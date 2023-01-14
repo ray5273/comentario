@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    {{- partial "head-meta.html" . }}
+
+    <!-- Link to self -->
+    <link rel="canonical" href="{{ .Permalink }}">
+
+    <!-- Favicon   -->
+    <link rel="shortcut icon" type="image/x-icon" href="{{ `favicon.ico` | absURL }}"/>
+
+    <!-- Page title -->
+    <title>{{ .Title }}</title>
+
+    <!-- Stylesheets -->
+    <link href="{{ (resources.Get `main.scss` | toCSS | minify).Permalink }}" rel="stylesheet">
+</head>
+<body>
+{{ block "main" . }}
+{{ .Content }}
+{{ end }}
+</body>
+</html>

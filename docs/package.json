@@ -1,0 +1,14 @@
+{
+    "name": "comentario.app",
+    "version": "1.0.0",
+    "description": "comentario.app website",
+    "scripts": {
+        "build": "hugo --gc --minify",
+        "prebuild": "rm -rf public",
+        "start": "hugo server -DF"
+    },
+    "repository": "https://gitlab.com/comentario/comentario.app",
+    "dependencies": {
+        "bootstrap": "^5.2.3"
+    }
+}

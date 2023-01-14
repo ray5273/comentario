@@ -1,0 +1,13 @@
+baseURL: https://comentario.app/
+languageCode: en-us
+title: Comentario
+
+disableKinds:
+- taxonomy
+- term
+- RSS
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
