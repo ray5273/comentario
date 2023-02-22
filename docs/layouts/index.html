@@ -1,7 +1,19 @@
 {{- define "main" }}
-<div class="d-flex w-100 h-100 justify-content-center align-content-center align-items-center">
-    <div class="display-1 text-center">
+<main class="container">
+    <!-- Hero area -->
+    <div class="row">
+        <div class="col-md-6 hero-area">
+            <div class="display-3">{{ .Params.slogan }}</div>
+            <div class="lead text-muted">{{ .Params.subslogan }}</div>
+        </div>
+        <div class="col-md-6 hero-area">
+            <img src="/img/worker.svg" class="img-fluid" alt="">
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div>
         {{ .Content }}
     </div>
-</div>
+</main>
 {{- end }}

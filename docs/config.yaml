@@ -1,13 +1,40 @@
 baseURL: https://comentario.app/
-languageCode: en-us
-title: Comentario
+languageCode: en
+title: 'Comentario: Comments Made Easy'
 
 disableKinds:
 - taxonomy
 - term
 - RSS
 
+defaultContentLanguage: en
+defaultContentLanguageInSubdir: true
+languages:
+  en:
+    weight: 1
+
+module:
+  hugoVersion:
+    extended: true
+    min: "v0.110"
+  mounts:
+    - source: node_modules
+      target: assets/node_modules
+    - source: assets
+      target: assets
+    - source: node_modules/@fortawesome/fontawesome-free/webfonts
+      target: static/webfonts
+    - source: static
+      target: static
+
 markup:
   goldmark:
     renderer:
       unsafe: true
+  highlight:
+    style: autumn
+
+menu:
+  navbar:
+    - identifier: features
+      url: '#features'

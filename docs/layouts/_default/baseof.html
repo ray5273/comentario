@@ -16,8 +16,23 @@
     <link href="{{ (resources.Get `main.scss` | toCSS | minify).Permalink }}" rel="stylesheet">
 </head>
 <body>
+
+<!-- Navbar -->
+{{- block "navbar" . }}
+{{- partial "navbar" . }}
+{{- end }}
+
+<!-- Main content -->
 {{ block "main" . }}
 {{ .Content }}
 {{ end }}
+
+<!-- Footer -->
+{{ block "footer" . }}
+{{ partial "footer" . }}
+{{ end }}
+
+<!-- Scripts -->
+{{- partial "scripts" . }}
 </body>
 </html>

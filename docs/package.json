@@ -9,6 +9,10 @@
     },
     "repository": "https://gitlab.com/comentario/comentario.app",
     "dependencies": {
-        "bootstrap": "^5.2.3"
+        "@fortawesome/fontawesome-free": "^6.2.1",
+        "@popperjs/core": "^2.11.6",
+        "bootstrap": "^5.2.3",
+        "chart.js": "^4.1.1",
+        "jquery": "^3.6.2"
     }
 }

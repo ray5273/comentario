@@ -1,0 +1,25 @@
+<nav class="navbar navbar-expand-md navbar-light bg-light">
+    <div class="container-fluid">
+        <!-- Brand -->
+        <a class="navbar-brand" href="{{ ref . `/` }}">
+            <img src="/img/comentario.svg" alt="Comentario logo" width="30" height="24" class="d-inline-block align-text-top">
+            Comentario
+        </a>
+
+        <!-- Nav menu -->
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar-menu-collapsible" aria-controls="navbar-menu-collapsible" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse justify-content-end" id="navbar-menu-collapsible">
+            <div class="navbar-nav">
+                {{- range .Site.Menus.navbar }}
+                <a class="nav-link{{ if $.IsMenuCurrent `navbar` . }} active{{ end }}"
+                   {{ if $.IsMenuCurrent `navbar` . }}aria-current="page"{{ end }}
+                   href="{{ .URL }}">
+                    {{- T .Identifier -}}
+                </a>
+                {{- end }}
+            </div>
+        </div>
+    </div>
+</nav>
