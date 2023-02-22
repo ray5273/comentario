@@ -1,2 +1,5 @@
-- {id: copyright, translation: Copyright ©2023 Comentario.}
-- {id: features,  translation: Features}
+- {id: about,             translation: About}
+- {id: copyright,         translation: Copyright ©2023 Comentario.}
+- {id: demo,              translation: Demo}
+- {id: getStarted,        translation: Get Started}
+- {id: viewDemo,          translation: View Demo}

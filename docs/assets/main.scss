@@ -1,6 +1,33 @@
 // Vars
 $font-family-sans-serif: Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 
+// Theme palette
+$primary:   #4950d8;
+$secondary: #839c8f;
+$success:   #198754;
+$info:      #6610f2;
+$warning:   #ffc107;
+$danger:    #dc3545;
+$light:     #ffffff;
+$dark:      #212529;
+// -- Theme palette custom extensions
+$cta:       #ec8100;
+
+// Extend the (default) theme color with the cta color
+$theme-colors: (
+    "primary":   $primary,
+    "secondary": $secondary,
+    "success":   $success,
+    "info":      $info,
+    "warning":   $warning,
+    "danger":    $danger,
+    "light":     $light,
+    "dark":      $dark,
+
+    // Custom colours
+    "cta":       $cta
+);
+
 // Configuration
 @import "node_modules/bootstrap/scss/functions";
 @import "node_modules/bootstrap/scss/variables";
@@ -17,7 +44,7 @@ $font-family-sans-serif: Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans
 @import "node_modules/bootstrap/scss/grid";
 // @import "node_modules/bootstrap/scss/tables";
 // @import "node_modules/bootstrap/scss/forms";
-// @import "node_modules/bootstrap/scss/buttons";
+@import "node_modules/bootstrap/scss/buttons";
 @import "node_modules/bootstrap/scss/transitions";
 @import "node_modules/bootstrap/scss/dropdown";
 // @import "node_modules/bootstrap/scss/button-group";
@@ -73,6 +100,27 @@ footer {
     font-size: 0.85rem;
 }
 
+#homepage h2:not(:first-child) {
+    margin-top: 4rem;
+}
+
+// Figure
+.imgfig {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+
+    .figure-img {
+        max-width: 100%;
+        height: auto;
+        max-height: 800px;
+    }
+
+    .figure-caption {
+        margin-bottom: 1rem;
+    }
+}
+
 // Code highlight
 .highlight {
     pre {
@@ -80,6 +128,22 @@ footer {
     }
 }
 
-:root {
-    --hljs-bg: $gray-100;
+// Override Bootstrap classes
+.btn-primary, .btn-secondary, .btn-cta {
+    --bs-btn-color:        #fff;
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+
+// Animations
+.fade-in-1s {
+    animation: fade-in-animation 1s ease forwards 1;
+}
+.fade-in-3s {
+    animation: fade-in-animation 3s ease forwards 1;
+}
+@keyframes fade-in-animation {
+    0%   { opacity: 0; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
 }

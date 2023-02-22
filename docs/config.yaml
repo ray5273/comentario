@@ -36,5 +36,7 @@ markup:
 
 menu:
   navbar:
-    - identifier: features
-      url: '#features'
+    - identifier: demo
+      url: 'https://demo.comentario.app'
+    - identifier: about
+      url: '#about'
