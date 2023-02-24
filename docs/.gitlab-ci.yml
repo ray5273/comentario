@@ -57,4 +57,4 @@ deploy-index-page:
     -     echo "Failed to find pod of comentario.app"
     -     echo 1
     - fi
-    - kubectl annotate pod "$COMENTARIO_POD" statics-configmap-version="$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA"
+    - kubectl annotate --overwrite "$COMENTARIO_POD" statics-configmap-version="$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA"
