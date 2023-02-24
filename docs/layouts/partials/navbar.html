@@ -25,7 +25,7 @@
                 <a class="nav-link{{ if $page.IsMenuCurrent $menu . }} active{{ end }}"
                    {{ if $page.IsMenuCurrent $menu . }}aria-current="page"{{ end }}
                    href="{{ .URL }}">
-                    {{- .Title -}}
+                    {{- .Title | default (T .Identifier) -}}
                 </a>
                 {{- end }}
             </div>

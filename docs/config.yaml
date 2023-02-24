@@ -36,7 +36,8 @@ markup:
     style: autumn
 
 menu:
-  navbar-external:
+  # Will be lowercased in the template
+  navbarExternal:
     - identifier: demo
       url: 'https://demo.comentario.app'
     - identifier: about

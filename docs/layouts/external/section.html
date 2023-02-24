@@ -19,13 +19,17 @@
 
 <!-- Navbar -->
 {{- block "navbar" . }}
-{{- partial "navbar" (dict "$page" . "menu" "navbar-external" "home" "https://comentario.app/" ) }}
+{{- partial "navbar" (dict "$page" . "menu" "navbarexternal" "home" "https://comentario.app/" ) }}
 {{- end }}
 
 <!-- Main content -->
-{{ block "main" . }}
-{{ .Content }}
-{{ end }}
+<section id="content">
+    {{ block "main" . }}
+    <main class="container">
+        {{ .Content }}
+    </main>
+    {{ end }}
+</section>
 
 <!-- Footer -->
 {{ block "footer" . }}
