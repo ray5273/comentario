@@ -1,3 +1,3 @@
-# comentario.app
+# docs.comentario.app
 
-The [comentario.app](https://comentario.app/) website.
+The [docs.comentario.app](https://docs.comentario.app/) website.

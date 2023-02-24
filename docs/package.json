@@ -1,13 +1,13 @@
 {
-    "name": "comentario.app",
+    "name": "docs.comentario.app",
     "version": "1.0.0",
-    "description": "comentario.app website",
+    "description": "docs.comentario.app website",
     "scripts": {
         "build": "hugo --gc --minify",
         "prebuild": "rm -rf public",
         "start": "hugo server -DF"
     },
-    "repository": "https://gitlab.com/comentario/comentario.app",
+    "repository": "https://gitlab.com/comentario/docs.comentario.app",
     "dependencies": {
         "@fortawesome/fontawesome-free": "^6.2.1",
         "@popperjs/core": "^2.11.6",
