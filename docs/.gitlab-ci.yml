@@ -1,0 +1,52 @@
+workflow:
+  rules:
+    - if: $CI_COMMIT_BRANCH == "master"
+
+stages:
+  - build
+  - deploy
+
+variables:
+  CI_TOOLS_VERSION: "v4"
+  # Namespace to deploy Kubernetes objects into
+  NAMESPACE: ys-comentario
+
+build:
+  stage: build
+  image: registry.gitlab.com/comentario/comentario-ci-tools/builder:$CI_TOOLS_VERSION
+  artifacts:
+    when: always
+    name: public
+    paths:
+      - public/
+  cache:
+    key:
+      files:
+        - package-lock.json
+    paths:
+      - .npm
+  script:
+    # Fetch the dependencies, specifying a cache location inside the build dir
+    - npm ci --cache .npm
+
+    # Build the site
+    - npm run build
+
+deploy-index-page:
+  stage: deploy
+  dependencies:
+    - build
+  image: alpine/k8s:1.25.6
+  script:
+    # Use the Kubernetes context from GitLab agent
+    - kubectl config use-context comentario/comentario-ci-tools:ys-comentario
+
+    # Check for the presence of the index ConfigMap
+    - CM_NAME=comentario-app-statics-configmap
+    - if kubectl get configmap $CM_NAME --namespace $NAMESPACE; then
+          # ConfigMap exists: replace it
+    -     kubectl create configmap $CM_NAME --namespace $NAMESPACE --from-file public/index.html --dry-run=client -o yaml | kubectl replace -f -
+    - else
+          # ConfigMap doesn't exist: create one
+    -     kubectl create configmap $CM_NAME --namespace $NAMESPACE --from-file public/index.html
+    - fi
