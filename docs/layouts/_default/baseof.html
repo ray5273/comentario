@@ -7,7 +7,7 @@
     <link rel="canonical" href="{{ .Permalink }}">
 
     <!-- Favicon   -->
-    <link rel="shortcut icon" type="image/x-icon" href="{{ `favicon.ico` | absURL }}"/>
+    <link rel="shortcut icon" type="image/x-icon" href="{{ `favicon.ico` | absURL }}">
 
     <!-- Page title -->
     <title>{{ .Title }}</title>
@@ -19,13 +19,27 @@
 
 <!-- Navbar -->
 {{- block "navbar" . }}
-{{- partial "navbar" . }}
+{{- partial "navbar" (dict "page" . "menu" "navbar" "home" (absURL "/")) }}
 {{- end }}
 
-<!-- Main content -->
-{{ block "main" . }}
-{{ .Content }}
-{{ end }}
+
+<!-- Main page content -->
+<section id="content" class="container">
+    <!-- Heading -->
+    {{- block "heading" . }}
+    {{- if default true .Params.showHeading }}<h1 class="mt-3">{{ .Title | markdownify }}</h1>{{ end }}
+    {{- if default true .Params.showDescription }}
+        {{- with .Params.description -}}
+            <p class="subheading"><i class="fas fa-chevron-right me-1"></i>{{ . | markdownify }}</p>
+        {{- end -}}
+    {{- end }}
+    {{- end }}
+
+    <!-- Main content -->
+    {{ block "main" . }}
+    {{ .Content }}
+    {{ end }}
+</section>
 
 <!-- Footer -->
 {{ block "footer" . }}

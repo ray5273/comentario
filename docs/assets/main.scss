@@ -135,6 +135,14 @@ footer {
     --bs-btn-active-color: #fff;
 }
 
+// Subheading, the page's description under the main heading
+.subheading {
+    color: $gray-600;
+    margin-top: -0.66rem;
+    margin-bottom: 2rem;
+    font-size: 90%;
+}
+
 // Animations
 .fade-in-1s {
     animation: fade-in-animation 1s ease forwards 1;

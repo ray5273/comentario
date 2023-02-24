@@ -45,10 +45,10 @@ deploy-index-page:
     - CM_NAME=comentario-app-statics-configmap
     - if kubectl get configmap $CM_NAME --namespace $NAMESPACE; then
           # ConfigMap exists: replace it
-    -     kubectl create configmap $CM_NAME --namespace $NAMESPACE --from-file public/index.html --dry-run=client -o yaml | kubectl replace -f -
+    -     kubectl create configmap $CM_NAME --namespace $NAMESPACE --from-file public/external/index.html --dry-run=client -o yaml | kubectl replace -f -
     - else
           # ConfigMap doesn't exist: create one
-    -     kubectl create configmap $CM_NAME --namespace $NAMESPACE --from-file public/index.html
+    -     kubectl create configmap $CM_NAME --namespace $NAMESPACE --from-file public/external/index.html
     - fi
 
     # Give the comentario.app deployment a nudge to restart

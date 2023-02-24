@@ -3,8 +3,11 @@
     "version": "1.0.0",
     "description": "docs.comentario.app website",
     "scripts": {
+        "clean": "rm -rf public",
         "build": "hugo --gc --minify",
-        "prebuild": "rm -rf public",
+        "build:dev": "hugo -DF",
+        "prebuild": "npm run clean",
+        "prebuild:dev": "npm run clean",
         "start": "hugo server -DF"
     },
     "repository": "https://gitlab.com/comentario/docs.comentario.app",

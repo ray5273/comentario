@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="{{ .Lang }}">
+<head>
+    {{- partial "head-meta.html" . }}
+
+    <!-- Link to self: use a hardcoded value because the page is rendered on another domain -->
+    <link rel="canonical" href="https://comentario.app/">
+
+    <!-- Favicon   -->
+    <link rel="shortcut icon" type="image/x-icon" href="{{ `favicon.ico` | absURL }}">
+
+    <!-- Page title -->
+    <title>{{ .Title }}</title>
+
+    <!-- Stylesheets -->
+    <link href="{{ (resources.Get `main.scss` | toCSS | minify).Permalink }}" rel="stylesheet">
+</head>
+<body>
+
+<!-- Navbar -->
+{{- block "navbar" . }}
+{{- partial "navbar" (dict "$page" . "menu" "navbar-external" "home" "https://comentario.app/" ) }}
+{{- end }}
+
+<!-- Main content -->
+{{ block "main" . }}
+{{ .Content }}
+{{ end }}
+
+<!-- Footer -->
+{{ block "footer" . }}
+{{ partial "footer" . }}
+{{ end }}
+
+<!-- Scripts -->
+{{- partial "scripts" . }}
+</body>
+</html>

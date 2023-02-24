@@ -6,6 +6,7 @@ disableKinds:
 - taxonomy
 - term
 - RSS
+- sitemap
 
 defaultContentLanguage: en
 defaultContentLanguageInSubdir: true
@@ -35,7 +36,7 @@ markup:
     style: autumn
 
 menu:
-  navbar:
+  navbar-external:
     - identifier: demo
       url: 'https://demo.comentario.app'
     - identifier: about
