@@ -13,6 +13,8 @@ defaultContentLanguageInSubdir: true
 languages:
   en:
     weight: 1
+  ru:
+    weight: 2
 
 module:
   hugoVersion:

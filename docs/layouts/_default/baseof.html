@@ -17,11 +17,14 @@
 </head>
 <body>
 
-<!-- Navbar -->
-{{- block "navbar" . }}
-{{- partial "navbar" (dict "page" . "menu" "navbar" "home" (absURL "/")) }}
-{{- end }}
+<!-- Scroll to top button -->
+<a href id="btn-scroll-to-top" class="fas fa-angle-up float-button"></a>
 
+<!-- Sidebar navigation -->
+<a href="#sidebar" id="sidebar-toggler" class="fas fa-bars float-button" aria-controls="sidebar"></a>
+<div id="sidebar" class="collapsed border-end">
+    {{- partial "sidebar" . }}
+</div>
 
 <!-- Main page content -->
 <section id="content" class="container">

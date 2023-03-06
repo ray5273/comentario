@@ -2,4 +2,6 @@
 - {id: copyright,         translation: Copyright ©2023 Comentario.}
 - {id: demo,              translation: Demo}
 - {id: getStarted,        translation: Get Started}
+- {id: readMore,          translation: Read more}
+- {id: toApp,             translation: Go to comentario.app}
 - {id: viewDemo,          translation: View Demo}

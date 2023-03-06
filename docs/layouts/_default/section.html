@@ -1,0 +1,20 @@
+{{ define "main" }}
+<main>
+    <!-- Main content -->
+    {{ .Content }}
+
+    <!-- If there are child pages, list them -->
+    {{- range .Pages }}
+        <!-- Child page heading -->
+        <h2 id="{{ .Title | anchorize }}">{{ .Title | markdownify }}</h2>
+
+        <!-- Child page description -->
+        {{- with (default .Params.description .Params.longDescription) }}
+        <p>{{ . | markdownify }}</p>
+        {{- end }}
+
+        <!-- Child page link -->
+        <p><a href="{{ .RelPermalink }}" class="btn btn-outline-secondary">{{ T `readMore` }} »</a></p>
+    {{- end }}
+</main>
+{{ end }}

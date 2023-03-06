@@ -1,0 +1,35 @@
+<!-- Logo -->
+<div class="sidebar-logo-container">
+    <a class="sidebar-logo" href="{{ absLangURL `/` }}" title="{{ T `home` }}"><img src="/img/docs-logo.png" alt="Logo"></a>
+</div>
+
+<!-- Language switcher -->
+<!-- DISABLE for now
+<ul class="nav justify-content-center border-top lang-menu">
+    {{ range .AllTranslations }}
+    <li class="nav-item">
+        <a class="nav-link{{ if eq $.Lang .Lang }} active{{ end }}" href="{{ .Permalink }}"
+           title="{{ .Language.LanguageName }}">{{ .Language.Lang | upper }}</a>
+    </li>
+    {{ end }}
+</ul>
+-->
+
+<!-- Main sidebar menu -->
+<ul class="nav nav-pills flex-column border-top pt-2">
+    <li class="nav-item">
+        <a class="nav-link" href="https://comentario.app/" title="{{ T `toApp` }}" target="_blank" rel="noopener">
+            <span class="comentario-icon me-1"></span>
+            <strong>comentario.app</strong>
+        </a>
+    </li>
+
+    {{- range .Site.Menus.sidebar }}
+    <li class="nav-item">
+        <a class="nav-link{{ if $.IsMenuCurrent `sidebar` . }} active{{ end }}" href="{{ .URL }}">
+            <i class="sidebar-icon fas fa-{{ .Page.Params.icon | default `info-circle` }} me-1"></i>
+            {{- .Title -}}
+        </a>
+    </li>
+    {{- end }}
+</ul>
