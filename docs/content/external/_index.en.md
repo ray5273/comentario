@@ -2,6 +2,7 @@
 title: comentario.app
 slogan: Comments. Easy.
 subslogan: Add comments to your web page or blog in a matter of minutes.
+skipSidebar: true
 ---
 
 ## What is Comentario? {#about}

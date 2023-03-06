@@ -16,20 +16,22 @@
 -->
 
 <!-- Main sidebar menu -->
-<ul class="nav nav-pills flex-column border-top pt-2">
-    <li class="nav-item">
-        <a class="nav-link" href="https://comentario.app/" title="{{ T `toApp` }}" target="_blank" rel="noopener">
-            <span class="comentario-icon me-1"></span>
-            <strong>comentario.app</strong>
-        </a>
-    </li>
-
+<ul class="nav mt-2">
+    <!-- List all top-level sections (added automatically to the "sidebar" menu thanks to the sectionPagesMenu config
+         entry) -->
     {{- range .Site.Menus.sidebar }}
+    {{- if not .Page.Params.skipSidebar }}
     <li class="nav-item">
-        <a class="nav-link{{ if $.IsMenuCurrent `sidebar` . }} active{{ end }}" href="{{ .URL }}">
-            <i class="sidebar-icon fas fa-{{ .Page.Params.icon | default `info-circle` }} me-1"></i>
-            {{- .Title -}}
-        </a>
+        <!-- Link to the section page -->
+        <a class="nav-link{{ if $.IsMenuCurrent `sidebar` . }} active{{ end }}"
+           {{- if eq (absURL .URL) $.Permalink }} aria-current="page"{{ end -}}
+           href="{{ .URL }}">{{ .Title }}</a>
+
+        <!-- If it's the current section, render its children (if any) -->
+        {{- if eq .Page.Section $.Section }}
+            {{- partial "sidebar-subpages" (dict "page" .Page "curURL" $.Permalink) }}
+        {{- end }}
     </li>
+    {{- end }}
     {{- end }}
 </ul>
