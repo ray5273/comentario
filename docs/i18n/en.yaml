@@ -1,6 +1,7 @@
 - {id: about,             translation: About}
 - {id: copyright,         translation: Copyright ©2023 Comentario.}
 - {id: demo,              translation: Demo}
+- {id: documentation,     translation: Documentation}
 - {id: getStarted,        translation: Get Started}
 - {id: numPages,          translation: {one: 'One page', other: '{{ .Count }} pages'}}
 - {id: readMore,          translation: Read more}

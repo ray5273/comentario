@@ -38,15 +38,4 @@ Comentario supports the Markdown syntax and can do a lot for you:
 
 ## Installation {#install}
 
-At this moment, Comentario only supports on-premises installs: you have to self-host it.
-
-Comentario can easily be added on any web page by including a tiny HTML snippet (generated for you by your Comentario instance), similar to this:
-
-```html
-<script defer src="https://example.com/js/comentario.js"></script>
-<div id="comentario"></div>
-```
-
-Please refer to the [README](https://gitlab.com/comentario/comentario/-/blob/master/README.md) to learn how to install it.
-
-Comentario is [open-source software](https://gitlab.com/comentario/comentario) distributed on the terms of the MIT license.
+Please refer to the [](/getting-started/installation) documentation to learn how to get Comentario up and running.

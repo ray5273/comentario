@@ -43,5 +43,10 @@ menu:
   navbarExternal:
     - identifier: demo
       url: 'https://demo.comentario.app'
+      weight: 10
     - identifier: about
       url: '#about'
+      weight: 20
+    - identifier: documentation
+      url: 'https://docs.comentario.app'
+      weight: 30
