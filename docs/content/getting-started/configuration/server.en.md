@@ -2,6 +2,15 @@
 title: Server configuration
 description: Comentario command-line and environment configuration
 weight: 100
+tags:
+    - configuration
+    - secrets
+    - CLI
+    - command line
+    - environment
+    - IP
+    - logging
+    - debug
 ---
 
 Comentario server can be configured in two ways:

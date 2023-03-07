@@ -27,8 +27,8 @@
            {{- if eq (absURL .URL) $.Permalink }} aria-current="page"{{ end -}}
            href="{{ .URL }}">{{ .Title }}</a>
 
-        <!-- If it's the current section, render its children (if any) -->
-        {{- if eq .Page.Section $.Section }}
+        <!-- If it's the current section and not a taxonomy page, render its children (if any) -->
+        {{- if and (eq .Page.Section $.Section) (ne .Page.Kind "taxonomy") }}
             {{- partial "sidebar-subpages" (dict "page" .Page "curURL" $.Permalink) }}
         {{- end }}
     </li>

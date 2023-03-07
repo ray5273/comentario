@@ -1,6 +1,17 @@
 ---
 title: Helm chart
-description: Comentario contains a Helm chart for Kubernetes deployment.
+description: Deploying Comentario in a Kubernetes cluster with Helm
+tags:
+    - installation
+    - configuration
+    - Kubernetes
+    - Let's Encrypt
+    - Helm
+    - Helm chart
+    - Bitnami
+    - certmanager
+    - database
+    - PostgreSQL
 ---
 
 You can easily deploy Comentario into a Kubernetes cluster using a Helm chart.

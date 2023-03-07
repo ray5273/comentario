@@ -1,7 +1,9 @@
 ---
 title: Installation
-description: How to install Comentario.
+description: How to self-host Comentario
 weight: 200
+tags:
+    - getting started
 ---
 
 You can install Comentario locally or deploy it somewhere on the Internet.

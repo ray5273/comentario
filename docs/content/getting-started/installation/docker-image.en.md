@@ -1,6 +1,9 @@
 ---
 title: Docker image
-description: Comentario provides ready-for-use Docker images.
+description: Comentario provides ready-for-use Docker images
+tags:
+    - installation
+    - Docker
 ---
 
 Comentario automated build pipeline creates and uploads Docker images to [GitLab Container Registry](https://gitlab.com/comentario/comentario/container_registry).

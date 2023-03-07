@@ -1,6 +1,6 @@
 ---
 title: About
-description: General information about our service
+description: General information about Comentario
 layout: single
 menu:
     # navbar is used when the page is embedded externally (comentario.app)
@@ -9,8 +9,7 @@ menu:
     footer:
         weight: 10
 tags:
-    - about us
-    - features
+    - about
 ---
 
 **[Comentario](https://comentario.app)** is a free and open-source *web comment engine*. It's powerful and flexible, while being lightweight and clutter-free.

@@ -1,7 +1,14 @@
 ---
 title: Requirements
-description: What is required for running Comentario.
+description: What is required for running Comentario
 weight: 100
+tags:
+    - configuration
+    - database
+    - PostgreSQL
+    - Linux
+    - Alpine Linux
+    - ARM
 ---
 
 Please read this first: this page explains what you'll need to *self-host* a Comentario instance.

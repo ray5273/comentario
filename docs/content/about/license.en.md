@@ -1,6 +1,11 @@
 ---
 title: License
-description: Comentario license
+description: Comentario license.
+tags:
+    - about
+    - license
+    - MIT
+    - open source
 ---
 
 The source code of Comentario is freely available for downloading, modifying, and using, under the terms of the MIT License below.

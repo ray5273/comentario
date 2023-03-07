@@ -2,5 +2,8 @@
 - {id: copyright,         translation: Copyright ©2023 Comentario.}
 - {id: demo,              translation: Demo}
 - {id: getStarted,        translation: Get Started}
+- {id: numPages,          translation: {one: 'One page', other: '{{ .Count }} pages'}}
 - {id: readMore,          translation: Read more}
+- {id: tag,               translation: Tag}
+- {id: tags,              translation: Tags}
 - {id: viewDemo,          translation: View Demo}

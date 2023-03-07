@@ -10,7 +10,7 @@
     <link rel="shortcut icon" type="image/x-icon" href="{{ `favicon.ico` | absURL }}">
 
     <!-- Page title -->
-    <title>{{ .Title }}</title>
+    {{- partial "title" . }}
 
     <!-- Stylesheets -->
     <link href="{{ (resources.Get `main.scss` | toCSS | minify).Permalink }}" rel="stylesheet">

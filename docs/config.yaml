@@ -1,11 +1,9 @@
 #file: noinspection YAMLSchemaValidation
 baseURL: https://docs.comentario.app/
 languageCode: en
-title: 'Comentario: Comments Made Easy'
+title: 'Comentario Documentation'
 
 disableKinds:
-- taxonomy
-- term
 - RSS
 - sitemap
 

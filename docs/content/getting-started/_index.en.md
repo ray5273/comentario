@@ -1,6 +1,8 @@
 ---
 title: Getting started
-description: How to get started using Comentario.
+description: How to get started using Comentario
+tags:
+    - getting started
 ---
 
 Interested in using Comentario? Find all your answers here!

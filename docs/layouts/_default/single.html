@@ -1,5 +1,9 @@
 {{ define "main" }}
 <main>
+    <!-- Main content -->
     {{ .Content }}
+
+    <!-- Tag list -->
+    {{- partial "tags" . }}
 </main>
 {{ end }}

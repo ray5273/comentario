@@ -14,5 +14,8 @@
         <!-- Child page link -->
         <p><a href="{{ .RelPermalink }}" class="btn btn-outline-secondary">{{ T `readMore` }} »</a></p>
     {{- end }}
+
+    <!-- Tag list -->
+    {{- partial "tags" . }}
 </main>
 {{ end }}

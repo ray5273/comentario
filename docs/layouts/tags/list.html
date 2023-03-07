@@ -1,0 +1,43 @@
+{{- define "heading" }}<h1 class="mt-3">{{ T "tag" }}: {{ .Title }}</h1>{{ end }}
+
+{{- define "main" }}
+<!-- Blog feed -->
+<div class="tag-pages">
+    <!-- Compile the list of all tags' sections -->
+    {{- $sections := slice }}{{ range .Pages }}{{ $sections = append .Section $sections  }}{{ end }}
+    {{- $sections = $sections | uniq | sort }}
+
+    <!-- Iterate all found sections -->
+    <ul class="list-unstyled">
+        {{- range $section := $sections }}
+            <!-- Try to find the section page -->
+            {{- $secpage := false }}
+            {{- range first 1 (where $.Site.Sections "Section" $section) }}
+            {{- $secpage = . }}
+            {{- end }}
+
+            {{- if $secpage }}
+            <li>
+                <!-- Heading -->
+                <h5>{{ $secpage.Title }}</h5>
+
+                <!-- Iterate all pages having this section -->
+                <ul>
+                    {{- range where $.Pages "Section" $section }}
+                    <li>
+                        <a href="{{ .RelPermalink }}">{{ .Title }}</a>
+                        {{- with .Date }}
+                            <span class="ms-1 badge bg-secondary">{{ partial "date" (dict "date" . "long" false) }}</span>
+                        {{ end }}
+                        {{- with .Description | markdownify | default .Summary  | plainify | safeHTML | truncate 200 "…" }}
+                            <p class="text-muted">{{ . }}</p>
+                        {{- end }}
+                    </li>
+                    {{- end }}
+                </ul>
+            </li>
+            {{- end }}
+        {{- end }}
+    </ul>
+</div>
+{{- end }}

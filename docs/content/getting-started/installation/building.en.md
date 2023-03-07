@@ -1,6 +1,15 @@
 ---
 title: Building Comentario
-description: How to build Comentario from the source code.
+description: How to build Comentario from the source code
+tags:
+    - installation
+    - configuration
+    - compilation
+    - building
+    - testing
+    - e2e
+    - database
+    - PostgreSQL
 ---
 
 This page explains how you can build Comentario **frontend** (UI) and **backend** (server) from its source code.

@@ -1,7 +1,22 @@
 ---
 title: Secrets
-description: Secrets configuration.
+description: Secrets configuration
 weight: 200
+tags:
+    - configuration
+    - secrets
+    - database
+    - PostgreSQL
+    - SMTP
+    - identity provider
+    - email
+    - authentication
+    - spam detection
+    - GitHub
+    - GitLab
+    - Google
+    - Twitter
+    - Akismet
 ---
 
 Comentario stores its sensitive data in a YAML file called *secrets*.
