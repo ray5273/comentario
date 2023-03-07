@@ -1,8 +1,12 @@
 ---
 title: Installation
 description: How to install Comentario.
-longDescription: You can install Comentario locally or deploy it somewhere on the Internet.
+weight: 200
 ---
+
+You can install Comentario locally or deploy it somewhere on the Internet.
+
+<!--more-->
 
 Comentario can be installed and run in a number of ways:
 

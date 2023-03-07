@@ -36,7 +36,7 @@ markup:
     renderer:
       unsafe: true
   highlight:
-    style: autumn
+    style: monokailight
 
 sectionPagesMenu: sidebar
 

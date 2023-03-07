@@ -9,9 +9,7 @@
         <h2 id="{{ .Title | anchorize }}">{{ .Title | markdownify }}</h2>
 
         <!-- Child page description -->
-        {{- with (default .Params.description .Params.longDescription) }}
-        <p>{{ . | markdownify }}</p>
-        {{- end }}
+        <p>{{ .Summary }}</p>
 
         <!-- Child page link -->
         <p><a href="{{ .RelPermalink }}" class="btn btn-outline-secondary">{{ T `readMore` }} »</a></p>

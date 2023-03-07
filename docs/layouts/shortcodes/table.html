@@ -1,0 +1,4 @@
+<!-- Render a table of custom class(es), passed as the first argument -->
+<div class="table-responsive">
+{{ replace (markdownify .Inner) "\x3ctable\x3e" (printf "\x3ctable class=%q\x3e" (.Get 0)) | safeHTML }}
+</div>
