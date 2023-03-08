@@ -4,7 +4,7 @@
         <ul class="list-unstyled">
             {{- range site.Menus.footer }}
             <li>
-                <a class="nav-link{{ if $.IsMenuCurrent `footer` . }} active{{ end }}"
+                <a class="{{ if $.IsMenuCurrent `footer` . }}active{{ end }}"
                    {{ if $.IsMenuCurrent `footer` . }}aria-current="page"{{ end }}
                    href="{{ .URL | absLangURL }}">{{ .Title }}</a>
             </li>

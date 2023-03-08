@@ -164,8 +164,9 @@ a {
         top: 0;
         bottom: 0;
         width: 100%;
-        background-color: $secondary;
-        opacity: 0.2;
+        background-color: transparentize($dark, 0.6);
+        backdrop-filter: blur(3px);
+       // opacity: 0.2;
         transition: opacity 0.6s ease;
 
         @include media-breakpoint-up(md) {
@@ -215,6 +216,29 @@ a {
                 &.active {
                     color: $light;
                     background-color: $primary;
+                }
+
+                // Placeholder in case the item has no children
+                &:before {
+                    content: '';
+                    display: inline-block;
+                    width: 1em;
+                    height: 1em;
+                    background: transparent no-repeat;
+                }
+
+                &.has-children{
+                    // angle-right icon
+                    &:before {
+                        vertical-align: top;
+                        margin-top: (1.5 - 1em) * 0.5;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M246.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L178.7 256 41.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z'/%3E%3C/svg%3E");
+                    }
+
+                    // angle-down icon
+                    &.is-current:before {
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M169.4 342.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 274.7 54.6 137.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/%3E%3C/svg%3E");
+                    }
                 }
             }
 
@@ -286,6 +310,18 @@ footer {
     padding-bottom: 2rem;
     font-size: $font-size-sm;
     z-index: 20;
+
+    a {
+        color: inherit;
+        transition: color 0.1s linear;
+
+        &:hover, &:active {
+            color: $light;
+        }
+    }
+    .active {
+        font-weight: $font-weight-bold;
+    }
 }
 
 // Main content

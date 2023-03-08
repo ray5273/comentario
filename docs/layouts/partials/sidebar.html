@@ -20,18 +20,6 @@
     <!-- List all top-level sections (added automatically to the "sidebar" menu thanks to the sectionPagesMenu config
          entry) -->
     {{- range .Site.Menus.sidebar }}
-    {{- if not .Page.Params.skipSidebar }}
-    <li class="nav-item">
-        <!-- Link to the section page -->
-        <a class="nav-link{{ if $.IsMenuCurrent `sidebar` . }} active{{ end }}"
-           {{- if eq (absLangURL .URL) $.Permalink }} aria-current="page"{{ end -}}
-           href="{{ .URL }}">{{ .Title }}</a>
-
-        <!-- If it's the current section and not a taxonomy page, render its children (if any) -->
-        {{- if and (eq .Page.Section $.Section) (ne .Page.Kind "taxonomy") }}
-            {{- partial "sidebar-subpages" (dict "page" .Page "curURL" $.Permalink) }}
-        {{- end }}
-    </li>
-    {{- end }}
+    {{- partial "sidebar-nav-item" (dict "page" .Page "curURL" $.Permalink "item" .) }}
     {{- end }}
 </ul>
