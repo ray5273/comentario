@@ -85,7 +85,7 @@ $link-decoration: none;
 @import "node_modules/@fortawesome/fontawesome-free/scss/solid";
 @import "node_modules/@fortawesome/fontawesome-free/scss/brands";
 
-$sidebar-color: adjust-color($primary, $saturation: -33%, $lightness: +33%);
+$sidebar-color: adjust-color($primary, $saturation: -33%, $lightness: +28%);
 $footer-color:  adjust-color($primary, $saturation: -33%, $lightness: 0%);
 
 // Give all root elements full height so that we can position the footer at the bottom of the screen
@@ -154,69 +154,99 @@ a {
         visibility: hidden;
     }
 }
-#sidebar {
-    background-color: $sidebar-color;
-    display: block;
-    position: fixed;
-    left: 0;
-    top: 0;
-    bottom: 0;
-    z-index: 110;
-    padding-left: 0;
-    padding-right: 0;
-    width: 280px;
-    box-shadow: 4px 0 10px #33333340;
-    transition: left 0.3s ease-in-out;
-    overflow-y: auto;
 
-    &.collapsed {
-        left: -281px;
-        box-shadow: none;
+.sidebar-container {
+
+    .sidebar-backdrop {
+        position: fixed;
+        z-index: 109;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: $secondary;
+        opacity: 0.2;
+        transition: opacity 0.6s ease;
+
+        @include media-breakpoint-up(md) {
+            opacity: 0;
+            width: 0;
+        }
+    }
+
+    .sidebar {
+        background-color: $sidebar-color;
+        display: block;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 110;
+        padding-left: 0;
+        padding-right: 0;
+        width: 280px;
+        box-shadow: 4px 0 10px #33333340;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+
         @include media-breakpoint-up(md) {
             left: 0;
-        }
-    }
-
-    @include media-breakpoint-up(md) {
-        left: 0;
-        z-index: 10;
-        box-shadow: none;
-    }
-
-    .nav {
-        flex-direction: column;
-        border-top: 1px solid $border-color;
-
-        // All items
-        .nav-item {
-            padding-left: 0.5rem;
+            z-index: 10;
+            box-shadow: none;
         }
 
-        // All links
-        .nav-link {
-            --bs-nav-link-padding-x: 0.5rem;
-            --bs-nav-link-padding-y: 0.25rem;
-            --bs-nav-link-font-weight: bold;
+        .nav {
+            flex-direction: column;
 
-            display: inline-block;
-            border-radius: 0.25rem;
-
-            &.active {
-                color: $light;
-                background-color: $primary;
-            }
-        }
-
-        // Second+ level links
-        ul {
+            // All items
             .nav-item {
-                padding-left: 1rem;
+                padding-left: 0.5rem;
             }
+
+            // All links
             .nav-link {
-                --bs-nav-link-font-weight: null;
+                --bs-nav-link-padding-x: 0.5rem;
+                --bs-nav-link-padding-y: 0.25rem;
+                --bs-nav-link-font-weight: bold;
+
+                display: inline-block;
+                border-radius: 0.25rem;
+
+                &.active {
+                    color: $light;
+                    background-color: $primary;
+                }
+            }
+
+            // Second+ level links
+            ul {
+                .nav-item {
+                    padding-left: 1rem;
+                }
+
+                .nav-link {
+                    --bs-nav-link-font-weight: null;
+                }
             }
         }
     }
+
+    &.collapsed {
+        .sidebar-backdrop {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar {
+            left: -281px;
+            box-shadow: none;
+
+            @include media-breakpoint-up(md) {
+                left: 0;
+            }
+        }
+    }
+
 }
 .sidebar-logo-container {
     margin-top: 20px;
@@ -333,7 +363,6 @@ footer {
     color: $light;
 
     transition: all .5s ease-in-out;
-    opacity: 0.9;
     visibility: visible;
     z-index: 1000;
     font-size: 1.5em;

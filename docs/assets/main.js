@@ -4,11 +4,9 @@ $(document).ready(function () {
      * Initialise the scroll-to-top button
      */
     const btnScrollToTop = $('#btn-scroll-to-top');
-    $(window).scroll(function() {
-        btnScrollToTop.toggleClass('show', $(window).scrollTop() > 300);
-    });
+    $(window).scroll(() => btnScrollToTop.toggleClass('show', $(window).scrollTop() > 300));
 
-    btnScrollToTop.on('click', function(e) {
+    btnScrollToTop.on('click', e => {
         e.preventDefault();
         window.scrollTo({ top: 0, behavior: 'smooth' });
     });
@@ -16,14 +14,13 @@ $(document).ready(function () {
     /**
      * Set up the sidebar toggler
      */
-    $('#sidebar-toggler').on('click', function () {
-        $('#sidebar').toggleClass('collapsed');
+    $('#sidebar-toggler,.sidebar-backdrop').on('click', () => {
+        $('.sidebar-container').toggleClass('collapsed');
+        $('body').toggleClass('overflow-hidden');
     });
 
     /**
      * Permanent link for headings.
      */
-    $(':header[id]').each(function () {
-        $(this).append('<a href="#' + this.id + '" class="heading-link"></a>');
-    });
+    $(':header[id]').each((_, el) => $(el).append('<a href="#' + el.id + '" class="heading-link"></a>'));
 });

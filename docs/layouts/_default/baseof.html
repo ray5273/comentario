@@ -22,8 +22,11 @@
 
 <!-- Sidebar navigation -->
 <a href="#sidebar" id="sidebar-toggler" class="fas fa-bars float-button" aria-controls="sidebar"></a>
-<div id="sidebar" class="collapsed border-end">
-    {{- partial "sidebar" . }}
+<div class="sidebar-container collapsed">
+    <div class="sidebar-backdrop"></div>
+    <div class="sidebar">
+        {{- partial "sidebar" . }}
+    </div>
 </div>
 
 <!-- Main page content -->
