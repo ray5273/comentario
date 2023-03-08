@@ -6,6 +6,7 @@
         "clean": "rm -rf public",
         "build": "hugo --gc --minify",
         "build:dev": "hugo -DF",
+        "postbuild": "echo '/*\\n  Access-Control-Allow-Origin: *' > public/_headers",
         "prebuild": "npm run clean",
         "prebuild:dev": "npm run clean",
         "start": "hugo server -DF"
