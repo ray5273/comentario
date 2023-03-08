@@ -1,14 +1,10 @@
 <!----------------------------------------------------------------------------------------------------------------------
-    Render a navbar at the top of page.
-    Context is a dictionary containing the following key-value pairs:
-        page: Page being the menu is being rendered on
-        menu: Name of the menu to render
-        home: Home URL (linked by the logo)
+    Render a navbar for an external page at the top of page.
 ----------------------------------------------------------------------------------------------------------------------->
 <nav class="navbar navbar-expand-md navbar-light bg-light">
     <div class="container-fluid">
         <!-- Brand -->
-        <a class="navbar-brand" href="{{ .home }}">
+        <a class="navbar-brand" href="https://comentario.app">
             <img src="{{ `/img/comentario.svg` | absURL }}" alt="Comentario logo" width="30" height="24" class="d-inline-block align-text-top">
             Comentario
         </a>
@@ -19,12 +15,10 @@
         </button>
         <div class="collapse navbar-collapse justify-content-end" id="navbar-menu-collapsible">
             <div class="navbar-nav">
-                {{- $menu := .menu }}
-                {{- $page := .page }}
-                {{- range (index site.Menus $menu) }}
-                <a class="nav-link{{ if $page.IsMenuCurrent $menu . }} active{{ end }}"
-                   {{ if $page.IsMenuCurrent $menu . }}aria-current="page"{{ end }}
-                   href="{{ .URL }}">
+                {{- range site.Menus.extnavbar }}
+                <a class="nav-link{{ if $.IsMenuCurrent `extnavbar` . }} active{{ end }}"
+                   {{ if $.IsMenuCurrent `extnavbar` . }}aria-current="page"{{ end }}
+                   href="{{ .URL | absLangURL }}">
                     {{- .Title | default (T .Identifier) -}}
                 </a>
                 {{- end }}

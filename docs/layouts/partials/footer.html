@@ -1,12 +1,17 @@
 <footer>
-    <div class="container">
-        <div class="row">
-            <div class="col-sm-1">
-                <img src="{{ `/img/comentario.svg` | absURL }}" alt="" width="128" class="img-fluid">
-            </div>
-            <div class="col-sm-6 d-flex align-items-end">
-                <div>{{ T "copyright" }}</div>
-            </div>
-        </div>
+    <div class="container ps-5">
+        <!-- Menu -->
+        <ul class="list-unstyled">
+            {{- range site.Menus.footer }}
+            <li>
+                <a class="nav-link{{ if $.IsMenuCurrent `footer` . }} active{{ end }}"
+                   {{ if $.IsMenuCurrent `footer` . }}aria-current="page"{{ end }}
+                   href="{{ .URL | absLangURL }}">{{ .Title }}</a>
+            </li>
+            {{- end }}
+        </ul>
+
+        <!-- Copyright -->
+        <div>{{ T "copyright" }}</div>
     </div>
 </footer>

@@ -1,6 +1,9 @@
 ---
 title: Source code
 description: Comentario is an open-source software
+menu:
+    footer:
+        weight: 30
 tags:
     - about
     - open source

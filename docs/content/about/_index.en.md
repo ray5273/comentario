@@ -3,9 +3,8 @@ title: About
 description: General information about Comentario
 layout: single
 menu:
-    # navbar is used when the page is embedded externally (comentario.app)
-    navbar:
-        weight: 10
+    extNavbar:
+        weight: 20
     footer:
         weight: 10
 tags:

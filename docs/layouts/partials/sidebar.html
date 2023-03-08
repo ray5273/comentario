@@ -24,7 +24,7 @@
     <li class="nav-item">
         <!-- Link to the section page -->
         <a class="nav-link{{ if $.IsMenuCurrent `sidebar` . }} active{{ end }}"
-           {{- if eq (absURL .URL) $.Permalink }} aria-current="page"{{ end -}}
+           {{- if eq (absLangURL .URL) $.Permalink }} aria-current="page"{{ end -}}
            href="{{ .URL }}">{{ .Title }}</a>
 
         <!-- If it's the current section and not a taxonomy page, render its children (if any) -->

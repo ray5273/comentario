@@ -2,15 +2,19 @@
 title: Comentario Documentation
 showHeading: false
 showDescription: false
+menu:
+    extNavbar:
+        weight: 30
+        title: Documentation
 ---
 
 **Welcome to Comentario Documentation!**
 
-Comentario is an open-source web comment engine, adding discussion functionality to plain, boring web pages.
+**[Comentario](https://comentario.app)** is an open-source web comment engine, adding discussion functionality to plain, boring web pages.
 
-<p>
-{{< button "/about" "About" "outline-primary" >}}
-{{< button "/about/features" "Features" "outline-primary" >}}
-{{< button "/getting-started" "Getting started" "outline-primary" >}}
-{{< button "/getting-started/configuration" "Configuration" "outline-primary" >}}
+<p class="text-center">
+{{< button "/about" "About" "outline-primary mb-2" >}}
+{{< button "/about/features" "Features" "outline-primary mb-2" >}}
+{{< button "/getting-started" "Get Started" "cta mb-2" >}}
+{{< button "https://demo.comentario.app" `View Demo<i class="fas fa-external-link ms-2"></i>` "primary mb-2" "BFOR" >}}
 </p>

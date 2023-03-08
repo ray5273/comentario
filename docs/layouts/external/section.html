@@ -18,9 +18,7 @@
 <body>
 
 <!-- Navbar -->
-{{- block "navbar" . }}
-{{- partial "navbar" (dict "$page" . "menu" "navbarexternal" "home" "https://comentario.app/" ) }}
-{{- end }}
+{{- partial "external-navbar" . }}
 
 <!-- Main content -->
 <section id="external-content">
@@ -39,8 +37,8 @@
                 <div class="lead text-muted">{{ .Params.subslogan }}</div>
                 <!-- Buttons -->
                 <div class="mt-3">
-                    <a href="https://demo.comentario.app/" class="btn btn-primary">{{ T "viewDemo" }}</a>
-                    <a href="{{ ref . `/getting-started` }}"                     class="btn btn-cta">{{ T "getStarted" }}</a>
+                    <a href="https://demo.comentario.app/"   class="btn btn-primary mb-2">{{ T "viewDemo" }}<i class="fas fa-external-link ms-2"></i></a>
+                    <a href="{{ ref . `/getting-started` }}" class="btn btn-cta mb-2">{{ T "getStarted" }}</a>
                 </div>
             </div>
             <div class="col-md-6 hero-area">

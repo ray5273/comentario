@@ -1,6 +1,9 @@
 ---
 title: Getting started
 description: How to get started using Comentario
+menu:
+    footer:
+        weight: 20
 tags:
     - getting started
 ---
