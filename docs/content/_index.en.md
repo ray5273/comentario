@@ -10,7 +10,7 @@ menu:
 
 **Welcome to Comentario Documentation!**
 
-**[Comentario](https://comentario.app)** is an open-source web comment engine, adding discussion functionality to plain, boring web pages.
+**[Comentario](https://comentario.app)** is an open-source web comment engine, which adds discussion functionality to plain, boring web pages.
 
 <p class="text-center">
 {{< button "/about" "About" "outline-primary mb-2" >}}
