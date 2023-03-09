@@ -92,3 +92,25 @@ helm upgrade --install \
     helm/comentario
 ```
 
+## Backing up the database
+
+To get a full database dump from the PostgreSQL database running in the cluster, issue the following command (assuming your PostgreSQL instance is named `comentario-postgres`):
+
+```bash
+kubectl exec -t -n $NAMESPACE \
+    $(kubectl get -n $NAMESPACE pods -l app.kubernetes.io/instance=comentario-postgres -o name) \
+    -- pg_dump -U postgres -d comentario > /path/to/comentario.sql
+```
+
+## Restoring the database from backup
+
+To restore the database from a previously downloaded dump file (see above), you can use these commands (also assuming your PostgreSQL instance is named `comentario-postgres`).
+
+We cannot send it via the pipe directly (I'm not sure why), so we copy it over first and clean up afterwards.
+
+```bash
+PG_POD=$(kubectl get -n $NAMESPACE pods -l app.kubernetes.io/instance=comentario-postgres -o 'jsonpath={.items..metadata.name}')
+kubectl cp -n $NAMESPACE /path/to/comentario.sql $PG_POD:/tmp/c.sql
+kubectl exec -t -n $NAMESPACE $PG_POD -- psql -U postgres -d comentario -f /tmp/c.sql
+kubectl exec -t -n $NAMESPACE $PG_POD -- rm /tmp/c.sql
+```
