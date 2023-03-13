@@ -42,6 +42,7 @@ Below is a summary of the values in the secrets file.
 | `postgres.database`   | string  |    ✔     | Name of the PostgreSQL database          |               |
 | `postgres.username`   | string  |    ✔     | Username to connect to PostgreSQL DB     |               |
 | `postgres.password`   | string  |    ✔     | Password to connect to PostgreSQL DB     |               |
+| `postgres.sslmode`    | string  |          | SSL mode when connecting to Postgres DB  |   `disable`   |
 | `smtpServer.host`     | string  |          | Hostname or IP address of SMTP server    |               |
 | `smtpServer.port`     | integer |          | Port number of SMTP server               |               |
 | `smtpServer.username` | string  |          | Username to connect to SMTP server       |               |
