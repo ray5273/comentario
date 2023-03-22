@@ -1,0 +1,4 @@
+---
+layout: none
+skipSidebar: true
+---
