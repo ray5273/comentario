@@ -10,7 +10,7 @@ import (
 	"github.com/markbates/goth"
 	"github.com/pkg/errors"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -36,7 +36,7 @@ var oauthSessions = &util.SafeStringMap[models.HexID]{}
 var commenterTokens = &util.SafeStringMap[models.HexID]{}
 
 // OauthInit initiates a federated authentication process
-func OauthInit(params operations.OauthInitParams) middleware.Responder {
+func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	// Map the provider to a goth provider
 	gothIdP := util.FederatedIdProviders[params.Provider]
 	if gothIdP == "" {
@@ -81,7 +81,7 @@ func OauthInit(params operations.OauthInitParams) middleware.Responder {
 	}
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
-	return NewCookieResponder(operations.NewOauthInitTemporaryRedirect().WithLocation(sessURL)).
+	return NewCookieResponder(api_commenter.NewOauthInitTemporaryRedirect().WithLocation(sessURL)).
 		WithCookie(
 			util.CookieNameAuthSession,
 			string(sessID),
@@ -91,7 +91,7 @@ func OauthInit(params operations.OauthInitParams) middleware.Responder {
 			http.SameSiteLaxMode)
 }
 
-func OauthCallback(params operations.OauthCallbackParams) middleware.Responder {
+func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responder {
 	// Map the provider to a goth provider
 	gothIdP := util.FederatedIdProviders[params.Provider]
 	if gothIdP == "" {
@@ -211,7 +211,7 @@ func OauthCallback(params operations.OauthCallbackParams) middleware.Responder {
 	return NewCookieResponder(closeParentWindowResponse()).WithoutCookie(util.CookieNameAuthSession, "/")
 }
 
-func OauthSsoInit(params operations.OauthSsoInitParams) middleware.Responder {
+func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder {
 	domainURL, err := util.ParseAbsoluteURL(params.HTTPRequest.Header.Get("Referer"))
 	if err != nil {
 		return oauthFailure(err)
@@ -277,10 +277,10 @@ func OauthSsoInit(params operations.OauthSsoInitParams) middleware.Responder {
 	ssoURL.RawQuery = q.Encode()
 
 	// Succeeded: redirect to SSO
-	return operations.NewOauthSsoInitTemporaryRedirect().WithLocation(ssoURL.String())
+	return api_commenter.NewOauthSsoInitTemporaryRedirect().WithLocation(ssoURL.String())
 }
 
-func OauthSsoCallback(params operations.OauthSsoCallbackParams) middleware.Responder {
+func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Responder {
 	payloadBytes, err := hex.DecodeString(params.Payload)
 	if err != nil {
 		return oauthFailure(fmt.Errorf("payload: invalid hex encoding: %s", err.Error()))
@@ -393,7 +393,7 @@ func getSessionState(sess goth.Session) (string, error) {
 // auth session cookie
 func oauthFailure(err error) middleware.Responder {
 	return NewCookieResponder(
-		operations.NewOauthInitUnauthorized().
+		api_commenter.NewOauthInitUnauthorized().
 			WithPayload(fmt.Sprintf(
 				`<html lang="en">
 				<head>

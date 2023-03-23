@@ -4,6 +4,9 @@ root: true
 env:
   es6: true
 
+ignorePatterns:
+  - frontend/generated-api/**
+
 overrides:
   # Gulp
   - files: gulpfile.js
@@ -15,9 +18,6 @@ overrides:
 
   # Embed TypeScript files
   - files: 'embed/**/*.ts'
-    excludedFiles:
-      - cypress/**
-      - frontend/**
     parser: '@typescript-eslint/parser'
     plugins:
       - '@typescript-eslint'

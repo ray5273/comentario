@@ -56,14 +56,13 @@ type UserOwner struct {
 	EmailConfirmed bool // Whether the user's email is confirmed
 }
 
-// ToOwner converts this user into models.Owner model
-func (u *UserOwner) ToOwner() *models.Owner {
-	return &models.Owner{
-		ConfirmedEmail: u.EmailConfirmed,
-		Email:          strfmt.Email(u.Email),
-		JoinDate:       strfmt.DateTime(u.Created),
-		Name:           u.Name,
-		OwnerHex:       u.HexID,
+// ToAPIModel converts this user into a principal API model
+func (u *UserOwner) ToAPIModel() *models.Principal {
+	return &models.Principal{
+		IsConfirmed: u.EmailConfirmed,
+		Email:       strfmt.Email(u.Email),
+		Name:        u.Name,
+		ID:          u.HexID,
 	}
 }
 

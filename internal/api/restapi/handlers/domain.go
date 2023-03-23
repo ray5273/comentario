@@ -4,7 +4,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -12,7 +12,7 @@ import (
 	"strings"
 )
 
-func DomainClear(params operations.DomainClearParams) middleware.Responder {
+func DomainClear(params api_owner.DomainClearParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -30,10 +30,10 @@ func DomainClear(params operations.DomainClearParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewDomainClearNoContent()
+	return api_owner.NewDomainClearNoContent()
 }
 
-func DomainDelete(params operations.DomainDeleteParams) middleware.Responder {
+func DomainDelete(params api_owner.DomainDeleteParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -51,10 +51,10 @@ func DomainDelete(params operations.DomainDeleteParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewDomainDeleteNoContent()
+	return api_owner.NewDomainDeleteNoContent()
 }
 
-func DomainList(_ operations.DomainListParams, principal data.Principal) middleware.Responder {
+func DomainList(_ api_owner.DomainListParams, principal data.Principal) middleware.Responder {
 	// Fetch domains by the owner
 	domains, err := svc.TheDomainService.ListByOwner(principal.GetUser().HexID)
 	if err != nil {
@@ -68,13 +68,13 @@ func DomainList(_ operations.DomainListParams, principal data.Principal) middlew
 	}
 
 	// Succeeded
-	return operations.NewDomainListOK().WithPayload(&operations.DomainListOKBody{
+	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{
 		ConfiguredOauths: idps,
 		Domains:          domains,
 	})
 }
 
-func DomainModeratorDelete(params operations.DomainModeratorDeleteParams) middleware.Responder {
+func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -92,10 +92,10 @@ func DomainModeratorDelete(params operations.DomainModeratorDeleteParams) middle
 	}
 
 	// Succeeded
-	return operations.NewDomainModeratorDeleteNoContent()
+	return api_owner.NewDomainModeratorDeleteNoContent()
 }
 
-func DomainModeratorNew(params operations.DomainModeratorNewParams) middleware.Responder {
+func DomainModeratorNew(params api_owner.DomainModeratorNewParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -113,10 +113,10 @@ func DomainModeratorNew(params operations.DomainModeratorNewParams) middleware.R
 	}
 
 	// Succeeded
-	return operations.NewDomainModeratorNewNoContent()
+	return api_owner.NewDomainModeratorNewNoContent()
 }
 
-func DomainNew(params operations.DomainNewParams) middleware.Responder {
+func DomainNew(params api_owner.DomainNewParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -155,10 +155,10 @@ func DomainNew(params operations.DomainNewParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewDomainNewOK().WithPayload(&operations.DomainNewOKBody{Domain: domain.Domain})
+	return api_owner.NewDomainNewOK().WithPayload(&api_owner.DomainNewOKBody{Domain: domain.Domain})
 }
 
-func DomainSsoSecretNew(params operations.DomainSsoSecretNewParams) middleware.Responder {
+func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -177,10 +177,10 @@ func DomainSsoSecretNew(params operations.DomainSsoSecretNewParams) middleware.R
 	}
 
 	// Succeeded
-	return operations.NewDomainSsoSecretNewOK().WithPayload(&operations.DomainSsoSecretNewOKBody{SsoSecret: token})
+	return api_owner.NewDomainSsoSecretNewOK().WithPayload(&api_owner.DomainSsoSecretNewOKBody{SsoSecret: token})
 }
 
-func DomainStatistics(params operations.DomainStatisticsParams) middleware.Responder {
+func DomainStatistics(params api_owner.DomainStatisticsParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -205,13 +205,13 @@ func DomainStatistics(params operations.DomainStatisticsParams) middleware.Respo
 	}
 
 	// Succeeded
-	return operations.NewDomainStatisticsOK().WithPayload(&operations.DomainStatisticsOKBody{
+	return api_owner.NewDomainStatisticsOK().WithPayload(&api_owner.DomainStatisticsOKBody{
 		CommentsLast30Days: comments,
 		ViewsLast30Days:    views,
 	})
 }
 
-func DomainUpdate(params operations.DomainUpdateParams) middleware.Responder {
+func DomainUpdate(params api_owner.DomainUpdateParams) middleware.Responder {
 	// Find the owner user
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
@@ -235,5 +235,5 @@ func DomainUpdate(params operations.DomainUpdateParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewDomainUpdateNoContent()
+	return api_owner.NewDomainUpdateNoContent()
 }

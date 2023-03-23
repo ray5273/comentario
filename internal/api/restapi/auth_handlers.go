@@ -5,7 +5,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 )
 
@@ -35,20 +34,14 @@ func AuthOwnerByCookieHeader(headerValue string) (data.Principal, error) {
 	// auth cookies, only headers)
 	r := &http.Request{Header: http.Header{"Cookie": []string{headerValue}}}
 
-	// Check if there's a token cookie
-	if token := handlers.ExtractOwnerTokenFromCookie(r); token != "" {
-		if owner, err := svc.TheUserService.FindOwnerByToken(token); err == nil {
-			return owner, nil
-		}
+	// Authenticate the user
+	u, err := handlers.GetUserFromCookie(r)
+	if err != nil {
+		// Authentication failed
+		logger.Warningf("Failed to authenticate user: %v", err)
+		return nil, ErrUnauthorised
 	}
 
-	// Check if there's a token cookie
-	if cookie, err := r.Cookie(util.CookieNameUserToken); err == nil {
-		if owner, err := svc.TheUserService.FindOwnerByToken(models.HexID(cookie.Value)); err == nil {
-			return owner, nil
-		}
-	}
-
-	// Authentication failed
-	return nil, ErrUnauthorised
+	// Succeeded
+	return u, nil
 }

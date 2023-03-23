@@ -4,16 +4,14 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"golang.org/x/crypto/bcrypt"
-	"time"
 )
 
-func OwnerConfirmHex(params operations.OwnerConfirmHexParams) middleware.Responder {
+func OwnerConfirmHex(params api_owner.OwnerConfirmHexParams) middleware.Responder {
 	// Update the owner, if the token checks out
 	conf := "true"
 	if err := svc.TheUserService.ConfirmOwner(models.HexID(params.ConfirmHex)); err != nil {
@@ -21,11 +19,11 @@ func OwnerConfirmHex(params operations.OwnerConfirmHexParams) middleware.Respond
 	}
 
 	// Redirect to login
-	return operations.NewOwnerConfirmHexTemporaryRedirect().
+	return api_owner.NewOwnerConfirmHexTemporaryRedirect().
 		WithLocation(config.URLFor("login", map[string]string{"confirmed": conf}))
 }
 
-func OwnerDelete(params operations.OwnerDeleteParams) middleware.Responder {
+func OwnerDelete(params api_owner.OwnerDeleteParams) middleware.Responder {
 	// Find the owner user
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
@@ -47,41 +45,10 @@ func OwnerDelete(params operations.OwnerDeleteParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewOwnerDeleteNoContent()
+	return api_owner.NewOwnerDeleteNoContent()
 }
 
-func OwnerLogin(params operations.OwnerLoginParams) middleware.Responder {
-	// Find the owner
-	owner, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), true)
-	if err == svc.ErrNotFound {
-		time.Sleep(util.WrongAuthDelay)
-		return respUnauthorized(util.ErrorInvalidEmailPassword)
-	} else if err != nil {
-		return respServiceError(err)
-	}
-
-	// Verify the owner is confirmed
-	if !owner.EmailConfirmed {
-		return respUnauthorized(util.ErrorUnconfirmedEmail)
-	}
-
-	// Verify the provided password
-	if err := bcrypt.CompareHashAndPassword([]byte(owner.PasswordHash), []byte(swag.StringValue(params.Body.Password))); err != nil {
-		time.Sleep(util.WrongAuthDelay)
-		return respUnauthorized(util.ErrorInvalidEmailPassword)
-	}
-
-	// Create a new owner session
-	ownerToken, err := svc.TheUserService.CreateOwnerSession(owner.HexID)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Succeeded
-	return operations.NewOwnerLoginOK().WithPayload(&operations.OwnerLoginOKBody{OwnerToken: ownerToken})
-}
-
-func OwnerNew(params operations.OwnerNewParams) middleware.Responder {
+func OwnerNew(params api_owner.OwnerNewParams) middleware.Responder {
 	// Verify new owners are allowed
 	if !config.CLIFlags.AllowNewOwners {
 		return respForbidden(util.ErrorNewOwnerForbidden)
@@ -134,20 +101,5 @@ func OwnerNew(params operations.OwnerNewParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewOwnerNewOK().WithPayload(&operations.OwnerNewOKBody{ConfirmEmail: config.SMTPConfigured})
-}
-
-func OwnerSelf(params operations.OwnerSelfParams) middleware.Responder {
-	// Try to find the owner
-	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
-	if err == svc.ErrNotFound {
-		// Owner isn't logged id
-		return operations.NewOwnerSelfNoContent()
-	} else if err != nil {
-		// Any other database error
-		return respServiceError(err)
-	}
-
-	// Succeeded: owner's logged in
-	return operations.NewOwnerSelfOK().WithPayload(&operations.OwnerSelfOKBody{Owner: user.ToOwner()})
+	return api_owner.NewOwnerNewOK().WithPayload(&api_owner.OwnerNewOKBody{ConfirmEmail: config.SMTPConfigured})
 }

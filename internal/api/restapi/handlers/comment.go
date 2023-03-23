@@ -6,7 +6,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -14,7 +14,7 @@ import (
 	"time"
 )
 
-func CommentApprove(params operations.CommentApproveParams, principal data.Principal) middleware.Responder {
+func CommentApprove(params api_commenter.CommentApproveParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -37,10 +37,10 @@ func CommentApprove(params operations.CommentApproveParams, principal data.Princ
 	}
 
 	// Succeeded
-	return operations.NewCommentApproveNoContent()
+	return api_commenter.NewCommentApproveNoContent()
 }
 
-func CommentCount(params operations.CommentCountParams) middleware.Responder {
+func CommentCount(params api_commenter.CommentCountParams) middleware.Responder {
 	// Fetch comment counts
 	cc, err := svc.ThePageService.CommentCountsByPath(*params.Body.Domain, params.Body.Paths)
 	if err != nil {
@@ -48,10 +48,10 @@ func CommentCount(params operations.CommentCountParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewCommentCountOK().WithPayload(&operations.CommentCountOKBody{CommentCounts: cc})
+	return api_commenter.NewCommentCountOK().WithPayload(&api_commenter.CommentCountOKBody{CommentCounts: cc})
 }
 
-func CommentDelete(params operations.CommentDeleteParams, principal data.Principal) middleware.Responder {
+func CommentDelete(params api_commenter.CommentDeleteParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -76,10 +76,10 @@ func CommentDelete(params operations.CommentDeleteParams, principal data.Princip
 	}
 
 	// Succeeded
-	return operations.NewCommentDeleteNoContent()
+	return api_commenter.NewCommentDeleteNoContent()
 }
 
-func CommentEdit(params operations.CommentEditParams, principal data.Principal) middleware.Responder {
+func CommentEdit(params api_commenter.CommentEditParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -108,10 +108,10 @@ func CommentEdit(params operations.CommentEditParams, principal data.Principal) 
 	}
 
 	// Succeeded
-	return operations.NewCommentEditOK().WithPayload(&operations.CommentEditOKBody{HTML: html})
+	return api_commenter.NewCommentEditOK().WithPayload(&api_commenter.CommentEditOKBody{HTML: html})
 }
 
-func CommentList(params operations.CommentListParams, principal data.Principal) middleware.Responder {
+func CommentList(params api_commenter.CommentListParams, principal data.Principal) middleware.Responder {
 	commenter := principal.(*data.UserCommenter)
 
 	// Fetch the domain
@@ -162,7 +162,7 @@ func CommentList(params operations.CommentListParams, principal data.Principal) 
 	_ = svc.TheDomainService.RegisterView(domain.Domain, commenter)
 
 	// Succeeded
-	return operations.NewCommentListOK().WithPayload(&operations.CommentListOKBody{
+	return api_commenter.NewCommentListOK().WithPayload(&api_commenter.CommentListOKBody{
 		Attributes:            page,
 		Commenters:            commenters,
 		Comments:              comments,
@@ -176,7 +176,7 @@ func CommentList(params operations.CommentListParams, principal data.Principal) 
 	})
 }
 
-func CommentNew(params operations.CommentNewParams, principal data.Principal) middleware.Responder {
+func CommentNew(params api_commenter.CommentNewParams, principal data.Principal) middleware.Responder {
 	// Fetch the domain
 	domain, err := svc.TheDomainService.FindByName(*params.Body.Domain)
 	if err != nil {
@@ -253,7 +253,7 @@ func CommentNew(params operations.CommentNewParams, principal data.Principal) mi
 	go emailNotificationNew(domain, comment)
 
 	// Succeeded
-	return operations.NewCommentNewOK().WithPayload(&operations.CommentNewOKBody{
+	return api_commenter.NewCommentNewOK().WithPayload(&api_commenter.CommentNewOKBody{
 		CommenterHex: commenter.HexID,
 		CommentHex:   comment.CommentHex,
 		HTML:         comment.HTML,
@@ -261,7 +261,7 @@ func CommentNew(params operations.CommentNewParams, principal data.Principal) mi
 	})
 }
 
-func CommentVote(params operations.CommentVoteParams, principal data.Principal) middleware.Responder {
+func CommentVote(params api_commenter.CommentVoteParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -292,5 +292,5 @@ func CommentVote(params operations.CommentVoteParams, principal data.Principal) 
 	}
 
 	// Succeeded
-	return operations.NewCommentVoteNoContent()
+	return api_commenter.NewCommentVoteNoContent()
 }

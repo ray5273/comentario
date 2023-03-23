@@ -3,12 +3,12 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 )
 
-func PageUpdate(params operations.PageUpdateParams, principal data.Principal) middleware.Responder {
+func PageUpdate(params api_commenter.PageUpdateParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -26,5 +26,5 @@ func PageUpdate(params operations.PageUpdateParams, principal data.Principal) mi
 	}
 
 	// Succeeded
-	return operations.NewPageUpdateNoContent()
+	return api_commenter.NewPageUpdateNoContent()
 }

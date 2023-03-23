@@ -14,6 +14,11 @@ import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/e2e"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -72,56 +77,69 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.CommenterTokenHeaderAuth = AuthCommenterByTokenHeader
 	api.OwnerCookieAuth = AuthOwnerByCookieHeader
 
+	//------------------------------------------------------------------------------------------------------------------
+	// Auth API
+	//------------------------------------------------------------------------------------------------------------------
+
+	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIAuthCurUserPwdResetSendEmailHandler = api_auth.CurUserPwdResetSendEmailHandlerFunc(handlers.CurUserPwdResetSendEmail)
+	api.APIAuthCurUserPwdResetChangeHandler = api_auth.CurUserPwdResetChangeHandlerFunc(handlers.CurUserPwdResetChange)
+	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
+
+	//------------------------------------------------------------------------------------------------------------------
+	// Commenter API
+	//------------------------------------------------------------------------------------------------------------------
+
 	// Comment
-	api.CommentApproveHandler = operations.CommentApproveHandlerFunc(handlers.CommentApprove)
-	api.CommentCountHandler = operations.CommentCountHandlerFunc(handlers.CommentCount)
-	api.CommentDeleteHandler = operations.CommentDeleteHandlerFunc(handlers.CommentDelete)
-	api.CommentEditHandler = operations.CommentEditHandlerFunc(handlers.CommentEdit)
-	api.CommentListHandler = operations.CommentListHandlerFunc(handlers.CommentList)
-	api.CommentNewHandler = operations.CommentNewHandlerFunc(handlers.CommentNew)
-	api.CommentVoteHandler = operations.CommentVoteHandlerFunc(handlers.CommentVote)
+	api.APICommenterCommentApproveHandler = api_commenter.CommentApproveHandlerFunc(handlers.CommentApprove)
+	api.APICommenterCommentCountHandler = api_commenter.CommentCountHandlerFunc(handlers.CommentCount)
+	api.APICommenterCommentDeleteHandler = api_commenter.CommentDeleteHandlerFunc(handlers.CommentDelete)
+	api.APICommenterCommentEditHandler = api_commenter.CommentEditHandlerFunc(handlers.CommentEdit)
+	api.APICommenterCommentListHandler = api_commenter.CommentListHandlerFunc(handlers.CommentList)
+	api.APICommenterCommentNewHandler = api_commenter.CommentNewHandlerFunc(handlers.CommentNew)
+	api.APICommenterCommentVoteHandler = api_commenter.CommentVoteHandlerFunc(handlers.CommentVote)
 	// Commenter
-	api.CommenterLoginHandler = operations.CommenterLoginHandlerFunc(handlers.CommenterLogin)
-	api.CommenterLogoutHandler = operations.CommenterLogoutHandlerFunc(handlers.CommenterLogout)
-	api.CommenterNewHandler = operations.CommenterNewHandlerFunc(handlers.CommenterNew)
-	api.CommenterPhotoHandler = operations.CommenterPhotoHandlerFunc(handlers.CommenterPhoto)
-	api.CommenterSelfHandler = operations.CommenterSelfHandlerFunc(handlers.CommenterSelf)
-	api.CommenterTokenNewHandler = operations.CommenterTokenNewHandlerFunc(handlers.CommenterTokenNew)
-	api.CommenterUpdateHandler = operations.CommenterUpdateHandlerFunc(handlers.CommenterUpdate)
-	// Domain
-	api.DomainClearHandler = operations.DomainClearHandlerFunc(handlers.DomainClear)
-	api.DomainDeleteHandler = operations.DomainDeleteHandlerFunc(handlers.DomainDelete)
-	api.DomainExportBeginHandler = operations.DomainExportBeginHandlerFunc(handlers.DomainExportBegin)
-	api.DomainExportDownloadHandler = operations.DomainExportDownloadHandlerFunc(handlers.DomainExportDownload)
-	api.DomainImportCommentoHandler = operations.DomainImportCommentoHandlerFunc(handlers.DomainImportCommento)
-	api.DomainImportDisqusHandler = operations.DomainImportDisqusHandlerFunc(handlers.DomainImportDisqus)
-	api.DomainListHandler = operations.DomainListHandlerFunc(handlers.DomainList)
-	api.DomainModeratorDeleteHandler = operations.DomainModeratorDeleteHandlerFunc(handlers.DomainModeratorDelete)
-	api.DomainModeratorNewHandler = operations.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
-	api.DomainNewHandler = operations.DomainNewHandlerFunc(handlers.DomainNew)
-	api.DomainSsoSecretNewHandler = operations.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
-	api.DomainStatisticsHandler = operations.DomainStatisticsHandlerFunc(handlers.DomainStatistics)
-	api.DomainUpdateHandler = operations.DomainUpdateHandlerFunc(handlers.DomainUpdate)
+	api.APICommenterCommenterLoginHandler = api_commenter.CommenterLoginHandlerFunc(handlers.CommenterLogin)
+	api.APICommenterCommenterLogoutHandler = api_commenter.CommenterLogoutHandlerFunc(handlers.CommenterLogout)
+	api.APICommenterCommenterNewHandler = api_commenter.CommenterNewHandlerFunc(handlers.CommenterNew)
+	api.APICommenterCommenterPhotoHandler = api_commenter.CommenterPhotoHandlerFunc(handlers.CommenterPhoto)
+	api.APICommenterCommenterSelfHandler = api_commenter.CommenterSelfHandlerFunc(handlers.CommenterSelf)
+	api.APICommenterCommenterTokenNewHandler = api_commenter.CommenterTokenNewHandlerFunc(handlers.CommenterTokenNew)
+	api.APICommenterCommenterUpdateHandler = api_commenter.CommenterUpdateHandlerFunc(handlers.CommenterUpdate)
 	// Email
-	api.EmailGetHandler = operations.EmailGetHandlerFunc(handlers.EmailGet)
-	api.EmailModerateHandler = operations.EmailModerateHandlerFunc(handlers.EmailModerate)
-	api.EmailUpdateHandler = operations.EmailUpdateHandlerFunc(handlers.EmailUpdate)
+	api.APICommenterEmailGetHandler = api_commenter.EmailGetHandlerFunc(handlers.EmailGet)
+	api.APICommenterEmailModerateHandler = api_commenter.EmailModerateHandlerFunc(handlers.EmailModerate)
+	api.APICommenterEmailUpdateHandler = api_commenter.EmailUpdateHandlerFunc(handlers.EmailUpdate)
 	// OAuth
-	api.OauthInitHandler = operations.OauthInitHandlerFunc(handlers.OauthInit)
-	api.OauthCallbackHandler = operations.OauthCallbackHandlerFunc(handlers.OauthCallback)
-	api.OauthSsoCallbackHandler = operations.OauthSsoCallbackHandlerFunc(handlers.OauthSsoCallback)
-	api.OauthSsoInitHandler = operations.OauthSsoInitHandlerFunc(handlers.OauthSsoInit)
-	// Owner
-	api.OwnerConfirmHexHandler = operations.OwnerConfirmHexHandlerFunc(handlers.OwnerConfirmHex)
-	api.OwnerDeleteHandler = operations.OwnerDeleteHandlerFunc(handlers.OwnerDelete)
-	api.OwnerLoginHandler = operations.OwnerLoginHandlerFunc(handlers.OwnerLogin)
-	api.OwnerNewHandler = operations.OwnerNewHandlerFunc(handlers.OwnerNew)
-	api.OwnerSelfHandler = operations.OwnerSelfHandlerFunc(handlers.OwnerSelf)
+	api.APICommenterOauthInitHandler = api_commenter.OauthInitHandlerFunc(handlers.OauthInit)
+	api.APICommenterOauthCallbackHandler = api_commenter.OauthCallbackHandlerFunc(handlers.OauthCallback)
+	api.APICommenterOauthSsoCallbackHandler = api_commenter.OauthSsoCallbackHandlerFunc(handlers.OauthSsoCallback)
+	api.APICommenterOauthSsoInitHandler = api_commenter.OauthSsoInitHandlerFunc(handlers.OauthSsoInit)
 	// Page
-	api.PageUpdateHandler = operations.PageUpdateHandlerFunc(handlers.PageUpdate)
-	// Auth
-	api.ForgotPasswordHandler = operations.ForgotPasswordHandlerFunc(handlers.ForgotPassword)
-	api.ResetPasswordHandler = operations.ResetPasswordHandlerFunc(handlers.ResetPassword)
+	api.APICommenterPageUpdateHandler = api_commenter.PageUpdateHandlerFunc(handlers.PageUpdate)
+
+	//------------------------------------------------------------------------------------------------------------------
+	// Owner API
+	//------------------------------------------------------------------------------------------------------------------
+
+	// Domain
+	api.APIOwnerDomainClearHandler = api_owner.DomainClearHandlerFunc(handlers.DomainClear)
+	api.APIOwnerDomainDeleteHandler = api_owner.DomainDeleteHandlerFunc(handlers.DomainDelete)
+	api.APIOwnerDomainExportBeginHandler = api_owner.DomainExportBeginHandlerFunc(handlers.DomainExportBegin)
+	api.APIOwnerDomainExportDownloadHandler = api_owner.DomainExportDownloadHandlerFunc(handlers.DomainExportDownload)
+	api.APIOwnerDomainImportCommentoHandler = api_owner.DomainImportCommentoHandlerFunc(handlers.DomainImportCommento)
+	api.APIOwnerDomainImportDisqusHandler = api_owner.DomainImportDisqusHandlerFunc(handlers.DomainImportDisqus)
+	api.APIOwnerDomainListHandler = api_owner.DomainListHandlerFunc(handlers.DomainList)
+	api.APIOwnerDomainModeratorDeleteHandler = api_owner.DomainModeratorDeleteHandlerFunc(handlers.DomainModeratorDelete)
+	api.APIOwnerDomainModeratorNewHandler = api_owner.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
+	api.APIOwnerDomainNewHandler = api_owner.DomainNewHandlerFunc(handlers.DomainNew)
+	api.APIOwnerDomainSsoSecretNewHandler = api_owner.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
+	api.APIOwnerDomainStatisticsHandler = api_owner.DomainStatisticsHandlerFunc(handlers.DomainStatistics)
+	api.APIOwnerDomainUpdateHandler = api_owner.DomainUpdateHandlerFunc(handlers.DomainUpdate)
+	// Owner
+	api.APIOwnerOwnerConfirmHexHandler = api_owner.OwnerConfirmHexHandlerFunc(handlers.OwnerConfirmHex)
+	api.APIOwnerOwnerDeleteHandler = api_owner.OwnerDeleteHandlerFunc(handlers.OwnerDelete)
+	api.APIOwnerOwnerNewHandler = api_owner.OwnerNewHandlerFunc(handlers.OwnerNew)
 
 	// Shutdown functions
 	api.PreServerShutdown = func() {}
@@ -199,12 +217,12 @@ func configureE2eMode(api *operations.ComentarioAPI) error {
 
 	// Configure API endpoints
 	e2eHandler = *hPtr
-	api.E2eResetHandler = operations.E2eResetHandlerFunc(func(operations.E2eResetParams) middleware.Responder {
+	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(func(api_e2e.E2eResetParams) middleware.Responder {
 		if err := e2eHandler.HandleReset(); err != nil {
 			logger.Errorf("E2eReset failed: %v", err)
-			return operations.NewGenericInternalServerError()
+			return api_generic.NewGenericInternalServerError()
 		}
-		return operations.NewE2eResetNoContent()
+		return api_e2e.NewE2eResetNoContent()
 	})
 
 	// Succeeded

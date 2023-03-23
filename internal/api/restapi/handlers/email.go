@@ -3,13 +3,13 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 )
 
-func EmailGet(params operations.EmailGetParams) middleware.Responder {
+func EmailGet(params api_commenter.EmailGetParams) middleware.Responder {
 	// Fetch the email by its unsubscribe token
 	email, err := svc.TheEmailService.FindByUnsubscribeToken(*params.Body.UnsubscribeSecretHex)
 	if err != nil {
@@ -17,10 +17,10 @@ func EmailGet(params operations.EmailGetParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewEmailGetOK().WithPayload(&operations.EmailGetOKBody{Email: email})
+	return api_commenter.NewEmailGetOK().WithPayload(&api_commenter.EmailGetOKBody{Email: email})
 }
 
-func EmailModerate(params operations.EmailModerateParams) middleware.Responder {
+func EmailModerate(params api_commenter.EmailModerateParams) middleware.Responder {
 	// Find the comment
 	comment, err := svc.TheCommentService.FindByHexID(models.HexID(params.CommentHex))
 	if err != nil {
@@ -66,10 +66,10 @@ func EmailModerate(params operations.EmailModerateParams) middleware.Responder {
 
 	// Succeeded
 	// TODO redirect to a proper page instead of letting the user see JSON response
-	return operations.NewEmailModerateNoContent()
+	return api_commenter.NewEmailModerateNoContent()
 }
 
-func EmailUpdate(params operations.EmailUpdateParams) middleware.Responder {
+func EmailUpdate(params api_commenter.EmailUpdateParams) middleware.Responder {
 	// Update the email record
 	err := svc.TheEmailService.UpdateByEmailToken(
 		string(params.Body.Email.Email),
@@ -81,7 +81,7 @@ func EmailUpdate(params operations.EmailUpdateParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewEmailUpdateNoContent()
+	return api_commenter.NewEmailUpdateNoContent()
 }
 
 func emailNotificationModerator(d *models.Domain, path string, title string, commenterHex models.HexID, commentHex models.HexID, html string, state models.CommentState) {

@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -13,7 +13,7 @@ import (
 	"io"
 )
 
-func DomainExportBegin(params operations.DomainExportBeginParams) middleware.Responder {
+func DomainExportBegin(params api_owner.DomainExportBeginParams) middleware.Responder {
 	// Make sure SMTP is configured
 	if !config.SMTPConfigured {
 		return respBadRequest(util.ErrorSMTPNotConfigured)
@@ -35,10 +35,10 @@ func DomainExportBegin(params operations.DomainExportBeginParams) middleware.Res
 	go domainExport(domain, user.Email)
 
 	// Succeeded
-	return operations.NewDomainExportBeginNoContent()
+	return api_owner.NewDomainExportBeginNoContent()
 }
 
-func DomainExportDownload(params operations.DomainExportDownloadParams) middleware.Responder {
+func DomainExportDownload(params api_owner.DomainExportDownloadParams) middleware.Responder {
 	// Fetch the data
 	domain, binData, created, err := svc.TheImportExportService.GetExportedData(models.HexID(params.ExportHex))
 	if err != nil {
@@ -46,12 +46,12 @@ func DomainExportDownload(params operations.DomainExportDownloadParams) middlewa
 	}
 
 	// Succeeded
-	return operations.NewDomainExportDownloadOK().
+	return api_owner.NewDomainExportDownloadOK().
 		WithContentDisposition(fmt.Sprintf(`inline; filename="%s-%v.json.gz"`, domain, created.Unix())).
 		WithPayload(io.NopCloser(bytes.NewReader(binData)))
 }
 
-func DomainImportCommento(params operations.DomainImportCommentoParams) middleware.Responder {
+func DomainImportCommento(params api_owner.DomainImportCommentoParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -70,10 +70,10 @@ func DomainImportCommento(params operations.DomainImportCommentoParams) middlewa
 	}
 
 	// Succeeded
-	return operations.NewDomainImportCommentoOK().WithPayload(&operations.DomainImportCommentoOKBody{NumImported: count})
+	return api_owner.NewDomainImportCommentoOK().WithPayload(&api_owner.DomainImportCommentoOKBody{NumImported: count})
 }
 
-func DomainImportDisqus(params operations.DomainImportDisqusParams) middleware.Responder {
+func DomainImportDisqus(params api_owner.DomainImportDisqusParams) middleware.Responder {
 	user, err := svc.TheUserService.FindOwnerByToken(*params.Body.OwnerToken)
 	if err != nil {
 		return respServiceError(err)
@@ -92,7 +92,7 @@ func DomainImportDisqus(params operations.DomainImportDisqusParams) middleware.R
 	}
 
 	// Succeeded
-	return operations.NewDomainImportDisqusOK().WithPayload(&operations.DomainImportDisqusOKBody{NumImported: count})
+	return api_owner.NewDomainImportDisqusOK().WithPayload(&api_owner.DomainImportDisqusOKBody{NumImported: count})
 }
 
 // domainExport performs a domain export, then notifies the user about the outcome using the given email

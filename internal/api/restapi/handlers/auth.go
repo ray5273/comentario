@@ -2,68 +2,50 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
-	"gitlab.com/comentario/comentario/internal/config"
+	"github.com/go-openapi/swag"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"golang.org/x/crypto/bcrypt"
+	"net/http"
 	"time"
 )
 
-func ForgotPassword(params operations.ForgotPasswordParams) middleware.Responder {
-	email := data.EmailToString(params.Body.Email)
-	entity := *params.Body.Entity
-
-	var user *data.User
-
-	switch entity {
-	// Resetting owner password
-	case models.EntityOwner:
-		if owner, err := svc.TheUserService.FindOwnerByEmail(email, false); err == nil {
-			user = &owner.User
-		} else if err != svc.ErrNotFound {
-			return respServiceError(err)
-		}
-
-	// Resetting commenter password: find the locally authenticated commenter
-	case models.EntityCommenter:
-		if commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", email, false); err == nil {
-			user = &commenter.User
-		} else if err != svc.ErrNotFound {
-			return respServiceError(err)
-		}
-	}
-
-	// If no user found, apply a random delay to discourage email polling
-	if user == nil {
-		util.RandomSleep(100*time.Millisecond, 4000*time.Millisecond)
-
-		// Generate a random reset token
-	} else if token, err := svc.TheUserService.CreateResetToken(user.HexID, entity); err != nil {
-		return respServiceError(err)
-
-		// Send out an email
-	} else if err := svc.TheMailService.SendFromTemplate(
-		"",
-		email,
-		"Reset your password",
-		"reset-hex.gohtml",
-		map[string]any{"URL": config.URLFor("reset", map[string]string{"hex": string(token)})},
-	); err != nil {
+func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
+	// Find the user
+	user, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), true)
+	if err == svc.ErrNotFound {
+		time.Sleep(util.WrongAuthDelay)
+		return respUnauthorized(util.ErrorInvalidEmailPassword)
+	} else if err != nil {
 		return respServiceError(err)
 	}
 
-	// Succeeded (or no user found)
-	return operations.NewForgotPasswordNoContent()
-}
+	// Verify the owner is confirmed
+	if !user.EmailConfirmed {
+		return respUnauthorized(util.ErrorUnconfirmedEmail)
+	}
 
-func ResetPassword(params operations.ResetPasswordParams) middleware.Responder {
-	entity, err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.ResetHex, *params.Body.Password)
+	// Verify the provided password
+	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(swag.StringValue(params.Body.Password))); err != nil {
+		time.Sleep(util.WrongAuthDelay)
+		return respUnauthorized(util.ErrorInvalidEmailPassword)
+	}
+
+	// Create a new owner session
+	ownerToken, err := svc.TheUserService.CreateOwnerSession(user.HexID)
 	if err != nil {
 		return respServiceError(err)
 	}
 
-	// Succeeded
-	return operations.NewResetPasswordOK().WithPayload(&operations.ResetPasswordOKBody{Entity: entity})
+	// Succeeded. Return a principal and a session cookie
+	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToAPIModel())).
+		WithCookie(
+			util.CookieNameUserSession,
+			string(user.HexID+ownerToken),
+			"/",
+			util.UserSessionCookieDuration,
+			true,
+			http.SameSiteLaxMode)
 }

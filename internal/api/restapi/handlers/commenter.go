@@ -6,7 +6,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -19,7 +19,7 @@ import (
 	"time"
 )
 
-func CommenterLogin(params operations.CommenterLoginParams) middleware.Responder {
+func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Responder {
 	// Try to find a local user with the given email
 	commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", data.EmailToString(params.Body.Email), true)
 	if err != nil {
@@ -46,14 +46,14 @@ func CommenterLogin(params operations.CommenterLoginParams) middleware.Responder
 	}
 
 	// Succeeded
-	return operations.NewCommenterLoginOK().WithPayload(&operations.CommenterLoginOKBody{
+	return api_commenter.NewCommenterLoginOK().WithPayload(&api_commenter.CommenterLoginOKBody{
 		Commenter:      commenter.ToCommenter(),
 		CommenterToken: commenterToken,
 		Email:          email,
 	})
 }
 
-func CommenterLogout(params operations.CommenterLogoutParams, principal data.Principal) middleware.Responder {
+func CommenterLogout(params api_commenter.CommenterLogoutParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -66,10 +66,10 @@ func CommenterLogout(params operations.CommenterLogoutParams, principal data.Pri
 	}
 
 	// Regardless of whether the above was successful, return a success response
-	return operations.NewCommenterLogoutNoContent()
+	return api_commenter.NewCommenterLogoutNoContent()
 }
 
-func CommenterNew(params operations.CommenterNewParams) middleware.Responder {
+func CommenterNew(params api_commenter.CommenterNewParams) middleware.Responder {
 	email := data.EmailToString(params.Body.Email)
 	name := data.TrimmedString(params.Body.Name)
 	website := string(params.Body.WebsiteURL)
@@ -85,10 +85,10 @@ func CommenterNew(params operations.CommenterNewParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return operations.NewCommenterNewNoContent()
+	return api_commenter.NewCommenterNewNoContent()
 }
 
-func CommenterPhoto(params operations.CommenterPhotoParams) middleware.Responder {
+func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Responder {
 	// Validate the passed commenter hex ID
 	id := models.HexID(params.CommenterHex)
 	if err := id.Validate(nil); err != nil {
@@ -114,8 +114,7 @@ func CommenterPhoto(params operations.CommenterPhotoParams) middleware.Responder
 	// Decode the image
 	img, imgFormat, err := image.Decode(limitedResp)
 	if err != nil {
-		return operations.NewGenericInternalServerError().
-			WithPayload(&operations.GenericInternalServerErrorBody{Details: "Failed to decode image"})
+		return respInternalError()
 	}
 	logger.Debugf("Loaded commenter avatar: format=%s, dimensions=%s", imgFormat, img.Bounds().Size().String())
 
@@ -135,13 +134,12 @@ func CommenterPhoto(params operations.CommenterPhotoParams) middleware.Responder
 	// Resize the image and encode into a JPEG
 	var buf bytes.Buffer
 	if err = imaging.Encode(&buf, imaging.Resize(img, 38, 0, imaging.Lanczos), imaging.JPEG); err != nil {
-		return operations.NewGenericInternalServerError().
-			WithPayload(&operations.GenericInternalServerErrorBody{Details: "Failed to encode image"})
+		return respInternalError()
 	}
-	return operations.NewCommenterPhotoOK().WithPayload(io.NopCloser(&buf))
+	return api_commenter.NewCommenterPhotoOK().WithPayload(io.NopCloser(&buf))
 }
 
-func CommenterSelf(params operations.CommenterSelfParams) middleware.Responder {
+func CommenterSelf(params api_commenter.CommenterSelfParams) middleware.Responder {
 	// Extract a commenter token from the corresponding header, if any
 	if token := models.HexID(params.HTTPRequest.Header.Get(util.HeaderCommenterToken)); token.Validate(nil) == nil {
 		// Find the commenter
@@ -157,7 +155,7 @@ func CommenterSelf(params operations.CommenterSelfParams) middleware.Responder {
 			}
 
 			// Succeeded
-			return operations.NewCommenterSelfOK().WithPayload(&operations.CommenterSelfOKBody{
+			return api_commenter.NewCommenterSelfOK().WithPayload(&api_commenter.CommenterSelfOKBody{
 				Commenter: commenter.ToCommenter(),
 				Email:     email,
 			})
@@ -165,10 +163,10 @@ func CommenterSelf(params operations.CommenterSelfParams) middleware.Responder {
 	}
 
 	// Not logged in, bad token, commenter is anonymous or doesn't exist
-	return operations.NewCommenterSelfNoContent()
+	return api_commenter.NewCommenterSelfNoContent()
 }
 
-func CommenterTokenNew(operations.CommenterTokenNewParams) middleware.Responder {
+func CommenterTokenNew(api_commenter.CommenterTokenNewParams) middleware.Responder {
 	// Create an "anonymous" session
 	token, err := svc.TheUserService.CreateCommenterSession("")
 	if err != nil {
@@ -176,10 +174,10 @@ func CommenterTokenNew(operations.CommenterTokenNewParams) middleware.Responder 
 	}
 
 	// Succeeded
-	return operations.NewCommenterTokenNewOK().WithPayload(&operations.CommenterTokenNewOKBody{CommenterToken: token})
+	return api_commenter.NewCommenterTokenNewOK().WithPayload(&api_commenter.CommenterTokenNewOKBody{CommenterToken: token})
 }
 
-func CommenterUpdate(params operations.CommenterUpdateParams, principal data.Principal) middleware.Responder {
+func CommenterUpdate(params api_commenter.CommenterUpdateParams, principal data.Principal) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -204,5 +202,5 @@ func CommenterUpdate(params operations.CommenterUpdateParams, principal data.Pri
 	}
 
 	// Succeeded
-	return operations.NewCommenterUpdateNoContent()
+	return api_commenter.NewCommenterUpdateNoContent()
 }

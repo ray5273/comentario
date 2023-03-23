@@ -16,10 +16,11 @@ const (
 
 	DBMaxAttempts = 10 // Max number of attempts to connect to the database
 
-	CookieNameUserToken   = "comentario_user_token"    // Cookie name to store the token of the authenticated (owner) user
-	CookieNameAuthSession = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
-	LangCookieDuration    = 365 * OneDay               // How long the language cookie stays valid
-	HeaderCommenterToken  = "X-Commenter-Token"        // Name of the header that contains the token of the authenticated commenter user
+	CookieNameUserSession     = "comentario_user_session"  // Cookie name to store the session of the authenticated user
+	UserSessionCookieDuration = 28 * OneDay                // How long the language cookie stays valid
+	CookieNameAuthSession     = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
+	LangCookieDuration        = 365 * OneDay               // How long the language cookie stays valid
+	HeaderCommenterToken      = "X-Commenter-Token"        // Name of the header that contains the token of the authenticated commenter user
 )
 
 var (

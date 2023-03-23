@@ -12,6 +12,8 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
 import { HomeComponent } from './home/home.component';
 import { DocEmbedDirective } from './_directives/doc-embed.directive';
 import { HttpInterceptorService } from './_services/http-interceptor.service';
+import { BASE_PATH } from '../generated-api';
+import { environment } from '../environments/environment';
 
 @NgModule({
     declarations: [
@@ -26,11 +28,13 @@ import { HttpInterceptorService } from './_services/http-interceptor.service';
     imports: [
         BrowserModule,
         HttpClientModule,
-        AppRoutingModule,
         FontAwesomeModule,
         NgbToastModule,
+        AppRoutingModule,
     ],
     providers: [
+        // Base API path
+        {provide: BASE_PATH, useValue: environment.apiBaseUrl},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
     ],
     bootstrap: [AppComponent],

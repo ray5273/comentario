@@ -206,23 +206,6 @@ definitions:
       type: "IdentityProviderMap"
     x-omitempty: false
 
-  owner:
-    description: Instance owner
-    type: object
-    properties:
-      ownerHex:
-        $ref: "#/definitions/hexId"
-      email:
-        type: string
-        format: email
-      name:
-        type: string
-      confirmedEmail:
-        type: boolean
-      joinDate:
-        type: string
-        format: date-time
-
   page:
     description: Page hosting comments
     type: object
@@ -251,6 +234,22 @@ definitions:
     type: string
     maxLength: 64
     pattern: 'root|[0-9a-f]{64}'
+
+  principal:
+    description: Authenticated user (excludes commenters for now)
+    type: object
+    readOnly: true
+    properties:
+      id:
+        $ref: "#/definitions/hexId"
+      email:
+        type: string
+        format: email
+      name:
+        type: string
+      isConfirmed:
+        type: boolean
+        x-omitempty: false
 
   sortPolicy:
     description: Sort policy
@@ -294,6 +293,8 @@ paths:
     options:
       operationId: Generic
       summary: Fake endpoint to provide generic errors
+      tags:
+        - ApiGeneric
       responses:
         400:
           description: Bad request
@@ -335,10 +336,12 @@ paths:
   # Auth
   #---------------------------------------------------------------------------------------------------------------------
 
-  /forgot:
+  /auth/login:
     post:
-      operationId: ForgotPassword
-      summary: Request owner or commenter password reset for specified email
+      operationId: AuthLogin
+      summary: Sign in as an existing user
+      tags:
+        - ApiAuth
       parameters:
         - in: body
           name: body
@@ -347,21 +350,66 @@ paths:
             type: object
             required:
               - email
-              - entity
+              - password
             properties:
               email:
                 type: string
                 format: email
-              entity:
-                $ref: "#/definitions/entity"
+              password:
+                type: string
+                minLength: 1
+                maxLength: 63
+      responses:
+        200:
+          description: Login successful
+          schema:
+            $ref: "#/definitions/principal"
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Current user
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /user:
+    get:
+      operationId: CurUserGet
+      summary: Fetch the currently authenticated user, if any
+      tags:
+        - ApiAuth
+      responses:
+        200:
+          description: User is authenticated, principal info returned
+          schema:
+            $ref: "#/definitions/principal"
+        204:
+          description: User is not authenticated
+
+  /user/pwdreset:
+    post:
+      operationId: CurUserPwdResetSendEmail
+      summary: Request user's password reset by sending them an email
+      tags:
+        - ApiAuth
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
       responses:
         204:
           description: Reset email has been sent, if the email is known
 
-  /reset:
-    post:
-      operationId: ResetPassword
-      summary: Reset owner's or commenter's password
+    put:
+      operationId: CurUserPwdResetChange
+      summary: Give the user a new password
+      tags:
+        - ApiAuth
       parameters:
         - in: body
           name: body
@@ -379,13 +427,8 @@ paths:
                 minLength: 1
                 maxLength: 63
       responses:
-        200:
+        204:
           description: Password has been reset
-          schema:
-            type: object
-            properties:
-              entity:
-                $ref: "#/definitions/entity"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Comments
@@ -395,6 +438,8 @@ paths:
     post:
       operationId: CommentApprove
       summary: Approve specified unapproved comment
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -416,6 +461,8 @@ paths:
     post:
       operationId: CommentCount
       summary: Request comment counts for specified paths on given domain
+      tags:
+        - ApiCommenter
       parameters:
         - in: body
           name: body
@@ -447,6 +494,8 @@ paths:
     post:
       operationId: CommentDelete
       summary: Delete specified comment
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -467,6 +516,9 @@ paths:
   /comment/edit:
     post:
       operationId: CommentEdit
+      summary: Update specified comment
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -496,6 +548,8 @@ paths:
     post:
       operationId: CommentList
       summary: Get a list of comments and commenters for the given domain/path combination
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -549,6 +603,8 @@ paths:
     post:
       operationId: CommentNew
       summary: Add a new comment
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -589,6 +645,8 @@ paths:
     post:
       operationId: CommentVote
       summary: Vote for specified comment
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -621,6 +679,8 @@ paths:
     post:
       operationId: CommenterLogin
       summary: Sign in as specified commenter
+      tags:
+        - ApiCommenter
       parameters:
         - in: body
           name: body
@@ -654,6 +714,8 @@ paths:
     post:
       operationId: CommenterLogout
       summary: Log the currently signed-in commenter out
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       responses:
@@ -664,6 +726,8 @@ paths:
     post:
       operationId: CommenterNew
       summary: Sign up as a new commenter
+      tags:
+        - ApiCommenter
       parameters:
         - in: body
           name: body
@@ -697,6 +761,8 @@ paths:
     get:
       operationId: CommenterPhoto
       summary: Get an avatar for given commenter in JPEG format
+      tags:
+        - ApiCommenter
       produces:
         - image/jpeg
       parameters:
@@ -717,6 +783,8 @@ paths:
     post:
       operationId: CommenterSelf
       summary: Request commenter's sign-in status and, if the commenter's signed in, their details
+      tags:
+        - ApiCommenter
       responses:
         204:
           description: Commenter is not signed in
@@ -734,6 +802,8 @@ paths:
     post:
       operationId: CommenterTokenNew
       summary: Request a new anonymous, unique commenter token
+      tags:
+        - ApiCommenter
       responses:
         200:
           description: Commenter token
@@ -747,6 +817,8 @@ paths:
     post:
       operationId: CommenterUpdate
       summary: Update commenter details
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -784,6 +856,8 @@ paths:
     post:
       operationId: DomainClear
       summary: Clear all domain's pages/comments/votes
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -808,6 +882,8 @@ paths:
     post:
       operationId: DomainDelete
       summary: Delete specified domain
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -832,6 +908,8 @@ paths:
     post:
       operationId: DomainExportBegin
       summary: Initiate domain data export
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -856,6 +934,8 @@ paths:
     get:
       operationId: DomainExportDownload
       summary: Download previously exported domain data
+      tags:
+        - ApiOwner
       produces:
         - application/gzip
       parameters:
@@ -878,6 +958,8 @@ paths:
     post:
       operationId: DomainImportCommento
       summary: Import comments and commenters into specified domain from a Commento export, downloaded from certain URL
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -913,6 +995,8 @@ paths:
     post:
       operationId: DomainImportDisqus
       summary: Import comments and commenters into specified domain from a Disqus export, downloaded from certain URL
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -948,6 +1032,8 @@ paths:
     post:
       operationId: DomainList
       summary: Get a list of registered domains
+      tags:
+        - ApiOwner
       security:
         - ownerCookie: []
       parameters:
@@ -978,6 +1064,8 @@ paths:
     post:
       operationId: DomainModeratorDelete
       summary: Delete specified domain moderator
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1006,6 +1094,8 @@ paths:
     post:
       operationId: DomainModeratorNew
       summary: Add a new domain moderator
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1034,6 +1124,8 @@ paths:
     post:
       operationId: DomainNew
       summary: Register a new domain
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1069,6 +1161,8 @@ paths:
     post:
       operationId: DomainSsoSecretNew
       summary: Generate an SSO secret for specified domain
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1098,6 +1192,8 @@ paths:
     post:
       operationId: DomainStatistics
       summary: Get comment and view statistics for specified domain
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1133,6 +1229,8 @@ paths:
     post:
       operationId: DomainUpdate
       summary: Update properties of specified domain
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1159,6 +1257,8 @@ paths:
     post:
       operationId: EmailGet
       summary: Get email properties for specified unsubscribe token
+      tags:
+        - ApiCommenter
       parameters:
         - in: body
           name: body
@@ -1183,6 +1283,8 @@ paths:
     get:
       operationId: EmailModerate
       summary: Apply a moderator action to specified comment
+      tags:
+        - ApiCommenter
       parameters:
         - name: unsubscribeSecretHex
           in: query
@@ -1211,6 +1313,8 @@ paths:
     post:
       operationId: EmailUpdate
       summary: Update properties of specified email
+      tags:
+        - ApiCommenter
       parameters:
         - in: body
           name: body
@@ -1234,6 +1338,8 @@ paths:
     get:
       operationId: OwnerConfirmHex
       summary: Confirm specified owner's email using the emailed token
+      tags:
+        - ApiOwner
       consumes:
         - application/x-www-form-urlencoded
       parameters:
@@ -1254,6 +1360,8 @@ paths:
     post:
       operationId: OwnerNew
       summary: Sign up as a new owner
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1287,66 +1395,12 @@ paths:
                 description: Whether a confirmation email was sent
                 x-omitempty: false
 
-  /owner/login:
-    post:
-      operationId: OwnerLogin
-      summary: Sign in as an existing owner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - email
-              - password
-            properties:
-              email:
-                type: string
-                format: email
-              password:
-                type: string
-                minLength: 1
-                maxLength: 63
-      responses:
-        200:
-          description: Owner has signed in successfully
-          schema:
-            type: object
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-
-  /owner/self:
-    post:
-      operationId: OwnerSelf
-      summary: Request owner's sign-in status and, if the owner's signed in, their details
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-      responses:
-        204:
-          description: Owner is not signed in
-        200:
-          description: Owner is signed in
-          schema:
-            type: object
-            properties:
-              owner:
-                $ref: "#/definitions/owner"
-
   /owner/delete:
     post:
       operationId: OwnerDelete
       summary: Delete current owner's account
+      tags:
+        - ApiOwner
       parameters:
         - in: body
           name: body
@@ -1370,6 +1424,8 @@ paths:
     post:
       operationId: PageUpdate
       summary: Update specified page's properties
+      tags:
+        - ApiCommenter
       security:
         - commenterTokenHeader: []
       parameters:
@@ -1395,6 +1451,8 @@ paths:
     get:
       operationId: OauthInit
       summary: Initiate signing in using federated authentication
+      tags:
+        - ApiCommenter
       produces:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
@@ -1416,6 +1474,8 @@ paths:
     get:
       operationId: OauthCallback
       summary: Endpoint that gets called back by the federated authentication provider
+      tags:
+        - ApiCommenter
       produces:
         - text/html
       parameters:
@@ -1430,6 +1490,8 @@ paths:
     get:
       operationId: OauthSsoInit
       summary: Initiate signing in using federated SSO authentication
+      tags:
+        - ApiCommenter
       produces:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
@@ -1450,6 +1512,8 @@ paths:
     get:
       operationId: OauthSsoCallback
       summary: Endpoint that gets called back by the SSO authentication provider
+      tags:
+        - ApiCommenter
       produces:
         - text/html
       parameters:
@@ -1478,6 +1542,8 @@ paths:
     post:
       operationId: E2eReset
       summary: Reset the backend (all settings and database) to testing defaults
+      tags:
+        - ApiE2e
       responses:
         204:
           description: The backend has been successfully reset

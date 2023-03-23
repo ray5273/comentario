@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -16,17 +18,44 @@ import (
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("handlers")
 
-// ExtractOwnerTokenFromCookie extracts an owner token from the corresponding cookie, contained in the given request.
-// Returns an empty string on error
-func ExtractOwnerTokenFromCookie(r *http.Request) models.HexID {
-	// Extract a token from the cookie
-	if cookie, err := r.Cookie(util.CookieNameUserToken); err == nil {
-		// Validate the token
-		if token := models.HexID(cookie.Value); token.Validate(nil) == nil {
-			return token
-		}
+// GetUserFromCookie parses the session cookie contained in the given request, validates it and returns the
+// corresponding user
+func GetUserFromCookie(r *http.Request) (*data.UserOwner, error) {
+	// Extract session data from the cookie
+	cookie, err := r.Cookie(util.CookieNameUserSession)
+	if err != nil {
+		return nil, err
 	}
-	return ""
+
+	// Check it's exactly 128 characters (64 + 64) long
+	if l := len(cookie.Value); l != 128 {
+		return nil, fmt.Errorf("invalid cookie value length (%d), want 128", l)
+	}
+
+	// Extract ID and token
+	userID := models.HexID(cookie.Value[:64])
+	token := models.HexID(cookie.Value[64:])
+
+	// Validate the data
+	if err = userID.Validate(nil); err != nil {
+		return nil, err
+	}
+	if err = token.Validate(nil); err != nil {
+		return nil, err
+	}
+
+	// Find the user
+	user, err := svc.TheUserService.FindOwnerByToken(token)
+	if err != nil {
+		return nil, err
+	}
+
+	// Verify the token belongs to the user
+	if user.HexID != userID {
+		return nil, fmt.Errorf("session doesn't belong to the user")
+	}
+
+	return user, nil
 }
 
 // closeParentWindowResponse returns a responder that renders an HTML script closing the parent window
@@ -105,29 +134,29 @@ func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
 
 // respBadRequest returns a responder that responds with HTTP Bad Request error
 func respBadRequest(err error) middleware.Responder {
-	return operations.NewGenericBadRequest().WithPayload(&operations.GenericBadRequestBody{Details: err.Error()})
+	return api_generic.NewGenericBadRequest().WithPayload(&api_generic.GenericBadRequestBody{Details: err.Error()})
 }
 
 // respForbidden returns a responder that responds with HTTP Forbidden error
 func respForbidden(err error) middleware.Responder {
-	return operations.NewGenericForbidden().WithPayload(&operations.GenericForbiddenBody{Details: err.Error()})
+	return api_generic.NewGenericForbidden().WithPayload(&api_generic.GenericForbiddenBody{Details: err.Error()})
 }
 
 // respInternalError returns a responder that responds with HTTP Internal Server Error
 func respInternalError() middleware.Responder {
-	return operations.NewGenericInternalServerError()
+	return api_generic.NewGenericInternalServerError()
 }
 
 // respNotFound returns a responder that responds with HTTP Not Found error
 func respNotFound() middleware.Responder {
-	return operations.NewGenericNotFound()
+	return api_generic.NewGenericNotFound()
 }
 
 // respServiceError translates the provided error, returned by a service, into an appropriate error responder
 func respServiceError(err error) middleware.Responder {
 	switch err {
 	case svc.ErrNotFound:
-		return operations.NewGenericNotFound()
+		return api_generic.NewGenericNotFound()
 	}
 
 	// Not recognised: return an internal error response
@@ -136,5 +165,5 @@ func respServiceError(err error) middleware.Responder {
 
 // respUnauthorized returns a responder that responds with HTTP Unauthorized error
 func respUnauthorized(err error) middleware.Responder {
-	return operations.NewGenericUnauthorized().WithPayload(&operations.GenericUnauthorizedBody{Details: err.Error()})
+	return api_generic.NewGenericUnauthorized().WithPayload(&api_generic.GenericUnauthorizedBody{Details: err.Error()})
 }
