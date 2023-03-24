@@ -29,7 +29,7 @@ export class DocEmbedDirective implements OnChanges {
 
     ngOnChanges(changes: SimpleChanges): void {
         // Do not bother requesting pages during an end-2-end test
-        if (changes['docEmbed'] && !this.cfgSvc.isUnderTest && this.docEmbed) {
+        if (changes.docEmbed && !this.cfgSvc.isUnderTest && this.docEmbed) {
             const e = this.element.nativeElement;
 
             // Load the document from the documentation website, bypassing the error handler (since it's a less important resource)
