@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { AppRoutingModule } from './app-routing.module';
@@ -14,6 +15,7 @@ import { DocEmbedDirective } from './_directives/doc-embed.directive';
 import { HttpInterceptorService } from './_services/http-interceptor.service';
 import { BASE_PATH } from '../generated-api';
 import { environment } from '../environments/environment';
+import { ToolsModule } from './_modules/tools/tools.module';
 
 @NgModule({
     declarations: [
@@ -28,9 +30,12 @@ import { environment } from '../environments/environment';
     imports: [
         BrowserModule,
         HttpClientModule,
+        FormsModule,
+        ReactiveFormsModule,
         FontAwesomeModule,
         NgbToastModule,
         AppRoutingModule,
+        ToolsModule,
     ],
     providers: [
         // Base API path

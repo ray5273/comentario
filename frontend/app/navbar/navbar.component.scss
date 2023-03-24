@@ -1,3 +1,9 @@
+@import "../../scss/vars";
+
+.navbar {
+    background-color: var(--app-navbar-bg-color);
+}
+
 .nav-row {
     display: flex;
 

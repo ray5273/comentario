@@ -1,0 +1,66 @@
+<div class="d-block d-md-flex">
+    <!-- Dark background underneath the normal (not fixed/sticky) sidebar that covers a possible gap between the real
+         sidebar and the footer. Relevant when the screen is taller than the sidebar, since the footer will be at the
+         screen's bottom. -->
+    <div class="cc-sidebar-filler"></div>
+
+    <!-- Sidebar outer container, either normal (wide screen) or fixed -->
+    <nav id="sidebarMenu" class="cc-sidebar-container" [class.expanded]="expanded">
+        <!-- Sidebar content, either sticky (wide screen) or scrollable -->
+        <div class="sidebar-content">
+            <!-- Logo -->
+            <div class="cc-logo">
+                <a [routerLink]="Paths.home" role="button">
+                    <img src="images/navbar-logo.png" width="192" height="48" alt="Comentario">
+                </a>
+            </div>
+
+            <!-- Regular user's items -->
+            <ul class="nav">
+                <!-- Show/collapse button -->
+                <li class="nav-item d-md-none mw-100">
+                    <a [class.collapsed]="!expanded" [attr.aria-expanded]="expanded" (click)="expanded = !expanded"
+                       class="cc-toggler collapse-toggler" role="button" id="sidebarToggler">
+                        <fa-icon class="cc-icon" [icon]="faChevronRight"></fa-icon>
+                    </a>
+                </li>
+                <!-- Dashboard -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.dashboard" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faTachometerAlt"></fa-icon>
+                        <span class="cc-hide-collapsed" i18n>Dashboard</span>
+                    </a>
+                </li>
+                <!-- Domains -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.domains" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                        <span class="cc-hide-collapsed" i18n>Domains</span>
+                    </a>
+                </li>
+            </ul>
+
+            <!-- Logout -->
+            <ul class="nav">
+                <li class="nav-item cc-divider">
+                    <h2 class="cc-hide-collapsed" i18n>Logout</h2>
+                </li>
+                <li class="nav-item">
+                    <a appConfirm="Are you sure you want to logout?" confirmAction="Logout" [confirmIcon]="faQuestionCircle"
+                       (confirmed)="logout()" role="button" class="cc-link" i18n-appConfirm i18n-confirmAction>
+                        <fa-icon class="cc-icon" [icon]="faSignOutAlt"></fa-icon>
+                        <span class="cc-hide-collapsed" i18n>Logout</span>
+                    </a>
+                </li>
+            </ul>
+        </div>
+    </nav>
+
+    <!-- Sidebar backdrop, only on a small screen and when the sidebar is expanded -->
+    <div class="cc-backdrop" [class.show]="expanded" (click)="expanded = false"></div>
+
+    <!-- Main page content -->
+    <div class="cc-content">
+        <router-outlet></router-outlet>
+    </div>
+</div>

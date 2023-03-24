@@ -122,8 +122,8 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 
 	// Prepare a map of configured identity providers: federated ones should only be enabled when configured
 	idps := domain.Idps.Clone()
-	for idp, gothIdP := range util.FederatedIdProviders {
-		idps[idp] = idps[idp] && goth.GetProviders()[gothIdP] != nil
+	for _, idp := range data.FederatedIdProviders {
+		idps[idp.ID] = idps[idp.ID] && goth.GetProviders()[idp.GothID] != nil
 	}
 
 	// Fetch the page

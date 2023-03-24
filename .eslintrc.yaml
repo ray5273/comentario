@@ -91,6 +91,7 @@ overrides:
           format:
             - camelCase
             - UPPER_CASE
+      '@typescript-eslint/no-non-null-assertion': off
       jsdoc/newline-after-description:
         - 'off'
       max-len:

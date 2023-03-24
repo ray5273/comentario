@@ -37,20 +37,23 @@ var commenterTokens = &util.SafeStringMap[models.HexID]{}
 
 // OauthInit initiates a federated authentication process
 func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
-	// Map the provider to a goth provider
-	gothIdP := util.FederatedIdProviders[params.Provider]
-	if gothIdP == "" {
-		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
-	}
+	var provider goth.Provider
 
-	// Get the registered provider instance by its name (coming from the path parameter)
-	provider, err := goth.GetProvider(gothIdP)
-	if err != nil {
-		return respBadRequest(fmt.Errorf("%s (%s)", util.ErrorOAuthNotConfigured.Error(), params.Provider))
+	// Map the provider to a goth provider
+	if idp, ok := data.FederatedIdProviders[params.Provider]; !ok {
+		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
+
+	} else {
+		// Get the registered provider instance by its name (coming from the path parameter)
+		var err error
+		provider, err = goth.GetProvider(idp.GothID)
+		if err != nil {
+			return respBadRequest(fmt.Errorf("%s (%s)", util.ErrorOAuthNotConfigured.Error(), params.Provider))
+		}
 	}
 
 	// Verify the provided commenter token
-	if _, err = svc.TheUserService.FindCommenterByToken(models.HexID(params.CommenterToken)); err != nil && err != svc.ErrNotFound {
+	if _, err := svc.TheUserService.FindCommenterByToken(models.HexID(params.CommenterToken)); err != nil && err != svc.ErrNotFound {
 		return oauthFailure(err)
 	}
 
@@ -92,21 +95,23 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 }
 
 func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responder {
-	// Map the provider to a goth provider
-	gothIdP := util.FederatedIdProviders[params.Provider]
-	if gothIdP == "" {
-		return respBadRequest(util.ErrorUnknownIdP)
-	}
+	var provider goth.Provider
 
-	// Get the registered provider instance by its name (coming from the path parameter)
-	provider, err := goth.GetProvider(gothIdP)
-	if err != nil {
-		logger.Debugf("Failed to fetch provider '%s': %v", params.Provider, err)
-		return oauthFailure(fmt.Errorf("provider not configured: %s", params.Provider))
+	// Map the provider to a goth provider
+	if idp, ok := data.FederatedIdProviders[params.Provider]; !ok {
+		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
+
+	} else {
+		// Get the registered provider instance by its name (coming from the path parameter)
+		var err error
+		provider, err = goth.GetProvider(idp.GothID)
+		if err != nil {
+			logger.Debugf("Failed to fetch provider '%s': %v", params.Provider, err)
+			return oauthFailure(fmt.Errorf("provider not configured: %s", params.Provider))
+		}
 	}
 
 	// Obtain the auth session ID from the cookie
-	var sess goth.Session
 	var sessID models.HexID
 	if cookie, err := params.HTTPRequest.Cookie(util.CookieNameAuthSession); err != nil {
 		logger.Debugf("Auth session cookie error: %v", err)
@@ -116,8 +121,10 @@ func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responde
 	}
 
 	// Find and delete the session
+	var sess goth.Session
+	var err error
 	if sessData, ok := oauthSessions.Take(sessID); !ok {
-		logger.Debugf("No auth session found with ID=%v: %v", sessID, err)
+		logger.Debugf("No auth session found with ID=%v", sessID)
 		return oauthFailure(errors.New("auth session not found"))
 
 		// Recover the original provider session

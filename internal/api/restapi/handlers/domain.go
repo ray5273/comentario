@@ -54,6 +54,7 @@ func DomainDelete(params api_owner.DomainDeleteParams) middleware.Responder {
 	return api_owner.NewDomainDeleteNoContent()
 }
 
+// DomainList returns a list of domain belonging to the user
 func DomainList(_ api_owner.DomainListParams, principal data.Principal) middleware.Responder {
 	// Fetch domains by the owner
 	domains, err := svc.TheDomainService.ListByOwner(principal.GetUser().HexID)
@@ -63,15 +64,12 @@ func DomainList(_ api_owner.DomainListParams, principal data.Principal) middlewa
 
 	// Prepare an IdentityProviderMap
 	idps := exmodels.IdentityProviderMap{}
-	for idp, gothIdP := range util.FederatedIdProviders {
-		idps[idp] = goth.GetProviders()[gothIdP] != nil
+	for _, idp := range data.FederatedIdProviders {
+		idps[idp.ID] = goth.GetProviders()[idp.GothID] != nil
 	}
 
 	// Succeeded
-	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{
-		ConfiguredOauths: idps,
-		Domains:          domains,
-	})
+	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{Domains: domains})
 }
 
 func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams) middleware.Responder {

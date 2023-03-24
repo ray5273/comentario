@@ -1,0 +1,12 @@
+<section class="container">
+    <!-- Heading -->
+    <h1 i18n="heading">Domains</h1>
+
+    <!-- Domain list -->
+    <div class="list-group">
+        <a *ngFor="let d of domains" [routerLink]="d.domain" class="list-group-item list-group-item-action">
+            <div class="fw-bold">{{ d.name }}</div>
+            <div>{{ d.domain }}</div>
+        </a>
+    </div>
+</section>

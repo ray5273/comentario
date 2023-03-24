@@ -27,12 +27,6 @@ var (
 	WrongAuthDelay = 10 * time.Second // Delay to exercise on a wrong email, password etc.
 
 	// FederatedIdProviders maps all known federated identity providers from our IDs to goth IDs
-	FederatedIdProviders = map[string]string{
-		"github":  "github",
-		"gitlab":  "gitlab",
-		"google":  "google",
-		"twitter": "twitter",
-	}
 
 	// UILanguageTags stores tags of supported frontend languages
 	UILanguageTags = []language.Tag{

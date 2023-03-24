@@ -1,0 +1,64 @@
+// Fonts
+$font-family-sans-serif: Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$headings-font-family:   Volkhov, serif;
+
+// Theme palette
+$primary:   #4950d8;
+$secondary: adjust-color($primary, $saturation: -25%, $lightness: +16%);
+$success:   #198754;
+$info:      #6610f2;
+$warning:   #ffc107;
+$danger:    #dc3545;
+$light:     #ffffff;
+$dark:      #212529;
+// -- Theme palette custom extensions
+$cta:       #ec8100;
+
+// Custom vars
+$navbar-bg-color: adjust-color($primary, $saturation: - 33%, $lightness: +36%);
+$sidebar-bg-color: $navbar-bg-color;
+$footer-bg-color: adjust-color($primary, $saturation: -33%, $lightness: 0%);
+
+// Extend the (default) theme color with the cta color
+$theme-colors: (
+    "primary":   $primary,
+    "secondary": $secondary,
+    "success":   $success,
+    "info":      $info,
+    "warning":   $warning,
+    "danger":    $danger,
+    "light":     $light,
+    "dark":      $dark,
+
+    // Custom colours
+    "cta":       $cta,
+);
+
+// Standard color overrides
+$input-placeholder-color:       #bcbcbc; // Make it a bit lighter
+$toast-header-color:            #fff;
+$toast-header-background-color: transparent;
+$toast-box-shadow:              0 .25rem 3rem rgba(#000, .3);
+$code-color:                    $info;
+
+// Remove underlining from all links
+$link-decoration: none;
+
+// Bootstrap var overrides
+$navbar-padding-x: 0.5rem;
+$navbar-padding-y: 0.5rem;
+
+// Import Bootstrap functions and mixins
+@import "../../node_modules/bootstrap/scss/functions";
+@import "../../node_modules/bootstrap/scss/variables";
+@import "../../node_modules/bootstrap/scss/maps";
+@import "../../node_modules/bootstrap/scss/mixins";
+@import "../../node_modules/bootstrap/scss/utilities";
+
+// Properties
+:root {
+    --app-sidebar-bg-color: #{$sidebar-bg-color};
+    --app-sidebar-color:    #0000007f;
+    --app-navbar-bg-color:  #{$navbar-bg-color};
+    --app-footer-bg-color:  #{$footer-bg-color};
+}

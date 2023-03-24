@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/go-openapi/strfmt"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"time"
 )
@@ -16,6 +17,16 @@ var AnonymousCommenter = UserCommenter{
 		Name:  "Anonymous",
 	},
 }
+
+// FederatedIdProviders accumulates information about all supported ID providers
+var FederatedIdProviders = map[string]exmodels.FederatedIdProviderInfo{
+	"github":  {ID: "github", Name: "GitHub", GothID: "github"},
+	"gitlab":  {ID: "gitlab", Name: "GitLab", GothID: "gitlab"},
+	"google":  {ID: "google", Name: "Google", GothID: "google"},
+	"twitter": {ID: "twitter", Name: "Twitter", GothID: "twitter"},
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
 
 // Principal represents user's identity for the API
 type Principal interface {

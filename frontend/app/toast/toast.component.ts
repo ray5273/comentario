@@ -2,7 +2,7 @@ import { ChangeDetectorRef, Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastService } from '../_services/toast.service';
 import { Toast } from '../_models/toast';
-import { Paths } from '../consts';
+import { Paths } from '../_utils/consts';
 
 @Component({
     selector: 'app-toast',

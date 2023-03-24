@@ -1,62 +1,18 @@
 package handlers
 
 import (
-	"fmt"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"time"
 )
 
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("handlers")
-
-// GetUserFromCookie parses the session cookie contained in the given request, validates it and returns the
-// corresponding user
-func GetUserFromCookie(r *http.Request) (*data.UserOwner, error) {
-	// Extract session data from the cookie
-	cookie, err := r.Cookie(util.CookieNameUserSession)
-	if err != nil {
-		return nil, err
-	}
-
-	// Check it's exactly 128 characters (64 + 64) long
-	if l := len(cookie.Value); l != 128 {
-		return nil, fmt.Errorf("invalid cookie value length (%d), want 128", l)
-	}
-
-	// Extract ID and token
-	userID := models.HexID(cookie.Value[:64])
-	token := models.HexID(cookie.Value[64:])
-
-	// Validate the data
-	if err = userID.Validate(nil); err != nil {
-		return nil, err
-	}
-	if err = token.Validate(nil); err != nil {
-		return nil, err
-	}
-
-	// Find the user
-	user, err := svc.TheUserService.FindOwnerByToken(token)
-	if err != nil {
-		return nil, err
-	}
-
-	// Verify the token belongs to the user
-	if user.HexID != userID {
-		return nil, fmt.Errorf("session doesn't belong to the user")
-	}
-
-	return user, nil
-}
 
 // closeParentWindowResponse returns a responder that renders an HTML script closing the parent window
 func closeParentWindowResponse() middleware.Responder {

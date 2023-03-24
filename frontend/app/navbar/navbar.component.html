@@ -1,4 +1,4 @@
-<nav id="app-navbar" class="navbar navbar-expand flex-wrap flex-md-nowrap" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
+<nav id="app-navbar" class="navbar navbar-expand navbar-light flex-wrap flex-md-nowrap" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
     <!-- Logo -->
     <div class="nav-row">
         <a [routerLink]="Paths.home" id="navbarLogo"><img src="images/navbar-logo.png" width="192" height="48" alt="Logo"></a>
@@ -13,9 +13,14 @@
 
         <ul class="navbar-nav">
             <!-- User button -->
-            <li class="nav-item" *ngIf="loggedIn else signin" routerLink="TODO">
+            <li class="nav-item" *ngIf="authSvc.principal | async as p else signin" [routerLink]="Paths.manage.dashboard">
                 <a class="nav-link btn btn-outline-secondary d-flex align-items-center" id="userMenu">
-                    USER NAME
+                    <!-- User icon -->
+                    <fa-icon [icon]="faUser" class="me-1"></fa-icon>
+                    <!-- User's name -->
+                    <div class="text-truncate position-relative ms-1" style="max-width: 100px">
+                        <ng-container>{{ p.name }}</ng-container>
+                    </div>
                 </a>
             </li>
             <!-- Sign in -->

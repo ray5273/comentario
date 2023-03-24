@@ -1,0 +1,179 @@
+@import 'scss/vars';
+
+$sidebar-size-normal: 222px; // Logo 192px + 2 * 15px (padding)
+$sidebar-size-collapsed: 40px;
+
+:host {
+    display: block;
+}
+
+.cc-sidebar-filler {
+    position: fixed;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 178; // Behind the sidebar-container
+    width: $sidebar-size-normal;
+    background-color: var(--app-sidebar-bg-color);
+    transition: width 0.3s ease-in-out;
+
+    @include media-breakpoint-down(md) {
+        width: $sidebar-size-collapsed;
+    }
+}
+.cc-sidebar-container {
+    width: $sidebar-size-normal;
+    background-color: var(--app-sidebar-bg-color);
+    color: var(--app-sidebar-color);
+    transition: width 0.3s ease-in-out;
+    z-index: 179; // Behind the footer
+
+    @include media-breakpoint-down(md) {
+        position: fixed;
+        top: 0;
+        bottom: 0;
+        left: 0;
+        z-index: 999; // On top of all panels, but behind all overlays
+        box-shadow: 0 0 5px rgba(0, 0, 0, .666);
+
+        &:not(.expanded) {
+            width: $sidebar-size-collapsed;
+
+            .cc-hide-collapsed {
+                opacity: 0;
+            }
+            .cc-vshrink-collapsed {
+                height: 0;
+            }
+            .cc-logo {
+                margin-left: -167px;
+            }
+            .cc-divider:before {
+                opacity: 1;
+            }
+        }
+    }
+}
+
+.sidebar-content {
+    display: flex;
+    flex-direction: column;
+    // Always allocate room for child navs
+    flex: 0 0 auto;
+    overflow-x: hidden;
+    overflow-y: auto;
+    // Enable scrolling on small screens (ignored when position is sticky)
+    max-height: 100%;
+
+    @include media-breakpoint-up(md) {
+        position: sticky;
+        top: 0;
+    }
+}
+
+.cc-logo {
+    padding: 15px;
+    transition: all 0.3s linear;
+}
+
+.cc-hide-collapsed {
+    transition: opacity 0.3s linear;
+}
+.cc-vshrink-collapsed {
+    overflow: hidden;
+    line-height: 1.1em;
+    height: 1.1em;
+    transition: height 0.3s linear;
+}
+
+.cc-divider {
+    position: relative;
+
+    &:before {
+        content: '';
+        position: absolute;
+        top: 0.5em;
+        left: 6px;
+        right: 6px;
+        border-top: 1px #666 solid;
+        opacity: 0;
+    }
+}
+
+h2 {
+    font-family: $font-family-sans-serif;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+    margin: 0;
+    padding: 3px 12px;
+}
+
+.nav {
+    flex-direction: column;
+    flex-wrap: nowrap;
+    flex-shrink: 0;
+    overflow-x: hidden;
+}
+
+.cc-link, .cc-toggler {
+    display: flex;
+    align-items: center;
+    white-space: nowrap;
+    padding: 0.5rem 0;
+    color: var(--app-sidebar-color);
+    text-decoration: none;
+
+    &:hover, &:focus {
+        text-decoration: none;
+        background-color: transparentize($primary, 0.75);
+    }
+    &.active {
+        background-color: $primary;
+        color: $light;
+    }
+}
+
+.cc-link {
+    min-width: $sidebar-size-normal;
+}
+
+.cc-toggler {
+    justify-content: center;
+}
+
+.cc-icon {
+    width: $sidebar-size-collapsed;
+    text-align: center;
+}
+
+.cc-backdrop {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 0;
+    background-color: #000000;
+    opacity: 0;
+    transition: opacity 0.3s ease-in-out;
+    z-index: 998; // Right beneath the floating sidebar
+
+    @include media-breakpoint-down(md) {
+        &.show {
+            width: 100%;
+            opacity: 0.6;
+        }
+    }
+}
+
+.cc-content {
+    width: calc(100% - $sidebar-size-normal);
+    box-sizing: border-box;
+
+    @include media-breakpoint-down(md) {
+        width: 100%;
+        padding-left: $sidebar-size-collapsed;
+    }
+}

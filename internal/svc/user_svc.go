@@ -35,6 +35,8 @@ type UserService interface {
 	DeleteCommenterSession(id, token models.HexID) error
 	// DeleteOwnerByID removes an owner user by their hex ID
 	DeleteOwnerByID(id models.HexID) error
+	// DeleteOwnerSession removes an owner session by hex ID and token from the database
+	DeleteOwnerSession(id, token models.HexID) error
 	// DeleteResetTokens removes all password reset tokens for the given user
 	DeleteResetTokens(userID models.HexID) error
 	// FindCommenterByEmail finds and returns the first commenter having the specified email only, ignoring the identity
@@ -320,6 +322,19 @@ func (svc *userService) DeleteOwnerByID(id models.HexID) error {
 	// Delete the owner user
 	if err := db.Exec("delete from owners where ownerhex=$1;", id); err != nil {
 		logger.Errorf("userService.DeleteOwnerByID: Exec() failed for owners: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) DeleteOwnerSession(id, token models.HexID) error {
+	logger.Debugf("userService.DeleteOwnerSession(%s, %s)", id, token)
+
+	// Delete the record
+	if err := db.Exec("delete from ownersessions where ownerhex=$1 and ownertoken=$2;", id, token); err != nil {
+		logger.Errorf("userService.DeleteOwnerSession: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

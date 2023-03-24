@@ -1,5 +1,3 @@
-// This file is safe to edit. Once it exists it will not be overwritten
-
 package restapi
 
 import (
@@ -74,8 +72,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	}
 
 	// Set up auth handlers
-	api.CommenterTokenHeaderAuth = AuthCommenterByTokenHeader
-	api.OwnerCookieAuth = AuthOwnerByCookieHeader
+	api.CommenterTokenHeaderAuth = handlers.AuthCommenterByTokenHeader
+	api.UserCookieAuth = handlers.AuthUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Auth API
@@ -85,6 +83,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIAuthCurUserPwdResetSendEmailHandler = api_auth.CurUserPwdResetSendEmailHandlerFunc(handlers.CurUserPwdResetSendEmail)
 	api.APIAuthCurUserPwdResetChangeHandler = api_auth.CurUserPwdResetChangeHandlerFunc(handlers.CurUserPwdResetChange)
 	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
+	api.APIAuthAuthLogoutHandler = api_auth.AuthLogoutHandlerFunc(handlers.AuthLogout)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Commenter API
@@ -121,6 +120,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	//------------------------------------------------------------------------------------------------------------------
 	// Owner API
 	//------------------------------------------------------------------------------------------------------------------
+
+	// Config
+	api.APIOwnerConfigClientGetHandler = api_owner.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
 
 	// Domain
 	api.APIOwnerDomainClearHandler = api_owner.DomainClearHandlerFunc(handlers.DomainClear)
@@ -224,6 +226,9 @@ func configureE2eMode(api *operations.ComentarioAPI) error {
 		}
 		return api_e2e.NewE2eResetNoContent()
 	})
+
+	// Reduce delays during end-2-end tests
+	util.WrongAuthDelay = 0
 
 	// Succeeded
 	return nil

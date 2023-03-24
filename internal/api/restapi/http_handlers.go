@@ -16,8 +16,7 @@ import (
 )
 
 var (
-	ErrInternal     = errors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-	ErrUnauthorised = errors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	ErrInternal = errors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
 
 // notFoundBypassWriter is an object that pretends to be a ResponseWriter but refrains from writing a 404 response

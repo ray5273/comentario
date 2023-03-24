@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { merge, Observable, of, Subject } from 'rxjs';
+import { merge, Observable, of, Subject, tap } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, take } from 'rxjs/operators';
 import { ApiAuthService, Principal } from '../../generated-api';
 
@@ -57,8 +57,7 @@ export class AuthService {
      * Log out the current user and return an observable for successful completion.
      */
     logout(): Observable<void> {
-        return of(undefined);
-        // TODO return this.api.curUserLogout().pipe(tap(() => this._update$.next(null)));
+        return this.api.authLogout().pipe(tap(() => this._update$.next(null)));
     }
 
     /**
@@ -73,7 +72,11 @@ export class AuthService {
      * @private
      */
     private safeFetchPrincipal(): Observable<Principal | null> {
-        // In case of error (shouldn't normally happen) we simply consider user isn't authenticated
-        return this.api.curUserGet().pipe(catchError(() => of(null)));
+        return this.api.curUserGet()
+            .pipe(
+                // In case of error (shouldn't normally happen) we simply consider user isn't authenticated
+                catchError(() => of(null)),
+                // Map all falsy values to null, too
+                map(p => p || null));
     }
 }

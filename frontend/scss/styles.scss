@@ -1,0 +1,149 @@
+@import url('https://fonts.googleapis.com/css2?family=Volkhov:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+// Common vars
+@import "vars";
+
+// Import Bootstrap
+@import "../../node_modules/bootstrap/scss/bootstrap";
+
+// Override Bootstrap classes
+.btn-primary, .btn-secondary, .btn-cta {
+    --bs-btn-color:        #fff;
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-cta {
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+
+// Give all root elements full height so that we can position the footer at the bottom of the screen
+html, body, app-root {
+    height: 100%;
+}
+
+section {
+    padding-top: $spacer;
+    margin-bottom: 3rem;
+
+    // Section title
+    &>h1, &>h2, &>h3 {
+        margin-bottom: $spacer;
+    }
+
+    &.danger {
+        border-top: #f67d8a 2px dashed;
+        color: #721c24;
+    }
+}
+
+// Center all headings
+@for $h from 1 through 6 {
+    h#{$h} {
+        text-align: center;
+    }
+}
+
+// Collapse toggler
+.collapse-toggler {
+
+    svg {
+        transform: rotate(180deg);
+        transition: all ease 0.333s;
+    }
+
+    &.collapsed {
+        svg {
+            transform: rotate(0deg);
+        }
+    }
+}
+
+// Toast
+.toast {
+    overflow: hidden; // Fix the lower corners of the body sticking over the rounded corners of the toast
+}
+.toast-body {
+    background-color: rgba($white, .8);
+    display: flex;
+}
+
+// Separate block from the previous one: XS by a top margin, from SM up by a left border
+.separate-sm-left {
+    margin-top: 1.5rem;
+
+    @include media-breakpoint-up(sm) {
+        border-left: 1px solid #dee2e6;
+        margin-top: 0;
+    }
+}
+
+// Animations
+.fade-in {
+    animation: fade-in-animation 0.5s ease forwards 1;
+}
+.fade-in-1s {
+    animation: fade-in-animation 1s ease forwards 1;
+}
+.fade-in-3s {
+    animation: fade-in-animation 3s ease forwards 1;
+}
+@keyframes fade-in-animation {
+    0%   { opacity: 0; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+// Spinners
+.is-spinning-sm {
+    pointer-events: none;
+
+    &::before {
+        content: '';
+        display: inline-block;
+        width: 1rem;
+        height: 1rem;
+        margin-left: 0.25rem;
+        margin-right: 0.25rem;
+        vertical-align: -0.125em;
+        border: 0.2em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: .75s linear infinite spinner-border; // Defined by Bootstrap
+    }
+}
+.is-spinning-lg {
+    position: relative;
+    min-height: 100px;
+    pointer-events: none;
+
+    // Animated border
+    &::before {
+        content: '';
+        position: absolute;
+        left: 50%;
+        top: 50%;
+        width: 3rem;
+        height: 3rem;
+        margin-left: -1.5rem;
+        margin-top: -1.5rem;
+        box-sizing: border-box;
+        z-index: 1000;
+        border: 0.3em solid currentColor;
+        border-right-color: transparent;
+        border-radius: 50%;
+        animation: .75s linear infinite spinner-border; // Defined by Bootstrap
+    }
+
+    // Translucent backdrop
+    &::after {
+        content: '';
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(255, 255, 255, 0.8);
+        z-index: 999;
+    }
+}

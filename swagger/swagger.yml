@@ -17,14 +17,26 @@ securityDefinitions:
     in: header
     name: X-Commenter-Token
 
-  # Cookie authentication for owners. Uses the apiKey type for the lack of a proper cookie-based authentication in
-  # Swagger 2
-  ownerCookie:
+  # Cookie authentication for users (other than commenters). Uses the apiKey type for the lack of a proper cookie-based
+  # authentication in Swagger 2
+  userCookie:
     type: apiKey
     in: header
     name: Cookie
 
 definitions:
+
+  clientConfig:
+    description: Client configuration
+    type: object
+    readOnly: true
+    required:
+      - idps
+    properties:
+      idps:
+        type: array
+        items:
+          $ref: "#/definitions/federatedIdProvider"
 
   comment:
     type: object
@@ -190,6 +202,30 @@ definitions:
       - none
       - pending-moderation
 
+  federatedIdpId:
+    description: Federated identity provider ID
+    type: string
+    enum:
+      - github
+      - gitlab
+      - google
+      - twitter
+
+  federatedIdProvider:
+    description: Federated identity provider info
+    type: object
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: FederatedIdProviderInfo
+    properties:
+      id:
+        $ref: "#/definitions/federatedIdpId"
+        description: Provider ID
+      name:
+        type: string
+        description: Provider name
+
   hexId:
     description: ID consisting of 64 hex digits
     type: string
@@ -333,6 +369,22 @@ paths:
                 type: string
 
   #---------------------------------------------------------------------------------------------------------------------
+  # Config
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /config/client:
+    get:
+      operationId: ConfigClientGet
+      summary: Obtain client configuration
+      tags:
+        - ApiOwner
+      responses:
+        200:
+          description: Client configuration
+          schema:
+            $ref: "#/definitions/clientConfig"
+
+  #---------------------------------------------------------------------------------------------------------------------
   # Auth
   #---------------------------------------------------------------------------------------------------------------------
 
@@ -364,6 +416,18 @@ paths:
           description: Login successful
           schema:
             $ref: "#/definitions/principal"
+
+  /auth/logout:
+    post:
+      operationId: AuthLogout
+      summary: Log the current user out
+      tags:
+        - ApiAuth
+      security:
+        - userCookie: []
+      responses:
+        204:
+          description: User has been logged out
 
   #---------------------------------------------------------------------------------------------------------------------
   # Current user
@@ -1035,18 +1099,7 @@ paths:
       tags:
         - ApiOwner
       security:
-        - ownerCookie: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
+        - userCookie: []
       responses:
         200:
           description: List of domains and configured identity providers
@@ -1057,8 +1110,6 @@ paths:
                 type: array
                 items:
                   $ref: "#/definitions/domain"
-              configuredOauths:
-                $ref: "#/definitions/idpMap"
 
   /domain/moderator/delete:
     post:

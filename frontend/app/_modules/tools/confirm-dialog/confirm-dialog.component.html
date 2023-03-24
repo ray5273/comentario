@@ -1,0 +1,24 @@
+<!-- Modal header -->
+<div *ngIf="title" class="modal-header">
+    <h5>{{ title }}</h5>
+</div>
+
+<!-- Modal body -->
+<div class="modal-body d-flex">
+    <div class="text-warning"><fa-icon [icon]="icon" size="4x"></fa-icon></div>
+    <div class="ms-3">
+        <ng-container [ngTemplateOutlet]="template"></ng-container>
+    </div>
+</div>
+
+<!-- Modal footer -->
+<div class="modal-footer">
+    <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()" i18n>Cancel</button>
+    <button type="button" [disabled]="!actionEnabled" [class]="actionClass"
+            (click)="activeModal.close()">{{ actionLabel }}</button>
+</div>
+
+<!-- Template that is rendered when only text is given -->
+<ng-template #textTempl>
+    <p [innerHtml]="safeHtml"></p>
+</ng-template>

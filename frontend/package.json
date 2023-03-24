@@ -15,7 +15,10 @@
         "postbuild": "npm run copy-assets && npm run cleanup-assets",
         "postbuild:prod": "npm run copy-assets && npm run cleanup-assets",
         "prebuild": "npm run generate",
-        "prebuild:prod": "npm run generate"
+        "prebuild:prod": "npm run generate",
+        "prestart": "npm run generate",
+        "pretest": "npm run generate",
+        "pretest:ci": "npm run generate"
     },
     "dependencies": {
         "@angular/animations": "^15.2.2",

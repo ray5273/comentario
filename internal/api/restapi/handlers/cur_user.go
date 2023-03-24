@@ -13,7 +13,7 @@ import (
 
 func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 	// Try to authenticate the user
-	user, err := GetUserFromCookie(params.HTTPRequest)
+	user, err := GetUserFromSessionCookie(params.HTTPRequest)
 	if err == svc.ErrDB {
 		// Houston, we have a problem
 		return respInternalError()

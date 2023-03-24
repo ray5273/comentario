@@ -3,10 +3,24 @@ package data
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"fmt"
 	"github.com/go-openapi/strfmt"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"strings"
 )
+
+// DecodeHexID decodes a string hex ID into a byte array
+func DecodeHexID(id models.HexID) (*[32]byte, error) {
+	b, err := hex.DecodeString(string(id))
+	if err != nil {
+		return nil, err
+	} else if l := len(b); l != 32 {
+		return nil, fmt.Errorf("wrong decoded hex ID length (%d), want 32", l)
+	}
+	var b32 [32]byte
+	copy(b32[:], b)
+	return &b32, nil
+}
 
 // EmailToString converts a value of *strfmt.Email into a string
 func EmailToString(email *strfmt.Email) string {

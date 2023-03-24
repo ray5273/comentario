@@ -1,16 +1,22 @@
-$primary:      #4950d8;
-$footer-color: adjust-color($primary, $saturation: -33%, $lightness: 0%);
+@import "scss/vars";
 
 :host {
+    z-index: 180; // Behind the navbar
     margin-top: auto;
 }
 
 footer {
-    background-color: $footer-color;
+    background-color: var(--app-footer-bg-color);
     color: #ced1e1;
     padding-top: 2rem;
     padding-bottom: 2rem;
     font-size: 0.875rem;
+
+
+    // Leave room for the sidebar (if any), which is displayed above the footer with width < md
+    @include media-breakpoint-down(md){
+        padding-left: 50px;
+    }
 }
 
 a {

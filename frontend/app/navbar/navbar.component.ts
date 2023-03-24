@@ -1,6 +1,8 @@
 import { Component } from '@angular/core';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
+import { Paths } from '../_utils/consts';
 import { DocsService } from '../_services/docs.service';
-import { Paths } from '../consts';
+import { AuthService } from '../_services/auth.service';
 
 @Component({
     selector: 'app-navbar',
@@ -10,9 +12,12 @@ import { Paths } from '../consts';
 export class NavbarComponent {
 
     readonly Paths = Paths;
-    loggedIn = false;
+
+    // Icons
+    readonly faUser = faUser;
 
     constructor(
+        readonly authSvc: AuthService,
         readonly docsSvc: DocsService,
     ) {}
 }

@@ -44,7 +44,7 @@
                             }
                         ],
                         "styles": [
-                            "./styles.scss"
+                            "./scss/styles.scss"
                         ],
                         "scripts": [],
                         "localize": true
@@ -54,13 +54,13 @@
                             "budgets": [
                                 {
                                     "type": "initial",
-                                    "maximumWarning": "500kb",
-                                    "maximumError": "1mb"
+                                    "maximumWarning": "1mb",
+                                    "maximumError": "2mb"
                                 },
                                 {
                                     "type": "anyComponentStyle",
-                                    "maximumWarning": "2kb",
-                                    "maximumError": "4kb"
+                                    "maximumWarning": "10kb",
+                                    "maximumError": "20kb"
                                 }
                             ],
                             "fileReplacements": [
@@ -115,7 +115,7 @@
                             "./assets"
                         ],
                         "styles": [
-                            "./styles.scss"
+                            "./scss/styles.scss"
                         ],
                         "scripts": []
                     }

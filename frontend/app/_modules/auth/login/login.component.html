@@ -1,0 +1,41 @@
+<section class="container">
+    <!-- Heading -->
+    <h1 i18n="heading">Log in</h1>
+
+    <div class="row justify-content-center">
+        <!-- Login form -->
+        <div class="col-sm-6 col-lg-5 col-xl-4">
+            <form [formGroup]="form" (ngSubmit)="submit()">
+                <!-- Email -->
+                <div class="mb-3">
+                    <label for="email" class="form-label colon" i18n>Your email</label>
+                    <input formControlName="email" type="email" class="form-control" id="email" size="45"
+                           [class.is-valid]="email.touched && email.valid"
+                           [class.is-invalid]="email.touched && email.invalid"
+                           required minlength="6" maxlength="255" placeholder="user@example.com" autocomplete="email">
+                    <div class="invalid-feedback" i18n>Please enter a valid email.</div>
+                </div>
+                <!-- Password -->
+                <div class="mb-3">
+                    <label for="password" class="form-label colon" i18n>Password</label>
+                    <app-password-input formControlName="password" [required]="true" id="password"
+                                        autocomplete="current-password"></app-password-input>
+                </div>
+                <!-- Submit button -->
+                <div class="mb-3 text-center">
+                    <button [appSpinner]="submitting.active" type="submit" class="btn btn-primary" i18n="action">Sign in</button>
+                    <a [routerLink]="Paths.auth.forgotPassword" class="btn btn-link" i18n>Forgot your password?</a>
+                </div>
+            </form>
+        </div>
+
+        <!-- Buttons for signup/federated login -->
+        <div class="col-sm-6 col-lg-4 col-xl-3 separate-sm-left text-center">
+            <!-- Sign up button -->
+            <div class="d-grid gap-2 mb-3">
+                <label class="form-label" i18n>Don't have an account yet?</label>
+                <button [routerLink]="Paths.auth.signup" type="button" class="btn btn-outline-primary" i18n>Sign up here</button>
+            </div>
+        </div>
+    </div>
+</section>

@@ -43,6 +43,8 @@ RUN \
 
 # Frontend and embed build
 FROM node:18-alpine AS frontend-build
+RUN apk add --no-cache --update openjdk17-jre-headless
+
 COPY . /comentario
 WORKDIR /comentario
 RUN rm -rf build && yarn install --frozen-lockfile && yarn run build:prod

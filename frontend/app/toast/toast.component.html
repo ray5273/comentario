@@ -5,10 +5,10 @@
     <!-- Optional heading -->
     <ng-template ngbToastHeader>
         <strong class="me-auto" [ngSwitch]="t.alertType">
-            <ng-container *ngSwitchCase="'info'"    i18n>Psst, here it comes</ng-container>
-            <ng-container *ngSwitchCase="'success'" i18n>Yes!</ng-container>
-            <ng-container *ngSwitchCase="'warning'" i18n>Ouch, that was close!</ng-container>
-            <ng-container *ngSwitchCase="'danger'"  i18n>Blimey, that's gone sour!</ng-container>
+            <ng-container *ngSwitchCase="'info'"    i18n>Info</ng-container>
+            <ng-container *ngSwitchCase="'success'" i18n>Success</ng-container>
+            <ng-container *ngSwitchCase="'warning'" i18n>Warning</ng-container>
+            <ng-container *ngSwitchCase="'danger'"  i18n>Error</ng-container>
         </strong>
     </ng-template>
 

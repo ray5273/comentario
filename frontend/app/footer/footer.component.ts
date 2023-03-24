@@ -1,6 +1,6 @@
 import { Component } from '@angular/core';
 import { DocsService } from '../_services/docs.service';
-import { Paths } from '../consts';
+import { Paths } from '../_utils/consts';
 
 @Component({
     selector: 'app-footer',
