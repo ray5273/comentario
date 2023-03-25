@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -16,12 +15,12 @@ func PageUpdate(params api_commenter.PageUpdateParams, principal data.Principal)
 
 	// Verify the user is a domain moderator
 	page := params.Body.Page
-	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, swag.StringValue(page.Domain)); r != nil {
+	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, page.Host); r != nil {
 		return r
 	}
 
 	// Insert or update the page
-	if err := svc.ThePageService.UpsertByDomainPath(page); err != nil {
+	if err := svc.ThePageService.UpsertByHostPath(page); err != nil {
 		return respServiceError(err)
 	}
 

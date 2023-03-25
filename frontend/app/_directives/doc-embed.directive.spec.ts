@@ -65,7 +65,7 @@ describe('DocEmbedDirective', () => {
         req.flush(null, {status: 500, statusText: 'Ouch'});
 
         // After the request the HTML is updated
-        expect(div.innerHTML).toContain('Cound not load <a href="http://localhost:1313/zh/embed/test/" target="_blank" rel="noopener">test</a> resource');
+        expect(div.innerHTML).toContain('Could not load <a href="http://localhost:1313/zh/embed/test/" target="_blank" rel="noopener">test</a> resource');
 
         // Assert there are no more pending requests
         httpTestingController.verify();

@@ -39,7 +39,7 @@ func EmailModerate(params api_commenter.EmailModerateParams) middleware.Responde
 	}
 
 	// Verify the user is a domain moderator
-	if r := Verifier.UserIsDomainModerator(string(email.Email), comment.Domain); r != nil {
+	if r := Verifier.UserIsDomainModerator(string(email.Email), comment.Host); r != nil {
 		return r
 	}
 
@@ -117,7 +117,7 @@ func emailNotificationModerator(d *models.Domain, path string, title string, com
 		_ = svc.TheMailService.SendCommentNotification(
 			string(m.Email),
 			string(kind),
-			d.Domain,
+			d.Host,
 			path,
 			commenter.Name,
 			title,
@@ -165,7 +165,7 @@ func emailNotificationReply(d *models.Domain, path string, title string, comment
 		_ = svc.TheMailService.SendCommentNotification(
 			parentCommenter.Email,
 			"reply",
-			d.Domain,
+			d.Host,
 			path,
 			commenter.Name,
 			title,
@@ -177,7 +177,7 @@ func emailNotificationReply(d *models.Domain, path string, title string, comment
 
 func emailNotificationNew(d *models.Domain, c *models.Comment) {
 	// Fetch the page
-	page, err := svc.ThePageService.FindByDomainPath(d.Domain, c.Path)
+	page, err := svc.ThePageService.FindByHostPath(d.Host, c.Path)
 	if err != nil {
 		logger.Errorf("cannot get page to send email notification: %v", err)
 		return
@@ -185,9 +185,9 @@ func emailNotificationNew(d *models.Domain, c *models.Comment) {
 
 	// If the page has no title, try to fetch it
 	if page.Title == "" {
-		if page.Title, err = svc.ThePageService.UpdateTitleByDomainPath(d.Domain, c.Path); err != nil {
-			// Failed, just use the domain name
-			page.Title = d.Domain
+		if page.Title, err = svc.ThePageService.UpdateTitleByHostPath(d.Host, c.Path); err != nil {
+			// Failed, just use the host
+			page.Title = string(d.Host)
 		}
 	}
 

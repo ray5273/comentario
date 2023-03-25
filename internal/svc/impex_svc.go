@@ -20,16 +20,16 @@ var TheImportExportService ImportExportService = &importExportService{}
 type ImportExportService interface {
 	// CreateExport exports the data for the specified domain, then adds and persists a new export record in the
 	// database, returning its hex ID
-	CreateExport(domain string) (models.HexID, error)
-	// GetExportedData fetches an export with the given hex ID from the database, returning the related domain name, the
+	CreateExport(host models.Host) (models.HexID, error)
+	// GetExportedData fetches an export with the given hex ID from the database, returning the related domain host, the
 	// binary data, and the export timestamp
-	GetExportedData(id models.HexID) (string, []byte, time.Time, error)
+	GetExportedData(id models.HexID) (models.Host, []byte, time.Time, error)
 	// ImportCommento performs data import in the "commento" format, downloading the archive from the given URL. Returns
 	// the number of imported comments
-	ImportCommento(domain, dataURL string) (int64, error)
+	ImportCommento(host models.Host, dataURL string) (int64, error)
 	// ImportDisqus performs data import from Disqus, downloading the archive from the given URL. Returns the number of
 	// imported comments
-	ImportDisqus(domain, dataURL string) (int64, error)
+	ImportDisqus(host models.Host, dataURL string) (int64, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -85,20 +85,20 @@ type disqusXML struct {
 	Posts   []disqusPost   `xml:"post"`
 }
 
-func (svc *importExportService) CreateExport(domain string) (models.HexID, error) {
-	logger.Debugf("importExportService.CreateExport(%s)", domain)
+func (svc *importExportService) CreateExport(host models.Host) (models.HexID, error) {
+	logger.Debugf("importExportService.CreateExport(%s)", host)
 
 	// Create an export data object
 	exp := commentoExportV1{Version: 1}
 
 	// Fetch comments
 	var err error
-	if exp.Comments, err = TheCommentService.ListByDomain(domain); err != nil {
+	if exp.Comments, err = TheCommentService.ListByHost(host); err != nil {
 		return "", err
 	}
 
 	// Fetch commenters
-	if exp.Commenters, err = TheUserService.ListCommentersByDomain(domain); err != nil {
+	if exp.Commenters, err = TheUserService.ListCommentersByHost(host); err != nil {
 		return "", err
 	}
 
@@ -126,7 +126,7 @@ func (svc *importExportService) CreateExport(domain string) (models.HexID, error
 	// Insert a database record
 	err = db.Exec(
 		"insert into exports(exporthex, bindata, domain, creationdate) values($1, $2, $3, $4);",
-		id, gzippedData, domain, time.Now().UTC())
+		id, gzippedData, host, time.Now().UTC())
 	if err != nil {
 		logger.Errorf("importExportService.CreateExport: Exec() failed: %v", err)
 		return "", translateDBErrors(err)
@@ -136,25 +136,25 @@ func (svc *importExportService) CreateExport(domain string) (models.HexID, error
 	return id, nil
 }
 
-func (svc *importExportService) GetExportedData(id models.HexID) (string, []byte, time.Time, error) {
+func (svc *importExportService) GetExportedData(id models.HexID) (models.Host, []byte, time.Time, error) {
 	logger.Debugf("importExportService.GetExportedData(%s)", id)
 
 	// Fetch the data record
 	row := db.QueryRow("select domain, bindata, creationdate from exports where exporthex=$1;", id)
-	var domain string
+	var host models.Host
 	var binData []byte
 	var created time.Time
-	if err := row.Scan(&domain, &binData, &created); err != nil {
+	if err := row.Scan(&host, &binData, &created); err != nil {
 		logger.Errorf("importExportService.GetExportedData: QueryRow failed(): %v", err)
 		return "", nil, time.Time{}, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return domain, binData, created, nil
+	return host, binData, created, nil
 }
 
-func (svc *importExportService) ImportCommento(domain, dataURL string) (int64, error) {
-	logger.Debugf("importExportService.ImportCommento(%s, %s)", domain, dataURL)
+func (svc *importExportService) ImportCommento(host models.Host, dataURL string) (int64, error) {
+	logger.Debugf("importExportService.ImportCommento(%s, %s)", host, dataURL)
 
 	// Validate the URL
 	if _, err := util.ParseAbsoluteURL(dataURL); err != nil {
@@ -238,7 +238,7 @@ func (svc *importExportService) ImportCommento(domain, dataURL string) (int64, e
 			}
 
 			// Add a new comment record
-			newComment, err := TheCommentService.Create(cHex, domain, comment.Path, comment.Markdown, parentHex, comment.State, comment.CreationDate)
+			newComment, err := TheCommentService.Create(cHex, host, comment.Path, comment.Markdown, parentHex, comment.State, comment.CreationDate)
 			if err != nil {
 				return count, err
 			}
@@ -256,8 +256,8 @@ func (svc *importExportService) ImportCommento(domain, dataURL string) (int64, e
 	return count, nil
 }
 
-func (svc *importExportService) ImportDisqus(domain, dataURL string) (int64, error) {
-	logger.Debugf("importExportService.ImportDisqus(%s, %s)", domain, dataURL)
+func (svc *importExportService) ImportDisqus(host models.Host, dataURL string) (int64, error) {
+	logger.Debugf("importExportService.ImportDisqus(%s, %s)", host, dataURL)
 
 	// Validate the URL and check it's on *.discus.com
 	if u, err := util.ParseAbsoluteURL(dataURL); err != nil {
@@ -359,7 +359,7 @@ func (svc *importExportService) ImportDisqus(domain, dataURL string) (int64, err
 		// TODO restrict the list of tags to just the basics: <a>, <b>, <i>, <code>. Especially remove <img> (convert it to <a>)
 		comment, err := TheCommentService.Create(
 			cHex,
-			domain,
+			host,
 			path,
 			html2md.Convert(post.Message),
 			parentHex,

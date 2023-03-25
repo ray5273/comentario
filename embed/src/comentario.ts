@@ -687,7 +687,7 @@ export class Comentario {
 
         // Open a popup window
         const popup = window.open(
-            `${this.apiClient.baseUrl}/oauth/${idp}?commenterToken=${r.commenterToken}`,
+            `${this.apiClient.baseUrl}/oauth/${idp}?token=${r.commenterToken}`,
             '_blank',
             'popup,width=800,height=600');
         if (!popup) {

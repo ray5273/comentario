@@ -225,10 +225,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                         !anonymous && commenter.avatarUrl ?
                             Wrap.new('img')
                                 .classes('avatar-img')
-                                .attr({
-                                    src: `${ctx.apiUrl}/commenter/photo?commenterHex=${commenter.commenterHex}`,
-                                    alt: '',
-                                }) :
+                                .attr({src: `${ctx.apiUrl}/commenter/photo/${commenter.commenterHex}`, alt: ''}) :
                             UIToolkit.div('avatar', `bg-${bgColor}`).html(anonymous ? '' : commenter.name![0].toUpperCase()),
                         // Name and subtitle
                         UIToolkit.div('name-container')

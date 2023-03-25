@@ -16,16 +16,16 @@ type CommentService interface {
 	// Approve sets the status of a comment with the given hex ID to 'approved'
 	Approve(commentHex models.HexID) error
 	// Create creates, persists, and returns a new comment
-	Create(commenterHex models.HexID, domain, path, markdown string, parentHex models.ParentHexID, state models.CommentState, creationDate strfmt.DateTime) (*models.Comment, error)
-	// DeleteByDomain deletes all comments for the specified domain
-	DeleteByDomain(domain string) error
+	Create(commenterHex models.HexID, host models.Host, path, markdown string, parentHex models.ParentHexID, state models.CommentState, creationDate strfmt.DateTime) (*models.Comment, error)
+	// DeleteByHost deletes all comments for the specified domain
+	DeleteByHost(host models.Host) error
 	// FindByHexID finds and returns a comment with the given hex ID
 	FindByHexID(commentHex models.HexID) (*models.Comment, error)
-	// ListByDomain returns a list of all comments for the given domain
-	ListByDomain(domain string) ([]models.Comment, error)
-	// ListWithCommentersByDomainPath returns a list of comments and related commenters for the given domain and path
+	// ListByHost returns a list of all comments for the given domain
+	ListByHost(host models.Host) ([]models.Comment, error)
+	// ListWithCommentersByHostPath returns a list of comments and related commenters for the given domain and path
 	// combination. commenter is the current (un)authenticated user
-	ListWithCommentersByDomainPath(commenter *data.UserCommenter, domain, path string) ([]*models.Comment, map[models.HexID]*models.Commenter, error)
+	ListWithCommentersByHostPath(commenter *data.UserCommenter, host models.Host, path string) ([]*models.Comment, map[models.HexID]*models.Commenter, error)
 	// MarkDeleted mark a comment with the given hex ID deleted in the database
 	MarkDeleted(commentHex models.HexID, deleterHex models.HexID) error
 	// UpdateText updates the markdown and the HTML of a comment with the given hex ID in the database
@@ -50,8 +50,8 @@ func (svc *commentService) Approve(commentHex models.HexID) error {
 	return nil
 }
 
-func (svc *commentService) Create(commenterHex models.HexID, domain, path, markdown string, parentHex models.ParentHexID, state models.CommentState, creationDate strfmt.DateTime) (*models.Comment, error) {
-	logger.Debugf("commentService.Create(%s, %s, %s, ..., %s, %s, ...)", commenterHex, domain, path, parentHex, state)
+func (svc *commentService) Create(commenterHex models.HexID, host models.Host, path, markdown string, parentHex models.ParentHexID, state models.CommentState, creationDate strfmt.DateTime) (*models.Comment, error) {
+	logger.Debugf("commentService.Create(%s, %s, %s, ..., %s, %s, ...)", commenterHex, host, path, parentHex, state)
 
 	// Generate a new comment hex ID
 	commentHex, err := data.RandomHexID()
@@ -63,7 +63,7 @@ func (svc *commentService) Create(commenterHex models.HexID, domain, path, markd
 	html := util.MarkdownToHTML(markdown)
 
 	// Persist a new page record (if necessary)
-	if err = ThePageService.UpsertByDomainPath(&models.Page{Domain: &domain, Path: path}); err != nil {
+	if err = ThePageService.UpsertByHostPath(&models.Page{Host: host, Path: path}); err != nil {
 		return nil, err
 	}
 
@@ -72,7 +72,7 @@ func (svc *commentService) Create(commenterHex models.HexID, domain, path, markd
 		CommentHex:   commentHex,
 		CommenterHex: commenterHex,
 		CreationDate: creationDate,
-		Domain:       domain,
+		Host:         host,
 		HTML:         html,
 		Markdown:     markdown,
 		ParentHex:    parentHex,
@@ -82,7 +82,7 @@ func (svc *commentService) Create(commenterHex models.HexID, domain, path, markd
 	err = db.Exec(
 		"insert into comments(commentHex, domain, path, commenterHex, parentHex, markdown, html, creationDate, state) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9);",
-		c.CommentHex, c.Domain, c.Path, fixCommenterHex(c.CommenterHex), c.ParentHex, c.Markdown, c.HTML, c.CreationDate, c.State)
+		c.CommentHex, c.Host, c.Path, fixCommenterHex(c.CommenterHex), c.ParentHex, c.Markdown, c.HTML, c.CreationDate, c.State)
 	if err != nil {
 		logger.Errorf("commentService.Create: Exec() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -91,12 +91,12 @@ func (svc *commentService) Create(commenterHex models.HexID, domain, path, markd
 	return &c, nil
 }
 
-func (svc *commentService) DeleteByDomain(domain string) error {
-	logger.Debugf("commentService.DeleteByDomain(%s)", domain)
+func (svc *commentService) DeleteByHost(host models.Host) error {
+	logger.Debugf("commentService.DeleteByHost(%s)", host)
 
 	// Delete records from the database
-	if err := db.Exec("delete from comments where domain=$1;", domain); err != nil {
-		logger.Errorf("commentService.DeleteByDomain: Exec() failed: %v", err)
+	if err := db.Exec("delete from comments where domain=$1;", host); err != nil {
+		logger.Errorf("commentService.DeleteByHost: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -129,15 +129,15 @@ func (svc *commentService) FindByHexID(commentHex models.HexID) (*models.Comment
 	return &c, nil
 }
 
-func (svc *commentService) ListByDomain(domain string) ([]models.Comment, error) {
-	logger.Debugf("commentService.ListByDomain(%s)", domain)
+func (svc *commentService) ListByHost(host models.Host) ([]models.Comment, error) {
+	logger.Debugf("commentService.ListByHost(%s)", host)
 
 	// Query all domain's comments
 	rows, err := db.Query(
 		"select commenthex, domain, path, commenterhex, markdown, parenthex, score, state, creationdate from comments where domain=$1;",
-		domain)
+		host)
 	if err != nil {
-		logger.Errorf("commentService.ListByDomain: Query() failed: %v", domain, err)
+		logger.Errorf("commentService.ListByHost: Query() failed: %v", host, err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -147,8 +147,8 @@ func (svc *commentService) ListByDomain(domain string) ([]models.Comment, error)
 	for rows.Next() {
 		c := models.Comment{}
 		var crHex string
-		if err = rows.Scan(&c.CommentHex, &c.Domain, &c.Path, &crHex, &c.Markdown, &c.ParentHex, &c.Score, &c.State, &c.CreationDate); err != nil {
-			logger.Errorf("commentService.ListByDomain: rows.Scan() failed: %v", err)
+		if err = rows.Scan(&c.CommentHex, &c.Host, &c.Path, &crHex, &c.Markdown, &c.ParentHex, &c.Score, &c.State, &c.CreationDate); err != nil {
+			logger.Errorf("commentService.ListByHost: rows.Scan() failed: %v", err)
 			return nil, translateDBErrors(err)
 		}
 
@@ -161,7 +161,7 @@ func (svc *commentService) ListByDomain(domain string) ([]models.Comment, error)
 
 	// Check that Next() didn't error
 	if err := rows.Err(); err != nil {
-		logger.Errorf("commentService.ListByDomain: Next() failed: %v", err)
+		logger.Errorf("commentService.ListByHost: Next() failed: %v", err)
 		return nil, err
 	}
 
@@ -169,8 +169,8 @@ func (svc *commentService) ListByDomain(domain string) ([]models.Comment, error)
 	return res, nil
 }
 
-func (svc *commentService) ListWithCommentersByDomainPath(commenter *data.UserCommenter, domain, path string) ([]*models.Comment, map[models.HexID]*models.Commenter, error) {
-	logger.Debugf("commentService.ListWithCommentersByDomainPath([%s], %s, %s)", commenter.HexID, domain, path)
+func (svc *commentService) ListWithCommentersByHostPath(commenter *data.UserCommenter, host models.Host, path string) ([]*models.Comment, map[models.HexID]*models.Commenter, error) {
+	logger.Debugf("commentService.ListWithCommentersByHostPath([%s], %s, %s)", commenter.HexID, host, path)
 
 	// Prepare a query
 	statement :=
@@ -188,7 +188,7 @@ func (svc *commentService) ListWithCommentersByDomainPath(commenter *data.UserCo
 			"left join votes v on v.commenthex=c.commenthex and v.commenterhex=$1 " +
 			"left join commenters r on r.commenterhex=c.commenterhex " +
 			"where c.domain=$2 and c.path=$3 and c.deleted=false"
-	params := []any{commenter.HexID, domain, path}
+	params := []any{commenter.HexID, host, path}
 
 	// Anonymous commenter: only include approved
 	if commenter.IsAnonymous() {
@@ -205,7 +205,7 @@ func (svc *commentService) ListWithCommentersByDomainPath(commenter *data.UserCo
 	// Fetch the comments
 	rs, err := db.Query(statement, params...)
 	if err != nil {
-		logger.Errorf("commentService.ListWithCommentersByDomainPath: Query() failed: %v", err)
+		logger.Errorf("commentService.ListWithCommentersByHostPath: Query() failed: %v", err)
 		return nil, nil, util.ErrorInternal
 	}
 	defer rs.Close()
@@ -241,7 +241,7 @@ func (svc *commentService) ListWithCommentersByDomainPath(commenter *data.UserCo
 			&ucProvider,
 			&uc.Created)
 		if err != nil {
-			logger.Errorf("commentService.ListWithCommentersByDomainPath: Scan() failed: %v", err)
+			logger.Errorf("commentService.ListWithCommentersByHostPath: Scan() failed: %v", err)
 			return nil, nil, translateDBErrors(err)
 		}
 

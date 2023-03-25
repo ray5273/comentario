@@ -53,12 +53,12 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	}
 
 	// Verify the provided commenter token
-	if _, err := svc.TheUserService.FindCommenterByToken(models.HexID(params.CommenterToken)); err != nil && err != svc.ErrNotFound {
+	if _, err := svc.TheUserService.FindCommenterByToken(models.HexID(params.Token)); err != nil && err != svc.ErrNotFound {
 		return oauthFailure(err)
 	}
 
 	// Initiate an authentication session
-	sess, err := provider.BeginAuth(params.CommenterToken)
+	sess, err := provider.BeginAuth(params.Token)
 	if err != nil {
 		logger.Warningf("OauthInit(): provider.BeginAuth() failed: %v", err)
 		return respInternalError()
@@ -80,7 +80,7 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 		logger.Warningf("OauthInit(): failed to extract session state: %v", err)
 		return respInternalError()
 	} else if originalState == "" {
-		commenterTokens.Put(sessID, params.CommenterToken)
+		commenterTokens.Put(sessID, params.Token)
 	}
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
@@ -225,20 +225,20 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 	}
 
 	// Try to find the commenter by token
-	commenterToken := models.HexID(params.CommenterToken)
+	commenterToken := models.HexID(params.Token)
 	if _, err = svc.TheUserService.FindCommenterByToken(commenterToken); err != nil && err != svc.ErrNotFound {
 		return oauthFailure(err)
 	}
 
 	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByName(domainURL.Host)
+	domain, err := svc.TheDomainService.FindByHost(models.Host(domainURL.Host))
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Make sure the domain allow SSO authentication
 	if !domain.Idps["sso"] {
-		return oauthFailure(fmt.Errorf("SSO not configured for %s", domain.Domain))
+		return oauthFailure(fmt.Errorf("SSO not configured for %s", domain.Host))
 	}
 
 	// Verify the domain's SSO config is complete
@@ -253,7 +253,7 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 	}
 
 	// Create and persist a new SSO token
-	token, err := svc.TheDomainService.CreateSSOToken(domain.Domain, commenterToken)
+	token, err := svc.TheDomainService.CreateSSOToken(domain.Host, commenterToken)
 	if err != nil {
 		return oauthFailure(err)
 	}
@@ -315,7 +315,7 @@ func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Re
 	}
 
 	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByName(domainName)
+	domain, err := svc.TheDomainService.FindByHost(domainName)
 	if err != nil {
 		return oauthFailure(err)
 	}
@@ -345,7 +345,7 @@ func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Re
 
 	// Now try to find an existing commenter by their email
 	var commenterHex models.HexID
-	idp := "sso:" + domain.Domain
+	idp := "sso:" + string(domain.Host)
 	if commenter, err := svc.TheUserService.FindCommenterByIdPEmail(idp, payload.Email, false); err == nil {
 		// Commenter found
 		commenterHex = commenter.HexID

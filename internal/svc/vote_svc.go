@@ -10,8 +10,8 @@ var TheVoteService VoteService = &voteService{}
 
 // VoteService is a service interface for dealing with comment votes
 type VoteService interface {
-	// DeleteByDomain deletes all votes for the specified domain
-	DeleteByDomain(domain string) error
+	// DeleteByHost deletes all votes for the specified host
+	DeleteByHost(host models.Host) error
 	// SetVote inserts or updates a vote for the given comment and commenter
 	SetVote(commentHex, commenterHex models.HexID, direction int) error
 }
@@ -21,12 +21,12 @@ type VoteService interface {
 // voteService is a blueprint VoteService implementation
 type voteService struct{}
 
-func (svc *voteService) DeleteByDomain(domain string) error {
-	logger.Debugf("voteService.DeleteByDomain(%s)", domain)
+func (svc *voteService) DeleteByHost(host models.Host) error {
+	logger.Debugf("voteService.DeleteByHost(%s)", host)
 
 	// Delete the records in the database
-	if err := db.Exec("delete from votes v using comments c where c.commenthex=v.commenthex and c.domain=$1;", domain); err != nil {
-		logger.Errorf("voteService.DeleteByDomain: Exec() failed: %v", err)
+	if err := db.Exec("delete from votes v using comments c where c.commenthex=v.commenthex and c.domain=$1;", host); err != nil {
+		logger.Errorf("voteService.DeleteByHost: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

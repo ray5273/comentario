@@ -55,8 +55,8 @@ type UserService interface {
 	FindOwnerByID(id models.HexID) (*data.UserOwner, error)
 	// FindOwnerByToken finds and returns an owner user by their token
 	FindOwnerByToken(token models.HexID) (*data.UserOwner, error)
-	// ListCommentersByDomain returns a list of all commenters for the (comments of) given domain
-	ListCommentersByDomain(domain string) ([]models.Commenter, error)
+	// ListCommentersByHost returns a list of all commenters for the (comments of) given domain
+	ListCommentersByHost(host models.Host) ([]models.Commenter, error)
 	// ResetUserPasswordByToken finds and resets a user's password for the given reset token, returning the
 	// corresponding entity
 	ResetUserPasswordByToken(token models.HexID, password string) (models.Entity, error)
@@ -481,8 +481,8 @@ func (svc *userService) FindOwnerByToken(token models.HexID) (*data.UserOwner, e
 	}
 }
 
-func (svc *userService) ListCommentersByDomain(domain string) ([]models.Commenter, error) {
-	logger.Debugf("userService.ListCommentersByDomain(%s)", domain)
+func (svc *userService) ListCommentersByHost(host models.Host) ([]models.Commenter, error) {
+	logger.Debugf("userService.ListCommentersByHost(%s)", host)
 
 	// Query all commenters of the domain's comments
 	rows, err := db.Query(
@@ -490,9 +490,9 @@ func (svc *userService) ListCommentersByDomain(domain string) ([]models.Commente
 			"from comments c "+
 			"join commenters r on r.commenterhex=c.commenterhex "+
 			"where c.domain=$1;",
-		domain)
+		host)
 	if err != nil {
-		logger.Errorf("commentService.ListCommentersByDomain: Query() failed: %v", domain, err)
+		logger.Errorf("commentService.ListCommentersByHost: Query() failed: %v", host, err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -503,7 +503,7 @@ func (svc *userService) ListCommentersByDomain(domain string) ([]models.Commente
 	for rows.Next() {
 		r := models.Commenter{}
 		if err = rows.Scan(&r.CommenterHex, &r.Email, &r.Name, &link, &photo, &provider, &r.JoinDate); err != nil {
-			logger.Errorf("commentService.ListCommentersByDomain: rows.Scan() failed: %v", err)
+			logger.Errorf("commentService.ListCommentersByHost: rows.Scan() failed: %v", err)
 			return nil, translateDBErrors(err)
 		}
 
@@ -518,7 +518,7 @@ func (svc *userService) ListCommentersByDomain(domain string) ([]models.Commente
 
 	// Check that Next() didn't error
 	if err := rows.Err(); err != nil {
-		logger.Errorf("commentService.ListCommentersByDomain: Next() failed: %v", err)
+		logger.Errorf("commentService.ListCommentersByHost: Next() failed: %v", err)
 		return nil, err
 	}
 

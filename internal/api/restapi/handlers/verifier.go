@@ -21,9 +21,9 @@ type VerifierService interface {
 	// PrincipalIsAuthenticated verifies the given principal is an authenticated one
 	PrincipalIsAuthenticated(principal data.Principal) middleware.Responder
 	// UserIsDomainModerator verifies the owner with the given email is a moderator in the specified domain
-	UserIsDomainModerator(email, domainName string) middleware.Responder
+	UserIsDomainModerator(email string, host models.Host) middleware.Responder
 	// UserOwnsDomain verifies the owner with the given hex ID owns the specified domain
-	UserOwnsDomain(id models.HexID, domainName string) middleware.Responder
+	UserOwnsDomain(id models.HexID, host models.Host) middleware.Responder
 }
 
 // ----------------------------------------------------------------------------------------------------------------------
@@ -57,8 +57,8 @@ func (v *verifier) PrincipalIsAuthenticated(principal data.Principal) middleware
 	return nil
 }
 
-func (v *verifier) UserIsDomainModerator(email, domainName string) middleware.Responder {
-	if b, err := svc.TheDomainService.IsDomainModerator(email, domainName); err != nil {
+func (v *verifier) UserIsDomainModerator(email string, host models.Host) middleware.Responder {
+	if b, err := svc.TheDomainService.IsDomainModerator(email, host); err != nil {
 		return respServiceError(err)
 	} else if !b {
 		return respForbidden(util.ErrorNotModerator)
@@ -66,8 +66,8 @@ func (v *verifier) UserIsDomainModerator(email, domainName string) middleware.Re
 	return nil
 }
 
-func (v *verifier) UserOwnsDomain(id models.HexID, domainName string) middleware.Responder {
-	if b, err := svc.TheDomainService.IsDomainOwner(id, domainName); err != nil {
+func (v *verifier) UserOwnsDomain(id models.HexID, host models.Host) middleware.Responder {
+	if b, err := svc.TheDomainService.IsDomainOwner(id, host); err != nil {
 		return respServiceError(err)
 	} else if !b {
 		return respForbidden(util.ErrorNotDomainOwner)

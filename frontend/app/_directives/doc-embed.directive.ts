@@ -40,7 +40,7 @@ export class DocEmbedDirective implements OnChanges {
                     next: t => e.innerHTML = t,
                     // Display error on failure
                     error: (err: Error) => e.innerHTML = '<div class="container text-center alert alert-secondary fade-in">' +
-                            `Cound not load <a href="${url}" target="_blank" rel="noopener">${this.docEmbed}</a> resource:<br>` +
+                            `Could not load <a href="${url}" target="_blank" rel="noopener">${this.docEmbed}</a> resource:<br>` +
                             `<span class="small">${err.message}</span>` +
                         '</div>',
                 });

@@ -90,7 +90,7 @@ func CommenterNew(params api_commenter.CommenterNewParams) middleware.Responder 
 
 func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Responder {
 	// Validate the passed commenter hex ID
-	id := models.HexID(params.CommenterHex)
+	id := models.HexID(params.ID)
 	if err := id.Validate(nil); err != nil {
 		return respBadRequest(err)
 	}

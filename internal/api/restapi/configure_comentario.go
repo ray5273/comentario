@@ -50,7 +50,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.JSONProducer = runtime.JSONProducer()
 	api.GzipProducer = runtime.ByteStreamProducer()
 	api.HTMLProducer = runtime.TextProducer()
-	api.UrlformConsumer = runtime.DiscardConsumer
 
 	// Use a more strict email validator than the default, RFC5322-compliant one
 	eml := strfmt.Email("")
@@ -79,11 +78,14 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Auth API
 	//------------------------------------------------------------------------------------------------------------------
 
-	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
-	api.APIAuthCurUserPwdResetSendEmailHandler = api_auth.CurUserPwdResetSendEmailHandlerFunc(handlers.CurUserPwdResetSendEmail)
-	api.APIAuthCurUserPwdResetChangeHandler = api_auth.CurUserPwdResetChangeHandlerFunc(handlers.CurUserPwdResetChange)
+	api.APIAuthAuthConfirmHandler = api_auth.AuthConfirmHandlerFunc(handlers.AuthConfirm)
+	api.APIAuthAuthDeleteProfileHandler = api_auth.AuthDeleteProfileHandlerFunc(handlers.AuthDeleteProfile)
 	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
 	api.APIAuthAuthLogoutHandler = api_auth.AuthLogoutHandlerFunc(handlers.AuthLogout)
+	api.APIAuthAuthSignupHandler = api_auth.AuthSignupHandlerFunc(handlers.AuthSignup)
+	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIAuthCurUserPwdResetChangeHandler = api_auth.CurUserPwdResetChangeHandlerFunc(handlers.CurUserPwdResetChange)
+	api.APIAuthCurUserPwdResetSendEmailHandler = api_auth.CurUserPwdResetSendEmailHandlerFunc(handlers.CurUserPwdResetSendEmail)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Commenter API
@@ -129,8 +131,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIOwnerDomainDeleteHandler = api_owner.DomainDeleteHandlerFunc(handlers.DomainDelete)
 	api.APIOwnerDomainExportBeginHandler = api_owner.DomainExportBeginHandlerFunc(handlers.DomainExportBegin)
 	api.APIOwnerDomainExportDownloadHandler = api_owner.DomainExportDownloadHandlerFunc(handlers.DomainExportDownload)
-	api.APIOwnerDomainImportCommentoHandler = api_owner.DomainImportCommentoHandlerFunc(handlers.DomainImportCommento)
-	api.APIOwnerDomainImportDisqusHandler = api_owner.DomainImportDisqusHandlerFunc(handlers.DomainImportDisqus)
+	api.APIOwnerDomainGetHandler = api_owner.DomainGetHandlerFunc(handlers.DomainGet)
+	api.APIOwnerDomainImportHandler = api_owner.DomainImportHandlerFunc(handlers.DomainImport)
 	api.APIOwnerDomainListHandler = api_owner.DomainListHandlerFunc(handlers.DomainList)
 	api.APIOwnerDomainModeratorDeleteHandler = api_owner.DomainModeratorDeleteHandlerFunc(handlers.DomainModeratorDelete)
 	api.APIOwnerDomainModeratorNewHandler = api_owner.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
@@ -138,10 +140,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIOwnerDomainSsoSecretNewHandler = api_owner.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
 	api.APIOwnerDomainStatisticsHandler = api_owner.DomainStatisticsHandlerFunc(handlers.DomainStatistics)
 	api.APIOwnerDomainUpdateHandler = api_owner.DomainUpdateHandlerFunc(handlers.DomainUpdate)
-	// Owner
-	api.APIOwnerOwnerConfirmHexHandler = api_owner.OwnerConfirmHexHandlerFunc(handlers.OwnerConfirmHex)
-	api.APIOwnerOwnerDeleteHandler = api_owner.OwnerDeleteHandlerFunc(handlers.OwnerDelete)
-	api.APIOwnerOwnerNewHandler = api_owner.OwnerNewHandlerFunc(handlers.OwnerNew)
 
 	// Shutdown functions
 	api.PreServerShutdown = func() {}

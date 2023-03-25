@@ -69,7 +69,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             Wrap.new('img')
                 .classes('avatar-img')
                 .attr({
-                    src: `${this.baseUrl}/api/commenter/photo?commenterHex=${this.commenter.commenterHex}`,
+                    src: `${this.baseUrl}/api/commenter/photo/${this.commenter.commenterHex}`,
                     loading: 'lazy',
                     alt: '',
                 }) :

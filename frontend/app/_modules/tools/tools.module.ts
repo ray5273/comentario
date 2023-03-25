@@ -7,9 +7,11 @@ import { PasswordInputComponent } from './password-input/password-input.componen
 import { SpinnerDirective } from './_directives/spinner.directive';
 import { ConfirmDirective } from './_directives/confirm.directive';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
+import { CheckmarkComponent } from './checkmark/checkmark.component';
 
 @NgModule({
     declarations: [
+        CheckmarkComponent,
         ConfirmDialogComponent,
         ConfirmDirective,
         PasswordInputComponent,
@@ -22,6 +24,7 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
         NgbModalModule,
     ],
     exports: [
+        CheckmarkComponent,
         ConfirmDialogComponent,
         ConfirmDirective,
         PasswordInputComponent,

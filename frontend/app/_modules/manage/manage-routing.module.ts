@@ -4,6 +4,7 @@ import { authGuardCanActivate } from '../../_guards/auth.guard';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ControlCenterComponent } from './control-center/control-center.component';
 import { DomainManagerComponent } from './domains/domain-manager/domain-manager.component';
+import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 
 const children: Routes = [
     // Default route
@@ -13,7 +14,8 @@ const children: Routes = [
     {path: 'dashboard', component: DashboardComponent},
 
     // Domains
-    {path: 'domains', component: DomainManagerComponent},
+    {path: 'domains',       component: DomainManagerComponent},
+    {path: 'domains/:host', component: DomainDetailComponent},
 ];
 
 // Make a parent route object, protected by the AuthGuard

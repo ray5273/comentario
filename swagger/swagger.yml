@@ -24,6 +24,10 @@ securityDefinitions:
     in: header
     name: Cookie
 
+# Default security is cookie-based user authentication
+security:
+  - userCookie: []
+
 definitions:
 
   clientConfig:
@@ -47,8 +51,8 @@ definitions:
         $ref: "#/definitions/hexId"
       parentHex:
         $ref: "#/definitions/parentHexId"
-      domain:
-        type: string
+      host:
+        $ref: "#/definitions/host"
       creationDate:
         type: string
         format: date-time
@@ -106,21 +110,21 @@ definitions:
   domain:
     description: Registered domain
     type: object
+    required:
+      - host
+      - displayName
     properties:
-      domain:
+      host:
+        $ref: "#/definitions/host"
+      displayName:
         type: string
-      ownerHex:
-        $ref: "#/definitions/hexId"
-      name:
-        type: string
+        description: Display name of the domain
+        x-isnullable: false
       creationDate:
         type: string
         format: date-time
       state:
         $ref: "#/definitions/domainState"
-      importedComments:
-        type: boolean
-        x-omitempty: false
       autoSpamFilter:
         type: boolean
         x-omitempty: false
@@ -156,8 +160,8 @@ definitions:
       email:
         type: string
         format: email
-      domain:
-        type: string
+      host:
+        $ref: "#/definitions/host"
       addDate:
         type: string
         format: date-time
@@ -233,6 +237,15 @@ definitions:
     maxLength: 64
     pattern: '[0-9a-f]{64}'
 
+  host:
+    description: DNS hostname, with an optional port number
+    example: example.com:8080
+    type: string
+    minLength: 1
+    maxLength: 259  # 253 (max length of a DNS name) + ":" + 5 (port number 1..65535)
+    pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
+    x-isnullable: false
+
   idpMap:
     description: Map of enabled identity providers (name => boolean), including 'commento', 'sso', and all known federated IdPs
     type: object
@@ -246,10 +259,10 @@ definitions:
     description: Page hosting comments
     type: object
     required:
-      - domain
+      - host
     properties:
-      domain:
-        type: string
+      host:
+        $ref: "#/definitions/host"
       path:
         type: string
       isLocked:
@@ -308,6 +321,46 @@ parameters:
       - gitlab
       - google
       - twitter
+
+  pathImportSource:
+    name: source
+    in: path
+    required: true
+    description: Source of the data to import into a domain
+    type: string
+    enum:
+      - commento
+      - disqus
+
+  pathHost:
+    name: host
+    in: path
+    required: true
+    description: Domain host path parameter
+    type: string
+    minLength: 1
+    maxLength: 259
+    pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
+
+  pathId:
+    in: path
+    name: id
+    required: true
+    description: ID consisting of 64 hex digits, in the path
+    type: string
+    minLength: 64
+    maxLength: 64
+    pattern: '[0-9a-f]{64}'
+
+  queryToken:
+    in: query
+    name: token
+    required: true
+    description: ID consisting of 64 hex digits, in the query parameter
+    type: string
+    minLength: 64
+    maxLength: 64
+    pattern: '[0-9a-f]{64}'
 
 responses:
 
@@ -378,6 +431,7 @@ paths:
       summary: Obtain client configuration
       tags:
         - ApiOwner
+      security: []
       responses:
         200:
           description: Client configuration
@@ -394,6 +448,7 @@ paths:
       summary: Sign in as an existing user
       tags:
         - ApiAuth
+      security: []
       parameters:
         - in: body
           name: body
@@ -423,11 +478,73 @@ paths:
       summary: Log the current user out
       tags:
         - ApiAuth
-      security:
-        - userCookie: []
       responses:
         204:
           description: User has been logged out
+
+  /auth/profile:
+    post:
+      operationId: AuthSignup
+      summary: Sign up as a new owner
+      tags:
+        - ApiAuth
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+              - email
+              - password
+            properties:
+              name:
+                type: string
+                minLength: 1
+                maxLength: 63
+              email:
+                type: string
+                format: email
+              password:
+                type: string
+                minLength: 1
+                maxLength: 63
+      responses:
+        200:
+          description: Owner has signed up successfully
+          schema:
+            type: object
+            properties:
+              confirmEmail:
+                type: boolean
+                description: Whether a confirmation email was sent
+                x-omitempty: false
+
+    put:
+      operationId: AuthConfirm
+      summary: Confirm specified owner's email using the emailed token
+      tags:
+        - ApiAuth
+      security: []
+      parameters:
+        - $ref: "#/parameters/queryToken"
+      responses:
+        307:
+          description: Redirect to login
+          headers:
+            Location:
+              type: string
+
+    delete:
+      operationId: AuthDeleteProfile
+      summary: Delete the account of the current user
+      tags:
+        - ApiAuth
+      responses:
+        204:
+          description: Owner's account has been deleted
 
   #---------------------------------------------------------------------------------------------------------------------
   # Current user
@@ -439,6 +556,7 @@ paths:
       summary: Fetch the currently authenticated user, if any
       tags:
         - ApiAuth
+      security: []
       responses:
         200:
           description: User is authenticated, principal info returned
@@ -453,6 +571,7 @@ paths:
       summary: Request user's password reset by sending them an email
       tags:
         - ApiAuth
+      security: []
       parameters:
         - in: body
           name: body
@@ -474,6 +593,7 @@ paths:
       summary: Give the user a new password
       tags:
         - ApiAuth
+      security: []
       parameters:
         - in: body
           name: body
@@ -527,6 +647,7 @@ paths:
       summary: Request comment counts for specified paths on given domain
       tags:
         - ApiCommenter
+      security: []
       parameters:
         - in: body
           name: body
@@ -534,11 +655,11 @@ paths:
           schema:
             type: object
             required:
-              - domain
+              - host
               - paths
             properties:
-              domain:
-                type: string
+              host:
+                $ref: "#/definitions/host"
               paths:
                 type: array
                 items:
@@ -611,7 +732,7 @@ paths:
   /comment/list:
     post:
       operationId: CommentList
-      summary: Get a list of comments and commenters for the given domain/path combination
+      summary: Get a list of comments and commenters for the given host/path combination
       tags:
         - ApiCommenter
       security:
@@ -623,11 +744,10 @@ paths:
           schema:
             type: object
             required:
-              - domain
+              - host
             properties:
-              domain:
-                type: string
-                minLength: 1
+              host:
+                $ref: "#/definitions/host"
               path:
                 type: string
       responses:
@@ -636,8 +756,8 @@ paths:
           schema:
             type: object
             properties:
-              domain:
-                type: string
+              host:
+                $ref: "#/definitions/host"
               comments:
                 type: array
                 items:
@@ -678,12 +798,12 @@ paths:
           schema:
             type: object
             required:
-              - domain
+              - host
               - parentHex
               - markdown
             properties:
-              domain:
-                type: string
+              host:
+                $ref: "#/definitions/host"
               path:
                 type: string
               parentHex:
@@ -745,6 +865,7 @@ paths:
       summary: Sign in as specified commenter
       tags:
         - ApiCommenter
+      security: []
       parameters:
         - in: body
           name: body
@@ -792,6 +913,7 @@ paths:
       summary: Sign up as a new commenter
       tags:
         - ApiCommenter
+      security: []
       parameters:
         - in: body
           name: body
@@ -821,22 +943,17 @@ paths:
         204:
           description: Commenter signed up successfully
 
-  /commenter/photo:
+  /commenter/photo/{id}:
     get:
       operationId: CommenterPhoto
       summary: Get an avatar for given commenter in JPEG format
       tags:
         - ApiCommenter
+      security: []
       produces:
         - image/jpeg
       parameters:
-        - name: commenterHex
-          in: query
-          type: string
-          required: true
-          minLength: 64
-          maxLength: 64
-          pattern: '[0-9a-f]{64}'
+        - $ref: "#/parameters/pathId"
       responses:
         200:
           description: Success or failure response (see 'success' property)
@@ -849,6 +966,7 @@ paths:
       summary: Request commenter's sign-in status and, if the commenter's signed in, their details
       tags:
         - ApiCommenter
+      security: []
       responses:
         204:
           description: Commenter is not signed in
@@ -868,6 +986,7 @@ paths:
       summary: Request a new anonymous, unique commenter token
       tags:
         - ApiCommenter
+      security: []
       responses:
         200:
           description: Commenter token
@@ -916,193 +1035,15 @@ paths:
   # Domains
   #---------------------------------------------------------------------------------------------------------------------
 
-  /domain/clear:
-    post:
-      operationId: DomainClear
-      summary: Clear all domain's pages/comments/votes
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-      responses:
-        204:
-          description: Domain has been cleared
-
-  /domain/delete:
-    post:
-      operationId: DomainDelete
-      summary: Delete specified domain
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-      responses:
-        204:
-          description: Domain has been deleted
-
-  /domain/export/begin:
-    post:
-      operationId: DomainExportBegin
-      summary: Initiate domain data export
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-      responses:
-        204:
-          description: Export has been successfully started
-
-  /domain/export/download:
+  /domains:
     get:
-      operationId: DomainExportDownload
-      summary: Download previously exported domain data
-      tags:
-        - ApiOwner
-      produces:
-        - application/gzip
-      parameters:
-        - in: query
-          name: exportHex
-          type: string
-          required: true
-          minLength: 64
-          maxLength: 64
-      responses:
-        200:
-          description: Export file
-          schema:
-            type: file
-          headers:
-            Content-Disposition:
-              type: string
-
-  /domain/import/commento:
-    post:
-      operationId: DomainImportCommento
-      summary: Import comments and commenters into specified domain from a Commento export, downloaded from certain URL
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-              - url
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-              url:
-                type: string
-                format: uri
-      responses:
-        200:
-          description: Import completed successfully
-          schema:
-            type: object
-            properties:
-              numImported:
-                type: integer
-                description: Number of imported comments
-                x-omitempty: false
-
-  /domain/import/disqus:
-    post:
-      operationId: DomainImportDisqus
-      summary: Import comments and commenters into specified domain from a Disqus export, downloaded from certain URL
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-              - url
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-              url:
-                type: string
-                format: uri
-      responses:
-        200:
-          description: Import completed successfully
-          schema:
-            type: object
-            properties:
-              numImported:
-                type: integer
-                description: Number of imported comments
-                x-omitempty: false
-
-  /domain/list:
-    post:
       operationId: DomainList
       summary: Get a list of registered domains
       tags:
         - ApiOwner
-      security:
-        - userCookie: []
       responses:
         200:
-          description: List of domains and configured identity providers
+          description: List of domains
           schema:
             type: object
             properties:
@@ -1111,67 +1052,6 @@ paths:
                 items:
                   $ref: "#/definitions/domain"
 
-  /domain/moderator/delete:
-    post:
-      operationId: DomainModeratorDelete
-      summary: Delete specified domain moderator
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-              - email
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-              email:
-                type: string
-                format: email
-      responses:
-        204:
-          description: Domain moderator has been deleted
-
-  /domain/moderator/new:
-    post:
-      operationId: DomainModeratorNew
-      summary: Add a new domain moderator
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-              - email
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
-              email:
-                type: string
-                format: email
-      responses:
-        204:
-          description: Domain moderator has been added
-
-  /domain/new:
     post:
       operationId: DomainNew
       summary: Register a new domain
@@ -1184,34 +1064,41 @@ paths:
           schema:
             type: object
             required:
-              - ownerToken
-              - name
               - domain
             properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              name:
-                description: Display name of the domain
-                type: string
-                minLength: 1
-                maxLength: 63
               domain:
-                type: string
-                minLength: 1
-                maxLength: 253 # Maximum length of a valid DNS entry
+                $ref: "#/definitions/domain"
+      responses:
+        204:
+          description: Domain added successfully
+
+  /domains/{host}:
+    parameters:
+      - $ref: "#/parameters/pathHost"
+
+    get:
+      operationId: DomainGet
+      summary: Get properties of a domain
+      tags:
+        - ApiOwner
       responses:
         200:
-          description: Domain added successfully
+          description: Domain properties
           schema:
-            type: object
-            properties:
-              domain:
-                type: string
+            $ref: "#/definitions/domain"
 
-  /domain/sso/new:
-    post:
-      operationId: DomainSsoSecretNew
-      summary: Generate an SSO secret for specified domain
+    delete:
+      operationId: DomainDelete
+      summary: Delete a domain
+      tags:
+        - ApiOwner
+      responses:
+        204:
+          description: Domain has been deleted
+
+    put:
+      operationId: DomainUpdate
+      summary: Update properties of specified domain
       tags:
         - ApiOwner
       parameters:
@@ -1221,15 +1108,140 @@ paths:
           schema:
             type: object
             required:
-              - ownerToken
               - domain
             properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
               domain:
+                $ref: "#/definitions/domain"
+      responses:
+        204:
+          description: Domain properties have been updated
+
+    post:
+      operationId: DomainClear
+      summary: Clear all domain's pages/comments/votes
+      tags:
+        - ApiOwner
+      responses:
+        204:
+          description: Domain has been cleared
+
+  /domains/{host}/export/begin:
+    post:
+      operationId: DomainExportBegin
+      summary: Initiate domain data export
+      tags:
+        - ApiOwner
+      parameters:
+        - $ref: "#/parameters/pathHost"
+      responses:
+        204:
+          description: Export has been successfully started
+
+  /domains/export/download/{id}:
+    get:
+      operationId: DomainExportDownload
+      summary: Download previously exported domain data
+      tags:
+        - ApiOwner
+      security: []
+      produces:
+        - application/gzip
+      parameters:
+        - $ref: "#/parameters/pathId"
+      responses:
+        200:
+          description: Export file
+          schema:
+            type: file
+          headers:
+            Content-Disposition:
+              type: string
+
+  /domains/{host}/import/{source}:
+    post:
+      operationId: DomainImport
+      summary: Import comments and commenters into specified domain from exported data, downloaded from certain URL
+      tags:
+        - ApiOwner
+      parameters:
+        - $ref: "#/parameters/pathHost"
+        - $ref: "#/parameters/pathImportSource"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - url
+            properties:
+              url:
                 type: string
-                minLength: 1
-                maxLength: 253
+                format: uri
+      responses:
+        200:
+          description: Import completed successfully
+          schema:
+            type: object
+            properties:
+              numImported:
+                type: integer
+                description: Number of imported comments
+                x-omitempty: false
+
+  /domains/{host}/moderators:
+    parameters:
+      - $ref: "#/parameters/pathHost"
+
+    post:
+      operationId: DomainModeratorNew
+      summary: Add a new domain moderator
+      tags:
+        - ApiOwner
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+      responses:
+        204:
+          description: Domain moderator has been added
+
+    delete:
+      operationId: DomainModeratorDelete
+      summary: Delete specified domain moderator
+      tags:
+        - ApiOwner
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+      responses:
+        204:
+          description: Domain moderator has been deleted
+
+  /domains/{host}/sso/new:
+    post:
+      operationId: DomainSsoSecretNew
+      summary: Generate an SSO secret for specified domain
+      tags:
+        - ApiOwner
+      parameters:
+        - $ref: "#/parameters/pathHost"
       responses:
         200:
           description: SSO secret has been generated for the domain
@@ -1239,28 +1251,14 @@ paths:
               ssoSecret:
                 $ref: "#/definitions/hexId"
 
-  /domain/statistics:
-    post:
+  /domains/{host}/stats:
+    get:
       operationId: DomainStatistics
       summary: Get comment and view statistics for specified domain
       tags:
         - ApiOwner
       parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                type: string
-                minLength: 1
-                maxLength: 253
+        - $ref: "#/parameters/pathHost"
       responses:
         200:
           description: Success or failure response (see 'success' property)
@@ -1276,30 +1274,6 @@ paths:
                 items:
                   type: integer
 
-  /domain/update:
-    post:
-      operationId: DomainUpdate
-      summary: Update properties of specified domain
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-              - domain
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-              domain:
-                $ref: "#/definitions/domain"
-      responses:
-        204:
-          description: Domain properties have been updated
-
   #---------------------------------------------------------------------------------------------------------------------
   # Emails
   #---------------------------------------------------------------------------------------------------------------------
@@ -1310,6 +1284,7 @@ paths:
       summary: Get email properties for specified unsubscribe token
       tags:
         - ApiCommenter
+      security: []
       parameters:
         - in: body
           name: body
@@ -1336,6 +1311,7 @@ paths:
       summary: Apply a moderator action to specified comment
       tags:
         - ApiCommenter
+      security: []
       parameters:
         - name: unsubscribeSecretHex
           in: query
@@ -1366,6 +1342,7 @@ paths:
       summary: Update properties of specified email
       tags:
         - ApiCommenter
+      security: []
       parameters:
         - in: body
           name: body
@@ -1380,92 +1357,6 @@ paths:
       responses:
         204:
           description: Email properties have been updated
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # Owners
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /owner/confirm-hex:
-    get:
-      operationId: OwnerConfirmHex
-      summary: Confirm specified owner's email using the emailed token
-      tags:
-        - ApiOwner
-      consumes:
-        - application/x-www-form-urlencoded
-      parameters:
-        - in: formData
-          name: confirmHex
-          required: true
-          type: string
-          minLength: 64
-          maxLength: 64
-      responses:
-        307:
-          description: Redirect to login
-          headers:
-            Location:
-              type: string
-
-  /owner/new:
-    post:
-      operationId: OwnerNew
-      summary: Sign up as a new owner
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - name
-              - email
-              - password
-            properties:
-              name:
-                type: string
-                minLength: 1
-                maxLength: 63
-              email:
-                type: string
-                format: email
-              password:
-                type: string
-                minLength: 1
-                maxLength: 63
-      responses:
-        200:
-          description: Owner has signed up successfully
-          schema:
-            type: object
-            properties:
-              confirmEmail:
-                type: boolean
-                description: Whether a confirmation email was sent
-                x-omitempty: false
-
-  /owner/delete:
-    post:
-      operationId: OwnerDelete
-      summary: Delete current owner's account
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - ownerToken
-            properties:
-              ownerToken:
-                $ref: "#/definitions/hexId"
-      responses:
-        204:
-          description: Owner's account has been deleted
 
   #---------------------------------------------------------------------------------------------------------------------
   # Pages
@@ -1504,17 +1395,12 @@ paths:
       summary: Initiate signing in using federated authentication
       tags:
         - ApiCommenter
+      security: []
       produces:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
         - $ref: "#/parameters/federatedIdpId"
-        - in: query
-          name: commenterToken
-          type: string
-          required: true
-          minLength: 64
-          maxLength: 64
-          pattern: '[0-9a-f]{64}'
+        - $ref: "#/parameters/queryToken"
       responses:
         307:
           $ref: "#/responses/OAuthRedirect"
@@ -1527,6 +1413,7 @@ paths:
       summary: Endpoint that gets called back by the federated authentication provider
       tags:
         - ApiCommenter
+      security: []
       produces:
         - text/html
       parameters:
@@ -1543,16 +1430,11 @@ paths:
       summary: Initiate signing in using federated SSO authentication
       tags:
         - ApiCommenter
+      security: []
       produces:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
-        - in: query
-          name: commenterToken
-          type: string
-          required: true
-          minLength: 64
-          maxLength: 64
-          pattern: '[0-9a-f]{64}'
+        - $ref: "#/parameters/queryToken"
       responses:
         307:
           $ref: "#/responses/OAuthRedirect"
@@ -1565,6 +1447,7 @@ paths:
       summary: Endpoint that gets called back by the SSO authentication provider
       tags:
         - ApiCommenter
+      security: []
       produces:
         - text/html
       parameters:
@@ -1595,6 +1478,7 @@ paths:
       summary: Reset the backend (all settings and database) to testing defaults
       tags:
         - ApiE2e
+      security: []
       responses:
         204:
           description: The backend has been successfully reset

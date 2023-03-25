@@ -1,0 +1,123 @@
+<section class="container">
+    <!-- Heading -->
+    <h1 i18n="heading">Domain details</h1>
+
+    <!-- Toolbar -->
+    <nav class="navbar navbar-light border-bottom">
+        <!-- Edit button -->
+        <button [routerLink]="[Paths.manage.domains, domain?.host, 'edit']"
+                type="button" class="btn btn-secondary mt-2 me-2">
+            <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
+            <ng-container i18n>Edit</ng-container>
+        </button>
+
+        <!-- Sandwich button and menu -->
+        <div ngbDropdown display="dynamic" id="domainToolMenu">
+            <!-- Toggler -->
+            <button ngbDropdownToggle class="btn btn-outline-secondary no-arrow mt-2" id="domainToolMenuToggle"
+                    aria-label="Toggle menu" i18n-aria-label>
+                <fa-icon [icon]="faBars"></fa-icon>
+            </button>
+            <!-- Menu -->
+            <div ngbDropdownMenu aria-labelledby="domainToolMenuToggle">
+                <!-- Clone button -->
+                <button [routerLink]="[Paths.manage.domains, domain?.host, 'clone']"
+                        ngbDropdownItem>
+                    <fa-icon [icon]="faClone" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Clone</ng-container>
+                </button>
+                <!-- Divider -->
+                <div class="dropdown-divider"></div>
+                <!-- Delete button -->
+                <button [appConfirm]="deleteDlg" confirmAction="Delete domain"
+                        (confirmed)="delete()" ngbDropdownItem class="text-danger" i18n-confirmAction>
+                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Delete</ng-container>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Properties -->
+    <section [appSpinner]="loading.active" spinnerSize="lg">
+        <dl *ngIf="domain" id="domainDetailTable" class="detail-table">
+            <!-- Display name -->
+            <div>
+                <dt i18n>Display name</dt>
+                <dd>{{ domain!.displayName }}</dd>
+            </div>
+            <!-- Host -->
+            <div>
+                <dt i18n>Host</dt>
+                <dd>{{ domain!.host }}</dd>
+            </div>
+            <!-- State -->
+            <div>
+                <dt i18n>State</dt>
+                <dd>{{ domain!.state }}</dd>
+            </div>
+
+            <!-- Auto spam filter -->
+            <div>
+                <dt i18n>Auto spam filter</dt>
+                <dd><app-checkmark [value]="domain!.autoSpamFilter"></app-checkmark></dd>
+            </div>
+            <!-- Moderate all anonymous -->
+            <div>
+                <dt i18n>Moderate all anonymous</dt>
+                <dd><app-checkmark [value]="domain!.moderateAllAnonymous"></app-checkmark></dd>
+            </div>
+            <!-- Require identification -->
+            <div>
+                <dt i18n>Require identification</dt>
+                <dd><app-checkmark [value]="domain!.requireIdentification"></app-checkmark></dd>
+            </div>
+            <!-- Require moderation -->
+            <div>
+                <dt i18n>Require moderation</dt>
+                <dd><app-checkmark [value]="domain!.requireModeration"></app-checkmark></dd>
+            </div>
+            <!-- Created -->
+            <div>
+                <dt i18n>Created</dt>
+                <dd>{{ domain!.creationDate }}</dd>
+            </div>
+            <!-- Default sort policy -->
+            <div>
+                <dt i18n>Default sort policy</dt>
+                <dd>{{ domain!.defaultSortPolicy }}</dd>
+            </div>
+            <!-- Email notification policy -->
+            <div>
+                <dt i18n>Email notification policy</dt>
+                <dd>{{ domain!.emailNotificationPolicy }}</dd>
+            </div>
+            <!-- Identity providers -->
+            <div>
+                <dt i18n>Identity providers</dt>
+                <dd>
+                    <table>
+                        <tr *ngFor="let idp of idps">
+                            <td class="text-center"><app-checkmark [value]="idp.enabled"></app-checkmark></td>
+                            <td>{{ idp.name }}</td>
+                        </tr>
+                    </table>
+                </dd>
+            </div>
+            <!-- Moderators -->
+            <div>
+                <dt i18n>Moderators</dt>
+                <dd>
+                    <ul class="list-unstyled mb-0">
+                        <li *ngFor="let m of domain!.moderators">{{ m.email }}</li>
+                    </ul>
+                </dd>
+            </div>
+        </dl>
+    </section>
+</section>
+
+<!-- Delete confirmation dialog content template -->
+<ng-template #deleteDlg>
+    <p i18n>Are you sure you want to delete the domain <code>{{ domain!.host }}</code>?</p>
+</ng-template>

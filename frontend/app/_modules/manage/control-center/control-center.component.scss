@@ -45,8 +45,13 @@ $sidebar-size-collapsed: 40px;
             .cc-vshrink-collapsed {
                 height: 0;
             }
-            .cc-logo {
-                margin-left: -167px;
+            .cc-logo-expanded {
+                opacity: 0;
+                transform: translateX(-165px);
+            }
+            .cc-logo-collapsed {
+                opacity: 1;
+                left: 4px;
             }
             .cc-divider:before {
                 opacity: 1;
@@ -72,13 +77,27 @@ $sidebar-size-collapsed: 40px;
 }
 
 .cc-logo {
-    padding: 15px;
+    padding: 5px 0 15px 0;
+    text-align: center;
+    position: relative;
+}
+
+.cc-logo-expanded {
+    transition: all 0.3s linear;
+}
+
+.cc-logo-collapsed {
+    position: absolute;
+    opacity: 0;
+    left: 160px;
+    top: 13px;
     transition: all 0.3s linear;
 }
 
 .cc-hide-collapsed {
     transition: opacity 0.3s linear;
 }
+
 .cc-vshrink-collapsed {
     overflow: hidden;
     line-height: 1.1em;

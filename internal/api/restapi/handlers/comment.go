@@ -27,7 +27,7 @@ func CommentApprove(params api_commenter.CommentApproveParams, principal data.Pr
 	}
 
 	// Verify the user is a domain moderator
-	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Domain); r != nil {
+	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
 		return r
 	}
 
@@ -42,7 +42,7 @@ func CommentApprove(params api_commenter.CommentApproveParams, principal data.Pr
 
 func CommentCount(params api_commenter.CommentCountParams) middleware.Responder {
 	// Fetch comment counts
-	cc, err := svc.ThePageService.CommentCountsByPath(*params.Body.Domain, params.Body.Paths)
+	cc, err := svc.ThePageService.CommentCounts(params.Body.Host, params.Body.Paths)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -65,7 +65,7 @@ func CommentDelete(params api_commenter.CommentDeleteParams, principal data.Prin
 
 	// If not deleting their own comment, the user must be a domain moderator
 	if comment.CommenterHex != principal.GetHexID() {
-		if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Domain); r != nil {
+		if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
 			return r
 		}
 	}
@@ -93,7 +93,7 @@ func CommentEdit(params api_commenter.CommentEditParams, principal data.Principa
 
 	// If not updating their own comment, the user must be a domain moderator
 	if comment.CommenterHex != principal.GetHexID() {
-		if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Domain); r != nil {
+		if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
 			return r
 		}
 	}
@@ -115,7 +115,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 	commenter := principal.(*data.UserCommenter)
 
 	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByName(*params.Body.Domain)
+	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -127,7 +127,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 	}
 
 	// Fetch the page
-	page, err := svc.ThePageService.FindByDomainPath(domain.Domain, params.Body.Path)
+	page, err := svc.ThePageService.FindByHostPath(domain.Host, params.Body.Path)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -142,7 +142,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 	}
 
 	// Fetch comment list
-	comments, commenters, err := svc.TheCommentService.ListWithCommentersByDomainPath(commenter, domain.Domain, params.Body.Path)
+	comments, commenters, err := svc.TheCommentService.ListWithCommentersByHostPath(commenter, domain.Host, params.Body.Path)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -159,7 +159,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 	}
 
 	// Register a view in domain statistics, ignoring any error
-	_ = svc.TheDomainService.RegisterView(domain.Domain, commenter)
+	_ = svc.TheDomainService.RegisterView(domain.Host, commenter)
 
 	// Succeeded
 	return api_commenter.NewCommentListOK().WithPayload(&api_commenter.CommentListOKBody{
@@ -168,7 +168,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 		Comments:              comments,
 		ConfiguredOauths:      idps,
 		DefaultSortPolicy:     domain.DefaultSortPolicy,
-		Domain:                domain.Domain,
+		Host:                  domain.Host,
 		IsFrozen:              domain.State == models.DomainStateFrozen,
 		IsModerator:           commenter.IsModerator,
 		RequireIdentification: domain.RequireIdentification,
@@ -178,7 +178,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 
 func CommentNew(params api_commenter.CommentNewParams, principal data.Principal) middleware.Responder {
 	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByName(*params.Body.Domain)
+	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -197,7 +197,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 
 	// Verify the page isn't locked
 	path := strings.TrimSpace(params.Body.Path)
-	if page, err := svc.ThePageService.FindByDomainPath(domain.Domain, path); err != nil {
+	if page, err := svc.ThePageService.FindByHostPath(domain.Host, path); err != nil {
 		return respServiceError(err)
 	} else if page.IsLocked {
 		return respBadRequest(util.ErrorPageLocked)
@@ -223,7 +223,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 		state = models.CommentStateUnapproved
 	} else if domain.AutoSpamFilter &&
 		svc.TheAntispamService.CheckForSpam(
-			domain.Domain,
+			domain.Host,
 			util.UserIP(params.HTTPRequest),
 			util.UserAgent(params.HTTPRequest),
 			commenter.Name,
@@ -239,7 +239,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 	// Persist a new comment record
 	comment, err := svc.TheCommentService.Create(
 		commenter.HexID,
-		domain.Domain,
+		domain.Host,
 		path,
 		markdown,
 		*params.Body.ParentHex,

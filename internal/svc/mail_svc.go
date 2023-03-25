@@ -17,7 +17,7 @@ type MailService interface {
 	// Send sends an email and logs the outcome
 	Send(replyTo, recipient, subject, htmlMessage string) error
 	// SendCommentNotification sends an email notification about a comment to the given recipient
-	SendCommentNotification(recipientEmail, kind, domain, path, commenterName, title, html string, commentHex, unsubscribeToken models.HexID) error
+	SendCommentNotification(recipientEmail, kind string, host models.Host, path, commenterName, title, html string, commentHex, unsubscribeToken models.HexID) error
 	// SendFromTemplate sends an email from the provided template and logs the outcome
 	SendFromTemplate(replyTo, recipient, subject, templateFile string, templateData map[string]any) error
 }
@@ -27,7 +27,7 @@ type MailService interface {
 // mailService is a blueprint MailService implementation
 type mailService struct{}
 
-func (svc *mailService) SendCommentNotification(recipientEmail, kind, domain, path, commenterName, title, html string, commentHex, unsubscribeToken models.HexID) error {
+func (svc *mailService) SendCommentNotification(recipientEmail, kind string, host models.Host, path, commenterName, title, html string, commentHex, unsubscribeToken models.HexID) error {
 	return svc.SendFromTemplate(
 		"",
 		recipientEmail,
@@ -36,7 +36,7 @@ func (svc *mailService) SendCommentNotification(recipientEmail, kind, domain, pa
 		map[string]any{
 			"Kind":          kind,
 			"Title":         title,
-			"Domain":        domain,
+			"Domain":        host,
 			"Path":          path,
 			"CommentHex":    commentHex,
 			"CommenterName": commenterName,

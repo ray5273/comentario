@@ -6,17 +6,6 @@
 // Import Bootstrap
 @import "../../node_modules/bootstrap/scss/bootstrap";
 
-// Override Bootstrap classes
-.btn-primary, .btn-secondary, .btn-cta {
-    --bs-btn-color:        #fff;
-    --bs-btn-hover-color:  #fff;
-    --bs-btn-active-color: #fff;
-}
-.btn-outline-primary, .btn-outline-secondary, .btn-outline-cta {
-    --bs-btn-hover-color:  #fff;
-    --bs-btn-active-color: #fff;
-}
-
 // Give all root elements full height so that we can position the footer at the bottom of the screen
 html, body, app-root {
     height: 100%;
@@ -59,13 +48,44 @@ section {
     }
 }
 
-// Toast
-.toast {
-    overflow: hidden; // Fix the lower corners of the body sticking over the rounded corners of the toast
-}
-.toast-body {
-    background-color: rgba($white, .8);
+// Detail table
+dl.detail-table, dl.detail-table > div {
+    align-items: baseline;
     display: flex;
+    flex-wrap: wrap;
+    width: 100%;
+    margin: 0; // Override the standard 1rem bottom margin
+
+    dt {
+        flex: 0 0 30%;
+        margin-bottom: 0.5rem;
+        margin-right: 15px;
+        &:after {
+            content: ':';
+        }
+    }
+    dd {
+        flex: 1;
+        margin-bottom: 0.5rem;
+        overflow: hidden;
+        white-space: nowrap;
+        text-overflow: ellipsis;
+    }
+
+    // Display both dt and dd at full-width on sm and down
+    @include media-breakpoint-down(md) {
+        & {
+            display: block;
+            dt {
+                margin-bottom: 0;
+            }
+            dd {
+                margin-bottom: 1rem;
+                // Allow value text wrapping
+                white-space: normal;
+            }
+        }
+    }
 }
 
 // Separate block from the previous one: XS by a top margin, from SM up by a left border
@@ -78,7 +98,10 @@ section {
     }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 // Animations
+//----------------------------------------------------------------------------------------------------------------------
+
 .fade-in {
     animation: fade-in-animation 0.5s ease forwards 1;
 }
@@ -94,7 +117,10 @@ section {
     100% { opacity: 1; }
 }
 
+//----------------------------------------------------------------------------------------------------------------------
 // Spinners
+//----------------------------------------------------------------------------------------------------------------------
+
 .is-spinning-sm {
     pointer-events: none;
 
@@ -146,4 +172,44 @@ section {
         background-color: rgba(255, 255, 255, 0.8);
         z-index: 999;
     }
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// Bootstrap fixes
+//----------------------------------------------------------------------------------------------------------------------
+
+// Make text white on buttons (it's dark by default and that looks ugly)
+.btn-primary, .btn-secondary, .btn-cta {
+    --bs-btn-color:        #fff;
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-cta {
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+
+// Toast
+.toast {
+    // Fix the lower corners of the body sticking over the rounded corners of the toast
+    overflow: hidden;
+}
+.toast-body {
+    background-color: rgba($white, .8);
+    display: flex;
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// ng-bootstrap fixes
+//----------------------------------------------------------------------------------------------------------------------
+
+// Extra style to remove the standard arrow from the dropdown
+.dropdown-toggle.no-arrow::after {
+    content: initial;
+}
+
+// Make the typeahead's popup scrollable
+ngb-typeahead-window.dropdown-menu {
+    max-height: 350px !important;
+    overflow-y: auto;
 }
