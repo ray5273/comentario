@@ -740,8 +740,8 @@ export class Comentario {
         try {
             this.setError();
             r = await this.apiClient.post<ApiCommentListResponse>('comment/list', this.token, {
-                domain: parent.location.host,
-                path:   this.pageId,
+                host: parent.location.host,
+                path: this.pageId,
             });
 
         } catch (e) {
@@ -893,7 +893,7 @@ export class Comentario {
             this.setError();
             await this.apiClient.post<void>('page/update', this.token, {
                 page: {
-                    domain:           parent.location.host,
+                    host:             parent.location.host,
                     path:             this.pageId,
                     isLocked:         this.isLocked,
                     stickyCommentHex: this.stickyCommentHex,
