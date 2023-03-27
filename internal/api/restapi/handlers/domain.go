@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -181,6 +182,11 @@ func DomainNew(params api_owner.DomainNewParams, principal data.Principal) middl
 		return respBadRequest(util.ErrorInvalidDomainHost)
 	}
 
+	// Validate identity providers
+	if err := domainValidateIdPs(domain); err != nil {
+		return respBadRequest(err)
+	}
+
 	// Persist a new domain record in the database
 	owner := principal.(*data.UserOwner)
 	if err := svc.TheDomainService.Create(owner.HexID, domain); err != nil {
@@ -241,15 +247,14 @@ func DomainStatistics(params api_owner.DomainStatisticsParams, principal data.Pr
 
 func DomainUpdate(params api_owner.DomainUpdateParams, principal data.Principal) middleware.Responder {
 	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	domain := params.Body.Domain
+	if r := Verifier.UserOwnsDomain(principal.GetHexID(), domain.Host); r != nil {
 		return r
 	}
 
-	// Validate SSO provider
-	domain := params.Body.Domain
-	if domain.Idps["sso"] && domain.SsoURL == "" {
-		return respBadRequest(util.ErrorSSOURLMissing)
+	// Validate identity providers
+	if err := domainValidateIdPs(domain); err != nil {
+		return respBadRequest(err)
 	}
 
 	// Update the domain record
@@ -285,4 +290,33 @@ func domainExport(host models.Host, email string) {
 				"URL":    config.URLForAPI("domain/export/download", map[string]string{"exportHex": string(exportHex)}),
 			})
 	}
+}
+
+// domainValidateIdPs validates the passed list of domain's identity providers
+func domainValidateIdPs(domain *models.Domain) error {
+	// Validate identity providers
+	for _, idp := range domain.Idps {
+		switch idp.ID {
+		// Local auth is always possible
+		case "":
+			continue
+
+		// If SSO is included, make sure the URL is provided
+		case "sso":
+			if domain.SsoURL == "" {
+				return util.ErrorSSOURLMissing
+			}
+
+		// It must be a federated provider. Make sure it's valid and configured
+		default:
+			if fidp, ok := data.FederatedIdProviders[idp.ID]; ok {
+				if _, err := goth.GetProvider(fidp.GothID); err != nil {
+					return fmt.Errorf("cannot enable identity provider '%s' as it isn't configured", fidp.Name)
+				}
+			} else {
+				return fmt.Errorf("invalid identity provider ID: '%s'", idp.ID)
+			}
+		}
+	}
+	return nil
 }

@@ -1,4 +1,4 @@
-import { NgModule } from '@angular/core';
+import { APP_INITIALIZER, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
@@ -16,6 +16,7 @@ import { HttpInterceptorService } from './_services/http-interceptor.service';
 import { BASE_PATH } from '../generated-api';
 import { environment } from '../environments/environment';
 import { ToolsModule } from './_modules/tools/tools.module';
+import { ConfigService } from './_services/config.service';
 
 @NgModule({
     declarations: [
@@ -41,6 +42,13 @@ import { ToolsModule } from './_modules/tools/tools.module';
         // Base API path
         {provide: BASE_PATH, useValue: environment.apiBaseUrl},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
+        // Initialise the config service
+        {
+            provide: APP_INITIALIZER,
+            useFactory: (cs: ConfigService) => () => cs.init(),
+            deps: [ConfigService],
+            multi: true,
+        },
     ],
     bootstrap: [AppComponent],
 })

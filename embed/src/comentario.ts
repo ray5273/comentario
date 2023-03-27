@@ -15,7 +15,7 @@ import {
     ApiCommenterLoginResponse,
     ApiCommenterTokenNewResponse,
     ApiCommentListResponse,
-    ApiCommentNewResponse,
+    ApiCommentNewResponse, ApiIdentityProvider,
     ApiSelfResponse,
 } from './api';
 import { Wrap } from './element-wrap';
@@ -85,7 +85,7 @@ export class Comentario {
     private isFrozen = false;
     private isLocked = false;
     private stickyCommentHex = '';
-    private authMethods: StringBooleanMap = {};
+    private idps: ApiIdentityProvider[] = [];
     private anonymousOnly = false;
     private sortPolicy: SortPolicy = 'score-desc';
     private selfHex?: string;
@@ -721,7 +721,7 @@ export class Comentario {
      */
     private async logout(): Promise<void> {
         // Terminate the server session
-        await this.apiClient.post<ApiCommentListResponse>('commenter/logout', this.token);
+        await this.apiClient.post('commenter/logout', this.token);
         // Wipe the token cookie
         this.token = AnonymousCommenterId;
         // Update auth status controls
@@ -746,7 +746,7 @@ export class Comentario {
 
         } catch (e) {
             // Disable login on error
-            this.profileBar!.authMethods = undefined;
+            this.profileBar!.idps = undefined;
             this.setError(e);
             throw e;
         }
@@ -757,14 +757,14 @@ export class Comentario {
         this.isFrozen              = r.isFrozen;
         this.isLocked              = r.attributes.isLocked;
         this.stickyCommentHex      = r.attributes.stickyCommentHex;
-        this.authMethods           = r.configuredOauths;
+        this.idps                  = r.idps;
         this.sortPolicy            = r.defaultSortPolicy;
 
         // Check if no auth provider available, but we allow anonymous commenting
-        this.anonymousOnly = !this.requireIdentification && !Object.values(this.authMethods).includes(true);
+        this.anonymousOnly = !this.requireIdentification && this.idps.length === 0;
 
         // Configure methods and moderator status in the profile bar
-        this.profileBar!.authMethods = this.authMethods;
+        this.profileBar!.idps        = this.idps;
         this.profileBar!.isModerator = this.isModerator;
 
         // Build a map by grouping all comments by their parentHex value

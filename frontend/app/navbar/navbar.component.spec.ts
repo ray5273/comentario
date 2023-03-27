@@ -2,8 +2,9 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { NavbarComponent } from './navbar.component';
-import { AuthServiceMock } from '../_testing/mocks.spec';
+import { AuthServiceMock, DocsServiceMock } from '../_testing/mocks.spec';
 import { AuthService } from '../_services/auth.service';
+import { DocsService } from '../_services/docs.service';
 
 describe('NavbarComponent', () => {
     let component: NavbarComponent;
@@ -15,6 +16,7 @@ describe('NavbarComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 {provide: AuthService, useValue: AuthServiceMock},
+                {provide: DocsService, useValue: DocsServiceMock},
             ],
         })
         .compileComponents();

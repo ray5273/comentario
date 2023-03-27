@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
-import { StringBooleanMap } from './models';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
+import { ApiIdentityProvider } from './api';
 
 export class LoginDialog extends Dialog {
 
@@ -12,7 +12,7 @@ export class LoginDialog extends Dialog {
     private constructor(
         parent: Wrap<any>,
         pos: DialogPositioning,
-        private readonly authMethods: StringBooleanMap,
+        private readonly idps: ApiIdentityProvider[],
         private readonly origin: string,
     ) {
         super(parent, 'Log in', pos);
@@ -43,23 +43,22 @@ export class LoginDialog extends Dialog {
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
-     * @param authMethods Map of enabled authentication methods.
+     * @param idps Map of enabled authentication methods.
      * @param origin Site origin (used for redirection to the "forgot password" page).
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, authMethods: StringBooleanMap, origin: string): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, authMethods, origin);
+    static run(parent: Wrap<any>, pos: DialogPositioning, idps: ApiIdentityProvider[], origin: string): Promise<LoginDialog> {
+        const dlg = new LoginDialog(parent, pos, idps, origin);
         return dlg.run(dlg);
     }
 
     override renderContent(): Wrap<any> {
         // Create a login form
         const form = UIToolkit.form(() => this.dismiss(true), () => this.dismiss());
-        const oauthProviders = ['google', 'github', 'gitlab', 'twitter'];
-        const hasOAuth = oauthProviders.some(p => this.authMethods[p]);
-        const hasLocalAuth = this.authMethods['commento'];
+        const federatedIdps = this.idps.filter(idp => idp.id !== '' && idp.id !== 'sso');
+        const hasLocalAuth = this.idps.some(idp => idp.id === '');
 
         // SSO auth
-        if (this.authMethods['sso']) {
+        if (this.idps.some(idp => idp.id === 'sso')) {
             form.append(
                 // SSO button
                 UIToolkit.div('oauth-buttons')
@@ -67,20 +66,19 @@ export class LoginDialog extends Dialog {
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner(`Proceed with ${parent.location.host} authentication`),
                 // Separator
-                (hasOAuth || hasLocalAuth) && Wrap.new('hr'));
+                (federatedIdps.length > 0 || hasLocalAuth) && Wrap.new('hr'));
         }
 
         // Add OAuth buttons, if applicable
-        if (hasOAuth) {
+        if (federatedIdps.length) {
             form.append(
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner('Proceed with social login'),
                 // OAuth buttons
                 UIToolkit.div('oauth-buttons')
                     .append(
-                        ...oauthProviders
-                            .filter(p => this.authMethods[p])
-                            .map(idp => UIToolkit.button(idp, () => this.dismissWith(idp), 'oauth-button', `${idp}-button`))),
+                        ...federatedIdps.map(idp =>
+                            UIToolkit.button(idp.name, () => this.dismissWith(idp.id), 'oauth-button', `${idp.id}-button`))),
                 // Separator
                 hasLocalAuth && Wrap.new('hr'));
         }

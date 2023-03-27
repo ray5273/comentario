@@ -98,6 +98,20 @@ dl.detail-table, dl.detail-table > div {
     }
 }
 
+.form-footer {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-end;
+    margin-top: .5rem;
+    padding: .75rem;
+    border-top: 1px solid $border-color;
+
+    > * {
+        margin: .25rem;
+    }
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Animations
 //----------------------------------------------------------------------------------------------------------------------

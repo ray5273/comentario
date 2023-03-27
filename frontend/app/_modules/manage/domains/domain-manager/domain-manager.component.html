@@ -2,6 +2,21 @@
     <!-- Heading -->
     <h1 i18n="heading">Domains</h1>
 
+    <!-- Toolbar -->
+    <nav class="navbar navbar-light">
+        <div class="container-fluid">
+            <div class="row g-2 flex-grow-1">
+                <!-- New item button -->
+                <div class="col">
+                    <button [routerLink]="[Paths.manage.domains, 'create']" type="button" class="btn btn-success">
+                        <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
+                        <ng-container i18n>New domain</ng-container>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
     <!-- Domain list -->
     <div class="list-group">
         <a *ngFor="let d of domains" [routerLink]="d.host" class="list-group-item list-group-item-action">

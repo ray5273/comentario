@@ -79,6 +79,25 @@ func (svc *domainService) Clear(host models.Host) error {
 func (svc *domainService) Create(ownerHex models.HexID, domain *models.Domain) error {
 	logger.Debugf("domainService.Create(%s, %#v)", ownerHex, domain)
 
+	// Prepare IdP settings
+	var local, google, github, gitlab, twitter, sso bool
+	for _, idp := range domain.Idps {
+		switch idp.ID {
+		case "":
+			local = true
+		case "google":
+			google = true
+		case "github":
+			github = true
+		case "gitlab":
+			gitlab = true
+		case "twitter":
+			twitter = true
+		case "sso":
+			sso = true
+		}
+	}
+
 	// Insert a new record
 	domain.CreationDate = strfmt.DateTime(time.Now().UTC())
 	err := db.Exec(
@@ -89,8 +108,8 @@ func (svc *domainService) Create(ownerHex models.HexID, domain *models.Domain) e
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);",
 		ownerHex, domain.Host, domain.DisplayName, domain.CreationDate, domain.State, domain.AutoSpamFilter,
 		domain.RequireModeration, domain.RequireIdentification, domain.ModerateAllAnonymous,
-		domain.EmailNotificationPolicy, domain.Idps["commento"], domain.Idps["google"], domain.Idps["github"],
-		domain.Idps["gitlab"], domain.Idps["twitter"], domain.Idps["sso"], domain.SsoURL, domain.DefaultSortPolicy)
+		domain.EmailNotificationPolicy, local, google, github, gitlab, twitter, sso, domain.SsoURL,
+		domain.DefaultSortPolicy)
 	if err != nil {
 		logger.Errorf("domainService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -389,6 +408,25 @@ func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.
 func (svc *domainService) Update(domain *models.Domain) error {
 	logger.Debug("domainService.Update(...)")
 
+	// Prepare IdP settings
+	var local, google, github, gitlab, twitter, sso bool
+	for _, idp := range domain.Idps {
+		switch idp.ID {
+		case "":
+			local = true
+		case "google":
+			google = true
+		case "github":
+			github = true
+		case "gitlab":
+			gitlab = true
+		case "twitter":
+			twitter = true
+		case "sso":
+			sso = true
+		}
+	}
+
 	// Update the domain
 	err := db.Exec(
 		"update domains "+
@@ -404,12 +442,12 @@ func (svc *domainService) Update(domain *models.Domain) error {
 		domain.RequireIdentification,
 		domain.ModerateAllAnonymous,
 		domain.EmailNotificationPolicy,
-		domain.Idps["commento"],
-		domain.Idps["google"],
-		domain.Idps["github"],
-		domain.Idps["gitlab"],
-		domain.Idps["twitter"],
-		domain.Idps["sso"],
+		local,
+		google,
+		github,
+		gitlab,
+		twitter,
+		sso,
 		domain.SsoURL,
 		domain.DefaultSortPolicy,
 		domain.Host)
@@ -433,7 +471,7 @@ func (svc *domainService) fetchDomainsAndModerators(rs *sql.Rows) ([]*models.Dom
 		// Fetch a domain and a moderator
 		d := models.Domain{}
 		m := models.DomainModerator{}
-		var commento, google, github, gitlab, twitter, sso bool
+		var local, google, github, gitlab, twitter, sso bool
 		err := rs.Scan(
 			&d.Host,
 			&d.DisplayName,
@@ -444,7 +482,7 @@ func (svc *domainService) fetchDomainsAndModerators(rs *sql.Rows) ([]*models.Dom
 			&d.RequireIdentification,
 			&d.ModerateAllAnonymous,
 			&d.EmailNotificationPolicy,
-			&commento,
+			&local,
 			&google,
 			&github,
 			&gitlab,
@@ -466,14 +504,32 @@ func (svc *domainService) fetchDomainsAndModerators(rs *sql.Rows) ([]*models.Dom
 		if domain, exists = dn[d.Host]; !exists {
 			domain = &d
 
-			// Compile a map of identity providers
-			d.Idps = exmodels.IdentityProviderMap{
-				"commento": commento,
-				"google":   google,
-				"github":   github,
-				"gitlab":   gitlab,
-				"twitter":  twitter,
-				"sso":      sso,
+			// Compile a list of identity providers
+			if local {
+				d.Idps = append(d.Idps, &exmodels.IdentityProvider{Name: "Local"})
+			}
+			if sso {
+				d.Idps = append(d.Idps, &exmodels.IdentityProvider{ID: "sso", Name: "sso"})
+			}
+
+			// Federated IdPs
+			var fidps []string
+			if google {
+				fidps = append(fidps, "google")
+			}
+			if github {
+				fidps = append(fidps, "github")
+			}
+			if gitlab {
+				fidps = append(fidps, "gitlab")
+			}
+			if twitter {
+				fidps = append(fidps, "twitter")
+			}
+			for _, id := range fidps {
+				if fidp, ok := data.FederatedIdProviders[id]; ok {
+					d.Idps = append(d.Idps, &fidp)
+				}
 			}
 
 			// Add the domain to the result list and the name map

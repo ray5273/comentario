@@ -19,7 +19,7 @@ var AnonymousCommenter = UserCommenter{
 }
 
 // FederatedIdProviders accumulates information about all supported ID providers
-var FederatedIdProviders = map[string]exmodels.FederatedIdProviderInfo{
+var FederatedIdProviders = map[string]exmodels.IdentityProvider{
 	"github":  {ID: "github", Name: "GitHub", GothID: "github"},
 	"gitlab":  {ID: "gitlab", Name: "GitLab", GothID: "gitlab"},
 	"google":  {ID: "google", Name: "Google", GothID: "google"},

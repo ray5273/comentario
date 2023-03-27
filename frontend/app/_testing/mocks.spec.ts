@@ -4,7 +4,9 @@
 import { noop, of } from 'rxjs';
 import { ToastService } from '../_services/toast.service';
 import { AuthService } from '../_services/auth.service';
-import { ApiAuthService, ApiOwnerService, Principal } from '../../generated-api';
+import { ApiAuthService, ApiGenericService, ApiOwnerService, Principal } from '../../generated-api';
+import { ConfigService } from '../_services/config.service';
+import { DocsService } from '../_services/docs.service';
 
 export const MockPrincipal: Principal = {
     id:          '3095476039754607235673945067839458603987456038745528734659278423',
@@ -19,6 +21,21 @@ export const AuthServiceMock: Partial<AuthService> = {
     lastPrincipal: of(MockPrincipal),
     login:         (email, password) => of(MockPrincipal),
     logout:        () => of(undefined),
+};
+
+// noinspection JSUnusedLocalSymbols
+export const ConfigServiceMock: Partial<ConfigService> = {
+    clientConfig: {baseUrl: '', idps: []},
+    docsBaseUrl:  '',
+    init:         () => of(null),
+};
+
+// noinspection JSUnusedLocalSymbols
+export const DocsServiceMock: Partial<DocsService> = {
+    urlHome:         '',
+    urlAbout:        '',
+    getEmbedPageUrl: (pageName: string) => '',
+    getPageUrl:      (path: string, lang?: string) => '',
 };
 
 // noinspection JSUnusedLocalSymbols
@@ -46,6 +63,9 @@ const getApiMock = <T>(token: T): jasmine.SpyObj<T> => {
     return instance;
 
 };
+
+export type MockApiGenericService = jasmine.SpyObj<ApiGenericService>;
+export const getApiGenericServiceMock = () => getApiMock(ApiGenericService);
 
 export type MockApiAuthService = jasmine.SpyObj<ApiAuthService>;
 export const getApiAuthServiceMock = () => getApiMock(ApiAuthService);

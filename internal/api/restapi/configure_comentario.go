@@ -75,6 +75,13 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.UserCookieAuth = handlers.AuthUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
+	// Generic API
+	//------------------------------------------------------------------------------------------------------------------
+
+	// Config
+	api.APIGenericConfigClientGetHandler = api_generic.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
+
+	//------------------------------------------------------------------------------------------------------------------
 	// Auth API
 	//------------------------------------------------------------------------------------------------------------------
 
@@ -122,9 +129,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	//------------------------------------------------------------------------------------------------------------------
 	// Owner API
 	//------------------------------------------------------------------------------------------------------------------
-
-	// Config
-	api.APIOwnerConfigClientGetHandler = api_owner.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
 
 	// Domain
 	api.APIOwnerDomainClearHandler = api_owner.DomainClearHandlerFunc(handlers.DomainClear)

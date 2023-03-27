@@ -36,11 +36,17 @@ definitions:
     readOnly: true
     required:
       - idps
+      - baseUrl
     properties:
+      baseUrl:
+        type: string
+        x-isnullable: false
+        description: Base Comentario URL
       idps:
         type: array
         items:
-          $ref: "#/definitions/federatedIdProvider"
+          $ref: "#/definitions/identityProvider"
+        description: Configured federated identity providers
 
   comment:
     type: object
@@ -112,46 +118,75 @@ definitions:
     type: object
     required:
       - host
-      - displayName
+      - state
+      - autoSpamFilter
+      - requireModeration
+      - requireIdentification
+      - moderateAllAnonymous
+      - defaultSortPolicy
+      - emailNotificationPolicy
     properties:
       host:
         $ref: "#/definitions/host"
+        description: Host, with an optional port number, the domain is configured on
       displayName:
         type: string
         description: Display name of the domain
+        maxLength: 255
         x-isnullable: false
+      state:
+        $ref: "#/definitions/domainState"
+        description: Domain state
+      autoSpamFilter:
+        type: boolean
+        description: Whether automatic spam detection is active
+        x-omitempty: false
+        x-isnullable: false
+      requireModeration:
+        type: boolean
+        description: Whether every comment is subject to an approval by a moderator
+        x-omitempty: false
+        x-isnullable: false
+      requireIdentification:
+        type: boolean
+        description: Whether anonymous comments are disabled
+        x-omitempty: false
+        x-isnullable: false
+      moderateAllAnonymous:
+        type: boolean
+        description: Whether anonymous comments are subject to an approval by a moderator
+        x-omitempty: false
+        x-isnullable: false
+      defaultSortPolicy:
+        $ref: "#/definitions/sortPolicy"
+        description: Default comment sorting for the domain
+      emailNotificationPolicy:
+        $ref: "#/definitions/emailNotificationPolicy"
+        description: Email notification policy for new comments
+      idps:
+        type: array
+        items:
+          $ref: "#/definitions/identityProvider"
+        description: Map of enabled identity providers
+      ssoUrl:
+        type: string
+        format: uri
+        description: URL of the SSO server
+      ssoSecret:
+        type: string
+        readOnly: true
+        description: SSO secret
       creationDate:
         type: string
         format: date-time
-      state:
-        $ref: "#/definitions/domainState"
-      autoSpamFilter:
-        type: boolean
-        x-omitempty: false
-      requireModeration:
-        type: boolean
-        x-omitempty: false
-      requireIdentification:
-        type: boolean
-        x-omitempty: false
-      moderateAllAnonymous:
-        type: boolean
-        x-omitempty: false
+        readOnly: true
+        description: Timestamp when the domain was created
       moderators:
         type: array
         items:
           $ref: "#/definitions/domainModerator"
-      emailNotificationPolicy:
-        $ref: "#/definitions/emailNotificationPolicy"
-      idps:
-        $ref: "#/definitions/idpMap"
-      ssoSecret:
-        type: string
-      ssoUrl:
-        type: string
-        format: uri
-      defaultSortPolicy:
-        $ref: "#/definitions/sortPolicy"
+        readOnly: true
+        description: List of domain moderators
 
   domainModerator:
     description: Domain moderator
@@ -172,6 +207,7 @@ definitions:
     enum:
       - unfrozen
       - frozen
+    x-isnullable: false
 
   email:
     type: object
@@ -205,6 +241,7 @@ definitions:
       - all
       - none
       - pending-moderation
+    x-isnullable: false
 
   federatedIdpId:
     description: Federated identity provider ID
@@ -214,21 +251,6 @@ definitions:
       - gitlab
       - google
       - twitter
-
-  federatedIdProvider:
-    description: Federated identity provider info
-    type: object
-    x-go-type:
-      import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
-      type: FederatedIdProviderInfo
-    properties:
-      id:
-        $ref: "#/definitions/federatedIdpId"
-        description: Provider ID
-      name:
-        type: string
-        description: Provider name
 
   hexId:
     description: ID consisting of 64 hex digits
@@ -246,14 +268,29 @@ definitions:
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
 
-  idpMap:
-    description: Map of enabled identity providers (name => boolean), including 'commento', 'sso', and all known federated IdPs
+  identityProvider:
+    description: Generalised identity provider info
     type: object
     x-go-type:
       import:
         package: "gitlab.com/comentario/comentario/internal/api/exmodels"
-      type: "IdentityProviderMap"
-    x-omitempty: false
+      type: IdentityProvider
+    required:
+      - id
+      - name
+    properties:
+      id:
+        type: string
+        description: >
+          Provider ID. Empty string means "local, password-based authentication", other values are 'sso' and all the 
+          values of the federatedIdpId enum
+        x-isnullable: false
+        example: github
+      name:
+        type: string
+        description: Provider name
+        x-isnullable: false
+        example: GitHub
 
   page:
     description: Page hosting comments
@@ -307,6 +344,7 @@ definitions:
       - score-desc
       - creationdate-desc
       - creationdate-asc
+    x-isnullable: false
 
 parameters:
 
@@ -430,7 +468,7 @@ paths:
       operationId: ConfigClientGet
       summary: Obtain client configuration
       tags:
-        - ApiOwner
+        - ApiGeneric
       security: []
       responses:
         200:
@@ -780,8 +818,11 @@ paths:
                 $ref: "#/definitions/sortPolicy"
               attributes:
                 $ref: "#/definitions/page"
-              configuredOauths:
-                $ref: "#/definitions/idpMap"
+              idps:
+                type: array
+                items:
+                  $ref: "#/definitions/identityProvider"
+                description: Map of enabled identity providers
 
   /comment/new:
     post:
@@ -1072,6 +1113,26 @@ paths:
         204:
           description: Domain added successfully
 
+    put:
+      operationId: DomainUpdate
+      summary: Update properties of specified domain
+      tags:
+        - ApiOwner
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - domain
+            properties:
+              domain:
+                $ref: "#/definitions/domain"
+      responses:
+        204:
+          description: Domain properties have been updated
+
   /domains/{host}:
     parameters:
       - $ref: "#/parameters/pathHost"
@@ -1095,26 +1156,6 @@ paths:
       responses:
         204:
           description: Domain has been deleted
-
-    put:
-      operationId: DomainUpdate
-      summary: Update properties of specified domain
-      tags:
-        - ApiOwner
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - domain
-            properties:
-              domain:
-                $ref: "#/definitions/domain"
-      responses:
-        204:
-          description: Domain properties have been updated
 
     post:
       operationId: DomainClear

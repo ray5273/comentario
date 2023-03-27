@@ -6,6 +6,8 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ApiOwnerService, Domain } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
+import { ConfigService } from '../../../../_services/config.service';
+import { Location } from '@angular/common';
 
 @UntilDestroy()
 @Component({
@@ -19,6 +21,7 @@ export class DomainDetailComponent implements OnInit {
 
     readonly loading = new ProcessingStatus();
     readonly Paths = Paths;
+    readonly snippet: string;
 
     // Icons
     readonly faBars     = faBars;
@@ -31,7 +34,13 @@ export class DomainDetailComponent implements OnInit {
         private readonly router: Router,
         private readonly api: ApiOwnerService,
         private readonly toastSvc: ToastService,
-    ) {}
+        private readonly cfgSvc: ConfigService,
+    ) {
+        const script = Location.joinWithSlash(this.cfgSvc.clientConfig.baseUrl, 'js/comentario.js');
+        this.snippet =
+            `<script defer src="${script}"></script>\n` +
+            `<div id="comentario"></div>`;
+    }
 
     ngOnInit(): void {
         // Subscribe to route changes to be able to reload data on same route

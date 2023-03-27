@@ -237,7 +237,14 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 	}
 
 	// Make sure the domain allow SSO authentication
-	if !domain.Idps["sso"] {
+	found := false
+	for _, idp := range domain.Idps {
+		if idp.ID == "sso" {
+			found = true
+			break
+		}
+	}
+	if !found {
 		return oauthFailure(fmt.Errorf("SSO not configured for %s", domain.Host))
 	}
 

@@ -41,6 +41,14 @@
     <!-- Properties -->
     <section [appSpinner]="loading.active" spinnerSize="lg">
         <dl *ngIf="domain" id="domainDetailTable" class="detail-table">
+            <!-- HTML snippet -->
+            <div>
+                <dt i18n>HTML snippet</dt>
+                <dd>
+w                    <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on.</p>
+                    <textarea [value]="snippet" class="form-control font-monospace" rows="3" readonly></textarea>
+                </dd>
+            </div>
             <!-- Display name -->
             <div>
                 <dt i18n>Display name</dt>
@@ -99,7 +107,10 @@
                     <table>
                         <tr *ngFor="let idp of idps">
                             <td class="text-center"><app-checkmark [value]="idp.enabled"></app-checkmark></td>
-                            <td>{{ idp.name }}</td>
+                            <td>
+                                <ng-container *ngIf="idp.name else local">{{ idp.name }}</ng-container>
+                                <ng-template #local><span i18n>Local (password-based)</span></ng-template>
+                            </td>
                         </tr>
                     </table>
                 </dd>

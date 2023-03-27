@@ -1,10 +1,11 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { Commenter, ProfileSettings, Email, SignupData, StringBooleanMap } from './models';
+import { Commenter, Email, ProfileSettings, SignupData } from './models';
 import { Utils } from './utils';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
+import { ApiIdentityProvider } from './api';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 
@@ -12,7 +13,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     private btnLogin?: Wrap<HTMLButtonElement>;
     private commenter?: Commenter;
     private email?: Email;
-    private _authMethods?: StringBooleanMap;
+    private _idps?: ApiIdentityProvider[];
 
     /**
      * @param baseUrl Comentario's base URL.
@@ -34,12 +35,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     }
 
     /**
-     * Map of allowed authentication methods: {idp: true}.
+     * Map of allowed identity providers.
      */
-    set authMethods(am: StringBooleanMap | undefined) {
-        this._authMethods = am;
+    set idps(idps: ApiIdentityProvider[] | undefined) {
+        this._idps = idps;
         // Hide or show the login button based on the availability of any auth method
-        this.btnLogin?.setClasses(!am || !Object.values(am).includes(true), 'hidden');
+        this.btnLogin?.setClasses(!idps?.length, 'hidden');
     }
 
     /**
@@ -132,13 +133,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a login dialog and return a promise that's resolved when the dialog is closed.
      */
     async loginUser(): Promise<void> {
-        if (!this._authMethods) {
+        if (!this._idps) {
             return Promise.reject('No configured authentication methods.');
         }
         const dlg = await LoginDialog.run(
             this.root,
             {ref: this.btnLogin!, placement: 'bottom-end'},
-            this._authMethods,
+            this._idps,
             this.baseUrl);
         if (dlg.confirmed) {
             switch (dlg.navigateTo) {

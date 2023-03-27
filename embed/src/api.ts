@@ -5,6 +5,11 @@ export interface ApiSelfResponse {
     email?:     Email;
 }
 
+export interface ApiIdentityProvider {
+    id:   string;
+    name: string;
+}
+
 export interface ApiCommentListResponse {
     requireIdentification: boolean;
     isModerator:           boolean;
@@ -12,7 +17,7 @@ export interface ApiCommentListResponse {
     attributes:            any;
     comments:              Comment[];
     commenters:            Commenter[];
-    configuredOauths:      { [k: string]: boolean };
+    idps:                  ApiIdentityProvider[];
     defaultSortPolicy:     SortPolicy;
 }
 

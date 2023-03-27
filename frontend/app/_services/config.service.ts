@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+import { Observable, tap } from 'rxjs';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from '../../environments/environment';
+import { ApiGenericService, ClientConfig } from '../../generated-api';
 
 @Injectable({
     providedIn: 'root',
@@ -17,9 +19,12 @@ export class ConfigService {
      */
     readonly isUnderTest: boolean = false;
 
+    private _clientConfig?: ClientConfig;
+
     constructor(
         private readonly ngbConfig: NgbConfig,
         private readonly toastConfig: NgbToastConfig,
+        private readonly api: ApiGenericService,
     ) {
         // Detect if the e2e-test is active
         this.isUnderTest = !!(window as any).Cypress;
@@ -30,9 +35,24 @@ export class ConfigService {
     }
 
     /**
+     * Client configuration obtained from the API.
+     */
+    get clientConfig(): ClientConfig {
+        return this._clientConfig!;
+    }
+
+    /**
      * Return the base URL for embedded and linked documentation pages.
      */
     get docsBaseUrl(): string {
         return environment.docsBaseUrl;
+    }
+
+    /**
+     * Initialise the app configuration.
+     */
+    init(): Observable<any> {
+        // Fetch client config
+        return this.api.configClientGet().pipe(tap(cc => this._clientConfig = cc));
     }
 }
