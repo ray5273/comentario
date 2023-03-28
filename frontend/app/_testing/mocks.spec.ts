@@ -25,6 +25,7 @@ export const AuthServiceMock: Partial<AuthService> = {
 
 // noinspection JSUnusedLocalSymbols
 export const ConfigServiceMock: Partial<ConfigService> = {
+    allIdps:      [],
     clientConfig: {baseUrl: '', idps: []},
     docsBaseUrl:  '',
     init:         () => of(null),

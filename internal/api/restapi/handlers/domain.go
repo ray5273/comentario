@@ -295,26 +295,26 @@ func domainExport(host models.Host, email string) {
 // domainValidateIdPs validates the passed list of domain's identity providers
 func domainValidateIdPs(domain *models.Domain) error {
 	// Validate identity providers
-	for _, idp := range domain.Idps {
-		switch idp.ID {
+	for _, id := range domain.Idps {
+		switch id {
 		// Local auth is always possible
-		case "":
+		case models.IdentityProviderIDEmpty:
 			continue
 
 		// If SSO is included, make sure the URL is provided
-		case "sso":
+		case models.IdentityProviderIDSso:
 			if domain.SsoURL == "" {
 				return util.ErrorSSOURLMissing
 			}
 
 		// It must be a federated provider. Make sure it's valid and configured
 		default:
-			if fidp, ok := data.FederatedIdProviders[idp.ID]; ok {
+			if fidp, ok := data.FederatedIdProviders[id]; ok {
 				if _, err := goth.GetProvider(fidp.GothID); err != nil {
 					return fmt.Errorf("cannot enable identity provider '%s' as it isn't configured", fidp.Name)
 				}
 			} else {
-				return fmt.Errorf("invalid identity provider ID: '%s'", idp.ID)
+				return fmt.Errorf("invalid identity provider ID: '%s'", id)
 			}
 		}
 	}

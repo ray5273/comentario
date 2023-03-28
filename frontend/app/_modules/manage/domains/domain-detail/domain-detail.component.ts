@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
+import { Location } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faBars, faClone, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { ApiOwnerService, Domain } from '../../../../../generated-api';
+import { ApiOwnerService, Domain, IdentityProvider } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { ConfigService } from '../../../../_services/config.service';
-import { Location } from '@angular/common';
 
 @UntilDestroy()
 @Component({
@@ -17,7 +17,7 @@ import { Location } from '@angular/common';
 export class DomainDetailComponent implements OnInit {
 
     domain?: Domain;
-    idps?: {name: string; enabled: boolean}[];
+    domainIdps?: IdentityProvider[];
 
     readonly loading = new ProcessingStatus();
     readonly Paths = Paths;
@@ -68,7 +68,7 @@ export class DomainDetailComponent implements OnInit {
             .pipe(this.loading.processing())
             .subscribe(d => {
                 this.domain = d;
-                this.idps = Object.entries(d.idps as any).map(([name, v]) => ({name, enabled: !!v}));
+                this.domainIdps = this.cfgSvc.allIdps.filter(idp => d.idps.includes(idp.id));
             });
     }
 }

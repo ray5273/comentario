@@ -4,7 +4,7 @@
     <h1 *ngIf="!isNew" i18n="heading">Edit domain</h1>
 
     <!-- Edit form -->
-    <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
+    <form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
         <!-- Info -->
         <div *ngIf="isNew" class="mb-3">
             <ng-container i18n>Add a domain to enable comments on it.</ng-container>
@@ -129,16 +129,12 @@
                     <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
                 </div>
 
-                <!-- Local -->
-                <div class="form-check me-3">
-                    <input type="checkbox" class="form-check-input" id="authLocal">
-                    <label class="form-check-label" for="authLocal" i18n>Local (password-based)</label>
-                </div>
-
                 <!-- Identity providers -->
-                <div *ngFor="let idp of idps" class="form-check me-3">
-                    <input type="checkbox" class="form-check-input" [id]="'idp' + idp.id">
-                    <label class="form-check-label" [for]="'idp' + idp.id"><ng-container i18n>Login via</ng-container> {{ idp.name }}</label>
+                <div formArrayName="idps">
+                    <div *ngFor="let idp of idps; index as idx" class="form-check me-3">
+                        <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
+                        <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+                    </div>
                 </div>
             </div>
         </div>

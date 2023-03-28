@@ -45,8 +45,8 @@
             <div>
                 <dt i18n>HTML snippet</dt>
                 <dd>
-w                    <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on.</p>
-                    <textarea [value]="snippet" class="form-control font-monospace" rows="3" readonly></textarea>
+                    <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on.</p>
+                    <textarea [value]="snippet" #sn (click)="sn.select()" class="form-control font-monospace" rows="3" readonly></textarea>
                 </dd>
             </div>
             <!-- Display name -->
@@ -75,44 +75,29 @@ w                    <p i18n>Insert the following piece of HTML code into every 
                 <dt i18n>Moderate all anonymous</dt>
                 <dd><app-checkmark [value]="domain!.moderateAllAnonymous"></app-checkmark></dd>
             </div>
-            <!-- Require identification -->
-            <div>
-                <dt i18n>Require identification</dt>
-                <dd><app-checkmark [value]="domain!.requireIdentification"></app-checkmark></dd>
-            </div>
             <!-- Require moderation -->
             <div>
                 <dt i18n>Require moderation</dt>
                 <dd><app-checkmark [value]="domain!.requireModeration"></app-checkmark></dd>
             </div>
-            <!-- Created -->
+            <!-- Comment sorting -->
             <div>
-                <dt i18n>Created</dt>
-                <dd>{{ domain!.creationDate }}</dd>
-            </div>
-            <!-- Default sort policy -->
-            <div>
-                <dt i18n>Default sort policy</dt>
+                <dt i18n>Comment sorting</dt>
                 <dd>{{ domain!.defaultSortPolicy }}</dd>
             </div>
-            <!-- Email notification policy -->
+            <!-- Email moderators -->
             <div>
-                <dt i18n>Email notification policy</dt>
+                <dt i18n>Email moderators</dt>
                 <dd>{{ domain!.emailNotificationPolicy }}</dd>
             </div>
-            <!-- Identity providers -->
+            <!-- Authentication -->
             <div>
-                <dt i18n>Identity providers</dt>
+                <dt i18n>Authentication</dt>
                 <dd>
-                    <table>
-                        <tr *ngFor="let idp of idps">
-                            <td class="text-center"><app-checkmark [value]="idp.enabled"></app-checkmark></td>
-                            <td>
-                                <ng-container *ngIf="idp.name else local">{{ idp.name }}</ng-container>
-                                <ng-template #local><span i18n>Local (password-based)</span></ng-template>
-                            </td>
-                        </tr>
-                    </table>
+                    <ul class="list-unstyled">
+                        <li *ngIf="!domain!.requireIdentification">Anonymous comments</li>
+                        <li *ngFor="let idp of domainIdps">{{ idp.name }}</li>
+                    </ul>
                 </dd>
             </div>
             <!-- Moderators -->
@@ -123,6 +108,11 @@ w                    <p i18n>Insert the following piece of HTML code into every 
                         <li *ngFor="let m of domain!.moderators">{{ m.email }}</li>
                     </ul>
                 </dd>
+            </div>
+            <!-- Created -->
+            <div>
+                <dt i18n>Created</dt>
+                <dd>{{ domain!.creationDate | date:'short' }}</dd>
             </div>
         </dl>
     </section>

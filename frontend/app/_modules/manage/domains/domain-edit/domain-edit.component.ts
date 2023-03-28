@@ -1,14 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
-import { $localize } from '@angular/localize/init';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import {
     ApiOwnerService,
     Domain,
     DomainState,
     EmailNotificationPolicy,
-    IdentityProvider,
     SortPolicy,
 } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
@@ -28,16 +26,10 @@ export class DomainEditComponent implements OnInit {
     /** Domain being edited. */
     domain?: Domain;
 
-    /** Configured identity providers. */
-    idps: IdentityProvider[] = [
-        {id: '',    name: $localize`Local (password-based)`},
-        {id: 'sso', name: `Single Sign-On`},
-        ...this.cfgSvc.clientConfig.idps,
-    ];
-
     readonly Paths = Paths;
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
+    readonly idps = this.cfgSvc.allIdps;
     readonly form = this.fb.nonNullable.group({
         host:                    '',
         displayName:             '',
@@ -49,7 +41,7 @@ export class DomainEditComponent implements OnInit {
         emailNotificationPolicy: EmailNotificationPolicy.PendingModeration,
         ssoUrl:                  '',
         defaultSortPolicy:       SortPolicy.CreationdateAsc,
-        idps:                    this.fb.array([]), // TODO
+        idps:                    this.fb.array(this.idps.map(idp => idp.id !== 'sso')), // Enable all but SSO by default
     });
 
     // Icons
@@ -81,21 +73,21 @@ export class DomainEditComponent implements OnInit {
             this.api.domainGet(host)
                 .pipe(this.loading.processing())
                 .subscribe(d => {
-                    this.form.patchValue({
+                    this.domain = d;
+                    this.form.setValue({
                         host:                    d.host,
-                        displayName:             d.displayName,
+                        displayName:             d.displayName || '',
                         state:                   d.state,
-                        autoSpamFilter:          d.autoSpamFilter,
-                        requireModeration:       d.requireModeration,
+                        autoSpamFilter:          !!d.autoSpamFilter,
+                        requireModeration:       !!d.requireModeration,
                         allowAnonymous:          !d.requireIdentification,
-                        moderateAllAnonymous:    d.moderateAllAnonymous,
+                        moderateAllAnonymous:    !!d.moderateAllAnonymous,
                         emailNotificationPolicy: d.emailNotificationPolicy,
-                        ssoUrl:                  d.ssoUrl,
+                        ssoUrl:                  d.ssoUrl || '',
                         defaultSortPolicy:       d.defaultSortPolicy,
+                        // Checkbox for a specific IdP is on if that IdP is present among the enabled ones for the domain
+                        idps:                    this.idps.map(idp => !!d.idps?.includes(idp.id)),
                     });
-
-                    // Update IdPs
-                    // TODO
                 });
         }
 
@@ -112,26 +104,28 @@ export class DomainEditComponent implements OnInit {
         // Submit the form if it's valid
         if (this.form.valid) {
             const vals = this.form.value;
-            const dto = {
-                host:                    vals.host!,
+            const dto: Domain = {
+                // Host cannot be changed once set
+                host:                    vals.host || this.domain!.host,
                 displayName:             vals.displayName,
                 state:                   vals.state!,
-                autoSpamFilter:          vals.autoSpamFilter!,
-                requireModeration:       vals.requireModeration!,
+                autoSpamFilter:          vals.autoSpamFilter,
+                requireModeration:       vals.requireModeration,
                 requireIdentification:   !vals.allowAnonymous,
-                moderateAllAnonymous:    vals.moderateAllAnonymous!,
+                moderateAllAnonymous:    vals.moderateAllAnonymous,
                 defaultSortPolicy:       vals.defaultSortPolicy!,
                 emailNotificationPolicy: vals.emailNotificationPolicy!,
+                idps:                    this.idps.filter((_, idx) => vals.idps?.[idx]).map(idp => idp.id),
             };
 
-            // Run update with the API
-            this.api.domainUpdate({domain: dto})
+            // Run creation/updating with the API
+            (this.isNew ? this.api.domainNew({domain: dto}) : this.api.domainUpdate({domain: dto}))
                 .pipe(this.saving.processing())
                 .subscribe(() => {
                     // Add a success toast
                     this.toastSvc.success('data-saved').keepOnRouteChange();
                     // Navigate to the edited/created domain
-                    return this.router.navigate([Paths.manage.domains, vals.host]);
+                    return this.router.navigate([Paths.manage.domains, dto.host]);
                 });
         }
     }

@@ -119,12 +119,9 @@ definitions:
     required:
       - host
       - state
-      - autoSpamFilter
-      - requireModeration
-      - requireIdentification
-      - moderateAllAnonymous
       - defaultSortPolicy
       - emailNotificationPolicy
+      - idps
     properties:
       host:
         $ref: "#/definitions/host"
@@ -166,8 +163,10 @@ definitions:
       idps:
         type: array
         items:
-          $ref: "#/definitions/identityProvider"
-        description: Map of enabled identity providers
+          $ref: "#/definitions/identityProviderId"
+        description: >
+          List of IDs of identity providers enabled for this domain. Must be a subset of the local auth (id == ''), SSO
+          (id == 'sso'; only when ssoUrl is set) and all federated IdPs configured for this instance (see clientConfig)
       ssoUrl:
         type: string
         format: uri
@@ -271,26 +270,33 @@ definitions:
   identityProvider:
     description: Generalised identity provider info
     type: object
-    x-go-type:
-      import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
-      type: IdentityProvider
     required:
       - id
       - name
     properties:
       id:
-        type: string
-        description: >
-          Provider ID. Empty string means "local, password-based authentication", other values are 'sso' and all the 
-          values of the federatedIdpId enum
-        x-isnullable: false
+        $ref: "#/definitions/identityProviderId"
+        description: Provider ID
         example: github
       name:
         type: string
-        description: Provider name
+        description: >
+          Provider name. Ignored when the provider spec is received as input for an operation (e.g. when saving a 
+          domain)
         x-isnullable: false
         example: GitHub
+
+  identityProviderId:
+    description: ID of an identity provider
+    type: string
+    enum:
+      - ''       # Local auth
+      - sso      # Single Sign-On
+      - github   # From this point on are the federated IdP IDs
+      - gitlab
+      - google
+      - twitter
+    x-isnullable: false
 
   page:
     description: Page hosting comments
@@ -821,8 +827,8 @@ paths:
               idps:
                 type: array
                 items:
-                  $ref: "#/definitions/identityProvider"
-                description: Map of enabled identity providers
+                  $ref: "#/definitions/identityProviderId"
+                description: List of IDs of enabled identity providers
 
   /comment/new:
     post:

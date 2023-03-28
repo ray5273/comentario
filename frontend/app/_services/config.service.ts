@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from '../../environments/environment';
-import { ApiGenericService, ClientConfig } from '../../generated-api';
+import { ApiGenericService, ClientConfig, IdentityProvider } from '../../generated-api';
 
 @Injectable({
     providedIn: 'root',
@@ -32,6 +32,17 @@ export class ConfigService {
         // Disable animations with e2e to speed up the tests
         ngbConfig.animation = !this.isUnderTest;
         toastConfig.delay = ConfigService.TOAST_DELAY;
+    }
+
+    /**
+     * All identity providers available for this Comentario instance, including local, SSO, and federated ones.
+     */
+    get allIdps(): IdentityProvider[] {
+        return [
+            {id: '',    name: $localize`Local (password-based)`},
+            {id: 'sso', name: `Single Sign-On`},
+            ...this.clientConfig.idps,
+        ];
     }
 
     /**

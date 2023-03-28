@@ -2,7 +2,6 @@ package data
 
 import (
 	"github.com/go-openapi/strfmt"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"time"
 )
@@ -18,12 +17,17 @@ var AnonymousCommenter = UserCommenter{
 	},
 }
 
+type FederatedIdentityProvider struct {
+	models.IdentityProvider
+	GothID string // ID of the corresponding goth provider (if any)
+}
+
 // FederatedIdProviders accumulates information about all supported ID providers
-var FederatedIdProviders = map[string]exmodels.IdentityProvider{
-	"github":  {ID: "github", Name: "GitHub", GothID: "github"},
-	"gitlab":  {ID: "gitlab", Name: "GitLab", GothID: "gitlab"},
-	"google":  {ID: "google", Name: "Google", GothID: "google"},
-	"twitter": {ID: "twitter", Name: "Twitter", GothID: "twitter"},
+var FederatedIdProviders = map[models.IdentityProviderID]*FederatedIdentityProvider{
+	models.IdentityProviderIDGithub:  {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDGithub, Name: "GitHub"}, GothID: "github"},
+	models.IdentityProviderIDGitlab:  {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDGitlab, Name: "GitLab"}, GothID: "gitlab"},
+	models.IdentityProviderIDGoogle:  {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDGoogle, Name: "Google"}, GothID: "google"},
+	models.IdentityProviderIDTwitter: {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDTwitter, Name: "Twitter"}, GothID: "twitter"},
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

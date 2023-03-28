@@ -5,7 +5,6 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/markbates/goth"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -122,10 +121,10 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 	}
 
 	// Prepare a map of configured identity providers: federated ones should only be enabled when configured
-	var idps []*exmodels.IdentityProvider
-	for _, idp := range domain.Idps {
+	var ids []models.IdentityProviderID
+	for _, id := range domain.Idps {
 		// If it's a federated IdP
-		if fidp, ok := data.FederatedIdProviders[idp.ID]; ok {
+		if fidp, ok := data.FederatedIdProviders[id]; ok {
 			// If it isn't configured, skip it over
 			if _, err := goth.GetProvider(fidp.GothID); err != nil {
 				continue
@@ -133,7 +132,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 		}
 
 		// Add it to the list otherwise
-		idps = append(idps, idp)
+		ids = append(ids, id)
 	}
 
 	// Fetch the page
@@ -176,7 +175,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 		Attributes:            page,
 		Commenters:            commenters,
 		Comments:              comments,
-		Idps:                  idps,
+		Idps:                  ids,
 		DefaultSortPolicy:     domain.DefaultSortPolicy,
 		Host:                  domain.Host,
 		IsFrozen:              domain.State == models.DomainStateFrozen,

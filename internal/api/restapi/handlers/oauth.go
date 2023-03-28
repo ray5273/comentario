@@ -40,7 +40,7 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	var provider goth.Provider
 
 	// Map the provider to a goth provider
-	if idp, ok := data.FederatedIdProviders[params.Provider]; !ok {
+	if idp, ok := data.FederatedIdProviders[models.IdentityProviderID(params.Provider)]; !ok {
 		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
 
 	} else {
@@ -98,7 +98,7 @@ func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responde
 	var provider goth.Provider
 
 	// Map the provider to a goth provider
-	if idp, ok := data.FederatedIdProviders[params.Provider]; !ok {
+	if idp, ok := data.FederatedIdProviders[models.IdentityProviderID(params.Provider)]; !ok {
 		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
 
 	} else {
@@ -236,10 +236,10 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 		return respServiceError(err)
 	}
 
-	// Make sure the domain allow SSO authentication
+	// Make sure the domain allows SSO authentication
 	found := false
-	for _, idp := range domain.Idps {
-		if idp.ID == "sso" {
+	for _, id := range domain.Idps {
+		if id == models.IdentityProviderIDSso {
 			found = true
 			break
 		}

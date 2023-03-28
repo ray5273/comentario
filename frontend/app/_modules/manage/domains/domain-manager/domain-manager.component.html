@@ -18,7 +18,7 @@
     </nav>
 
     <!-- Domain list -->
-    <div class="list-group">
+    <div [appSpinner]="domainsLoading.active" spinnerSize="lg" class="list-group">
         <a *ngFor="let d of domains" [routerLink]="d.host" class="list-group-item list-group-item-action">
             <div class="fw-bold">{{ d.displayName }}</div>
             <div>{{ d.host }}</div>

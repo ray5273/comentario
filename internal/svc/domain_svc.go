@@ -3,7 +3,6 @@ package svc
 import (
 	"database/sql"
 	"github.com/go-openapi/strfmt"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"time"
@@ -81,19 +80,19 @@ func (svc *domainService) Create(ownerHex models.HexID, domain *models.Domain) e
 
 	// Prepare IdP settings
 	var local, google, github, gitlab, twitter, sso bool
-	for _, idp := range domain.Idps {
-		switch idp.ID {
-		case "":
+	for _, id := range domain.Idps {
+		switch id {
+		case models.IdentityProviderIDEmpty:
 			local = true
-		case "google":
+		case models.IdentityProviderIDGoogle:
 			google = true
-		case "github":
+		case models.IdentityProviderIDGithub:
 			github = true
-		case "gitlab":
+		case models.IdentityProviderIDGitlab:
 			gitlab = true
-		case "twitter":
+		case models.IdentityProviderIDTwitter:
 			twitter = true
-		case "sso":
+		case models.IdentityProviderIDSso:
 			sso = true
 		}
 	}
@@ -410,19 +409,19 @@ func (svc *domainService) Update(domain *models.Domain) error {
 
 	// Prepare IdP settings
 	var local, google, github, gitlab, twitter, sso bool
-	for _, idp := range domain.Idps {
-		switch idp.ID {
-		case "":
+	for _, id := range domain.Idps {
+		switch id {
+		case models.IdentityProviderIDEmpty:
 			local = true
-		case "google":
+		case models.IdentityProviderIDGoogle:
 			google = true
-		case "github":
+		case models.IdentityProviderIDGithub:
 			github = true
-		case "gitlab":
+		case models.IdentityProviderIDGitlab:
 			gitlab = true
-		case "twitter":
+		case models.IdentityProviderIDTwitter:
 			twitter = true
-		case "sso":
+		case models.IdentityProviderIDSso:
 			sso = true
 		}
 	}
@@ -506,29 +505,29 @@ func (svc *domainService) fetchDomainsAndModerators(rs *sql.Rows) ([]*models.Dom
 
 			// Compile a list of identity providers
 			if local {
-				d.Idps = append(d.Idps, &exmodels.IdentityProvider{Name: "Local"})
+				d.Idps = append(d.Idps, models.IdentityProviderIDEmpty)
 			}
 			if sso {
-				d.Idps = append(d.Idps, &exmodels.IdentityProvider{ID: "sso", Name: "sso"})
+				d.Idps = append(d.Idps, models.IdentityProviderIDSso)
 			}
 
 			// Federated IdPs
-			var fidps []string
+			var fidps []models.IdentityProviderID
 			if google {
-				fidps = append(fidps, "google")
+				fidps = append(fidps, models.IdentityProviderIDGoogle)
 			}
 			if github {
-				fidps = append(fidps, "github")
+				fidps = append(fidps, models.IdentityProviderIDGithub)
 			}
 			if gitlab {
-				fidps = append(fidps, "gitlab")
+				fidps = append(fidps, models.IdentityProviderIDGitlab)
 			}
 			if twitter {
-				fidps = append(fidps, "twitter")
+				fidps = append(fidps, models.IdentityProviderIDTwitter)
 			}
 			for _, id := range fidps {
-				if fidp, ok := data.FederatedIdProviders[id]; ok {
-					d.Idps = append(d.Idps, &fidp)
+				if _, ok := data.FederatedIdProviders[id]; ok {
+					d.Idps = append(d.Idps, id)
 				}
 			}
 
