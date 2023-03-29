@@ -28,7 +28,8 @@ func ConfigClientGet(api_generic.ConfigClientGetParams) middleware.Responder {
 
 	// Succeeded
 	return api_generic.NewConfigClientGetOK().WithPayload(&models.ClientConfig{
-		BaseURL: config.BaseURL.String(),
-		Idps:    idps,
+		BaseURL:       config.BaseURL.String(),
+		Idps:          idps,
+		SignupAllowed: config.CLIFlags.AllowNewOwners,
 	})
 }

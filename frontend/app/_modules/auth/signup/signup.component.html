@@ -1,0 +1,78 @@
+<section class="container">
+    <!-- Heading -->
+    <h1 i18n="heading">Sign up</h1>
+
+    <!-- Sign up closed -->
+    <div *ngIf="!signupAllowed else signupForm" class="text-center">
+        <!-- Alert -->
+        <div class="alert alert-secondary">
+            <h2 class="alert-heading" i18n>Sign-up closed</h2>
+            <hr>
+            <p><fa-icon [icon]="faBan" size="3x"></fa-icon></p>
+            <p i18n>Unfortunately, registration of new users is currently disabled.</p>
+            <p class="small" i18n>If you believe it's an error, please contact site owner.</p>
+        </div>
+
+        <!-- Login prompt -->
+        <p><a [routerLink]="Paths.auth.login" i18n>Already have an account?</a></p>
+    </div>
+
+    <!-- Signup message and form -->
+    <ng-template #signupForm>
+        <div *ngIf="!isComplete else signupComplete" class="row justify-content-center">
+            <!-- Sign-up form -->
+            <div class="col-sm-6 col-lg-5 col-xl-4">
+                <form [formGroup]="form" (ngSubmit)="submit()" id="signup-form">
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="email" class="form-label colon" i18n>Your email</label>
+                        <input #emailInput formControlName="email" type="email" class="form-control" id="email" size="45"
+                               [class.is-valid]="email.touched && email.valid"
+                               [class.is-invalid]="email.touched && email.invalid"
+                               required minlength="6" maxlength="255" autocomplete="email" placeholder="user@example.com">
+                        <div class="invalid-feedback" i18n>Please enter a valid email.</div>
+                    </div>
+                    <!-- Password -->
+                    <div class="mb-3">
+                        <label for="password" class="form-label colon" i18n>Password</label>
+                        <app-password-input formControlName="password" [required]="true" [strong]="true"
+                                            autocomplete="new-password" id="password"></app-password-input>
+                    </div>
+                    <!-- Name -->
+                    <div class="mb-3">
+                        <label for="name" class="form-label colon" i18n>Your name</label>
+                        <input formControlName="name" type="text" class="form-control" id="name" size="45"
+                               [class.is-valid]="name.touched && name.valid"
+                               [class.is-invalid]="name.touched && name.invalid"
+                               required minlength="2" maxlength="63" placeholder="Enter name" autocomplete="name"
+                               i18n-placeholder>
+                        <div class="invalid-feedback" i18n>Please enter your name.</div>
+                    </div>
+                    <!-- Submit button -->
+                    <div class="mb-3 text-center">
+                        <button [appSpinner]="submitting.active" type="submit" class="btn btn-primary" i18n="action">Sign up</button>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Button for login -->
+            <div class="col-sm-6 col-lg-4 col-xl-3 separate-sm-left text-center">
+                <!-- Login message -->
+                <div class="d-grid gap-2 mb-3">
+                    <label class="form-label" i18n>Already have an account?</label>
+                    <button [routerLink]="Paths.auth.login" type="button" class="btn btn-outline-primary" i18n="action">Log in here</button>
+                </div>
+            </div>
+        </div>
+    </ng-template>
+
+    <!-- Sign-up complete -->
+    <ng-template #signupComplete>
+        <div *ngIf="isComplete" @fadeInOut-slow class="text-center" id="signup-complete">
+            <p i18n>Your registration is almost complete!</p>
+            <p><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></p>
+            <p i18n>Please check your email and click the confirmation link in it.</p>
+            <p i18n>If you don't see the email, check your Spam folder.</p>
+        </div>
+    </ng-template>
+</section>

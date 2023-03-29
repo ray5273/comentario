@@ -2,12 +2,11 @@
 export const Paths = {
     home: '/',
 
-
     // Auth
     auth: {
         login:          '/auth/login',
         forgotPassword: '', // TODO
-        signup:         '', // TODO
+        signup:         '/auth/signup',
     },
 
     // Control Center

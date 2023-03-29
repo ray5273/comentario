@@ -26,7 +26,7 @@ export const AuthServiceMock: Partial<AuthService> = {
 // noinspection JSUnusedLocalSymbols
 export const ConfigServiceMock: Partial<ConfigService> = {
     allIdps:      [],
-    clientConfig: {baseUrl: '', idps: []},
+    clientConfig: {baseUrl: '', idps: [], signupAllowed: false},
     docsBaseUrl:  '',
     init:         () => of(null),
 };
@@ -62,7 +62,6 @@ const getApiMock = <T>(token: T): jasmine.SpyObj<T> => {
     // Make every method return an empty observable
     serviceMethods.forEach(m => (instance as any)[m].and.returnValue(of({})));
     return instance;
-
 };
 
 export type MockApiGenericService = jasmine.SpyObj<ApiGenericService>;

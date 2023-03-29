@@ -35,13 +35,18 @@ definitions:
     type: object
     readOnly: true
     required:
-      - idps
       - baseUrl
+      - signupAllowed
+      - idps
     properties:
       baseUrl:
         type: string
         x-isnullable: false
         description: Base Comentario URL
+      signupAllowed:
+        type: boolean
+        x-isnullable: false
+        description: Whether registration of new users is allowed
       idps:
         type: array
         items:
