@@ -1,0 +1,30 @@
+<!-- Toast ID (mostly for e2e-testing purposes) -->
+<div class="d-none message-id">{{ messageId || errorCode }}</div>
+
+<!-- The message -->
+<ng-container [ngSwitch]="messageId">
+    <!--------------------------------------------------------------------------------------------------------------
+     Success messages
+     -------------------------------------------------------------------------------------------------------------->
+    <ng-container *ngSwitchCase="'data-saved'"           i18n>Saved successfully.</ng-container>
+    <ng-container *ngSwitchCase="'domain-deleted'"       i18n>Domain has been successfully deleted.</ng-container>
+    <ng-container *ngSwitchCase="'pwd-reset-email-sent'" i18n>If your email is registered with us, we'll send you a password reset link!</ng-container>
+
+    <!------------------------------------------------------------------------------------------------------------------
+     Error messages
+     ------------------------------------------------------------------------------------------------------------------>
+    <ng-container *ngSwitchCase="'internal-error'" i18n>A server error has occurred, please contact support.</ng-container>
+
+    <!--------------------------------------------------------------------------------------------------------------
+     No luck with the ID: use the HTTP error code
+    -------------------------------------------------------------------------------------------------------------->
+    <ng-container *ngSwitchDefault [ngSwitch]="errorCode">
+        <ng-container *ngSwitchCase="400" i18n>Invalid input data. Please try again.</ng-container>
+        <ng-container *ngSwitchCase="401" i18n>You have been signed out, please login again.</ng-container>
+        <ng-container *ngSwitchCase="403" i18n>You're not authorised to perform this operation.</ng-container>
+        <ng-container *ngSwitchCase="404" i18n>Requested element was not found. It was possibly deleted.</ng-container>
+        <ng-container *ngSwitchCase="422" i18n>The value is invalid. Please correct and try again.</ng-container>
+        <ng-container *ngSwitchCase="500" i18n>A server error is occurred. Please try again later.</ng-container>
+        <ng-container *ngSwitchDefault i18n>There's something wrong in the cloud. Please try again.</ng-container>
+    </ng-container>
+</ng-container>

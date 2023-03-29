@@ -18,7 +18,7 @@
     <!-- Toast text -->
     <div class="ms-3">
         <!-- The main message -->
-        <div>{{ t.message }}</div>
+        <app-server-message [messageId]="t.id" [errorCode]="t.errorCode"></app-server-message>
 
         <!-- Additional details, if any -->
         <div *ngIf="t.details" class="toast-details small mt-2">({{ t.details }})</div>

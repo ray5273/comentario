@@ -8,6 +8,7 @@ import { SpinnerDirective } from './_directives/spinner.directive';
 import { ConfirmDirective } from './_directives/confirm.directive';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { CheckmarkComponent } from './checkmark/checkmark.component';
+import { ServerMessageComponent } from './server-message/server-message.component';
 
 @NgModule({
     declarations: [
@@ -15,6 +16,7 @@ import { CheckmarkComponent } from './checkmark/checkmark.component';
         ConfirmDialogComponent,
         ConfirmDirective,
         PasswordInputComponent,
+        ServerMessageComponent,
         SpinnerDirective,
     ],
     imports: [
@@ -28,6 +30,7 @@ import { CheckmarkComponent } from './checkmark/checkmark.component';
         ConfirmDialogComponent,
         ConfirmDirective,
         PasswordInputComponent,
+        ServerMessageComponent,
         SpinnerDirective,
     ],
 })

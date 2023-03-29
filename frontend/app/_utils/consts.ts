@@ -5,7 +5,7 @@ export const Paths = {
     // Auth
     auth: {
         login:          '/auth/login',
-        forgotPassword: '', // TODO
+        forgotPassword: '/auth/forgotPassword',
         signup:         '/auth/signup',
     },
 

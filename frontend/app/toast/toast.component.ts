@@ -3,6 +3,7 @@ import { Router } from '@angular/router';
 import { ToastService } from '../_services/toast.service';
 import { Toast } from '../_models/toast';
 import { Paths } from '../_utils/consts';
+import { AuthService } from '../_services/auth.service';
 
 @Component({
     selector: 'app-toast',
@@ -19,6 +20,7 @@ export class ToastComponent {
         private readonly ref: ChangeDetectorRef,
         private readonly router: Router,
         private readonly toastSvc: ToastService,
+        private readonly authSvc: AuthService,
     ) {}
 
     get toasts(): Toast[] {
@@ -32,6 +34,9 @@ export class ToastComponent {
     }
 
     goLogin() {
+        // Remember the current route to get back to it after login
+        this.authSvc.afterLoginRedirectUrl = this.router.url;
+
         // Redirect to login
         this.router.navigate([Paths.auth.login]);
     }
