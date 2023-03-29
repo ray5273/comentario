@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { ApiIdentityProvider } from './api';
+import { IdentityProvider } from './models';
 
 export class LoginDialog extends Dialog {
 
@@ -12,7 +12,7 @@ export class LoginDialog extends Dialog {
     private constructor(
         parent: Wrap<any>,
         pos: DialogPositioning,
-        private readonly idps: ApiIdentityProvider[],
+        private readonly idps: IdentityProvider[],
         private readonly origin: string,
     ) {
         super(parent, 'Log in', pos);
@@ -46,7 +46,7 @@ export class LoginDialog extends Dialog {
      * @param idps Map of enabled authentication methods.
      * @param origin Site origin (used for redirection to the "forgot password" page).
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, idps: ApiIdentityProvider[], origin: string): Promise<LoginDialog> {
+    static run(parent: Wrap<any>, pos: DialogPositioning, idps: IdentityProvider[], origin: string): Promise<LoginDialog> {
         const dlg = new LoginDialog(parent, pos, idps, origin);
         return dlg.run(dlg);
     }

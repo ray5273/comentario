@@ -78,3 +78,7 @@ export const sortingProps: { [k in SortPolicy]: SortPolicyProps<Comment> } = {
     'creationdate-asc':  {label: 'Oldest',  comparator: (a, b) => a.creationMs! < b.creationMs! ? -1 : 1},
 };
 
+export interface IdentityProvider {
+    id:   string;
+    name: string;
+}

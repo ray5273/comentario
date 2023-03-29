@@ -5,17 +5,19 @@ import {
     CommenterMap,
     CommentsGroupedByHex,
     Email,
+    IdentityProvider,
     ProfileSettings,
     SignupData,
     SortPolicy,
     StringBooleanMap,
 } from './models';
 import {
+    ApiClientConfigResponse,
     ApiCommentEditResponse,
     ApiCommenterLoginResponse,
     ApiCommenterTokenNewResponse,
     ApiCommentListResponse,
-    ApiCommentNewResponse, ApiIdentityProvider,
+    ApiCommentNewResponse,
     ApiSelfResponse,
 } from './api';
 import { Wrap } from './element-wrap';
@@ -74,6 +76,12 @@ export class Comentario {
     /** Map of comments, grouped by their parentHex. */
     private parentHexMap?: CommentsGroupedByHex;
 
+    /** Identity providers configured on the backend. */
+    private configuredIdps: IdentityProvider[] = [];
+
+    /** Identity providers allowed for commenter authentication on the current page. */
+    private allowedIdps: IdentityProvider[] = [];
+
     private pageId = parent.location.pathname;
     private cssOverride?: string;
     private noFonts = false;
@@ -85,7 +93,6 @@ export class Comentario {
     private isFrozen = false;
     private isLocked = false;
     private stickyCommentHex = '';
-    private idps: ApiIdentityProvider[] = [];
     private anonymousOnly = false;
     private sortPolicy: SortPolicy = 'score-desc';
     private selfHex?: string;
@@ -161,6 +168,9 @@ export class Comentario {
                                     .attr({href: 'https://comentario.app/', target: '_blank'})
                                     .html('Powered by ')
                                     .append(Wrap.new('span').classes('logo-brand').inner('Comentario')))));
+
+        // Load client configuration
+        await this.loadClientConfig();
 
         // Load information about ourselves
         await this.getAuthStatus();
@@ -368,6 +378,27 @@ export class Comentario {
     }
 
     /**
+     * Fetch client configuration from the backend.
+     * @private
+     */
+    private async loadClientConfig(): Promise<void> {
+        this.configuredIdps = [];
+        try {
+            this.setError();
+            const r = await this.apiClient.get<ApiClientConfigResponse>('config/client');
+            this.configuredIdps = [
+                {id: '',    name: 'Local'},
+                {id: 'sso', name: 'SSO'},
+                ...r.idps,
+            ];
+
+        } catch (e) {
+            this.setError(e);
+            throw e;
+        }
+    }
+
+    /**
      * Request the authentication status of the current user from the backend, and return a promise that resolves as
      * soon as the status becomes definite.
      * @private
@@ -544,7 +575,7 @@ export class Comentario {
             // Submit the comment to the backend
             const parentHex = parentCard?.comment.commentHex || 'root';
             const r = await this.apiClient.post<ApiCommentNewResponse>('comment/new', this.token, {
-                domain:    parent.location.host,
+                host:      parent.location.host,
                 path:      this.pageId,
                 parentHex,
                 markdown,
@@ -757,14 +788,16 @@ export class Comentario {
         this.isFrozen              = r.isFrozen;
         this.isLocked              = r.attributes.isLocked;
         this.stickyCommentHex      = r.attributes.stickyCommentHex;
-        this.idps                  = r.idps;
         this.sortPolicy            = r.defaultSortPolicy;
 
+        // Select from all available IdPs those allowed on this page
+        this.allowedIdps = this.configuredIdps.filter(idp => r.idps.includes(idp.id));
+
         // Check if no auth provider available, but we allow anonymous commenting
-        this.anonymousOnly = !this.requireIdentification && this.idps.length === 0;
+        this.anonymousOnly = !this.requireIdentification && this.allowedIdps.length === 0;
 
         // Configure methods and moderator status in the profile bar
-        this.profileBar!.idps        = this.idps;
+        this.profileBar!.idps        = this.allowedIdps;
         this.profileBar!.isModerator = this.isModerator;
 
         // Build a map by grouping all comments by their parentHex value

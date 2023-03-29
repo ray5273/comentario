@@ -1,11 +1,10 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { Commenter, Email, ProfileSettings, SignupData } from './models';
+import { Commenter, Email, IdentityProvider, ProfileSettings, SignupData } from './models';
 import { Utils } from './utils';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
-import { ApiIdentityProvider } from './api';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 
@@ -13,7 +12,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     private btnLogin?: Wrap<HTMLButtonElement>;
     private commenter?: Commenter;
     private email?: Email;
-    private _idps?: ApiIdentityProvider[];
+    private _idps?: IdentityProvider[];
 
     /**
      * @param baseUrl Comentario's base URL.
@@ -37,7 +36,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     /**
      * Map of allowed identity providers.
      */
-    set idps(idps: ApiIdentityProvider[] | undefined) {
+    set idps(idps: IdentityProvider[] | undefined) {
         this._idps = idps;
         // Hide or show the login button based on the availability of any auth method
         this.btnLogin?.setClasses(!idps?.length, 'hidden');

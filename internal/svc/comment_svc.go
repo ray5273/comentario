@@ -109,7 +109,7 @@ func (svc *commentService) FindByHexID(commentHex models.HexID) (*models.Comment
 
 	// Query the database
 	row := db.QueryRow(
-		"select commenthex, commenterhex, markdown, html, parenthex, score, state, deleted, creationdate "+
+		"select commenthex, commenterhex, domain, path, markdown, html, parenthex, score, state, deleted, creationdate "+
 			"from comments "+
 			"where commenthex=$1;",
 		commentHex)
@@ -117,7 +117,9 @@ func (svc *commentService) FindByHexID(commentHex models.HexID) (*models.Comment
 	// Fetch the comment
 	var c models.Comment
 	var crHex string
-	err := row.Scan(&c.CommentHex, &crHex, &c.Markdown, &c.HTML, &c.ParentHex, &c.Score, &c.State, &c.Deleted, &c.CreationDate)
+	err := row.Scan(
+		&c.CommentHex, &crHex, &c.Host, &c.Path, &c.Markdown, &c.HTML, &c.ParentHex, &c.Score, &c.State, &c.Deleted,
+		&c.CreationDate)
 	if err != nil {
 		return nil, translateDBErrors(err)
 	}

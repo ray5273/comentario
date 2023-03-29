@@ -1,13 +1,14 @@
-import { Comment, Commenter, Email, SortPolicy } from './models';
+import { Comment, Commenter, Email, IdentityProvider, SortPolicy } from './models';
+
+export interface ApiClientConfigResponse {
+    baseUrl:       string;
+    signupAllowed: boolean;
+    idps:          IdentityProvider[];
+}
 
 export interface ApiSelfResponse {
     commenter?: Commenter;
     email?:     Email;
-}
-
-export interface ApiIdentityProvider {
-    id:   string;
-    name: string;
 }
 
 export interface ApiCommentListResponse {
@@ -17,7 +18,7 @@ export interface ApiCommentListResponse {
     attributes:            any;
     comments:              Comment[];
     commenters:            Commenter[];
-    idps:                  ApiIdentityProvider[];
+    idps:                  string[];
     defaultSortPolicy:     SortPolicy;
 }
 
