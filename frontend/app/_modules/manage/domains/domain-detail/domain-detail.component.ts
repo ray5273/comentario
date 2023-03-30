@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBars, faClone, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit, faSnowflake, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { ApiOwnerService, Domain, IdentityProvider } from '../../../../../generated-api';
+import { ApiOwnerService, Domain, DomainState, IdentityProvider } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { ConfigService } from '../../../../_services/config.service';
+import { DocsService } from '../../../../_services/docs.service';
 
 @UntilDestroy()
 @Component({
@@ -16,6 +17,7 @@ import { ConfigService } from '../../../../_services/config.service';
 })
 export class DomainDetailComponent implements OnInit {
 
+    activeTab = 'installation';
     domain?: Domain;
     domainIdps?: IdentityProvider[];
 
@@ -24,10 +26,13 @@ export class DomainDetailComponent implements OnInit {
     readonly snippet: string;
 
     // Icons
-    readonly faBars     = faBars;
-    readonly faClone    = faClone;
-    readonly faEdit     = faEdit;
-    readonly faTrashAlt = faTrashAlt;
+    readonly faBars            = faBars;
+    readonly faCalendarXmark   = faCalendarXmark;
+    readonly faCircleQuestion  = faCircleQuestion;
+    readonly faClone           = faClone;
+    readonly faEdit            = faEdit;
+    readonly faSnowflake       = faSnowflake;
+    readonly faTrashAlt        = faTrashAlt;
 
     constructor(
         private readonly route: ActivatedRoute,
@@ -35,11 +40,16 @@ export class DomainDetailComponent implements OnInit {
         private readonly api: ApiOwnerService,
         private readonly toastSvc: ToastService,
         private readonly cfgSvc: ConfigService,
+        readonly docsSvc: DocsService,
     ) {
-        const script = Location.joinWithSlash(this.cfgSvc.clientConfig.baseUrl, 'js/comentario.js');
+        const script = Location.joinWithSlash(this.cfgSvc.clientConfig.baseUrl, 'comentario.js');
         this.snippet =
             `<script defer src="${script}"></script>\n` +
             `<div id="comentario"></div>`;
+    }
+
+    get freezeAction(): string {
+        return this.domain?.state === DomainState.Frozen ? $localize`Unfreeze` : $localize`Freeze`;
     }
 
     ngOnInit(): void {
@@ -60,6 +70,24 @@ export class DomainDetailComponent implements OnInit {
                 this.toastSvc.success('domain-deleted').keepOnRouteChange();
                 // Navigate to the domain list page
                 this.router.navigate([Paths.manage.domains]);
+            });
+    }
+
+    clearComments() {
+        // Run cleaning with the API
+        this.api.domainClear(this.domain!.host)
+            // Add a toast
+            .subscribe(() => this.toastSvc.success('domain-cleared').keepOnRouteChange());
+    }
+
+    toggleFrozen() {
+        // Run toggle with the API
+        this.api.domainToggleFrozen(this.domain!.host)
+            .subscribe(() => {
+                // Add a toast
+                this.toastSvc.success('data-saved').keepOnRouteChange();
+                // Reload the domain
+                this.reload();
             });
     }
 

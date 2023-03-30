@@ -18,12 +18,23 @@ section {
     // Section title
     &>h1, &>h2, &>h3 {
         margin-bottom: $spacer;
+
+        & + .subheading {
+            // Offset the bottom margin on section headings followed by a subheading
+            margin-top: -$spacer;
+        }
     }
 
     &.danger {
         border-top: #f67d8a 2px dashed;
         color: #721c24;
     }
+}
+
+.subheading {
+    @include font-size($lead-font-size);
+    text-align: center;
+    margin-bottom: $spacer;
 }
 
 // Center all headings

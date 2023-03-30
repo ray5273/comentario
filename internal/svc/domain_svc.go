@@ -44,6 +44,8 @@ type DomainService interface {
 	StatsForViews(host models.Host) ([]int64, error)
 	// TakeSSOToken queries and removes the provided token from the database, returning its host and commenter token
 	TakeSSOToken(token models.HexID) (models.Host, models.HexID, error)
+	// ToggleFrozen switches the frozen status to unfrozen, and vice versa, for the given domain
+	ToggleFrozen(host models.Host) error
 	// Update updates the domain record in the database
 	Update(domain *models.Domain) error
 }
@@ -402,6 +404,22 @@ func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.
 
 	// Succeeded
 	return host, commenterToken, nil
+}
+
+func (svc *domainService) ToggleFrozen(host models.Host) error {
+	logger.Debugf("domainService.ToggleFrozen(%s)", host)
+
+	// Update the domain
+	err := db.Exec(
+		"update domains set state=case when state=$1 then $2 else $1 end where domain=$3;",
+		models.DomainStateFrozen, models.DomainStateUnfrozen, host)
+	if err != nil {
+		logger.Errorf("domainService.ToggleFrozen: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 func (svc *domainService) Update(domain *models.Domain) error {

@@ -1177,6 +1177,15 @@ paths:
         204:
           description: Domain has been cleared
 
+    put:
+      operationId: DomainToggleFrozen
+      summary: Freeze or unfreeze the domain
+      tags:
+        - ApiOwner
+      responses:
+        204:
+          description: Domain frozen status has been toggled
+
   /domains/{host}/export/begin:
     post:
       operationId: DomainExportBegin

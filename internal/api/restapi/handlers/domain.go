@@ -245,6 +245,23 @@ func DomainStatistics(params api_owner.DomainStatisticsParams, principal data.Pr
 	})
 }
 
+// DomainToggleFrozen toggles domain state between frozen and unfrozen
+func DomainToggleFrozen(params api_owner.DomainToggleFrozenParams, principal data.Principal) middleware.Responder {
+	// Verify the user owns the domain
+	host := models.Host(params.Host)
+	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+		return r
+	}
+
+	// Toggle the frozen state of the domain
+	if err := svc.TheDomainService.ToggleFrozen(host); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_owner.NewDomainToggleFrozenNoContent()
+}
+
 func DomainUpdate(params api_owner.DomainUpdateParams, principal data.Principal) middleware.Responder {
 	// Verify the user owns the domain
 	domain := params.Body.Domain

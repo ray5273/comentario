@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbDropdownModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ManageRoutingModule } from './manage-routing.module';
 import { ControlCenterComponent } from './control-center/control-center.component';
 import { ToolsModule } from '../tools/tools.module';
@@ -27,6 +27,7 @@ import { DomainEditComponent } from './domains/domain-edit/domain-edit.component
         ReactiveFormsModule,
         FontAwesomeModule,
         NgbDropdownModule,
+        NgbNavModule,
         ToolsModule,
         ManageRoutingModule,
     ],

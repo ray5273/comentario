@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { DomainDetailComponent } from './domain-detail.component';
 import { ApiOwnerService } from '../../../../../generated-api';
 import { ConfigServiceMock, getApiOwnerServiceMock } from '../../../../_testing/mocks.spec';
@@ -15,7 +16,7 @@ describe('DomainDetailComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [DomainDetailComponent],
-            imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
+            imports: [RouterTestingModule, FontAwesomeTestingModule, NgbNavModule, ToolsModule],
             providers: [
                 {provide: ApiOwnerService, useValue: getApiOwnerServiceMock()},
                 {provide: ConfigService,   useValue: ConfigServiceMock},

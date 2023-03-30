@@ -1,6 +1,7 @@
 <section class="container">
-    <!-- Heading -->
+    <!-- Heading & subheading -->
     <h1 i18n="heading">Domain details</h1>
+    <div *ngIf="domain" class="subheading">{{ domain.displayName || domain.host }}</div>
 
     <!-- Toolbar -->
     <nav class="navbar navbar-light border-bottom">
@@ -26,8 +27,20 @@
                     <fa-icon [icon]="faClone" class="me-1"></fa-icon>
                     <ng-container i18n="action">Clone</ng-container>
                 </button>
+                <!-- Freeze button -->
+                <button [appConfirm]="freezeDlg" [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion"
+                        (confirmed)="toggleFrozen()" ngbDropdownItem>
+                    <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
+                    {{ freezeAction }}
+                </button>
                 <!-- Divider -->
                 <div class="dropdown-divider"></div>
+                <!-- Clear comments button -->
+                <button [appConfirm]="clearCommentsDlg" confirmAction="Clear comments"
+                        (confirmed)="clearComments()" ngbDropdownItem class="text-danger" i18n-confirmAction>
+                    <fa-icon [icon]="faCalendarXmark" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Clear comments</ng-container>
+                </button>
                 <!-- Delete button -->
                 <button [appConfirm]="deleteDlg" confirmAction="Delete domain"
                         (confirmed)="delete()" ngbDropdownItem class="text-danger" i18n-confirmAction>
@@ -38,87 +51,121 @@
         </div>
     </nav>
 
-    <!-- Properties -->
+    <!-- Tabs -->
     <section [appSpinner]="loading.active" spinnerSize="lg">
-        <dl *ngIf="domain" id="domainDetailTable" class="detail-table">
-            <!-- HTML snippet -->
-            <div>
-                <dt i18n>HTML snippet</dt>
-                <dd>
-                    <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on.</p>
-                    <textarea [value]="snippet" #sn (click)="sn.select()" class="form-control font-monospace" rows="3" readonly></textarea>
-                </dd>
-            </div>
-            <!-- Display name -->
-            <div>
-                <dt i18n>Display name</dt>
-                <dd>{{ domain!.displayName }}</dd>
-            </div>
-            <!-- Host -->
-            <div>
-                <dt i18n>Host</dt>
-                <dd>{{ domain!.host }}</dd>
-            </div>
-            <!-- State -->
-            <div>
-                <dt i18n>State</dt>
-                <dd>{{ domain!.state }}</dd>
-            </div>
+        <ng-container *ngIf="domain">
+            <ul #tabs="ngbNav" [(activeId)]="activeTab" ngbNav class="nav-tabs">
+                <!-- Installation tab -->
+                <li ngbNavItem="installation">
+                    <a ngbNavLink i18n>Installation</a>
+                    <ng-template ngbNavContent>
+                        <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
+                        <textarea [value]="snippet" #sn (click)="sn.select()" class="form-control font-monospace mb-4" rows="3" readonly></textarea>
+                        <p i18n>Read more on Comentario installation and configuration in the <a [href]="docsSvc.getPageUrl('getting-started/')" target="_blank" rel="noopener">documentation</a>.</p>
+                    </ng-template>
+                </li>
 
-            <!-- Auto spam filter -->
-            <div>
-                <dt i18n>Auto spam filter</dt>
-                <dd><app-checkmark [value]="domain!.autoSpamFilter"></app-checkmark></dd>
-            </div>
-            <!-- Moderate all anonymous -->
-            <div>
-                <dt i18n>Moderate all anonymous</dt>
-                <dd><app-checkmark [value]="domain!.moderateAllAnonymous"></app-checkmark></dd>
-            </div>
-            <!-- Require moderation -->
-            <div>
-                <dt i18n>Require moderation</dt>
-                <dd><app-checkmark [value]="domain!.requireModeration"></app-checkmark></dd>
-            </div>
-            <!-- Comment sorting -->
-            <div>
-                <dt i18n>Comment sorting</dt>
-                <dd>{{ domain!.defaultSortPolicy }}</dd>
-            </div>
-            <!-- Email moderators -->
-            <div>
-                <dt i18n>Email moderators</dt>
-                <dd>{{ domain!.emailNotificationPolicy }}</dd>
-            </div>
-            <!-- Authentication -->
-            <div>
-                <dt i18n>Authentication</dt>
-                <dd>
-                    <ul class="list-unstyled">
-                        <li *ngIf="!domain!.requireIdentification">Anonymous comments</li>
-                        <li *ngFor="let idp of domainIdps">{{ idp.name }}</li>
-                    </ul>
-                </dd>
-            </div>
-            <!-- Moderators -->
-            <div>
-                <dt i18n>Moderators</dt>
-                <dd>
-                    <ul class="list-unstyled mb-0">
-                        <li *ngFor="let m of domain!.moderators">{{ m.email }}</li>
-                    </ul>
-                </dd>
-            </div>
-            <!-- Created -->
-            <div>
-                <dt i18n>Created</dt>
-                <dd>{{ domain!.creationDate | date:'short' }}</dd>
-            </div>
-        </dl>
+                <!-- Properties tab -->
+                <li ngbNavItem="properties">
+                    <a ngbNavLink i18n>Properties</a>
+                    <ng-template ngbNavContent>
+                        <dl id="domainDetailTable" class="detail-table">
+                            <!-- HTML snippet -->
+                            <div>
+                                <dt i18n>HTML snippet</dt>
+                                <dd>
+                                </dd>
+                            </div>
+                            <!-- Display name -->
+                            <div>
+                                <dt i18n>Display name</dt>
+                                <dd>{{ domain.displayName }}</dd>
+                            </div>
+                            <!-- Host -->
+                            <div>
+                                <dt i18n>Host</dt>
+                                <dd>{{ domain.host }}</dd>
+                            </div>
+                            <!-- State -->
+                            <div>
+                                <dt i18n>State</dt>
+                                <dd>{{ domain.state }}</dd>
+                            </div>
+
+                            <!-- Auto spam filter -->
+                            <div>
+                                <dt i18n>Auto spam filter</dt>
+                                <dd><app-checkmark [value]="domain.autoSpamFilter"></app-checkmark></dd>
+                            </div>
+                            <!-- Moderate all anonymous -->
+                            <div>
+                                <dt i18n>Moderate all anonymous</dt>
+                                <dd><app-checkmark [value]="domain.moderateAllAnonymous"></app-checkmark></dd>
+                            </div>
+                            <!-- Require moderation -->
+                            <div>
+                                <dt i18n>Require moderation</dt>
+                                <dd><app-checkmark [value]="domain.requireModeration"></app-checkmark></dd>
+                            </div>
+                            <!-- Comment sorting -->
+                            <div>
+                                <dt i18n>Comment sorting</dt>
+                                <dd>{{ domain.defaultSortPolicy }}</dd>
+                            </div>
+                            <!-- Email moderators -->
+                            <div>
+                                <dt i18n>Email moderators</dt>
+                                <dd>{{ domain.emailNotificationPolicy }}</dd>
+                            </div>
+                            <!-- Authentication -->
+                            <div>
+                                <dt i18n>Authentication</dt>
+                                <dd>
+                                    <ul class="list-unstyled">
+                                        <li *ngIf="!domain.requireIdentification">Anonymous comments</li>
+                                        <li *ngFor="let idp of domainIdps">{{ idp.name }}</li>
+                                    </ul>
+                                </dd>
+                            </div>
+                            <!-- Moderators -->
+                            <div>
+                                <dt i18n>Moderators</dt>
+                                <dd>
+                                    <ul class="list-unstyled mb-0">
+                                        <li *ngFor="let m of domain.moderators">{{ m.email }}</li>
+                                    </ul>
+                                </dd>
+                            </div>
+                            <!-- Created -->
+                            <div>
+                                <dt i18n>Created</dt>
+                                <dd>{{ domain.creationDate | date:'short' }}</dd>
+                            </div>
+                        </dl>
+                    </ng-template>
+                </li>
+            </ul>
+
+            <!-- Tabs outlet -->
+            <div [ngbNavOutlet]="tabs" class="mt-2"></div>
+        </ng-container>
     </section>
 </section>
 
+<!-- Freeze domain confirmation dialog content template -->
+<ng-template #freezeDlg>
+    <p *ngIf="domain!.state === 'frozen'" i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
+    <p *ngIf="domain!.state !== 'frozen'" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
+</ng-template>
+
+<!-- Clear comments confirmation dialog content template -->
+<ng-template #clearCommentsDlg>
+    <p i18n>Are you absolutely sure you want to remove all comments from the domain <code>{{ domain!.host }}</code>?</p>
+    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
+</ng-template>
+
 <!-- Delete confirmation dialog content template -->
 <ng-template #deleteDlg>
-    <p i18n>Are you sure you want to delete the domain <code>{{ domain!.host }}</code>?</p>
+    <p i18n>Are you absolutely sure you want to delete the domain <code>{{ domain!.host }}</code>?</p>
+    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>

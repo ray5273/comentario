@@ -143,6 +143,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIOwnerDomainNewHandler = api_owner.DomainNewHandlerFunc(handlers.DomainNew)
 	api.APIOwnerDomainSsoSecretNewHandler = api_owner.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
 	api.APIOwnerDomainStatisticsHandler = api_owner.DomainStatisticsHandlerFunc(handlers.DomainStatistics)
+	api.APIOwnerDomainToggleFrozenHandler = api_owner.DomainToggleFrozenHandlerFunc(handlers.DomainToggleFrozen)
 	api.APIOwnerDomainUpdateHandler = api_owner.DomainUpdateHandlerFunc(handlers.DomainUpdate)
 
 	// Shutdown functions
