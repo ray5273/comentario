@@ -208,7 +208,7 @@ func (svc *commentService) ListWithCommentersByHostPath(commenter *data.UserComm
 	rs, err := db.Query(statement, params...)
 	if err != nil {
 		logger.Errorf("commentService.ListWithCommentersByHostPath: Query() failed: %v", err)
-		return nil, nil, util.ErrorInternal
+		return nil, nil, translateDBErrors(err)
 	}
 	defer rs.Close()
 

@@ -190,3 +190,13 @@ func URLFor(path string, queryParams map[string]string) string {
 func URLForAPI(path string, queryParams map[string]string) string {
 	return URLFor(util.APIPath+strings.TrimPrefix(path, "/"), queryParams)
 }
+
+// URLForUI returns the complete absolute URL for the given UI language and sub-path, with optional query params. If the
+// path is empty, returns the language root path
+func URLForUI(lang, subPath string, queryParams map[string]string) string {
+	// Make sure the language is correct
+	if !util.IsUILang(lang) {
+		lang = "en"
+	}
+	return URLFor(fmt.Sprintf("%s/%s", lang, subPath), queryParams)
+}

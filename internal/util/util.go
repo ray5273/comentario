@@ -245,7 +245,10 @@ func ParseAbsoluteURL(s string) (*url.URL, error) {
 
 // RandomSleep sleeps a random duration of time within the given interval
 func RandomSleep(min, max time.Duration) {
-	time.Sleep(time.Duration(int64(min) + rand.Int63n(int64(max-min))))
+	// Don't bother if max <= min
+	if max > min {
+		time.Sleep(time.Duration(int64(min) + rand.Int63n(int64(max-min))))
+	}
 }
 
 // UserAgent return the value of the User-Agent request header

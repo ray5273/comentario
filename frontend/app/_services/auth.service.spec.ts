@@ -1,13 +1,16 @@
+// noinspection DuplicatedCode
+
 import { TestBed } from '@angular/core/testing';
 import { of, skip, throwError } from 'rxjs';
+import { MockService } from 'ng-mocks';
 import { AuthService } from './auth.service';
-import { getApiAuthServiceMock, MockApiAuthService } from '../_testing/mocks.spec';
 import { ApiAuthService, Principal } from '../../generated-api';
 
 describe('AuthService', () => {
 
     let service: AuthService;
-    let api: MockApiAuthService;
+    let api: ApiAuthService;
+    let principalResponse: any;
 
     const principal1: Principal = {
         id: 'one',
@@ -19,20 +22,22 @@ describe('AuthService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: ApiAuthService, useValue: getApiAuthServiceMock()},
+                {provide: ApiAuthService, useValue: MockService(ApiAuthService)},
             ],
         });
-        api = TestBed.inject(ApiAuthService) as MockApiAuthService;
+        api = TestBed.inject(ApiAuthService);
+        spyOn(api, 'curUserGet').and.callFake(() => principalResponse);
     });
 
     it('is created', () => {
+        principalResponse = of(null);
         service = TestBed.inject(AuthService);
         expect(service).toBeTruthy();
     });
 
     it('fetches principal on creation', (done) => {
         // Prepare
-        api.curUserGet.and.returnValue(of(principal1) as any);
+        principalResponse = of(principal1);
 
         // Test
         service = TestBed.inject(AuthService);
@@ -45,8 +50,7 @@ describe('AuthService', () => {
     });
 
     it('fetches null principal on creation when user not authenticated', (done) => {
-        // Prepare
-        api.curUserGet.and.returnValue(of(undefined) as any);
+        principalResponse = of(undefined);
 
         // Test
         service = TestBed.inject(AuthService);
@@ -59,7 +63,7 @@ describe('AuthService', () => {
 
     it('fetches null principal on creation on API error', (done) => {
         // Prepare
-        api.curUserGet.and.returnValue(throwError(() => 'ai-ai-ai'));
+        principalResponse = throwError(() => 'ai-ai-ai');
 
         // Test
         service = TestBed.inject(AuthService);
@@ -72,7 +76,7 @@ describe('AuthService', () => {
 
     it('re-fetches principal on update', (done) => {
         // Prepare
-        api.curUserGet.and.returnValues(of(principal1) as any, of(principal2) as any);
+        principalResponse = of(principal1);
 
         // Test
         service = TestBed.inject(AuthService);
@@ -84,12 +88,13 @@ describe('AuthService', () => {
                 expect(p!.id).toBe('two');
                 done();
             });
+        principalResponse = of(principal2);
         service.update();
     });
 
     it('saves and reuses principal when provided with update', (done) => {
         // Prepare
-        api.curUserGet.and.returnValue(of(principal1) as any);
+        principalResponse = of(principal1);
 
         // Test
         service = TestBed.inject(AuthService);
@@ -106,7 +111,7 @@ describe('AuthService', () => {
 
     it('returns last principal', (done) => {
         // Prepare
-        api.curUserGet.and.returnValue(of(principal1) as any);
+        principalResponse = of(principal1);
 
         // Test
         service = TestBed.inject(AuthService);
@@ -123,8 +128,8 @@ describe('AuthService', () => {
 
         it('returns updated principal after successful login', (done) => {
             // Prepare
-            api.curUserGet.and.returnValue(of(principal1) as any);
-            api.authLogin.and.returnValue(of(principal2) as any);
+            principalResponse = of(principal1);
+            spyOn(api, 'authLogin').and.returnValue(of(principal2) as any);
 
             // Test
             service = TestBed.inject(AuthService);
@@ -142,8 +147,8 @@ describe('AuthService', () => {
 
         it('errors on failed login', (done) => {
             // Prepare
-            api.curUserGet.and.returnValue(of(principal1) as any);
-            api.authLogin.and.returnValue(throwError(() => 'Bad blood'));
+            principalResponse = of(principal1);
+            spyOn(api, 'authLogin').and.returnValue(throwError(() => 'Bad blood'));
 
             // Test
             service = TestBed.inject(AuthService);
@@ -164,8 +169,8 @@ describe('AuthService', () => {
 
         it('logs user out', (done) => {
             // Prepare
-            api.curUserGet.and.returnValue(of(principal1) as any);
-            api.authLogout.and.returnValue(of(undefined) as any);
+            principalResponse = of(principal1);
+            spyOn(api, 'authLogout').and.returnValue(of(undefined) as any);
 
             // Test
             service = TestBed.inject(AuthService);
@@ -180,8 +185,8 @@ describe('AuthService', () => {
 
         it('errors on failed logout', (done) => {
             // Prepare
-            api.curUserGet.and.returnValue(of(principal1) as any);
-            api.authLogout.and.returnValue(throwError(() => 'ouch!'));
+            principalResponse = of(principal1);
+            spyOn(api, 'authLogout').and.returnValue(throwError(() => 'ouch!'));
 
             // Test
             service = TestBed.inject(AuthService);

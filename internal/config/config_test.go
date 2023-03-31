@@ -92,3 +92,34 @@ func TestURLForAPI(t *testing.T) {
 		})
 	}
 }
+
+func TestURLForUI(t *testing.T) {
+	tests := []struct {
+		name        string
+		base        string
+		lang        string
+		path        string
+		queryParams map[string]string
+		want        string
+	}{
+		{"Root, no params, EN ", "http://ace.of.base:1234", "en", "", nil, "http://ace.of.base:1234/en/"},
+		{"Root, no params, BZ ", "http://ace.of.base/", "bz", "", nil, "http://ace.of.base/en/"},
+		{"Root with params, EN", "http://basics/", "en", "", map[string]string{"foo": "bar"}, "http://basics/en/?foo=bar"},
+		{"Root with params, BE", "http://basics/", "be", "", map[string]string{"foo": "bar"}, "http://basics/en/?foo=bar"},
+		{"Path, no params, EN ", "https://sun.set:222/", "en", "tot/morgen", nil, "https://sun.set:222/en/tot/morgen"},
+		{"Path with params, EN", "https://yellow/submarine", "en", "strawberry/fields", map[string]string{"baz": "   "}, "https://yellow/submarine/en/strawberry/fields?baz=+++"},
+		{"Path with params, BG", "https://yellow/submarine", "bg", "strawberry/fields", map[string]string{"baz": "   "}, "https://yellow/submarine/en/strawberry/fields?baz=+++"},
+	}
+	for _, tt := range tests {
+		var err error
+		t.Run(tt.name, func(t *testing.T) {
+			BaseURL, err = url.Parse(tt.base)
+			if err != nil {
+				panic(err)
+			}
+			if got := URLForUI(tt.lang, tt.path, tt.queryParams); got != tt.want {
+				t.Errorf("URLForUI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

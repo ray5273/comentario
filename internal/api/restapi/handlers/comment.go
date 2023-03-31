@@ -201,7 +201,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 
 	// Verify the domain isn't frozen
 	if domain.State == models.DomainStateFrozen {
-		return respBadRequest(util.ErrorDomainFrozen)
+		return respBadRequest(ErrorDomainFrozen)
 	}
 
 	// Verify the page isn't locked
@@ -209,7 +209,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 	if page, err := svc.ThePageService.FindByHostPath(domain.Host, path); err != nil {
 		return respServiceError(err)
 	} else if page.IsLocked {
-		return respBadRequest(util.ErrorPageLocked)
+		return respBadRequest(ErrorPageLocked)
 	}
 
 	// If the commenter is authenticated, check if it's a domain moderator
@@ -292,7 +292,7 @@ func CommentVote(params api_commenter.CommentVoteParams, principal data.Principa
 
 	// Make sure the commenter is not voting for their own comment
 	if comment.CommenterHex == principal.GetHexID() {
-		return respForbidden(util.ErrorSelfVote)
+		return respForbidden(ErrorSelfVote)
 	}
 
 	// Update the vote in the database

@@ -6,7 +6,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
 )
 
 func EmailGet(params api_commenter.EmailGetParams) middleware.Responder {
@@ -29,7 +28,7 @@ func EmailModerate(params api_commenter.EmailModerateParams) middleware.Responde
 
 	// Verify the comment isn't deleted yet
 	if comment.Deleted {
-		return respBadRequest(util.ErrorCommentDeleted)
+		return respBadRequest(ErrorCommentDeleted)
 	}
 
 	// Fetch the email by its unsubscribe token
@@ -61,7 +60,7 @@ func EmailModerate(params api_commenter.EmailModerateParams) middleware.Responde
 			return respServiceError(err)
 		}
 	default:
-		return respBadRequest(util.ErrorInvalidAction)
+		return respBadRequest(ErrorInvalidModAction)
 	}
 
 	// Succeeded

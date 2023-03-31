@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { MockService } from 'ng-mocks';
 import { DomainDetailComponent } from './domain-detail.component';
-import { ApiOwnerService } from '../../../../../generated-api';
-import { ConfigServiceMock, getApiOwnerServiceMock } from '../../../../_testing/mocks.spec';
+import { ApiOwnerService, ClientConfig } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { ConfigService } from '../../../../_services/config.service';
 
@@ -13,13 +14,19 @@ describe('DomainDetailComponent', () => {
     let component: DomainDetailComponent;
     let fixture: ComponentFixture<DomainDetailComponent>;
 
+    const clientConfig: ClientConfig = {
+        baseUrl:       '',
+        signupAllowed: false,
+        idps:          [],
+    };
+
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [DomainDetailComponent],
             imports: [RouterTestingModule, FontAwesomeTestingModule, NgbNavModule, ToolsModule],
             providers: [
-                {provide: ApiOwnerService, useValue: getApiOwnerServiceMock()},
-                {provide: ConfigService,   useValue: ConfigServiceMock},
+                {provide: ConfigService,  useValue: MockService(ConfigService, {clientConfig})},
+                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService, {domainGet: () => of(null)} as any)},
             ],
         })
             .compileComponents();

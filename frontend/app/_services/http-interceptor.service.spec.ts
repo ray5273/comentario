@@ -1,7 +1,7 @@
 import { TestBed } from '@angular/core/testing';
+import { MockProvider } from 'ng-mocks';
 import { HttpInterceptorService } from './http-interceptor.service';
 import { ToastService } from './toast.service';
-import { ToastServiceMock } from '../_testing/mocks.spec';
 
 describe('InterceptorService', () => {
 
@@ -9,10 +9,7 @@ describe('InterceptorService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            providers: [
-                HttpInterceptorService,
-                {provide: ToastService, useValue: ToastServiceMock},
-            ]
+            providers: [HttpInterceptorService, MockProvider(ToastService)],
         });
         service = TestBed.inject(HttpInterceptorService);
     });

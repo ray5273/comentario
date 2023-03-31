@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
+import { MockService } from 'ng-mocks';
 import { ConfigService } from './config.service';
-import { getApiGenericServiceMock } from '../_testing/mocks.spec';
 import { ApiGenericService } from '../../generated-api';
 
 describe('ConfigService', () => {
@@ -10,7 +10,7 @@ describe('ConfigService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: ApiGenericService, useValue: getApiGenericServiceMock()},
+                {provide: ApiGenericService, useValue: MockService(ApiGenericService)},
             ],
         });
         (window as any).Cypress = undefined;

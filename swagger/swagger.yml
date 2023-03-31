@@ -231,13 +231,6 @@ definitions:
         type: boolean
         x-omitempty: false
 
-  entity:
-    description: Entity for resetting the password
-    type: string
-    enum:
-      - owner
-      - commenter
-
   emailNotificationPolicy:
     description: Email notification policy
     type: string
@@ -246,6 +239,29 @@ definitions:
       - none
       - pending-moderation
     x-isnullable: false
+
+  entity:
+    description: Entity for resetting the password
+    type: string
+    enum:
+      - owner
+      - commenter
+
+  error:
+    description: Generic error object
+    type: object
+    readOnly: true
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      details:
+        type: string
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: "Error"
 
   federatedIdpId:
     description: Federated identity provider ID
@@ -412,6 +428,41 @@ parameters:
     pattern: '[0-9a-f]{64}'
 
 responses:
+  # 400
+  BadRequest:
+    description: Invalid input data has been passed
+    schema:
+      $ref: "#/definitions/error"
+
+  # 401
+  Unauthorised:
+    description: User is not authorised
+    schema:
+      $ref: "#/definitions/error"
+
+  # 403
+  Forbidden:
+    description: The specified operation is not allowed
+    schema:
+      $ref: "#/definitions/error"
+
+  # 404
+  NotFound:
+    description: The specified resource was not found
+    schema:
+      $ref: "#/definitions/error"
+
+  # 422
+  UnprocessableEntity:
+    description: Invalid input data has been passed
+    schema:
+      $ref: "#/definitions/error"
+
+  # 500
+  InternalError:
+    description: Server experiences an internal error
+    schema:
+      $ref: "#/definitions/error"
 
   # 307
   OAuthRedirect:
@@ -435,40 +486,17 @@ paths:
         - ApiGeneric
       responses:
         400:
-          description: Bad request
-          schema:
-            type: object
-            properties:
-              details:
-                type: string
+          $ref: "#/responses/BadRequest"
         401:
-          description: Unauthorized
-          schema:
-            type: object
-            properties:
-              details:
-                type: string
+          $ref: "#/responses/Unauthorised"
         403:
-          description: Forbidden
-          schema:
-            type: object
-            properties:
-              details:
-                type: string
+          $ref: "#/responses/Forbidden"
         404:
-          description: Resource not found
-          schema:
-            type: object
-            properties:
-              details:
-                type: string
+          $ref: "#/responses/NotFound"
+        422:
+          $ref: "#/responses/UnprocessableEntity"
         500:
-          description: Internal server error
-          schema:
-            type: object
-            properties:
-              details:
-                type: string
+          $ref: "#/responses/InternalError"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Config
@@ -650,13 +678,15 @@ paths:
           schema:
             type: object
             required:
-              - resetHex
+              - token
               - password
             properties:
-              resetHex:
+              token:
                 $ref: "#/definitions/hexId"
+                description: Password reset token provided in the reset email
               password:
                 type: string
+                description: New password to set
                 minLength: 1
                 maxLength: 63
       responses:

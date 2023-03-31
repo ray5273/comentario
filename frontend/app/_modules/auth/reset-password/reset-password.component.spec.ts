@@ -2,24 +2,30 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MockComponent, MockDirective, MockProviders } from 'ng-mocks';
-import { AuthService } from '../../../_services/auth.service';
+import { ResetPasswordComponent } from './reset-password.component';
+import { ApiAuthService } from '../../../../generated-api';
+import { ToastService } from '../../../_services/toast.service';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
-import { LoginComponent } from './login.component';
 
-describe('LoginComponent', () => {
-    let component: LoginComponent;
-    let fixture: ComponentFixture<LoginComponent>;
+describe('ResetPasswordComponent', () => {
+
+    let component: ResetPasswordComponent;
+    let fixture: ComponentFixture<ResetPasswordComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [LoginComponent, MockComponent(PasswordInputComponent), MockDirective(SpinnerDirective)],
+            declarations: [
+                ResetPasswordComponent,
+                MockComponent(PasswordInputComponent),
+                MockDirective(SpinnerDirective),
+            ],
             imports: [RouterTestingModule, ReactiveFormsModule],
-            providers: [MockProviders(AuthService)],
+            providers: MockProviders(ToastService, ApiAuthService),
         })
             .compileComponents();
 
-        fixture = TestBed.createComponent(LoginComponent);
+        fixture = TestBed.createComponent(ResetPasswordComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

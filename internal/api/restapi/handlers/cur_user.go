@@ -8,7 +8,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"time"
 )
 
 func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
@@ -16,7 +15,7 @@ func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 	user, err := GetUserFromSessionCookie(params.HTTPRequest)
 	if err == svc.ErrDB {
 		// Houston, we have a problem
-		return respInternalError()
+		return respInternalError(nil)
 	} else if err != nil {
 		// Authentication failed for whatever reason
 		return api_auth.NewCurUserGetNoContent()
@@ -53,7 +52,7 @@ func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) mi
 
 	// If no user found, apply a random delay to discourage email polling
 	if user == nil {
-		util.RandomSleep(100*time.Millisecond, 4000*time.Millisecond)
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 
 		// Generate a random reset token
 	} else if token, err := svc.TheUserService.CreateResetToken(user.HexID, entity); err != nil {
@@ -64,8 +63,8 @@ func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) mi
 		"",
 		email,
 		"Reset your password",
-		"reset-hex.gohtml",
-		map[string]any{"URL": config.URLFor("reset", map[string]string{"hex": string(token)})},
+		"reset-password.gohtml",
+		map[string]any{"URL": config.URLForUI("en", "", map[string]string{"passwordResetToken": string(token)})},
 	); err != nil {
 		return respServiceError(err)
 	}
@@ -75,8 +74,11 @@ func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) mi
 }
 
 func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middleware.Responder {
-	_, err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.ResetHex, *params.Body.Password)
-	if err != nil {
+	if _, err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.Token, *params.Body.Password); err == svc.ErrBadToken {
+		// Token unknown: forbidden
+		return respForbidden(ErrorBadToken)
+	} else if err != nil {
+		// Any other error
 		return respServiceError(err)
 	}
 

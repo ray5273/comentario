@@ -74,7 +74,7 @@ func (svc *mailService) SendFromTemplate(replyTo, recipient, subject, templateFi
 	t, err := template.ParseFiles(filename)
 	if err != nil {
 		logger.Errorf("Failed to parse HTML template file %s: %v", filename, err)
-		return util.ErrorMalformedTemplate
+		return err
 	}
 	logger.Debugf("Parsed HTML template %s", filename)
 

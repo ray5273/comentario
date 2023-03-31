@@ -9,12 +9,37 @@
     <ng-container *ngSwitchCase="'data-saved'"           i18n>Saved successfully.</ng-container>
     <ng-container *ngSwitchCase="'domain-cleared'"       i18n>All comments on the domain have been successfully deleted.</ng-container>
     <ng-container *ngSwitchCase="'domain-deleted'"       i18n>Domain has been successfully deleted.</ng-container>
+    <ng-container *ngSwitchCase="'password-changed'"     i18n>Your password has been changed. You can now sign in with your new password.</ng-container>
     <ng-container *ngSwitchCase="'pwd-reset-email-sent'" i18n>If your email is registered with us, we'll send you a password reset link!</ng-container>
 
     <!------------------------------------------------------------------------------------------------------------------
      Error messages
      ------------------------------------------------------------------------------------------------------------------>
-    <ng-container *ngSwitchCase="'internal-error'" i18n>A server error has occurred, please contact support.</ng-container>
+    <ng-container *ngSwitchCase="'bad-token'"            i18n>Required token is missing or invalid.</ng-container>
+    <ng-container *ngSwitchCase="'comment-deleted'"      i18n>This comment has been deleted.</ng-container>
+    <ng-container *ngSwitchCase="'domain-frozen'"        i18n>No comment can be added: this domain is frozen.</ng-container>
+    <ng-container *ngSwitchCase="'email-already-exists'" i18n>This email is already registered in our system.</ng-container>
+    <ng-container *ngSwitchCase="'email-not-confirmed'">
+        <ng-container i18n>Your email is not confirmed yet.</ng-container>&ngsp;
+        <ng-container i18n>Please check your email and click the confirmation link in it.</ng-container>&ngsp;
+        <ng-container i18n>If you don't see the email, check your Spam folder.</ng-container>
+    </ng-container>
+    <ng-container *ngSwitchCase="'federated-profile'"    i18n>Profile of an external (federated) user cannot be updated.</ng-container>
+    <ng-container *ngSwitchCase="'idp-unconfigured'"     i18n>Identity provider isn't configured.</ng-container>
+    <ng-container *ngSwitchCase="'idp-unknown'"          i18n>Identity provider is unknown.</ng-container>
+    <ng-container *ngSwitchCase="'internal-error'"       i18n>A server error has occurred, please contact support.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-credentials'"  i18n>This user doesn't exists or the password is wrong.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-mod-action'"   i18n>Invalid moderation action.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-prop-value'"   i18n>Property value is invalid.</ng-container>
+    <ng-container *ngSwitchCase="'not-domain-owner'"     i18n>You have to be a domain owner in order to do that.</ng-container>
+    <ng-container *ngSwitchCase="'not-moderator'"        i18n>You have to be a moderator in order to do that.</ng-container>
+    <ng-container *ngSwitchCase="'owner-has-domains'"    i18n>Account cannot be deleted: all domains linked to it must be deleted first.</ng-container>
+    <ng-container *ngSwitchCase="'page-locked'"          i18n>No comment can be added: comment thread on this page is locked.</ng-container>
+    <ng-container *ngSwitchCase="'self-vote'"            i18n>You cannot vote for your own comment.</ng-container>
+    <ng-container *ngSwitchCase="'signups-forbidden'"    i18n>Unfortunately, registration of new users is currently disabled.</ng-container>
+    <ng-container *ngSwitchCase="'smtp-unconfigured'"    i18n>Cannot proceed: sending emails via SMTP isn't configured.</ng-container>
+    <ng-container *ngSwitchCase="'sso-url-missing'"      i18n>SSO URL is missing.</ng-container>
+    <ng-container *ngSwitchCase="'unauthenticated'"      i18n>This operation requires you to be signed in.</ng-container>
 
     <!--------------------------------------------------------------------------------------------------------------
      No luck with the ID: use the HTTP error code

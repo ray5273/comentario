@@ -24,7 +24,8 @@ const (
 )
 
 var (
-	WrongAuthDelay = 10 * time.Second // Delay to exercise on a wrong email, password etc.
+	WrongAuthDelayMin = 100 * time.Millisecond // Minimal delay to exercise on a wrong email, password etc.
+	WrongAuthDelayMax = 4 * time.Second        // Maximal delay to exercise on a wrong email, password etc.
 
 	// FederatedIdProviders maps all known federated identity providers from our IDs to goth IDs
 

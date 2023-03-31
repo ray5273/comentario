@@ -3,6 +3,7 @@ package svc
 import (
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/lunny/html2md"
@@ -178,7 +179,7 @@ func (svc *importExportService) ImportCommento(host models.Host, dataURL string)
 	// Verify the export format version
 	if exp.Version != 1 {
 		logger.Errorf("importExportService.ImportCommento: invalid export version (got %d, want 1)", exp.Version)
-		return 0, util.ErrorBadCommentoExportVersion
+		return 0, fmt.Errorf("invalid export version (%d)", exp.Version)
 	}
 
 	// Check if imported commentedHex or email exists, creating a map of commenterHex (old hex, new hex)
@@ -199,7 +200,7 @@ func (svc *importExportService) ImportCommento(host models.Host, dataURL string)
 		randomPassword, err := data.RandomHexID()
 		if err != nil {
 			logger.Errorf("importExportService.ImportCommento: RandomHexID() failed: %v", err)
-			return 0, util.ErrorInternal
+			return 0, err
 		}
 
 		// Persist a new commenter instance
@@ -227,14 +228,14 @@ func (svc *importExportService) ImportCommento(host models.Host, dataURL string)
 			cHex, ok := commenterHex[comment.CommenterHex]
 			if !ok {
 				logger.Errorf("importExportService.ImportCommento: failed to find mapped commenter (hex=%v)", comment.CommenterHex)
-				return count, util.ErrorInternal
+				return count, fmt.Errorf("failed to find mapped commenter (hex=%v)", comment.CommenterHex)
 			}
 
 			// Find the parent comment
 			parentHex, ok := commentHex[comment.ParentHex]
 			if !ok {
 				logger.Errorf("importExportService.ImportCommento: failed to find parent comment (hex=%v)", comment.ParentHex)
-				return count, util.ErrorInternal
+				return count, fmt.Errorf("failed to find parent comment (hex=%v)", comment.ParentHex)
 			}
 
 			// Add a new comment record
@@ -263,7 +264,7 @@ func (svc *importExportService) ImportDisqus(host models.Host, dataURL string) (
 	if u, err := util.ParseAbsoluteURL(dataURL); err != nil {
 		return 0, err
 	} else if u.Host != "disqus.com" && !strings.HasSuffix(u.Host, ".disqus.com") {
-		return 0, util.ErrorNoDisqusURL
+		return 0, errors.New("export file must be hosted on disqus.com")
 	}
 
 	// Fetch and decompress the export tarball
@@ -315,7 +316,7 @@ func (svc *importExportService) ImportDisqus(host models.Host, dataURL string) (
 		randomPassword, err := data.RandomHexID()
 		if err != nil {
 			logger.Errorf("importExportService.ImportDisqus: RandomHexID() failed: %v", err)
-			return 0, util.ErrorInternal
+			return 0, err
 		}
 
 		// Persist a new commenter instance

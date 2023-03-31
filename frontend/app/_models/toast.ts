@@ -1,4 +1,10 @@
-import { faBomb, faCheck, faExclamation, faInfoCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import {
+    faCheck,
+    faCircleExclamation,
+    faExclamation,
+    faInfoCircle,
+    IconDefinition,
+} from '@fortawesome/free-solid-svg-icons';
 
 export enum Severity {
     INFO,
@@ -68,9 +74,8 @@ export class Toast {
         switch (this.severity) {
             case Severity.SUCCESS: return faCheck;
             case Severity.WARNING: return faExclamation;
-            case Severity.ERROR:   return faBomb;
+            case Severity.ERROR:   return faCircleExclamation;
         }
         return faInfoCircle;
     }
-
 }

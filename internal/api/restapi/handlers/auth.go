@@ -15,7 +15,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
-	"time"
 )
 
 var (
@@ -40,8 +39,8 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, principal data.Princi
 		return respServiceError(err)
 
 		// Make sure the owner owns no domains
-	} else if len(domains) > 0 {
-		return respBadRequest(util.ErrorCannotDeleteOwner)
+	} else if l := len(domains); l > 0 {
+		return respBadRequest(ErrorOwnerHasDomains.WithDetails(fmt.Sprintf("%d domain(s)", l)))
 	}
 
 	// Delete the user
@@ -77,21 +76,21 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	// Find the user
 	user, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), true)
 	if err == svc.ErrNotFound {
-		time.Sleep(util.WrongAuthDelay)
-		return respUnauthorized(util.ErrorInvalidEmailPassword)
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+		return respUnauthorized(ErrorInvalidCredentials)
 	} else if err != nil {
 		return respServiceError(err)
 	}
 
 	// Verify the owner is confirmed
 	if !user.EmailConfirmed {
-		return respUnauthorized(util.ErrorUnconfirmedEmail)
+		return respUnauthorized(ErrorEmailNotConfirmed)
 	}
 
 	// Verify the provided password
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(swag.StringValue(params.Body.Password))); err != nil {
-		time.Sleep(util.WrongAuthDelay)
-		return respUnauthorized(util.ErrorInvalidEmailPassword)
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+		return respUnauthorized(ErrorInvalidCredentials)
 	}
 
 	// Create a new owner session
@@ -103,7 +102,7 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	// Make a value for the session cookie
 	sv, err := GetSessionValue(user.HexID, ownerToken)
 	if err != nil {
-		return respInternalError()
+		return respInternalError(nil)
 	}
 
 	// Succeeded. Return a principal and a session cookie
@@ -122,7 +121,7 @@ func AuthLogout(params api_auth.AuthLogoutParams, _ data.Principal) middleware.R
 	// Extract session from the cookie
 	userID, token, err := FetchUserSessionFromCookie(params.HTTPRequest)
 	if err != nil {
-		return respUnauthorized(err)
+		return respUnauthorized(nil)
 	}
 
 	// Delete the session token, ignoring any error
@@ -135,7 +134,7 @@ func AuthLogout(params api_auth.AuthLogoutParams, _ data.Principal) middleware.R
 func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	// Verify new owners are allowed
 	if !config.CLIFlags.AllowNewOwners {
-		return respForbidden(util.ErrorNewOwnerForbidden)
+		return respForbidden(ErrorSignupsForbidden)
 	}
 
 	// Verify no owner with that email exists yet

@@ -41,14 +41,14 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 
 	// Map the provider to a goth provider
 	if idp, ok := data.FederatedIdProviders[models.IdentityProviderID(params.Provider)]; !ok {
-		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
+		return respBadRequest(ErrorIdPUnknown.WithDetails(params.Provider))
 
 	} else {
 		// Get the registered provider instance by its name (coming from the path parameter)
 		var err error
 		provider, err = goth.GetProvider(idp.GothID)
 		if err != nil {
-			return respBadRequest(fmt.Errorf("%s (%s)", util.ErrorOAuthNotConfigured.Error(), params.Provider))
+			return respBadRequest(ErrorIdPUnconfigured.WithDetails(params.Provider))
 		}
 	}
 
@@ -61,14 +61,14 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	sess, err := provider.BeginAuth(params.Token)
 	if err != nil {
 		logger.Warningf("OauthInit(): provider.BeginAuth() failed: %v", err)
-		return respInternalError()
+		return respInternalError(nil)
 	}
 
 	// Fetch the redirection URL
 	sessURL, err := sess.GetAuthURL()
 	if err != nil {
 		logger.Warningf("OauthInit(): sess.GetAuthURL() failed: %v", err)
-		return respInternalError()
+		return respInternalError(nil)
 	}
 
 	// Store the session in memory, to verify it later
@@ -78,7 +78,7 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	// If the session doesn't have the state param, also store the commenter token locally, for subsequent use
 	if originalState, err := getSessionState(sess); err != nil {
 		logger.Warningf("OauthInit(): failed to extract session state: %v", err)
-		return respInternalError()
+		return respInternalError(nil)
 	} else if originalState == "" {
 		commenterTokens.Put(sessID, params.Token)
 	}
@@ -99,7 +99,7 @@ func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responde
 
 	// Map the provider to a goth provider
 	if idp, ok := data.FederatedIdProviders[models.IdentityProviderID(params.Provider)]; !ok {
-		return respBadRequest(fmt.Errorf("unknown provider: %s", params.Provider))
+		return respBadRequest(ErrorIdPUnknown.WithDetails(params.Provider))
 
 	} else {
 		// Get the registered provider instance by its name (coming from the path parameter)
@@ -249,8 +249,8 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 	}
 
 	// Verify the domain's SSO config is complete
-	if domain.SsoSecret == "" || domain.SsoURL == "" {
-		return oauthFailure(util.ErrorMissingConfig)
+	if err := validateDomainSSOConfig(domain); err != nil {
+		return oauthFailure(err)
 	}
 
 	key, err := hex.DecodeString(domain.SsoSecret)
@@ -268,15 +268,14 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 	tokenBytes, err := hex.DecodeString(string(token))
 	if err != nil {
 		logger.Errorf("OauthSsoInit: failed to decode SSO token: %v", err)
-		return oauthFailure(util.ErrorInternal)
+		return oauthFailure(err)
 	}
 
 	// Parse the domain's SSO URL
 	ssoURL, err := util.ParseAbsoluteURL(string(domain.SsoURL))
 	if err != nil {
-		// this should really not be happening; we're checking if the passed URL is valid at domain update
 		logger.Errorf("OauthSsoInit: failed to parse SSO URL: %v", err)
-		return oauthFailure(util.ErrorInternal)
+		return oauthFailure(err)
 	}
 
 	// Generate a new HMAC signature hash
@@ -311,8 +310,15 @@ func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Re
 		return oauthFailure(fmt.Errorf("payload: failed to unmarshal: %s", err.Error()))
 	}
 
-	if payload.Token == "" || payload.Email == "" || payload.Name == "" {
-		return oauthFailure(util.ErrorMissingField)
+	// Validate payload fields
+	if payload.Token == "" {
+		return oauthFailure(errors.New("token is missing in the payload"))
+	}
+	if payload.Email == "" {
+		return oauthFailure(errors.New("email is missing in the payload"))
+	}
+	if payload.Name == "" {
+		return oauthFailure(errors.New("name is missing in the payload"))
 	}
 
 	// Fetch domain/commenter token for the token, removing the token
@@ -328,8 +334,8 @@ func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Re
 	}
 
 	// Verify the domain's SSO config is complete
-	if domain.SsoSecret == "" || domain.SsoURL == "" {
-		return oauthFailure(util.ErrorMissingConfig)
+	if err := validateDomainSSOConfig(domain); err != nil {
+		return oauthFailure(err)
 	}
 
 	key, err := hex.DecodeString(domain.SsoSecret)
@@ -437,6 +443,17 @@ func validateAuthSessionState(sess goth.Session, req *http.Request) error {
 			logger.Debugf("Auth session state mismatch: want '%s', got '%s'", originalState, reqState)
 			return errors.New("auth session state mismatch")
 		}
+	}
+	return nil
+}
+
+// validateDomainSSOConfig verifies the SSO configuration of the domain is valid
+func validateDomainSSOConfig(domain *models.Domain) error {
+	if domain.SsoSecret == "" {
+		return errors.New("domain SSO secret is not configured")
+	}
+	if domain.SsoURL == "" {
+		return errors.New("domain SSO URL is not configured")
 	}
 	return nil
 }

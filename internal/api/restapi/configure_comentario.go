@@ -231,7 +231,8 @@ func configureE2eMode(api *operations.ComentarioAPI) error {
 	})
 
 	// Reduce delays during end-2-end tests
-	util.WrongAuthDelay = 0
+	util.WrongAuthDelayMin = 0
+	util.WrongAuthDelayMax = 0
 
 	// Succeeded
 	return nil

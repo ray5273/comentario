@@ -4,6 +4,7 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -89,23 +90,23 @@ func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
 }
 
 // respBadRequest returns a responder that responds with HTTP Bad Request error
-func respBadRequest(err error) middleware.Responder {
-	return api_generic.NewGenericBadRequest().WithPayload(&api_generic.GenericBadRequestBody{Details: err.Error()})
+func respBadRequest(err *exmodels.Error) middleware.Responder {
+	return api_generic.NewGenericBadRequest().WithPayload(err)
 }
 
 // respForbidden returns a responder that responds with HTTP Forbidden error
-func respForbidden(err error) middleware.Responder {
-	return api_generic.NewGenericForbidden().WithPayload(&api_generic.GenericForbiddenBody{Details: err.Error()})
+func respForbidden(err *exmodels.Error) middleware.Responder {
+	return api_generic.NewGenericForbidden().WithPayload(err)
 }
 
 // respInternalError returns a responder that responds with HTTP Internal Server Error
-func respInternalError() middleware.Responder {
-	return api_generic.NewGenericInternalServerError()
+func respInternalError(err *exmodels.Error) middleware.Responder {
+	return api_generic.NewGenericInternalServerError().WithPayload(err)
 }
 
 // respNotFound returns a responder that responds with HTTP Not Found error
-func respNotFound() middleware.Responder {
-	return api_generic.NewGenericNotFound()
+func respNotFound(err *exmodels.Error) middleware.Responder {
+	return api_generic.NewGenericNotFound().WithPayload(err)
 }
 
 // respServiceError translates the provided error, returned by a service, into an appropriate error responder
@@ -116,10 +117,11 @@ func respServiceError(err error) middleware.Responder {
 	}
 
 	// Not recognised: return an internal error response
-	return respInternalError()
+	logger.Errorf("Service error: %v", err)
+	return respInternalError(nil)
 }
 
 // respUnauthorized returns a responder that responds with HTTP Unauthorized error
-func respUnauthorized(err error) middleware.Responder {
-	return api_generic.NewGenericUnauthorized().WithPayload(&api_generic.GenericUnauthorizedBody{Details: err.Error()})
+func respUnauthorized(err *exmodels.Error) middleware.Responder {
+	return api_generic.NewGenericUnauthorized().WithPayload(err)
 }

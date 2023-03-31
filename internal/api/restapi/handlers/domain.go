@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/markbates/goth"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -55,7 +57,7 @@ func DomainDelete(params api_owner.DomainDeleteParams, principal data.Principal)
 func DomainExportBegin(params api_owner.DomainExportBeginParams, principal data.Principal) middleware.Responder {
 	// Make sure SMTP is configured
 	if !config.SMTPConfigured {
-		return respBadRequest(util.ErrorSMTPNotConfigured)
+		return respBadRequest(ErrorSMTPUnconfigured)
 	}
 
 	// Verify the user owns the domain
@@ -118,7 +120,7 @@ func DomainImport(params api_owner.DomainImportParams, principal data.Principal)
 	case "disqus":
 		count, err = svc.TheImportExportService.ImportDisqus(host, srcURL)
 	default:
-		err = util.ErrorInternal
+		err = errors.New("unknown import source")
 	}
 
 	// Check the result
@@ -179,7 +181,7 @@ func DomainNew(params api_owner.DomainNewParams, principal data.Principal) middl
 	domain := params.Body.Domain
 	if ok, _, _ := util.IsValidHostPort(string(domain.Host)); !ok {
 		logger.Warningf("DomainNew(): '%s' is not a valid host[:port]", domain.Host)
-		return respBadRequest(util.ErrorInvalidDomainHost)
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails(string(domain.Host)))
 	}
 
 	// Validate identity providers
@@ -293,7 +295,7 @@ func domainExport(host models.Host, email string) {
 			email,
 			"Comentario Data Export Errored",
 			"domain-export-error.gohtml",
-			map[string]any{"Domain": host, "Error": util.ErrorInternal.Error()})
+			map[string]any{"Domain": host, "Error": err.Error()})
 
 	} else {
 		// Succeeded. Notify the user by email, ignoring any error
@@ -310,7 +312,7 @@ func domainExport(host models.Host, email string) {
 }
 
 // domainValidateIdPs validates the passed list of domain's identity providers
-func domainValidateIdPs(domain *models.Domain) error {
+func domainValidateIdPs(domain *models.Domain) *exmodels.Error {
 	// Validate identity providers
 	for _, id := range domain.Idps {
 		switch id {
@@ -321,17 +323,17 @@ func domainValidateIdPs(domain *models.Domain) error {
 		// If SSO is included, make sure the URL is provided
 		case models.IdentityProviderIDSso:
 			if domain.SsoURL == "" {
-				return util.ErrorSSOURLMissing
+				return ErrorSSOURLMissing
 			}
 
 		// It must be a federated provider. Make sure it's valid and configured
 		default:
 			if fidp, ok := data.FederatedIdProviders[id]; ok {
 				if _, err := goth.GetProvider(fidp.GothID); err != nil {
-					return fmt.Errorf("cannot enable identity provider '%s' as it isn't configured", fidp.Name)
+					return ErrorIdPUnconfigured.WithDetails(fidp.Name)
 				}
 			} else {
-				return fmt.Errorf("invalid identity provider ID: '%s'", id)
+				return ErrorIdPUnknown.WithDetails(string(id))
 			}
 		}
 	}

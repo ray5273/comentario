@@ -16,21 +16,20 @@ import (
 	"image/draw"
 	"io"
 	"net/http"
-	"time"
 )
 
 func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Responder {
 	// Try to find a local user with the given email
 	commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", data.EmailToString(params.Body.Email), true)
 	if err != nil {
-		time.Sleep(util.WrongAuthDelay)
-		return respUnauthorized(util.ErrorInvalidEmailPassword)
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+		return respUnauthorized(ErrorInvalidCredentials)
 	}
 
 	// Verify the provided password
 	if err := bcrypt.CompareHashAndPassword([]byte(commenter.PasswordHash), []byte(swag.StringValue(params.Body.Password))); err != nil {
-		time.Sleep(util.WrongAuthDelay)
-		return respUnauthorized(util.ErrorInvalidEmailPassword)
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+		return respUnauthorized(ErrorInvalidCredentials)
 	}
 
 	// Create a new commenter session
@@ -92,7 +91,7 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 	// Validate the passed commenter hex ID
 	id := models.HexID(params.ID)
 	if err := id.Validate(nil); err != nil {
-		return respBadRequest(err)
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("id"))
 	}
 
 	// Find the commenter user
@@ -104,7 +103,7 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 	// Fetch the image pointed to by the PhotoURL
 	resp, err := http.Get(commenter.PhotoURL)
 	if err != nil {
-		return respNotFound()
+		return respNotFound(nil)
 	}
 	defer resp.Body.Close()
 
@@ -114,7 +113,7 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 	// Decode the image
 	img, imgFormat, err := image.Decode(limitedResp)
 	if err != nil {
-		return respInternalError()
+		return respInternalError(nil)
 	}
 	logger.Debugf("Loaded commenter avatar: format=%s, dimensions=%s", imgFormat, img.Bounds().Size().String())
 
@@ -134,7 +133,7 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 	// Resize the image and encode into a JPEG
 	var buf bytes.Buffer
 	if err = imaging.Encode(&buf, imaging.Resize(img, 38, 0, imaging.Lanczos), imaging.JPEG); err != nil {
-		return respInternalError()
+		return respInternalError(nil)
 	}
 	return api_commenter.NewCommenterPhotoOK().WithPayload(io.NopCloser(&buf))
 }
@@ -186,7 +185,7 @@ func CommenterUpdate(params api_commenter.CommenterUpdateParams, principal data.
 
 	// Only locally authenticated users can be updated
 	if commenter.Provider != "" {
-		return respBadRequest(util.ErrorCannotUpdateOauthProfile)
+		return respBadRequest(ErrorFederatedProfile)
 	}
 
 	// Update the commenter in the database

@@ -1,19 +1,16 @@
 import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { MockProviders } from 'ng-mocks';
-import { UnauthGuard } from './unauth.guard';
-import { AuthService } from '../_services/auth.service';
+import { TokenGuard } from './token.guard';
 
-describe('UnauthGuard', () => {
+describe('TokenGuard', () => {
 
-    let guard: UnauthGuard;
+    let guard: TokenGuard;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
             imports: [RouterTestingModule],
-            providers: [MockProviders(AuthService)],
         });
-        guard = TestBed.inject(UnauthGuard);
+        guard = TestBed.inject(TokenGuard);
     });
 
     it('is created', () => {

@@ -1,5 +1,6 @@
 import { Inject, Injectable, LOCALE_ID } from '@angular/core';
 import { ConfigService } from './config.service';
+import { Location } from '@angular/common';
 
 @Injectable({
     providedIn: 'root',
@@ -33,6 +34,6 @@ export class DocsService {
      * @param lang Language to return a URL for. Optional, defaults to the current UI language.
      */
     getPageUrl(path: string, lang?: string): string {
-        return `${this.cfgSvc.docsBaseUrl}${lang || this.locale}/${path}`;
+        return Location.joinWithSlash(this.cfgSvc.docsBaseUrl, `${lang || this.locale}/${path}`);
     }
 }

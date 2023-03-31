@@ -2,7 +2,6 @@ package persistence
 
 import (
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
 
@@ -16,7 +15,7 @@ func migrateEmails(db *Database) error {
 	`)
 	if err != nil {
 		logger.Errorf("cannot get comments: %v", err)
-		return util.ErrorDatabaseMigration
+		return err
 	}
 	defer rows.Close()
 
@@ -24,12 +23,12 @@ func migrateEmails(db *Database) error {
 		var email string
 		if err = rows.Scan(&email); err != nil {
 			logger.Errorf("cannot get email from tables during migration: %v", err)
-			return util.ErrorDatabaseMigration
+			return err
 		}
 
 		unsubscribeSecretHex, err := data.RandomHexID()
 		if err != nil {
-			return util.ErrorDatabaseMigration
+			return err
 		}
 
 		err = db.Exec(
@@ -40,7 +39,7 @@ func migrateEmails(db *Database) error {
 			time.Now().UTC())
 		if err != nil {
 			logger.Errorf("cannot insert email during migration: %v", err)
-			return util.ErrorDatabaseMigration
+			return err
 		}
 	}
 

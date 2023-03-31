@@ -534,10 +534,13 @@ func (svc *userService) ResetUserPasswordByToken(token models.HexID, password st
 	var entity models.Entity
 	row := db.QueryRow("select hex, entity from resethexes where resethex=$1;", token)
 	if err := row.Scan(&userID, &entity); err != nil {
-		// Do not log "not found" errors
-		if err != sql.ErrNoRows {
-			logger.Errorf("userService.ResetUserPasswordByToken: Scan() failed: %v", err)
+		// Unknown token
+		if err == sql.ErrNoRows {
+			return "", ErrBadToken
 		}
+
+		// Any other database error
+		logger.Errorf("userService.ResetUserPasswordByToken: Scan() failed: %v", err)
 		return "", translateDBErrors(err)
 	}
 

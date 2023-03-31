@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { DomainEditComponent } from './domain-edit.component';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
+import { of } from 'rxjs';
+import { MockService } from 'ng-mocks';
+import { DomainEditComponent } from './domain-edit.component';
 import { ApiOwnerService } from '../../../../../generated-api';
-import { ConfigServiceMock, getApiOwnerServiceMock } from '../../../../_testing/mocks.spec';
 import { ConfigService } from '../../../../_services/config.service';
 import { ToolsModule } from '../../../tools/tools.module';
 
@@ -17,8 +18,8 @@ describe('DomainEditComponent', () => {
             declarations: [DomainEditComponent],
             imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, ToolsModule],
             providers: [
-                {provide: ApiOwnerService, useValue: getApiOwnerServiceMock()},
-                {provide: ConfigService,   useValue: ConfigServiceMock},
+                {provide: ConfigService,  useValue: MockService(ConfigService, {allIdps: []})},
+                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService, {domainGet: () => of(null)} as any)},
             ],
         })
             .compileComponents();

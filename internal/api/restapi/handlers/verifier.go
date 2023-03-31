@@ -5,7 +5,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
 )
 
 // Verifier is a global VerifierService implementation
@@ -33,7 +32,7 @@ type verifier struct{}
 func (v *verifier) CommenterLocalEmaiUnique(email string) middleware.Responder {
 	// Verify no such email is registered yet
 	if _, err := svc.TheUserService.FindCommenterByIdPEmail("", email, false); err == nil {
-		return respBadRequest(util.ErrorEmailAlreadyExists)
+		return respBadRequest(ErrorEmailAlreadyExists)
 	} else if err != svc.ErrNotFound {
 		return respServiceError(err)
 	}
@@ -43,7 +42,7 @@ func (v *verifier) CommenterLocalEmaiUnique(email string) middleware.Responder {
 func (v *verifier) OwnerEmaiUnique(email string) middleware.Responder {
 	// Verify no such email is registered yet
 	if _, err := svc.TheUserService.FindOwnerByEmail(email, false); err == nil {
-		return respBadRequest(util.ErrorEmailAlreadyExists)
+		return respBadRequest(ErrorEmailAlreadyExists)
 	} else if err != svc.ErrNotFound {
 		return respServiceError(err)
 	}
@@ -52,7 +51,7 @@ func (v *verifier) OwnerEmaiUnique(email string) middleware.Responder {
 
 func (v *verifier) PrincipalIsAuthenticated(principal data.Principal) middleware.Responder {
 	if principal.IsAnonymous() {
-		return respUnauthorized(util.ErrorUnauthenticated)
+		return respUnauthorized(ErrorUnauthenticated)
 	}
 	return nil
 }
@@ -61,7 +60,7 @@ func (v *verifier) UserIsDomainModerator(email string, host models.Host) middlew
 	if b, err := svc.TheDomainService.IsDomainModerator(email, host); err != nil {
 		return respServiceError(err)
 	} else if !b {
-		return respForbidden(util.ErrorNotModerator)
+		return respForbidden(ErrorNotModerator)
 	}
 	return nil
 }
@@ -70,7 +69,7 @@ func (v *verifier) UserOwnsDomain(id models.HexID, host models.Host) middleware.
 	if b, err := svc.TheDomainService.IsDomainOwner(id, host); err != nil {
 		return respServiceError(err)
 	} else if !b {
-		return respForbidden(util.ErrorNotDomainOwner)
+		return respForbidden(ErrorNotDomainOwner)
 	}
 	return nil
 }

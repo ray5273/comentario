@@ -1,10 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
+import { MockProviders, MockService } from 'ng-mocks';
 import { SignupComponent } from './signup.component';
-import { ConfigServiceMock, getApiAuthServiceMock } from '../../../_testing/mocks.spec';
 import { ConfigService } from '../../../_services/config.service';
-import { ApiAuthService } from '../../../../generated-api';
+import { ApiAuthService, ClientConfig } from '../../../../generated-api';
 
 describe('SignupComponent', () => {
 
@@ -16,8 +16,8 @@ describe('SignupComponent', () => {
             declarations: [SignupComponent],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
-                {provide: ApiAuthService, useValue: getApiAuthServiceMock()},
-                {provide: ConfigService,  useValue: ConfigServiceMock},
+                {provide: ConfigService,  useValue: MockService(ConfigService, {clientConfig: {} as ClientConfig})},
+                MockProviders(ApiAuthService),
             ],
         })
             .compileComponents();

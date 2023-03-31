@@ -4,8 +4,9 @@ export const Paths = {
 
     // Auth
     auth: {
-        login:          '/auth/login',
         forgotPassword: '/auth/forgotPassword',
+        login:          '/auth/login',
+        resetPassword:  '/auth/resetPassword',
         signup:         '/auth/signup',
     },
 
