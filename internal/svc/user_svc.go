@@ -8,7 +8,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -51,8 +50,8 @@ type UserService interface {
 	FindCommenterByToken(token models.HexID) (*data.UserCommenter, error)
 	// FindOwnerByEmail finds and returns an owner user by their email
 	FindOwnerByEmail(email string, readPwdHash bool) (*data.UserOwner, error)
-	// FindOwnerByID finds and returns an owner user by their hex ID
-	FindOwnerByID(id models.HexID) (*data.UserOwner, error)
+	// FindOwnerByID finds and returns an owner user by their hex ID, optionally reading in the password hash
+	FindOwnerByID(id models.HexID, readPwdHash bool) (*data.UserOwner, error)
 	// FindOwnerByToken finds and returns an owner user by their token
 	FindOwnerByToken(token models.HexID) (*data.UserOwner, error)
 	// ListCommentersByHost returns a list of all commenters for the (comments of) given domain
@@ -65,6 +64,9 @@ type UserService interface {
 	UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error
 	// UpdateCommenterSession links a commenter token to the given commenter, by updating the session record
 	UpdateCommenterSession(token, id models.HexID) error
+	// UpdateOwner updates the given user's data in the database. If no newPassword is given, the password stays
+	// unchanged
+	UpdateOwner(id models.HexID, name, newPassword string) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -129,12 +131,8 @@ func (svc *userService) CreateCommenter(email, name, websiteURL, photoURL, idp, 
 	}
 
 	// Hash the user's password, if any
-	if password != "" {
-		if h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err != nil {
-			return nil, err
-		} else {
-			uc.PasswordHash = string(h)
-		}
+	if err := uc.SetPassword(password); err != nil {
+		return nil, err
 	}
 
 	// Insert a commenter record
@@ -201,11 +199,9 @@ func (svc *userService) CreateOwner(email, name, password string) (*data.UserOwn
 		uo.HexID = id
 	}
 
-	// Hash the user's password
-	if h, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost); err != nil {
+	// Hash the user's password, if any
+	if err := uo.SetPassword(password); err != nil {
 		return nil, err
-	} else {
-		uo.PasswordHash = string(h)
 	}
 
 	// Insert a new owner record
@@ -449,14 +445,14 @@ func (svc *userService) FindOwnerByEmail(email string, readPwdHash bool) (*data.
 	}
 }
 
-func (svc *userService) FindOwnerByID(id models.HexID) (*data.UserOwner, error) {
+func (svc *userService) FindOwnerByID(id models.HexID, readPwdHash bool) (*data.UserOwner, error) {
 	logger.Debugf("userService.FindOwnerByID(%s)", id)
 
 	// Query the database
 	row := db.QueryRow("select ownerhex, email, name, confirmedemail, joindate, passwordhash from owners where ownerhex=$1;", id)
 
 	// Fetch the owner user
-	if u, err := svc.fetchOwner(row, false); err != nil {
+	if u, err := svc.fetchOwner(row, readPwdHash); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
@@ -530,10 +526,10 @@ func (svc *userService) ResetUserPasswordByToken(token models.HexID, password st
 	logger.Debugf("userService.ResetUserPasswordByToken(%s, %s)", token, password)
 
 	// Find and fetch the token record
-	var userID models.HexID
+	var user data.User // Just use a generic user for both entities
 	var entity models.Entity
 	row := db.QueryRow("select hex, entity from resethexes where resethex=$1;", token)
-	if err := row.Scan(&userID, &entity); err != nil {
+	if err := row.Scan(&user.HexID, &entity); err != nil {
 		// Unknown token
 		if err == sql.ErrNoRows {
 			return "", ErrBadToken
@@ -544,10 +540,8 @@ func (svc *userService) ResetUserPasswordByToken(token models.HexID, password st
 		return "", translateDBErrors(err)
 	}
 
-	// Hash the new password
-	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
-	if err != nil {
-		logger.Errorf("cannot generate hash from password: %v", err)
+	// Hash the user's password, if any
+	if err := user.SetPassword(password); err != nil {
 		return "", err
 	}
 
@@ -555,18 +549,18 @@ func (svc *userService) ResetUserPasswordByToken(token models.HexID, password st
 	switch entity {
 	// Owner
 	case models.EntityOwner:
-		if _, err := svc.FindOwnerByID(userID); err != nil {
+		if _, err := svc.FindOwnerByID(user.HexID, false); err != nil {
 			return "", err
-		} else if err := db.Exec("update owners set passwordhash=$1 where ownerhex=$2;", string(hash), userID); err != nil {
+		} else if err := db.Exec("update owners set passwordhash=$1 where ownerhex=$2;", user.PasswordHash, user.HexID); err != nil {
 			logger.Errorf("userService.ResetUserPasswordByToken: Exec() failed for owner: %v", err)
 			return "", translateDBErrors(err)
 		}
 
 	// Commenter
 	case models.EntityCommenter:
-		if _, err := svc.FindCommenterByID(userID); err != nil {
+		if _, err := svc.FindCommenterByID(user.HexID); err != nil {
 			return "", err
-		} else if err := db.Exec("update commenters set passwordhash=$1 where commenterhex=$2;", string(hash), userID); err != nil {
+		} else if err := db.Exec("update commenters set passwordhash=$1 where commenterhex=$2;", user.PasswordHash, user.HexID); err != nil {
 			logger.Errorf("userService.ResetUserPasswordByToken: Exec() failed for commenter: %v", err)
 			return "", translateDBErrors(err)
 		}
@@ -577,7 +571,7 @@ func (svc *userService) ResetUserPasswordByToken(token models.HexID, password st
 	}
 
 	// Remove all the user's reset tokens, ignoring any error
-	_ = svc.DeleteResetTokens(userID)
+	_ = svc.DeleteResetTokens(user.HexID)
 
 	// Succeeded
 	return entity, nil
@@ -605,6 +599,28 @@ func (svc *userService) UpdateCommenterSession(token, id models.HexID) error {
 	// Update the record
 	if err := db.Exec("update commentersessions set commenterhex=$1 where commentertoken=$2;", id, token); err != nil {
 		logger.Errorf("userService.UpdateCommenterSession: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) UpdateOwner(id models.HexID, name, newPassword string) error {
+	logger.Debugf("userService.UpdateOwner(%s, %s, %s)", id, name, newPassword)
+
+	// Prepare a generic user to hash the password
+	user := &data.User{HexID: id, Name: name}
+	if err := user.SetPassword(newPassword); err != nil {
+		return err
+	}
+
+	// Update the record
+	err := db.Exec(
+		"update owners set name=$1, passwordhash=case when $2='' then passwordhash else $2 end where ownerhex=$3;",
+		user.Name, user.PasswordHash, user.HexID)
+	if err != nil {
+		logger.Errorf("userService.UpdateOwner: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

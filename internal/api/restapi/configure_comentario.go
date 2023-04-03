@@ -91,6 +91,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIAuthAuthLogoutHandler = api_auth.AuthLogoutHandlerFunc(handlers.AuthLogout)
 	api.APIAuthAuthSignupHandler = api_auth.AuthSignupHandlerFunc(handlers.AuthSignup)
 	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIAuthCurUserProfileUpdateHandler = api_auth.CurUserProfileUpdateHandlerFunc(handlers.CurUserProfileUpdate)
 	api.APIAuthCurUserPwdResetChangeHandler = api_auth.CurUserPwdResetChangeHandlerFunc(handlers.CurUserPwdResetChange)
 	api.APIAuthCurUserPwdResetSendEmailHandler = api_auth.CurUserPwdResetSendEmailHandlerFunc(handlers.CurUserPwdResetSendEmail)
 

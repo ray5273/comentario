@@ -23,8 +23,8 @@
         <!-- Additional details, if any -->
         <div *ngIf="t.details" class="toast-details small mt-2">({{ t.details }})</div>
 
-        <!-- "401 Unauthorized: show a login button -->
-        <div *ngIf="t.errorCode === 401" class="mt-3">
+        <!-- "401 Unauthorized: show a login button (unless it's a login error) -->
+        <div *ngIf="t.errorCode === 401 && t.id !== 'invalid-credentials'" class="mt-3">
             <button type="button" (click)="goLogin()" class="btn btn-primary w-100" i18n>Log in</button>
         </div>
     </div>

@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"time"
 )
 
 func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
@@ -23,6 +24,43 @@ func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 
 	// Succeeded: owner's logged in
 	return api_auth.NewCurUserGetOK().WithPayload(user.ToAPIModel())
+}
+
+func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, principal data.Principal) middleware.Responder {
+	// If the password is getting changed, verify the current password
+	if params.Body.NewPassword != "" {
+		// Fetch the user with its password hash (which doesn't get filled for principal during authentication)
+		if u, err := svc.TheUserService.FindOwnerByID(principal.GetHexID(), true); err != nil {
+			return respServiceError(err)
+
+			// Verify the current password
+		} else if !u.VerifyPassword(params.Body.CurPassword) {
+			// Sleep a while to discourage brute-force attacks
+			time.Sleep(util.WrongAuthDelayMax)
+			return respBadRequest(ErrorWrongCurPassword)
+		}
+	}
+
+	// Update the user
+	if err := svc.TheUserService.UpdateOwner(principal.GetHexID(), data.TrimmedString(params.Body.Name), params.Body.NewPassword); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_auth.NewCurUserProfileUpdateNoContent()
+}
+
+func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middleware.Responder {
+	if _, err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.Token, *params.Body.Password); err == svc.ErrBadToken {
+		// Token unknown: forbidden
+		return respForbidden(ErrorBadToken)
+	} else if err != nil {
+		// Any other error
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_auth.NewCurUserPwdResetChangeNoContent()
 }
 
 func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) middleware.Responder {
@@ -71,17 +109,4 @@ func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) mi
 
 	// Succeeded (or no user found)
 	return api_auth.NewCurUserPwdResetSendEmailNoContent()
-}
-
-func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middleware.Responder {
-	if _, err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.Token, *params.Body.Password); err == svc.ErrBadToken {
-		// Token unknown: forbidden
-		return respForbidden(ErrorBadToken)
-	} else if err != nil {
-		// Any other error
-		return respServiceError(err)
-	}
-
-	// Succeeded
-	return api_auth.NewCurUserPwdResetChangeNoContent()
 }

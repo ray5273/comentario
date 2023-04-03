@@ -6,6 +6,7 @@ import { ControlCenterComponent } from './control-center/control-center.componen
 import { DomainManagerComponent } from './domains/domain-manager/domain-manager.component';
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
+import { ProfileComponent } from './account/profile/profile.component';
 
 const children: Routes = [
     // Default route
@@ -20,6 +21,9 @@ const children: Routes = [
     {path: 'domains/:host',       component: DomainDetailComponent},
     {path: 'domains/:host/edit',  component: DomainEditComponent},
     {path: 'domains/:host/clone', component: DomainEditComponent, data: {new: true}},
+
+    // Account
+    {path: 'account/profile', component: ProfileComponent},
 ];
 
 // Make a parent route object, protected by the AuthGuard

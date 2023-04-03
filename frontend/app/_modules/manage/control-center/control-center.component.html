@@ -39,6 +39,22 @@
                         <span class="cc-hide-collapsed" i18n>Domains</span>
                     </a>
                 </li>
+
+                <!-- [Account] -->
+                <li class="nav-item cc-divider">
+                    <h2 class="cc-hide-collapsed" i18n>Account</h2>
+                </li>
+                <!-- Profile -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.account.profile" routerLinkActive="active" class="cc-link" id="sidebarProfile">
+                        <!-- User's avatar -->
+                        <fa-icon class="cc-icon" [icon]="faUser"></fa-icon>
+                        <div class="cc-hide-collapsed">
+                            <!-- User's name -->
+                            <div class="text-truncate" style="max-width: 200px">{{ principal?.name }}</div>
+                        </div>
+                    </a>
+                </li>
             </ul>
 
             <!-- Logout -->

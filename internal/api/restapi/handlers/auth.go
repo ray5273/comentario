@@ -13,7 +13,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"golang.org/x/crypto/bcrypt"
 	"net/http"
 )
 
@@ -84,11 +83,11 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 
 	// Verify the owner is confirmed
 	if !user.EmailConfirmed {
-		return respUnauthorized(ErrorEmailNotConfirmed)
+		return respForbidden(ErrorEmailNotConfirmed)
 	}
 
 	// Verify the provided password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(swag.StringValue(params.Body.Password))); err != nil {
+	if !user.VerifyPassword(swag.StringValue(params.Body.Password)) {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return respUnauthorized(ErrorInvalidCredentials)
 	}

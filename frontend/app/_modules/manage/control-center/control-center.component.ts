@@ -1,10 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationStart, Router } from '@angular/router';
-import { faAt, faChevronRight, faQuestionCircle, faSignOutAlt, faTachometerAlt } from '@fortawesome/free-solid-svg-icons';
+import { faAt, faChevronRight, faQuestionCircle, faSignOutAlt, faTachometerAlt, faUser } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
 import { filter } from 'rxjs/operators';
+import { Principal } from '../../../../generated-api';
 
 @UntilDestroy()
 @Component({
@@ -17,6 +18,9 @@ export class ControlCenterComponent implements OnInit {
     /** Whether the sidebar is open by the user (only applies to small screens). */
     expanded = false;
 
+    /** Logged-in principal. */
+    principal?: Principal | null;
+
     readonly Paths = Paths;
 
     // Icons
@@ -25,6 +29,7 @@ export class ControlCenterComponent implements OnInit {
     readonly faQuestionCircle = faQuestionCircle;
     readonly faSignOutAlt     = faSignOutAlt;
     readonly faTachometerAlt  = faTachometerAlt;
+    readonly faUser           = faUser;
 
     constructor(
         private readonly router: Router,
@@ -34,8 +39,11 @@ export class ControlCenterComponent implements OnInit {
     ngOnInit(): void {
         // Collapse the sidebar on route change
         this.router.events
-            .pipe(filter(e => e instanceof NavigationStart), untilDestroyed(this))
+            .pipe(untilDestroyed(this), filter(e => e instanceof NavigationStart))
             .subscribe(() => this.expanded = false);
+
+        // Monitor principal changes
+        this.authSvc.principal.subscribe(p => this.principal = p);
     }
 
     logout() {

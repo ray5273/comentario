@@ -23,4 +23,5 @@ var (
 	ErrorSMTPUnconfigured     = &exmodels.Error{ID: "smtp-unconfigured", Message: "Sending emails via SMTP isn't configured"}
 	ErrorSSOURLMissing        = &exmodels.Error{ID: "sso-url-missing", Message: "SSO URL is missing"}
 	ErrorUnauthenticated      = &exmodels.Error{ID: "unauthenticated", Message: "User isn't authenticated"}
+	ErrorWrongCurPassword     = &exmodels.Error{ID: "wrong-cur-password", Message: "Wrong current password"}
 )

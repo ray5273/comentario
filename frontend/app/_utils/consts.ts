@@ -14,5 +14,10 @@ export const Paths = {
     manage: {
         dashboard: '/manage/dashboard',
         domains:   '/manage/domains',
+
+        // Account
+        account: {
+            profile: '/manage/account/profile',
+        },
     },
 };

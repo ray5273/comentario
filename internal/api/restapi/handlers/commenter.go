@@ -10,7 +10,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"golang.org/x/crypto/bcrypt"
 	"image"
 	"image/color"
 	"image/draw"
@@ -27,7 +26,7 @@ func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Respon
 	}
 
 	// Verify the provided password
-	if err := bcrypt.CompareHashAndPassword([]byte(commenter.PasswordHash), []byte(swag.StringValue(params.Body.Password))); err != nil {
+	if !commenter.VerifyPassword(swag.StringValue(params.Body.Password)) {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return respUnauthorized(ErrorInvalidCredentials)
 	}

@@ -1,0 +1,94 @@
+<section class="container-lg" *ngIf="principal">
+    <!-- Heading -->
+    <h1 i18n="heading">My profile</h1>
+
+    <!-- Profile form -->
+    <section>
+        <form [formGroup]="userForm" (ngSubmit)="submit()">
+            <div class="row g-3">
+                <div class="row g-3">
+                    <!-- Email -->
+                    <div class="col-md-6">
+                        <label for="email" class="form-label colon" i18n>Email</label>
+                        <input formControlName="email" type="email" class="form-control" id="email" size="45" readonly>
+                    </div>
+
+                    <!-- Name -->
+                    <div class="col-md-6">
+                        <label for="name" class="form-label colon" i18n>Name</label>
+                        <input formControlName="name" type="text" class="form-control" id="name"
+                               [class.is-valid]="name.touched && name.valid"
+                               [class.is-invalid]="name.touched && name.invalid"
+                               required minlength="2" maxlength="63" placeholder="Enter name" i18n-placeholder>
+                        <div class="invalid-feedback" i18n>Please enter your name.</div>
+                    </div>
+
+                    <!-- Current password -->
+                    <div class="col-md-6">
+                        <label for="curPassword" class="form-label colon" i18n>Current password</label>
+                        <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
+                                            id="curPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                    </div>
+
+                    <!-- New password -->
+                    <div class="col-md-6">
+                        <label for="newPassword" class="form-label colon" i18n>New password</label>
+                        <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
+                                            id="newPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Save button -->
+            <div class="form-footer">
+                <button [appSpinner]="saving.active" type="submit" class="btn btn-primary" i18n="action">Save</button>
+            </div>
+        </form>
+    </section>
+
+    <!-- Danger zone -->
+    <section class="danger text-center p-4">
+        <!-- Collapse link -->
+        <button [class.collapsed]="isDangerZoneCollapsed" [attr.aria-expanded]="!isDangerZoneCollapsed"
+                (click)="collapse.toggle()"
+                type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="dangerZoneContainer">
+            <span class="me-2" i18n>Danger zone</span>
+            <fa-icon [icon]="faAngleDown"></fa-icon>
+        </button>
+        <!-- Danger zone content -->
+        <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="dangerZoneContainer">
+            <!-- Delete account -->
+            <section>
+                <h3 i18n="heading">Delete my account</h3>
+
+                <!-- Delete account info -->
+                <p i18n>Here you can terminate your service account.</p>
+                <p i18n>Please note: you first need to delete all domains linked to your account.</p>
+
+                <!-- Delete account button -->
+                <button [appConfirm]="deleteAccountDlg"
+                        confirmTitle="Are you absolutely sure you want to delete your account?"
+                        confirmAction="Delete my account"
+                        [confirmIcon]="faSkullCrossbones"
+                        [confirmActionEnabled]="agreed.value"
+                        [appSpinner]="deleting.active" type="button" class="btn btn-danger"
+                        (confirmed)="deleteAccount()"
+                        i18n-confirmTitle i18n-confirmAction>
+                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Delete my account</ng-container>
+                </button>
+            </section>
+        </div>
+    </section>
+</section>
+
+<!-- Delete account confirmation dialog content template -->
+<ng-template #deleteAccountDlg>
+    <p i18n>You will lose your access to Comentario.</p>
+    <form [formGroup]="deleteConfirmationForm">
+        <div class="form-check">
+            <input formControlName="agreed" type="checkbox" class="form-check-input" id="agreed-del-account">
+            <label class="form-check-label text-danger" for="agreed-del-account" i18n>I have read the above and understand that this action cannot be undone</label>
+        </div>
+    </form>
+</ng-template>

@@ -3,6 +3,7 @@ package data
 import (
 	"github.com/go-openapi/strfmt"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"golang.org/x/crypto/bcrypt"
 	"time"
 )
 
@@ -40,6 +41,11 @@ type Principal interface {
 	GetUser() *User
 	// IsAnonymous returns whether the underlying user is anonymous
 	IsAnonymous() bool
+	// SetPassword updates the PasswordHash from the provided plain-test password. If s is empty, also sets the hash to
+	// empty
+	SetPassword(s string) error
+	// VerifyPassword checks whether the provided password matches the hash
+	VerifyPassword(s string) bool
 }
 
 // User is a base user type
@@ -61,6 +67,26 @@ func (u *User) GetUser() *User {
 
 func (u *User) IsAnonymous() bool {
 	return u.HexID == AnonymousCommenter.HexID
+}
+
+func (u *User) SetPassword(s string) error {
+	// If no password is provided, remove the hash. This means the user won't be able to log in
+	if s == "" {
+		u.PasswordHash = ""
+		return nil
+	}
+
+	// Hash and save the password
+	if h, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost); err != nil {
+		return err
+	} else {
+		u.PasswordHash = string(h)
+	}
+	return nil
+}
+
+func (u *User) VerifyPassword(s string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(s)) == nil
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
-import { MockDirective, MockProviders } from 'ng-mocks';
+import { MockDirective, MockService } from 'ng-mocks';
 import { AuthService } from '../../../_services/auth.service';
 import { ControlCenterComponent } from './control-center.component';
 import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
@@ -15,7 +16,9 @@ describe('ControlCenterComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [ControlCenterComponent, MockDirective(ConfirmDirective)],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
-            providers: [MockProviders(AuthService)],
+            providers: [
+                {provide: AuthService, useValue: MockService(AuthService, {principal: of(null)})},
+            ],
         })
             .compileComponents();
 

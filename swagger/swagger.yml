@@ -642,6 +642,39 @@ paths:
         204:
           description: User is not authenticated
 
+    put:
+      operationId: CurUserProfileUpdate
+      summary: Update profile details of the current user
+      tags:
+        - ApiAuth
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - name
+            properties:
+              name:
+                type: string
+                minLength: 1
+                maxLength: 63
+                description: New full name of the user
+              curPassword:
+                type: string
+                minLength: 1
+                maxLength: 63
+                description: Current password of the user. Required if newPassword is given, otherwise ignored
+              newPassword:
+                type: string
+                minLength: 1
+                maxLength: 63
+                description: New password to set for the user. Optional, if not provided, the password remains unchanged
+      responses:
+        204:
+          description: User profile has been updated
+
   /user/pwdreset:
     post:
       operationId: CurUserPwdResetSendEmail
