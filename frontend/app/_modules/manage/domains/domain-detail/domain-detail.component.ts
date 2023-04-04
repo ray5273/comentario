@@ -2,13 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit, faSnowflake, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit, faSnowflake, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ApiOwnerService, Domain, DomainState, IdentityProvider } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { DocsService } from '../../../../_services/docs.service';
+import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 
 @UntilDestroy()
 @Component({
@@ -21,9 +22,14 @@ export class DomainDetailComponent implements OnInit {
     domain?: Domain;
     domainIdps?: IdentityProvider[];
 
-    readonly loading = new ProcessingStatus();
+    readonly loading     = new ProcessingStatus();
+    readonly modAdding   = new ProcessingStatus();
+    readonly modDeleting = new ProcessingStatus();
     readonly Paths = Paths;
     readonly snippet: string;
+    readonly modForm = this.fb.nonNullable.group({
+        email: ['', [Validators.email]],
+    });
 
     // Icons
     readonly faBars            = faBars;
@@ -33,10 +39,12 @@ export class DomainDetailComponent implements OnInit {
     readonly faEdit            = faEdit;
     readonly faSnowflake       = faSnowflake;
     readonly faTrashAlt        = faTrashAlt;
+    readonly faXmark           = faXmark;
 
     constructor(
         private readonly route: ActivatedRoute,
         private readonly router: Router,
+        private readonly fb: FormBuilder,
         private readonly api: ApiOwnerService,
         private readonly toastSvc: ToastService,
         private readonly cfgSvc: ConfigService,
@@ -50,6 +58,10 @@ export class DomainDetailComponent implements OnInit {
 
     get freezeAction(): string {
         return this.domain?.state === DomainState.Frozen ? $localize`Unfreeze` : $localize`Freeze`;
+    }
+
+    get modEmail(): AbstractControl<string> {
+        return this.modForm.get('email')!;
     }
 
     ngOnInit(): void {
@@ -77,7 +89,7 @@ export class DomainDetailComponent implements OnInit {
         // Run cleaning with the API
         this.api.domainClear(this.domain!.host)
             // Add a toast
-            .subscribe(() => this.toastSvc.success('domain-cleared').keepOnRouteChange());
+            .subscribe(() => this.toastSvc.success('domain-cleared'));
     }
 
     toggleFrozen() {
@@ -85,10 +97,41 @@ export class DomainDetailComponent implements OnInit {
         this.api.domainToggleFrozen(this.domain!.host)
             .subscribe(() => {
                 // Add a toast
-                this.toastSvc.success('data-saved').keepOnRouteChange();
+                this.toastSvc.success('data-saved');
                 // Reload the domain
                 this.reload();
             });
+    }
+
+    removeModerator(email: string) {
+        this.api.domainModeratorDelete(this.domain!.host, {email})
+            .pipe(this.modDeleting.processing())
+            .subscribe(() =>{
+                // Add a toast
+                this.toastSvc.success('moderator-removed');
+                // Reload the domain
+                this.reload();
+            });
+    }
+
+    addModerator() {
+        // Mark all controls touched to display validation results
+        this.modForm.markAllAsTouched();
+
+        // Submit the form if it's valid
+        if (this.modForm.valid) {
+            this.api.domainModeratorNew(this.domain!.host, {email: this.modEmail.value})
+                .pipe(this.modAdding.processing())
+                .subscribe(() => {
+                    // Add a toast
+                    this.toastSvc.success('moderator-added');
+                    // Clear the form
+                    this.modForm.reset();
+                    this.modForm.markAsUntouched();
+                    // Reload the domain
+                    this.reload();
+                });
+        }
     }
 
     private reload() {

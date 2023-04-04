@@ -224,7 +224,7 @@ func (svc *domainService) DeleteModerator(host models.Host, email string) error 
 }
 
 func (svc *domainService) FindByHost(host models.Host) (*models.Domain, error) {
-	logger.Debugf("domainService.Find(%s)", host)
+	logger.Debugf("domainService.FindByHost(%s)", host)
 
 	// Query the row
 	rows, err := db.Query(
@@ -232,7 +232,7 @@ func (svc *domainService) FindByHost(host models.Host) (*models.Domain, error) {
 			"d.domain, d.name, d.creationdate, d.state, d.autospamfilter, d.requiremoderation, "+
 			"d.requireidentification, d.moderateallanonymous, d.emailnotificationpolicy, d.commentoprovider, "+
 			"d.googleprovider, d.githubprovider, d.gitlabprovider, d.twitterprovider, d.ssoprovider, d.ssosecret, "+
-			"d.ssourl, d.defaultsortpolicy, m.email, m.adddate "+
+			"d.ssourl, d.defaultsortpolicy, coalesce(m.email, ''), coalesce(m.adddate, CURRENT_TIMESTAMP) "+
 			"from domains d "+
 			"left join moderators m on m.domain=d.domain "+
 			"where d.domain=$1;",
@@ -303,7 +303,7 @@ func (svc *domainService) ListByOwner(ownerHex models.HexID) ([]*models.Domain, 
 			"d.domain, d.name, d.creationdate, d.state, d.autospamfilter, d.requiremoderation, "+
 			"d.requireidentification, d.moderateallanonymous, d.emailnotificationpolicy, d.commentoprovider, "+
 			"d.googleprovider, d.githubprovider, d.gitlabprovider, d.twitterprovider, d.ssoprovider, d.ssosecret, "+
-			"d.ssourl, d.defaultsortpolicy, m.email, m.adddate "+
+			"d.ssourl, d.defaultsortpolicy, coalesce(m.email, ''), coalesce(m.adddate, CURRENT_TIMESTAMP) "+
 			"from domains d "+
 			"left join moderators m on m.domain=d.domain "+
 			"where d.ownerhex=$1;",

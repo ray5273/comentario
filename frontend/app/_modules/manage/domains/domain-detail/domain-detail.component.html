@@ -127,21 +127,51 @@
                                     </ul>
                                 </dd>
                             </div>
-                            <!-- Moderators -->
-                            <div>
-                                <dt i18n>Moderators</dt>
-                                <dd>
-                                    <ul class="list-unstyled mb-0">
-                                        <li *ngFor="let m of domain.moderators">{{ m.email }}</li>
-                                    </ul>
-                                </dd>
-                            </div>
                             <!-- Created -->
                             <div>
                                 <dt i18n>Created</dt>
                                 <dd>{{ domain.creationDate | date:'short' }}</dd>
                             </div>
                         </dl>
+                    </ng-template>
+                </li>
+
+                <!-- Moderators tab -->
+                <li ngbNavItem="moderators">
+                    <a ngbNavLink i18n>Moderators</a>
+                    <ng-template ngbNavContent>
+                        <!-- List of moderators -->
+                        <div [appSpinner]="modDeleting.active" spinnerSize="lg" class="list-group list-group-flush">
+                            <div *ngFor="let m of domain.moderators" class="list-group-item d-flex flex-wrap">
+                                <!-- Moderator email -->
+                                <div class="flex-grow-1 d-flex align-items-center">{{ m.email }}</div>
+                                <!-- Delete button -->
+                                <button appConfirm="Are you sure you want to remove this moderator?"
+                                        confirmAction="Remove moderator" (confirmed)="removeModerator(m.email)"
+                                        type="button" class="btn btn-outline-danger" i18n-appConfirm i18n-confirmAction>
+                                    <fa-icon [icon]="faXmark" class="me-1"></fa-icon>
+                                    <ng-container i18n>Remove</ng-container>
+                                </button>
+                            </div>
+
+                            <!-- New moderator form -->
+                            <form [formGroup]="modForm" (ngSubmit)="addModerator()" id="moderator-form" class="list-group-item">
+                                <div class="input-group">
+                                    <!-- Email -->
+                                    <span class="input-group-text d-none d-md-flex" i18n>Add moderator</span>
+                                    <input formControlName="email" type="email" class="form-control" id="modEmail"
+                                           [class.is-valid]="modEmail.touched && modEmail.valid"
+                                           [class.is-invalid]="modEmail.touched && modEmail.invalid"
+                                           required minlength="6" maxlength="255" autocomplete="email"
+                                           placeholder="user@example.com">
+                                    <!-- Submit button -->
+                                    <button [appSpinner]="modAdding.active" type="submit"
+                                            class="btn btn-outline-success" i18n="action">Add</button>
+                                    <!-- Error feedback -->
+                                    <div class="invalid-feedback" i18n>Please enter a valid email.</div>
+                                </div>
+                            </form>
+                        </div>
                     </ng-template>
                 </li>
             </ul>

@@ -195,10 +195,15 @@ definitions:
   domainModerator:
     description: Domain moderator
     type: object
+    readOnly: true
+    required:
+      - email
+      - host
     properties:
       email:
         type: string
         format: email
+        x-isnullable: false
       host:
         $ref: "#/definitions/host"
       addDate:

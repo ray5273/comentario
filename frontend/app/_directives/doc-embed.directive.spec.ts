@@ -36,7 +36,8 @@ describe('DocEmbedDirective', () => {
                                 expect(pageName).toBe('test');
                                 return 'https://page.url/';
                             }
-                        })},
+                        }),
+                },
                 MockProvider(ConfigService),
             ],
         })

@@ -2,26 +2,24 @@
     <!-- Heading -->
     <h1 i18n="heading">Domains</h1>
 
-    <!-- Toolbar -->
-    <nav class="navbar navbar-light">
-        <div class="container-fluid">
-            <div class="row g-2 flex-grow-1">
-                <!-- New item button -->
-                <div class="col">
-                    <button [routerLink]="[Paths.manage.domains, 'create']" type="button" class="btn btn-success">
-                        <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
-                        <ng-container i18n>New domain</ng-container>
-                    </button>
-                </div>
+    <!-- Domain grid and the New domain button -->
+    <div [appSpinner]="domainsLoading.active" spinnerSize="lg" class="row row-cols-1 row-cols-md-2 g-4">
+        <!-- Domains -->
+        <div *ngFor="let d of domains" class="col">
+            <div class="card h-100">
+                <a [routerLink]="d.host" class="card-body text-center">
+                    <h5 class="card-title">{{ d.displayName || d.host }}</h5>
+                    <div class="card-text">{{ d.host }}</div>
+                </a>
             </div>
         </div>
-    </nav>
-
-    <!-- Domain list -->
-    <div [appSpinner]="domainsLoading.active" spinnerSize="lg" class="list-group">
-        <a *ngFor="let d of domains" [routerLink]="d.host" class="list-group-item list-group-item-action">
-            <div class="fw-bold">{{ d.displayName }}</div>
-            <div>{{ d.host }}</div>
-        </a>
+        <!-- New domain button -->
+        <div class="col">
+            <a [routerLink]="[Paths.manage.domains, 'create']"
+                 class="card py-4 h-100 bg-success text-light flex-row justify-content-center align-items-center lead">
+                <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
+                <ng-container i18n>New domain</ng-container>
+            </a>
+        </div>
     </div>
 </section>
