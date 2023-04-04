@@ -3,14 +3,13 @@ package svc
 import (
 	"encoding/json"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/lunny/html2md"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"strings"
+	"io"
 	"time"
 )
 
@@ -25,12 +24,12 @@ type ImportExportService interface {
 	// GetExportedData fetches an export with the given hex ID from the database, returning the related domain host, the
 	// binary data, and the export timestamp
 	GetExportedData(id models.HexID) (models.Host, []byte, time.Time, error)
-	// ImportCommento performs data import in the "commento" format, downloading the archive from the given URL. Returns
-	// the number of imported comments
-	ImportCommento(host models.Host, dataURL string) (int64, error)
-	// ImportDisqus performs data import from Disqus, downloading the archive from the given URL. Returns the number of
+	// ImportCommento performs data import in the "commento" format from the provided data buffer. Returns the number of
 	// imported comments
-	ImportDisqus(host models.Host, dataURL string) (int64, error)
+	ImportCommento(host models.Host, reader io.Reader) (int64, error)
+	// ImportDisqus performs data import from Disqus from the provided data buffer. Returns the number of imported
+	// comments
+	ImportDisqus(host models.Host, reader io.Reader) (int64, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -154,21 +153,16 @@ func (svc *importExportService) GetExportedData(id models.HexID) (models.Host, [
 	return host, binData, created, nil
 }
 
-func (svc *importExportService) ImportCommento(host models.Host, dataURL string) (int64, error) {
-	logger.Debugf("importExportService.ImportCommento(%s, %s)", host, dataURL)
-
-	// Validate the URL
-	if _, err := util.ParseAbsoluteURL(dataURL); err != nil {
-		return 0, err
-	}
+func (svc *importExportService) ImportCommento(host models.Host, reader io.Reader) (int64, error) {
+	logger.Debugf("importExportService.ImportCommento(%s, ...)", host)
 
 	// Fetch and decompress the export tarball
-	d, err := util.DownloadGzip(dataURL)
+	d, err := util.DecompressGzip(reader)
 	if err != nil {
-		logger.Errorf("importExportService.ImportCommento: DownloadGzip() failed: %v", err)
+		logger.Errorf("importExportService.ImportCommento: DecompressGzip() failed: %v", err)
 		return 0, err
 	}
-
+	logger.Warning(string(d)) // TODO
 	// Unmarshal the data
 	var exp commentoExportV1
 	if err := json.Unmarshal(d, &exp); err != nil {
@@ -257,20 +251,13 @@ func (svc *importExportService) ImportCommento(host models.Host, dataURL string)
 	return count, nil
 }
 
-func (svc *importExportService) ImportDisqus(host models.Host, dataURL string) (int64, error) {
-	logger.Debugf("importExportService.ImportDisqus(%s, %s)", host, dataURL)
-
-	// Validate the URL and check it's on *.discus.com
-	if u, err := util.ParseAbsoluteURL(dataURL); err != nil {
-		return 0, err
-	} else if u.Host != "disqus.com" && !strings.HasSuffix(u.Host, ".disqus.com") {
-		return 0, errors.New("export file must be hosted on disqus.com")
-	}
+func (svc *importExportService) ImportDisqus(host models.Host, reader io.Reader) (int64, error) {
+	logger.Debugf("importExportService.ImportDisqus(%s, ...)", host)
 
 	// Fetch and decompress the export tarball
-	d, err := util.DownloadGzip(dataURL)
+	d, err := util.DecompressGzip(reader)
 	if err != nil {
-		logger.Errorf("importExportService.ImportDisqus: DownloadGzip() failed: %v", err)
+		logger.Errorf("importExportService.ImportDisqus: DecompressGzip() failed: %v", err)
 		return 0, err
 	}
 

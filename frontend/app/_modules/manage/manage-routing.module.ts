@@ -7,6 +7,7 @@ import { DomainManagerComponent } from './domains/domain-manager/domain-manager.
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
+import { DomainImportComponent } from './domains/domain-import/domain-import.component';
 
 const children: Routes = [
     // Default route
@@ -16,11 +17,12 @@ const children: Routes = [
     {path: 'dashboard', component: DashboardComponent},
 
     // Domains
-    {path: 'domains',             component: DomainManagerComponent},
-    {path: 'domains/create',      component: DomainEditComponent, data: {new: true}},
-    {path: 'domains/:host',       component: DomainDetailComponent},
-    {path: 'domains/:host/edit',  component: DomainEditComponent},
-    {path: 'domains/:host/clone', component: DomainEditComponent, data: {new: true}},
+    {path: 'domains',              component: DomainManagerComponent},
+    {path: 'domains/create',       component: DomainEditComponent, data: {new: true}},
+    {path: 'domains/:host',        component: DomainDetailComponent},
+    {path: 'domains/:host/edit',   component: DomainEditComponent},
+    {path: 'domains/:host/clone',  component: DomainEditComponent, data: {new: true}},
+    {path: 'domains/:host/import', component: DomainImportComponent},
 
     // Account
     {path: 'account/profile', component: ProfileComponent},

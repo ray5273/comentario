@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
 import { Location } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit, faSnowflake, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit, faFileImport, faSnowflake, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ApiOwnerService, Domain, DomainState, IdentityProvider } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
@@ -37,6 +37,7 @@ export class DomainDetailComponent implements OnInit {
     readonly faCircleQuestion  = faCircleQuestion;
     readonly faClone           = faClone;
     readonly faEdit            = faEdit;
+    readonly faFileImport      = faFileImport;
     readonly faSnowflake       = faSnowflake;
     readonly faTrashAlt        = faTrashAlt;
     readonly faXmark           = faXmark;

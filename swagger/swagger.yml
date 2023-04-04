@@ -1292,20 +1292,16 @@ paths:
       summary: Import comments and commenters into specified domain from exported data, downloaded from certain URL
       tags:
         - ApiOwner
+      consumes:
+        - multipart/form-data
       parameters:
         - $ref: "#/parameters/pathHost"
         - $ref: "#/parameters/pathImportSource"
-        - in: body
-          name: body
+        - in: formData
+          name: data
+          type: file
           required: true
-          schema:
-            type: object
-            required:
-              - url
-            properties:
-              url:
-                type: string
-                format: uri
+          description: Import data file
       responses:
         200:
           description: Import completed successfully

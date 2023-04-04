@@ -12,6 +12,7 @@ import { DomainManagerComponent } from './domains/domain-manager/domain-manager.
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
+import { DomainImportComponent } from './domains/domain-import/domain-import.component';
 
 @NgModule({
     declarations: [
@@ -21,6 +22,7 @@ import { ProfileComponent } from './account/profile/profile.component';
         DomainDetailComponent,
         DomainEditComponent,
         ProfileComponent,
+        DomainImportComponent,
     ],
     imports: [
         CommonModule,

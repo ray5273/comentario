@@ -35,6 +35,14 @@
                 </button>
                 <!-- Divider -->
                 <div class="dropdown-divider"></div>
+                <!-- Import data button -->
+                <button [routerLink]="[Paths.manage.domains, domain?.host, 'import']"
+                        ngbDropdownItem>
+                    <fa-icon [icon]="faFileImport" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Import data</ng-container>
+                </button>
+                <!-- Divider -->
+                <div class="dropdown-divider"></div>
                 <!-- Clear comments button -->
                 <button [appConfirm]="clearCommentsDlg" confirmAction="Clear comments"
                         (confirmed)="clearComments()" ngbDropdownItem class="text-danger" i18n-confirmAction>

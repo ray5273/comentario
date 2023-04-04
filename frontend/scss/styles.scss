@@ -123,6 +123,10 @@ dl.detail-table, dl.detail-table > div {
     }
 }
 
+.colon::after {
+    content: ':';
+}
+
 .w-max-500 {
     max-width: 500px !important;
 }

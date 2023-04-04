@@ -60,17 +60,9 @@ func (m *noOpMailer) Mail(_, recipient, subject, _ string) error {
 
 // ----------------------------------------------------------------------------------------------------------------------
 
-// DownloadGzip downloads a gzip-compressed archive from the given URL, then decompresses it and returns the binary data
-func DownloadGzip(dataURL string) ([]byte, error) {
-	// Fetch the archive
-	resp, err := http.Get(dataURL)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
-
-	// Read and decompress the data
-	if r, err := gzip.NewReader(resp.Body); err != nil {
+// DecompressGzip reads and decompresses a gzip-compressed archive from the given data buffer
+func DecompressGzip(rc io.Reader) ([]byte, error) {
+	if r, err := gzip.NewReader(rc); err != nil {
 		return nil, err
 	} else if b, err := io.ReadAll(r); err != nil {
 		return nil, err

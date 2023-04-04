@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"bytes"
-	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/markbates/goth"
@@ -104,6 +103,8 @@ func DomainGet(params api_owner.DomainGetParams, principal data.Principal) middl
 }
 
 func DomainImport(params api_owner.DomainImportParams, principal data.Principal) middleware.Responder {
+	defer params.Data.Close()
+
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -111,16 +112,15 @@ func DomainImport(params api_owner.DomainImportParams, principal data.Principal)
 	}
 
 	// Perform import
-	srcURL := data.URIToString(params.Body.URL)
 	var count int64
 	var err error
 	switch params.Source {
 	case "commento":
-		count, err = svc.TheImportExportService.ImportCommento(host, srcURL)
+		count, err = svc.TheImportExportService.ImportCommento(host, params.Data)
 	case "disqus":
-		count, err = svc.TheImportExportService.ImportDisqus(host, srcURL)
+		count, err = svc.TheImportExportService.ImportDisqus(host, params.Data)
 	default:
-		err = errors.New("unknown import source")
+		respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
 	}
 
 	// Check the result
