@@ -82,109 +82,27 @@
                 <li ngbNavItem="properties">
                     <a ngbNavLink i18n>Properties</a>
                     <ng-template ngbNavContent>
-                        <dl id="domainDetailTable" class="detail-table">
-                            <!-- HTML snippet -->
-                            <div>
-                                <dt i18n>HTML snippet</dt>
-                                <dd>
-                                </dd>
-                            </div>
-                            <!-- Display name -->
-                            <div>
-                                <dt i18n>Display name</dt>
-                                <dd>{{ domain.displayName }}</dd>
-                            </div>
-                            <!-- Host -->
-                            <div>
-                                <dt i18n>Host</dt>
-                                <dd>{{ domain.host }}</dd>
-                            </div>
-                            <!-- State -->
-                            <div>
-                                <dt i18n>State</dt>
-                                <dd>{{ domain.state }}</dd>
-                            </div>
-
-                            <!-- Auto spam filter -->
-                            <div>
-                                <dt i18n>Auto spam filter</dt>
-                                <dd><app-checkmark [value]="domain.autoSpamFilter"></app-checkmark></dd>
-                            </div>
-                            <!-- Moderate all anonymous -->
-                            <div>
-                                <dt i18n>Moderate all anonymous</dt>
-                                <dd><app-checkmark [value]="domain.moderateAllAnonymous"></app-checkmark></dd>
-                            </div>
-                            <!-- Require moderation -->
-                            <div>
-                                <dt i18n>Require moderation</dt>
-                                <dd><app-checkmark [value]="domain.requireModeration"></app-checkmark></dd>
-                            </div>
-                            <!-- Comment sorting -->
-                            <div>
-                                <dt i18n>Comment sorting</dt>
-                                <dd>{{ domain.defaultSortPolicy }}</dd>
-                            </div>
-                            <!-- Email moderators -->
-                            <div>
-                                <dt i18n>Email moderators</dt>
-                                <dd>{{ domain.emailNotificationPolicy }}</dd>
-                            </div>
-                            <!-- Authentication -->
-                            <div>
-                                <dt i18n>Authentication</dt>
-                                <dd>
-                                    <ul class="list-unstyled">
-                                        <li *ngIf="!domain.requireIdentification">Anonymous comments</li>
-                                        <li *ngFor="let idp of domainIdps">{{ idp.name }}</li>
-                                    </ul>
-                                </dd>
-                            </div>
-                            <!-- Created -->
-                            <div>
-                                <dt i18n>Created</dt>
-                                <dd>{{ domain.creationDate | date:'short' }}</dd>
-                            </div>
-                        </dl>
+                        <app-domain-props [domain]="domain"></app-domain-props>
                     </ng-template>
                 </li>
 
                 <!-- Moderators tab -->
                 <li ngbNavItem="moderators">
-                    <a ngbNavLink i18n>Moderators</a>
+                    <a ngbNavLink>
+                        <ng-container i18n>Moderators</ng-container>
+                        <!-- Badge with the number -->
+                        <span *ngIf="domain?.moderators?.length as num" class="ms-2 badge bg-secondary">{{ num }}</span>
+                    </a>
                     <ng-template ngbNavContent>
-                        <!-- List of moderators -->
-                        <div [appSpinner]="modDeleting.active" spinnerSize="lg" class="list-group list-group-flush">
-                            <div *ngFor="let m of domain.moderators" class="list-group-item d-flex flex-wrap">
-                                <!-- Moderator email -->
-                                <div class="flex-grow-1 d-flex align-items-center">{{ m.email }}</div>
-                                <!-- Delete button -->
-                                <button appConfirm="Are you sure you want to remove this moderator?"
-                                        confirmAction="Remove moderator" (confirmed)="removeModerator(m.email)"
-                                        type="button" class="btn btn-outline-danger" i18n-appConfirm i18n-confirmAction>
-                                    <fa-icon [icon]="faXmark" class="me-1"></fa-icon>
-                                    <ng-container i18n>Remove</ng-container>
-                                </button>
-                            </div>
+                        <app-domain-moderators [domain]="domain" (updated)="reload()"></app-domain-moderators>
+                    </ng-template>
+                </li>
 
-                            <!-- New moderator form -->
-                            <form [formGroup]="modForm" (ngSubmit)="addModerator()" id="moderator-form" class="list-group-item">
-                                <div class="input-group">
-                                    <!-- Email -->
-                                    <span class="input-group-text d-none d-md-flex" i18n>Add moderator</span>
-                                    <input formControlName="email" type="email" class="form-control" id="modEmail"
-                                           [class.is-valid]="modEmail.touched && modEmail.valid"
-                                           [class.is-invalid]="modEmail.touched && modEmail.invalid"
-                                           required minlength="6" maxlength="255" autocomplete="email"
-                                           placeholder="user@example.com">
-                                    <!-- Submit button -->
-                                    <button [appSpinner]="modAdding.active" type="submit"
-                                            class="btn btn-outline-success" i18n="action">Add</button>
-                                    <!-- Error feedback -->
-                                    <div class="invalid-feedback" i18n>Please enter a valid email.</div>
-                                </div>
-                            </form>
-                        </div>
+                <!-- Statistics tab -->
+                <li ngbNavItem="statistics">
+                    <a ngbNavLink i18n>Statistics</a>
+                    <ng-template ngbNavContent>
+                        <app-domain-stats [domain]="domain"></app-domain-stats>
                     </ng-template>
                 </li>
             </ul>

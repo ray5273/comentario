@@ -1,0 +1,58 @@
+<dl *ngIf="_domain as d" id="domainDetailTable" class="detail-table">
+    <!-- Display name -->
+    <div>
+        <dt i18n>Display name</dt>
+        <dd>{{ d.displayName }}</dd>
+    </div>
+    <!-- Host -->
+    <div>
+        <dt i18n>Host</dt>
+        <dd>{{ d.host }}</dd>
+    </div>
+    <!-- State -->
+    <div>
+        <dt i18n>State</dt>
+        <dd>{{ d.state }}</dd>
+    </div>
+
+    <!-- Auto spam filter -->
+    <div>
+        <dt i18n>Auto spam filter</dt>
+        <dd><app-checkmark [value]="d.autoSpamFilter"></app-checkmark></dd>
+    </div>
+    <!-- Moderate all anonymous -->
+    <div>
+        <dt i18n>Moderate all anonymous</dt>
+        <dd><app-checkmark [value]="d.moderateAllAnonymous"></app-checkmark></dd>
+    </div>
+    <!-- Require moderation -->
+    <div>
+        <dt i18n>Require moderation</dt>
+        <dd><app-checkmark [value]="d.requireModeration"></app-checkmark></dd>
+    </div>
+    <!-- Comment sorting -->
+    <div>
+        <dt i18n>Comment sorting</dt>
+        <dd>{{ d.defaultSortPolicy }}</dd>
+    </div>
+    <!-- Email moderators -->
+    <div>
+        <dt i18n>Email moderators</dt>
+        <dd>{{ d.emailNotificationPolicy }}</dd>
+    </div>
+    <!-- Authentication -->
+    <div>
+        <dt i18n>Authentication</dt>
+        <dd>
+            <ul class="list-unstyled">
+                <li *ngIf="!d.requireIdentification">Anonymous comments</li>
+                <li *ngFor="let idp of _idps">{{ idp.name }}</li>
+            </ul>
+        </dd>
+    </div>
+    <!-- Created -->
+    <div>
+        <dt i18n>Created</dt>
+        <dd>{{ d.creationDate | date:'short' }}</dd>
+    </div>
+</dl>
