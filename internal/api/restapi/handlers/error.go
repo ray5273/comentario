@@ -20,7 +20,6 @@ var (
 	ErrorPageLocked           = &exmodels.Error{ID: "page-locked", Message: "This page is locked"}
 	ErrorSelfVote             = &exmodels.Error{ID: "self-vote", Message: "You cannot vote for your own comment"}
 	ErrorSignupsForbidden     = &exmodels.Error{ID: "signups-forbidden", Message: "New signups are forbidden"}
-	ErrorSMTPUnconfigured     = &exmodels.Error{ID: "smtp-unconfigured", Message: "Sending emails via SMTP isn't configured"}
 	ErrorSSOURLMissing        = &exmodels.Error{ID: "sso-url-missing", Message: "SSO URL is missing"}
 	ErrorUnauthenticated      = &exmodels.Error{ID: "unauthenticated", Message: "User isn't authenticated"}
 	ErrorWrongCurPassword     = &exmodels.Error{ID: "wrong-cur-password", Message: "Wrong current password"}

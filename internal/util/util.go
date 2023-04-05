@@ -1,6 +1,7 @@
 package util
 
 import (
+	"bytes"
 	"compress/gzip"
 	"errors"
 	"fmt"
@@ -59,6 +60,22 @@ func (m *noOpMailer) Mail(_, recipient, subject, _ string) error {
 }
 
 // ----------------------------------------------------------------------------------------------------------------------
+
+// CompressGzip compresses a data buffer using gzip
+func CompressGzip(b []byte) ([]byte, error) {
+	var buf bytes.Buffer
+	w := gzip.NewWriter(&buf)
+	if _, err := w.Write(b); err != nil {
+		_ = w.Close()
+		return nil, err
+	}
+
+	// Try to gracefully close the writer
+	if err := w.Close(); err != nil {
+		return nil, err
+	}
+	return buf.Bytes(), nil
+}
 
 // DecompressGzip reads and decompresses a gzip-compressed archive from the given data buffer
 func DecompressGzip(rc io.Reader) ([]byte, error) {

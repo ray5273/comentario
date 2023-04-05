@@ -18,12 +18,8 @@ var TheImportExportService ImportExportService = &importExportService{}
 
 // ImportExportService is a service interface for dealing with data import/export
 type ImportExportService interface {
-	// CreateExport exports the data for the specified domain, then adds and persists a new export record in the
-	// database, returning its hex ID
-	CreateExport(host models.Host) (models.HexID, error)
-	// GetExportedData fetches an export with the given hex ID from the database, returning the related domain host, the
-	// binary data, and the export timestamp
-	GetExportedData(id models.HexID) (models.Host, []byte, time.Time, error)
+	// Export exports the data for the specified domain, returning gzip-compressed binary data
+	Export(host models.Host) ([]byte, error)
 	// ImportCommento performs data import in the "commento" format from the provided data buffer. Returns the number of
 	// imported comments
 	ImportCommento(host models.Host, reader io.Reader) (int64, error)
@@ -85,8 +81,8 @@ type disqusXML struct {
 	Posts   []disqusPost   `xml:"post"`
 }
 
-func (svc *importExportService) CreateExport(host models.Host) (models.HexID, error) {
-	logger.Debugf("importExportService.CreateExport(%s)", host)
+func (svc *importExportService) Export(host models.Host) ([]byte, error) {
+	logger.Debugf("importExportService.Export(%s)", host)
 
 	// Create an export data object
 	exp := commentoExportV1{Version: 1}
@@ -94,63 +90,30 @@ func (svc *importExportService) CreateExport(host models.Host) (models.HexID, er
 	// Fetch comments
 	var err error
 	if exp.Comments, err = TheCommentService.ListByHost(host); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Fetch commenters
 	if exp.Commenters, err = TheUserService.ListCommentersByHost(host); err != nil {
-		return "", err
+		return nil, err
 	}
 
 	// Convert the data into JSON
 	jsonData, err := json.Marshal(exp)
 	if err != nil {
-		logger.Errorf("importExportService.CreateExport: json.Marshal() failed: %v", err)
-		return "", err
+		logger.Errorf("importExportService.Export: json.Marshal() failed: %v", err)
+		return nil, err
 	}
 
 	// Compress the JSON data with Gzip
-	gzippedData, err := util.GzipStatic(jsonData)
+	gzippedData, err := util.CompressGzip(jsonData)
 	if err != nil {
-		logger.Errorf("importExportService.CreateExport: GzipStatic() failed: %v", err)
-		return "", err
-	}
-
-	// Generate a new random hex ID for the export
-	id, err := data.RandomHexID()
-	if err != nil {
-		logger.Errorf("importExportService.CreateExport: RandomHexID() failed: %v", err)
-		return "", err
-	}
-
-	// Insert a database record
-	err = db.Exec(
-		"insert into exports(exporthex, bindata, domain, creationdate) values($1, $2, $3, $4);",
-		id, gzippedData, host, time.Now().UTC())
-	if err != nil {
-		logger.Errorf("importExportService.CreateExport: Exec() failed: %v", err)
-		return "", translateDBErrors(err)
+		logger.Errorf("importExportService.Export: CompressGzip() failed: %v", err)
+		return nil, err
 	}
 
 	// Succeeded
-	return id, nil
-}
-
-func (svc *importExportService) GetExportedData(id models.HexID) (models.Host, []byte, time.Time, error) {
-	logger.Debugf("importExportService.GetExportedData(%s)", id)
-
-	// Fetch the data record
-	row := db.QueryRow("select domain, bindata, creationdate from exports where exporthex=$1;", id)
-	var host models.Host
-	var binData []byte
-	var created time.Time
-	if err := row.Scan(&host, &binData, &created); err != nil {
-		logger.Errorf("importExportService.GetExportedData: QueryRow failed(): %v", err)
-		return "", nil, time.Time{}, translateDBErrors(err)
-	}
-
-	// Succeeded
-	return host, binData, created, nil
+	return gzippedData, nil
 }
 
 func (svc *importExportService) ImportCommento(host models.Host, reader io.Reader) (int64, error) {
@@ -162,7 +125,7 @@ func (svc *importExportService) ImportCommento(host models.Host, reader io.Reade
 		logger.Errorf("importExportService.ImportCommento: DecompressGzip() failed: %v", err)
 		return 0, err
 	}
-	logger.Warning(string(d)) // TODO
+
 	// Unmarshal the data
 	var exp commentoExportV1
 	if err := json.Unmarshal(d, &exp); err != nil {

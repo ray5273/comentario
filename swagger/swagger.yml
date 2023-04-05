@@ -1254,29 +1254,16 @@ paths:
         204:
           description: Domain frozen status has been toggled
 
-  /domains/{host}/export/begin:
-    post:
-      operationId: DomainExportBegin
-      summary: Initiate domain data export
-      tags:
-        - ApiOwner
-      parameters:
-        - $ref: "#/parameters/pathHost"
-      responses:
-        204:
-          description: Export has been successfully started
-
-  /domains/export/download/{id}:
+  /domains/{host}/export:
     get:
-      operationId: DomainExportDownload
-      summary: Download previously exported domain data
+      operationId: DomainExport
+      summary: Export domain data and download as a gzip-archive file
       tags:
         - ApiOwner
-      security: []
       produces:
         - application/gzip
       parameters:
-        - $ref: "#/parameters/pathId"
+        - $ref: "#/parameters/pathHost"
       responses:
         200:
           description: Export file

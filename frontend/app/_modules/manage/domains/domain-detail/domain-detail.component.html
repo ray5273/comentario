@@ -35,6 +35,11 @@
                 </button>
                 <!-- Divider -->
                 <div class="dropdown-divider"></div>
+                <!-- Export data button -->
+                <button (click)="exportData()" ngbDropdownItem>
+                    <fa-icon [icon]="faFileExport" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Export data</ng-container>
+                </button>
                 <!-- Import data button -->
                 <button [routerLink]="[Paths.manage.domains, domain?.host, 'import']"
                         ngbDropdownItem>

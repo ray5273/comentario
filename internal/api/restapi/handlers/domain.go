@@ -8,11 +8,12 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
+	"strings"
+	"time"
 )
 
 func DomainClear(params api_owner.DomainClearParams, principal data.Principal) middleware.Responder {
@@ -53,36 +54,27 @@ func DomainDelete(params api_owner.DomainDeleteParams, principal data.Principal)
 	return api_owner.NewDomainDeleteNoContent()
 }
 
-func DomainExportBegin(params api_owner.DomainExportBeginParams, principal data.Principal) middleware.Responder {
-	// Make sure SMTP is configured
-	if !config.SMTPConfigured {
-		return respBadRequest(ErrorSMTPUnconfigured)
-	}
-
+func DomainExport(params api_owner.DomainExportParams, principal data.Principal) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
 		return r
 	}
 
-	// Initiate domain export in the background
-	go domainExport(host, principal.GetUser().Email)
-
-	// Succeeded
-	return api_owner.NewDomainExportBeginNoContent()
-}
-
-func DomainExportDownload(params api_owner.DomainExportDownloadParams) middleware.Responder {
-	// Fetch the data
-	domain, binData, created, err := svc.TheImportExportService.GetExportedData(models.HexID(params.ID))
+	// Export the data
+	b, err := svc.TheImportExportService.Export(host)
 	if err != nil {
 		return respServiceError(err)
 	}
 
-	// Succeeded
-	return api_owner.NewDomainExportDownloadOK().
-		WithContentDisposition(fmt.Sprintf(`inline; filename="%s-%v.json.gz"`, domain, created.Unix())).
-		WithPayload(io.NopCloser(bytes.NewReader(binData)))
+	// Succeeded. Send the data as a file
+	return api_owner.NewDomainExportOK().
+		WithContentDisposition(
+			fmt.Sprintf(
+				`inline; filename="%s-%s.json.gz"`,
+				strings.ReplaceAll(string(host), ":", "-"),
+				time.Now().UTC().Format("2006-01-02-15-04-05"))).
+		WithPayload(io.NopCloser(bytes.NewReader(b)))
 }
 
 // DomainGet returns properties of a domain belonging to the current user
@@ -283,32 +275,6 @@ func DomainUpdate(params api_owner.DomainUpdateParams, principal data.Principal)
 
 	// Succeeded
 	return api_owner.NewDomainUpdateNoContent()
-}
-
-// domainExport performs a domain export, then notifies the user about the outcome using the given email
-func domainExport(host models.Host, email string) {
-	// Export the data
-	if exportHex, err := svc.TheImportExportService.CreateExport(host); err != nil {
-		// Notify the user in a case of failure, ignoring any error
-		_ = svc.TheMailService.SendFromTemplate(
-			"",
-			email,
-			"Comentario Data Export Errored",
-			"domain-export-error.gohtml",
-			map[string]any{"Domain": host, "Error": err.Error()})
-
-	} else {
-		// Succeeded. Notify the user by email, ignoring any error
-		_ = svc.TheMailService.SendFromTemplate(
-			"",
-			email,
-			"Comentario Data Export",
-			"domain-export.gohtml",
-			map[string]any{
-				"Domain": host,
-				"URL":    config.URLForAPI("domain/export/download", map[string]string{"exportHex": string(exportHex)}),
-			})
-	}
 }
 
 // domainValidateIdPs validates the passed list of domain's identity providers

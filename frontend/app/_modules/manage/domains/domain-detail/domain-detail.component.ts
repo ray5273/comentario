@@ -1,15 +1,16 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Inject, OnInit } from '@angular/core';
 import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { Location } from '@angular/common';
+import { DOCUMENT, Location } from '@angular/common';
+import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit, faFileImport, faSnowflake, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faBars, faCalendarXmark, faCircleQuestion, faClone, faEdit,
+    faFileExport, faFileImport, faSnowflake, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ApiOwnerService, Domain, DomainState, IdentityProvider } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { DocsService } from '../../../../_services/docs.service';
-import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 
 @UntilDestroy()
 @Component({
@@ -37,12 +38,14 @@ export class DomainDetailComponent implements OnInit {
     readonly faCircleQuestion  = faCircleQuestion;
     readonly faClone           = faClone;
     readonly faEdit            = faEdit;
+    readonly faFileExport      = faFileExport;
     readonly faFileImport      = faFileImport;
     readonly faSnowflake       = faSnowflake;
     readonly faTrashAlt        = faTrashAlt;
     readonly faXmark           = faXmark;
 
     constructor(
+        @Inject(DOCUMENT) private readonly doc: Document,
         private readonly route: ActivatedRoute,
         private readonly router: Router,
         private readonly fb: FormBuilder,
@@ -91,6 +94,23 @@ export class DomainDetailComponent implements OnInit {
         this.api.domainClear(this.domain!.host)
             // Add a toast
             .subscribe(() => this.toastSvc.success('domain-cleared'));
+    }
+
+    exportData() {
+        // Trigger an export
+        this.api.domainExport(this.domain!.host)
+            .subscribe(b => {
+                // Create a link element
+                const a = this.doc.createElement('a');
+                a.href = URL.createObjectURL(b);
+                a.download = `${this.domain!.host}-${new Date().toISOString()}.json.gz`;
+
+                // "Click" the link: this should cause a file download
+                a.click();
+
+                // Cleanup
+                URL.revokeObjectURL(a.href);
+            });
     }
 
     toggleFrozen() {

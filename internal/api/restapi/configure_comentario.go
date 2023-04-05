@@ -134,8 +134,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Domain
 	api.APIOwnerDomainClearHandler = api_owner.DomainClearHandlerFunc(handlers.DomainClear)
 	api.APIOwnerDomainDeleteHandler = api_owner.DomainDeleteHandlerFunc(handlers.DomainDelete)
-	api.APIOwnerDomainExportBeginHandler = api_owner.DomainExportBeginHandlerFunc(handlers.DomainExportBegin)
-	api.APIOwnerDomainExportDownloadHandler = api_owner.DomainExportDownloadHandlerFunc(handlers.DomainExportDownload)
+	api.APIOwnerDomainExportHandler = api_owner.DomainExportHandlerFunc(handlers.DomainExport)
 	api.APIOwnerDomainGetHandler = api_owner.DomainGetHandlerFunc(handlers.DomainGet)
 	api.APIOwnerDomainImportHandler = api_owner.DomainImportHandlerFunc(handlers.DomainImport)
 	api.APIOwnerDomainListHandler = api_owner.DomainListHandlerFunc(handlers.DomainList)
