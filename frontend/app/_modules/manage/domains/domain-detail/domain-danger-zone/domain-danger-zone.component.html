@@ -1,0 +1,62 @@
+<!-- (Un)Freeze -->
+<div class="row border-bottom pt-3 pb-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold" i18n>Freeze domain</div>
+        <p i18n>Freezing your domain will disable new comments and voting temporarily. You may unfreeze the domain later.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [appConfirm]="freezeDlg" [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion"
+                (confirmed)="toggleFrozen()" class="btn btn-secondary w-100">
+            <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
+            {{ freezeAction }}
+        </button>
+    </div>
+</div>
+
+<!-- Clear comments -->
+<div class="row border-bottom pt-3 pb-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold text-danger" i18n>Clear comments</div>
+        <p i18n>This will permanently delete all comments without affecting your settings. This may be useful if you want to clear all comments after testing Comentario.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [appConfirm]="clearCommentsDlg" confirmAction="Clear comments" (confirmed)="clearComments()"
+                class="btn btn-danger w-100" i18n-confirmAction>
+            <fa-icon [icon]="faCalendarXmark" class="me-1"></fa-icon>
+            <ng-container i18n="action">Clear</ng-container>
+        </button>
+    </div>
+</div>
+
+<!-- Delete -->
+<div class="row border-bottom pt-3 pb-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold text-danger" i18n>Delete domain</div>
+        <p i18n>This will permanently delete all comments and all data associated with your domain.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [appConfirm]="deleteDlg" confirmAction="Delete domain" (confirmed)="delete()"
+                class="btn btn-danger w-100" i18n-confirmAction>
+            <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+            <ng-container i18n="action">Delete</ng-container>
+        </button>
+    </div>
+</div>
+
+<!-- Freeze domain confirmation dialog content template -->
+<ng-template #freezeDlg>
+    <p *ngIf="domain!.state === 'frozen'" i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
+    <p *ngIf="domain!.state !== 'frozen'" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
+</ng-template>
+
+<!-- Clear comments confirmation dialog content template -->
+<ng-template #clearCommentsDlg>
+    <p i18n>Are you absolutely sure you want to remove all comments from the domain <code>{{ domain!.host }}</code>?</p>
+    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
+</ng-template>
+
+<!-- Delete confirmation dialog content template -->
+<ng-template #deleteDlg>
+    <p i18n>Are you absolutely sure you want to delete the domain <code>{{ domain!.host }}</code>?</p>
+    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
+</ng-template>

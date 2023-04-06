@@ -109,6 +109,12 @@ dl.detail-table, dl.detail-table > div {
     }
 }
 
+.toolbar {
+    > * {
+        margin: .25rem;
+    }
+}
+
 .form-footer {
     display: flex;
     flex-wrap: wrap;

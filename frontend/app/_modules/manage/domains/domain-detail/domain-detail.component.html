@@ -3,67 +3,6 @@
     <h1 i18n="heading">Domain details</h1>
     <div *ngIf="domain" class="subheading">{{ domain.displayName || domain.host }}</div>
 
-    <!-- Toolbar -->
-    <nav class="navbar navbar-light border-bottom">
-        <!-- Edit button -->
-        <button [routerLink]="[Paths.manage.domains, domain?.host, 'edit']"
-                type="button" class="btn btn-secondary mt-2 me-2">
-            <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
-            <ng-container i18n>Edit</ng-container>
-        </button>
-
-        <!-- Sandwich button and menu -->
-        <div ngbDropdown display="dynamic" id="domainToolMenu">
-            <!-- Toggler -->
-            <button ngbDropdownToggle class="btn btn-outline-secondary no-arrow mt-2" id="domainToolMenuToggle"
-                    aria-label="Toggle menu" i18n-aria-label>
-                <fa-icon [icon]="faBars"></fa-icon>
-            </button>
-            <!-- Menu -->
-            <div ngbDropdownMenu aria-labelledby="domainToolMenuToggle">
-                <!-- Clone button -->
-                <button [routerLink]="[Paths.manage.domains, domain?.host, 'clone']"
-                        ngbDropdownItem>
-                    <fa-icon [icon]="faClone" class="me-1"></fa-icon>
-                    <ng-container i18n="action">Clone</ng-container>
-                </button>
-                <!-- Freeze button -->
-                <button [appConfirm]="freezeDlg" [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion"
-                        (confirmed)="toggleFrozen()" ngbDropdownItem>
-                    <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
-                    {{ freezeAction }}
-                </button>
-                <!-- Divider -->
-                <div class="dropdown-divider"></div>
-                <!-- Export data button -->
-                <button (click)="exportData()" ngbDropdownItem>
-                    <fa-icon [icon]="faFileExport" class="me-1"></fa-icon>
-                    <ng-container i18n="action">Export data</ng-container>
-                </button>
-                <!-- Import data button -->
-                <button [routerLink]="[Paths.manage.domains, domain?.host, 'import']"
-                        ngbDropdownItem>
-                    <fa-icon [icon]="faFileImport" class="me-1"></fa-icon>
-                    <ng-container i18n="action">Import data</ng-container>
-                </button>
-                <!-- Divider -->
-                <div class="dropdown-divider"></div>
-                <!-- Clear comments button -->
-                <button [appConfirm]="clearCommentsDlg" confirmAction="Clear comments"
-                        (confirmed)="clearComments()" ngbDropdownItem class="text-danger" i18n-confirmAction>
-                    <fa-icon [icon]="faCalendarXmark" class="me-1"></fa-icon>
-                    <ng-container i18n="action">Clear comments</ng-container>
-                </button>
-                <!-- Delete button -->
-                <button [appConfirm]="deleteDlg" confirmAction="Delete domain"
-                        (confirmed)="delete()" ngbDropdownItem class="text-danger" i18n-confirmAction>
-                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
-                    <ng-container i18n="action">Delete</ng-container>
-                </button>
-            </div>
-        </div>
-    </nav>
-
     <!-- Tabs -->
     <section [appSpinner]="loading.active" spinnerSize="lg">
         <ng-container *ngIf="domain">
@@ -105,6 +44,14 @@
                         <app-domain-stats [domain]="domain"></app-domain-stats>
                     </ng-template>
                 </li>
+
+                <!-- Danger zone tab -->
+                <li ngbNavItem="danger-zone">
+                    <a ngbNavLink class="text-danger" i18n>Danger zone</a>
+                    <ng-template ngbNavContent>
+                        <app-domain-danger-zone [domain]="domain" (updated)="reload()"></app-domain-danger-zone>
+                    </ng-template>
+                </li>
             </ul>
 
             <!-- Tabs outlet -->
@@ -112,21 +59,3 @@
         </ng-container>
     </section>
 </section>
-
-<!-- Freeze domain confirmation dialog content template -->
-<ng-template #freezeDlg>
-    <p *ngIf="domain!.state === 'frozen'" i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
-    <p *ngIf="domain!.state !== 'frozen'" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
-</ng-template>
-
-<!-- Clear comments confirmation dialog content template -->
-<ng-template #clearCommentsDlg>
-    <p i18n>Are you absolutely sure you want to remove all comments from the domain <code>{{ domain!.host }}</code>?</p>
-    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
-</ng-template>
-
-<!-- Delete confirmation dialog content template -->
-<ng-template #deleteDlg>
-    <p i18n>Are you absolutely sure you want to delete the domain <code>{{ domain!.host }}</code>?</p>
-    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
-</ng-template>

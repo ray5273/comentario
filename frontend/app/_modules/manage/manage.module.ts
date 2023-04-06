@@ -17,6 +17,7 @@ import { DomainImportComponent } from './domains/domain-import/domain-import.com
 import { DomainPropsComponent } from './domains/domain-detail/domain-props/domain-props.component';
 import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
 import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
+import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
 
 @NgModule({
     declarations: [
@@ -30,6 +31,7 @@ import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domai
         DomainPropsComponent,
         DomainModeratorsComponent,
         DomainStatsComponent,
+        DomainDangerZoneComponent,
     ],
     imports: [
         CommonModule,
