@@ -45,6 +45,14 @@
                     </ng-template>
                 </li>
 
+                <!-- Import/Export tab -->
+                <li ngbNavItem="impex">
+                    <a ngbNavLink i18n>Import/Export</a>
+                    <ng-template ngbNavContent>
+                        <app-domain-impex [domain]="domain"></app-domain-impex>
+                    </ng-template>
+                </li>
+
                 <!-- Danger zone tab -->
                 <li ngbNavItem="danger-zone">
                     <a ngbNavLink class="text-danger" i18n>Danger zone</a>

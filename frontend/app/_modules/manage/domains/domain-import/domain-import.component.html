@@ -3,48 +3,73 @@
     <h1 i18n="heading">Import data</h1>
     <div *ngIf="host" class="subheading">{{ host }}</div>
 
-    <!-- Edit form -->
-    <form *ngIf="!isComplete" [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
-        <!-- Source format -->
-        <div class="mb-3 row">
-            <label class="col-sm-3 col-form-label colon" i18n>Source format</label>
-            <div class="col-sm-9">
-                <!-- Commento -->
-                <div class="form-check">
-                    <input formControlName="source" class="form-check-input" type="radio" id="sourceCommento" value="commento">
-                    <label class="form-check-label" for="sourceCommento" i18n>Commento</label>
-                </div>
-                <!-- Disqus -->
-                <div class="form-check">
-                    <input formControlName="source" class="form-check-input" type="radio" id="sourceDisqus" value="disqus">
-                    <label class="form-check-label" for="sourceDisqus" i18n>Disqus</label>
+    <!-- Import isn't performed yet -->
+    <div *ngIf="!isComplete">
+        <!-- Info -->
+        <p i18n>Use this page to import a data dump that you previously exported from Commento, Comentario, or Disqus.</p>
+        <div class="alert alert-warning" role="alert">
+            <h5 class="alert-heading text-start">
+                <fa-icon [icon]="faExclamationTriangle" class="text-warning me-1"></fa-icon>
+                <ng-container i18n>Warning</ng-container>
+            </h5>
+            <div i18n>It is strongly recommended you perform an import only once. Importing multiple times may have unintended effects.</div>
+        </div>
+        <hr>
+
+        <!-- Edit form -->
+        <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
+            <!-- Source format -->
+            <div class="mb-3 row">
+                <label class="col-sm-3 col-form-label colon" i18n>Source format</label>
+                <div class="col-sm-9">
+                    <!-- Commento/Comentario -->
+                    <div class="form-check mb-3">
+                        <input formControlName="source" class="form-check-input" type="radio" id="sourceCommento" value="commento">
+                        <label class="form-check-label" for="sourceCommento">Commento/Comentario</label>
+                        <div class="form-text">
+                            <ng-container i18n>If you've previously exported data from Commento or Comentario, you can restore it using this option.</ng-container>
+                        </div>
+                    </div>
+                    <!-- Disqus -->
+                    <div class="form-check">
+                        <input formControlName="source" class="form-check-input" type="radio" id="sourceDisqus" value="disqus">
+                        <label class="form-check-label" for="sourceDisqus">Disqus</label>
+                        <div class="form-text">
+                            <ng-container i18n>If you're currently using Disqus, you can import all comments into Comentario:</ng-container>
+                            <ul>
+                                <li i18n>Go to the <a href="https://disqus.com/admin/discussions/export/" target="_blank" rel="nofollow noopener noreferrer">admin export section</a> in Disqus and click <strong>Export Comments</strong>. This should start the process of exporting your comments in the background.</li>
+                                <li i18n>You'll receive an email from Disqus with a link to a compressed archive of all comments and associated data.</li>
+                                <li i18n>Download the file and select it in the field below.</li>
+                            </ul>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- File input -->
-        <div class="mb-3 row">
-            <label for="fileSelect" class="col-sm-3 col-form-label colon" i18n>Data file</label>
-            <div class="col-sm-9">
-                <input (change)="onFileSelected($event)"
-                       [class.is-valid]="file.touched && file.valid"
-                       [class.is-invalid]="file.touched && file.invalid"
-                       id="fileSelect" type="file" class="form-control">
-                <!-- Invalid feedback -->
-                <div class="invalid-feedback">
-                    <ng-container i18n>Please select a file.</ng-container>
+            <!-- File input -->
+            <div class="mb-3 row">
+                <label for="fileSelect" class="col-sm-3 col-form-label colon" i18n>Data file</label>
+                <div class="col-sm-9">
+                    <input (change)="onFileSelected($event)"
+                           [class.is-valid]="file.touched && file.valid"
+                           [class.is-invalid]="file.touched && file.invalid"
+                           id="fileSelect" type="file" class="form-control">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback">
+                        <ng-container i18n>Please select a file.</ng-container>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Buttons -->
-        <div class="form-footer">
-            <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
-            <button [appSpinner]="importing.active" type="submit" class="btn btn-primary">
-                <ng-container i18n="action">Import</ng-container>
-            </button>
-        </div>
-    </form>
+            <!-- Buttons -->
+            <div class="form-footer">
+                <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
+                <button [appSpinner]="importing.active" type="submit" class="btn btn-primary">
+                    <ng-container i18n="action">Import</ng-container>
+                </button>
+            </div>
+        </form>
+    </div>
 
     <!-- Import complete -->
     <div *ngIf="isComplete" @fadeInOut-slow class="text-center" id="import-complete">

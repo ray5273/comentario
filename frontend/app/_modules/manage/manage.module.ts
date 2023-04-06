@@ -18,20 +18,22 @@ import { DomainPropsComponent } from './domains/domain-detail/domain-props/domai
 import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
 import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
 import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
+import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
 
 @NgModule({
     declarations: [
         ControlCenterComponent,
         DashboardComponent,
-        DomainManagerComponent,
+        DomainDangerZoneComponent,
         DomainDetailComponent,
         DomainEditComponent,
-        ProfileComponent,
+        DomainImpexComponent,
         DomainImportComponent,
-        DomainPropsComponent,
+        DomainManagerComponent,
         DomainModeratorsComponent,
+        DomainPropsComponent,
         DomainStatsComponent,
-        DomainDangerZoneComponent,
+        ProfileComponent,
     ],
     imports: [
         CommonModule,

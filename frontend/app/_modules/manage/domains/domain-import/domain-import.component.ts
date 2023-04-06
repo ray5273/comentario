@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
-import { faCheck } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { ApiOwnerService } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Animations } from '../../../../_utils/animations';
@@ -26,7 +26,8 @@ export class DomainImportComponent implements OnInit {
     });
 
     // Icons
-    readonly faCheck = faCheck;
+    readonly faCheck               = faCheck;
+    readonly faExclamationTriangle = faExclamationTriangle;
 
     constructor(
         private readonly fb: FormBuilder,

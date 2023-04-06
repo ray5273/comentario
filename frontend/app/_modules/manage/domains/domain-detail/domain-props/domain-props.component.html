@@ -6,23 +6,6 @@
         <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
         <ng-container i18n>Edit</ng-container>
     </button>
-    <div class="toolbar">
-        <!-- Clone button -->
-        <button [routerLink]="[Paths.manage.domains, _domain?.host, 'clone']" class="btn btn-outline-secondary">
-            <fa-icon [icon]="faClone" class="me-1"></fa-icon>
-            <ng-container i18n="action">Clone</ng-container>
-        </button>
-        <!-- Export data button -->
-        <button (click)="exportData()" class="btn btn-outline-secondary">
-            <fa-icon [icon]="faFileExport" class="me-1"></fa-icon>
-            <ng-container i18n="action">Export data</ng-container>
-        </button>
-        <!-- Import data button -->
-        <button [routerLink]="[Paths.manage.domains, _domain?.host, 'import']" class="btn btn-outline-secondary">
-            <fa-icon [icon]="faFileImport" class="me-1"></fa-icon>
-            <ng-container i18n="action">Import data</ng-container>
-        </button>
-    </div>
 </nav>
 
 <!-- Detail table -->
