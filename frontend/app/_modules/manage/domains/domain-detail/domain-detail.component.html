@@ -1,67 +1,49 @@
 <section class="container">
     <!-- Heading & subheading -->
     <h1 i18n="heading">Domain details</h1>
-    <div *ngIf="domain" class="subheading">{{ domain.displayName || domain.host }}</div>
+    <div *ngIf="_domain" class="subheading">{{ _domain.displayName || _domain.host }}</div>
 
     <!-- Tabs -->
     <section [appSpinner]="loading.active" spinnerSize="lg">
-        <ng-container *ngIf="domain">
-            <ul #tabs="ngbNav" [(activeId)]="activeTab" ngbNav class="nav-pills justify-content-center">
-                <!-- Installation tab -->
-                <li ngbNavItem="installation">
-                    <a ngbNavLink i18n>Installation</a>
-                    <ng-template ngbNavContent>
-                        <app-domain-installation></app-domain-installation>
-                    </ng-template>
-                </li>
+        <ul *ngIf="_domain" ngbNav [activeId]="subPath" class="nav-pills justify-content-center">
+            <!-- Installation -->
+            <li ngbNavItem="installation">
+                <a ngbNavLink routerLink="installation" i18n>Installation</a>
+            </li>
 
-                <!-- Settings tab -->
-                <li ngbNavItem="settings">
-                    <a ngbNavLink i18n>Settings</a>
-                    <ng-template ngbNavContent>
-                        <app-domain-settings [domain]="domain"></app-domain-settings>
-                    </ng-template>
-                </li>
+            <!-- Settings -->
+            <li ngbNavItem="settings">
+                <a ngbNavLink routerLink="settings" i18n>Settings</a>
+            </li>
 
-                <!-- Moderators tab -->
-                <li ngbNavItem="moderators">
-                    <a ngbNavLink>
-                        <ng-container i18n>Moderators</ng-container>
-                        <!-- Badge with the number -->
-                        <span *ngIf="domain?.moderators?.length as num" class="ms-2 badge bg-secondary">{{ num }}</span>
-                    </a>
-                    <ng-template ngbNavContent>
-                        <app-domain-moderators [domain]="domain" (updated)="reload()"></app-domain-moderators>
-                    </ng-template>
-                </li>
+            <!-- Moderators -->
+            <li ngbNavItem="moderators">
+                <a ngbNavLink routerLink="moderators">
+                    <ng-container i18n>Moderators</ng-container>
+                    <!-- Badge with the number -->
+                    <span *ngIf="_domain.moderators?.length as num" class="ms-2 badge bg-secondary">{{ num }}</span>
+                </a>
+            </li>
 
-                <!-- Statistics tab -->
-                <li ngbNavItem="statistics">
-                    <a ngbNavLink i18n>Statistics</a>
-                    <ng-template ngbNavContent>
-                        <app-domain-stats [domain]="domain"></app-domain-stats>
-                    </ng-template>
-                </li>
+            <!-- Statistics -->
+            <li ngbNavItem="stats">
+                <a ngbNavLink routerLink="stats" i18n>Statistics</a>
+            </li>
 
-                <!-- Import/Export tab -->
-                <li ngbNavItem="impex">
-                    <a ngbNavLink i18n>Import/Export</a>
-                    <ng-template ngbNavContent>
-                        <app-domain-impex [domain]="domain"></app-domain-impex>
-                    </ng-template>
-                </li>
+            <!-- Import/Export -->
+            <li ngbNavItem="impex">
+                <a ngbNavLink routerLink="impex" i18n>Import/Export</a>
+            </li>
 
-                <!-- Danger zone tab -->
-                <li ngbNavItem="danger-zone">
-                    <a ngbNavLink class="text-danger" i18n>Danger zone</a>
-                    <ng-template ngbNavContent>
-                        <app-domain-danger-zone [domain]="domain" (updated)="reload()"></app-domain-danger-zone>
-                    </ng-template>
-                </li>
-            </ul>
+            <!-- Danger zone -->
+            <li ngbNavItem="danger">
+                <a ngbNavLink routerLink="danger" class="text-danger" i18n>Danger zone</a>
+            </li>
+        </ul>
 
-            <!-- Tabs outlet -->
-            <div [ngbNavOutlet]="tabs" class="mt-3 pt-3 border-top"></div>
-        </ng-container>
+        <!-- Tabs content -->
+        <div class="mt-3 pt-3 border-top">
+            <router-outlet></router-outlet>
+        </div>
     </section>
 </section>

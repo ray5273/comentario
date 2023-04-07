@@ -131,6 +131,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Owner API
 	//------------------------------------------------------------------------------------------------------------------
 
+	// Dashboard
+	api.APIOwnerDashboardDataGetHandler = api_owner.DashboardDataGetHandlerFunc(handlers.DashboardDataGet)
+
 	// Domain
 	api.APIOwnerDomainClearHandler = api_owner.DomainClearHandlerFunc(handlers.DomainClear)
 	api.APIOwnerDomainDeleteHandler = api_owner.DomainDeleteHandlerFunc(handlers.DomainDelete)

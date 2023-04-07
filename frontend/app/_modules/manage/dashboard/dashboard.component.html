@@ -2,4 +2,46 @@
     <!-- Heading -->
     <h1 i18n="heading">Dashboard</h1>
 
+    <!-- Counters -->
+    <div [appSpinner]="loading.active" spinnerSize="lg">
+        <div *ngIf="data" class="row row-cols-2 row-cols-sm-3 row-cols-md-4 g-2">
+            <!-- Domains -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-body text-center text-nowrap">
+                        <div class="card-title fw-bold text-truncate" i18n="metric|">Domains</div>
+                        <div class="card-text display-4">{{ data.countDomains | number }}</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Pages -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-body text-center text-nowrap">
+                        <div class="card-title fw-bold text-truncate" i18n="metric|">Pages</div>
+                        <div class="card-text display-4">{{ data.countPages | number }}</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Comments -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-body text-center text-nowrap">
+                        <div class="card-title fw-bold text-truncate" i18n="metric|">Comments</div>
+                        <div class="card-text display-4">{{ data.countComments | number }}</div>
+                    </div>
+                </div>
+            </div>
+            <!-- Commenters -->
+            <div class="col">
+                <div class="card">
+                    <div class="card-body text-center text-nowrap">
+                        <div class="card-title fw-bold text-truncate" i18n="metric|">Commenters</div>
+                        <div class="card-text display-4">{{ data.countCommenters | number }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
 </section>

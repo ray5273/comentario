@@ -125,7 +125,11 @@ export class DomainEditComponent implements OnInit {
                     // Add a success toast
                     this.toastSvc.success('data-saved').keepOnRouteChange();
                     // Navigate to the edited/created domain
-                    return this.router.navigate([Paths.manage.domains, dto.host]);
+                    const commands = [Paths.manage.domains, dto.host];
+                    if (!this.isNew) {
+                        commands.push('settings');
+                    }
+                    return this.router.navigate(commands);
                 });
         }
     }

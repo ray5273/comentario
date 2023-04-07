@@ -1,18 +1,20 @@
-import { Component, Inject, Input } from '@angular/core';
+import { Component, Inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faClone, faFileExport, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { Paths } from '../../../../../_utils/consts';
 import { ApiOwnerService, Domain } from '../../../../../../generated-api';
 import { ToastService } from '../../../../../_services/toast.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
+import { DomainDetailComponent } from '../domain-detail.component';
 
+@UntilDestroy()
 @Component({
     selector: 'app-domain-impex',
     templateUrl: './domain-impex.component.html',
 })
 export class DomainImpexComponent {
 
-    @Input()
     domain?: Domain;
 
     readonly downloading = new ProcessingStatus();
@@ -27,7 +29,13 @@ export class DomainImpexComponent {
         @Inject(DOCUMENT) private readonly doc: Document,
         private readonly toastSvc: ToastService,
         private readonly api: ApiOwnerService,
-    ) {}
+        details: DomainDetailComponent,
+    ) {
+        // Subscribe to domain changes
+        details.domain
+            .pipe(untilDestroyed(this))
+            .subscribe(d => this.domain = d);
+    }
 
     exportData() {
         // Trigger an export

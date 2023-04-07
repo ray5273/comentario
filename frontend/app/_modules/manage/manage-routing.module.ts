@@ -8,6 +8,12 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
+import { DomainInstallationComponent } from './domains/domain-detail/domain-installation/domain-installation.component';
+import { DomainSettingsComponent } from './domains/domain-detail/domain-settings/domain-settings.component';
+import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
+import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
+import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
+import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
 
 const children: Routes = [
     // Default route
@@ -19,7 +25,19 @@ const children: Routes = [
     // Domains
     {path: 'domains',              component: DomainManagerComponent},
     {path: 'domains/create',       component: DomainEditComponent, data: {new: true}},
-    {path: 'domains/:host',        component: DomainDetailComponent},
+    {
+        path: 'domains/:host',
+        component: DomainDetailComponent,
+        children: [
+            {path: '', pathMatch: 'full', redirectTo: 'installation'},
+            {path: 'installation', component: DomainInstallationComponent},
+            {path: 'settings',     component: DomainSettingsComponent},
+            {path: 'moderators',   component: DomainModeratorsComponent},
+            {path: 'stats',        component: DomainStatsComponent},
+            {path: 'impex',        component: DomainImpexComponent},
+            {path: 'danger',       component: DomainDangerZoneComponent},
+        ],
+    },
     {path: 'domains/:host/edit',   component: DomainEditComponent},
     {path: 'domains/:host/clone',  component: DomainEditComponent, data: {new: true}},
     {path: 'domains/:host/import', component: DomainImportComponent},

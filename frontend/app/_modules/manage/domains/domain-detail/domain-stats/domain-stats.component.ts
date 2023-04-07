@@ -1,16 +1,19 @@
-import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
+import { Component, Inject, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ChartDataset, ChartOptions } from 'chart.js';
 import { ApiOwnerService, Domain } from '../../../../../../generated-api';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
+import { DomainDetailComponent } from '../domain-detail.component';
 
+@UntilDestroy()
 @Component({
     selector: 'app-domain-stats',
     templateUrl: './domain-stats.component.html',
 })
 export class DomainStatsComponent {
 
-    _domain?: Domain;
+    domain?: Domain;
     countDays = 0;
     countViews?: number;
     countComments?: number;
@@ -34,23 +37,26 @@ export class DomainStatsComponent {
     constructor(
         @Inject(LOCALE_ID) private readonly locale: string,
         private readonly api: ApiOwnerService,
-    ) {}
-
-    @Input()
-    set domain(d: Domain | undefined) {
-        this._domain = d;
-        this.reload();
+        details: DomainDetailComponent,
+    ) {
+        // Subscribe to domain changes
+        details.domain
+            .pipe(untilDestroyed(this))
+            .subscribe(d => {
+                this.domain = d;
+                this.reload();
+            });
     }
 
     private reload() {
-        if (!this._domain) {
+        if (!this.domain) {
             this.chartLabels = [];
             this.chartData = [];
             return;
         }
 
         // Request data from the backend
-        this.api.domainStatistics(this._domain.host)
+        this.api.domainStatistics(this.domain.host)
             .pipe(this.loading.processing())
             .subscribe(r => {
                 // Fetch the number of days

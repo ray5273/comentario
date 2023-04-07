@@ -40,6 +40,8 @@ type DomainService interface {
 	RegisterView(host models.Host, commenter *data.UserCommenter) error
 	// StatsForComments collects and returns comment statistics for the given domain
 	StatsForComments(host models.Host) ([]int64, error)
+	// StatsForOwner collects and returns overall statistics for all domains of the specified owner
+	StatsForOwner(ownerHex models.HexID) (countDomains, countPages, countComments, countCommenters int64, err error)
 	// StatsForViews collects and returns view statistics for the given domain
 	StatsForViews(host models.Host) ([]int64, error)
 	// TakeSSOToken queries and removes the provided token from the database, returning its host and commenter token
@@ -362,6 +364,38 @@ func (svc *domainService) StatsForComments(host models.Host) ([]int64, error) {
 		// Succeeded
 		return res, nil
 	}
+}
+
+func (svc *domainService) StatsForOwner(ownerHex models.HexID) (countDomains, countPages, countComments, countCommenters int64, err error) {
+	logger.Debugf("domainService.StatsForOwner(%s)", ownerHex)
+
+	// Query domain and page counts
+	rdp := db.QueryRow(
+		"select count(distinct d.*), count(p.*) "+
+			"from domains d "+
+			"left join pages p on p.domain = d.domain "+
+			"where d.ownerhex=$1",
+		ownerHex)
+	if err = rdp.Scan(&countDomains, &countPages); err != nil {
+		// Any other database error
+		logger.Errorf("domainService.StatsForOwner: QueryRow() for domains/pages failed: %v", err)
+		return 0, 0, 0, 0, translateDBErrors(err)
+	}
+
+	// Query comment and commenter counts
+	rcc := db.QueryRow(
+		"select count(*), count(distinct commenterhex) "+
+			"from comments "+
+			"where domain in (select domain from domains where ownerhex=$1)",
+		ownerHex)
+	if err = rcc.Scan(&countComments, &countCommenters); err != nil {
+		// Any other database error
+		logger.Errorf("domainService.StatsForOwner: QueryRow() for comments/commenters failed: %v", err)
+		return 0, 0, 0, 0, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return
 }
 
 func (svc *domainService) StatsForViews(host models.Host) ([]int64, error) {

@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, NavigationEnd, Router } from '@angular/router';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { ActivatedRoute, Router } from '@angular/router';
+import { BehaviorSubject } from 'rxjs';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ApiOwnerService, Domain } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
@@ -12,32 +13,53 @@ import { Paths } from '../../../../_utils/consts';
 })
 export class DomainDetailComponent implements OnInit {
 
-    activeTab = 'installation';
-    domain?: Domain;
+    _domain?: Domain;
+
+    /**
+     * Observable for retrieving the domain in question.
+     */
+    readonly domain = new BehaviorSubject<Domain | undefined>(undefined);
 
     readonly loading = new ProcessingStatus();
     readonly Paths = Paths;
 
+    private _host?: string | null;
+
     constructor(
-        private readonly route: ActivatedRoute,
         private readonly router: Router,
+        private readonly route: ActivatedRoute,
         private readonly api: ApiOwnerService,
     ) {}
 
-    ngOnInit(): void {
-        // Subscribe to route changes to be able to reload data on same route
-        this.router.events
-            .pipe(untilDestroyed(this))
-            .subscribe(e => e instanceof NavigationEnd && this.reload());
+    /**
+     * The last path segment, which is used for tab selection.
+     */
+    get subPath(): string {
+        return this.router.url.split('/').pop() || '';
+    }
 
-        // Fetch the data from the backend
-        this.reload();
+    ngOnInit(): void {
+        // Subscribe to route parameter changes to reload data
+        this.route.paramMap
+            .subscribe(pm => {
+                this._host = pm.get('host');
+                this.reload();
+            });
     }
 
     reload() {
-        // Load the domain
-        this.api.domainGet(this.route.snapshot.paramMap.get('host') as string)
-            .pipe(this.loading.processing())
-            .subscribe(d => this.domain = d);
+        // Load the domain, if the host is known
+        if (this._host) {
+            this.api.domainGet(this._host)
+                .pipe(this.loading.processing())
+                .subscribe(d => this.setDomain(d));
+        } else {
+            this.setDomain(undefined);
+        }
+    }
+
+    private setDomain(d: Domain | undefined) {
+        this._domain = d;
+        this.domain.next(d);
     }
 }

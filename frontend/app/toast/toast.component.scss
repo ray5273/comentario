@@ -1,7 +1,15 @@
+@import "../../scss/vars";
+
 :host {
     position: fixed;
-    top: 1rem;
-    right: 1rem;
+    top: 0.25rem;
+    right: 0.25rem;
     z-index: 1090; // Fix the quirk of the element layering, from a certain moment (or Chrome version) the toast close
                    // button was being covered by the Sign in button. So, there.
+    max-width: 95%;
+
+    @include media-breakpoint-up(sm) {
+        top: 1rem;
+        right: 1rem;
+    }
 }

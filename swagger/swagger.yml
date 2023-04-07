@@ -1152,6 +1152,48 @@ paths:
           description: Commenter details haven been updated
 
   #---------------------------------------------------------------------------------------------------------------------
+  # Dashboard
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /dashboard:
+    get:
+      operationId: DashboardDataGet
+      summary: Get summary ("dashboard") data for the user
+      tags:
+        - ApiOwner
+      responses:
+        200:
+          description: Dashboard data
+          schema:
+            type: object
+            required:
+              - countDomains
+              - countPages
+              - countComments
+              - countCommenters
+            properties:
+              countDomains:
+                description: Total number of domains belonging to the user
+                type: integer
+                x-omitempty: false
+                x-isnullable: false
+              countPages:
+                description: Total number of pages with comments on the user's domains
+                type: integer
+                x-omitempty: false
+                x-isnullable: false
+              countComments:
+                description: Total number of comments on the user's domains
+                type: integer
+                x-omitempty: false
+                x-isnullable: false
+              countCommenters:
+                description: Total number of commenters, who left comments on the user's domains
+                type: integer
+                x-omitempty: false
+                x-isnullable: false
+
+  #---------------------------------------------------------------------------------------------------------------------
   # Domains
   #---------------------------------------------------------------------------------------------------------------------
 

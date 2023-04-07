@@ -7,7 +7,7 @@ import { authGuardCanLoad } from '../_guards/auth.guard';
 const routes: Routes = [
     // Auth
     {
-        path: 'auth',
+        path:         'auth',
         loadChildren: () => import('./auth/auth.module').then(m => m.AuthModule),
     },
 
@@ -24,7 +24,7 @@ const routes: Routes = [
 ];
 
 @NgModule({
-    imports: [RouterModule.forRoot(routes)],
+    imports: [RouterModule.forRoot(routes, {scrollPositionRestoration: 'enabled'})],
     exports: [RouterModule],
 })
 export class AppRoutingModule {}

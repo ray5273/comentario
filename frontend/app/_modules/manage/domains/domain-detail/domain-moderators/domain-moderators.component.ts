@@ -1,21 +1,20 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiOwnerService, Domain } from '../../../../../../generated-api';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ToastService } from '../../../../../_services/toast.service';
+import { DomainDetailComponent } from '../domain-detail.component';
 
+@UntilDestroy()
 @Component({
     selector: 'app-domain-moderators',
     templateUrl: './domain-moderators.component.html',
 })
 export class DomainModeratorsComponent {
 
-    @Input()
     domain?: Domain;
-
-    @Output()
-    updated = new EventEmitter<void>();
 
     readonly adding   = new ProcessingStatus();
     readonly deleting = new ProcessingStatus();
@@ -30,7 +29,13 @@ export class DomainModeratorsComponent {
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
         private readonly api: ApiOwnerService,
-    ) {}
+        private readonly details: DomainDetailComponent,
+    ) {
+        // Subscribe to domain changes
+        details.domain
+            .pipe(untilDestroyed(this))
+            .subscribe(d => this.domain = d);
+    }
 
     get email(): AbstractControl<string> {
         return this.form.get('email')!;
@@ -42,8 +47,8 @@ export class DomainModeratorsComponent {
             .subscribe(() =>{
                 // Add a toast
                 this.toastSvc.success('moderator-removed');
-                // Notify the subscribers
-                this.updated.next();
+                // Reload the details
+                this.details.reload();
             });
     }
 
@@ -52,8 +57,8 @@ export class DomainModeratorsComponent {
         this.form.markAllAsTouched();
 
         // Submit the form if it's valid
-        if (this.form.valid) {
-            this.api.domainModeratorNew(this.domain!.host, {email: this.email.value})
+        if (this.domain && this.form.valid) {
+            this.api.domainModeratorNew(this.domain.host, {email: this.email.value})
                 .pipe(this.adding.processing())
                 .subscribe(() => {
                     // Add a toast
@@ -61,8 +66,8 @@ export class DomainModeratorsComponent {
                     // Clear the form
                     this.form.reset();
                     this.form.markAsUntouched();
-                    // Notify the subscribers
-                    this.updated.next();
+                    // Reload the details
+                    this.details.reload();
                 });
         }
     }
