@@ -1,5 +1,21 @@
 # Comentario changelog
 
+## v2.3.0
+
+This release brings a **whole new administration UI** (frontend) for website owners, developed from scratch with Angular. There are too many improvements to mention, bust most notable ones are:
+
+* **BREAKING CHANGE:** the .js-script is moved from `js/` to the site root (e.g. `https://<your-domain>/comentario.js`);
+* Complete support for all screen sizes, from mobiles to XL desktops;
+* Multilingual UI support;
+* New dashboard screen showing statistics across all your domains;
+* Proper authentication based on HTTP-only cookies;
+* Proper input validation;
+* Domain clone function;
+* Domain data export downloads the dump file instead of sending an email;
+* New `SSLMode` setting for PostgreSQL connection.
+
+Contrary to what was previously said, the database still *maintains full compatibility* with Commento 1.8.0 and all previous Comentario versions. We intend to totally rework the data model in subsequent releases, because Commento data model is flawed in many ways.
+
 ## v2.2.3
 
 This release brings no extra functionality to Comentario, but rather concentrates on the automated build pipeline, stability, and [documentation](https://docs.comentario.app/).
