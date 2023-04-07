@@ -6,22 +6,20 @@
     <!-- Tabs -->
     <section [appSpinner]="loading.active" spinnerSize="lg">
         <ng-container *ngIf="domain">
-            <ul #tabs="ngbNav" [(activeId)]="activeTab" ngbNav class="nav-tabs">
+            <ul #tabs="ngbNav" [(activeId)]="activeTab" ngbNav class="nav-pills justify-content-center">
                 <!-- Installation tab -->
                 <li ngbNavItem="installation">
                     <a ngbNavLink i18n>Installation</a>
                     <ng-template ngbNavContent>
-                        <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
-                        <textarea [value]="snippet" #sn (click)="sn.select()" class="form-control font-monospace mb-4" rows="3" readonly></textarea>
-                        <p i18n>Read more on Comentario installation and configuration in the <a [href]="docsSvc.getPageUrl('getting-started/')" target="_blank" rel="noopener">documentation</a>.</p>
+                        <app-domain-installation></app-domain-installation>
                     </ng-template>
                 </li>
 
-                <!-- Properties tab -->
-                <li ngbNavItem="properties">
-                    <a ngbNavLink i18n>Properties</a>
+                <!-- Settings tab -->
+                <li ngbNavItem="settings">
+                    <a ngbNavLink i18n>Settings</a>
                     <ng-template ngbNavContent>
-                        <app-domain-props [domain]="domain"></app-domain-props>
+                        <app-domain-settings [domain]="domain"></app-domain-settings>
                     </ng-template>
                 </li>
 
@@ -63,7 +61,7 @@
             </ul>
 
             <!-- Tabs outlet -->
-            <div [ngbNavOutlet]="tabs" class="mt-2"></div>
+            <div [ngbNavOutlet]="tabs" class="mt-3 pt-3 border-top"></div>
         </ng-container>
     </section>
 </section>

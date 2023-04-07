@@ -17,7 +17,7 @@ import {
     ApiCommenterLoginResponse,
     ApiCommenterTokenNewResponse,
     ApiCommentListResponse,
-    ApiCommentNewResponse,
+    ApiCommentNewResponse, ApiErrorResponse,
     ApiSelfResponse,
 } from './api';
 import { Wrap } from './element-wrap';
@@ -334,6 +334,38 @@ export class Comentario {
     }
 
     /**
+     * Return a textual description of the provided error.
+     * @param error Error do return a description for.
+     * @private
+     */
+    private describeError(error: any): string {
+        if (error instanceof HttpClientError) {
+            // If there's a response, try to parse it as JSON
+            let resp: ApiErrorResponse | undefined;
+            if (typeof error.response === 'string') {
+                try {
+                    resp = JSON.parse(error.response);
+                } catch (e) {
+                    // Do nothing
+                }
+            }
+
+            // Translate error ID
+            switch (resp?.id) {
+                case 'unknown-host':
+                    return 'This domain is not registered in Comentario';
+
+                // Not a known error ID
+                default:
+                    return resp?.message || error.message;
+            }
+        }
+
+        // TODO put this under "technical details"
+        return JSON.stringify(error);
+    }
+
+    /**
      * Set and display (message is given) or clean (message is falsy) an error message in the error panel.
      * @param error Error object to set. If falsy, the error panel gets removed.
      * @private
@@ -351,30 +383,8 @@ export class Comentario {
             this.root!.prepend(this.error = UIToolkit.div('error-box'));
         }
 
-        // Figure out the error message
-        let msg = '';
-        if (error instanceof HttpClientError) {
-            // If there's a response, try to parse it
-            if (typeof error.response === 'string') {
-                try {
-                    const resp = JSON.parse(error.response);
-                    msg = resp?.details;
-                } catch (e) {
-                    // Do nothing
-                }
-            }
-
-            // No details, just use the message
-            if (!msg) {
-                msg = error.message;
-            }
-        } else {
-            // TODO put this under "technical details"
-            msg = JSON.stringify(error);
-        }
-
         // Set error text
-        this.error.inner(`Error: ${msg}.`);
+        this.error.inner(`Error: ${this.describeError(error)}.`);
     }
 
     /**

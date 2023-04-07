@@ -6,10 +6,10 @@ import { ConfigService } from '../../../../../_services/config.service';
 import { Paths } from '../../../../../_utils/consts';
 
 @Component({
-    selector: 'app-domain-props',
-    templateUrl: './domain-props.component.html',
+    selector: 'app-domain-settings',
+    templateUrl: './domain-settings.component.html',
 })
-export class DomainPropsComponent {
+export class DomainSettingsComponent {
 
     _domain?: Domain;
     _idps?: IdentityProvider[];

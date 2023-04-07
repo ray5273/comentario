@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { NgbCollapseModule, NgbDropdownModule, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapseModule, NgbDropdownModule, NgbNavModule, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { NgChartsModule } from 'ng2-charts';
 import { ManageRoutingModule } from './manage-routing.module';
 import { ControlCenterComponent } from './control-center/control-center.component';
@@ -14,11 +14,12 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
-import { DomainPropsComponent } from './domains/domain-detail/domain-props/domain-props.component';
+import { DomainSettingsComponent } from './domains/domain-detail/domain-settings/domain-settings.component';
 import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
 import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
 import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
 import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
+import { DomainInstallationComponent } from './domains/domain-detail/domain-installation/domain-installation.component';
 
 @NgModule({
     declarations: [
@@ -31,9 +32,10 @@ import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domai
         DomainImportComponent,
         DomainManagerComponent,
         DomainModeratorsComponent,
-        DomainPropsComponent,
+        DomainSettingsComponent,
         DomainStatsComponent,
         ProfileComponent,
+        DomainInstallationComponent,
     ],
     imports: [
         CommonModule,
@@ -44,6 +46,7 @@ import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domai
         NgbCollapseModule,
         NgbDropdownModule,
         NgbNavModule,
+        NgbTooltip,
         NgChartsModule,
         ToolsModule,
         ManageRoutingModule,

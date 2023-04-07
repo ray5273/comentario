@@ -1,5 +1,11 @@
 import { Comment, Commenter, Email, IdentityProvider, SortPolicy } from './models';
 
+export interface ApiErrorResponse {
+    id?:      string;
+    message?: string;
+    details?: string;
+}
+
 export interface ApiClientConfigResponse {
     baseUrl:       string;
     signupAllowed: boolean;

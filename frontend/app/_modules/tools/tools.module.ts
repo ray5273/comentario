@@ -9,12 +9,14 @@ import { ConfirmDirective } from './_directives/confirm.directive';
 import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.component';
 import { CheckmarkComponent } from './checkmark/checkmark.component';
 import { ServerMessageComponent } from './server-message/server-message.component';
+import { CopyTextDirective } from './_directives/copy-text.directive';
 
 @NgModule({
     declarations: [
         CheckmarkComponent,
         ConfirmDialogComponent,
         ConfirmDirective,
+        CopyTextDirective,
         PasswordInputComponent,
         ServerMessageComponent,
         SpinnerDirective,
@@ -32,6 +34,7 @@ import { ServerMessageComponent } from './server-message/server-message.componen
         PasswordInputComponent,
         ServerMessageComponent,
         SpinnerDirective,
+        CopyTextDirective,
     ],
 })
 export class ToolsModule {}

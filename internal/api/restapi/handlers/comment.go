@@ -116,6 +116,15 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 
 	// Fetch the domain
 	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
+	if err == svc.ErrNotFound {
+		// No domain found for this host
+		return respForbidden(ErrorUnknownHost)
+	} else if err != nil {
+		return respServiceError(err)
+	}
+
+	// Fetch the page
+	page, err := svc.ThePageService.FindByHostPath(domain.Host, params.Body.Path)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -133,12 +142,6 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 
 		// Add it to the list otherwise
 		ids = append(ids, id)
-	}
-
-	// Fetch the page
-	page, err := svc.ThePageService.FindByHostPath(domain.Host, params.Body.Path)
-	if err != nil {
-		return respServiceError(err)
 	}
 
 	// Make a map of moderator emails, also figure out if the user is a moderator self

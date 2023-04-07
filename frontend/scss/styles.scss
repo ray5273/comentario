@@ -238,6 +238,12 @@ dl.detail-table, dl.detail-table > div {
     display: flex;
 }
 
+// nav-pill with .text-danger becomes white-on-red when .active
+.nav-pills .nav-link.active.text-danger {
+    color: $light !important;
+    --bs-nav-pills-link-active-bg: #{$danger};
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // ng-bootstrap fixes
 //----------------------------------------------------------------------------------------------------------------------
