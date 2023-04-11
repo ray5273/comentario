@@ -1,11 +1,11 @@
-#file: noinspection YAMLSchemaValidation
 baseURL: https://docs.comentario.app/
 languageCode: en
 title: 'Comentario Documentation'
+googleAnalytics: 'G-E2705JHXPL'
 
 disableKinds:
-- RSS
-- sitemap
+  - RSS
+  - sitemap
 
 defaultContentLanguage: en
 defaultContentLanguageInSubdir: true
@@ -37,6 +37,9 @@ markup:
     style: monokailight
 
 sectionPagesMenu: sidebar
+
+params:
+  description: 'Documentation for Comentario, the powerful commenting tool for web pages.'
 
 menu:
   # Will be lowercased in the template
