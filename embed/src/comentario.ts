@@ -270,7 +270,7 @@ export class Comentario {
      */
     private dataTagsLoad() {
         for (const script of this.doc.getElementsByTagName('script')) {
-            if (script.src.match(/\/js\/comentario\.js$/)) {
+            if (script.src.match(/\/comentario\.js$/)) {
                 const ws = new Wrap(script);
                 let s = ws.getAttr('data-page-id');
                 if (s) {
