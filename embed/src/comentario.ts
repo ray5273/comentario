@@ -85,7 +85,10 @@ export class Comentario {
     /** Identifier of the page for loading comments. Defaults to page path. */
     private pageId = parent.location.pathname;
 
-    /** Optional CSS stylesheet URL that gets loaded after the default one. */
+    /**
+     * Optional CSS stylesheet URL that gets loaded after the default one. Setting to 'false' disables loading any CSS
+     * altogether.
+     */
     private cssOverride?: string;
     private noFonts = false;
     private hideDeleted = false;
@@ -140,17 +143,20 @@ export class Comentario {
             return this.reject(`No root element with id='${this.rootId}' found. Check your configuration and HTML.`);
         }
 
-        try {
-            // Begin by loading the stylesheet
-            await this.cssLoad(`${this.cdn}/comentario.css`);
+        // If CSS isn't disabled altogether
+        if (this.cssOverride !== 'false') {
+            try {
+                // Begin by loading the stylesheet
+                await this.cssLoad(`${this.cdn}/comentario.css`);
 
-            // Load stylesheet override, if any
-            if (this.cssOverride) {
-                await this.cssLoad(this.cssOverride);
+                // Load stylesheet override, if any
+                if (this.cssOverride) {
+                    await this.cssLoad(this.cssOverride);
+                }
+            } catch (e) {
+                // Do not block Comentario load on CSS load failure, but log the error to the console
+                console.error(e);
             }
-        } catch (e) {
-            // Do not block Comentario load on CSS load failure, but log the error to the console
-            console.error(e);
         }
 
         // Set up the root content
