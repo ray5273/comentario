@@ -6,7 +6,8 @@
         "clean": "gulp clean",
         "build": "env NODE_ENV=development gulp",
         "build:prod": "gulp",
-        "lint": "gulp lint"
+        "lint": "gulp lint",
+        "start": "env NODE_ENV=development gulp start"
     },
     "private": true,
     "dependencies": {},

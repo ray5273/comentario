@@ -10,7 +10,7 @@ import eslint from 'gulp-eslint';
 import webpack from 'webpack-stream';
 
 const sass = gulpSass(dartSass);
-const { dest, parallel, series, src } = gulp;
+const { dest, parallel, series, src, watch } = gulp;
 
 /** Whether we're running in the production mode (default). */
 const isProd = ((process.env.NODE_ENV || 'production').trim().toLowerCase() === 'production');
@@ -56,6 +56,12 @@ const compileTypescript = () =>
 
 /** Run all build tasks in parallel. */
 export const build = parallel(compileCss, compileTypescript);
+
+/** Watch the source tree and rebuild the code on changes. */
+export const start = () => {
+    watch(sources.scss,       compileCss);
+    watch(sources.typescript, compileTypescript);
+}
 
 /** Lint and build all by default. */
 export default series(lint, build);
