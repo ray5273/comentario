@@ -82,7 +82,10 @@ export class Comentario {
     /** Identity providers allowed for commenter authentication on the current page. */
     private allowedIdps: IdentityProvider[] = [];
 
+    /** Identifier of the page for loading comments. Defaults to page path. */
     private pageId = parent.location.pathname;
+
+    /** Optional CSS stylesheet URL that gets loaded after the default one. */
     private cssOverride?: string;
     private noFonts = false;
     private hideDeleted = false;
@@ -137,12 +140,17 @@ export class Comentario {
             return this.reject(`No root element with id='${this.rootId}' found. Check your configuration and HTML.`);
         }
 
-        // Begin by loading the stylesheet
-        await this.cssLoad(`${this.cdn}/comentario.css`);
+        try {
+            // Begin by loading the stylesheet
+            await this.cssLoad(`${this.cdn}/comentario.css`);
 
-        // Load stylesheet override, if any
-        if (this.cssOverride) {
-            await this.cssLoad(this.cssOverride);
+            // Load stylesheet override, if any
+            if (this.cssOverride) {
+                await this.cssLoad(this.cssOverride);
+            }
+        } catch (e) {
+            // Do not block Comentario load on CSS load failure, but log the error to the console
+            console.error(e);
         }
 
         // Set up the root content
@@ -243,11 +251,14 @@ export class Comentario {
         // Don't bother if the stylesheet has been loaded already
         return this.loadedCss[url] ?
             Promise.resolve() :
-            new Promise(resolve => {
+            new Promise((resolve, reject) => {
                 this.loadedCss[url] = true;
                 new Wrap(this.doc.getElementsByTagName('head')[0])
                     .append(
-                        Wrap.new('link').attr({href: url, rel: 'stylesheet', type: 'text/css'}).on('load', () => resolve()));
+                        Wrap.new('link')
+                            .attr({href: url, rel: 'stylesheet', type: 'text/css'})
+                            .on('load', () => resolve())
+                            .on('error', (_, e) => reject(e)));
             });
     }
 
