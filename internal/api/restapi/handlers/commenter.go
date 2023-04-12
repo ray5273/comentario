@@ -139,19 +139,19 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 
 func CommenterPwdResetSendEmail(params api_commenter.CommenterPwdResetSendEmailParams) middleware.Responder {
 	// Find the locally authenticated commenter
-	var principal data.Principal
+	var user *data.User
 	if commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", data.EmailToString(params.Body.Email), false); err == nil {
-		principal = &commenter.User
+		user = &commenter.User
 	} else if err != svc.ErrNotFound {
 		return respServiceError(err)
 	}
 
 	// If no user found, apply a random delay to discourage email polling
-	if principal == nil {
+	if user == nil {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 
 		// Send a reset email otherwise
-	} else if r := sendPasswordResetToken(principal); r != nil {
+	} else if r := sendPasswordResetToken(user, true); r != nil {
 		return r
 	}
 

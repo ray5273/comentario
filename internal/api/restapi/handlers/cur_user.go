@@ -64,19 +64,19 @@ func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middlewa
 
 func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) middleware.Responder {
 	// Find the owner user with that email
-	var principal data.Principal
+	var user *data.User
 	if owner, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), false); err == nil {
-		principal = &owner.User
+		user = &owner.User
 	} else if err != svc.ErrNotFound {
 		return respServiceError(err)
 	}
 
 	// If no user found, apply a random delay to discourage email polling
-	if principal == nil {
+	if user == nil {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 
 		// Send a reset email otherwise
-	} else if r := sendPasswordResetToken(principal); r != nil {
+	} else if r := sendPasswordResetToken(user, false); r != nil {
 		return r
 	}
 
@@ -84,19 +84,16 @@ func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) mi
 	return api_auth.NewCurUserPwdResetSendEmailNoContent()
 }
 
-// sendPasswordResetToken sends an email containing a password reset link to the given principal
-func sendPasswordResetToken(principal data.Principal) middleware.Responder {
-	// Determine the "entity"
-	_, isCommenter := principal.(*data.UserCommenter)
-
+// sendPasswordResetToken sends an email containing a password reset link to the given user
+func sendPasswordResetToken(user *data.User, isCommenter bool) middleware.Responder {
 	// Generate a random reset token
-	if token, err := svc.TheUserService.CreateResetToken(principal.GetHexID(), isCommenter); err != nil {
+	if token, err := svc.TheUserService.CreateResetToken(user.HexID, isCommenter); err != nil {
 		return respServiceError(err)
 
 		// Send out an email
 	} else if err := svc.TheMailService.SendFromTemplate(
 		"",
-		principal.GetUser().Email,
+		user.Email,
 		"Reset your password",
 		"reset-password.gohtml",
 		map[string]any{"URL": config.URLForUI("en", "", map[string]string{"passwordResetToken": string(token)})},
