@@ -245,13 +245,6 @@ definitions:
       - pending-moderation
     x-isnullable: false
 
-  entity:
-    description: Entity for resetting the password
-    type: string
-    enum:
-      - owner
-      - commenter
-
   error:
     description: Generic error object
     type: object
@@ -701,7 +694,7 @@ paths:
                 format: email
       responses:
         204:
-          description: Reset email has been sent, if the email is known
+          description: Reset email has been sent, if the email address is known
 
     put:
       operationId: CurUserPwdResetChange
@@ -1079,6 +1072,29 @@ paths:
           description: Success or failure response (see 'success' property)
           schema:
             type: file
+
+  /commenter/pwdreset:
+    post:
+      operationId: CommenterPwdResetSendEmail
+      summary: Request commenter's password reset by sending them an email
+      tags:
+        - ApiCommenter
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+      responses:
+        204:
+          description: Reset email has been sent, if the email address is known
 
   /commenter/self:
     post:

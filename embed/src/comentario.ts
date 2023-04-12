@@ -1,7 +1,7 @@
 import { HttpClient, HttpClientError } from './http-client';
 import {
     AnonymousCommenterId,
-    Comment,
+    Comment, Commenter,
     CommenterMap,
     CommentsGroupedByHex,
     Email,
@@ -104,6 +104,9 @@ export class Comentario {
     private selfHex?: string;
     private initialised = false;
 
+    /** The currently authenticated user. */
+    private commenter?: Commenter;
+
     /** The email instance of the currently authenticated user. */
     private email?: Email;
 
@@ -169,6 +172,7 @@ export class Comentario {
                     this.root,
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.openOAuthPopup(idp),
+                    email => this.requestPasswordReset(email),
                     data => this.signup(data),
                     data => this.saveSettings(data)),
                 // Main area
@@ -434,6 +438,7 @@ export class Comentario {
         this.isAuthenticated = false;
         this.isModerator = false;
         this.selfHex = undefined;
+        this.commenter = undefined;
         this.email = undefined;
 
         // If we're not already (knowingly) anonymous
@@ -447,6 +452,7 @@ export class Comentario {
                     this.token = AnonymousCommenterId;
                 } else {
                     // Commenter is authenticated
+                    this.commenter = r.commenter;
                     this.email = r.email;
 
                     // Update the profile bar
@@ -672,6 +678,21 @@ export class Comentario {
      */
     private cancelCommentEdits() {
         this.editor?.remove();
+    }
+
+    /**
+     * Request a password reset for the given email.
+     * @param email Email address to request a password reset for.
+     */
+    private async requestPasswordReset(email: string): Promise<void> {
+        try {
+            this.setError();
+            await this.apiClient.post<void>('commenter/pwdreset', undefined, {email});
+
+        } catch (e) {
+            this.setError(e);
+            throw e;
+        }
     }
 
     /**
@@ -1000,13 +1021,15 @@ export class Comentario {
         try {
             this.setError();
 
-            // Update commenter settings
-            await this.apiClient.post<void>('commenter/update', this.token, {
-                email:      data.email,
-                name:       data.name,
-                websiteUrl: data.websiteUrl,
-                avatarUrl:  data.avatarUrl,
-            });
+            // Update commenter settings (only for a locally-authenticated user)
+            if (!this.commenter!.provider) {
+                await this.apiClient.post<void>('commenter/update', this.token, {
+                    email:      data.email,
+                    name:       data.name,
+                    websiteUrl: data.websiteUrl,
+                    avatarUrl:  data.avatarUrl,
+                });
+            }
 
             // Update email settings
             this.email!.sendModeratorNotifications = data.notifyModerator;

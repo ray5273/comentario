@@ -28,8 +28,9 @@ type UserService interface {
 	CreateOwnerConfirmationToken(userID models.HexID) (models.HexID, error)
 	// CreateOwnerSession creates and persists a new owner session record, returning session token
 	CreateOwnerSession(id models.HexID) (models.HexID, error)
-	// CreateResetToken creates and persists a new password reset token for the user of given kind ('entity') and hex ID
-	CreateResetToken(userID models.HexID, entity models.Entity) (models.HexID, error)
+	// CreateResetToken creates and persists a new password reset token for an owner (commenter == false) or a commenter
+	// (commenter == true) user with the given hex ID
+	CreateResetToken(userID models.HexID, commenter bool) (models.HexID, error)
 	// DeleteCommenterSession removes a commenter session by hex ID and token from the database
 	DeleteCommenterSession(id, token models.HexID) error
 	// DeleteOwnerByID removes an owner user by their hex ID
@@ -58,7 +59,7 @@ type UserService interface {
 	ListCommentersByHost(host models.Host) ([]models.Commenter, error)
 	// ResetUserPasswordByToken finds and resets a user's password for the given reset token, returning the
 	// corresponding entity
-	ResetUserPasswordByToken(token models.HexID, password string) (models.Entity, error)
+	ResetUserPasswordByToken(token models.HexID, password string) error
 	// UpdateCommenter updates the given commenter's data in the database. If no idp is provided, the local auth
 	// provider is assumed
 	UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error
@@ -262,8 +263,8 @@ func (svc *userService) CreateOwnerSession(id models.HexID) (models.HexID, error
 	return token, nil
 }
 
-func (svc *userService) CreateResetToken(userID models.HexID, entity models.Entity) (models.HexID, error) {
-	logger.Debugf("userService.CreateResetToken(%s, %s)", userID, entity)
+func (svc *userService) CreateResetToken(userID models.HexID, commenter bool) (models.HexID, error) {
+	logger.Debugf("userService.CreateResetToken(%s, %v)", userID, commenter)
 
 	// Generate a random reset token
 	token, err := data.RandomHexID()
@@ -272,13 +273,16 @@ func (svc *userService) CreateResetToken(userID models.HexID, entity models.Enti
 		return "", err
 	}
 
+	// Determine the "entity"
+	entity := "owner"
+	if commenter {
+		entity = "commenter"
+	}
+
 	// Persist the token
 	err = db.Exec(
 		"insert into resethexes(resethex, hex, entity, senddate) values($1, $2, $3, $4);",
-		token,
-		userID,
-		entity,
-		time.Now().UTC())
+		token, userID, entity, time.Now().UTC())
 	if err != nil {
 		logger.Errorf("userService.CreateResetToken: Exec() failed: %v", err)
 		return "", translateDBErrors(err)
@@ -522,59 +526,53 @@ func (svc *userService) ListCommentersByHost(host models.Host) ([]models.Comment
 	return res, nil
 }
 
-func (svc *userService) ResetUserPasswordByToken(token models.HexID, password string) (models.Entity, error) {
+func (svc *userService) ResetUserPasswordByToken(token models.HexID, password string) error {
 	logger.Debugf("userService.ResetUserPasswordByToken(%s, %s)", token, password)
 
 	// Find and fetch the token record
 	var user data.User // Just use a generic user for both entities
-	var entity models.Entity
+	var entity string
 	row := db.QueryRow("select hex, entity from resethexes where resethex=$1;", token)
 	if err := row.Scan(&user.HexID, &entity); err != nil {
 		// Unknown token
 		if err == sql.ErrNoRows {
-			return "", ErrBadToken
+			return ErrBadToken
 		}
 
 		// Any other database error
 		logger.Errorf("userService.ResetUserPasswordByToken: Scan() failed: %v", err)
-		return "", translateDBErrors(err)
+		return translateDBErrors(err)
 	}
 
 	// Hash the user's password, if any
 	if err := user.SetPassword(password); err != nil {
-		return "", err
+		return err
 	}
 
 	// Fetch the user and update their password
-	switch entity {
-	// Owner
-	case models.EntityOwner:
+	if entity == "owner" {
+		// Owner user
 		if _, err := svc.FindOwnerByID(user.HexID, false); err != nil {
-			return "", err
+			return err
 		} else if err := db.Exec("update owners set passwordhash=$1 where ownerhex=$2;", user.PasswordHash, user.HexID); err != nil {
 			logger.Errorf("userService.ResetUserPasswordByToken: Exec() failed for owner: %v", err)
-			return "", translateDBErrors(err)
+			return translateDBErrors(err)
 		}
-
-	// Commenter
-	case models.EntityCommenter:
+	} else {
+		// Commenter user
 		if _, err := svc.FindCommenterByID(user.HexID); err != nil {
-			return "", err
+			return err
 		} else if err := db.Exec("update commenters set passwordhash=$1 where commenterhex=$2;", user.PasswordHash, user.HexID); err != nil {
 			logger.Errorf("userService.ResetUserPasswordByToken: Exec() failed for commenter: %v", err)
-			return "", translateDBErrors(err)
+			return translateDBErrors(err)
 		}
-
-	// Unknown entity
-	default:
-		return "", ErrUnknownEntity
 	}
 
 	// Remove all the user's reset tokens, ignoring any error
 	_ = svc.DeleteResetTokens(user.HexID)
 
 	// Succeeded
-	return entity, nil
+	return nil
 }
 
 func (svc *userService) UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error {

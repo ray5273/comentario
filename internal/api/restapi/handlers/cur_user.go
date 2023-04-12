@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -51,7 +50,7 @@ func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, principal 
 }
 
 func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middleware.Responder {
-	if _, err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.Token, *params.Body.Password); err == svc.ErrBadToken {
+	if err := svc.TheUserService.ResetUserPasswordByToken(*params.Body.Token, *params.Body.Password); err == svc.ErrBadToken {
 		// Token unknown: forbidden
 		return respForbidden(ErrorBadToken)
 	} else if err != nil {
@@ -64,42 +63,40 @@ func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middlewa
 }
 
 func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) middleware.Responder {
-	email := data.EmailToString(params.Body.Email)
-	// TODO entity := *params.Body.Entity
-	entity := models.EntityOwner
-
-	var user *data.User
-
-	switch entity {
-	// Resetting owner password
-	case models.EntityOwner:
-		if owner, err := svc.TheUserService.FindOwnerByEmail(email, false); err == nil {
-			user = &owner.User
-		} else if err != svc.ErrNotFound {
-			return respServiceError(err)
-		}
-
-	// Resetting commenter password: find the locally authenticated commenter
-	case models.EntityCommenter:
-		if commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", email, false); err == nil {
-			user = &commenter.User
-		} else if err != svc.ErrNotFound {
-			return respServiceError(err)
-		}
+	// Find the owner user with that email
+	var principal data.Principal
+	if owner, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), false); err == nil {
+		principal = &owner.User
+	} else if err != svc.ErrNotFound {
+		return respServiceError(err)
 	}
 
 	// If no user found, apply a random delay to discourage email polling
-	if user == nil {
+	if principal == nil {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 
-		// Generate a random reset token
-	} else if token, err := svc.TheUserService.CreateResetToken(user.HexID, entity); err != nil {
+		// Send a reset email otherwise
+	} else if r := sendPasswordResetToken(principal); r != nil {
+		return r
+	}
+
+	// Succeeded (or no user found)
+	return api_auth.NewCurUserPwdResetSendEmailNoContent()
+}
+
+// sendPasswordResetToken sends an email containing a password reset link to the given principal
+func sendPasswordResetToken(principal data.Principal) middleware.Responder {
+	// Determine the "entity"
+	_, isCommenter := principal.(*data.UserCommenter)
+
+	// Generate a random reset token
+	if token, err := svc.TheUserService.CreateResetToken(principal.GetHexID(), isCommenter); err != nil {
 		return respServiceError(err)
 
 		// Send out an email
 	} else if err := svc.TheMailService.SendFromTemplate(
 		"",
-		email,
+		principal.GetUser().Email,
 		"Reset your password",
 		"reset-password.gohtml",
 		map[string]any{"URL": config.URLForUI("en", "", map[string]string{"passwordResetToken": string(token)})},
@@ -107,6 +104,6 @@ func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) mi
 		return respServiceError(err)
 	}
 
-	// Succeeded (or no user found)
-	return api_auth.NewCurUserPwdResetSendEmailNoContent()
+	// Succeeded
+	return nil
 }

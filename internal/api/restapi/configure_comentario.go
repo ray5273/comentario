@@ -112,6 +112,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APICommenterCommenterLogoutHandler = api_commenter.CommenterLogoutHandlerFunc(handlers.CommenterLogout)
 	api.APICommenterCommenterNewHandler = api_commenter.CommenterNewHandlerFunc(handlers.CommenterNew)
 	api.APICommenterCommenterPhotoHandler = api_commenter.CommenterPhotoHandlerFunc(handlers.CommenterPhoto)
+	api.APICommenterCommenterPwdResetSendEmailHandler = api_commenter.CommenterPwdResetSendEmailHandlerFunc(handlers.CommenterPwdResetSendEmail)
 	api.APICommenterCommenterSelfHandler = api_commenter.CommenterSelfHandlerFunc(handlers.CommenterSelf)
 	api.APICommenterCommenterTokenNewHandler = api_commenter.CommenterTokenNewHandlerFunc(handlers.CommenterTokenNew)
 	api.APICommenterCommenterUpdateHandler = api_commenter.CommenterUpdateHandlerFunc(handlers.CommenterUpdate)

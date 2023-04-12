@@ -12,10 +12,9 @@ import (
 var logger = logging.MustGetLogger("svc")
 
 var (
-	ErrBadToken      = errors.New("services: invalid token")
-	ErrDB            = errors.New("services: database error")
-	ErrNotFound      = errors.New("services: object not found")
-	ErrUnknownEntity = errors.New("services: unknown entity")
+	ErrBadToken = errors.New("services: invalid token")
+	ErrDB       = errors.New("services: database error")
+	ErrNotFound = errors.New("services: object not found")
 )
 
 // checkErrors picks and returns the first non-nil error, or nil if there's none

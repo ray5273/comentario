@@ -13,7 +13,6 @@ export class LoginDialog extends Dialog {
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly idps: IdentityProvider[],
-        private readonly origin: string,
     ) {
         super(parent, 'Log in', pos);
     }
@@ -43,11 +42,10 @@ export class LoginDialog extends Dialog {
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
-     * @param idps Map of enabled authentication methods.
-     * @param origin Site origin (used for redirection to the "forgot password" page).
+     * @param idps List of enabled identity providers.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, idps: IdentityProvider[], origin: string): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, idps, origin);
+    static run(parent: Wrap<any>, pos: DialogPositioning, idps: IdentityProvider[]): Promise<LoginDialog> {
+        const dlg = new LoginDialog(parent, pos, idps);
         return dlg.run(dlg);
     }
 
@@ -100,10 +98,7 @@ export class LoginDialog extends Dialog {
                 // Forgot password link
                 UIToolkit.div('dialog-centered')
                     .append(
-                        Wrap.new('a')
-                            .attr({href: `${this.origin}/forgot?commenter=true`, target: '_blank'})
-                            .inner('Forgot your password?')
-                            .click(() => this.dismissWith('forgot'))),
+                        Wrap.new('a').inner('Forgot your password?').click(() => this.dismissWith('forgot'))),
                 // Switch to signup link container
                 UIToolkit.div('dialog-centered')
                     .append(

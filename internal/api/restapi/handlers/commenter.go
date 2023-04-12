@@ -137,6 +137,28 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 	return api_commenter.NewCommenterPhotoOK().WithPayload(io.NopCloser(&buf))
 }
 
+func CommenterPwdResetSendEmail(params api_commenter.CommenterPwdResetSendEmailParams) middleware.Responder {
+	// Find the locally authenticated commenter
+	var principal data.Principal
+	if commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", data.EmailToString(params.Body.Email), false); err == nil {
+		principal = &commenter.User
+	} else if err != svc.ErrNotFound {
+		return respServiceError(err)
+	}
+
+	// If no user found, apply a random delay to discourage email polling
+	if principal == nil {
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+
+		// Send a reset email otherwise
+	} else if r := sendPasswordResetToken(principal); r != nil {
+		return r
+	}
+
+	// Succeeded (or no user found)
+	return api_commenter.NewCommenterPwdResetSendEmailNoContent()
+}
+
 func CommenterSelf(params api_commenter.CommenterSelfParams) middleware.Responder {
 	// Extract a commenter token from the corresponding header, if any
 	if token := models.HexID(params.HTTPRequest.Header.Get(util.HeaderCommenterToken)); token.Validate(nil) == nil {
