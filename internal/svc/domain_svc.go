@@ -5,6 +5,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
 
@@ -38,12 +39,14 @@ type DomainService interface {
 	// RegisterView records a domain view in the database. commenterHex should be "anonymous" for an unauthenticated
 	// viewer
 	RegisterView(host models.Host, commenter *data.UserCommenter) error
-	// StatsForComments collects and returns comment statistics for the given domain
-	StatsForComments(host models.Host) ([]int64, error)
+	// StatsForComments collects and returns comment statistics for the given domain and number of days. If no host is
+	// given, statistics is collected for all domains owner by the user
+	StatsForComments(host models.Host, ownerID models.HexID, numDays int) ([]int64, error)
 	// StatsForOwner collects and returns overall statistics for all domains of the specified owner
 	StatsForOwner(ownerHex models.HexID) (countDomains, countPages, countComments, countCommenters int64, err error)
-	// StatsForViews collects and returns view statistics for the given domain
-	StatsForViews(host models.Host) ([]int64, error)
+	// StatsForViews collects and returns view statistics for the given domain and number of days. If no host is given,
+	// statistics is collected for all domains owner by the user
+	StatsForViews(host models.Host, ownerID models.HexID, numDays int) ([]int64, error)
 	// TakeSSOToken queries and removes the provided token from the database, returning its host and commenter token
 	TakeSSOToken(token models.HexID) (models.Host, models.HexID, error)
 	// ToggleFrozen switches the frozen status to unfrozen, and vice versa, for the given domain
@@ -340,17 +343,22 @@ func (svc *domainService) RegisterView(host models.Host, commenter *data.UserCom
 	return nil
 }
 
-func (svc *domainService) StatsForComments(host models.Host) ([]int64, error) {
-	logger.Debugf("domainService.StatsForComments(%s)", host)
+func (svc *domainService) StatsForComments(host models.Host, ownerID models.HexID, numDays int) ([]int64, error) {
+	logger.Debugf("domainService.StatsForComments(%s, %s, %d)", host, ownerID, numDays)
+
+	// Correct the number of days if needed
+	if numDays > util.MaxNumberStatsDays {
+		numDays = util.MaxNumberStatsDays
+	}
 
 	// Query the data from the database, grouped by day
 	rows, err := db.Query(
 		"select count(c.creationdate) "+
-			"from (select date_trunc('day', current_date-x) as date from generate_series(0, 29) as x) d "+
-			"left join comments c on d.date=date_trunc('day', c.creationdate) and c.domain=$1 "+
-			"group by d.date "+
-			"order by d.date;",
-		host)
+			"from (select date_trunc('day', current_date-x) as d1, date_trunc('day', current_date-x+1) as d2 from generate_series(0, $1) as x) d "+
+			"left join comments c on c.creationdate >= d.d1 and c.creationdate < d.d2 and ($2='' or c.domain=$2) and c.domain in (select domain from domains where ownerhex=$3) "+
+			"group by d.d1 "+
+			"order by d.d1;",
+		numDays-1, host, ownerID)
 	if err != nil {
 		logger.Errorf("domainService.StatsForComments: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -398,17 +406,22 @@ func (svc *domainService) StatsForOwner(ownerHex models.HexID) (countDomains, co
 	return
 }
 
-func (svc *domainService) StatsForViews(host models.Host) ([]int64, error) {
-	logger.Debugf("domainService.StatsForViews(%s)", host)
+func (svc *domainService) StatsForViews(host models.Host, ownerID models.HexID, numDays int) ([]int64, error) {
+	logger.Debugf("domainService.StatsForViews(%s, %s, %d)", host, ownerID, numDays)
+
+	// Correct the number of days if needed
+	if numDays > util.MaxNumberStatsDays {
+		numDays = util.MaxNumberStatsDays
+	}
 
 	// Query the data from the database, grouped by day
 	rows, err := db.Query(
 		"select count(v.viewdate) "+
-			"from (select date_trunc('day', current_date-x) as date from generate_series(0, 29) as x) d "+
-			"left join views v on d.date=date_trunc('day', v.viewdate) and v.domain=$1 "+
-			"group by d.date "+
-			"order by d.date;",
-		host)
+			"from (select date_trunc('day', current_date-x) as d1, date_trunc('day', current_date-x+1) as d2 from generate_series(0, $1) as x) d "+
+			"left join views v on v.viewdate >= d.d1 and v.viewdate < d.d2 and ($2='' or v.domain=$2) and v.domain in (select domain from domains where ownerhex=$3) "+
+			"group by d.d1 "+
+			"order by d.d1;",
+		numDays-1, host, ownerID)
 	if err != nil {
 		logger.Errorf("domainService.StatsForViews: Query() failed: %v", err)
 		return nil, translateDBErrors(err)

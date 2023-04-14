@@ -16,6 +16,8 @@ const (
 
 	DBMaxAttempts = 10 // Max number of attempts to connect to the database
 
+	MaxNumberStatsDays = 30 // Max number of days to get statistics for
+
 	CookieNameUserSession     = "comentario_user_session"  // Cookie name to store the session of the authenticated user
 	UserSessionCookieDuration = 28 * OneDay                // How long the language cookie stays valid
 	CookieNameAuthSession     = "_comentario_auth_session" // Cookie name to store the federated authentication session ID

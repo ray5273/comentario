@@ -1069,7 +1069,7 @@ paths:
         - $ref: "#/parameters/pathId"
       responses:
         200:
-          description: Success or failure response (see 'success' property)
+          description: Commenter avatar in the JPEG format
           schema:
             type: file
 
@@ -1208,6 +1208,35 @@ paths:
                 type: integer
                 x-omitempty: false
                 x-isnullable: false
+
+  /dashboard/stats:
+    get:
+      operationId: DashboardStatisticsGet
+      summary: Get comment and view statistics for the user
+      tags:
+        - ApiOwner
+      parameters:
+        - in: query
+          name: numDays
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 30
+          description: Number of days to get statistics for
+      responses:
+        200:
+          description: Statistical data on comments and views for the current user
+          schema:
+            type: object
+            properties:
+              viewCounts:
+                type: array
+                items:
+                  type: integer
+              commentCounts:
+                type: array
+                items:
+                  type: integer
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domains
@@ -1429,17 +1458,24 @@ paths:
         - ApiOwner
       parameters:
         - $ref: "#/parameters/pathHost"
+        - in: query
+          name: numDays
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 30
+          description: Number of days to get statistics for
       responses:
         200:
-          description: Success or failure response (see 'success' property)
+          description: Statistical data on comments and views for the domain
           schema:
             type: object
             properties:
-              viewsLast30Days:
+              viewCounts:
                 type: array
                 items:
                   type: integer
-              commentsLast30Days:
+              commentCounts:
                 type: array
                 items:
                   type: integer

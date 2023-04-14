@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { MockService } from 'ng-mocks';
+import { MockComponent, MockService } from 'ng-mocks';
 import { DashboardComponent } from './dashboard.component';
 import { ApiOwnerService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
+import { StatsChartComponent } from '../stats-chart/stats-chart.component';
 
 describe('DashboardComponent', () => {
 
@@ -12,7 +13,7 @@ describe('DashboardComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DashboardComponent],
+            declarations: [DashboardComponent, MockComponent(StatsChartComponent)],
             imports: [ToolsModule],
             providers: [
                 {provide: ApiOwnerService, useValue: MockService(ApiOwnerService, {dashboardDataGet: () => of({}) as any})},

@@ -20,6 +20,7 @@ import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domai
 import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
 import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
 import { DomainInstallationComponent } from './domains/domain-detail/domain-installation/domain-installation.component';
+import { StatsChartComponent } from './stats-chart/stats-chart.component';
 
 @NgModule({
     declarations: [
@@ -36,6 +37,7 @@ import { DomainInstallationComponent } from './domains/domain-detail/domain-inst
         DomainStatsComponent,
         ProfileComponent,
         DomainInstallationComponent,
+        StatsChartComponent,
     ],
     imports: [
         CommonModule,

@@ -1,0 +1,37 @@
+<div [appSpinner]="loading.active" spinnerSize="lg">
+    <ng-container *ngIf="countDays else none">
+        <!-- Info text -->
+        <p class="text-center" i18n>Here you can see statistics for the last {{ countDays }} days.</p>
+
+        <!-- Counters -->
+        <div class="d-flex justify-content-center">
+            <!-- Numbers of views -->
+            <div class="text-center d-inline-block px-3" [style.color]="chartData[0]['borderColor']">
+                <div i18n>Views</div>
+                <div class="display-3">{{ countViews | number }}</div>
+            </div>
+
+            <!-- Numbers of comments -->
+            <div class="text-center d-inline-block px-3" [style.color]="chartData[1]['borderColor']">
+                <div i18n>Comments</div>
+                <div class="display-3">{{ countComments | number }}</div>
+            </div>
+        </div>
+
+        <!-- Chart -->
+        <div class="d-flex justify-content-center">
+            <div class="d-inline-block mw-100" style="width: 45rem">
+                <canvas baseChart type="line"
+                        [options]="chartOptions"
+                        [labels]="chartLabels"
+                        [datasets]="chartData">
+                </canvas>
+            </div>
+        </div>
+    </ng-container>
+
+    <!-- Placeholder when no data -->
+    <ng-template #none>
+        <div class="w-100 py-5 d-flex justify-content-center align-items-center" i18n>No data available yet.</div>
+    </ng-template>
+</div>

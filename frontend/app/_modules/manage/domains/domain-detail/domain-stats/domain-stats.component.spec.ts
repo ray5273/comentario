@@ -1,10 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { MockProvider, MockService } from 'ng-mocks';
+import { MockComponent, MockProvider } from 'ng-mocks';
 import { DomainStatsComponent } from './domain-stats.component';
-import { ApiOwnerService } from '../../../../../../generated-api';
-import { ToolsModule } from '../../../../tools/tools.module';
 import { DomainDetailComponent } from '../domain-detail.component';
+import { StatsChartComponent } from '../../../stats-chart/stats-chart.component';
 
 describe('DomainStatsComponent', () => {
 
@@ -13,10 +12,8 @@ describe('DomainStatsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainStatsComponent],
-            imports: [ToolsModule],
+            declarations: [DomainStatsComponent, MockComponent(StatsChartComponent)],
             providers: [
-                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService)},
                 MockProvider(DomainDetailComponent, {domain: of(undefined)} as any),
             ],
         })

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/swag"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -220,22 +221,24 @@ func DomainStatistics(params api_owner.DomainStatisticsParams, principal data.Pr
 		return r
 	}
 
+	numDays := int(swag.Int64Value(params.NumDays))
+
 	// Collect view stats
-	views, err := svc.TheDomainService.StatsForViews(host)
+	views, err := svc.TheDomainService.StatsForViews(host, principal.GetHexID(), numDays)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Collect comment stats
-	comments, err := svc.TheDomainService.StatsForComments(host)
+	comments, err := svc.TheDomainService.StatsForComments(host, principal.GetHexID(), numDays)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
 	return api_owner.NewDomainStatisticsOK().WithPayload(&api_owner.DomainStatisticsOKBody{
-		CommentsLast30Days: comments,
-		ViewsLast30Days:    views,
+		CommentCounts: comments,
+		ViewCounts:    views,
 	})
 }
 
