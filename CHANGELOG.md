@@ -1,5 +1,20 @@
 # Comentario changelog
 
+## v2.3.1
+
+**Changes:**
+
+* New statistical chart in Dashboard, showing graphs for views and comments across all domains (8557838)
+* Optimised stats gathering, which should especially be noticeable on pages with lots of views or comments (8557838)
+* Fix: statistics is now displayed over the correct 30-day interval; use colour-coding for the metrics (7d4da5f) 
+* Embed: Fix password reset for commenter (b6d07dc) 
+* Embed: Add password reset dialog (c522489)
+* Embed: Fix settings saving for OAuth users (c522489) 
+* Embed: Setting `data-css-override="false"` disables CSS completely (resolves #10) (3590185) 
+* Embed: Don't fail Comentario load on CSS load failure (resolves #12) (d499784) 
+* Embed: Fix `data-*` attributes not working (6453eb3) 
+* Chore: add `start` (watch) script for yarn (b8bb54c)
+
 ## v2.3.0
 
 This release brings a **whole new administration UI** (frontend) for website owners, developed from scratch with Angular. There are too many improvements to mention, bust most notable ones are:
