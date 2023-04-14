@@ -23,7 +23,7 @@ export class DomainStatsComponent {
         aspectRatio: 1.25,
         backgroundColor: '#00000000',
         plugins: {
-            legend: {position: 'bottom'},
+            legend: {display: false},
         },
         scales: {
             y: {
@@ -72,18 +72,22 @@ export class DomainStatsComponent {
                 // Data available
                 this.chartData = [
                     {
-                        label:                $localize`Comments`,
-                        data:                 r.commentsLast30Days!,
-                        borderColor:          '#376daf',
-                        pointBackgroundColor: '#376daf',
-                        tension:              0.5,
-                    },
-                    {
                         label:                $localize`Views`,
                         data:                 r.viewsLast30Days!,
                         borderColor:          '#339b11',
+                        backgroundColor:      '#339b1120',
                         pointBackgroundColor: '#339b11',
                         tension:              0.5,
+                        fill:                 true,
+                    },
+                    {
+                        label:                $localize`Comments`,
+                        data:                 r.commentsLast30Days!,
+                        borderColor:          '#376daf',
+                        backgroundColor:      '#376daf20',
+                        pointBackgroundColor: '#376daf',
+                        tension:              0.5,
+                        fill:                 true,
                     },
                 ];
 

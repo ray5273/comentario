@@ -6,13 +6,13 @@
         <!-- Counters -->
         <div class="d-flex justify-content-center">
             <!-- Numbers of views -->
-            <div class="text-center d-inline-block px-3">
+            <div class="text-center d-inline-block px-3" [style.color]="chartData[0]['borderColor']">
                 <div i18n>Views</div>
                 <div class="display-3">{{ countViews | number }}</div>
             </div>
 
             <!-- Numbers of comments -->
-            <div class="text-center d-inline-block px-3">
+            <div class="text-center d-inline-block px-3" [style.color]="chartData[1]['borderColor']">
                 <div i18n>Comments</div>
                 <div class="display-3">{{ countComments | number }}</div>
             </div>

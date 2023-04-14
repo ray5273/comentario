@@ -346,8 +346,8 @@ func (svc *domainService) StatsForComments(host models.Host) ([]int64, error) {
 	// Query the data from the database, grouped by day
 	rows, err := db.Query(
 		"select count(c.creationdate) "+
-			"from (select to_char(date_trunc('day', (current_date-offs)), 'YYYY-MM-DD') as date from generate_series(0, 30, 1) as offs) d "+
-			"left join comments c on d.date=to_char(date_trunc('day', c.creationdate), 'YYYY-MM-DD') and c.domain=$1 "+
+			"from (select date_trunc('day', current_date-x) as date from generate_series(0, 29) as x) d "+
+			"left join comments c on d.date=date_trunc('day', c.creationdate) and c.domain=$1 "+
 			"group by d.date "+
 			"order by d.date;",
 		host)
@@ -404,8 +404,8 @@ func (svc *domainService) StatsForViews(host models.Host) ([]int64, error) {
 	// Query the data from the database, grouped by day
 	rows, err := db.Query(
 		"select count(v.viewdate) "+
-			"from (select to_char(date_trunc('day', (current_date-offs)), 'YYYY-MM-DD') as date from generate_series(0, 30, 1) as offs) d "+
-			"left join views v on d.date = to_char(date_trunc('day', v.viewdate), 'YYYY-MM-DD') and v.domain=$1 "+
+			"from (select date_trunc('day', current_date-x) as date from generate_series(0, 29) as x) d "+
+			"left join views v on d.date=date_trunc('day', v.viewdate) and v.domain=$1 "+
 			"group by d.date "+
 			"order by d.date;",
 		host)
