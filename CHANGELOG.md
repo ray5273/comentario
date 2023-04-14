@@ -12,7 +12,8 @@
 * Embed: Fix settings saving for OAuth users (c522489) 
 * Embed: Setting `data-css-override="false"` disables CSS completely (resolves #10) (3590185) 
 * Embed: Don't fail Comentario load on CSS load failure (resolves #12) (d499784) 
-* Embed: Fix `data-*` attributes not working (6453eb3) 
+* Embed: Fix `data-*` attributes not working (6453eb3)
+* Helm: drop `comentario.indexHtmlConfigMapName` config value
 * Chore: add `start` (watch) script for yarn (b8bb54c)
 
 ## v2.3.0
