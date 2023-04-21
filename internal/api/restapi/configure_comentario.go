@@ -71,7 +71,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	}
 
 	// Set up auth handlers
-	api.CommenterTokenHeaderAuth = handlers.AuthCommenterByTokenHeader
+	api.UserSessionHeaderAuth = handlers.AuthUserBySessionHeader
 	api.UserCookieAuth = handlers.AuthUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------

@@ -53,6 +53,27 @@ func TestCompressGzip(t *testing.T) {
 	}
 }
 
+func TestCountryByIP(t *testing.T) {
+	tests := []struct {
+		name string
+		ip   string
+		want string
+	}{
+		{"1.1.1.1            ", "1.1.1.1", "US"},
+		{"95.25.1.1          ", "95.25.1.1", "RU"},
+		{"localhost          ", "127.0.0.1", ""},
+		{"nonexistent address", "255.255.255.0", ""},
+		{"invalid address    ", "blah.blah", ""},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := CountryByIP(tt.ip); got != tt.want {
+				t.Errorf("CountryByIP() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDecompressGzip(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -514,5 +535,26 @@ func TestSafeStringMap(t *testing.T) {
 	// Verify the map is empty
 	if got := m.Len(); got != 0 {
 		t.Errorf("SafeStringMap.Len() returned %d, want 0", got)
+	}
+}
+
+func TestStripPort(t *testing.T) {
+	tests := []struct {
+		name     string
+		hostname string
+		want     string
+	}{
+		{"empty string                  ", "", ""},
+		{"host only                     ", "google.org.co.uk", "google.org.co.uk"},
+		{"host with port                ", "whatever.co.uk:23948", "whatever.co.uk"},
+		{"host with non-digits a-la port", "whatever.co.uk:0m", "whatever.co.uk:0m"},
+		{"garbage in garbage out        ", "SErc2%4G23Gb@t5g@x6hj4z<j37x3Q", "SErc2%4G23Gb@t5g@x6hj4z<j37x3Q"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StripPort(tt.hostname); got != tt.want {
+				t.Errorf("StripPort() = %v, want %v", got, tt.want)
+			}
+		})
 	}
 }

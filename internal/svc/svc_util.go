@@ -5,7 +5,6 @@ import (
 	"errors"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/data"
 )
 
 // logger represents a package-wide logger instance
@@ -25,14 +24,6 @@ func checkErrors(errs ...error) error {
 		}
 	}
 	return nil
-}
-
-// fixCommenterHex handles the anonymous commenter hex ID when persisting a database record.
-func fixCommenterHex(id models.HexID) string {
-	if id == data.AnonymousCommenter.HexID {
-		return "anonymous"
-	}
-	return string(id)
 }
 
 // fixIdP handles default value (i.e. local authentication) for the identity provider when persisting a database record.
@@ -73,14 +64,6 @@ func translateDBErrors(errs ...error) error {
 		// Any other database error
 		return ErrDB
 	}
-}
-
-// unfixCommenterHex handles the anonymous commenter hex ID when reading a database record.
-func unfixCommenterHex(id string) models.HexID {
-	if id == "anonymous" {
-		return data.AnonymousCommenter.HexID
-	}
-	return models.HexID(id)
 }
 
 // unfixIdP handles the default value (i.e. local authentication) for the identity provider when reading a database record.

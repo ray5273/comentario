@@ -11,14 +11,15 @@ swagger: "2.0"
 basePath: /api
 
 securityDefinitions:
-  # Cookie authentication for commenters
-  commenterTokenHeader:
+  # Header authentication for commenters (used by the embed part). Apart from the delivery method, its difference from
+  # the userCookie security is that userSessionHeader allows to 'authenticate' as an anonymous user
+  userSessionHeader:
     type: apiKey
     in: header
-    name: X-Commenter-Token
+    name: X-User-Session
 
-  # Cookie authentication for users (other than commenters). Uses the apiKey type for the lack of a proper cookie-based
-  # authentication in Swagger 2
+  # Cookie authentication for users (used by the frontend part). Uses the apiKey type for the lack of a proper
+  # cookie-based authentication in Swagger 2
   userCookie:
     type: apiKey
     in: header
@@ -347,20 +348,25 @@ definitions:
     pattern: 'root|[0-9a-f]{64}'
 
   principal:
-    description: Authenticated user (excludes commenters for now)
+    description: Authenticated or anonymous user
     type: object
     readOnly: true
     properties:
       id:
-        $ref: "#/definitions/hexId"
+        type: string
+        format: uuid
+        description: Unique user ID
       email:
         type: string
         format: email
+        description: Email address of the user
       name:
         type: string
+        description: Full name of the user
       isConfirmed:
         type: boolean
         x-omitempty: false
+        description: Whether the user has confirmed their email address
 
   sortPolicy:
     description: Sort policy
@@ -735,7 +741,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -792,7 +798,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -815,7 +821,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -846,7 +852,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -903,7 +909,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -945,7 +951,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -1015,7 +1021,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       responses:
         204:
           description: Logged out successfully
@@ -1139,7 +1145,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -1575,7 +1581,7 @@ paths:
       tags:
         - ApiCommenter
       security:
-        - commenterTokenHeader: []
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body

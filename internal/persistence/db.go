@@ -1,7 +1,9 @@
 package persistence
 
 import (
+	"crypto/md5"
 	"database/sql"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/op/go-logging"
@@ -18,10 +20,6 @@ import (
 
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("persistence")
-
-var goMigrations = map[string]func(db *Database) error{
-	"20190213033530-email-notifications.sql": migrateEmails,
-}
 
 // Database is an opaque structure providing database operations
 type Database struct {
@@ -66,13 +64,6 @@ func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
 
 // Migrate installs necessary migrations
 func (db *Database) Migrate() error {
-	// Make sure the migrations table exists
-	_, err := db.db.Exec(`create table if not exists migrations (filename text not null unique);`)
-	if err != nil {
-		logger.Errorf("Failed to create table 'migrations': %v", err)
-		return err
-	}
-
 	// Read available migrations
 	available, err := db.getAvailableMigrations()
 
@@ -85,14 +76,7 @@ func (db *Database) Migrate() error {
 
 	cntOK := 0
 	for _, filename := range available {
-		// Skip migrations that are already installed
-		if installed[filename] {
-			logger.Debugf("Migration '%s' is already installed", filename)
-			continue
-		}
-
 		// Read in the content of the file
-		logger.Debugf("Installing migration '%s'", filename)
 		fullName := path.Join(config.CLIFlags.DBMigrationPath, filename)
 		contents, err := os.ReadFile(fullName)
 		if err != nil {
@@ -100,26 +84,30 @@ func (db *Database) Migrate() error {
 			return err
 		}
 
+		// Calculate the checksum
+		csActual := md5.Sum(contents)
+
+		// Verify the migration checksum if it's already installed
+		if csExpected, ok := installed[filename]; ok {
+			if csExpected != csActual {
+				return fmt.Errorf("checksum mismatch for migration '%s': expected %x, actual %x", fullName, csExpected, csActual)
+			}
+			logger.Debugf("Migration '%s' is already installed", filename)
+			continue
+		}
+
 		// Run the content of the file
-		if _, err = db.db.Exec(string(contents)); err != nil {
-			logger.Errorf("Failed to execute SQL in '%s': %v", fullName, err)
-			return err
+		logger.Debugf("Installing migration '%s'", filename)
+		if _, err := db.db.Exec(string(contents)); err != nil {
+			return fmt.Errorf("failed to execute migration '%s': %v", fullName, err)
 		}
 
 		// Register the migration in the database
-		if _, err = db.db.Exec("insert into migrations (filename) values ($1);", filename); err != nil {
-			logger.Errorf("Failed to register migration '%s': %v", filename, err)
-			return err
-		}
+		// TODO		if _, err := db.db.Exec("insert into cm_migrations(filename, md5) values ($1, $2);", filename, hex.EncodeToString(csActual[:])); err != nil {
+		// TODO			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
+		// TODO		}
 
-		// Run the necessary code migrations
-		if fn, ok := goMigrations[filename]; ok {
-			if err = fn(db); err != nil {
-				logger.Errorf("Failed to execute Go migration for '%s': %v", fullName, err)
-				return err
-			}
-		}
-
+		// Succeeded
 		cntOK++
 	}
 
@@ -250,25 +238,42 @@ func (db *Database) getAvailableMigrations() ([]string, error) {
 	return list, err
 }
 
-// getInstalledMigrations returns a map of installed database migrations
-func (db *Database) getInstalledMigrations() (map[string]bool, error) {
-	// Query the migrations table
-	rows, err := db.db.Query("select filename from migrations;")
-	if err != nil {
-		logger.Errorf("getInstalledMigrations: Query() failed: %v", err)
+// getInstalledMigrations returns a map of installed database migrations (filename: md5)
+func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
+	// If no migrations table is present, it means no migration in installed either (the schema is most likely empty)
+	row := db.db.QueryRow("select exists(select from pg_tables where schemaname='public' and tablename='cm_migrations')")
+	var exists bool
+	if err := row.Scan(&exists); err != nil {
 		return nil, err
+	} else if !exists {
+		return nil, nil
+	}
+
+	// Query the migrations table
+	rows, err := db.db.Query("select filename, md5 from cm_migrations;")
+	if err != nil {
+		return nil, fmt.Errorf("getInstalledMigrations: Query() failed: %v", err)
 	}
 	defer rows.Close()
 
 	// Convert the files into a map
-	m := make(map[string]bool)
+	m := make(map[string][16]byte)
 	for rows.Next() {
-		var s string
-		if err = rows.Scan(&s); err != nil {
-			logger.Errorf("getInstalledMigrations: Scan() failed: %v", err)
-			return nil, err
+		var filename, checksum string
+		if err = rows.Scan(&filename, &checksum); err != nil {
+			return nil, fmt.Errorf("getInstalledMigrations: Scan() failed: %v", err)
 		}
-		m[s] = true
+
+		// Parse the sum as binary
+		if b, err := hex.DecodeString(checksum); err != nil {
+			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", filename, err)
+		} else if l := len(b); l != 16 {
+			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", filename, l)
+		} else {
+			var b16 [16]byte
+			copy(b16[:], b)
+			m[filename] = b16
+		}
 	}
 
 	// Check that Next() didn't error

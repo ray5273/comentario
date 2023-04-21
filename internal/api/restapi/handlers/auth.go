@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -32,7 +32,7 @@ func AuthConfirm(params api_auth.AuthConfirmParams) middleware.Responder {
 		WithLocation(config.URLFor("login", map[string]string{"confirmed": conf}))
 }
 
-func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, principal data.Principal) middleware.Responder {
+func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) middleware.Responder {
 	// Fetch a list of domains
 	if domains, err := svc.TheDomainService.ListByOwner(principal.GetHexID()); err != nil {
 		return respServiceError(err)
@@ -51,29 +51,10 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, principal data.Princi
 	return api_auth.NewAuthDeleteProfileNoContent()
 }
 
-// AuthCommenterByTokenHeader determines if the commenter token, contained in the X-Commenter-Token header, checks out
-func AuthCommenterByTokenHeader(headerValue string) (data.Principal, error) {
-	// Validate the token format
-	if token := models.HexID(headerValue); token.Validate(nil) == nil {
-		// If it's an anonymous commenter
-		if token == data.AnonymousCommenter.HexID {
-			return &data.AnonymousCommenter, nil
-		}
-
-		// Try to find the commenter by that token
-		if commenter, err := svc.TheUserService.FindCommenterByToken(token); err == nil {
-			return commenter, nil
-		}
-	}
-
-	// Authentication failed
-	return nil, ErrUnauthorised
-}
-
 // AuthLogin logs a user in using local authentication (email and password)
 func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	// Find the user
-	user, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), true)
+	user, err := svc.TheUserService.FindLocalUserByEmail(data.EmailToString(params.Body.Email))
 	if err == svc.ErrNotFound {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return respUnauthorized(ErrorInvalidCredentials)
@@ -81,9 +62,9 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 		return respServiceError(err)
 	}
 
-	// Verify the owner is confirmed
-	if !user.EmailConfirmed {
-		return respForbidden(ErrorEmailNotConfirmed)
+	// Verify the user is allowed to login
+	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
+		return r
 	}
 
 	// Verify the provided password
@@ -93,38 +74,32 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	}
 
 	// Create a new owner session
-	ownerToken, err := svc.TheUserService.CreateOwnerSession(user.HexID)
-	if err != nil {
+	us := data.NewUserSession(&user.ID, "", params.HTTPRequest)
+	if err := svc.TheUserService.CreateUserSession(us); err != nil {
 		return respServiceError(err)
 	}
 
-	// Make a value for the session cookie
-	sv, err := GetSessionValue(user.HexID, ownerToken)
-	if err != nil {
-		return respInternalError(nil)
-	}
-
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToAPIModel())).
+	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal())).
 		WithCookie(
 			util.CookieNameUserSession,
-			sv,
+			us.EncodeIDs(),
 			"/",
-			util.UserSessionCookieDuration,
+			util.UserSessionDuration,
 			true,
 			http.SameSiteLaxMode)
 }
 
 // AuthLogout logs currently logged user out
-func AuthLogout(params api_auth.AuthLogoutParams, _ data.Principal) middleware.Responder {
+func AuthLogout(params api_auth.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
-	userID, token, err := FetchUserSessionFromCookie(params.HTTPRequest)
+	_, sessionID, err := FetchUserSessionFromCookie(params.HTTPRequest)
 	if err != nil {
 		return respUnauthorized(nil)
 	}
 
 	// Delete the session token, ignoring any error
-	_ = svc.TheUserService.DeleteOwnerSession(userID, token)
+	_ = svc.TheUserService.DeleteUserSession(sessionID)
 
 	// Regardless of whether the above was successful, return a success response, removing the session cookie
 	return NewCookieResponder(api_auth.NewAuthLogoutNoContent()).WithoutCookie(util.CookieNameUserSession, "/")
@@ -186,9 +161,9 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	return api_auth.NewAuthSignupOK().WithPayload(&api_auth.AuthSignupOKBody{ConfirmEmail: config.SMTPConfigured})
 }
 
-// AuthUserByCookieHeader determines if the owner token contained in the cookie, extracted from the passed Cookie
+// AuthUserByCookieHeader determines if the user session contained in the cookie, extracted from the passed Cookie
 // header, checks out
-func AuthUserByCookieHeader(headerValue string) (data.Principal, error) {
+func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
 	// Hack to parse the provided data (which is in fact the "Cookie" header, but Swagger 2.0 doesn't support
 	// auth cookies, only headers)
 	r := &http.Request{Header: http.Header{"Cookie": []string{headerValue}}}
@@ -205,74 +180,85 @@ func AuthUserByCookieHeader(headerValue string) (data.Principal, error) {
 	return u, nil
 }
 
-// FetchUserSessionFromCookie parses the session cookie contained in the given request, validates it and returns the
-// user ID and the session token
-func FetchUserSessionFromCookie(r *http.Request) (models.HexID, models.HexID, error) {
-	// Extract session data from the cookie
-	cookie, err := r.Cookie(util.CookieNameUserSession)
-	if err != nil {
-		return "", "", err
+// AuthUserBySessionHeader determines if the user session contained in the X-User-Session header check out
+func AuthUserBySessionHeader(headerValue string) (*data.User, error) {
+	// Extract session from the header value
+	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err == nil {
+
+		// If it's an anonymous user
+		if *userID == data.AnonymousUser.ID {
+			return data.AnonymousUser, nil
+		}
+
+		// Find the user
+		if user, err := svc.TheUserService.FindUserBySession(userID, sessionID); err == nil {
+			// Verify the user is allowed to authenticate
+			if errm, _ := Verifier.UserCanAuthenticate(user, true); errm == nil {
+				// Succeeded
+				return user, nil
+			}
+		}
 	}
 
-	// Decode the cookie
-	b, err := base64.RawURLEncoding.DecodeString(cookie.Value)
-	if err != nil {
-		return "", "", err
-	}
-
-	// Check it's exactly 64 (32 + 32) bytes long
-	if l := len(b); l != 64 {
-		return "", "", fmt.Errorf("invalid cookie value length (%d), want 64", l)
-	}
-
-	// Extract ID and token, decoding them into a string hex ID
-	userID := models.HexID(hex.EncodeToString(b[:32]))
-	token := models.HexID(hex.EncodeToString(b[32:]))
-
-	// Validate the data
-	if err = userID.Validate(nil); err != nil {
-		return "", "", err
-	}
-	if err = token.Validate(nil); err != nil {
-		return "", "", err
-	}
-
-	// Succeeded
-	return userID, token, nil
+	// Authentication failed
+	return nil, ErrUnauthorised
 }
 
-// GetSessionValue creates a value for the session cookie from a user ID and a token
-func GetSessionValue(id, token models.HexID) (string, error) {
-	// Decode the values into a binary
-	if bid, err := data.DecodeHexID(id); err != nil {
-		logger.Errorf("GetSessionValue: DecodeHex() failed for id: %v", err)
-		return "", err
-	} else if bt, err := data.DecodeHexID(token); err != nil {
-		logger.Errorf("GetSessionValue: DecodeHex() failed for token: %v", err)
-		return "", err
-	} else {
-		return base64.RawURLEncoding.EncodeToString(append(bid[:], bt[:]...)), nil
+// ExtractUserSessionIDs parses and return the given string value that combines user and session ID
+func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
+	// Decode the value from base64
+	b, err := base64.RawURLEncoding.DecodeString(s)
+	if err != nil {
+		return nil, nil, err
 	}
+
+	// Check it's exactly 32 (16 + 16) bytes long
+	if l := len(b); l != 32 {
+		return nil, nil, fmt.Errorf("invalid user-session value length (%d), want 32", l)
+	}
+
+	// Extract ID and token
+	if userID, err := uuid.FromBytes(b[:16]); err != nil {
+		return nil, nil, err
+	} else if sessionID, err := uuid.FromBytes(b[16:]); err != nil {
+		return nil, nil, err
+	} else {
+		// Succeeded
+		return &userID, &sessionID, nil
+	}
+}
+
+// FetchUserSessionFromCookie extracts user ID and session ID from a session cookie contained in the given request
+func FetchUserSessionFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error) {
+	// Extract user-session data from the cookie
+	cookie, err := r.Cookie(util.CookieNameUserSession)
+	if err != nil {
+		return nil, nil, err
+	}
+
+	// Decode and parse the value
+	return ExtractUserSessionIDs(cookie.Value)
 }
 
 // GetUserFromSessionCookie parses the session cookie contained in the given request and returns the corresponding user
-func GetUserFromSessionCookie(r *http.Request) (*data.UserOwner, error) {
+func GetUserFromSessionCookie(r *http.Request) (*data.User, error) {
 	// Extract session from the cookie
-	userID, token, err := FetchUserSessionFromCookie(r)
+	userID, sessionID, err := FetchUserSessionFromCookie(r)
 	if err != nil {
 		return nil, err
 	}
 
 	// Find the user
-	user, err := svc.TheUserService.FindOwnerByToken(token)
+	user, err := svc.TheUserService.FindUserBySession(userID, sessionID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Verify the token belongs to the user
-	if user.HexID != userID {
-		return nil, fmt.Errorf("session doesn't belong to the user")
+	// Verify the user is allowed to authenticate
+	if errm, _ := Verifier.UserCanAuthenticate(user, true); errm != nil {
+		return nil, errm.Error()
 	}
 
+	// Succeeded
 	return user, nil
 }

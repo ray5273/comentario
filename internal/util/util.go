@@ -5,8 +5,10 @@ import (
 	"compress/gzip"
 	"errors"
 	"fmt"
+	"github.com/avct/uasurfer"
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
+	"github.com/phuslu/iploc"
 	"github.com/russross/blackfriday"
 	"golang.org/x/net/html"
 	"io"
@@ -41,9 +43,10 @@ type Mailer interface {
 var logger = logging.MustGetLogger("persistence")
 
 var (
-	reHexID        = regexp.MustCompile(`^[\da-f]{64}$`)
-	reDNSHostname  = regexp.MustCompile(`^([a-z\d][-a-z\d]{0,62})(\.[a-z\d][-a-z\d]{0,62})*$`) // Minimum one part
-	reEmailAddress = regexp.MustCompile(`^[^<>()[\]\\.,;:\s@"%]+(\.[^<>()[\]\\.,;:\s@"%]+)*@`) // Only the part up to the '@'
+	reHexID          = regexp.MustCompile(`^[\da-f]{64}$`)
+	reDNSHostname    = regexp.MustCompile(`^([a-z\d][-a-z\d]{0,62})(\.[a-z\d][-a-z\d]{0,62})*$`) // Minimum one part
+	reEmailAddress   = regexp.MustCompile(`^[^<>()[\]\\.,;:\s@"%]+(\.[^<>()[\]\\.,;:\s@"%]+)*@`) // Only the part up to the '@'
+	rePortInHostname = regexp.MustCompile(`:\d+$`)
 
 	// AppMailer is a Mailer implementation available application-wide. Defaults to a mailer that doesn't do anything
 	AppMailer Mailer = &noOpMailer{}
@@ -77,6 +80,15 @@ func CompressGzip(b []byte) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
+// CountryByIP tries to determine the country code for the given IP address
+func CountryByIP(ip string) string {
+	// Parse the IP and convert it to a country code. Convert "ZZ" (=unknown) into an empty string
+	if country := string(iploc.Country(net.ParseIP(ip))); country != "ZZ" {
+		return country
+	}
+	return ""
+}
+
 // DecompressGzip reads and decompresses a gzip-compressed archive from the given data buffer
 func DecompressGzip(rc io.Reader) ([]byte, error) {
 	if r, err := gzip.NewReader(rc); err != nil {
@@ -86,6 +98,11 @@ func DecompressGzip(rc io.Reader) ([]byte, error) {
 	} else {
 		return b, nil
 	}
+}
+
+// FormatVersion renders the given uasurfer.Version as a string
+func FormatVersion(v *uasurfer.Version) string {
+	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
 // HTMLDocumentTitle parses and returns the title of an HTML document
@@ -260,6 +277,11 @@ func RandomSleep(min, max time.Duration) {
 	}
 }
 
+// StripPort returns the provided hostname or IP address string with any port number part (':xxxx') removed
+func StripPort(hostOrIP string) string {
+	return rePortInHostname.ReplaceAllString(hostOrIP, "")
+}
+
 // UserAgent return the value of the User-Agent request header
 func UserAgent(r *http.Request) string {
 	return r.Header.Get("User-Agent")
@@ -267,11 +289,23 @@ func UserAgent(r *http.Request) string {
 
 // UserIP tries to determine the user IP
 func UserIP(r *http.Request) string {
-	ip := r.Header.Get("X-Forwarded-For")
-	if ip == "" {
-		ip = r.RemoteAddr
+	// First, try the X-Forwarded-For
+	if s := r.Header.Get("X-Forwarded-For"); s != "" {
+		return s
 	}
-	return ip
+	// Next, the X-Real-Ip
+	if s := r.Header.Get("X-Real-Ip"); s != "" {
+		return s
+	}
+	// Fall back to the remote IP from the request
+	return StripPort(r.RemoteAddr)
+}
+
+// UserIPCountry tries to determine the IP address and country code of the user based on it
+func UserIPCountry(r *http.Request) (ip, country string) {
+	ip = UserIP(r)
+	country = CountryByIP(ip)
+	return
 }
 
 var markdownPolicy *bluemonday.Policy

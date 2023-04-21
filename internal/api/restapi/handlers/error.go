@@ -23,5 +23,6 @@ var (
 	ErrorSSOURLMissing        = &exmodels.Error{ID: "sso-url-missing", Message: "SSO URL is missing"}
 	ErrorUnauthenticated      = &exmodels.Error{ID: "unauthenticated", Message: "User isn't authenticated"}
 	ErrorUnknownHost          = &exmodels.Error{ID: "unknown-host", Message: "Unknown host"}
+	ErrorUserBanned           = &exmodels.Error{ID: "user-banned", Message: "User is banned"}
 	ErrorWrongCurPassword     = &exmodels.Error{ID: "wrong-cur-password", Message: "Wrong current password"}
 )

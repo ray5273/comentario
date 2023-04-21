@@ -19,7 +19,7 @@ export class HttpClient {
      * @param body Optional request body.
      */
     post<T>(path: string, commenterToken?: string, body?: any): Promise<T> {
-        return this.request<T>('POST', path, body, commenterToken ? {'X-Commenter-Token': commenterToken} : undefined);
+        return this.request<T>('POST', path, body, commenterToken ? {'X-User-Session': commenterToken} : undefined);
     }
 
     /**

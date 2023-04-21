@@ -3,6 +3,7 @@ package svc
 import (
 	"database/sql"
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -16,27 +17,38 @@ var TheUserService UserService = &userService{}
 
 // UserService is a service interface for dealing with users
 type UserService interface {
-	// ConfirmOwner confirms the owner's email using the specified token
+	// CreateUserSession persists a new user session
+	CreateUserSession(s *data.UserSession) error
+	// DeleteUserSession removes a user session from the database
+	DeleteUserSession(id *uuid.UUID) error
+	// FindLocalUserByEmail finds and returns a locally-authenticated user by the given email
+	FindLocalUserByEmail(email string) (*data.User, error)
+	// FindUserBySession finds and returns a user by the given user and session ID
+	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, error)
+
+	//------------------------------------------------------------------
+
+	// ConfirmOwner confirms the owner's email using the specified token.
+	// Deprecated
 	ConfirmOwner(confirmToken models.HexID) error
 	// CreateCommenter creates and persists a new commenter. If no idp is provided, the local auth provider is assumed
 	CreateCommenter(email, name, websiteURL, photoURL, idp, password string) (*data.UserCommenter, error)
 	// CreateCommenterSession creates and persists a new commenter session record, returning session token
 	CreateCommenterSession(id models.HexID) (models.HexID, error)
 	// CreateOwner creates and persists a new owner user
+	// Deprecated
 	CreateOwner(email, name, password string) (*data.UserOwner, error)
 	// CreateOwnerConfirmationToken creates, persists, and returns a new owner confirmation token
+	// Deprecated
 	CreateOwnerConfirmationToken(userID models.HexID) (models.HexID, error)
-	// CreateOwnerSession creates and persists a new owner session record, returning session token
-	CreateOwnerSession(id models.HexID) (models.HexID, error)
 	// CreateResetToken creates and persists a new password reset token for an owner (commenter == false) or a commenter
 	// (commenter == true) user with the given hex ID
 	CreateResetToken(userID models.HexID, commenter bool) (models.HexID, error)
 	// DeleteCommenterSession removes a commenter session by hex ID and token from the database
 	DeleteCommenterSession(id, token models.HexID) error
 	// DeleteOwnerByID removes an owner user by their hex ID
+	// Deprecated
 	DeleteOwnerByID(id models.HexID) error
-	// DeleteOwnerSession removes an owner session by hex ID and token from the database
-	DeleteOwnerSession(id, token models.HexID) error
 	// DeleteResetTokens removes all password reset tokens for the given user
 	DeleteResetTokens(userID models.HexID) error
 	// FindCommenterByEmail finds and returns the first commenter having the specified email only, ignoring the identity
@@ -50,10 +62,13 @@ type UserService interface {
 	// FindCommenterByToken finds and returns a commenter user by their token
 	FindCommenterByToken(token models.HexID) (*data.UserCommenter, error)
 	// FindOwnerByEmail finds and returns an owner user by their email
+	// Deprecated
 	FindOwnerByEmail(email string, readPwdHash bool) (*data.UserOwner, error)
 	// FindOwnerByID finds and returns an owner user by their hex ID, optionally reading in the password hash
+	// Deprecated
 	FindOwnerByID(id models.HexID, readPwdHash bool) (*data.UserOwner, error)
 	// FindOwnerByToken finds and returns an owner user by their token
+	// Deprecated
 	FindOwnerByToken(token models.HexID) (*data.UserOwner, error)
 	// ListCommentersByHost returns a list of all commenters for the (comments of) given domain
 	ListCommentersByHost(host models.Host) ([]models.Commenter, error)
@@ -67,6 +82,7 @@ type UserService interface {
 	UpdateCommenterSession(token, id models.HexID) error
 	// UpdateOwner updates the given user's data in the database. If no newPassword is given, the password stays
 	// unchanged
+	// Deprecated
 	UpdateOwner(id models.HexID, name, newPassword string) error
 }
 
@@ -240,29 +256,6 @@ func (svc *userService) CreateOwnerConfirmationToken(userID models.HexID) (model
 	return token, nil
 }
 
-func (svc *userService) CreateOwnerSession(id models.HexID) (models.HexID, error) {
-	logger.Debugf("userService.CreateOwnerSession(%s)", id)
-
-	// Generate a new random token
-	token, err := data.RandomHexID()
-	if err != nil {
-		logger.Errorf("userService.CreateOwnerSession: RandomHexID() failed: %v", err)
-		return "", err
-	}
-
-	// Insert a new record
-	err = db.Exec(
-		"insert into ownersessions(ownertoken, ownerhex, logindate) values($1, $2, $3);",
-		token, id, time.Now().UTC())
-	if err != nil {
-		logger.Errorf("userService.CreateOwnerSession: Exec() failed: %v", err)
-		return "", translateDBErrors(err)
-	}
-
-	// Succeeded
-	return token, nil
-}
-
 func (svc *userService) CreateResetToken(userID models.HexID, commenter bool) (models.HexID, error) {
 	logger.Debugf("userService.CreateResetToken(%s, %v)", userID, commenter)
 
@@ -290,6 +283,26 @@ func (svc *userService) CreateResetToken(userID models.HexID, commenter bool) (m
 
 	// Succeeded
 	return token, nil
+}
+
+func (svc *userService) CreateUserSession(s *data.UserSession) error {
+	logger.Debugf("userService.CreateUserSession(%v)", s)
+
+	// Insert a new record
+	err := db.Exec(
+		"insert into cm_user_sessions("+
+			"id, user_id, ts_created, ts_expires, host, proto, ip, country, ua_browser_name, ua_browser_version, "+
+			"ua_os_name, ua_os_version, ua_device) "+
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
+		s.ID, s.UserID, s.CreatedTime, s.ExpiresTime, s.Host, s.Proto, s.IP, s.Country, s.BrowserName, s.BrowserVersion,
+		s.OSName, s.OSVersion, s.Device)
+	if err != nil {
+		logger.Errorf("userService.CreateUserSession: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 func (svc *userService) DeleteCommenterSession(id, token models.HexID) error {
@@ -329,12 +342,12 @@ func (svc *userService) DeleteOwnerByID(id models.HexID) error {
 	return nil
 }
 
-func (svc *userService) DeleteOwnerSession(id, token models.HexID) error {
-	logger.Debugf("userService.DeleteOwnerSession(%s, %s)", id, token)
+func (svc *userService) DeleteResetTokens(userID models.HexID) error {
+	logger.Debugf("userService.DeleteResetTokens(%s)", userID)
 
-	// Delete the record
-	if err := db.Exec("delete from ownersessions where ownerhex=$1 and ownertoken=$2;", id, token); err != nil {
-		logger.Errorf("userService.DeleteOwnerSession: Exec() failed: %v", err)
+	// Delete all tokens by user
+	if err := db.Exec("delete from resethexes where hex=$1;", userID); err != nil {
+		logger.Errorf("userService.DeleteResetTokens: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -342,12 +355,12 @@ func (svc *userService) DeleteOwnerSession(id, token models.HexID) error {
 	return nil
 }
 
-func (svc *userService) DeleteResetTokens(userID models.HexID) error {
-	logger.Debugf("userService.DeleteResetTokens(%s)", userID)
+func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
+	logger.Debugf("userService.DeleteUserSession(%s)", id)
 
-	// Delete all tokens by user
-	if err := db.Exec("delete from resethexes where hex=$1;", userID); err != nil {
-		logger.Errorf("userService.DeleteResetTokens: Exec() failed: %v", err)
+	// Delete the record
+	if err := db.Exec("delete from cm_user_sessions where id=$1;", id); err != nil {
+		logger.Errorf("userService.DeleteUserSession: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -435,6 +448,27 @@ func (svc *userService) FindCommenterByToken(token models.HexID) (*data.UserComm
 	}
 }
 
+func (svc *userService) FindLocalUserByEmail(email string) (*data.User, error) {
+	logger.Debugf("userService.FindLocalUserByEmail(%s)", email)
+
+	// Query the database
+	row := db.QueryRow(
+		"select "+
+			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.banned, u.ts_banned, u.user_banned, "+
+			"u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url "+
+			"from cm_users u "+
+			"where u.email=$1 and u.federated_idp is null;",
+		email)
+
+	// Fetch the owner user
+	if u, err := svc.fetchUser(row); err != nil {
+		return nil, translateDBErrors(err)
+	} else {
+		return u, nil
+	}
+}
+
 func (svc *userService) FindOwnerByEmail(email string, readPwdHash bool) (*data.UserOwner, error) {
 	logger.Debugf("userService.FindOwnerByEmail(%s)", email)
 
@@ -475,6 +509,28 @@ func (svc *userService) FindOwnerByToken(token models.HexID) (*data.UserOwner, e
 
 	// Fetch the owner user
 	if u, err := svc.fetchOwner(row, false); err != nil {
+		return nil, translateDBErrors(err)
+	} else {
+		return u, nil
+	}
+}
+
+func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, error) {
+	logger.Debugf("userService.FindUserBySession(%s, %s)", userID, sessionID)
+
+	// Query the database
+	row := db.QueryRow(
+		"select "+
+			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.banned, u.ts_banned, u.user_banned, "+
+			"u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url "+
+			"from cm_users u "+
+			"join cm_user_sessions s on s.user_id=u.id"+
+			"where u.id=$1 and s.id=$2 and s.ts_created<$3 and s.ts_expires>=$3;",
+		userID, sessionID, time.Now().UTC())
+
+	// Fetch the owner user
+	if u, err := svc.fetchUser(row); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
@@ -663,6 +719,40 @@ func (svc *userService) fetchOwner(s util.Scanner, readPwdHash bool) (*data.User
 	}
 	if readPwdHash {
 		u.PasswordHash = pwdHash
+	}
+	return &u, nil
+}
+
+// fetchUser returns a new user instance from the provided database row
+func (svc *userService) fetchUser(s util.Scanner) (*data.User, error) {
+	u := data.User{}
+	if err := s.Scan(
+		&u.ID,
+		&u.Email,
+		&u.Name,
+		&u.PasswordHash,
+		&u.SystemAccount,
+		&u.Superuser,
+		&u.Confirmed,
+		&u.ConfirmedTime,
+		&u.CreatedTime,
+		&u.UserCreated,
+		&u.SignupIP,
+		&u.SignupCountry,
+		&u.Banned,
+		&u.BannedTime,
+		&u.UserBanned,
+		&u.Remarks,
+		&u.FederatedIdP,
+		&u.FederatedID,
+		&u.Avatar,
+		&u.WebsiteURL,
+	); err != nil {
+		// Log "not found" errors only in debug
+		if err != sql.ErrNoRows || logger.IsEnabledFor(logging.DEBUG) {
+			logger.Errorf("userService.fetchUser: Scan() failed: %v", err)
+		}
+		return nil, err
 	}
 	return &u, nil
 }
