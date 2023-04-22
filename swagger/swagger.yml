@@ -25,6 +25,16 @@ securityDefinitions:
     in: header
     name: Cookie
 
+  # Token authentication for certain endpoints, called externally, such as password reset or email confirmation
+  token:
+    type: oauth2
+    flow: accessCode
+    authorizationUrl: http://dummy/
+    tokenUrl: http://dummy/
+    scopes:
+      pwd-reset: reset user's password
+      confirm-email: confirm user's email
+
 # Default security is cookie-based user authentication
 security:
   - userCookie: []
@@ -523,6 +533,21 @@ paths:
   # Auth
   #---------------------------------------------------------------------------------------------------------------------
 
+  /auth/confirm:
+    get:
+      operationId: AuthConfirm
+      summary: Confirm the user's email using the provided token
+      tags:
+        - ApiAuth
+      security:
+        - token: [confirm-email]
+      responses:
+        307:
+          description: Email has been confirmed, redirecting to the signup URL, if any, otherwise to login
+          headers:
+            Location:
+              type: string
+
   /auth/login:
     post:
       operationId: AuthLogin
@@ -594,29 +619,9 @@ paths:
                 maxLength: 63
       responses:
         200:
-          description: Owner has signed up successfully
+          description: Owner has signed up successfully, returning a principal
           schema:
-            type: object
-            properties:
-              confirmEmail:
-                type: boolean
-                description: Whether a confirmation email was sent
-                x-omitempty: false
-
-    put:
-      operationId: AuthConfirm
-      summary: Confirm specified owner's email using the emailed token
-      tags:
-        - ApiAuth
-      security: []
-      parameters:
-        - $ref: "#/parameters/queryToken"
-      responses:
-        307:
-          description: Redirect to login
-          headers:
-            Location:
-              type: string
+            $ref: "#/definitions/principal"
 
     delete:
       operationId: AuthDeleteProfile
@@ -981,7 +986,7 @@ paths:
   /commenter/login:
     post:
       operationId: CommenterLogin
-      summary: Sign in as specified commenter
+      summary: Sign a commenter in
       tags:
         - ApiCommenter
       security: []
@@ -994,25 +999,29 @@ paths:
             required:
               - email
               - password
+              - host
             properties:
               email:
                 type: string
                 format: email
+                description: Commenter's email
               password:
                 type: string
                 minLength: 1
+                description: Commenter's password
+              host:
+                $ref: "#/definitions/host"
+                description: Host the commenter is signing in on
       responses:
         200:
           description: Logged in successfully
           schema:
             type: object
             properties:
-              commenterToken:
-                $ref: "#/definitions/hexId"
-              commenter:
-                $ref: "#/definitions/commenter"
-              email:
-                $ref: "#/definitions/email"
+              sessionToken:
+                type: string
+              principal:
+                $ref: "#/definitions/principal"
 
   /commenter/logout:
     post:
@@ -1026,9 +1035,9 @@ paths:
         204:
           description: Logged out successfully
 
-  /commenter/new:
+  /commenter/signup:
     post:
-      operationId: CommenterNew
+      operationId: CommenterSignup
       summary: Sign up as a new commenter
       tags:
         - ApiCommenter
@@ -1043,24 +1052,35 @@ paths:
               - email
               - name
               - password
+              - url
             properties:
               email:
                 type: string
                 format: email
+                description: User's email
               name:
                 type: string
                 minLength: 1
                 maxLength: 63
+                description: User's full name
               password:
                 type: string
                 minLength: 1
                 maxLength: 63
+                description: User's password
               websiteUrl:
                 type: string
                 format: uri
+                description: Optional website URL of the user
+              url:
+                type: string
+                format: uri
+                description: URL the user signed up on
       responses:
-        204:
-          description: Commenter signed up successfully
+        200:
+          description: Commenter signed up successfully, principal is returned
+          schema:
+            $ref: "#/definitions/principal"
 
   /commenter/photo/{id}:
     get:

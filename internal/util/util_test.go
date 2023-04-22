@@ -142,6 +142,33 @@ func TestHTMLDocumentTitle(t *testing.T) {
 	}
 }
 
+func TestIndexOfString(t *testing.T) {
+	slice := []string{
+		"",
+		"foo",
+		"bar",
+		"foobar",
+		"bar",
+	}
+	tests := []struct {
+		name string
+		s    string
+		want int
+	}{
+		{"empty string             ", "", 0},
+		{"existing string          ", "foo", 1},
+		{"existing string, repeated", "bar", 2},
+		{"non-existing string      ", "baz", -1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IndexOfString(tt.s, slice); got != tt.want {
+				t.Errorf("IndexOfString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsValidURL(t *testing.T) {
 	tests := []struct {
 		name string

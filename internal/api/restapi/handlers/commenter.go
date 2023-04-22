@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -18,72 +19,71 @@ import (
 )
 
 func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Responder {
-	// Try to find a local user with the given email
-	commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", data.EmailToString(params.Body.Email), true)
-	if err != nil {
-		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-		return respUnauthorized(ErrorInvalidCredentials)
-	}
-
-	// Verify the provided password
-	if !commenter.VerifyPassword(swag.StringValue(params.Body.Password)) {
-		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-		return respUnauthorized(ErrorInvalidCredentials)
-	}
-
-	// Create a new commenter session
-	commenterToken, err := svc.TheUserService.CreateCommenterSession(commenter.HexID)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Fetch the commenter's email
-	email, err := svc.TheEmailService.FindByEmail(commenter.Email)
-	if err != nil {
-		return respServiceError(err)
+	// Log the user in
+	user, session, r := loginLocalUser(
+		data.EmailToString(params.Body.Email),
+		swag.StringValue(params.Body.Password),
+		string(params.Body.Host),
+		params.HTTPRequest)
+	if r != nil {
+		return r
 	}
 
 	// Succeeded
 	return api_commenter.NewCommenterLoginOK().WithPayload(&api_commenter.CommenterLoginOKBody{
-		Commenter:      commenter.ToCommenter(),
-		CommenterToken: commenterToken,
-		Email:          email,
+		SessionToken: session.EncodeIDs(),
+		Principal:    user.ToPrincipal(),
 	})
 }
 
-func CommenterLogout(params api_commenter.CommenterLogoutParams, principal data.Principal) middleware.Responder {
-	// Verify the commenter is authenticated
-	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
+func CommenterLogout(params api_commenter.CommenterLogoutParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
 
-	// Extract a commenter token from the corresponding header, if any
-	if token := models.HexID(params.HTTPRequest.Header.Get(util.HeaderCommenterToken)); token.Validate(nil) == nil {
-		// Delete the commenter token, ignoring any error
-		_ = svc.TheUserService.DeleteCommenterSession(principal.GetHexID(), token)
+	// Extract session from the session header
+	_, sessionID, err := ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
+	if err != nil {
+		return respUnauthorized(nil)
 	}
+
+	// Delete the session token, ignoring any error
+	_ = svc.TheUserService.DeleteUserSession(sessionID)
 
 	// Regardless of whether the above was successful, return a success response
 	return api_commenter.NewCommenterLogoutNoContent()
 }
 
-func CommenterNew(params api_commenter.CommenterNewParams) middleware.Responder {
+func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Responder {
+	// Verify no such email is registered yet
 	email := data.EmailToString(params.Body.Email)
-	name := data.TrimmedString(params.Body.Name)
-	website := string(params.Body.WebsiteURL)
-
-	// Since the local authentication is used, verify the email is unique
-	if r := Verifier.CommenterLocalEmaiUnique(email); r != nil {
-		return r
+	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
+		return respServiceError(err)
+	} else if exists {
+		return respBadRequest(ErrorEmailAlreadyExists)
 	}
 
-	// Create a commenter record in the database
-	if _, err := svc.TheUserService.CreateCommenter(email, name, website, "", "", *params.Body.Password); err != nil {
+	// Create a new user
+	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
+		WithPassword(swag.StringValue(params.Body.Password)).
+		WithSignup(params.HTTPRequest, data.URIToString(params.Body.URL)).
+		WithWebsiteURL(string(params.Body.WebsiteURL)).
+		// If SMTP isn't configured, mark the user as confirmed right away
+		WithConfirmed(!config.SMTPConfigured)
+
+	// Save the new user
+	if err := svc.TheUserService.CreateUser(user); err != nil {
 		return respServiceError(err)
 	}
 
+	// Send a confirmation email if needed
+	if r := sendConfirmationEmail(user); r != nil {
+		return r
+	}
+
 	// Succeeded
-	return api_commenter.NewCommenterNewNoContent()
+	return api_commenter.NewCommenterSignupOK().WithPayload(user.ToPrincipal())
 }
 
 func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Responder {
@@ -138,24 +138,11 @@ func CommenterPhoto(params api_commenter.CommenterPhotoParams) middleware.Respon
 }
 
 func CommenterPwdResetSendEmail(params api_commenter.CommenterPwdResetSendEmailParams) middleware.Responder {
-	// Find the locally authenticated commenter
-	var user *data.User
-	if commenter, err := svc.TheUserService.FindCommenterByIdPEmail("", data.EmailToString(params.Body.Email), false); err == nil {
-		user = &commenter.User
-	} else if err != svc.ErrNotFound {
-		return respServiceError(err)
-	}
-
-	// If no user found, apply a random delay to discourage email polling
-	if user == nil {
-		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-
-		// Send a reset email otherwise
-	} else if r := sendPasswordResetToken(user, true); r != nil {
+	if r := sendPasswordResetEmail(data.EmailToString(params.Body.Email)); r != nil {
 		return r
 	}
 
-	// Succeeded (or no user found)
+	// Succeeded
 	return api_commenter.NewCommenterPwdResetSendEmailNoContent()
 }
 

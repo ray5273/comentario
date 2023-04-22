@@ -74,26 +74,27 @@ insert into cm_identity_providers(id, name, icon) values
 -- Users
 ------------------------------------------------------------------------------------------------------------------------
 create table cm_users (
-    id             uuid primary key,                          -- Unique user ID
-    email          varchar(254)              not null unique, -- Unique user email
-    name           varchar(63)               not null,        -- User's full name
-    password_hash  varchar(100)              not null,        -- Password hash
-    system_account boolean     default false not null,        -- Whether the user is a system account (cannot sign in)
-    superuser      boolean     default false not null,        -- Whether the user is a "super user" (instance admin)
-    confirmed      boolean                   not null,        -- Whether the user's email has been confirmed
-    ts_confirmed   timestamp,                                 -- When the user's email has been confirmed
-    ts_created     timestamp                 not null,        -- When the user was created
-    user_created   uuid,                                      -- Reference to the user who created this one. null if the used signed up themselves
-    signup_ip      varchar(15) default ''    not null,        -- IP address the user signed up or was created from
-    signup_country varchar(2)  default ''    not null,        -- 2-letter country code matching the signup_ip
-    banned         boolean     default false not null,        -- Whether the user is banned
-    ts_banned      timestamp,                                 -- When the user was banned
-    user_banned    uuid,                                      -- Reference to the user who banned this one
-    remarks        text        default ''    not null,        -- Optional remarks for the user
-    federated_idp  varchar(32),                               -- Optional ID of the federated identity provider used for authentication. If empty, it's a local user
-    federated_id   varchar(255),                              -- User ID as reported by the federated identity provider (only when federated_idp is set)
-    avatar         bytea,                                     -- Optional user's avatar image
-    website_url    varchar(2083)                              -- Optional user's website URL
+    id             uuid primary key,                            -- Unique user ID
+    email          varchar(254)                not null unique, -- Unique user email
+    name           varchar(63)                 not null,        -- User's full name
+    password_hash  varchar(100)                not null,        -- Password hash
+    system_account boolean       default false not null,        -- Whether the user is a system account (cannot sign in)
+    superuser      boolean       default false not null,        -- Whether the user is a "super user" (instance admin)
+    confirmed      boolean                     not null,        -- Whether the user's email has been confirmed
+    ts_confirmed   timestamp,                                   -- When the user's email has been confirmed
+    ts_created     timestamp                   not null,        -- When the user was created
+    user_created   uuid,                                        -- Reference to the user who created this one. null if the used signed up themselves
+    signup_ip      varchar(15)   default ''    not null,        -- IP address the user signed up or was created from
+    signup_country varchar(2)    default ''    not null,        -- 2-letter country code matching the signup_ip
+    signup_url     varchar(2083) default ''    not null,        -- URL the user signed up on (only for commenter signup, empty for UI signup)
+    banned         boolean       default false not null,        -- Whether the user is banned
+    ts_banned      timestamp,                                   -- When the user was banned
+    user_banned    uuid,                                        -- Reference to the user who banned this one
+    remarks        text          default ''    not null,        -- Optional remarks for the user
+    federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty, it's a local user
+    federated_id   varchar(255),                                -- User ID as reported by the federated identity provider (only when federated_idp is set)
+    avatar         bytea,                                       -- Optional user's avatar image
+    website_url    varchar(2083)                                -- Optional user's website URL
 );
 
 -- Foreign keys
@@ -127,6 +128,20 @@ create table cm_user_sessions (
 
 -- Foreign keys
 alter table cm_user_sessions add constraint fk_user_sessions_user_id foreign key (user_id) references cm_users(id) on delete cascade;
+
+------------------------------------------------------------------------------------------------------------------------
+-- Tokens
+------------------------------------------------------------------------------------------------------------------------
+create table cm_tokens (
+    value      char(64) primary key, -- Token value, a random byte sequence
+    user_id    uuid not null,        -- Reference to the user owning the token
+    scope      varchar(32),          -- Token's scope
+    ts_expires timestamp,            -- When the token expires
+    multiuse   boolean               -- Whether the token is to be kept until expired; if false, the token gets deleted after first use
+);
+
+-- Foreign keys
+alter table cm_tokens add constraint fk_tokens_user_id foreign key (user_id) references cm_users(id) on delete cascade;
 
 --======================================================================================================================
 -- Migrate the legacy schema

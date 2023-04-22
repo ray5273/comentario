@@ -16,8 +16,6 @@ type VerifierService interface {
 	// CommenterLocalEmaiUnique verifies there's no existing commenter  user using the password authentication with the
 	// given email
 	CommenterLocalEmaiUnique(email string) middleware.Responder
-	// OwnerEmaiUnique verifies there's no existing owner user with the given email
-	OwnerEmaiUnique(email string) middleware.Responder
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
@@ -36,16 +34,6 @@ type verifier struct{}
 func (v *verifier) CommenterLocalEmaiUnique(email string) middleware.Responder {
 	// Verify no such email is registered yet
 	if _, err := svc.TheUserService.FindCommenterByIdPEmail("", email, false); err == nil {
-		return respBadRequest(ErrorEmailAlreadyExists)
-	} else if err != svc.ErrNotFound {
-		return respServiceError(err)
-	}
-	return nil
-}
-
-func (v *verifier) OwnerEmaiUnique(email string) middleware.Responder {
-	// Verify no such email is registered yet
-	if _, err := svc.TheUserService.FindOwnerByEmail(email, false); err == nil {
 		return respBadRequest(ErrorEmailAlreadyExists)
 	} else if err != svc.ErrNotFound {
 		return respServiceError(err)

@@ -18,11 +18,13 @@ const (
 
 	MaxNumberStatsDays = 30 // Max number of days to get statistics for
 
-	CookieNameUserSession = "comentario_user_session"  // Cookie name to store the session of the authenticated user
-	UserSessionDuration   = 28 * OneDay                // How long a user session stays valid
-	CookieNameAuthSession = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
-	LangCookieDuration    = 365 * OneDay               // How long the language cookie stays valid
-	HeaderUserSession     = "X-User-Session"           // Name of the header that contains the session of the authenticated user
+	CookieNameUserSession    = "comentario_user_session"  // Cookie name to store the session of the authenticated user
+	UserSessionDuration      = 28 * OneDay                // How long a user session stays valid
+	CookieNameAuthSession    = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
+	LangCookieDuration       = 365 * OneDay               // How long the language cookie stays valid
+	HeaderUserSession        = "X-User-Session"           // Name of the header that contains the session of the authenticated user
+	UserConfirmEmailDuration = 3 * OneDay                 // How long the token in the confirmation email stays valid
+	UserPwdResetDuration     = 12 * time.Hour             // How long the token in the password-reset email stays valid
 )
 
 var (

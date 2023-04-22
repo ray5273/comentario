@@ -2,12 +2,12 @@ package handlers
 
 import (
 	"encoding/base64"
+	"encoding/hex"
 	"fmt"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -17,22 +17,68 @@ import (
 )
 
 var (
-	ErrUnauthorised = errors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	ErrUnauthorised  = errors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	ErrInternalError = errors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
 
-func AuthConfirm(params api_auth.AuthConfirmParams) middleware.Responder {
-	// Update the owner, if the token checks out
-	conf := "true"
-	if err := svc.TheUserService.ConfirmOwner(models.HexID(params.Token)); err != nil {
-		conf = "false"
+// AuthBearerToken inspects the header and determines if the token is of one of the provided scopes
+func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
+	// Try to parse and find the token
+	var token *data.Token
+	if val, err := hex.DecodeString(tokenStr); err != nil || len(val) != 32 {
+		return nil, ErrUnauthorised
+	} else if token, err = svc.TheTokenService.FindByValue(val, false); err != nil {
+		return nil, ErrUnauthorised
 	}
 
-	// Redirect to login
-	return api_auth.NewAuthConfirmTemporaryRedirect().
-		WithLocation(config.URLFor("login", map[string]string{"confirmed": conf}))
+	// Check if the token is of the right scope
+	if util.IndexOfString(string(token.Scope), scopes) < 0 {
+		return nil, ErrUnauthorised
+	}
+
+	// Token seems legitimate, now find its owner
+	var user *data.User
+	var err error
+	if user, err = svc.TheUserService.FindUserByID(&token.Owner); err != nil {
+		return nil, ErrInternalError
+
+		// Verify the user is allowed to authenticate at all
+	} else if err, _ := Verifier.UserCanAuthenticate(user, false); err != nil {
+		// Not allowed
+		return nil, ErrUnauthorised
+	}
+
+	// If it's a disposable token, revoke it, ignoring any error
+	if !token.Multiuse {
+		_ = svc.TheTokenService.DeleteByValue(token.Value)
+	}
+
+	// Succeeded
+	return user, nil
+}
+
+func AuthConfirm(_ api_auth.AuthConfirmParams, user *data.User) middleware.Responder {
+	// Don't bother if the user is already confirmed
+	if !user.Confirmed {
+		// Update the user
+		if err := svc.TheUserService.ConfirmUser(&user.ID); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// Determine the redirect location: if there's a signup URL, use it
+	loc := user.SignupURL
+	if loc == "" {
+		// Redirect to the UI login page otherwise
+		loc = config.URLFor("login", map[string]string{"confirmed": "true"})
+	}
+
+	// Redirect the user's browser
+	return api_auth.NewAuthConfirmTemporaryRedirect().WithLocation(loc)
 }
 
 func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Fetch a list of domains
 	if domains, err := svc.TheDomainService.ListByOwner(principal.GetHexID()); err != nil {
 		return respServiceError(err)
@@ -41,9 +87,10 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) midd
 	} else if l := len(domains); l > 0 {
 		return respBadRequest(ErrorOwnerHasDomains.WithDetails(fmt.Sprintf("%d domain(s)", l)))
 	}
+	*/
 
 	// Delete the user
-	if err := svc.TheUserService.DeleteOwnerByID(principal.GetHexID()); err != nil {
+	if err := svc.TheUserService.DeleteUserByID(&user.ID); err != nil {
 		return respServiceError(err)
 	}
 
@@ -53,37 +100,21 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) midd
 
 // AuthLogin logs a user in using local authentication (email and password)
 func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
-	// Find the user
-	user, err := svc.TheUserService.FindLocalUserByEmail(data.EmailToString(params.Body.Email))
-	if err == svc.ErrNotFound {
-		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-		return respUnauthorized(ErrorInvalidCredentials)
-	} else if err != nil {
-		return respServiceError(err)
-	}
-
-	// Verify the user is allowed to login
-	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
+	// Log the user in
+	user, session, r := loginLocalUser(
+		data.EmailToString(params.Body.Email),
+		swag.StringValue(params.Body.Password),
+		"",
+		params.HTTPRequest)
+	if r != nil {
 		return r
-	}
-
-	// Verify the provided password
-	if !user.VerifyPassword(swag.StringValue(params.Body.Password)) {
-		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-		return respUnauthorized(ErrorInvalidCredentials)
-	}
-
-	// Create a new owner session
-	us := data.NewUserSession(&user.ID, "", params.HTTPRequest)
-	if err := svc.TheUserService.CreateUserSession(us); err != nil {
-		return respServiceError(err)
 	}
 
 	// Succeeded. Return a principal and a session cookie
 	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal())).
 		WithCookie(
 			util.CookieNameUserSession,
-			us.EncodeIDs(),
+			session.EncodeIDs(),
 			"/",
 			util.UserSessionDuration,
 			true,
@@ -111,54 +142,42 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 		return respForbidden(ErrorSignupsForbidden)
 	}
 
-	// Verify no owner with that email exists yet
+	// Verify no such email is registered yet
 	email := data.EmailToString(params.Body.Email)
-	if r := Verifier.OwnerEmaiUnique(email); r != nil {
+	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
+		return respServiceError(err)
+	} else if exists {
+		return respBadRequest(ErrorEmailAlreadyExists)
+	}
+
+	// Create a new user
+	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
+		WithPassword(swag.StringValue(params.Body.Password)).
+		WithSignup(params.HTTPRequest, "")
+
+	// If it's the first registered user, make them a superuser
+	if cnt, err := svc.TheUserService.CountUsers(); err != nil {
+		return respServiceError(err)
+	} else if cnt == 0 {
+		user.WithConfirmed(true).Superuser = true
+
+	} else {
+		// If SMTP isn't configured, mark the user as confirmed right away
+		user.WithConfirmed(!config.SMTPConfigured)
+	}
+
+	// Save the new user
+	if err := svc.TheUserService.CreateUser(user); err != nil {
+		return respServiceError(err)
+	}
+
+	// Send a confirmation email if needed
+	if r := sendConfirmationEmail(user); r != nil {
 		return r
 	}
 
-	// Create a new email record
-	if _, err := svc.TheEmailService.Create(email); err != nil {
-		return respServiceError(err)
-	}
-
-	// Create a new owner record
-	name := data.TrimmedString(params.Body.Name)
-	pwd := swag.StringValue(params.Body.Password)
-	owner, err := svc.TheUserService.CreateOwner(email, name, pwd)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// If mailing is configured, create and mail a confirmation token
-	if config.SMTPConfigured {
-		// Create a new confirmation token
-		token, err := svc.TheUserService.CreateOwnerConfirmationToken(owner.HexID)
-		if err != nil {
-			return respServiceError(err)
-		}
-
-		// Send a confirmation email
-		err = svc.TheMailService.SendFromTemplate(
-			"",
-			email,
-			"Please confirm your email address",
-			"confirm-hex.gohtml",
-			map[string]any{"URL": config.URLForAPI("owner/confirm-hex", map[string]string{"confirmHex": string(token)})})
-		if err != nil {
-			return respServiceError(err)
-		}
-	}
-
-	// If no commenter with that email exists yet, register the owner also as a commenter, with the same password
-	if _, err := svc.TheUserService.FindCommenterByIdPEmail("", email, false); err == svc.ErrNotFound {
-		if _, err := svc.TheUserService.CreateCommenter(email, name, "", "", "", pwd); err != nil {
-			return respServiceError(err)
-		}
-	}
-
 	// Succeeded
-	return api_auth.NewAuthSignupOK().WithPayload(&api_auth.AuthSignupOKBody{ConfirmEmail: config.SMTPConfigured})
+	return api_auth.NewAuthSignupOK().WithPayload(user.ToPrincipal())
 }
 
 // AuthUserByCookieHeader determines if the user session contained in the cookie, extracted from the passed Cookie
@@ -261,4 +280,37 @@ func GetUserFromSessionCookie(r *http.Request) (*data.User, error) {
 
 	// Succeeded
 	return user, nil
+}
+
+// loginLocalUser tries to log a local user in using their email and password, returning the user and a new user
+// session. In case of error an error responder is returned
+func loginLocalUser(email, password, host string, req *http.Request) (*data.User, *data.UserSession, middleware.Responder) {
+	// Find the user
+	user, err := svc.TheUserService.FindLocalUserByEmail(email)
+	if err == svc.ErrNotFound {
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
+	} else if err != nil {
+		return nil, nil, respServiceError(err)
+	}
+
+	// Verify the user is allowed to login
+	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
+		return nil, nil, r
+	}
+
+	// Verify the provided password
+	if !user.VerifyPassword(password) {
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
+	}
+
+	// Create a new session
+	session := data.NewUserSession(&user.ID, host, req)
+	if err := svc.TheUserService.CreateUserSession(session); err != nil {
+		return nil, nil, respServiceError(err)
+	}
+
+	// Succeeded
+	return user, session, nil
 }

@@ -1,7 +1,9 @@
 package data
 
 import (
+	"crypto/rand"
 	"encoding/base64"
+	"encoding/hex"
 	"github.com/avct/uasurfer"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
@@ -32,6 +34,44 @@ var FederatedIdProviders = map[models.IdentityProviderID]*FederatedIdentityProvi
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+type TokenScope string
+
+const (
+	TokenResetPassword = TokenScope("pwd-reset")
+	TokenConfirmEmail  = TokenScope("confirm-email")
+)
+
+// Token is, well, a token
+type Token struct {
+	Value       []byte     // Token value, a random byte sequence
+	Owner       uuid.UUID  // UUID of the user owning the token
+	Scope       TokenScope // Token's scope
+	ExpiresTime time.Time  // UTC timestamp of the expiration
+	Multiuse    bool       // Whether the token is to be kept until expired; if false, the token gets deleted after first use
+}
+
+// NewToken creates a new token instance
+func NewToken(owner *uuid.UUID, scope TokenScope, maxAge time.Duration, multiuse bool) (*Token, error) {
+	t := &Token{
+		Value:       make([]byte, 32),
+		Owner:       *owner,
+		Scope:       scope,
+		ExpiresTime: time.Now().UTC().Add(maxAge),
+		Multiuse:    multiuse,
+	}
+	if _, err := rand.Read(t.Value); err != nil {
+		return nil, err
+	}
+	return t, nil
+}
+
+// String converts the token's value into a hex string
+func (t *Token) String() string {
+	return hex.EncodeToString(t.Value)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 // User represents an authenticated or an anonymous user
 type User struct {
 	ID            uuid.UUID  // Unique user ID
@@ -45,7 +85,8 @@ type User struct {
 	CreatedTime   time.Time  // When the user was created
 	UserCreated   *uuid.UUID // Reference to the user who created this one. null if the used signed up themselves
 	SignupIP      string     // IP address the user signed up or was created from
-	SignupCountry string     // 2-letter country code matching the signup_ip
+	SignupCountry string     // 2-letter country code matching the SignupIP
+	SignupURL     string     // URL the user signed up on (only for commenter signup, empty for UI signup)
 	Banned        bool       // Whether the user is banned
 	BannedTime    time.Time  // When the user was banned
 	UserBanned    *uuid.UUID // Reference to the user who banned this one
@@ -56,27 +97,19 @@ type User struct {
 	WebsiteURL    string     // Optional user's website URL
 }
 
+// NewUser instantiates a new User
+func NewUser(email, name string) *User {
+	return &User{
+		ID:          uuid.New(),
+		Email:       email,
+		Name:        name,
+		CreatedTime: time.Now().UTC(),
+	}
+}
+
 // IsAnonymous returns whether the underlying user is anonymous
 func (u *User) IsAnonymous() bool {
 	return u.ID == AnonymousUser.ID
-}
-
-// SetPassword updates the PasswordHash from the provided plain-test password. If s is empty, also sets the hash to
-// empty
-func (u *User) SetPassword(s string) error {
-	// If no password is provided, remove the hash. This means the user won't be able to log in
-	if s == "" {
-		u.PasswordHash = ""
-		return nil
-	}
-
-	// Hash and save the password
-	if h, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost); err != nil {
-		return err
-	} else {
-		u.PasswordHash = string(h)
-	}
-	return nil
 }
 
 // ToPrincipal converts this user into a Principal model
@@ -92,6 +125,44 @@ func (u *User) ToPrincipal() *models.Principal {
 // VerifyPassword checks whether the provided password matches the hash
 func (u *User) VerifyPassword(s string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(s)) == nil
+}
+
+// WithConfirmed sets the value of Confirmed and ConfirmedTime
+func (u *User) WithConfirmed(b bool) *User {
+	u.Confirmed = b
+	if b {
+		u.ConfirmedTime = time.Now().UTC()
+	}
+	return u
+}
+
+// WithPassword updates the PasswordHash from the provided plain-test password. If s is empty, also sets the hash to
+// empty
+func (u *User) WithPassword(s string) *User {
+	// If no password is provided, remove the hash. This means the user won't be able to log in
+	if s == "" {
+		u.PasswordHash = ""
+
+		// Hash and save the password
+	} else if h, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost); err != nil {
+		panic(err)
+	} else {
+		u.PasswordHash = string(h)
+	}
+	return u
+}
+
+// WithSignup sets the SignupIP and SignupCountry values based on the provided HTTP request and URL
+func (u *User) WithSignup(req *http.Request, url string) *User {
+	u.SignupIP, u.SignupCountry = util.UserIPCountry(req)
+	u.SignupURL = url
+	return u
+}
+
+// WithWebsiteURL sets the WebsiteURL value
+func (u *User) WithWebsiteURL(s string) *User {
+	u.WebsiteURL = s
+	return u
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -111,11 +182,6 @@ type UserSession struct {
 	OSName         string    // Name of the user's OS
 	OSVersion      string    // Version of the user's OS
 	Device         string    // User's device type
-}
-
-// EncodeIDs returns user and session IDs encoded into a base64 string
-func (us *UserSession) EncodeIDs() string {
-	return base64.RawURLEncoding.EncodeToString(append(us.UserID[:], us.ID[:]...))
 }
 
 // NewUserSession instantiates a new UserSession from the given request
@@ -143,4 +209,9 @@ func NewUserSession(userID *uuid.UUID, host string, req *http.Request) *UserSess
 		OSVersion:      util.FormatVersion(&ua.OS.Version),
 		Device:         ua.DeviceType.StringTrimPrefix(),
 	}
+}
+
+// EncodeIDs returns user and session IDs encoded into a base64 string
+func (us *UserSession) EncodeIDs() string {
+	return base64.RawURLEncoding.EncodeToString(append(us.UserID[:], us.ID[:]...))
 }

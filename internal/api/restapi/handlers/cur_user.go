@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -22,22 +21,15 @@ func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 	}
 
 	// Succeeded: owner's logged in
-	return api_auth.NewCurUserGetOK().WithPayload(user.ToAPIModel())
+	return api_auth.NewCurUserGetOK().WithPayload(user.ToPrincipal())
 }
 
-func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, principal data.Principal) middleware.Responder {
+func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, user *data.User) middleware.Responder {
 	// If the password is getting changed, verify the current password
-	if params.Body.NewPassword != "" {
-		// Fetch the user with its password hash (which doesn't get filled for principal during authentication)
-		if u, err := svc.TheUserService.FindOwnerByID(principal.GetHexID(), true); err != nil {
-			return respServiceError(err)
-
-			// Verify the current password
-		} else if !u.VerifyPassword(params.Body.CurPassword) {
-			// Sleep a while to discourage brute-force attacks
-			time.Sleep(util.WrongAuthDelayMax)
-			return respBadRequest(ErrorWrongCurPassword)
-		}
+	if params.Body.NewPassword != "" && !user.VerifyPassword(params.Body.CurPassword) {
+		// Sleep a while to discourage brute-force attacks
+		time.Sleep(util.WrongAuthDelayMax)
+		return respBadRequest(ErrorWrongCurPassword)
 	}
 
 	// Update the user
@@ -63,44 +55,10 @@ func CurUserPwdResetChange(params api_auth.CurUserPwdResetChangeParams) middlewa
 }
 
 func CurUserPwdResetSendEmail(params api_auth.CurUserPwdResetSendEmailParams) middleware.Responder {
-	// Find the owner user with that email
-	var user *data.User
-	if owner, err := svc.TheUserService.FindOwnerByEmail(data.EmailToString(params.Body.Email), false); err == nil {
-		user = &owner.User
-	} else if err != svc.ErrNotFound {
-		return respServiceError(err)
-	}
-
-	// If no user found, apply a random delay to discourage email polling
-	if user == nil {
-		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-
-		// Send a reset email otherwise
-	} else if r := sendPasswordResetToken(user, false); r != nil {
+	if r := sendPasswordResetEmail(data.EmailToString(params.Body.Email)); r != nil {
 		return r
 	}
 
-	// Succeeded (or no user found)
-	return api_auth.NewCurUserPwdResetSendEmailNoContent()
-}
-
-// sendPasswordResetToken sends an email containing a password reset link to the given user
-func sendPasswordResetToken(user *data.User, isCommenter bool) middleware.Responder {
-	// Generate a random reset token
-	if token, err := svc.TheUserService.CreateResetToken(user.HexID, isCommenter); err != nil {
-		return respServiceError(err)
-
-		// Send out an email
-	} else if err := svc.TheMailService.SendFromTemplate(
-		"",
-		user.Email,
-		"Reset your password",
-		"reset-password.gohtml",
-		map[string]any{"URL": config.URLForUI("en", "", map[string]string{"passwordResetToken": string(token)})},
-	); err != nil {
-		return respServiceError(err)
-	}
-
 	// Succeeded
-	return nil
+	return api_auth.NewCurUserPwdResetSendEmailNoContent()
 }

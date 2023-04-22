@@ -155,6 +155,16 @@ func HTMLTitleFromURL(url string) (string, error) {
 	return HTMLDocumentTitle(resp.Body)
 }
 
+// IndexOfString returns the index of the given string in the slice, or -1 if it wasn't found
+func IndexOfString(s string, slice []string) int {
+	for i, e := range slice {
+		if s == e {
+			return i
+		}
+	}
+	return -1
+}
+
 // IsValidURL returns whether the passed string is a valid absolute URL
 func IsValidURL(s string) bool {
 	_, err := ParseAbsoluteURL(s)
