@@ -431,6 +431,14 @@ parameters:
     maxLength: 64
     pattern: '[0-9a-f]{64}'
 
+  pathUuid:
+    in: path
+    name: uuid
+    required: true
+    description: UUID in the path
+    type: string
+    format: uuid
+
   queryToken:
     in: query
     name: token
@@ -513,7 +521,7 @@ paths:
           $ref: "#/responses/InternalError"
 
   #---------------------------------------------------------------------------------------------------------------------
-  # Config
+  # Generic stuff
   #---------------------------------------------------------------------------------------------------------------------
 
   /config/client:
@@ -528,6 +536,25 @@ paths:
           description: Client configuration
           schema:
             $ref: "#/definitions/clientConfig"
+
+  /user/{uuid}/avatar:
+    get:
+      operationId: UserAvatarGet
+      summary: Get an avatar for given user in JPEG format
+      tags:
+        - ApiGeneric
+      security: []
+      produces:
+        - image/jpeg
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+      responses:
+        200:
+          description: User avatar in the JPEG format
+          schema:
+            type: file
+        204:
+          description: User has no avatar
 
   #---------------------------------------------------------------------------------------------------------------------
   # Auth
@@ -632,6 +659,54 @@ paths:
         204:
           description: Owner's account has been deleted
 
+  /auth/password-reset:
+    post:
+      operationId: AuthPwdResetSendEmail
+      summary: Request a password reset for a local user by sending them an email
+      tags:
+        - ApiAuth
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+            properties:
+              email:
+                type: string
+                format: email
+      responses:
+        204:
+          description: Reset email has been sent, if the email address is known
+
+    put:
+      operationId: AuthPwdResetChange
+      summary: Give a local user a new password
+      tags:
+        - ApiAuth
+      security:
+        - token: [pwd-reset]
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - password
+            properties:
+              password:
+                type: string
+                description: New password to set
+                minLength: 1
+                maxLength: 63
+      responses:
+        204:
+          description: Password has been reset
+
   #---------------------------------------------------------------------------------------------------------------------
   # Current user
   #---------------------------------------------------------------------------------------------------------------------
@@ -683,57 +758,6 @@ paths:
       responses:
         204:
           description: User profile has been updated
-
-  /user/pwdreset:
-    post:
-      operationId: CurUserPwdResetSendEmail
-      summary: Request user's password reset by sending them an email
-      tags:
-        - ApiAuth
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - email
-            properties:
-              email:
-                type: string
-                format: email
-      responses:
-        204:
-          description: Reset email has been sent, if the email address is known
-
-    put:
-      operationId: CurUserPwdResetChange
-      summary: Give the user a new password
-      tags:
-        - ApiAuth
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - token
-              - password
-            properties:
-              token:
-                $ref: "#/definitions/hexId"
-                description: Password reset token provided in the reset email
-              password:
-                type: string
-                description: New password to set
-                minLength: 1
-                maxLength: 63
-      responses:
-        204:
-          description: Password has been reset
 
   #---------------------------------------------------------------------------------------------------------------------
   # Comments
@@ -1082,23 +1106,6 @@ paths:
           schema:
             $ref: "#/definitions/principal"
 
-  /commenter/photo/{id}:
-    get:
-      operationId: CommenterPhoto
-      summary: Get an avatar for given commenter in JPEG format
-      tags:
-        - ApiCommenter
-      security: []
-      produces:
-        - image/jpeg
-      parameters:
-        - $ref: "#/parameters/pathId"
-      responses:
-        200:
-          description: Commenter avatar in the JPEG format
-          schema:
-            type: file
-
   /commenter/pwdreset:
     post:
       operationId: CommenterPwdResetSendEmail
@@ -1131,32 +1138,11 @@ paths:
       security: []
       responses:
         204:
-          description: Commenter is not signed in
+          description: User is not signed in
         200:
-          description: Commenter is signed in
+          description: User is authenticated, principal info returned
           schema:
-            type: object
-            properties:
-              commenter:
-                $ref: "#/definitions/commenter"
-              email:
-                $ref: "#/definitions/email"
-
-  /commenter/token/new:
-    post:
-      operationId: CommenterTokenNew
-      summary: Request a new anonymous, unique commenter token
-      tags:
-        - ApiCommenter
-      security: []
-      responses:
-        200:
-          description: Commenter token
-          schema:
-            type: object
-            properties:
-              commenterToken:
-                $ref: "#/definitions/hexId"
+            $ref: "#/definitions/principal"
 
   /commenter/update:
     post:
@@ -1184,9 +1170,6 @@ paths:
                 minLength: 1
                 maxLength: 63
               websiteUrl:
-                type: string
-                format: uri
-              avatarUrl:
                 type: string
                 format: uri
       responses:

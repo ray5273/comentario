@@ -13,9 +13,6 @@ var Verifier VerifierService = &verifier{}
 
 // VerifierService is an API service interface for data and permission verification
 type VerifierService interface {
-	// CommenterLocalEmaiUnique verifies there's no existing commenter  user using the password authentication with the
-	// given email
-	CommenterLocalEmaiUnique(email string) middleware.Responder
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
@@ -23,6 +20,8 @@ type VerifierService interface {
 	UserIsAuthenticated(user *data.User) middleware.Responder
 	// UserIsDomainModerator verifies the owner with the given email is a moderator in the specified domain
 	UserIsDomainModerator(email string, host models.Host) middleware.Responder
+	// UserIsLocal verifies the user is a locally authenticated one
+	UserIsLocal(user *data.User) middleware.Responder
 	// UserOwnsDomain verifies the owner with the given hex ID owns the specified domain
 	UserOwnsDomain(id models.HexID, host models.Host) middleware.Responder
 }
@@ -30,16 +29,6 @@ type VerifierService interface {
 // ----------------------------------------------------------------------------------------------------------------------
 // verifier is a blueprint VerifierService implementation
 type verifier struct{}
-
-func (v *verifier) CommenterLocalEmaiUnique(email string) middleware.Responder {
-	// Verify no such email is registered yet
-	if _, err := svc.TheUserService.FindCommenterByIdPEmail("", email, false); err == nil {
-		return respBadRequest(ErrorEmailAlreadyExists)
-	} else if err != svc.ErrNotFound {
-		return respServiceError(err)
-	}
-	return nil
-}
 
 func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder) {
 	switch {
@@ -63,6 +52,13 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {
 	if user.IsAnonymous() {
 		return respUnauthorized(ErrorUnauthenticated)
+	}
+	return nil
+}
+
+func (v *verifier) UserIsLocal(user *data.User) middleware.Responder {
+	if !user.IsLocal() {
+		return respBadRequest(ErrorNoLocalUser)
 	}
 	return nil
 }

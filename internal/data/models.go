@@ -107,9 +107,14 @@ func NewUser(email, name string) *User {
 	}
 }
 
-// IsAnonymous returns whether the underlying user is anonymous
+// IsAnonymous returns whether the user is anonymous
 func (u *User) IsAnonymous() bool {
 	return u.ID == AnonymousUser.ID
+}
+
+// IsLocal returns whether the user is local (as opposed to federated)
+func (u *User) IsLocal() bool {
+	return u.FederatedIdP == ""
 }
 
 // ToPrincipal converts this user into a Principal model
@@ -133,6 +138,18 @@ func (u *User) WithConfirmed(b bool) *User {
 	if b {
 		u.ConfirmedTime = time.Now().UTC()
 	}
+	return u
+}
+
+// WithEmail sets the Email value
+func (u *User) WithEmail(s string) *User {
+	u.Email = s
+	return u
+}
+
+// WithName sets the Name value
+func (u *User) WithName(s string) *User {
+	u.Name = s
 	return u
 }
 

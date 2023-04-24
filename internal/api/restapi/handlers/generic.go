@@ -1,12 +1,16 @@
 package handlers
 
 import (
+	"bytes"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/svc"
+	"io"
 	"sort"
 )
 
@@ -32,4 +36,23 @@ func ConfigClientGet(api_generic.ConfigClientGetParams) middleware.Responder {
 		Idps:          idps,
 		SignupAllowed: config.CLIFlags.AllowNewOwners,
 	})
+}
+
+func UserAvatarGet(params api_generic.UserAvatarGetParams) middleware.Responder {
+	// Parse the UUID
+	if id, err := uuid.Parse(string(params.UUID)); err != nil {
+		return respBadRequest(ErrorInvalidUUID)
+
+		// Find the user by their ID
+	} else if user, err := svc.TheUserService.FindUserByID(&id); err != nil {
+		return respServiceError(err)
+
+	} else if len(user.Avatar) == 0 {
+		// No avatar
+		return api_generic.NewUserAvatarGetNoContent()
+
+	} else {
+		// Avatar is present
+		return api_generic.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(user.Avatar)))
+	}
 }

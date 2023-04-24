@@ -14,6 +14,8 @@ var (
 	ErrorInvalidCredentials   = &exmodels.Error{ID: "invalid-credentials", Message: "Wrong password or user doesn't exist"}
 	ErrorInvalidModAction     = &exmodels.Error{ID: "invalid-mod-action", Message: "Invalid moderation action"}
 	ErrorInvalidPropertyValue = &exmodels.Error{ID: "invalid-prop-value", Message: "Value of the property is invalid"}
+	ErrorInvalidUUID          = &exmodels.Error{ID: "invalid-uuid", Message: "Invalid UUID value"}
+	ErrorNoLocalUser          = &exmodels.Error{ID: "no-local-user", Message: "User is not locally authenticated"}
 	ErrorNotDomainOwner       = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator         = &exmodels.Error{ID: "not-moderator", Message: "User is not a moderator"}
 	ErrorOwnerHasDomains      = &exmodels.Error{ID: "owner-has-domains", Message: "Owner can't be deleted as it still owns domains"}

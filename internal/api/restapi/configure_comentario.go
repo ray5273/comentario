@@ -90,11 +90,11 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIAuthAuthDeleteProfileHandler = api_auth.AuthDeleteProfileHandlerFunc(handlers.AuthDeleteProfile)
 	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
 	api.APIAuthAuthLogoutHandler = api_auth.AuthLogoutHandlerFunc(handlers.AuthLogout)
+	api.APIAuthAuthPwdResetChangeHandler = api_auth.AuthPwdResetChangeHandlerFunc(handlers.AuthPwdResetChange)
+	api.APIAuthAuthPwdResetSendEmailHandler = api_auth.AuthPwdResetSendEmailHandlerFunc(handlers.AuthPwdResetSendEmail)
 	api.APIAuthAuthSignupHandler = api_auth.AuthSignupHandlerFunc(handlers.AuthSignup)
 	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
 	api.APIAuthCurUserProfileUpdateHandler = api_auth.CurUserProfileUpdateHandlerFunc(handlers.CurUserProfileUpdate)
-	api.APIAuthCurUserPwdResetChangeHandler = api_auth.CurUserPwdResetChangeHandlerFunc(handlers.CurUserPwdResetChange)
-	api.APIAuthCurUserPwdResetSendEmailHandler = api_auth.CurUserPwdResetSendEmailHandlerFunc(handlers.CurUserPwdResetSendEmail)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Commenter API

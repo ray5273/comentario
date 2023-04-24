@@ -2,24 +2,20 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
-	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
-	"time"
 )
 
-func CommentApprove(params api_commenter.CommentApproveParams, principal data.Principal) middleware.Responder {
+func CommentApprove(params api_commenter.CommentApproveParams, user *data.User) middleware.Responder {
 	// Verify the commenter is authenticated
-	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
 
+	/* TODO new-db
 	// Fetch the comment
 	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
 	if err != nil {
@@ -35,7 +31,7 @@ func CommentApprove(params api_commenter.CommentApproveParams, principal data.Pr
 	if err = svc.TheCommentService.Approve(comment.CommentHex); err != nil {
 		return respServiceError(err)
 	}
-
+	*/
 	// Succeeded
 	return api_commenter.NewCommentApproveNoContent()
 }
@@ -51,11 +47,12 @@ func CommentCount(params api_commenter.CommentCountParams) middleware.Responder 
 	return api_commenter.NewCommentCountOK().WithPayload(&api_commenter.CommentCountOKBody{CommentCounts: cc})
 }
 
-func CommentDelete(params api_commenter.CommentDeleteParams, principal data.Principal) middleware.Responder {
+func CommentDelete(params api_commenter.CommentDeleteParams, user *data.User) middleware.Responder {
 	// Verify the commenter is authenticated
-	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
+	/* TODO new-db
 
 	// Find the comment
 	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
@@ -74,17 +71,18 @@ func CommentDelete(params api_commenter.CommentDeleteParams, principal data.Prin
 	if err = svc.TheCommentService.MarkDeleted(comment.CommentHex, principal.GetHexID()); err != nil {
 		return respServiceError(err)
 	}
-
+	*/
 	// Succeeded
 	return api_commenter.NewCommentDeleteNoContent()
 }
 
-func CommentEdit(params api_commenter.CommentEditParams, principal data.Principal) middleware.Responder {
+func CommentEdit(params api_commenter.CommentEditParams, user *data.User) middleware.Responder {
 	// Verify the commenter is authenticated
-	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
 
+	/* TODO new-db
 	// Find the existing comment
 	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
 	if err != nil {
@@ -106,14 +104,13 @@ func CommentEdit(params api_commenter.CommentEditParams, principal data.Principa
 	if err := svc.TheCommentService.UpdateText(comment.CommentHex, markdown, html); err != nil {
 		return respServiceError(err)
 	}
-
+	*/
 	// Succeeded
-	return api_commenter.NewCommentEditOK().WithPayload(&api_commenter.CommentEditOKBody{HTML: html})
+	return api_commenter.NewCommentEditOK() //.WithPayload(&api_commenter.CommentEditOKBody{HTML: html})
 }
 
-func CommentList(params api_commenter.CommentListParams, principal data.Principal) middleware.Responder {
-	commenter := principal.(*data.UserCommenter)
-
+func CommentList(params api_commenter.CommentListParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Fetch the domain
 	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
 	if err == svc.ErrNotFound {
@@ -148,7 +145,7 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 	moderatorEmailMap := map[strfmt.Email]bool{}
 	for _, mod := range domain.Moderators {
 		moderatorEmailMap[mod.Email] = true
-		if !commenter.IsAnonymous() && string(mod.Email) == commenter.Email {
+		if !user.IsAnonymous() && string(mod.Email) == user.Email {
 			commenter.IsModerator = true
 		}
 	}
@@ -172,9 +169,10 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 
 	// Register a view in domain statistics, ignoring any error
 	_ = svc.TheDomainService.RegisterView(domain.Host, commenter)
+	*/
 
 	// Succeeded
-	return api_commenter.NewCommentListOK().WithPayload(&api_commenter.CommentListOKBody{
+	return api_commenter.NewCommentListOK() /* TODO new-db.WithPayload(&api_commenter.CommentListOKBody{
 		Attributes:            page,
 		Commenters:            commenters,
 		Comments:              comments,
@@ -185,10 +183,10 @@ func CommentList(params api_commenter.CommentListParams, principal data.Principa
 		IsModerator:           commenter.IsModerator,
 		RequireIdentification: domain.RequireIdentification,
 		RequireModeration:     domain.RequireModeration,
-	})
+	})*/
 }
 
-func CommentNew(params api_commenter.CommentNewParams, principal data.Principal) middleware.Responder {
+func CommentNew(params api_commenter.CommentNewParams, user *data.User) middleware.Responder {
 	// Fetch the domain
 	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
 	if err != nil {
@@ -197,7 +195,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 
 	// If the domain disallows anonymous commenting, verify the commenter is authenticated
 	if domain.RequireIdentification {
-		if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
+		if r := Verifier.UserIsAuthenticated(user); r != nil {
 			return r
 		}
 	}
@@ -215,6 +213,7 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 		return respBadRequest(ErrorPageLocked)
 	}
 
+	/* TODO new-db
 	// If the commenter is authenticated, check if it's a domain moderator
 	commenter := principal.(*data.UserCommenter)
 	if !commenter.IsAnonymous() {
@@ -263,22 +262,24 @@ func CommentNew(params api_commenter.CommentNewParams, principal data.Principal)
 
 	// Send out an email notification
 	go emailNotificationNew(domain, comment)
-
+	*/
 	// Succeeded
-	return api_commenter.NewCommentNewOK().WithPayload(&api_commenter.CommentNewOKBody{
+
+	return api_commenter.NewCommentNewOK() /* TODO new-db.WithPayload(&api_commenter.CommentNewOKBody{
 		CommenterHex: commenter.HexID,
 		CommentHex:   comment.CommentHex,
 		HTML:         comment.HTML,
 		State:        state,
-	})
+	})*/
 }
 
-func CommentVote(params api_commenter.CommentVoteParams, principal data.Principal) middleware.Responder {
+func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middleware.Responder {
 	// Verify the commenter is authenticated
-	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
 
+	/* TODO new-db
 	// Calculate the direction
 	direction := 0
 	if *params.Body.Direction > 0 {
@@ -302,7 +303,7 @@ func CommentVote(params api_commenter.CommentVoteParams, principal data.Principa
 	if err := svc.TheVoteService.SetVote(comment.CommentHex, principal.GetHexID(), direction); err != nil {
 		return respServiceError(err)
 	}
-
+	*/
 	// Succeeded
 	return api_commenter.NewCommentVoteNoContent()
 }

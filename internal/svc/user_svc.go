@@ -36,23 +36,18 @@ type UserService interface {
 	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, error)
 	// IsUserEmailKnown returns whether there's any user present with the given email
 	IsUserEmailKnown(email string) (bool, error)
+	// UpdateLocalUser updates the given local user's data (name, email, password hash, website URL) in the database
+	UpdateLocalUser(user *data.User) error
 
 	//------------------------------------------------------------------
 
 	// ListCommentersByHost returns a list of all commenters for the (comments of) given domain
 	ListCommentersByHost(host models.Host) ([]models.Commenter, error)
-	// ResetUserPasswordByToken finds and resets a user's password for the given reset token, returning the
-	// corresponding entity
-	ResetUserPasswordByToken(token models.HexID, password string) error
 	// UpdateCommenter updates the given commenter's data in the database. If no idp is provided, the local auth
 	// provider is assumed
 	UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error
 	// UpdateCommenterSession links a commenter token to the given commenter, by updating the session record
 	UpdateCommenterSession(token, id models.HexID) error
-	// UpdateOwner updates the given user's data in the database. If no newPassword is given, the password stays
-	// unchanged
-	// Deprecated
-	UpdateOwner(id models.HexID, name, newPassword string) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -288,55 +283,6 @@ func (svc *userService) ListCommentersByHost(host models.Host) ([]models.Comment
 	return res, nil
 }
 
-func (svc *userService) ResetUserPasswordByToken(token models.HexID, password string) error {
-	logger.Debugf("userService.ResetUserPasswordByToken(%s, %s)", token, password)
-
-	// Find and fetch the token record
-	var user data.User // Just use a generic user for both entities
-	var entity string
-	row := db.QueryRow("select hex, entity from resethexes where resethex=$1;", token)
-	if err := row.Scan(&user.HexID, &entity); err != nil {
-		// Unknown token
-		if err == sql.ErrNoRows {
-			return ErrBadToken
-		}
-
-		// Any other database error
-		logger.Errorf("userService.ResetUserPasswordByToken: Scan() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Hash the user's password, if any
-	if err := user.SetPassword(password); err != nil {
-		return err
-	}
-
-	// Fetch the user and update their password
-	if entity == "owner" {
-		// Owner user
-		if _, err := svc.FindOwnerByID(user.HexID, false); err != nil {
-			return err
-		} else if err := db.Exec("update owners set passwordhash=$1 where ownerhex=$2;", user.PasswordHash, user.HexID); err != nil {
-			logger.Errorf("userService.ResetUserPasswordByToken: Exec() failed for owner: %v", err)
-			return translateDBErrors(err)
-		}
-	} else {
-		// Commenter user
-		if _, err := svc.FindCommenterByID(user.HexID); err != nil {
-			return err
-		} else if err := db.Exec("update commenters set passwordhash=$1 where commenterhex=$2;", user.PasswordHash, user.HexID); err != nil {
-			logger.Errorf("userService.ResetUserPasswordByToken: Exec() failed for commenter: %v", err)
-			return translateDBErrors(err)
-		}
-	}
-
-	// Remove all the user's reset tokens, ignoring any error
-	_ = svc.DeleteResetTokens(user.HexID)
-
-	// Succeeded
-	return nil
-}
-
 func (svc *userService) UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error {
 	logger.Debugf("userService.UpdateCommenter(%s, %s, %s, %s, %s, %s)", commenterHex, email, name, websiteURL, photoURL, idp)
 
@@ -366,22 +312,21 @@ func (svc *userService) UpdateCommenterSession(token, id models.HexID) error {
 	return nil
 }
 
-func (svc *userService) UpdateOwner(id models.HexID, name, newPassword string) error {
-	logger.Debugf("userService.UpdateOwner(%s, %s, %s)", id, name, newPassword)
-
-	// Prepare a generic user to hash the password
-	user := &data.User{HexID: id, Name: name}
-	if err := user.SetPassword(newPassword); err != nil {
-		return err
-	}
+func (svc *userService) UpdateLocalUser(user *data.User) error {
+	logger.Debugf("userService.UpdateLocalUser(%v)", user)
 
 	// Update the record
-	err := db.Exec(
-		"update owners set name=$1, passwordhash=case when $2='' then passwordhash else $2 end where ownerhex=$3;",
-		user.Name, user.PasswordHash, user.HexID)
-	if err != nil {
-		logger.Errorf("userService.UpdateOwner: Exec() failed: %v", err)
+	if res, err := db.ExecRes(
+		"update cm_users set email=$1, name=$2, password_hash=$3, website_url=$4 where id=$5 and federated_idp is null;",
+		user.Email, user.Name, user.PasswordHash, user.WebsiteURL, &user.ID,
+	); err != nil {
+		logger.Errorf("userService.UpdateLocalUser: Exec() failed: %v", err)
 		return translateDBErrors(err)
+	} else if i, err := res.RowsAffected(); err != nil {
+		logger.Errorf("userService.UpdateLocalUser: RowsAffected() failed: %v", err)
+		return translateDBErrors(err)
+	} else if i == 0 {
+		return ErrNotFound
 	}
 
 	// Succeeded

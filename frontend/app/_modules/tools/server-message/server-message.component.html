@@ -11,6 +11,8 @@
     <ng-container *ngSwitchCase="'domain-cleared'"       i18n>All comments on the domain have been successfully deleted.</ng-container>
     <ng-container *ngSwitchCase="'domain-deleted'"       i18n>Domain has been successfully deleted.</ng-container>
     <ng-container *ngSwitchCase="'file-downloaded'"      i18n>File has been successfully downloaded.</ng-container>
+    <ng-container *ngSwitchCase="'moderator-added'"      i18n>Domain moderator is added.</ng-container>
+    <ng-container *ngSwitchCase="'moderator-removed'"    i18n>Domain moderator is removed.</ng-container>
     <ng-container *ngSwitchCase="'password-changed'"     i18n>Your password has been changed. You can now sign in with your new password.</ng-container>
     <ng-container *ngSwitchCase="'pwd-reset-email-sent'" i18n>If your email is registered with us, we'll send you a password reset link!</ng-container>
 
@@ -33,8 +35,8 @@
     <ng-container *ngSwitchCase="'invalid-credentials'"  i18n>This user doesn't exist or the password is wrong.</ng-container>
     <ng-container *ngSwitchCase="'invalid-mod-action'"   i18n>Invalid moderation action.</ng-container>
     <ng-container *ngSwitchCase="'invalid-prop-value'"   i18n>Property value is invalid.</ng-container>
-    <ng-container *ngSwitchCase="'moderator-added'"      i18n>Domain moderator is added.</ng-container>
-    <ng-container *ngSwitchCase="'moderator-removed'"    i18n>Domain moderator is removed.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-uuid'"         i18n>Invalid UUID value.</ng-container>
+    <ng-container *ngSwitchCase="'no-local-user'"        i18n>This operation is only applicable to locally authenticated users.</ng-container>
     <ng-container *ngSwitchCase="'not-domain-owner'"     i18n>You have to be a domain owner in order to do that.</ng-container>
     <ng-container *ngSwitchCase="'not-moderator'"        i18n>You have to be a moderator in order to do that.</ng-container>
     <ng-container *ngSwitchCase="'owner-has-domains'"    i18n>Account cannot be deleted: all domains linked to it must be deleted first.</ng-container>

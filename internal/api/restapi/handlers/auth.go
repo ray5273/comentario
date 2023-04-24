@@ -136,6 +136,30 @@ func AuthLogout(params api_auth.AuthLogoutParams, _ *data.User) middleware.Respo
 	return NewCookieResponder(api_auth.NewAuthLogoutNoContent()).WithoutCookie(util.CookieNameUserSession, "/")
 }
 
+func AuthPwdResetChange(params api_auth.AuthPwdResetChangeParams, user *data.User) middleware.Responder {
+	// Verify it's a local user
+	if r := Verifier.UserIsLocal(user); r != nil {
+		return r
+	}
+
+	// Update the user's password
+	if err := svc.TheUserService.UpdateLocalUser(user.WithPassword(swag.StringValue(params.Body.Password))); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_auth.NewAuthPwdResetChangeNoContent()
+}
+
+func AuthPwdResetSendEmail(params api_auth.AuthPwdResetSendEmailParams) middleware.Responder {
+	if r := sendPasswordResetEmail(data.EmailToString(params.Body.Email)); r != nil {
+		return r
+	}
+
+	// Succeeded
+	return api_auth.NewAuthPwdResetSendEmailNoContent()
+}
+
 func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	// Verify new owners are allowed
 	if !config.CLIFlags.AllowNewOwners {
@@ -180,15 +204,14 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	return api_auth.NewAuthSignupOK().WithPayload(user.ToPrincipal())
 }
 
-// AuthUserByCookieHeader determines if the user session contained in the cookie, extracted from the passed Cookie
-// header, checks out
+// AuthUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header
 func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
 	// Hack to parse the provided data (which is in fact the "Cookie" header, but Swagger 2.0 doesn't support
 	// auth cookies, only headers)
 	r := &http.Request{Header: http.Header{"Cookie": []string{headerValue}}}
 
 	// Authenticate the user
-	u, err := GetUserFromSessionCookie(r)
+	u, err := GetUserBySessionCookie(r)
 	if err != nil {
 		// Authentication failed
 		logger.Warningf("Failed to authenticate user: %v", err)
@@ -199,11 +222,10 @@ func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
 	return u, nil
 }
 
-// AuthUserBySessionHeader determines if the user session contained in the X-User-Session header check out
+// AuthUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
 func AuthUserBySessionHeader(headerValue string) (*data.User, error) {
 	// Extract session from the header value
 	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err == nil {
-
 		// If it's an anonymous user
 		if *userID == data.AnonymousUser.ID {
 			return data.AnonymousUser, nil
@@ -259,8 +281,8 @@ func FetchUserSessionFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error)
 	return ExtractUserSessionIDs(cookie.Value)
 }
 
-// GetUserFromSessionCookie parses the session cookie contained in the given request and returns the corresponding user
-func GetUserFromSessionCookie(r *http.Request) (*data.User, error) {
+// GetUserBySessionCookie parses the session cookie contained in the given request and returns the corresponding user
+func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 	// Extract session from the cookie
 	userID, sessionID, err := FetchUserSessionFromCookie(r)
 	if err != nil {
