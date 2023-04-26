@@ -152,7 +152,7 @@ create table cm_domains (
     name              varchar(255)          not null,        -- Domain display name
     host              varchar(259)          not null unique, -- Domain host
     ts_created        timestamp             not null,        -- When the domain was created
-    is_readonly          boolean default false not null,        -- Whether the domain is readonly (no new comments are allowed)
+    is_readonly       boolean default false not null,        -- Whether the domain is readonly (no new comments are allowed)
     auth_anonymous    boolean default false not null,        -- Whether anonymous comments are allowed
     auth_local        boolean default false not null,        -- Whether local authentication is allowed
     auth_sso          boolean default false not null,        -- Whether SSO authentication is allowed
@@ -287,6 +287,17 @@ begin
                 left join emails e on e.email=o.email
                 -- Exclude already migrated owners
                 where not exists(select 1 from cm_users xu where xu.email=mod.email);
+
+        -- Migrate domain commenters
+        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator)
+            select dm.id, u.id, false, false, true, coalesce(e.sendreplynotifications, false), coalesce(e.sendmoderatornotifications, false)
+                from (select distinct commenterhex, domain from comments) c
+                join temp_commenterhex_map cm on cm.commenterhex=c.commenterhex
+                join cm_users u on u.id=cm.id
+                join temp_domain_map dm on dm.domain=c.domain
+                left join emails e on e.email=o.email
+                -- Exclude already migrated owners/moderators
+                where not exists(select 1 from cm_domains_users xdu where xdu.domain_id=dm.id and xdu.user_id=u.id);
 
         -- Migrate pages
         insert into cm_domain_pages(id, domain_id, path, title, is_readonly, count_comments)

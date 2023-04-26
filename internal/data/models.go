@@ -232,3 +232,68 @@ func NewUserSession(userID *uuid.UUID, host string, req *http.Request) *UserSess
 func (us *UserSession) EncodeIDs() string {
 	return base64.RawURLEncoding.EncodeToString(append(us.UserID[:], us.ID[:]...))
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// DomainModerationPolicy describes comment moderation policy on a specific domain
+type DomainModerationPolicy string
+
+const (
+	DomainModerationPolicyNone      DomainModerationPolicy = "none"      // No comments require moderation
+	DomainModerationPolicyAnonymous                        = "anonymous" // Comments by anonymous commenters require moderation
+	DomainModerationPolicyAll                              = "all"       // All comments require moderation
+)
+
+// DomainModNotifyPolicy describes moderator notification policy on a specific domain
+type DomainModNotifyPolicy string
+
+const (
+	DomainModNotifyPolicyNone    DomainModNotifyPolicy = "none"    // Do not notify domain moderators
+	DomainModNotifyPolicyPending                       = "pending" // Only notify domain moderator about comments pending moderation
+	DomainModNotifyPolicyAll                           = "all"     // Notify moderators about every comment
+)
+
+// Domain holds domain configuration
+type Domain struct {
+	ID               uuid.UUID              // Unique record ID
+	Name             string                 // Domain display name
+	Host             string                 // Domain host
+	CreatedTime      time.Time              // When the domain was created
+	IsReadonly       bool                   // Whether the domain is readonly (no new comments are allowed)
+	AuthAnonymous    bool                   // Whether anonymous comments are allowed
+	AuthLocal        bool                   // Whether local authentication is allowed
+	AuthSso          bool                   // Whether SSO authentication is allowed
+	SsoUrl           string                 // SSO provider URL
+	SsoSecret        string                 // SSO secret
+	ModerationPolicy DomainModerationPolicy // Moderation policy for domain: 'none', 'anonymous', 'all'
+	ModNotifyPolicy  DomainModNotifyPolicy  // Moderator notification policy for domain: 'none', 'pending', 'all'
+	DefaultSort      string                 // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+	CountComments    int64                  // Total number of comments
+	CountViews       int64                  // Total number of views
+}
+
+// NewDomain instantiates a new Domain
+func NewDomain(name, host string) *Domain {
+	return &Domain{
+		ID:               uuid.New(),
+		Name:             name,
+		Host:             host,
+		CreatedTime:      time.Now().UTC(),
+		ModerationPolicy: DomainModerationPolicyNone,
+		ModNotifyPolicy:  DomainModNotifyPolicyPending,
+		DefaultSort:      "ta",
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// DomainUser represent user configuration in a specific domain
+type DomainUser struct {
+	DomainID        uuid.UUID // ID of the domain
+	UserID          uuid.UUID // ID of the user
+	IsOwner         bool      // Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
+	IsModerator     bool      // Whether the user is a moderator of the domain (assumes is_commenter)
+	IsCommenter     bool      // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+	NotifyReplies   bool      // Whether the user is to be notified about replies to their comments
+	NotifyModerator bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
+}

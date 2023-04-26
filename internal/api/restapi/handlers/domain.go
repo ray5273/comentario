@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
+	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -17,7 +18,7 @@ import (
 	"time"
 )
 
-func DomainClear(params api_owner.DomainClearParams, principal data.Principal) middleware.Responder {
+func DomainClear(params api_owner.DomainClearParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -34,17 +35,20 @@ func DomainClear(params api_owner.DomainClearParams, principal data.Principal) m
 }
 
 // DomainDelete deletes an existing domain belonging to the current user
-func DomainDelete(params api_owner.DomainDeleteParams, principal data.Principal) middleware.Responder {
-	// Find the domain
-	domain, err := svc.TheDomainService.FindByHost(models.Host(params.Host))
-	if err != nil {
-		return respServiceError(err)
-	}
+func DomainDelete(params api_owner.DomainDeleteParams, user *data.User) middleware.Responder {
+	// Parse the UUID
+	if domainID, err := uuid.Parse(string(params.UUID)); err != nil {
+		return respBadRequest(ErrorInvalidUUID)
 
-	// Verify the user owns the domain
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), domain.Host); r != nil {
+		// Find the domain and the domain user
+	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUser(&domainID, &user.ID); err != nil {
+		return respServiceError(err)
+
+		// Verify the user owns the domain
+	} else if r := Verifier.UserOwnsDomain(domainUser); r != nil {
 		return r
-	}
+
+	} ...
 
 	// Delete the domain
 	if err = svc.TheDomainService.Delete(domain.Host); err != nil {
@@ -55,7 +59,7 @@ func DomainDelete(params api_owner.DomainDeleteParams, principal data.Principal)
 	return api_owner.NewDomainDeleteNoContent()
 }
 
-func DomainExport(params api_owner.DomainExportParams, principal data.Principal) middleware.Responder {
+func DomainExport(params api_owner.DomainExportParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -79,7 +83,7 @@ func DomainExport(params api_owner.DomainExportParams, principal data.Principal)
 }
 
 // DomainGet returns properties of a domain belonging to the current user
-func DomainGet(params api_owner.DomainGetParams, principal data.Principal) middleware.Responder {
+func DomainGet(params api_owner.DomainGetParams, user *data.User) middleware.Responder {
 	// Find the domain
 	domain, err := svc.TheDomainService.FindByHost(models.Host(params.Host))
 	if err != nil {
@@ -95,7 +99,7 @@ func DomainGet(params api_owner.DomainGetParams, principal data.Principal) middl
 	return api_owner.NewDomainGetOK().WithPayload(domain)
 }
 
-func DomainImport(params api_owner.DomainImportParams, principal data.Principal) middleware.Responder {
+func DomainImport(params api_owner.DomainImportParams, user *data.User) middleware.Responder {
 	defer params.Data.Close()
 
 	// Verify the user owns the domain
@@ -126,7 +130,7 @@ func DomainImport(params api_owner.DomainImportParams, principal data.Principal)
 }
 
 // DomainList returns a list of domain belonging to the user
-func DomainList(_ api_owner.DomainListParams, principal data.Principal) middleware.Responder {
+func DomainList(_ api_owner.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
 	domains, err := svc.TheDomainService.ListByOwner(principal.GetUser().HexID)
 	if err != nil {
@@ -137,7 +141,7 @@ func DomainList(_ api_owner.DomainListParams, principal data.Principal) middlewa
 	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{Domains: domains})
 }
 
-func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, principal data.Principal) middleware.Responder {
+func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -153,7 +157,7 @@ func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, princip
 	return api_owner.NewDomainModeratorDeleteNoContent()
 }
 
-func DomainModeratorNew(params api_owner.DomainModeratorNewParams, principal data.Principal) middleware.Responder {
+func DomainModeratorNew(params api_owner.DomainModeratorNewParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -169,7 +173,7 @@ func DomainModeratorNew(params api_owner.DomainModeratorNewParams, principal dat
 	return api_owner.NewDomainModeratorNewNoContent()
 }
 
-func DomainNew(params api_owner.DomainNewParams, principal data.Principal) middleware.Responder {
+func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Responder {
 	// Properly validate the domain's host (the Swagger pattern only performs a superficial check)
 	domain := params.Body.Domain
 	if ok, _, _ := util.IsValidHostPort(string(domain.Host)); !ok {
@@ -197,7 +201,7 @@ func DomainNew(params api_owner.DomainNewParams, principal data.Principal) middl
 	return api_owner.NewDomainNewNoContent()
 }
 
-func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, principal data.Principal) middleware.Responder {
+func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -214,7 +218,7 @@ func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, principal dat
 	return api_owner.NewDomainSsoSecretNewOK().WithPayload(&api_owner.DomainSsoSecretNewOKBody{SsoSecret: token})
 }
 
-func DomainStatistics(params api_owner.DomainStatisticsParams, principal data.Principal) middleware.Responder {
+func DomainStatistics(params api_owner.DomainStatisticsParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -243,7 +247,7 @@ func DomainStatistics(params api_owner.DomainStatisticsParams, principal data.Pr
 }
 
 // DomainToggleFrozen toggles domain state between frozen and unfrozen
-func DomainToggleFrozen(params api_owner.DomainToggleFrozenParams, principal data.Principal) middleware.Responder {
+func DomainToggleFrozen(params api_owner.DomainToggleFrozenParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -259,7 +263,7 @@ func DomainToggleFrozen(params api_owner.DomainToggleFrozenParams, principal dat
 	return api_owner.NewDomainToggleFrozenNoContent()
 }
 
-func DomainUpdate(params api_owner.DomainUpdateParams, principal data.Principal) middleware.Responder {
+func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middleware.Responder {
 	// Verify the user owns the domain
 	domain := params.Body.Domain
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), domain.Host); r != nil {

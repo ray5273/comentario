@@ -133,127 +133,83 @@ definitions:
     description: Registered domain
     type: object
     required:
+      - id
       - host
-      - state
-      - defaultSortPolicy
-      - emailNotificationPolicy
-      - idps
     properties:
+      id:
+        type: string
+        format: uuid
+        description: Unique domain ID
+      name:
+        type: string
+        maxLength: 255
+        description: Domain display name
       host:
         $ref: "#/definitions/host"
-        description: Host, with an optional port number, the domain is configured on
-      displayName:
+        description: Domain host
+      createdTime:
         type: string
-        description: Display name of the domain
-        maxLength: 255
-        x-isnullable: false
-      state:
-        $ref: "#/definitions/domainState"
-        description: Domain state
-      autoSpamFilter:
+        format: date-time
+        readOnly: true
+        description: When the domain was created
+      isReadonly:
         type: boolean
-        description: Whether automatic spam detection is active
+        description: Whether the domain is readonly (no new comments are allowed)
         x-omitempty: false
-        x-isnullable: false
-      requireModeration:
+      authAnonymous:
         type: boolean
-        description: Whether every comment is subject to an approval by a moderator
+        description: Whether anonymous comments are allowed
         x-omitempty: false
-        x-isnullable: false
-      requireIdentification:
+      authLocal:
         type: boolean
-        description: Whether anonymous comments are disabled
+        description: Whether local authentication is allowed
         x-omitempty: false
-        x-isnullable: false
-      moderateAllAnonymous:
+      authSso:
         type: boolean
-        description: Whether anonymous comments are subject to an approval by a moderator
+        description: Whether SSO authentication is allowed
         x-omitempty: false
-        x-isnullable: false
-      defaultSortPolicy:
-        $ref: "#/definitions/sortPolicy"
-        description: Default comment sorting for the domain
-      emailNotificationPolicy:
-        $ref: "#/definitions/emailNotificationPolicy"
-        description: Email notification policy for new comments
-      idps:
-        type: array
-        items:
-          $ref: "#/definitions/identityProviderId"
-        description: >
-          List of IDs of identity providers enabled for this domain. Must be a subset of the local auth (id == ''), SSO
-          (id == 'sso'; only when ssoUrl is set) and all federated IdPs configured for this instance (see clientConfig)
       ssoUrl:
         type: string
-        format: uri
-        description: URL of the SSO server
-      ssoSecret:
+        description: SSO provider URL
+      moderationPolicy:
+        $ref: "#/definitions/domainModerationPolicy"
+        description: Moderation policy for domain
+      modNotifyPolicy:
+        $ref: "#/definitions/domainModNotifyPolicy"
+        description: Moderator notification policy for domain
+      defaultSort:
         type: string
+        minLength: 2
+        maxLength: 2
+        description: >
+          Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+      countComments:
+        type: integer
         readOnly: true
-        description: SSO secret
-      creationDate:
-        type: string
-        format: date-time
+        description: Total number of comments
+        x-omitempty: false
+      countViews:
+        type: integer
         readOnly: true
-        description: Timestamp when the domain was created
-      moderators:
-        type: array
-        items:
-          $ref: "#/definitions/domainModerator"
-        readOnly: true
-        description: List of domain moderators
+        description: Total number of views
+        x-omitempty: false
 
-  domainModerator:
-    description: Domain moderator
-    type: object
-    readOnly: true
-    required:
-      - email
-      - host
-    properties:
-      email:
-        type: string
-        format: email
-        x-isnullable: false
-      host:
-        $ref: "#/definitions/host"
-      addDate:
-        type: string
-        format: date-time
-
-  domainState:
-    description: Domain state
+  domainModerationPolicy:
+    description: Moderation policy for domain
     type: string
     enum:
-      - unfrozen
-      - frozen
+      - none
+      - anonymous
+      - all
     x-isnullable: false
 
-  email:
-    type: object
-    properties:
-      email:
-        type: string
-        format: email
-      unsubscribeSecretHex:
-        $ref: "#/definitions/hexId"
-      lastEmailNotificationDate:
-        type: string
-        format: date-time
-      sendReplyNotifications:
-        type: boolean
-        x-omitempty: false
-      sendModeratorNotifications:
-        type: boolean
-        x-omitempty: false
-
-  emailNotificationPolicy:
-    description: Email notification policy
+  domainModNotifyPolicy:
+    description: Moderator notification policy for domain
     type: string
     enum:
-      - all
       - none
-      - pending-moderation
+      - pending
+      - all
     x-isnullable: false
 
   error:
@@ -1308,9 +1264,9 @@ paths:
         204:
           description: Domain properties have been updated
 
-  /domains/{host}:
+  /domains/{uuid}:
     parameters:
-      - $ref: "#/parameters/pathHost"
+      - $ref: "#/parameters/pathUuid"
 
     get:
       operationId: DomainGet
@@ -1488,90 +1444,6 @@ paths:
                 type: array
                 items:
                   type: integer
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # Emails
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /email/get:
-    post:
-      operationId: EmailGet
-      summary: Get email properties for specified unsubscribe token
-      tags:
-        - ApiCommenter
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - unsubscribeSecretHex
-            properties:
-              unsubscribeSecretHex:
-                $ref: "#/definitions/hexId"
-      responses:
-        200:
-          description: Email object
-          schema:
-            type: object
-            properties:
-              email:
-                $ref: "#/definitions/email"
-
-  /email/moderate:
-    get:
-      operationId: EmailModerate
-      summary: Apply a moderator action to specified comment
-      tags:
-        - ApiCommenter
-      security: []
-      parameters:
-        - name: unsubscribeSecretHex
-          in: query
-          type: string
-          required: true
-          minLength: 64
-          maxLength: 64
-        - name: action
-          in: query
-          type: string
-          required: true
-          enum:
-            - approve
-            - delete
-        - name: commentHex
-          in: query
-          type: string
-          required: true
-          minLength: 64
-          maxLength: 64
-      responses:
-        204:
-          description: Action has been applied
-
-  /email/update:
-    post:
-      operationId: EmailUpdate
-      summary: Update properties of specified email
-      tags:
-        - ApiCommenter
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - email
-            properties:
-              email:
-                $ref: "#/definitions/email"
-      responses:
-        204:
-          description: Email properties have been updated
 
   #---------------------------------------------------------------------------------------------------------------------
   # Pages

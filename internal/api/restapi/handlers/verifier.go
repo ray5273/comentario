@@ -22,8 +22,8 @@ type VerifierService interface {
 	UserIsDomainModerator(email string, host models.Host) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
 	UserIsLocal(user *data.User) middleware.Responder
-	// UserOwnsDomain verifies the owner with the given hex ID owns the specified domain
-	UserOwnsDomain(id models.HexID, host models.Host) middleware.Responder
+	// UserOwnsDomain verifies the given domain user is an owner
+	UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder
 }
 
 // ----------------------------------------------------------------------------------------------------------------------
@@ -72,10 +72,8 @@ func (v *verifier) UserIsDomainModerator(email string, host models.Host) middlew
 	return nil
 }
 
-func (v *verifier) UserOwnsDomain(id models.HexID, host models.Host) middleware.Responder {
-	if b, err := svc.TheDomainService.IsDomainOwner(id, host); err != nil {
-		return respServiceError(err)
-	} else if !b {
+func (v *verifier) UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder {
+	if !domainUser.IsOwner {
 		return respForbidden(ErrorNotDomainOwner)
 	}
 	return nil

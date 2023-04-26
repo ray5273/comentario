@@ -3,6 +3,7 @@ package svc
 import (
 	"database/sql"
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -14,6 +15,12 @@ var TheDomainService DomainService = &domainService{}
 
 // DomainService is a service interface for dealing with domains
 type DomainService interface {
+	// FindByID fetches and returns a domain by its ID
+	FindByID(id *uuid.UUID) (*data.Domain, error)
+	// FindDomainUser fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
+	// there's no record for the user on that domain, returns nil for DomainUser
+	FindDomainUser(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+
 	// Clear removes all pages, comments, and comment votes for the specified domain
 	Clear(host models.Host) error
 	// Create creates and persists a new domain record
@@ -257,6 +264,83 @@ func (svc *domainService) FindByHost(host models.Host) (*models.Domain, error) {
 		// Grab the first one
 		return domains[0], nil
 	}
+}
+
+func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
+	logger.Debugf("domainService.FindByID(%s)", id)
+
+	// Query the row
+	row := db.QueryRow(
+		"select "+
+			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
+			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views "+
+			"from cm_domains d "+
+			"where d.id=$1;",
+		id)
+
+	// Fetch the domain
+	if d, err := svc.fetchDomain(row); err != nil {
+		return nil, translateDBErrors(err)
+	} else {
+		return d, nil
+	}
+}
+
+func (svc *domainService) FindDomainUser(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
+	logger.Debugf("domainService.FindDomainUser(%s)", domainID, userID)
+
+	// Query the row
+	row := db.QueryRow(
+		"select "+
+			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
+			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
+			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), coalesce(du.notify_moderator, false) "+
+			"from cm_domains d "+
+			"left join cm_domains_users du on du.domain_id=$1 and du.user_id=$2 "+
+			"where d.id=$1;",
+		domainID, userID)
+
+	// Fetch the domain and the domain user
+	var d data.Domain
+	var du data.DomainUser
+	var uid uuid.NullUUID
+	err := row.Scan(
+		&d.ID,
+		&d.Name,
+		&d.Host,
+		&d.CreatedTime,
+		&d.IsReadonly,
+		&d.AuthAnonymous,
+		&d.AuthLocal,
+		&d.AuthSso,
+		&d.SsoUrl,
+		&d.SsoSecret,
+		&d.ModerationPolicy,
+		&d.ModNotifyPolicy,
+		&d.DefaultSort,
+		&d.CountComments,
+		&d.CountViews,
+		&uid,
+		&du.IsOwner,
+		&du.IsModerator,
+		&du.IsCommenter,
+		&du.NotifyReplies,
+		&du.NotifyModerator)
+	if err != nil {
+		logger.Errorf("domainService.FindDomainUser: Scan() failed: %v", err)
+		return nil, nil, err
+	}
+
+	// If no record found for the domain user, we'll return nil
+	var pdu *data.DomainUser
+	if uid.Valid {
+		pdu = &du
+	}
+
+	// Succeeded
+	return &d, pdu, nil
 }
 
 func (svc *domainService) IsDomainModerator(email string, host models.Host) (bool, error) {
@@ -524,7 +608,36 @@ func (svc *domainService) Update(domain *models.Domain) error {
 	return nil
 }
 
+// fetchDomain fetches and returns a domain instance from the provided database row
+func (svc *domainService) fetchDomain(row *sql.Row) (*data.Domain, error) {
+	var d data.Domain
+	err := row.Scan(
+		&d.ID,
+		&d.Name,
+		&d.Host,
+		&d.CreatedTime,
+		&d.IsReadonly,
+		&d.AuthAnonymous,
+		&d.AuthLocal,
+		&d.AuthSso,
+		&d.SsoUrl,
+		&d.SsoSecret,
+		&d.ModerationPolicy,
+		&d.ModNotifyPolicy,
+		&d.DefaultSort,
+		&d.CountComments,
+		&d.CountViews)
+	if err != nil {
+		logger.Errorf("domainService.fetchDomain: Scan() failed: %v", err)
+		return nil, err
+	}
+
+	// Succeeded
+	return &d, nil
+}
+
 // fetchDomainsAndModerators returns a list of domain instances from the provided database rows
+// Deprecated
 func (svc *domainService) fetchDomainsAndModerators(rs *sql.Rows) ([]*models.Domain, error) {
 	// Maintain a map of domains by host
 	dn := map[models.Host]*models.Domain{}
