@@ -2,6 +2,7 @@ package data
 
 import (
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"reflect"
 	"testing"
@@ -34,6 +35,35 @@ func TestDecodeHexID(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DecodeHexID() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDecodeUUID(t *testing.T) {
+	v := uuid.MustParse("4eaf7fc2-a6ce-88c9-4150-59e2201ab8cc")
+	tests := []struct {
+		name    string
+		id      strfmt.UUID
+		want    *uuid.UUID
+		wantErr bool
+	}{
+		{"empty          ", "", nil, true},
+		{"invalid UUID   ", "4gaf7fc2a6ce88c9415059e2201ab8cc", nil, true},
+		{"too short      ", "41af7fc2a6ce88c9415059e2201ab8c", nil, true},
+		{"too long       ", "41af7fc2a6ce88c9415059e2201ab8cca", nil, true},
+		{"valid solid    ", "4eaf7fc2a6ce88c9415059e2201ab8cc", &v, false},
+		{"valid separated", "4eaf7fc2-a6ce-88c9-4150-59e2201ab8cc", &v, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DecodeUUID(tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DecodeUUID() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DecodeUUID() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

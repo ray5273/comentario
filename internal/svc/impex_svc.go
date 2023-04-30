@@ -5,6 +5,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"github.com/lunny/html2md"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -19,7 +20,7 @@ var TheImportExportService ImportExportService = &importExportService{}
 // ImportExportService is a service interface for dealing with data import/export
 type ImportExportService interface {
 	// Export exports the data for the specified domain, returning gzip-compressed binary data
-	Export(host models.Host) ([]byte, error)
+	Export(domainID *uuid.UUID) ([]byte, error)
 	// ImportCommento performs data import in the "commento" format from the provided data buffer. Returns the number of
 	// imported comments
 	ImportCommento(host models.Host, reader io.Reader) (int64, error)
@@ -81,8 +82,8 @@ type disqusXML struct {
 	Posts   []disqusPost   `xml:"post"`
 }
 
-func (svc *importExportService) Export(host models.Host) ([]byte, error) {
-	logger.Debugf("importExportService.Export(%s)", host)
+func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
+	logger.Debugf("importExportService.Export(%s)", domainID)
 
 	// Create an export data object
 	exp := commentoExportV1{Version: 1}

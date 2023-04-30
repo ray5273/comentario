@@ -5,7 +5,6 @@ go 1.20
 require (
 	github.com/adtac/go-akismet v0.0.0-20181220032308-0ca9e1023047
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
-	github.com/disintegration/imaging v1.6.2
 	github.com/go-openapi/errors v0.20.3
 	github.com/go-openapi/loads v0.21.2
 	github.com/go-openapi/runtime v0.26.0
@@ -50,7 +49,6 @@ require (
 	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.11.4 // indirect
-	golang.org/x/image v0.7.0 // indirect
 	golang.org/x/oauth2 v0.7.0 // indirect
 	golang.org/x/sys v0.7.0 // indirect
 	google.golang.org/appengine v1.6.7 // indirect

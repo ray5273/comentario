@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"strings"
 )
@@ -20,6 +21,12 @@ func DecodeHexID(id models.HexID) (*[32]byte, error) {
 	var b32 [32]byte
 	copy(b32[:], b)
 	return &b32, nil
+}
+
+// DecodeUUID converts a strfmt.UUID into a binary UUID
+func DecodeUUID(sid strfmt.UUID) (*uuid.UUID, error) {
+	u, e := uuid.Parse(string(sid))
+	return &u, e
 }
 
 // EmailToString converts a value of *strfmt.Email into a string

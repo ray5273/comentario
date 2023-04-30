@@ -394,6 +394,7 @@ parameters:
     description: UUID in the path
     type: string
     format: uuid
+    x-isnullable: false
 
   queryToken:
     in: query
@@ -1306,7 +1307,7 @@ paths:
         204:
           description: Domain frozen status has been toggled
 
-  /domains/{host}/export:
+  /domains/{uuid}/export:
     get:
       operationId: DomainExport
       summary: Export domain data and download as a gzip-archive file
@@ -1315,7 +1316,7 @@ paths:
       produces:
         - application/gzip
       parameters:
-        - $ref: "#/parameters/pathHost"
+        - $ref: "#/parameters/pathUuid"
       responses:
         200:
           description: Export file
@@ -1325,7 +1326,7 @@ paths:
             Content-Disposition:
               type: string
 
-  /domains/{host}/import/{source}:
+  /domains/{uuid}/import/{source}:
     post:
       operationId: DomainImport
       summary: Import comments and commenters into specified domain from exported data, downloaded from certain URL
@@ -1334,7 +1335,7 @@ paths:
       consumes:
         - multipart/form-data
       parameters:
-        - $ref: "#/parameters/pathHost"
+        - $ref: "#/parameters/pathUuid"
         - $ref: "#/parameters/pathImportSource"
         - in: formData
           name: data

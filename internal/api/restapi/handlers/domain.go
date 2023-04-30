@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -19,14 +19,12 @@ import (
 )
 
 func DomainClear(params api_owner.DomainClearParams, user *data.User) middleware.Responder {
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	// Find the domain and verify the user's ownership
+	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
-	}
 
-	// Clear all domain's pages/comments/votes
-	if err := svc.TheDomainService.Clear(host); err != nil {
+		// Clear all domain's users/pages/comments
+	} else if err := svc.TheDomainService.ClearByID(&d.ID); err != nil {
 		return respServiceError(err)
 	}
 
@@ -36,22 +34,12 @@ func DomainClear(params api_owner.DomainClearParams, user *data.User) middleware
 
 // DomainDelete deletes an existing domain belonging to the current user
 func DomainDelete(params api_owner.DomainDeleteParams, user *data.User) middleware.Responder {
-	// Parse the UUID
-	if domainID, err := uuid.Parse(string(params.UUID)); err != nil {
-		return respBadRequest(ErrorInvalidUUID)
-
-		// Find the domain and the domain user
-	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUser(&domainID, &user.ID); err != nil {
-		return respServiceError(err)
-
-		// Verify the user owns the domain
-	} else if r := Verifier.UserOwnsDomain(domainUser); r != nil {
+	// Find the domain and verify the user's ownership
+	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
 
-	} ...
-
-	// Delete the domain
-	if err = svc.TheDomainService.Delete(domain.Host); err != nil {
+		// Delete the domain and all dependent objects
+	} else if err := svc.TheDomainService.DeleteByID(&d.ID); err != nil {
 		return respServiceError(err)
 	}
 
@@ -60,48 +48,41 @@ func DomainDelete(params api_owner.DomainDeleteParams, user *data.User) middlewa
 }
 
 func DomainExport(params api_owner.DomainExportParams, user *data.User) middleware.Responder {
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	// Find the domain and verify the user's ownership
+	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
-	}
 
-	// Export the data
-	b, err := svc.TheImportExportService.Export(host)
-	if err != nil {
+		// Export the data
+	} else if b, err := svc.TheImportExportService.Export(&d.ID); err != nil {
 		return respServiceError(err)
+	} else {
+		// Succeeded. Send the data as a file
+		return api_owner.NewDomainExportOK().
+			WithContentDisposition(
+				fmt.Sprintf(
+					`inline; filename="%s-%s.json.gz"`,
+					strings.ReplaceAll(d.Host, ":", "-"),
+					time.Now().UTC().Format("2006-01-02-15-04-05"))).
+			WithPayload(io.NopCloser(bytes.NewReader(b)))
 	}
-
-	// Succeeded. Send the data as a file
-	return api_owner.NewDomainExportOK().
-		WithContentDisposition(
-			fmt.Sprintf(
-				`inline; filename="%s-%s.json.gz"`,
-				strings.ReplaceAll(string(host), ":", "-"),
-				time.Now().UTC().Format("2006-01-02-15-04-05"))).
-		WithPayload(io.NopCloser(bytes.NewReader(b)))
 }
 
 // DomainGet returns properties of a domain belonging to the current user
 func DomainGet(params api_owner.DomainGetParams, user *data.User) middleware.Responder {
-	// Find the domain
-	domain, err := svc.TheDomainService.FindByHost(models.Host(params.Host))
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Verify the user owns the domain
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), domain.Host); r != nil {
+	// Find the domain and verify the user's ownership
+	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
-	}
 
-	// Succeeded
-	return api_owner.NewDomainGetOK().WithPayload(domain)
+	} else {
+		// Succeeded
+		return api_owner.NewDomainGetOK().WithPayload(d.ToDTO())
+	}
 }
 
 func DomainImport(params api_owner.DomainImportParams, user *data.User) middleware.Responder {
 	defer params.Data.Close()
 
+	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -124,6 +105,7 @@ func DomainImport(params api_owner.DomainImportParams, user *data.User) middlewa
 	if err != nil {
 		return respServiceError(err)
 	}
+	*/
 
 	// Succeeded
 	return api_owner.NewDomainImportOK().WithPayload(&api_owner.DomainImportOKBody{NumImported: count})
@@ -132,13 +114,19 @@ func DomainImport(params api_owner.DomainImportParams, user *data.User) middlewa
 // DomainList returns a list of domain belonging to the user
 func DomainList(_ api_owner.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
-	domains, err := svc.TheDomainService.ListByOwner(principal.GetUser().HexID)
+	domains, err := svc.TheDomainService.ListByOwnerID(&user.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
 
+	// Convert the models
+	ds := make([]*models.Domain, len(domains))
+	for i, d := range domains {
+		ds[i] = d.ToDTO()
+	}
+
 	// Succeeded
-	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{Domains: domains})
+	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{Domains: ds})
 }
 
 func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *data.User) middleware.Responder {
@@ -282,6 +270,27 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 
 	// Succeeded
 	return api_owner.NewDomainUpdateNoContent()
+}
+
+// domainGetDomainAndOwner parses a string UUID and fetches the corresponding domain and its user, verifying they own
+// the domain
+func domainGetDomainAndOwner(domainUUID strfmt.UUID, user *data.User) (*data.Domain, *data.DomainUser, middleware.Responder) {
+	// Parse domain ID
+	if domainID, err := data.DecodeUUID(domainUUID); err != nil {
+		return nil, nil, respBadRequest(ErrorInvalidUUID)
+
+		// Find the domain and domain user
+	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUser(domainID, &user.ID); err != nil {
+		return nil, nil, respServiceError(err)
+
+		// Verify the user owns the domain
+	} else if r := Verifier.UserOwnsDomain(domainUser); r != nil {
+		return nil, nil, r
+
+	} else {
+		// Succeeded
+		return domain, domainUser, nil
+	}
 }
 
 // domainValidateIdPs validates the passed list of domain's identity providers

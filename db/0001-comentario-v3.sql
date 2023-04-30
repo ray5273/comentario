@@ -151,7 +151,7 @@ create table cm_domains (
     id                uuid primary key,                      -- Unique record ID
     name              varchar(255)          not null,        -- Domain display name
     host              varchar(259)          not null unique, -- Domain host
-    ts_created        timestamp             not null,        -- When the domain was created
+    ts_created        timestamp             not null,        -- When the record was created
     is_readonly       boolean default false not null,        -- Whether the domain is readonly (no new comments are allowed)
     auth_anonymous    boolean default false not null,        -- Whether anonymous comments are allowed
     auth_local        boolean default false not null,        -- Whether local authentication is allowed
@@ -201,6 +201,7 @@ create table cm_domain_pages (
     path           varchar(2083)              not null, -- Page path
     title          varchar(100) default ''    not null, -- Page title
     is_readonly    boolean      default false not null, -- Whether the page is readonly (no new comments are allowed)
+    ts_created     timestamp                  not null, -- When the record was created
     count_comments integer      default 0     not null, -- Total number of comments
     count_views    integer      default 0     not null  -- Total number of views
 );
@@ -208,6 +209,35 @@ create table cm_domain_pages (
 -- Constraints
 alter table cm_domain_pages add constraint fk_domain_pages_domain_id      foreign key (domain_id) references cm_domains(id) on delete cascade;
 alter table cm_domain_pages add constraint uk_domain_pages_domain_id_path unique (domain_id, path);
+
+------------------------------------------------------------------------------------------------------------------------
+-- Comments
+------------------------------------------------------------------------------------------------------------------------
+
+create table cm_comments (
+    id            uuid primary key,               -- Unique record ID
+    parent_id     uuid,                           -- Parent record ID, null if it's a root comment on the page
+    page_id       uuid                  not null, -- Reference to the page
+    markdown      text                  not null, -- Comment text in markdown
+    html          text                  not null, -- Rendered comment text in HTML
+    score         integer default 0     not null, -- Comment score
+    is_approved   boolean default false not null, -- Whether the comment is approved and can be seen by everyone
+    is_spam       boolean default false not null, -- Whether the comment is flagged as (potential) spam
+    is_deleted    boolean default false not null, -- Whether the comment is marked as deleted
+    ts_created    timestamp             not null, -- When the comment was created
+    ts_approved   timestamp,                      -- When the comment was approved
+    ts_deleted    timestamp,                      -- When the comment was marked as deleted
+    user_created  uuid,                           -- Reference to the user who created the comment
+    user_approved uuid,                           -- Reference to the user who approved the comment
+    user_deleted  uuid                            -- Reference to the user who deleted the comment
+);
+
+-- Constraints
+alter table cm_comments add constraint fk_comments_parent_id foreign key (parent_id) references cm_comments(id)      on delete cascade;
+alter table cm_comments add constraint fk_comments_page_id   foreign key (page_id)   references cm_domain_pages(id)  on delete cascade;
+alter table cm_comments add constraint fk_comments_user_created  foreign key (user_created)  references cm_users(id) on delete set null;
+alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id) on delete set null;
+alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id) on delete set null;
 
 --======================================================================================================================
 -- Migrate the legacy schema
@@ -227,6 +257,10 @@ begin
         -- Create a domain mapping table
         create temporary table temp_domain_map(domain varchar(259) primary key, id uuid not null unique);
         insert into temp_domain_map(domain, id) select domain, gen_random_uuid() from domains;
+
+        -- Create a commenthex mapping table
+        create temporary table temp_commenthex_map(commenthex varchar(64) primary key, id uuid not null unique);
+        insert into temp_commenthex_map(commenthex, id) select commenthex, gen_random_uuid() from comments;
 
         -- Migrate owners
         insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks)
@@ -284,7 +318,7 @@ begin
                 from moderators mod
                 join cm_users u on u.email=mod.email
                 join temp_domain_map dm on dm.domain=mod.domain
-                left join emails e on e.email=o.email
+                left join emails e on e.email=u.email
                 -- Exclude already migrated owners
                 where not exists(select 1 from cm_users xu where xu.email=mod.email);
 
@@ -295,16 +329,39 @@ begin
                 join temp_commenterhex_map cm on cm.commenterhex=c.commenterhex
                 join cm_users u on u.id=cm.id
                 join temp_domain_map dm on dm.domain=c.domain
-                left join emails e on e.email=o.email
+                left join emails e on e.email=u.email
                 -- Exclude already migrated owners/moderators
                 where not exists(select 1 from cm_domains_users xdu where xdu.domain_id=dm.id and xdu.user_id=u.id);
 
         -- Migrate pages
-        insert into cm_domain_pages(id, domain_id, path, title, is_readonly, count_comments)
-            select gen_random_uuid(), m.id, p.path, p.title, p.islocked, p.commentcount
+        insert into cm_domain_pages(id, domain_id, path, title, ts_created, is_readonly, count_comments)
+            select gen_random_uuid(), m.id, p.path, p.title, current_timestamp, p.islocked, p.commentcount
                 from pages p
                 join temp_domain_map m on m.domain=p.domain;
 
+        -- Migrate comments
+        insert into cm_comments(
+                id, parent_id, page_id, markdown, html, score, is_approved, is_spam, is_deleted, ts_created, ts_approved,
+                ts_deleted, user_created, user_approved, user_deleted)
+            select
+                    cm.id, pcm.id, p.id, c.markdown, c.html, c.score, c.state='approved', c.state='flagged', c.deleted,
+                    c.creationdate, case when c.state='approved' then current_timestamp end, c.deletiondate, uc.id,
+                    case when c.state='approved' then uc.id end, ud.id
+                from comments c
+                -- commenthex map
+                join temp_commenthex_map cm on cm.commenthex=c.commenthex
+                -- parenthex map
+                left join temp_commenthex_map pcm on pcm.commenthex=c.parenthex
+                -- domain map
+                join temp_domain_map dm on dm.domain=c.domain
+                -- pages
+                join cm_domain_pages p on p.domain_id=dm.id and p.path = c.path
+                -- user created
+                join temp_commenterhex_map cmc on cmc.commenterhex=c.commenterhex
+                join cm_users uc on uc.id=cmc.id
+                -- user deleted
+                left join temp_commenterhex_map cmd on cmd.commenterhex=c.deleterhex
+                left join cm_users ud on ud.id=cmd.id;
 
         -- TODO update domains.count_comments, count_views
         -- TODO update cm_domain_pages.count_views

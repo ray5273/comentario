@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"github.com/avct/uasurfer"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt/conv"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -74,27 +75,27 @@ func (t *Token) String() string {
 
 // User represents an authenticated or an anonymous user
 type User struct {
-	ID            uuid.UUID  // Unique user ID
-	Email         string     // Unique user email
-	Name          string     // User's full name
-	PasswordHash  string     // Password hash
-	SystemAccount bool       // Whether the user is a system account (cannot sign in)
-	Superuser     bool       // Whether the user is a "super user" (instance admin)
-	Confirmed     bool       // Whether the user's email has been confirmed
-	ConfirmedTime time.Time  // When the user's email has been confirmed
-	CreatedTime   time.Time  // When the user was created
-	UserCreated   *uuid.UUID // Reference to the user who created this one. null if the used signed up themselves
-	SignupIP      string     // IP address the user signed up or was created from
-	SignupCountry string     // 2-letter country code matching the SignupIP
-	SignupURL     string     // URL the user signed up on (only for commenter signup, empty for UI signup)
-	Banned        bool       // Whether the user is banned
-	BannedTime    time.Time  // When the user was banned
-	UserBanned    *uuid.UUID // Reference to the user who banned this one
-	Remarks       string     // Optional remarks for the user
-	FederatedIdP  string     // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
-	FederatedID   string     // User ID as reported by the federated identity provider (only when federated_idp is set)
-	Avatar        []byte     // Optional user's avatar image
-	WebsiteURL    string     // Optional user's website URL
+	ID            uuid.UUID     // Unique user ID
+	Email         string        // Unique user email
+	Name          string        // User's full name
+	PasswordHash  string        // Password hash
+	SystemAccount bool          // Whether the user is a system account (cannot sign in)
+	Superuser     bool          // Whether the user is a "super user" (instance admin)
+	Confirmed     bool          // Whether the user's email has been confirmed
+	ConfirmedTime time.Time     // When the user's email has been confirmed
+	CreatedTime   time.Time     // When the user was created
+	UserCreated   uuid.NullUUID // Reference to the user who created this one. null if the used signed up themselves
+	SignupIP      string        // IP address the user signed up or was created from
+	SignupCountry string        // 2-letter country code matching the SignupIP
+	SignupURL     string        // URL the user signed up on (only for commenter signup, empty for UI signup)
+	Banned        bool          // Whether the user is banned
+	BannedTime    time.Time     // When the user was banned
+	UserBanned    uuid.NullUUID // Reference to the user who banned this one
+	Remarks       string        // Optional remarks for the user
+	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
+	FederatedID   string        // User ID as reported by the federated identity provider (only when federated_idp is set)
+	Avatar        []byte        // Optional user's avatar image
+	WebsiteURL    string        // Optional user's website URL
 }
 
 // NewUser instantiates a new User
@@ -263,7 +264,7 @@ type Domain struct {
 	AuthAnonymous    bool                   // Whether anonymous comments are allowed
 	AuthLocal        bool                   // Whether local authentication is allowed
 	AuthSso          bool                   // Whether SSO authentication is allowed
-	SsoUrl           string                 // SSO provider URL
+	SsoURL           string                 // SSO provider URL
 	SsoSecret        string                 // SSO secret
 	ModerationPolicy DomainModerationPolicy // Moderation policy for domain: 'none', 'anonymous', 'all'
 	ModNotifyPolicy  DomainModNotifyPolicy  // Moderator notification policy for domain: 'none', 'pending', 'all'
@@ -285,9 +286,29 @@ func NewDomain(name, host string) *Domain {
 	}
 }
 
+// ToDTO converts this model into an API model
+func (d *Domain) ToDTO() *models.Domain {
+	return &models.Domain{
+		AuthAnonymous:    d.AuthAnonymous,
+		AuthLocal:        d.AuthLocal,
+		AuthSso:          d.AuthSso,
+		CountComments:    d.CountComments,
+		CountViews:       d.CountViews,
+		CreatedTime:      strfmt.DateTime(d.CreatedTime),
+		DefaultSort:      d.DefaultSort,
+		Host:             models.Host(d.Host),
+		ID:               conv.UUID(strfmt.UUID(d.ID.String())),
+		IsReadonly:       d.IsReadonly,
+		ModNotifyPolicy:  models.DomainModNotifyPolicy(d.ModNotifyPolicy),
+		ModerationPolicy: models.DomainModerationPolicy(d.ModerationPolicy),
+		Name:             d.Name,
+		SsoURL:           d.SsoURL,
+	}
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
-// DomainUser represent user configuration in a specific domain
+// DomainUser represents user configuration in a specific domain
 type DomainUser struct {
 	DomainID        uuid.UUID // ID of the domain
 	UserID          uuid.UUID // ID of the user
@@ -296,4 +317,25 @@ type DomainUser struct {
 	IsCommenter     bool      // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
 	NotifyReplies   bool      // Whether the user is to be notified about replies to their comments
 	NotifyModerator bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// Comment represents a comment
+type Comment struct {
+	ID           uuid.UUID     // Unique record ID
+	ParentID     uuid.NullUUID // Parent record ID, null if it's a root comment on the page
+	PageID       uuid.UUID     // Reference to the page
+	Markdown     string        // Comment text in markdown
+	Html         string        // Rendered comment text in HTML
+	Score        int           // Comment score
+	IsApproved   bool          // Whether the comment is approved and can be seen by everyone
+	IsSpam       bool          // Whether the comment is flagged as (potential) spam
+	IsDeleted    bool          // Whether the comment is marked as deleted
+	TsCreated    time.Time     // When the comment was created
+	TsApproved   time.Time     // When the comment was approved
+	TsDeleted    time.Time     // When the comment was marked as deleted
+	UserCreated  uuid.NullUUID // Reference to the user who created the comment
+	UserApproved uuid.NullUUID // Reference to the user who approved the comment
+	UserDeleted  uuid.NullUUID // Reference to the user who deleted the comment
 }

@@ -15,14 +15,19 @@ var TheDomainService DomainService = &domainService{}
 
 // DomainService is a service interface for dealing with domains
 type DomainService interface {
+	// ClearByID removes all dependent objects (users, pages, comments, votes etc.) for the specified domain by its ID
+	ClearByID(id *uuid.UUID) error
+	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
+	// domain by its ID
+	DeleteByID(id *uuid.UUID) error
 	// FindByID fetches and returns a domain by its ID
 	FindByID(id *uuid.UUID) (*data.Domain, error)
 	// FindDomainUser fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUser(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	// ListByOwnerID fetches and returns a list of domains for the specified owner
+	ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error)
 
-	// Clear removes all pages, comments, and comment votes for the specified domain
-	Clear(host models.Host) error
 	// Create creates and persists a new domain record
 	Create(ownerHex models.HexID, domain *models.Domain) error
 	// CreateModerator creates and persists a new domain moderator record
@@ -41,8 +46,6 @@ type DomainService interface {
 	IsDomainModerator(email string, host models.Host) (bool, error)
 	// IsDomainOwner returns whether the given owner hex ID is an owner of the given domain
 	IsDomainOwner(id models.HexID, host models.Host) (bool, error)
-	// ListByOwner fetches and returns a list of domains for the specified owner
-	ListByOwner(ownerHex models.HexID) ([]*models.Domain, error)
 	// RegisterView records a domain view in the database. commenterHex should be "anonymous" for an unauthenticated
 	// viewer
 	RegisterView(host models.Host, commenter *data.UserCommenter) error
@@ -67,22 +70,15 @@ type DomainService interface {
 // domainService is a blueprint DomainService implementation
 type domainService struct{}
 
-func (svc *domainService) Clear(host models.Host) error {
-	logger.Debugf("domainService.Clear(%s)", host)
+func (svc *domainService) ClearByID(id *uuid.UUID) error {
+	logger.Debugf("domainService.ClearByID(%v)", id)
 
-	// Remove all votes on domain's comments
-	if err := TheVoteService.DeleteByHost(host); err != nil {
-		return err
-	}
-
-	// Remove all domain's comments
-	if err := TheCommentService.DeleteByHost(host); err != nil {
-		return err
-	}
-
-	// Remove all domain's pages
-	if err := ThePageService.DeleteByHost(host); err != nil {
-		return err
+	err := checkErrors(
+		db.Exec("delete from cm_domain_users where domain_id=$1;", id),
+		db.Exec("delete from cm_domain_pages where domain_id=$1;", id))
+	if err != nil {
+		logger.Errorf("domainService.ClearByID: Exec() failed: %v", err)
+		return translateDBErrors(err)
 	}
 
 	// Succeeded
@@ -222,6 +218,19 @@ func (svc *domainService) Delete(host models.Host) error {
 	return nil
 }
 
+func (svc *domainService) DeleteByID(id *uuid.UUID) error {
+	logger.Debugf("domainService.DeleteByID(%v)", id)
+
+	err := db.Exec("delete from cm_domains where id=$1;", id)
+	if err != nil {
+		logger.Errorf("domainService.DeleteByID: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
 func (svc *domainService) DeleteModerator(host models.Host, email string) error {
 	logger.Debugf("domainService.DeleteModerator(%s, %s)", host, email)
 
@@ -315,7 +324,7 @@ func (svc *domainService) FindDomainUser(domainID, userID *uuid.UUID) (*data.Dom
 		&d.AuthAnonymous,
 		&d.AuthLocal,
 		&d.AuthSso,
-		&d.SsoUrl,
+		&d.SsoURL,
 		&d.SsoSecret,
 		&d.ModerationPolicy,
 		&d.ModNotifyPolicy,
@@ -383,28 +392,25 @@ func (svc *domainService) IsDomainOwner(id models.HexID, host models.Host) (bool
 	return true, nil
 }
 
-func (svc *domainService) ListByOwner(ownerHex models.HexID) ([]*models.Domain, error) {
-	logger.Debugf("domainService.ListByOwner(%s)", ownerHex)
+func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error) {
+	logger.Debugf("domainService.ListByOwnerID(%s)", userID)
 
 	// Query domains and moderators
 	rows, err := db.Query(
 		"select "+
-			"d.domain, d.name, d.creationdate, d.state, d.autospamfilter, d.requiremoderation, "+
-			"d.requireidentification, d.moderateallanonymous, d.emailnotificationpolicy, d.commentoprovider, "+
-			"d.googleprovider, d.githubprovider, d.gitlabprovider, d.twitterprovider, d.ssoprovider, d.ssosecret, "+
-			"d.ssourl, d.defaultsortpolicy, coalesce(m.email, ''), coalesce(m.adddate, CURRENT_TIMESTAMP) "+
-			"from domains d "+
-			"left join moderators m on m.domain=d.domain "+
-			"where d.ownerhex=$1;",
-		ownerHex)
+			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
+			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views "+
+			"from cm_domains d "+
+			"where d.id in (select du.domain_id from cm_domain_users du where du.user_id=$1 and (du.is_owner or du.is_moderator));",
+		userID)
 	if err != nil {
-		logger.Errorf("domainService.ListByOwner: Query() failed: %v", err)
+		logger.Errorf("domainService.ListByOwnerID: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
 	// Fetch the domains
-	if domains, err := svc.fetchDomainsAndModerators(rows); err != nil {
+	if domains, err := svc.fetchDomains(rows); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return domains, nil
@@ -620,7 +626,7 @@ func (svc *domainService) fetchDomain(row *sql.Row) (*data.Domain, error) {
 		&d.AuthAnonymous,
 		&d.AuthLocal,
 		&d.AuthSso,
-		&d.SsoUrl,
+		&d.SsoURL,
 		&d.SsoSecret,
 		&d.ModerationPolicy,
 		&d.ModNotifyPolicy,
@@ -634,6 +640,46 @@ func (svc *domainService) fetchDomain(row *sql.Row) (*data.Domain, error) {
 
 	// Succeeded
 	return &d, nil
+}
+
+// fetchDomains fetches and returns a list domain instances from the provided database rows
+func (svc *domainService) fetchDomains(rows *sql.Rows) ([]data.Domain, error) {
+	defer rows.Close()
+
+	// Iterate all rows
+	var res []data.Domain
+	for rows.Next() {
+		var d data.Domain
+		err := rows.Scan(
+			&d.ID,
+			&d.Name,
+			&d.Host,
+			&d.CreatedTime,
+			&d.IsReadonly,
+			&d.AuthAnonymous,
+			&d.AuthLocal,
+			&d.AuthSso,
+			&d.SsoURL,
+			&d.SsoSecret,
+			&d.ModerationPolicy,
+			&d.ModNotifyPolicy,
+			&d.DefaultSort,
+			&d.CountComments,
+			&d.CountViews)
+		if err != nil {
+			logger.Errorf("domainService.fetchDomains: Scan() failed: %v", err)
+			return nil, err
+		}
+		res = append(res, d)
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Succeeded
+	return res, nil
 }
 
 // fetchDomainsAndModerators returns a list of domain instances from the provided database rows

@@ -22,7 +22,7 @@ type VerifierService interface {
 	UserIsDomainModerator(email string, host models.Host) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
 	UserIsLocal(user *data.User) middleware.Responder
-	// UserOwnsDomain verifies the given domain user is an owner
+	// UserOwnsDomain verifies the given domain user is an owner. domainUser can be nil
 	UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder
 }
 
@@ -73,7 +73,7 @@ func (v *verifier) UserIsDomainModerator(email string, host models.Host) middlew
 }
 
 func (v *verifier) UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder {
-	if !domainUser.IsOwner {
+	if domainUser == nil || !domainUser.IsOwner {
 		return respForbidden(ErrorNotDomainOwner)
 	}
 	return nil
