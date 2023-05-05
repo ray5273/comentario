@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 	"time"
 )
 
@@ -27,9 +28,13 @@ type DomainService interface {
 	FindDomainUser(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// ListByOwnerID fetches and returns a list of domains for the specified owner
 	ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error)
-
+	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
+	// the given ID
+	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
 	// Create creates and persists a new domain record
-	Create(ownerHex models.HexID, domain *models.Domain) error
+	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error
+
+	///////////////////////////////////////// TODO OLD Methods
 	// CreateModerator creates and persists a new domain moderator record
 	CreateModerator(host models.Host, email string) (*models.DomainModerator, error)
 	// CreateSSOSecret generates a new SSO secret token for the given domain and saves that in the domain properties
@@ -85,43 +90,47 @@ func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	return nil
 }
 
-func (svc *domainService) Create(ownerHex models.HexID, domain *models.Domain) error {
-	logger.Debugf("domainService.Create(%s, %#v)", ownerHex, domain)
+func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error {
+	logger.Debugf("domainService.Create(%s, %#v, %v)", userID, domain, idps)
 
-	// Prepare IdP settings
-	var local, google, github, gitlab, twitter, sso bool
-	for _, id := range domain.Idps {
-		switch id {
-		case models.IdentityProviderIDEmpty:
-			local = true
-		case models.IdentityProviderIDGoogle:
-			google = true
-		case models.IdentityProviderIDGithub:
-			github = true
-		case models.IdentityProviderIDGitlab:
-			gitlab = true
-		case models.IdentityProviderIDTwitter:
-			twitter = true
-		case models.IdentityProviderIDSso:
-			sso = true
-		}
+	// Insert a new domain record
+	err := db.Exec(
+		"insert into cm_domains("+
+			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret, moderation_policy, mod_notify_policy, default_sort) "+
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
+		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.IsReadonly, domain.AuthAnonymous,
+		domain.AuthLocal, domain.AuthSso, domain.SsoURL, domain.SsoSecret, domain.ModerationPolicy,
+		domain.ModNotifyPolicy, domain.DefaultSort)
+	if err != nil {
+		logger.Errorf("domainService.Create: Exec() failed for domain: %v", err)
+		return translateDBErrors(err)
 	}
 
-	// Insert a new record
-	domain.CreationDate = strfmt.DateTime(time.Now().UTC())
-	err := db.Exec(
-		"insert into domains"+
-			"(ownerhex, domain, name, creationdate, state, autospamfilter, requiremoderation, requireidentification, "+
-			"moderateallanonymous, emailnotificationpolicy, commentoprovider, googleprovider, githubprovider, "+
-			"gitlabprovider, twitterprovider, ssoprovider, ssourl, defaultsortpolicy) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18);",
-		ownerHex, domain.Host, domain.DisplayName, domain.CreationDate, domain.State, domain.AutoSpamFilter,
-		domain.RequireModeration, domain.RequireIdentification, domain.ModerateAllAnonymous,
-		domain.EmailNotificationPolicy, local, google, github, gitlab, twitter, sso, domain.SsoURL,
-		domain.DefaultSortPolicy)
+	// Insert a new domain owner record
+	err = db.Exec(
+		"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
+			"values($1, $2, true, true, true, true, true);",
+		&domain.ID, userID)
 	if err != nil {
-		logger.Errorf("domainService.Create: Exec() failed: %v", err)
+		logger.Errorf("domainService.Create: Exec() failed for domain user: %v", err)
 		return translateDBErrors(err)
+	}
+
+	// Insert domain IdP records, if any
+	if len(idps) > 0 {
+		var vals []string
+		var params []any
+		for _, id := range idps {
+			vals = append(vals, "(?,?)")
+			params = append(params, &domain.ID, id)
+		}
+		err = db.Exec(
+			"insert into cm_domains_idps(domain_id, fed_idp_id) values"+strings.Join(vals, ",")+";",
+			params...)
+		if err != nil {
+			logger.Errorf("domainService.Create: Exec() failed for domain IdPs: %v", err)
+			return translateDBErrors(err)
+		}
 	}
 
 	// Succeeded
@@ -395,7 +404,7 @@ func (svc *domainService) IsDomainOwner(id models.HexID, host models.Host) (bool
 func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error) {
 	logger.Debugf("domainService.ListByOwnerID(%s)", userID)
 
-	// Query domains and moderators
+	// Query domains
 	rows, err := db.Query(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
@@ -415,6 +424,38 @@ func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error
 	} else {
 		return domains, nil
 	}
+}
+
+func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error) {
+	logger.Debugf("domainService.ListDomainFederatedIdPs(%s)", domainID)
+
+	// Query domain's IdPs
+	rows, err := db.Query("select fed_idp_id from cm_domains_idps where domain_id=$1;", domainID)
+	if err != nil {
+		logger.Errorf("domainService.ListDomainFederatedIdPs: Query() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Fetch the IDs
+	var res []models.FederatedIdpID
+	for rows.Next() {
+		var id models.FederatedIdpID
+		if err := rows.Scan(&id); err != nil {
+			logger.Errorf("domainService.ListDomainFederatedIdPs: rows.Scan() failed: %v", err)
+			return nil, err
+		}
+		res = append(res, id)
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		logger.Errorf("domainService.ListDomainFederatedIdPs: rows.Next() failed: %v", err)
+		return nil, err
+	}
+
+	// Succeeded
+	return res, nil
 }
 
 func (svc *domainService) RegisterView(host models.Host, commenter *data.UserCommenter) error {

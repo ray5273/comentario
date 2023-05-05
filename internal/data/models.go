@@ -8,6 +8,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/strfmt/conv"
 	"github.com/google/uuid"
+	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/crypto/bcrypt"
@@ -21,16 +22,42 @@ const RootParentHexID = models.ParentHexID("root") // The "root" parent hex
 var AnonymousUser = &User{Name: "Anonymous"}
 
 type FederatedIdentityProvider struct {
-	models.IdentityProvider
-	GothID string // ID of the corresponding goth provider (if any)
+	Icon   string                // Provider icon name
+	ID     models.FederatedIdpID // Provider ID
+	Name   string                // Provider name
+	GothID string                // ID of the corresponding goth provider (if any)
+}
+
+// ToDTO converts this model into an API model
+func (p *FederatedIdentityProvider) ToDTO() *models.FederatedIdentityProvider {
+	return &models.FederatedIdentityProvider{
+		Icon: p.Icon,
+		ID:   p.ID,
+		Name: p.Name,
+	}
 }
 
 // FederatedIdProviders accumulates information about all supported ID providers
-var FederatedIdProviders = map[models.IdentityProviderID]*FederatedIdentityProvider{
-	models.IdentityProviderIDGithub:  {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDGithub, Name: "GitHub"}, GothID: "github"},
-	models.IdentityProviderIDGitlab:  {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDGitlab, Name: "GitLab"}, GothID: "gitlab"},
-	models.IdentityProviderIDGoogle:  {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDGoogle, Name: "Google"}, GothID: "google"},
-	models.IdentityProviderIDTwitter: {IdentityProvider: models.IdentityProvider{ID: models.IdentityProviderIDTwitter, Name: "Twitter"}, GothID: "twitter"},
+var FederatedIdProviders = map[models.FederatedIdpID]FederatedIdentityProvider{
+	models.FederatedIdpIDGithub:  {ID: models.FederatedIdpIDGithub, Name: "GitHub", Icon: "github", GothID: "github"},
+	models.FederatedIdpIDGitlab:  {ID: models.FederatedIdpIDGitlab, Name: "GitLab", Icon: "gitlab", GothID: "gitlab"},
+	models.FederatedIdpIDGoogle:  {ID: models.FederatedIdpIDGoogle, Name: "Google", Icon: "google", GothID: "google"},
+	models.FederatedIdpIDTwitter: {ID: models.FederatedIdpIDTwitter, Name: "Twitter", Icon: "twitter", GothID: "twitter"},
+}
+
+// GetFederatedIdP returns whether federated identity provider is known and configured, and if yes, its Provider
+// interface
+func GetFederatedIdP(id models.FederatedIdpID) (known, configured bool, provider goth.Provider) {
+	// Look up the IdP
+	var fidp FederatedIdentityProvider
+	if fidp, known = FederatedIdProviders[id]; !known {
+		return
+	}
+
+	// IdP found, now verify it's configured
+	provider, err := goth.GetProvider(fidp.GothID)
+	configured = err == nil
+	return
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

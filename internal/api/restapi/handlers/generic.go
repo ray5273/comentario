@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
-	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -17,11 +16,11 @@ import (
 // ConfigClientGet returns client config
 func ConfigClientGet(api_generic.ConfigClientGetParams) middleware.Responder {
 	// Prepare a slice of IdP IDs
-	var idps []*models.IdentityProvider
-	for _, fidp := range data.FederatedIdProviders {
+	var idps []*models.FederatedIdentityProvider
+	for fid, fidp := range data.FederatedIdProviders {
 		// If the provider is configured, add it to the slice
-		if _, err := goth.GetProvider(fidp.GothID); err == nil {
-			idps = append(idps, &fidp.IdentityProvider)
+		if _, ok, _ := data.GetFederatedIdP(fid); ok {
+			idps = append(idps, fidp.ToDTO())
 		}
 	}
 
@@ -33,7 +32,7 @@ func ConfigClientGet(api_generic.ConfigClientGetParams) middleware.Responder {
 	// Succeeded
 	return api_generic.NewConfigClientGetOK().WithPayload(&models.ClientConfig{
 		BaseURL:       config.BaseURL.String(),
-		Idps:          idps,
+		FederatedIdps: idps,
 		SignupAllowed: config.CLIFlags.AllowNewOwners,
 	})
 }

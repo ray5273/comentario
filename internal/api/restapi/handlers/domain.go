@@ -6,14 +6,14 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"github.com/markbates/goth"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
+	"sort"
 	"strings"
 	"time"
 )
@@ -73,9 +73,27 @@ func DomainGet(params api_owner.DomainGetParams, user *data.User) middleware.Res
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
 
+		// Prepare a list of federated IdP IDs
+	} else if idps, err := svc.TheDomainService.ListDomainFederatedIdPs(&d.ID); err != nil {
+		return respServiceError(err)
+
 	} else {
+		// Keep only providers that are configured
+		var fidps []models.FederatedIdpID
+		for _, id := range idps {
+			if _, ok, _ := data.GetFederatedIdP(id); ok {
+				fidps = append(fidps, id)
+			}
+		}
+
+		// Sort the providers by ID for a stable ordering
+		sort.Slice(idps, func(i, j int) bool { return idps[i] < idps[j] })
+
 		// Succeeded
-		return api_owner.NewDomainGetOK().WithPayload(d.ToDTO())
+		return api_owner.NewDomainGetOK().WithPayload(&api_owner.DomainGetOKBody{
+			Domain:          d.ToDTO(),
+			FederatedIdpIds: fidps,
+		})
 	}
 }
 
@@ -90,8 +108,9 @@ func DomainImport(params api_owner.DomainImportParams, user *data.User) middlewa
 	}
 
 	// Perform import
+	*/
 	var count int64
-	var err error
+	/*var err error
 	switch params.Source {
 	case "commento":
 		count, err = svc.TheImportExportService.ImportCommento(host, params.Data)
@@ -130,6 +149,7 @@ func DomainList(_ api_owner.DomainListParams, user *data.User) middleware.Respon
 }
 
 func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -140,12 +160,14 @@ func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *d
 	if err := svc.TheDomainService.DeleteModerator(host, data.EmailToString(params.Body.Email)); err != nil {
 		return respServiceError(err)
 	}
+	*/
 
 	// Succeeded
 	return api_owner.NewDomainModeratorDeleteNoContent()
 }
 
 func DomainModeratorNew(params api_owner.DomainModeratorNewParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -156,6 +178,7 @@ func DomainModeratorNew(params api_owner.DomainModeratorNewParams, user *data.Us
 	if _, err := svc.TheDomainService.CreateModerator(host, data.EmailToString(params.Body.Email)); err != nil {
 		return respServiceError(err)
 	}
+	*/
 
 	// Succeeded
 	return api_owner.NewDomainModeratorNewNoContent()
@@ -170,18 +193,28 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 	}
 
 	// Validate identity providers
-	if err := domainValidateIdPs(domain); err != nil {
-		return respBadRequest(err)
+	for _, id := range params.Body.FederatedIdpIds {
+		if _, r := Verifier.FederatedIdProvider(id); r != nil {
+			return r
+		}
 	}
 
 	// Persist a new domain record in the database
-	owner := principal.(*data.UserOwner)
-	if err := svc.TheDomainService.Create(owner.HexID, domain); err != nil {
-		return respServiceError(err)
+	d := &data.Domain{
+		ID:               uuid.New(),
+		Name:             domain.Name,
+		Host:             string(domain.Host),
+		CreatedTime:      time.Now().UTC(),
+		IsReadonly:       domain.IsReadonly,
+		AuthAnonymous:    domain.AuthAnonymous,
+		AuthLocal:        domain.AuthLocal,
+		AuthSso:          domain.AuthSso,
+		SsoURL:           domain.SsoURL,
+		ModerationPolicy: data.DomainModerationPolicy(domain.ModerationPolicy),
+		ModNotifyPolicy:  data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
+		DefaultSort:      domain.DefaultSort,
 	}
-
-	// Register the current owner as a domain moderator
-	if _, err := svc.TheDomainService.CreateModerator(domain.Host, owner.Email); err != nil {
+	if err := svc.TheDomainService.Create(&user.ID, d, params.Body.FederatedIdpIds); err != nil {
 		return respServiceError(err)
 	}
 
@@ -190,6 +223,7 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 }
 
 func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -201,6 +235,8 @@ func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.Us
 	if err != nil {
 		return respServiceError(err)
 	}
+	*/
+	token := models.HexID("")
 
 	// Succeeded
 	return api_owner.NewDomainSsoSecretNewOK().WithPayload(&api_owner.DomainSsoSecretNewOKBody{SsoSecret: token})
@@ -259,8 +295,10 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 	}
 
 	// Validate identity providers
-	if err := domainValidateIdPs(domain); err != nil {
-		return respBadRequest(err)
+	for _, id := range params.Body.FederatedIdpIds {
+		if _, r := Verifier.FederatedIdProvider(id); r != nil {
+			return r
+		}
 	}
 
 	// Update the domain record
@@ -291,33 +329,4 @@ func domainGetDomainAndOwner(domainUUID strfmt.UUID, user *data.User) (*data.Dom
 		// Succeeded
 		return domain, domainUser, nil
 	}
-}
-
-// domainValidateIdPs validates the passed list of domain's identity providers
-func domainValidateIdPs(domain *models.Domain) *exmodels.Error {
-	// Validate identity providers
-	for _, id := range domain.Idps {
-		switch id {
-		// Local auth is always possible
-		case models.IdentityProviderIDEmpty:
-			continue
-
-		// If SSO is included, make sure the URL is provided
-		case models.IdentityProviderIDSso:
-			if domain.SsoURL == "" {
-				return ErrorSSOURLMissing
-			}
-
-		// It must be a federated provider. Make sure it's valid and configured
-		default:
-			if fidp, ok := data.FederatedIdProviders[id]; ok {
-				if _, err := goth.GetProvider(fidp.GothID); err != nil {
-					return ErrorIdPUnconfigured.WithDetails(fidp.Name)
-				}
-			} else {
-				return ErrorIdPUnknown.WithDetails(string(id))
-			}
-		}
-	}
-	return nil
 }

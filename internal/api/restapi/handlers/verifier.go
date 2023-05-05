@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -13,6 +14,9 @@ var Verifier VerifierService = &verifier{}
 
 // VerifierService is an API service interface for data and permission verification
 type VerifierService interface {
+	// FederatedIdProvider verifies the federated identity provider specified by its ID is properly configured for
+	// authentication
+	FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder)
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
@@ -29,6 +33,19 @@ type VerifierService interface {
 // ----------------------------------------------------------------------------------------------------------------------
 // verifier is a blueprint VerifierService implementation
 type verifier struct{}
+
+func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder) {
+	if known, conf, p := data.GetFederatedIdP(id); !known {
+		// Provider ID not known
+		return nil, respBadRequest(ErrorIdPUnknown.WithDetails(string(id)))
+	} else if !conf {
+		// Provider not configured
+		return nil, respBadRequest(ErrorIdPUnconfigured.WithDetails(string(id)))
+	} else {
+		// Succeeded
+		return p, nil
+	}
+}
 
 func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder) {
 	switch {

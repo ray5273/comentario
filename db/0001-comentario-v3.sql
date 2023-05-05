@@ -57,14 +57,14 @@ create table if not exists cm_migrations (
 ------------------------------------------------------------------------------------------------------------------------
 -- Known federated identity providers
 ------------------------------------------------------------------------------------------------------------------------
-create table cm_identity_providers (
+create table cm_fed_identity_providers (
     id   varchar(32) primary key,     -- Unique provider ID, such as 'google'
     name varchar(63) not null unique, -- Unique display name, such as 'Google'
     icon varchar(32) not null         -- Name of the icon to use for the provider
 );
 
 -- Data
-insert into cm_identity_providers(id, name, icon) values
+insert into cm_fed_identity_providers(id, name, icon) values
     ('gitlab',  'GitLab',  'gitlab'),
     ('github',  'GitHub',  'github'),
     ('google',  'Google',  'google'),
@@ -98,9 +98,9 @@ create table cm_users (
 );
 
 -- Constraints
-alter table cm_users add constraint fk_users_user_created  foreign key (user_created)  references cm_users(id) on delete set null;
-alter table cm_users add constraint fk_users_user_banned   foreign key (user_banned)   references cm_users(id) on delete set null;
-alter table cm_users add constraint fk_users_federated_idp foreign key (federated_idp) references cm_identity_providers(id) on delete restrict;
+alter table cm_users add constraint fk_users_user_created  foreign key (user_created)  references cm_users(id)                  on delete set null;
+alter table cm_users add constraint fk_users_user_banned   foreign key (user_banned)   references cm_users(id)                  on delete set null;
+alter table cm_users add constraint fk_users_federated_idp foreign key (federated_idp) references cm_fed_identity_providers(id) on delete restrict;
 
 -- Data
 insert into cm_users(id, email, name, password_hash, system_account, confirmed, ts_created)
@@ -181,15 +181,15 @@ alter table cm_domains_users add primary key (domain_id, user_id);
 alter table cm_domains_users add constraint fk_domains_users_domain_id foreign key (domain_id) references cm_domains(id) on delete cascade;
 alter table cm_domains_users add constraint fk_domains_users_user_id   foreign key (user_id)   references cm_users(id)   on delete cascade;
 
--- Links between domains and identity providers, specifying which IdPs are allowed on the domain
+-- Links between domains and federated identity providers, specifying which IdPs are allowed on the domain
 create table cm_domains_idps (
-    domain_id uuid        not null, -- Reference to the domain
-    idp_id    varchar(32) not null  -- Reference to the identity provider
+    domain_id  uuid        not null, -- Reference to the domain
+    fed_idp_id varchar(32) not null  -- Reference to the identity provider
 );
 
 -- Constraints
-alter table cm_domains_idps add constraint fk_domains_idps_domain_id foreign key (domain_id) references cm_domains(id)            on delete cascade;
-alter table cm_domains_idps add constraint fk_domains_idps_idp_id    foreign key (idp_id)    references cm_identity_providers(id) on delete cascade;
+alter table cm_domains_idps add constraint fk_domains_idps_domain_id  foreign key (domain_id)  references cm_domains(id)                on delete cascade;
+alter table cm_domains_idps add constraint fk_domains_idps_fed_idp_id foreign key (fed_idp_id) references cm_fed_identity_providers(id) on delete cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Domain pages
@@ -332,6 +332,16 @@ begin
                 left join emails e on e.email=u.email
                 -- Exclude already migrated owners/moderators
                 where not exists(select 1 from cm_domains_users xdu where xdu.domain_id=dm.id and xdu.user_id=u.id);
+
+        -- Migrate domain IdPs
+        insert into cm_domains_idps(domain_id, fed_idp_id)
+            select id, 'gitlab' from temp_domain_map where domain in (select domain from domains where gitlabprovider)
+            union all
+            select id, 'github' from temp_domain_map where domain in (select domain from domains where githubprovider)
+            union all
+            select id, 'google' from temp_domain_map where domain in (select domain from domains where googleprovider)
+            union all
+            select id, 'twitter' from temp_domain_map where domain in (select domain from domains where twitterprovider);
 
         -- Migrate pages
         insert into cm_domain_pages(id, domain_id, path, title, ts_created, is_readonly, count_comments)
