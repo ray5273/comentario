@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -110,9 +111,8 @@ func CommentEdit(params api_commenter.CommentEditParams, user *data.User) middle
 }
 
 func CommentList(params api_commenter.CommentListParams, user *data.User) middleware.Responder {
-	/* TODO new-db
-	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
+	// Fetch the domain and the user
+	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID)
 	if err == svc.ErrNotFound {
 		// No domain found for this host
 		return respForbidden(ErrorUnknownHost)
@@ -121,26 +121,33 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	}
 
 	// Fetch the page
-	page, err := svc.ThePageService.FindByHostPath(domain.Host, params.Body.Path)
+	page, err := svc.ThePageService.FindByDomainPath(&domain.ID, string(params.Body.Path))
 	if err != nil {
 		return respServiceError(err)
 	}
 
-	// Prepare a map of configured identity providers: federated ones should only be enabled when configured
-	var ids []models.IdentityProviderID
-	for _, id := range domain.Idps {
-		// If it's a federated IdP
-		if fidp, ok := data.FederatedIdProviders[id]; ok {
-			// If it isn't configured, skip it over
-			if _, err := goth.GetProvider(fidp.GothID); err != nil {
-				continue
-			}
-		}
-
-		// Add it to the list otherwise
-		ids = append(ids, id)
+	// Prepare page info
+	pi := &models.PageInfo{
+		AuthAnonymous:    domain.AuthAnonymous,
+		AuthLocal:        domain.AuthLocal,
+		AuthSso:          domain.AuthSso,
+		DefaultSort:      models.CommentSort(domain.DefaultSort),
+		DomainID:         strfmt.UUID(domain.ID.String()),
+		IsDomainReadonly: domain.IsReadonly,
+		SsoURL:           domain.SsoURL,
+	}
+	if page != nil {
+		pi.PageID = strfmt.UUID(page.ID.String())
+		pi.IsPageReadonly = page.IsReadonly
 	}
 
+	// Fetch the domain's identity providers
+	if pi.Idps, err = svc.TheDomainService.ListDomainFederatedIdPs(&domain.ID); err != nil {
+		return respServiceError(err)
+	}
+
+	// TODO TBC
+	...
 	// Make a map of moderator emails, also figure out if the user is a moderator self
 	moderatorEmailMap := map[strfmt.Email]bool{}
 	for _, mod := range domain.Moderators {
@@ -169,7 +176,6 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 
 	// Register a view in domain statistics, ignoring any error
 	_ = svc.TheDomainService.RegisterView(domain.Host, commenter)
-	*/
 
 	// Succeeded
 	return api_commenter.NewCommentListOK() /* TODO new-db.WithPayload(&api_commenter.CommentListOKBody{

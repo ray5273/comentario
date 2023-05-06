@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"database/sql"
 	"encoding/hex"
 	"gitlab.com/comentario/comentario/internal/data"
 	"time"
@@ -44,16 +45,13 @@ func (svc *tokenService) DeleteByValue(value []byte) error {
 	logger.Debugf("tokenService.DeleteByValue(%x)", value)
 
 	// Delete the record
-	res, err := db.ExecRes("delete from cm_tokens where value=$1", hex.EncodeToString(value))
-	if err != nil {
-		logger.Errorf("tokenService.DeleteByValue: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	} else if i, err := res.RowsAffected(); err != nil {
-		logger.Errorf("tokenService.DeleteByValue: RowsAffected() failed: %v", err)
-		return translateDBErrors(err)
-	} else if i == 0 {
+	if err := db.ExecOne("delete from cm_tokens where value=$1", hex.EncodeToString(value)); err == sql.ErrNoRows {
 		// No rows affected
 		return ErrBadToken
+	} else if err != nil {
+		// Any other error
+		logger.Errorf("tokenService.DeleteByValue: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
 	}
 
 	// Succeeded

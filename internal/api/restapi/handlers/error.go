@@ -11,6 +11,7 @@ var (
 	ErrorFederatedProfile     = &exmodels.Error{ID: "federated-profile", Message: "Federated user profile can't be updated"}
 	ErrorIdPUnconfigured      = &exmodels.Error{ID: "idp-unconfigured", Message: "Identity provider isn't configured"}
 	ErrorIdPUnknown           = &exmodels.Error{ID: "idp-unknown", Message: "Unknown identity provider"}
+	ErrorImmutableProperty    = &exmodels.Error{ID: "immutable-property", Message: "Property cannot be updated"}
 	ErrorInvalidCredentials   = &exmodels.Error{ID: "invalid-credentials", Message: "Wrong password or user doesn't exist"}
 	ErrorInvalidModAction     = &exmodels.Error{ID: "invalid-mod-action", Message: "Invalid moderation action"}
 	ErrorInvalidPropertyValue = &exmodels.Error{ID: "invalid-prop-value", Message: "Value of the property is invalid"}

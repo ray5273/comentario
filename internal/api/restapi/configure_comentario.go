@@ -81,6 +81,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 
 	// Config
 	api.APIGenericConfigClientGetHandler = api_generic.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
+	// User
+	api.APIGenericUserAvatarGetHandler = api_generic.UserAvatarGetHandlerFunc(handlers.UserAvatarGet)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Auth API
@@ -112,7 +114,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APICommenterCommenterLoginHandler = api_commenter.CommenterLoginHandlerFunc(handlers.CommenterLogin)
 	api.APICommenterCommenterLogoutHandler = api_commenter.CommenterLogoutHandlerFunc(handlers.CommenterLogout)
 	api.APICommenterCommenterSignupHandler = api_commenter.CommenterSignupHandlerFunc(handlers.CommenterSignup)
-	api.APICommenterCommenterPhotoHandler = api_commenter.CommenterPhotoHandlerFunc(handlers.CommenterPhoto)
 	api.APICommenterCommenterPwdResetSendEmailHandler = api_commenter.CommenterPwdResetSendEmailHandlerFunc(handlers.CommenterPwdResetSendEmail)
 	api.APICommenterCommenterSelfHandler = api_commenter.CommenterSelfHandlerFunc(handlers.CommenterSelf)
 	api.APICommenterCommenterTokenNewHandler = api_commenter.CommenterTokenNewHandlerFunc(handlers.CommenterTokenNew)
@@ -149,7 +150,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIOwnerDomainNewHandler = api_owner.DomainNewHandlerFunc(handlers.DomainNew)
 	api.APIOwnerDomainSsoSecretNewHandler = api_owner.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
 	api.APIOwnerDomainStatisticsHandler = api_owner.DomainStatisticsHandlerFunc(handlers.DomainStatistics)
-	api.APIOwnerDomainToggleFrozenHandler = api_owner.DomainToggleFrozenHandlerFunc(handlers.DomainToggleFrozen)
+	api.APIOwnerDomainReadonlyHandler = api_owner.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
 	api.APIOwnerDomainUpdateHandler = api_owner.DomainUpdateHandlerFunc(handlers.DomainUpdate)
 
 	// Shutdown functions

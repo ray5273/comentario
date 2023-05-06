@@ -233,11 +233,11 @@ create table cm_comments (
 );
 
 -- Constraints
-alter table cm_comments add constraint fk_comments_parent_id foreign key (parent_id) references cm_comments(id)      on delete cascade;
-alter table cm_comments add constraint fk_comments_page_id   foreign key (page_id)   references cm_domain_pages(id)  on delete cascade;
-alter table cm_comments add constraint fk_comments_user_created  foreign key (user_created)  references cm_users(id) on delete set null;
-alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id) on delete set null;
-alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id) on delete set null;
+alter table cm_comments add constraint fk_comments_parent_id     foreign key (parent_id)    references cm_comments(id)     on delete cascade;
+alter table cm_comments add constraint fk_comments_page_id       foreign key (page_id)      references cm_domain_pages(id) on delete cascade;
+alter table cm_comments add constraint fk_comments_user_created  foreign key (user_created)  references cm_users(id)       on delete set null;
+alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id)       on delete set null;
+alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id)       on delete set null;
 
 --======================================================================================================================
 -- Migrate the legacy schema

@@ -57,6 +57,20 @@ func (db *Database) Exec(query string, args ...any) error {
 	return err
 }
 
+// ExecOne executes the provided statement against the database and verifies there's exactly one row affected
+func (db *Database) ExecOne(query string, args ...any) error {
+	if res, err := db.db.Exec(query, args...); err != nil {
+		return err
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("RowsAffected() failed: %v", err)
+	} else if cnt == 0 {
+		return sql.ErrNoRows
+	} else if cnt != 1 {
+		return fmt.Errorf("statement affected %d rows, want 1", cnt)
+	}
+	return nil
+}
+
 // ExecRes executes the provided statement against the database and returns its result
 func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
 	return db.db.Exec(query, args...)

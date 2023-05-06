@@ -2,11 +2,11 @@ package svc
 
 import (
 	"database/sql"
-	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
+	"sort"
 	"strings"
 	"time"
 )
@@ -18,42 +18,46 @@ var TheDomainService DomainService = &domainService{}
 type DomainService interface {
 	// ClearByID removes all dependent objects (users, pages, comments, votes etc.) for the specified domain by its ID
 	ClearByID(id *uuid.UUID) error
+	// Create creates and persists a new domain record
+	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error
 	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
 	// domain by its ID
 	DeleteByID(id *uuid.UUID) error
 	// FindByID fetches and returns a domain by its ID
 	FindByID(id *uuid.UUID) (*data.Domain, error)
-	// FindDomainUser fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
+	// FindDomainUserByHost fetches and returns a Domain and DomainUser by domain host and user ID. If the domain
+	// exists, but there's no record for the user on that domain, returns nil for DomainUser
+	FindDomainUserByHost(host string, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
-	FindDomainUser(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// ListByOwnerID fetches and returns a list of domains for the specified owner
 	ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
-	// Create creates and persists a new domain record
-	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error
+	// RegisterView records a domain/page view in the database
+	RegisterView(pageID, domainID, userID *uuid.UUID) error
+	// SetReadonly sets the readonly status for the given domain
+	SetReadonly(domainID *uuid.UUID, readonly bool) error
+	// Update updates an existing domain record in the database
+	Update(domain *data.Domain, idps []models.FederatedIdpID) error
+	// UserAdd links the specified user to the given domain
+	UserAdd(du *data.DomainUser) error
+	// UserModify updates roles and settings of the specified user in the given domain
+	UserModify(du *data.DomainUser) error
+	// UserRemove unlinks the specified user from the given domain
+	UserRemove(userID, domainID *uuid.UUID) error
 
 	///////////////////////////////////////// TODO OLD Methods
-	// CreateModerator creates and persists a new domain moderator record
-	CreateModerator(host models.Host, email string) (*models.DomainModerator, error)
 	// CreateSSOSecret generates a new SSO secret token for the given domain and saves that in the domain properties
 	CreateSSOSecret(host models.Host) (models.HexID, error)
 	// CreateSSOToken generates, persists, and returns a new SSO token for the given domain and commenter token
 	CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error)
-	// Delete deletes the specified domain
-	Delete(host models.Host) error
-	// DeleteModerator deletes the specified domain moderator
-	DeleteModerator(host models.Host, email string) error
-	// FindByHost fetches and returns a domain with the specified host
-	FindByHost(host models.Host) (*models.Domain, error)
 	// IsDomainModerator returns whether the given email is a moderator in the given domain
 	IsDomainModerator(email string, host models.Host) (bool, error)
 	// IsDomainOwner returns whether the given owner hex ID is an owner of the given domain
 	IsDomainOwner(id models.HexID, host models.Host) (bool, error)
-	// RegisterView records a domain view in the database. commenterHex should be "anonymous" for an unauthenticated
-	// viewer
-	RegisterView(host models.Host, commenter *data.UserCommenter) error
 	// StatsForComments collects and returns comment statistics for the given domain and number of days. If no host is
 	// given, statistics is collected for all domains owner by the user
 	StatsForComments(host models.Host, ownerID models.HexID, numDays int) ([]int64, error)
@@ -64,10 +68,6 @@ type DomainService interface {
 	StatsForViews(host models.Host, ownerID models.HexID, numDays int) ([]int64, error)
 	// TakeSSOToken queries and removes the provided token from the database, returning its host and commenter token
 	TakeSSOToken(token models.HexID) (models.Host, models.HexID, error)
-	// ToggleFrozen switches the frozen status to unfrozen, and vice versa, for the given domain
-	ToggleFrozen(host models.Host) error
-	// Update updates the domain record in the database
-	Update(domain *models.Domain) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -94,73 +94,40 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 	logger.Debugf("domainService.Create(%s, %#v, %v)", userID, domain, idps)
 
 	// Insert a new domain record
-	err := db.Exec(
+	if err := db.Exec(
 		"insert into cm_domains("+
-			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret, moderation_policy, mod_notify_policy, default_sort) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
-		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.IsReadonly, domain.AuthAnonymous,
-		domain.AuthLocal, domain.AuthSso, domain.SsoURL, domain.SsoSecret, domain.ModerationPolicy,
-		domain.ModNotifyPolicy, domain.DefaultSort)
-	if err != nil {
-		logger.Errorf("domainService.Create: Exec() failed for domain: %v", err)
+			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, moderation_policy, mod_notify_policy, default_sort) "+
+			"values($1, $2, $3, $4, false, $5, $6, $7, $8, $9, $10, $11);",
+		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.AuthAnonymous, domain.AuthLocal,
+		domain.AuthSso, domain.SsoURL, domain.ModerationPolicy, domain.ModNotifyPolicy, domain.DefaultSort,
+	); err != nil {
+		logger.Errorf("domainService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
-	// Insert a new domain owner record
-	err = db.Exec(
-		"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
-			"values($1, $2, true, true, true, true, true);",
-		&domain.ID, userID)
-	if err != nil {
-		logger.Errorf("domainService.Create: Exec() failed for domain user: %v", err)
-		return translateDBErrors(err)
+	// Save the domain IdPs
+	if err := svc.saveIdPs(&domain.ID, idps); err != nil {
+		return err
 	}
 
-	// Insert domain IdP records, if any
-	if len(idps) > 0 {
-		var vals []string
-		var params []any
-		for _, id := range idps {
-			vals = append(vals, "(?,?)")
-			params = append(params, &domain.ID, id)
-		}
-		err = db.Exec(
-			"insert into cm_domains_idps(domain_id, fed_idp_id) values"+strings.Join(vals, ",")+";",
-			params...)
-		if err != nil {
-			logger.Errorf("domainService.Create: Exec() failed for domain IdPs: %v", err)
-			return translateDBErrors(err)
-		}
+	// Register the user as domain owner
+	if err := svc.UserAdd(&data.DomainUser{
+		DomainID:        domain.ID,
+		UserID:          *userID,
+		IsOwner:         true,
+		IsModerator:     true,
+		IsCommenter:     true,
+		NotifyReplies:   true,
+		NotifyModerator: true,
+	}); err != nil {
+		return err
 	}
 
 	// Succeeded
 	return nil
 }
 
-func (svc *domainService) CreateModerator(host models.Host, email string) (*models.DomainModerator, error) {
-	logger.Debugf("domainService.CreateModerator(%s, %s)", host, email)
-
-	// Create a new email record
-	if _, err := TheEmailService.Create(email); err != nil {
-		return nil, err
-	}
-
-	// Create a new domain moderator record
-	dm := models.DomainModerator{
-		AddDate: strfmt.DateTime(time.Now().UTC()),
-		Host:    host,
-		Email:   strfmt.Email(email),
-	}
-	err := db.Exec("insert into moderators(domain, email, adddate) values($1, $2, $3);", dm.Host, dm.Email, dm.AddDate)
-	if err != nil {
-		logger.Errorf("domainService.CreateModerator: Exec() failed: %v", err)
-		return nil, translateDBErrors(err)
-	}
-
-	// Succeeded
-	return &dm, nil
-}
-
+// TODO new-db DEPRECATED
 func (svc *domainService) CreateSSOSecret(host models.Host) (models.HexID, error) {
 	logger.Debugf("domainService.CreateSSOSecret(%s)", host)
 
@@ -181,6 +148,7 @@ func (svc *domainService) CreateSSOSecret(host models.Host) (models.HexID, error
 	return token, nil
 }
 
+// TODO new-db DEPRECATED
 func (svc *domainService) CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error) {
 	logger.Debugf("domainService.CreateSSOToken(%s, %s)", host, commenterToken)
 
@@ -204,29 +172,6 @@ func (svc *domainService) CreateSSOToken(host models.Host, commenterToken models
 	return token, nil
 }
 
-func (svc *domainService) Delete(host models.Host) error {
-	logger.Debugf("domainService.Delete(%s)", host)
-
-	// Remove the domain's view stats, moderators, ssotokens
-	err := checkErrors(
-		db.Exec("delete from views where domain=$1;", host),
-		db.Exec("delete from moderators where domain=$1;", host),
-		db.Exec("delete from ssotokens where domain=$1;", host))
-	if err != nil {
-		logger.Errorf("domainService.Delete: Exec() failed for dependent object: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Remove the domain itself
-	if err := db.Exec("delete from domains where domain=$1;", host); err != nil {
-		logger.Errorf("domainService.Delete: Exec() failed for domain: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
-}
-
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.DeleteByID(%v)", id)
 
@@ -238,50 +183,6 @@ func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 
 	// Succeeded
 	return nil
-}
-
-func (svc *domainService) DeleteModerator(host models.Host, email string) error {
-	logger.Debugf("domainService.DeleteModerator(%s, %s)", host, email)
-
-	// Remove the row from the database
-	if err := db.Exec("delete from moderators where domain=$1 and email=$2;", host, email); err != nil {
-		logger.Errorf("domainService.DeleteModerator: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
-}
-
-func (svc *domainService) FindByHost(host models.Host) (*models.Domain, error) {
-	logger.Debugf("domainService.FindByHost(%s)", host)
-
-	// Query the row
-	rows, err := db.Query(
-		"select "+
-			"d.domain, d.name, d.creationdate, d.state, d.autospamfilter, d.requiremoderation, "+
-			"d.requireidentification, d.moderateallanonymous, d.emailnotificationpolicy, d.commentoprovider, "+
-			"d.googleprovider, d.githubprovider, d.gitlabprovider, d.twitterprovider, d.ssoprovider, d.ssosecret, "+
-			"d.ssourl, d.defaultsortpolicy, coalesce(m.email, ''), coalesce(m.adddate, CURRENT_TIMESTAMP) "+
-			"from domains d "+
-			"left join moderators m on m.domain=d.domain "+
-			"where d.domain=$1;",
-		host)
-	if err != nil {
-		logger.Errorf("domainService.FindByHost: Query() failed: %v", err)
-		return nil, translateDBErrors(err)
-	}
-	defer rows.Close()
-
-	// Fetch the domain(s)
-	if domains, err := svc.fetchDomainsAndModerators(rows); err != nil {
-		return nil, translateDBErrors(err)
-	} else if len(domains) == 0 {
-		return nil, ErrNotFound
-	} else {
-		// Grab the first one
-		return domains[0], nil
-	}
 }
 
 func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
@@ -305,8 +206,8 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	}
 }
 
-func (svc *domainService) FindDomainUser(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
-	logger.Debugf("domainService.FindDomainUser(%s)", domainID, userID)
+func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
+	logger.Debugf("domainService.FindDomainUserByHost(%s, %s)", host, userID)
 
 	// Query the row
 	row := db.QueryRow(
@@ -316,51 +217,44 @@ func (svc *domainService) FindDomainUser(domainID, userID *uuid.UUID) (*data.Dom
 			"d.count_views, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
 			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), coalesce(du.notify_moderator, false) "+
 			"from cm_domains d "+
-			"left join cm_domains_users du on du.domain_id=$1 and du.user_id=$2 "+
+			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$2 "+
+			"where d.host=$1;",
+		host, userID)
+
+	// Fetch the domain and the domain user
+	if d, du, err := svc.fetchDomainUser(row); err != nil {
+		return nil, nil, translateDBErrors(err)
+	} else {
+		// Succeeded
+		return d, du, nil
+	}
+}
+
+func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
+	logger.Debugf("domainService.FindDomainUserByID(%s, %s)", domainID, userID)
+
+	// Query the row
+	row := db.QueryRow(
+		"select "+
+			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
+			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
+			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), coalesce(du.notify_moderator, false) "+
+			"from cm_domains d "+
+			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$2 "+
 			"where d.id=$1;",
 		domainID, userID)
 
 	// Fetch the domain and the domain user
-	var d data.Domain
-	var du data.DomainUser
-	var uid uuid.NullUUID
-	err := row.Scan(
-		&d.ID,
-		&d.Name,
-		&d.Host,
-		&d.CreatedTime,
-		&d.IsReadonly,
-		&d.AuthAnonymous,
-		&d.AuthLocal,
-		&d.AuthSso,
-		&d.SsoURL,
-		&d.SsoSecret,
-		&d.ModerationPolicy,
-		&d.ModNotifyPolicy,
-		&d.DefaultSort,
-		&d.CountComments,
-		&d.CountViews,
-		&uid,
-		&du.IsOwner,
-		&du.IsModerator,
-		&du.IsCommenter,
-		&du.NotifyReplies,
-		&du.NotifyModerator)
-	if err != nil {
-		logger.Errorf("domainService.FindDomainUser: Scan() failed: %v", err)
-		return nil, nil, err
+	if d, du, err := svc.fetchDomainUser(row); err != nil {
+		return nil, nil, translateDBErrors(err)
+	} else {
+		// Succeeded
+		return d, du, nil
 	}
-
-	// If no record found for the domain user, we'll return nil
-	var pdu *data.DomainUser
-	if uid.Valid {
-		pdu = &du
-	}
-
-	// Succeeded
-	return &d, pdu, nil
 }
 
+// TODO new-db DEPRECATED
 func (svc *domainService) IsDomainModerator(email string, host models.Host) (bool, error) {
 	logger.Debugf("domainService.IsDomainModerator(%s, %s)", email, host)
 
@@ -381,6 +275,7 @@ func (svc *domainService) IsDomainModerator(email string, host models.Host) (boo
 	return true, nil
 }
 
+// TODO new-db DEPRECATED
 func (svc *domainService) IsDomainOwner(id models.HexID, host models.Host) (bool, error) {
 	logger.Debugf("domainService.IsDomainOwner(%s, %s)", id, host)
 
@@ -444,8 +339,11 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 		if err := rows.Scan(&id); err != nil {
 			logger.Errorf("domainService.ListDomainFederatedIdPs: rows.Scan() failed: %v", err)
 			return nil, err
+
+			// Only add a provider if it's enabled globally
+		} else if _, ok, _ := data.GetFederatedIdP(id); ok {
+			res = append(res, id)
 		}
-		res = append(res, id)
 	}
 
 	// Verify Next() didn't error
@@ -454,13 +352,17 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 		return nil, err
 	}
 
+	// Sort the providers by ID for a stable ordering
+	sort.Slice(res, func(i, j int) bool { return res[i] < res[j] })
+
 	// Succeeded
 	return res, nil
 }
 
-func (svc *domainService) RegisterView(host models.Host, commenter *data.UserCommenter) error {
-	logger.Debugf("domainService.RegisterView(%s, [%s])", host, commenter.HexID)
+func (svc *domainService) RegisterView(pageID, domainID, userID *uuid.UUID) error {
+	logger.Debugf("domainService.RegisterView(%s, %s, %s)", pageID, domainID, userID)
 
+	/* TODO new-db DEPRECATED
 	// Insert a new view record
 	err := db.Exec(
 		"insert into views(domain, commenterhex, viewdate) values ($1, $2, $3);",
@@ -469,11 +371,26 @@ func (svc *domainService) RegisterView(host models.Host, commenter *data.UserCom
 		logger.Warningf("domainService.RegisterView: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
+	*/
 
 	// Succeeded
 	return nil
 }
 
+func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error {
+	logger.Debugf("domainService.SetReadonly(%s, %v)", domainID, readonly)
+
+	// Update the domain record
+	if err := db.ExecOne("update cm_domains set is_readonly=$1 where id=$2;", readonly, domainID); err != nil {
+		logger.Errorf("domainService.SetReadonly: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+// TODO new-db DEPRECATED
 func (svc *domainService) StatsForComments(host models.Host, ownerID models.HexID, numDays int) ([]int64, error) {
 	logger.Debugf("domainService.StatsForComments(%s, %s, %d)", host, ownerID, numDays)
 
@@ -505,6 +422,7 @@ func (svc *domainService) StatsForComments(host models.Host, ownerID models.HexI
 	}
 }
 
+// TODO new-db DEPRECATED
 func (svc *domainService) StatsForOwner(ownerHex models.HexID) (countDomains, countPages, countComments, countCommenters int64, err error) {
 	logger.Debugf("domainService.StatsForOwner(%s)", ownerHex)
 
@@ -537,6 +455,7 @@ func (svc *domainService) StatsForOwner(ownerHex models.HexID) (countDomains, co
 	return
 }
 
+// TODO new-db DEPRECATED
 func (svc *domainService) StatsForViews(host models.Host, ownerID models.HexID, numDays int) ([]int64, error) {
 	logger.Debugf("domainService.StatsForViews(%s, %s, %d)", host, ownerID, numDays)
 
@@ -568,6 +487,7 @@ func (svc *domainService) StatsForViews(host models.Host, ownerID models.HexID, 
 	}
 }
 
+// TODO new-db DEPRECATED
 func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.HexID, error) {
 	logger.Debugf("domainService.TakeSSOToken(%s)", token)
 
@@ -584,15 +504,40 @@ func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.
 	return host, commenterToken, nil
 }
 
-func (svc *domainService) ToggleFrozen(host models.Host) error {
-	logger.Debugf("domainService.ToggleFrozen(%s)", host)
+func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID) error {
+	logger.Debugf("domainService.Update(%#v, %v)", domain, idps)
 
-	// Update the domain
-	err := db.Exec(
-		"update domains set state=case when state=$1 then $2 else $1 end where domain=$3;",
-		models.DomainStateFrozen, models.DomainStateUnfrozen, host)
-	if err != nil {
-		logger.Errorf("domainService.ToggleFrozen: Exec() failed: %v", err)
+	// Update the domain record
+	if err := db.ExecOne(
+		"update cm_domains "+
+			"set name=$1, auth_anonymous=$2, auth_local=$3, auth_sso=$4, sso_url=$5, moderation_policy=$6, mod_notify_policy=$7, default_sort=$8 "+
+			"where id=$9;",
+		domain.Name, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSso, domain.SsoURL, domain.ModerationPolicy,
+		domain.ModNotifyPolicy, domain.DefaultSort, &domain.ID,
+	); err != nil {
+		logger.Errorf("domainService.Update: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Save the domain IdPs
+	if err := svc.saveIdPs(&domain.ID, idps); err != nil {
+		return err
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *domainService) UserAdd(du *data.DomainUser) error {
+	logger.Debugf("domainService.UserAdd(%#v)", du)
+
+	// Insert a new domain-user link record
+	if err := db.Exec(
+		"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
+			"values($1, $2, $3, $4, $5, $6, $7);",
+		&du.DomainID, &du.UserID, du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator,
+	); err != nil {
+		logger.Errorf("domainService.UserAdd: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -600,54 +545,16 @@ func (svc *domainService) ToggleFrozen(host models.Host) error {
 	return nil
 }
 
-func (svc *domainService) Update(domain *models.Domain) error {
-	logger.Debug("domainService.Update(...)")
+func (svc *domainService) UserModify(du *data.DomainUser) error {
+	logger.Debugf("domainService.UserModify(%#v)", du)
 
-	// Prepare IdP settings
-	var local, google, github, gitlab, twitter, sso bool
-	for _, id := range domain.Idps {
-		switch id {
-		case models.IdentityProviderIDEmpty:
-			local = true
-		case models.IdentityProviderIDGoogle:
-			google = true
-		case models.IdentityProviderIDGithub:
-			github = true
-		case models.IdentityProviderIDGitlab:
-			gitlab = true
-		case models.IdentityProviderIDTwitter:
-			twitter = true
-		case models.IdentityProviderIDSso:
-			sso = true
-		}
-	}
-
-	// Update the domain
-	err := db.Exec(
-		"update domains "+
-			"set name=$1, state=$2, autospamfilter=$3, requiremoderation=$4, requireidentification=$5, "+
-			"moderateallanonymous=$6, emailnotificationpolicy=$7, commentoprovider=$8, googleprovider=$9, "+
-			"githubprovider=$10, gitlabprovider=$11, twitterprovider=$12, ssoprovider=$13, ssourl=$14, "+
-			"defaultsortpolicy=$15 "+
-			"where domain=$16;",
-		domain.DisplayName,
-		domain.State,
-		domain.AutoSpamFilter,
-		domain.RequireModeration,
-		domain.RequireIdentification,
-		domain.ModerateAllAnonymous,
-		domain.EmailNotificationPolicy,
-		local,
-		google,
-		github,
-		gitlab,
-		twitter,
-		sso,
-		domain.SsoURL,
-		domain.DefaultSortPolicy,
-		domain.Host)
-	if err != nil {
-		logger.Errorf("domainService.Update: Exec() failed: %v", err)
+	// Update the domain-user link record
+	if err := db.ExecOne(
+		"update cm_domains_users set is_owner=$1, is_moderator=$2, is_commenter=$3, notify_replies=$4, notify_moderator=$5 "+
+			"where domain_id=$6 and user_id=$7;",
+		du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator, &du.DomainID, &du.UserID,
+	); err != nil {
+		logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -655,10 +562,23 @@ func (svc *domainService) Update(domain *models.Domain) error {
 	return nil
 }
 
-// fetchDomain fetches and returns a domain instance from the provided database row
-func (svc *domainService) fetchDomain(row *sql.Row) (*data.Domain, error) {
+func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
+	logger.Debugf("domainService.UserRemove(%s, %s)", userID, domainID)
+
+	// Delete the domain-user link record
+	if err := db.ExecOne("delete from cm_domains_users where domain_id=$1 and user_id=$2;", &domainID, userID); err != nil {
+		logger.Errorf("domainService.UserRemove: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+// fetchDomain fetches and returns a domain instance from the provided Scanner
+func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 	var d data.Domain
-	err := row.Scan(
+	err := sc.Scan(
 		&d.ID,
 		&d.Name,
 		&d.Host,
@@ -690,28 +610,11 @@ func (svc *domainService) fetchDomains(rows *sql.Rows) ([]data.Domain, error) {
 	// Iterate all rows
 	var res []data.Domain
 	for rows.Next() {
-		var d data.Domain
-		err := rows.Scan(
-			&d.ID,
-			&d.Name,
-			&d.Host,
-			&d.CreatedTime,
-			&d.IsReadonly,
-			&d.AuthAnonymous,
-			&d.AuthLocal,
-			&d.AuthSso,
-			&d.SsoURL,
-			&d.SsoSecret,
-			&d.ModerationPolicy,
-			&d.ModNotifyPolicy,
-			&d.DefaultSort,
-			&d.CountComments,
-			&d.CountViews)
-		if err != nil {
-			logger.Errorf("domainService.fetchDomains: Scan() failed: %v", err)
+		if d, err := svc.fetchDomain(rows); err != nil {
 			return nil, err
+		} else {
+			res = append(res, *d)
 		}
-		res = append(res, d)
 	}
 
 	// Verify Next() didn't error
@@ -723,98 +626,46 @@ func (svc *domainService) fetchDomains(rows *sql.Rows) ([]data.Domain, error) {
 	return res, nil
 }
 
-// fetchDomainsAndModerators returns a list of domain instances from the provided database rows
-// Deprecated
-func (svc *domainService) fetchDomainsAndModerators(rs *sql.Rows) ([]*models.Domain, error) {
-	// Maintain a map of domains by host
-	dn := map[models.Host]*models.Domain{}
-	var res []*models.Domain
-
-	// Iterate all rows
-	for rs.Next() {
-		// Fetch a domain and a moderator
-		d := models.Domain{}
-		m := models.DomainModerator{}
-		var local, google, github, gitlab, twitter, sso bool
-		err := rs.Scan(
-			&d.Host,
-			&d.DisplayName,
-			&d.CreationDate,
-			&d.State,
-			&d.AutoSpamFilter,
-			&d.RequireModeration,
-			&d.RequireIdentification,
-			&d.ModerateAllAnonymous,
-			&d.EmailNotificationPolicy,
-			&local,
-			&google,
-			&github,
-			&gitlab,
-			&twitter,
-			&sso,
-			&d.SsoSecret,
-			&d.SsoURL,
-			&d.DefaultSortPolicy,
-			&m.Email,
-			&m.AddDate)
-		if err != nil {
-			logger.Warningf("domainService.fetchDomainsAndModerators: Scan() failed: %v", err)
-			return nil, err
-		}
-
-		// If the domain isn't encountered yet
-		var domain *models.Domain
-		var exists bool
-		if domain, exists = dn[d.Host]; !exists {
-			domain = &d
-
-			// Compile a list of identity providers
-			if local {
-				d.Idps = append(d.Idps, models.IdentityProviderIDEmpty)
-			}
-			if sso {
-				d.Idps = append(d.Idps, models.IdentityProviderIDSso)
-			}
-
-			// Federated IdPs
-			var fidps []models.IdentityProviderID
-			if google {
-				fidps = append(fidps, models.IdentityProviderIDGoogle)
-			}
-			if github {
-				fidps = append(fidps, models.IdentityProviderIDGithub)
-			}
-			if gitlab {
-				fidps = append(fidps, models.IdentityProviderIDGitlab)
-			}
-			if twitter {
-				fidps = append(fidps, models.IdentityProviderIDTwitter)
-			}
-			for _, id := range fidps {
-				if _, ok := data.FederatedIdProviders[id]; ok {
-					d.Idps = append(d.Idps, id)
-				}
-			}
-
-			// Add the domain to the result list and the name map
-			res = append(res, domain)
-			dn[d.Host] = domain
-		}
-
-		// Add the current moderator, if any, to the domain moderators
-		if m.Email != "" {
-			m.Host = domain.Host
-			domain.Moderators = append(domain.Moderators, &m)
-		}
+// fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner
+func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.DomainUser, error) {
+	var d data.Domain
+	var du data.DomainUser
+	var uid uuid.NullUUID
+	err := sc.Scan(
+		&d.ID,
+		&d.Name,
+		&d.Host,
+		&d.CreatedTime,
+		&d.IsReadonly,
+		&d.AuthAnonymous,
+		&d.AuthLocal,
+		&d.AuthSso,
+		&d.SsoURL,
+		&d.SsoSecret,
+		&d.ModerationPolicy,
+		&d.ModNotifyPolicy,
+		&d.DefaultSort,
+		&d.CountComments,
+		&d.CountViews,
+		&uid,
+		&du.IsOwner,
+		&du.IsModerator,
+		&du.IsCommenter,
+		&du.NotifyReplies,
+		&du.NotifyModerator)
+	if err != nil {
+		logger.Errorf("domainService.fetchDomainUser: Scan() failed: %v", err)
+		return nil, nil, err
 	}
 
-	// Check if Next() didn't error
-	if err := rs.Err(); err != nil {
-		return nil, err
+	// If no record found for the domain user, we'll return nil
+	var pdu *data.DomainUser
+	if uid.Valid {
+		pdu = &du
 	}
 
 	// Succeeded
-	return res, nil
+	return &d, pdu, nil
 }
 
 // fetchStats collects and returns a daily statistics using the provided database rows
@@ -837,4 +688,31 @@ func (svc *domainService) fetchStats(rs *sql.Rows) ([]int64, error) {
 
 	// Succeeded
 	return res, nil
+}
+
+// saveIdPs saves domain's identity provider links
+func (svc *domainService) saveIdPs(domainID *uuid.UUID, idps []models.FederatedIdpID) error {
+	// Delete any existing links
+	if err := db.Exec("delete from cm_domains_idps where domain_id=$1", domainID); err != nil {
+		logger.Errorf("domainService.saveIdPs: Exec() failed for deleting links: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Insert domain IdP records, if any
+	if len(idps) > 0 {
+		var vals []string
+		var params []any
+		for _, id := range idps {
+			vals = append(vals, "(?,?)")
+			params = append(params, &domainID, id)
+		}
+		if err := db.Exec("insert into cm_domains_idps(domain_id, fed_idp_id) values"+strings.Join(vals, ",")+";", params...); err != nil {
+			logger.Errorf("domainService.saveIdPs: Exec() failed for inserting links: %v", err)
+			return translateDBErrors(err)
+		}
+	}
+
+	// Succeeded
+	return nil
+
 }

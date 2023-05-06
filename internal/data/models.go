@@ -300,19 +300,6 @@ type Domain struct {
 	CountViews       int64                  // Total number of views
 }
 
-// NewDomain instantiates a new Domain
-func NewDomain(name, host string) *Domain {
-	return &Domain{
-		ID:               uuid.New(),
-		Name:             name,
-		Host:             host,
-		CreatedTime:      time.Now().UTC(),
-		ModerationPolicy: DomainModerationPolicyNone,
-		ModNotifyPolicy:  DomainModNotifyPolicyPending,
-		DefaultSort:      "ta",
-	}
-}
-
 // ToDTO converts this model into an API model
 func (d *Domain) ToDTO() *models.Domain {
 	return &models.Domain{
@@ -322,7 +309,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		CountComments:    d.CountComments,
 		CountViews:       d.CountViews,
 		CreatedTime:      strfmt.DateTime(d.CreatedTime),
-		DefaultSort:      d.DefaultSort,
+		DefaultSort:      models.CommentSort(d.DefaultSort),
 		Host:             models.Host(d.Host),
 		ID:               conv.UUID(strfmt.UUID(d.ID.String())),
 		IsReadonly:       d.IsReadonly,
@@ -344,6 +331,20 @@ type DomainUser struct {
 	IsCommenter     bool      // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
 	NotifyReplies   bool      // Whether the user is to be notified about replies to their comments
 	NotifyModerator bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// DomainPage represents a page on a specific domain
+type DomainPage struct {
+	ID            uuid.UUID // Unique record ID
+	DomainID      uuid.UUID // ID of the domain
+	Path          string    // Page path
+	Title         string    // Page title
+	IsReadonly    bool      // Whether the page is readonly (no new comments are allowed)
+	CreatedTime   time.Time // When the record was created
+	CountComments int64     // Total number of comments
+	CountViews    int64     // Total number of views
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

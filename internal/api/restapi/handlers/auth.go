@@ -78,16 +78,14 @@ func AuthConfirm(_ api_auth.AuthConfirmParams, user *data.User) middleware.Respo
 }
 
 func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) middleware.Responder {
-	/* TODO new-db
 	// Fetch a list of domains
-	if domains, err := svc.TheDomainService.ListByOwner(principal.GetHexID()); err != nil {
+	if domains, err := svc.TheDomainService.ListByOwnerID(&user.ID); err != nil {
 		return respServiceError(err)
 
 		// Make sure the owner owns no domains
 	} else if l := len(domains); l > 0 {
 		return respBadRequest(ErrorOwnerHasDomains.WithDetails(fmt.Sprintf("%d domain(s)", l)))
 	}
-	*/
 
 	// Delete the user
 	if err := svc.TheUserService.DeleteUserByID(&user.ID); err != nil {
@@ -316,7 +314,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 		return nil, nil, respServiceError(err)
 	}
 
-	// Verify the user is allowed to login
+	// Verify the user is allowed to log in
 	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
 		return nil, nil, r
 	}

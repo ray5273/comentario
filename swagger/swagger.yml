@@ -75,6 +75,8 @@ definitions:
         $ref: "#/definitions/parentHexId"
       host:
         $ref: "#/definitions/host"
+      path:
+        $ref: "#/definitions/path"
       creationDate:
         type: string
         format: date-time
@@ -92,8 +94,6 @@ definitions:
       markdown:
         type: string
       html:
-        type: string
-      path:
         type: string
 
   commenter:
@@ -120,6 +120,18 @@ definitions:
       isModerator:
         type: boolean
         x-omitempty: false
+
+  commentSort:
+    description: Comment sorting. 1st letter defines the property, 2nd letter the direction
+    type: string
+    minLength: 2
+    maxLength: 2
+    enum:
+      - ta # By timestamp, ascending
+      - td # By timestamp, descending
+      - sa # By score, ascending
+      - sd # By score, descending
+    x-isnullable: false
 
   commentState:
     description: Comment state
@@ -178,11 +190,8 @@ definitions:
         $ref: "#/definitions/domainModNotifyPolicy"
         description: Moderator notification policy for domain
       defaultSort:
-        type: string
-        minLength: 2
-        maxLength: 2
-        description: >
-          Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+        $ref: "#/definitions/commentSort"
+        description: Default comment sorting for domain
       countComments:
         type: integer
         readOnly: true
@@ -277,19 +286,6 @@ definitions:
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
 
-  # Deprecated
-  identityProviderId:
-    description: ID of an identity provider
-    type: string
-    enum:
-      - ''       # Local auth
-      - sso      # Single Sign-On
-      - github   # From this point on are the federated IdP IDs
-      - gitlab
-      - google
-      - twitter
-    x-isnullable: false
-
   page:
     description: Page hosting comments
     type: object
@@ -299,7 +295,7 @@ definitions:
       host:
         $ref: "#/definitions/host"
       path:
-        type: string
+        $ref: "#/definitions/path"
       isLocked:
         type: boolean
         x-omitempty: false
@@ -313,11 +309,65 @@ definitions:
         type: string
         readOnly: true
 
+  pageInfo:
+    description: Information about a page displaying comments
+    type: object
+    readOnly: true
+    properties:
+      domainId:
+        type: string
+        format: uuid
+        description: Domain ID
+      pageId:
+        type: string
+        format: uuid
+        description: Page ID
+      isDomainReadonly:
+        type: boolean
+        description: Whether the domain is readonly (no new comments are allowed)
+        x-omitempty: false
+      isPageReadonly:
+        type: boolean
+        description: Whether the page is readonly (no new comments are allowed)
+        x-omitempty: false
+      authAnonymous:
+        type: boolean
+        description: Whether anonymous comments are allowed
+        x-omitempty: false
+      authLocal:
+        type: boolean
+        description: Whether local authentication is allowed
+        x-omitempty: false
+      authSso:
+        type: boolean
+        description: Whether SSO authentication is allowed
+        x-omitempty: false
+      ssoUrl:
+        type: string
+        description: SSO provider URL
+      defaultSort:
+        $ref: "#/definitions/commentSort"
+        description: Default comment sorting for domain
+      idps:
+        type: array
+        items:
+          $ref: "#/definitions/federatedIdpId"
+        description: List of IDs of enabled federated identity providers
+
   parentHexId:
     description: ID similar to HexID, consisting of 64 hex digits, which can also be 'root'
     type: string
     maxLength: 64
     pattern: 'root|[0-9a-f]{64}'
+
+  path:
+    description: Path on a certain host
+    example: /foo
+    type: string
+    minLength: 1
+    maxLength: 2075 # 2083 (max URL length) - 8 (http://a, the shortest possible prefix)
+    pattern: "/.*"
+    x-isnullable: false
 
   principal:
     description: Authenticated or anonymous user
@@ -339,15 +389,6 @@ definitions:
         type: boolean
         x-omitempty: false
         description: Whether the user has confirmed their email address
-
-  sortPolicy:
-    description: Sort policy
-    type: string
-    enum:
-      - score-desc
-      - creationdate-desc
-      - creationdate-asc
-    x-isnullable: false
 
 parameters:
 
@@ -771,7 +812,7 @@ paths:
               paths:
                 type: array
                 items:
-                  type: string
+                  $ref: "#/definitions/path"
                 minItems: 1
                 maxItems: 32
       responses:
@@ -853,46 +894,31 @@ paths:
             type: object
             required:
               - host
+              - path
             properties:
               host:
                 $ref: "#/definitions/host"
               path:
-                type: string
+                $ref: "#/definitions/path"
       responses:
         200:
           description: Comment and commenter list
           schema:
             type: object
             properties:
-              host:
-                $ref: "#/definitions/host"
+              pageInfo:
+                description: Page info
+                $ref: "#/definitions/pageInfo"
               comments:
+                description: Comments on the page
                 type: array
                 items:
                   $ref: "#/definitions/comment"
               commenters:
-                type: object # map[string]commenter
-              requireModeration:
-                type: boolean
-                x-omitempty: false
-              requireIdentification:
-                type: boolean
-                x-omitempty: false
-              isFrozen:
-                type: boolean
-                x-omitempty: false
-              isModerator:
-                type: boolean
-                x-omitempty: false
-              defaultSortPolicy:
-                $ref: "#/definitions/sortPolicy"
-              attributes:
-                $ref: "#/definitions/page"
-              idps:
+                description: Commenters, who authored comments on the page
                 type: array
                 items:
-                  $ref: "#/definitions/identityProviderId"
-                description: List of IDs of enabled identity providers
+                  $ref: "#/definitions/commenter"
 
   /comment/new:
     post:
@@ -916,7 +942,7 @@ paths:
               host:
                 $ref: "#/definitions/host"
               path:
-                type: string
+                $ref: "#/definitions/path"
               parentHex:
                 $ref: "#/definitions/parentHexId"
               markdown:
@@ -1326,13 +1352,26 @@ paths:
           description: Domain has been cleared
 
     put:
-      operationId: DomainToggleFrozen
-      summary: Freeze or unfreeze the domain
+      operationId: DomainReadonly
+      summary: Set the domain's readonly state
       tags:
         - ApiOwner
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - readonly
+            properties:
+              readonly:
+                type: boolean
+                description: Readonly status to set
+                x-isnullable: false
       responses:
         204:
-          description: Domain frozen status has been toggled
+          description: Domain status has been set
 
   /domains/{uuid}/export:
     get:

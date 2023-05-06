@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
@@ -13,7 +12,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
-	"sort"
 	"strings"
 	"time"
 )
@@ -78,21 +76,10 @@ func DomainGet(params api_owner.DomainGetParams, user *data.User) middleware.Res
 		return respServiceError(err)
 
 	} else {
-		// Keep only providers that are configured
-		var fidps []models.FederatedIdpID
-		for _, id := range idps {
-			if _, ok, _ := data.GetFederatedIdP(id); ok {
-				fidps = append(fidps, id)
-			}
-		}
-
-		// Sort the providers by ID for a stable ordering
-		sort.Slice(idps, func(i, j int) bool { return idps[i] < idps[j] })
-
 		// Succeeded
 		return api_owner.NewDomainGetOK().WithPayload(&api_owner.DomainGetOKBody{
 			Domain:          d.ToDTO(),
-			FederatedIdpIds: fidps,
+			FederatedIdpIds: idps,
 		})
 	}
 }
@@ -212,7 +199,7 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 		SsoURL:           domain.SsoURL,
 		ModerationPolicy: data.DomainModerationPolicy(domain.ModerationPolicy),
 		ModNotifyPolicy:  data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
-		DefaultSort:      domain.DefaultSort,
+		DefaultSort:      string(domain.DefaultSort),
 	}
 	if err := svc.TheDomainService.Create(&user.ID, d, params.Body.FederatedIdpIds); err != nil {
 		return respServiceError(err)
@@ -243,6 +230,7 @@ func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.Us
 }
 
 func DomainStatistics(params api_owner.DomainStatisticsParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
 	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
@@ -262,36 +250,39 @@ func DomainStatistics(params api_owner.DomainStatisticsParams, user *data.User) 
 	if err != nil {
 		return respServiceError(err)
 	}
+	*/
 
 	// Succeeded
-	return api_owner.NewDomainStatisticsOK().WithPayload(&api_owner.DomainStatisticsOKBody{
+	return api_owner.NewDomainStatisticsOK() /* TODO new-db .WithPayload(&api_owner.DomainStatisticsOKBody{
 		CommentCounts: comments,
 		ViewCounts:    views,
-	})
+	})*/
 }
 
-// DomainToggleFrozen toggles domain state between frozen and unfrozen
-func DomainToggleFrozen(params api_owner.DomainToggleFrozenParams, user *data.User) middleware.Responder {
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+// DomainReadonly sets the domain's readonly state
+func DomainReadonly(params api_owner.DomainReadonlyParams, user *data.User) middleware.Responder {
+	// Find the domain and verify the user's ownership
+	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
-	}
 
-	// Toggle the frozen state of the domain
-	if err := svc.TheDomainService.ToggleFrozen(host); err != nil {
+		// Update the domain status
+	} else if err := svc.TheDomainService.SetReadonly(&d.ID, params.Body.Readonly); err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_owner.NewDomainToggleFrozenNoContent()
+	return api_owner.NewDomainReadonlyNoContent()
 }
 
 func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middleware.Responder {
-	// Verify the user owns the domain
-	domain := params.Body.Domain
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), domain.Host); r != nil {
+	// Find the domain and verify the user's ownership
+	newDomain := params.Body.Domain
+	if exDomain, _, r := domainGetDomainAndOwner(*newDomain.ID, user); r != nil {
 		return r
+
+		// Verify the host isn't changing
+	} else if string(newDomain.Host) != exDomain.Host {
+		return respBadRequest(ErrorImmutableProperty.WithDetails("host"))
 	}
 
 	// Validate identity providers
@@ -301,8 +292,19 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 		}
 	}
 
-	// Update the domain record
-	if err := svc.TheDomainService.Update(domain); err != nil {
+	// Persist a new domain record in the database
+	d := &data.Domain{
+		ID:               uuid.New(),
+		Name:             newDomain.Name,
+		AuthAnonymous:    newDomain.AuthAnonymous,
+		AuthLocal:        newDomain.AuthLocal,
+		AuthSso:          newDomain.AuthSso,
+		SsoURL:           newDomain.SsoURL,
+		ModerationPolicy: data.DomainModerationPolicy(newDomain.ModerationPolicy),
+		ModNotifyPolicy:  data.DomainModNotifyPolicy(newDomain.ModNotifyPolicy),
+		DefaultSort:      string(newDomain.DefaultSort),
+	}
+	if err := svc.TheDomainService.Update(d, params.Body.FederatedIdpIds); err != nil {
 		return respServiceError(err)
 	}
 
@@ -318,7 +320,7 @@ func domainGetDomainAndOwner(domainUUID strfmt.UUID, user *data.User) (*data.Dom
 		return nil, nil, respBadRequest(ErrorInvalidUUID)
 
 		// Find the domain and domain user
-	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUser(domainID, &user.ID); err != nil {
+	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID); err != nil {
 		return nil, nil, respServiceError(err)
 
 		// Verify the user owns the domain

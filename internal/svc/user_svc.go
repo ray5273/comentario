@@ -59,18 +59,9 @@ func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	logger.Debugf("userService.ConfirmUser(%s)", id)
 
 	// Update the owner's record
-	res, err := db.ExecRes("update cm_users set confirmed=true, ts_confirmed=$1 where id=$2;", time.Now().UTC(), id)
-	if err != nil {
-		logger.Errorf("userService.ConfirmUser: ExecRes() failed (owner update): %v", err)
+	if err := db.ExecOne("update cm_users set confirmed=true, ts_confirmed=$1 where id=$2;", time.Now().UTC(), id); err != nil {
+		logger.Errorf("userService.ConfirmUser: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
-	}
-
-	// Check if there was indeed an update
-	if count, err := res.RowsAffected(); err != nil {
-		logger.Errorf("userService.ConfirmUser: res.RowsAffected() failed: %v", err)
-		return translateDBErrors(err)
-	} else if count == 0 {
-		return ErrNotFound
 	}
 
 	// Succeeded
@@ -134,16 +125,9 @@ func (svc *userService) DeleteUserByID(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserByID(%s)", id)
 
 	// Delete the user
-	if res, err := db.ExecRes("delete from cm_users where id=$1;", id); err != nil {
-		logger.Errorf("userService.DeleteUserByID: Exec() failed: %v", err)
+	if err := db.ExecOne("delete from cm_users where id=$1;", id); err != nil {
+		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
-
-		// Verify there's something deleted indeed
-	} else if cnt, err := res.RowsAffected(); err != nil {
-		logger.Errorf("userService.DeleteUserByID: RowsAffected() failed: %v", err)
-		return translateDBErrors(err)
-	} else if cnt == 0 {
-		return ErrNotFound
 	}
 
 	// Succeeded
@@ -316,17 +300,12 @@ func (svc *userService) UpdateLocalUser(user *data.User) error {
 	logger.Debugf("userService.UpdateLocalUser(%v)", user)
 
 	// Update the record
-	if res, err := db.ExecRes(
+	if err := db.ExecOne(
 		"update cm_users set email=$1, name=$2, password_hash=$3, website_url=$4 where id=$5 and federated_idp is null;",
 		user.Email, user.Name, user.PasswordHash, user.WebsiteURL, &user.ID,
 	); err != nil {
-		logger.Errorf("userService.UpdateLocalUser: Exec() failed: %v", err)
+		logger.Errorf("userService.UpdateLocalUser: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
-	} else if i, err := res.RowsAffected(); err != nil {
-		logger.Errorf("userService.UpdateLocalUser: RowsAffected() failed: %v", err)
-		return translateDBErrors(err)
-	} else if i == 0 {
-		return ErrNotFound
 	}
 
 	// Succeeded
