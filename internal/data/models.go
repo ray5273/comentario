@@ -145,6 +145,19 @@ func (u *User) IsLocal() bool {
 	return u.FederatedIdP == ""
 }
 
+// ToCommenter converts this user into a Commenter model
+func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
+	return &models.Commenter{
+		AvatarURL:   "", // TODO new-db
+		Email:       strfmt.Email(u.Email),
+		ID:          strfmt.UUID(u.ID.String()),
+		IsCommenter: commenter,
+		IsModerator: moderator,
+		Name:        u.Name,
+		WebsiteURL:  strfmt.URI(u.WebsiteURL),
+	}
+}
+
 // ToPrincipal converts this user into a Principal model
 func (u *User) ToPrincipal() *models.Principal {
 	return &models.Principal{

@@ -2,6 +2,7 @@ package svc
 
 import (
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -23,9 +24,9 @@ type CommentService interface {
 	FindByHexID(commentHex models.HexID) (*models.Comment, error)
 	// ListByHost returns a list of all comments for the given domain
 	ListByHost(host models.Host) ([]models.Comment, error)
-	// ListWithCommentersByHostPath returns a list of comments and related commenters for the given domain and path
-	// combination. commenter is the current (un)authenticated user
-	ListWithCommentersByHostPath(commenter *data.UserCommenter, host models.Host, path string) ([]*models.Comment, map[models.HexID]*models.Commenter, error)
+	// ListWithCommentersByPage returns a list of comments and related commenters for the given page. user is the
+	// current authenticated/anonymous user
+	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*data.Comment, map[uuid.UUID]*data.User, error)
 	// MarkDeleted mark a comment with the given hex ID deleted in the database
 	MarkDeleted(commentHex models.HexID, deleterHex models.HexID) error
 	// UpdateText updates the markdown and the HTML of a comment with the given hex ID in the database
@@ -171,107 +172,109 @@ func (svc *commentService) ListByHost(host models.Host) ([]models.Comment, error
 	return res, nil
 }
 
-func (svc *commentService) ListWithCommentersByHostPath(commenter *data.UserCommenter, host models.Host, path string) ([]*models.Comment, map[models.HexID]*models.Commenter, error) {
-	logger.Debugf("commentService.ListWithCommentersByHostPath([%s], %s, %s)", commenter.HexID, host, path)
+func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*data.Comment, map[uuid.UUID]*data.User, error) {
+	logger.Debugf("commentService.ListWithCommentersByPage([%s], %#v)", &user.ID, page)
 
 	// Prepare a query
 	statement :=
 		"select " +
-			"c.commenthex, c.commenterhex, c.markdown, c.html, c.parenthex, c.score, c.state, c.deleted, c.creationdate, " +
-			"coalesce(v.direction, 0), " +
-			"coalesce(r.commenterhex, ''), " +
-			"coalesce(r.email, ''), " +
-			"coalesce(r.name, ''), " +
-			"coalesce(r.link, ''), " +
-			"coalesce(r.photo, ''), " +
-			"coalesce(r.provider, ''), " +
-			"coalesce(r.joindate, CURRENT_TIMESTAMP) " +
-			"from comments c " +
-			"left join votes v on v.commenthex=c.commenthex and v.commenterhex=$1 " +
-			"left join commenters r on r.commenterhex=c.commenterhex " +
-			"where c.domain=$2 and c.path=$3 and c.deleted=false"
-	params := []any{commenter.HexID, host, path}
+			// Comment fields
+			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_approved, c.is_spam, c.is_deleted, " +
+			"c.ts_created, c.ts_approved, c.ts_deleted, c.user_created, c.user_approved, c.user_deleted, " +
+			// User fields
+			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
+			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url " +
+			// Iterate comments
+			"from cm_comments c " +
+			// Outer-join commenter users
+			"left join cm_users u on u.id=c.user_created " +
+			// Outer-join domain users
+			"left join cm_domains_users du on du.user_id=c.user_created and du.domain_id=$1 " +
+			"where c.page_id=$2 and !c.is_deleted"
+	params := []any{&page.DomainID, &page.ID}
 
-	// Anonymous commenter: only include approved
-	if commenter.IsAnonymous() {
-		statement += " and c.state=$4"
-		params = append(params, models.CommentStateApproved)
+	// Anonymous user: only include approved
+	if user.IsAnonymous() {
+		statement += " and c.is_approved"
 
-	} else if !commenter.IsModerator {
-		// Authenticated, non-moderator commenter: show only approved and all own comments
-		statement += " and (c.state=$4 or c.commenterHex=$1)"
-		params = append(params, models.CommentStateApproved)
+	} else if !isModerator {
+		// Authenticated, non-moderator user: show only approved and all own comments
+		statement += " and (c.is_approved or c.user_created=$3)"
+		params = append(params, &user.ID)
 	}
 	statement += ";"
 
 	// Fetch the comments
 	rs, err := db.Query(statement, params...)
 	if err != nil {
-		logger.Errorf("commentService.ListWithCommentersByHostPath: Query() failed: %v", err)
+		logger.Errorf("commentService.ListWithCommentersByPage: Query() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
 	defer rs.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
-	commenters := map[models.HexID]*models.Commenter{
-		data.AnonymousCommenter.HexID: data.AnonymousCommenter.ToCommenter(),
-	}
+	commenters := map[uuid.UUID]*data.User{data.AnonymousUser.ID: data.AnonymousUser}
 
 	// Iterate result rows
-	var comments []*models.Comment
+	var comments []*data.Comment
 	for rs.Next() {
 		// Fetch the comment and the related commenter
-		comment := models.Comment{}
-		uc := data.UserCommenter{}
-		var crHex, ucWebsiteURL, ucPhotoURL, ucProvider string
+		cm := data.Comment{}
+		uc := data.User{}
 		err := rs.Scan(
-			&comment.CommentHex,
-			&crHex,
-			&comment.Markdown,
-			&comment.HTML,
-			&comment.ParentHex,
-			&comment.Score,
-			&comment.State,
-			&comment.Deleted,
-			&comment.CreationDate,
-			&comment.Direction,
-			&uc.HexID,
+			// Comment
+			&cm.ID,
+			&cm.ParentID,
+			&cm.PageID,
+			&cm.Markdown,
+			&cm.Html,
+			&cm.Score,
+			&cm.IsApproved,
+			&cm.IsSpam,
+			&cm.IsDeleted,
+			&cm.TsCreated,
+			&cm.TsApproved,
+			&cm.TsDeleted,
+			&cm.UserCreated,
+			&cm.UserApproved,
+			&cm.UserDeleted,
+			// User
+			&uc.ID,
 			&uc.Email,
 			&uc.Name,
-			&ucWebsiteURL,
-			&ucPhotoURL,
-			&ucProvider,
-			&uc.Created)
+			&uc.PasswordHash,
+			&uc.SystemAccount,
+			&uc.Superuser,
+			&uc.Confirmed,
+			&uc.ConfirmedTime,
+			&uc.CreatedTime,
+			&uc.UserCreated,
+			&uc.SignupIP,
+			&uc.SignupCountry,
+			&uc.SignupURL,
+			&uc.Banned,
+			&uc.BannedTime,
+			&uc.UserBanned,
+			&uc.Remarks,
+			&uc.FederatedIdP,
+			&uc.FederatedID,
+			&uc.Avatar,
+			&uc.WebsiteURL)
 		if err != nil {
-			logger.Errorf("commentService.ListWithCommentersByHostPath: Scan() failed: %v", err)
+			logger.Errorf("commentService.ListWithCommentersByPage: Scan() failed: %v", err)
 			return nil, nil, translateDBErrors(err)
 		}
 
-		// Apply necessary conversions
-		comment.CommenterHex = unfixCommenterHex(crHex)
-		if uc.HexID != "" {
-			uc.WebsiteURL = unfixUndefined(ucWebsiteURL)
-			uc.PhotoURL = unfixUndefined(ucPhotoURL)
-			uc.Provider = unfixIdP(ucProvider)
-
-			// Add the commenter to the map
-			if _, ok := commenters[comment.CommenterHex]; !ok {
-				commenters[comment.CommenterHex] = uc.ToCommenter()
+		// Add the authenticated user to the map
+		if !uc.IsAnonymous() {
+			if _, ok := commenters[uc.ID]; !ok {
+				commenters[uc.ID] = &uc
 			}
 		}
 
-		// Do not include the original markdown for anonymous and other commenters, unless it's a moderator
-		if uc.IsAnonymous() || !commenter.IsModerator && commenter.HexID != comment.CommenterHex {
-			comment.Markdown = ""
-		}
-
-		// Also, do not report comment state for non-moderators
-		if !commenter.IsModerator {
-			comment.State = ""
-		}
-
 		// Append the comment to the list
-		comments = append(comments, &comment)
+		comments = append(comments, &cm)
 	}
 
 	// Check that Next() didn't error

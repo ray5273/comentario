@@ -120,8 +120,8 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 		return respServiceError(err)
 	}
 
-	// Fetch the page
-	page, err := svc.ThePageService.FindByDomainPath(&domain.ID, string(params.Body.Path))
+	// Fetch the page, registering a new pageview
+	page, err := svc.ThePageService.GetRegisteringView(&domain.ID, string(params.Body.Path))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -134,11 +134,9 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 		DefaultSort:      models.CommentSort(domain.DefaultSort),
 		DomainID:         strfmt.UUID(domain.ID.String()),
 		IsDomainReadonly: domain.IsReadonly,
+		IsPageReadonly:   page.IsReadonly,
+		PageID:           strfmt.UUID(page.ID.String()),
 		SsoURL:           domain.SsoURL,
-	}
-	if page != nil {
-		pi.PageID = strfmt.UUID(page.ID.String())
-		pi.IsPageReadonly = page.IsReadonly
 	}
 
 	// Fetch the domain's identity providers
@@ -146,24 +144,15 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 		return respServiceError(err)
 	}
 
-	// TODO TBC
-	...
-	// Make a map of moderator emails, also figure out if the user is a moderator self
-	moderatorEmailMap := map[strfmt.Email]bool{}
-	for _, mod := range domain.Moderators {
-		moderatorEmailMap[mod.Email] = true
-		if !user.IsAnonymous() && string(mod.Email) == user.Email {
-			commenter.IsModerator = true
-		}
-	}
-
-	// Fetch comment list
-	comments, commenters, err := svc.TheCommentService.ListWithCommentersByHostPath(commenter, domain.Host, params.Body.Path)
+	// Fetch comments and commenters
+	comments, commenters, err := svc.TheCommentService.ListWithCommentersByPage(user, page, domainUser.IsModerator)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Update each commenter
+	// TODO TBC
+	!!!
 	for _, cr := range commenters {
 		// Set the IsModerator flag to true for domain moderators
 		if moderatorEmailMap[cr.Email] {
@@ -175,7 +164,7 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	}
 
 	// Register a view in domain statistics, ignoring any error
-	_ = svc.TheDomainService.RegisterView(domain.Host, commenter)
+	// TODO new-db _ = svc.TheDomainService.RegisterView(domain.Host, commenter)
 
 	// Succeeded
 	return api_commenter.NewCommentListOK() /* TODO new-db.WithPayload(&api_commenter.CommentListOKBody{

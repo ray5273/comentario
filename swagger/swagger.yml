@@ -65,60 +65,82 @@ definitions:
         description: Configured federated identity providers
 
   comment:
+    description: Comment residing on a page
     type: object
     properties:
-      commentHex:
-        $ref: "#/definitions/hexId"
-      commenterHex:
-        $ref: "#/definitions/hexId"
-      parentHex:
-        $ref: "#/definitions/parentHexId"
-      host:
-        $ref: "#/definitions/host"
-      path:
-        $ref: "#/definitions/path"
-      creationDate:
+      id:
         type: string
-        format: date-time
-      state:
-        $ref: "#/definitions/commentState"
-      deleted:
-        type: boolean
-        x-omitempty: false
-      direction:
-        type: integer
-        x-omitempty: false
-      score:
-        type: integer
-        x-omitempty: false
+        format: uuid
+        description: Unique record ID
+      parentId:
+        type: string
+        format: uuid
+        description: Parent record ID, null if it's a root comment on the page
+      pageId:
+        type: string
+        format: uuid
+        description: ID of the page
       markdown:
         type: string
+        description: Comment text in markdown
       html:
         type: string
+        description: Rendered comment text in HTML
+      score:
+        type: integer
+        description: Comment score
+        x-omitempty: false
+      isApproved:
+        type: boolean
+        description: Whether the comment is approved and can be seen by everyone
+        x-omitempty: false
+      isSpam:
+        type: boolean
+        description: Whether the comment is flagged as (potential) spam
+        x-omitempty: false
+      isDeleted:
+        type: boolean
+        description: Whether the comment is marked as deleted
+        x-omitempty: false
+      createdTime:
+        type: string
+        format: date-time
+        description: When the comment was created
+      userCreated:
+        type: string
+        format: uuid
+        description: ID of the user who created the comment
 
   commenter:
+    description: Stripped-down, read-only version of the user who authored a comment
     type: object
     properties:
-      commenterHex:
-        $ref: "#/definitions/hexId"
+      id:
+        type: string
+        format: uuid
+        description: Unique user ID
       email:
         type: string
         format: email
+        description: Email address of the user
       name:
         type: string
+        description: Full name of the user
       websiteUrl:
         type: string
         format: uri
+        description: URL of the user's website
       avatarUrl:
         type: string
         format: uri
-      provider:
-        type: string
-      joinDate:
-        type: string
-        format: date-time
+        description: URL of the user's avatar
       isModerator:
         type: boolean
+        description: Whether the user is a moderator on this specific domain
+        x-omitempty: false
+      isCommenter:
+        type: boolean
+        description: Whether the user is a commenter on this specific domain (false means the user is read-only)
         x-omitempty: false
 
   commentSort:
