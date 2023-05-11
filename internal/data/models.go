@@ -368,14 +368,14 @@ type Comment struct {
 	ParentID     uuid.NullUUID // Parent record ID, null if it's a root comment on the page
 	PageID       uuid.UUID     // Reference to the page
 	Markdown     string        // Comment text in markdown
-	Html         string        // Rendered comment text in HTML
+	HTML         string        // Rendered comment text in HTML
 	Score        int           // Comment score
 	IsApproved   bool          // Whether the comment is approved and can be seen by everyone
 	IsSpam       bool          // Whether the comment is flagged as (potential) spam
 	IsDeleted    bool          // Whether the comment is marked as deleted
-	TsCreated    time.Time     // When the comment was created
-	TsApproved   time.Time     // When the comment was approved
-	TsDeleted    time.Time     // When the comment was marked as deleted
+	CreatedTime  time.Time     // When the comment was created
+	ApprovedTime time.Time     // When the comment was approved
+	DeletedTime  time.Time     // When the comment was marked as deleted
 	UserCreated  uuid.NullUUID // Reference to the user who created the comment
 	UserApproved uuid.NullUUID // Reference to the user who approved the comment
 	UserDeleted  uuid.NullUUID // Reference to the user who deleted the comment

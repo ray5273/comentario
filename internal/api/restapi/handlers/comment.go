@@ -150,35 +150,15 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 		return respServiceError(err)
 	}
 
-	// Update each commenter
-	// TODO TBC
-	!!!
-	for _, cr := range commenters {
-		// Set the IsModerator flag to true for domain moderators
-		if moderatorEmailMap[cr.Email] {
-			cr.IsModerator = true
-		}
-
-		// Wipe out the email (to omit them in the response)
-		cr.Email = ""
-	}
-
 	// Register a view in domain statistics, ignoring any error
 	// TODO new-db _ = svc.TheDomainService.RegisterView(domain.Host, commenter)
 
 	// Succeeded
-	return api_commenter.NewCommentListOK() /* TODO new-db.WithPayload(&api_commenter.CommentListOKBody{
-		Attributes:            page,
-		Commenters:            commenters,
-		Comments:              comments,
-		Idps:                  ids,
-		DefaultSortPolicy:     domain.DefaultSortPolicy,
-		Host:                  domain.Host,
-		IsFrozen:              domain.State == models.DomainStateFrozen,
-		IsModerator:           commenter.IsModerator,
-		RequireIdentification: domain.RequireIdentification,
-		RequireModeration:     domain.RequireModeration,
-	})*/
+	return api_commenter.NewCommentListOK().WithPayload(&api_commenter.CommentListOKBody{
+		Commenters: commenters,
+		Comments:   comments,
+		PageInfo:   nil,
+	})
 }
 
 func CommentNew(params api_commenter.CommentNewParams, user *data.User) middleware.Responder {

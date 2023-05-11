@@ -26,7 +26,7 @@ type CommentService interface {
 	ListByHost(host models.Host) ([]models.Comment, error)
 	// ListWithCommentersByPage returns a list of comments and related commenters for the given page. user is the
 	// current authenticated/anonymous user
-	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*data.Comment, map[uuid.UUID]*data.User, error)
+	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted mark a comment with the given hex ID deleted in the database
 	MarkDeleted(commentHex models.HexID, deleterHex models.HexID) error
 	// UpdateText updates the markdown and the HTML of a comment with the given hex ID in the database
@@ -172,7 +172,7 @@ func (svc *commentService) ListByHost(host models.Host) ([]models.Comment, error
 	return res, nil
 }
 
-func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*data.Comment, map[uuid.UUID]*data.User, error) {
+func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error) {
 	logger.Debugf("commentService.ListWithCommentersByPage([%s], %#v)", &user.ID, page)
 
 	// Prepare a query
@@ -180,11 +180,9 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 		"select " +
 			// Comment fields
 			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_approved, c.is_spam, c.is_deleted, " +
-			"c.ts_created, c.ts_approved, c.ts_deleted, c.user_created, c.user_approved, c.user_deleted, " +
-			// User fields
-			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
-			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url " +
+			"c.ts_created, c.user_created, " +
+			// Commenter fields
+			"u.id, u.email, u.name, u.website_url, coalesce(du.is_commenter, true), coalesce(du.is_moderator, false) " +
 			// Iterate comments
 			"from cm_comments c " +
 			// Outer-join commenter users
@@ -214,62 +212,50 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	defer rs.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
-	commenters := map[uuid.UUID]*data.User{data.AnonymousUser.ID: data.AnonymousUser}
+	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false)}
 
 	// Iterate result rows
-	var comments []*data.Comment
+	var comments []*models.Comment
 	for rs.Next() {
 		// Fetch the comment and the related commenter
-		cm := data.Comment{}
-		uc := data.User{}
+		cm := models.Comment{}
+		uc := models.Commenter{}
+		var uid uuid.UUID
+		var email strfmt.Email
 		err := rs.Scan(
 			// Comment
 			&cm.ID,
 			&cm.ParentID,
 			&cm.PageID,
 			&cm.Markdown,
-			&cm.Html,
+			&cm.HTML,
 			&cm.Score,
 			&cm.IsApproved,
 			&cm.IsSpam,
 			&cm.IsDeleted,
-			&cm.TsCreated,
-			&cm.TsApproved,
-			&cm.TsDeleted,
+			&cm.CreatedTime,
 			&cm.UserCreated,
-			&cm.UserApproved,
-			&cm.UserDeleted,
 			// User
-			&uc.ID,
-			&uc.Email,
+			&uid,
+			&email,
 			&uc.Name,
-			&uc.PasswordHash,
-			&uc.SystemAccount,
-			&uc.Superuser,
-			&uc.Confirmed,
-			&uc.ConfirmedTime,
-			&uc.CreatedTime,
-			&uc.UserCreated,
-			&uc.SignupIP,
-			&uc.SignupCountry,
-			&uc.SignupURL,
-			&uc.Banned,
-			&uc.BannedTime,
-			&uc.UserBanned,
-			&uc.Remarks,
-			&uc.FederatedIdP,
-			&uc.FederatedID,
-			&uc.Avatar,
-			&uc.WebsiteURL)
+			&uc.WebsiteURL,
+			&uc.IsCommenter,
+			&uc.IsModerator)
 		if err != nil {
 			logger.Errorf("commentService.ListWithCommentersByPage: Scan() failed: %v", err)
 			return nil, nil, translateDBErrors(err)
 		}
 
 		// Add the authenticated user to the map
-		if !uc.IsAnonymous() {
-			if _, ok := commenters[uc.ID]; !ok {
-				commenters[uc.ID] = &uc
+		if uid != data.AnonymousUser.ID {
+			uc.ID = strfmt.UUID(uid.String())
+			// Only include the email if the user is a moderator
+			if isModerator {
+				uc.Email = email
+			}
+			if _, ok := commenterMap[uid]; !ok {
+				commenterMap[uid] = &uc
 			}
 		}
 
@@ -280,6 +266,12 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	// Check that Next() didn't error
 	if err := rs.Err(); err != nil {
 		return nil, nil, err
+	}
+
+	// Convert commenter map into a slice
+	var commenters []*models.Commenter
+	for _, commenter := range commenterMap {
+		commenters = append(commenters, commenter)
 	}
 
 	// Succeeded
