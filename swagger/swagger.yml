@@ -958,31 +958,40 @@ paths:
             type: object
             required:
               - host
-              - parentHex
+              - path
               - markdown
             properties:
               host:
+                description: Host the page resides on
                 $ref: "#/definitions/host"
               path:
+                description: Path to the page to create a comment on
                 $ref: "#/definitions/path"
-              parentHex:
-                $ref: "#/definitions/parentHexId"
-              markdown:
+              parentId:
+                description: Optional ID of the parent comment for the new one. If omitted, a root comment will be added
                 type: string
+                format: uuid
+              markdown:
+                description: Comment text in the markdown format
+                type: string
+                minLength: 1
+                maxLength: 4096
+                x-isnullable: false
       responses:
         200:
           description: Comment is added
           schema:
             type: object
             properties:
-              commentHex:
-                $ref: "#/definitions/hexId"
-              commenterHex:
-                $ref: "#/definitions/hexId"
+              comment:
+                description: Added comment
+                $ref: "#/definitions/comment"
+              commenter:
+                description: Commenter that corresponds to the current user
+                $ref: "#/definitions/commenter"
               html:
+                description: Comment text rendered as HTML
                 type: string
-              state:
-                $ref: "#/definitions/commentState"
 
   /comment/vote:
     post:

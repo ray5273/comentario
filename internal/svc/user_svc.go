@@ -20,6 +20,8 @@ type UserService interface {
 	ConfirmUser(id *uuid.UUID) error
 	// CountUsers returns a number of registered users (ignoring the anonymous)
 	CountUsers() (int, error)
+	// CreateDomainUser persists a new domain user (linking a user to a domain)
+	CreateDomainUser(du *data.DomainUser) error
 	// CreateUser persists a new user
 	CreateUser(u *data.User) error
 	// CreateUserSession persists a new user session
@@ -77,6 +79,23 @@ func (svc *userService) CountUsers() (int, error) {
 	} else {
 		return i, nil
 	}
+}
+
+func (svc *userService) CreateDomainUser(du *data.DomainUser) error {
+	logger.Debugf("userService.CreateDomainUser(%v)", du)
+
+	// Insert a new record
+	err := db.Exec(
+		"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
+			"values($1, $2, $3, $4, $5, $6, $7);",
+		du.DomainID, du.UserID, du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator)
+	if err != nil {
+		logger.Errorf("userService.CreateDomainUser: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 func (svc *userService) CreateUser(u *data.User) error {

@@ -346,6 +346,13 @@ type DomainUser struct {
 	NotifyModerator bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
 }
 
+// IsReadonly returns whether the domain user is not allowed to comment (is readonly). Can be called against a nil
+// receiver, which is interpreted as no domain user has been created yet for this specific user hence they're NOT
+// readonly
+func (u *DomainUser) IsReadonly() bool {
+	return u != nil && !u.IsOwner && !u.IsModerator && !u.IsCommenter
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // DomainPage represents a page on a specific domain

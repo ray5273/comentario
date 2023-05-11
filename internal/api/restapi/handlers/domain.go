@@ -144,7 +144,7 @@ func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *d
 	}
 
 	// Delete the moderator from the database
-	if err := svc.TheDomainService.DeleteModerator(host, data.EmailToString(params.Body.Email)); err != nil {
+	if err := svc.TheDomainService.DeleteModerator(host, data.EmailPtrToString(params.Body.Email)); err != nil {
 		return respServiceError(err)
 	}
 	*/
@@ -162,7 +162,7 @@ func DomainModeratorNew(params api_owner.DomainModeratorNewParams, user *data.Us
 	}
 
 	// Register a new domain moderator
-	if _, err := svc.TheDomainService.CreateModerator(host, data.EmailToString(params.Body.Email)); err != nil {
+	if _, err := svc.TheDomainService.CreateModerator(host, data.EmailPtrToString(params.Body.Email)); err != nil {
 		return respServiceError(err)
 	}
 	*/

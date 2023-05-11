@@ -3,11 +3,14 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
+	"time"
 )
 
 func CommentApprove(params api_commenter.CommentApproveParams, user *data.User) middleware.Responder {
@@ -121,7 +124,7 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	}
 
 	// Fetch the page, registering a new pageview
-	page, err := svc.ThePageService.GetRegisteringView(&domain.ID, string(params.Body.Path))
+	page, err := svc.ThePageService.GetRegisteringView(&domain.ID, data.PathToString(params.Body.Path))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -145,7 +148,7 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	}
 
 	// Fetch comments and commenters
-	comments, commenters, err := svc.TheCommentService.ListWithCommentersByPage(user, page, domainUser.IsModerator)
+	comments, commenters, err := svc.TheCommentService.ListWithCommentersByPage(user, page, domainUser != nil && domainUser.IsModerator)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -162,52 +165,75 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 }
 
 func CommentNew(params api_commenter.CommentNewParams, user *data.User) middleware.Responder {
-	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByHost(params.Body.Host)
-	if err != nil {
+	// Fetch the domain and the user
+	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID)
+	if err == svc.ErrNotFound {
+		// No domain found for this host
+		return respForbidden(ErrorUnknownHost)
+	} else if err != nil {
 		return respServiceError(err)
 	}
 
 	// If the domain disallows anonymous commenting, verify the commenter is authenticated
-	if domain.RequireIdentification {
+	if !domain.AuthAnonymous {
 		if r := Verifier.UserIsAuthenticated(user); r != nil {
 			return r
 		}
 	}
 
-	// Verify the domain isn't frozen
-	if domain.State == models.DomainStateFrozen {
-		return respBadRequest(ErrorDomainFrozen)
-	}
-
-	// Verify the page isn't locked
-	path := strings.TrimSpace(params.Body.Path)
-	if page, err := svc.ThePageService.FindByHostPath(domain.Host, path); err != nil {
+	// Fetch the page: it must exist at this point, under the assumption that one has to list existing comments prior to
+	// adding a new one
+	page, err := svc.ThePageService.FindByDomainPath(&domain.ID, data.PathToString(params.Body.Path))
+	if err != nil {
 		return respServiceError(err)
-	} else if page.IsLocked {
-		return respBadRequest(ErrorPageLocked)
 	}
 
-	/* TODO new-db
-	// If the commenter is authenticated, check if it's a domain moderator
-	commenter := principal.(*data.UserCommenter)
-	if !commenter.IsAnonymous() {
-		for _, mod := range domain.Moderators {
-			if string(mod.Email) == commenter.Email {
-				commenter.IsModerator = true
-				break
-			}
+	// Parse the parent ID
+	var parentID uuid.NullUUID
+	if err := parentID.Scan(params.Body.ParentID); err != nil {
+		return respBadRequest(ErrorInvalidUUID)
+	}
+
+	// Verify the domain, the page, and the user aren't readonly
+	if domain.IsReadonly {
+		return respForbidden(ErrorDomainReadonly)
+	} else if page.IsReadonly {
+		return respForbidden(ErrorPageReadonly)
+	} else if domainUser.IsReadonly() {
+		return respForbidden(ErrorUserReadonly)
+	}
+
+	// If the domain user doesn't exist yet, add one
+	if domainUser == nil {
+		domainUser = &data.DomainUser{
+			DomainID:        domain.ID,
+			UserID:          user.ID,
+			IsCommenter:     true,
+			NotifyReplies:   true,
+			NotifyModerator: true,
+		}
+		if err := svc.TheUserService.CreateDomainUser(domainUser); err != nil {
+			return respServiceError(err)
 		}
 	}
 
+	// Prepare a comment
+	c := &data.Comment{
+		ID:           uuid.New(),
+		ParentID:     parentID,
+		PageID:       page.ID,
+		Markdown:     strings.TrimSpace(params.Body.Markdown),
+		HTML:         "",
+		CreatedTime:  time.Now().UTC(),
+		UserCreated:  uuid.NullUUID{UUID:  user.ID, Valid: true},
+	}
+
 	// Determine comment state
-	markdown := data.TrimmedString(params.Body.Markdown)
-	var state models.CommentState
-	if commenter.IsModerator {
-		state = models.CommentStateApproved
-	} else if domain.RequireModeration || commenter.IsAnonymous() && domain.ModerateAllAnonymous {
-		state = models.CommentStateUnapproved
-	} else if domain.AutoSpamFilter &&
+	if domainUser.IsModerator {
+		c.IsApproved = true
+	} else if domain.ModerationPolicy == data.DomainModerationPolicyAll || user.IsAnonymous() && domain.ModerationPolicy == data.DomainModerationPolicyAnonymous {
+		// Not approved
+	} else if ... domain.AutoSpamFilter &&
 		svc.TheAntispamService.CheckForSpam(
 			domain.Host,
 			util.UserIP(params.HTTPRequest),

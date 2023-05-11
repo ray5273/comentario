@@ -100,7 +100,7 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) midd
 func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	// Log the user in
 	user, session, r := loginLocalUser(
-		data.EmailToString(params.Body.Email),
+		data.EmailPtrToString(params.Body.Email),
 		swag.StringValue(params.Body.Password),
 		"",
 		params.HTTPRequest)
@@ -150,7 +150,7 @@ func AuthPwdResetChange(params api_auth.AuthPwdResetChangeParams, user *data.Use
 }
 
 func AuthPwdResetSendEmail(params api_auth.AuthPwdResetSendEmailParams) middleware.Responder {
-	if r := sendPasswordResetEmail(data.EmailToString(params.Body.Email)); r != nil {
+	if r := sendPasswordResetEmail(data.EmailPtrToString(params.Body.Email)); r != nil {
 		return r
 	}
 
@@ -165,7 +165,7 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	}
 
 	// Verify no such email is registered yet
-	email := data.EmailToString(params.Body.Email)
+	email := data.EmailPtrToString(params.Body.Email)
 	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
 		return respServiceError(err)
 	} else if exists {

@@ -69,7 +69,7 @@ func TestDecodeUUID(t *testing.T) {
 	}
 }
 
-func TestEmailToString(t *testing.T) {
+func TestEmailPtrToString(t *testing.T) {
 	v1 := strfmt.Email("whatever@foo.bar")
 	v2 := strfmt.Email("  spaces@foo.bar\n ")
 	tests := []struct {
@@ -83,8 +83,28 @@ func TestEmailToString(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			if got := EmailToString(tt.v); got != tt.want {
-				t.Errorf("EmailToString() = %v, want %v", got, tt.want)
+			if got := EmailPtrToString(tt.v); got != tt.want {
+				t.Errorf("EmailPtrToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPathToString(t *testing.T) {
+	tests := []struct {
+		name string
+		v    models.Path
+		want string
+	}{
+		{"empty           ", "", ""},
+		{"empty whitespace", "\n\t ", ""},
+		{"value     ", "/ouch.org", "/ouch.org"},
+		{"whitespace", "\t   /whitespace.org\n \t", "/whitespace.org"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PathToString(tt.v); got != tt.want {
+				t.Errorf("PathToString() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -132,15 +152,37 @@ func TestTrimmedString(t *testing.T) {
 	}
 }
 
-func TestURIToString(t *testing.T) {
-	v := strfmt.URI("https://ouch.org")
+func TestURIPtrToString(t *testing.T) {
+	v1 := strfmt.URI("https://ouch.org")
+	v2 := strfmt.URI(" https://whitespace.org\n\n\t")
 	tests := []struct {
 		name string
 		v    *strfmt.URI
 		want string
 	}{
-		{"nil  ", nil, ""},
-		{"value", &v, "https://ouch.org"},
+		{"nil       ", nil, ""},
+		{"value     ", &v1, "https://ouch.org"},
+		{"whitespace", &v2, "https://whitespace.org"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := URIPtrToString(tt.v); got != tt.want {
+				t.Errorf("URIPtrToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestURIToString(t *testing.T) {
+	tests := []struct {
+		name string
+		v    strfmt.URI
+		want string
+	}{
+		{"empty           ", "", ""},
+		{"empty whitespace", "\n\t ", ""},
+		{"value     ", "https://ouch.org", "https://ouch.org"},
+		{"whitespace", "\t   https://whitespace.org\n \t", "https://whitespace.org"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

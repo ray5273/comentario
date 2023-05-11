@@ -17,9 +17,7 @@ var ThePageService PageService = &pageService{}
 type PageService interface {
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(host string, paths []string) (map[string]int, error)
-	// FindByDomainPath finds and returns a pages for the specified domain ID and path combination. If no such page
-	// exists in the database, return a nil DomainPage
-	// TODO is this method needed?
+	// FindByDomainPath finds and returns a pages for the specified domain ID and path combination
 	FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error)
 	// GetRegisteringView queries a page, registering a new pageview, inserting a new database record if necessary
 	GetRegisteringView(domainID *uuid.UUID, path string) (*data.DomainPage, error)
@@ -112,19 +110,14 @@ func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*dat
 	logger.Debugf("pageService.FindByDomainPath(%s, %s)", domainID, path)
 
 	// Query a page row
-	row := db.QueryRow(
+	var p data.DomainPage
+	if err := db.QueryRow(
 		"select id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views from cm_domain_pages "+
 			"where domain_id=$1 and path=$2;",
-		domainID, path)
-
-	// Fetch the row
-	var p data.DomainPage
-	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err == sql.ErrNoRows {
-		logger.Debug("pageService.FindByDomainPath: no page found yet")
-		return nil, nil
-
-	} else if err != nil {
-		// Any other database error
+		domainID, path,
+	).Scan(
+		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
+	); err != nil {
 		logger.Errorf("pageService.FindByDomainPath: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}

@@ -13,7 +13,7 @@ import (
 func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Responder {
 	// Log the user in
 	user, session, r := loginLocalUser(
-		data.EmailToString(params.Body.Email),
+		data.EmailPtrToString(params.Body.Email),
 		swag.StringValue(params.Body.Password),
 		string(params.Body.Host),
 		params.HTTPRequest)
@@ -49,7 +49,7 @@ func CommenterLogout(params api_commenter.CommenterLogoutParams, user *data.User
 
 func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Responder {
 	// Verify no such email is registered yet
-	email := data.EmailToString(params.Body.Email)
+	email := data.EmailPtrToString(params.Body.Email)
 	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
 		return respServiceError(err)
 	} else if exists {
@@ -59,7 +59,7 @@ func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Resp
 	// Create a new user
 	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
 		WithPassword(swag.StringValue(params.Body.Password)).
-		WithSignup(params.HTTPRequest, data.URIToString(params.Body.URL)).
+		WithSignup(params.HTTPRequest, data.URIPtrToString(params.Body.URL)).
 		WithWebsiteURL(string(params.Body.WebsiteURL)).
 		// If SMTP isn't configured, mark the user as confirmed right away
 		WithConfirmed(!config.SMTPConfigured)
@@ -79,7 +79,7 @@ func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Resp
 }
 
 func CommenterPwdResetSendEmail(params api_commenter.CommenterPwdResetSendEmailParams) middleware.Responder {
-	if r := sendPasswordResetEmail(data.EmailToString(params.Body.Email)); r != nil {
+	if r := sendPasswordResetEmail(data.EmailPtrToString(params.Body.Email)); r != nil {
 		return r
 	}
 
@@ -112,7 +112,7 @@ func CommenterUpdate(params api_commenter.CommenterUpdateParams, user *data.User
 	// Update the user
 	err := svc.TheUserService.UpdateLocalUser(
 		user.
-			WithEmail(data.EmailToString(params.Body.Email)).
+			WithEmail(data.EmailPtrToString(params.Body.Email)).
 			WithName(data.TrimmedString(params.Body.Name)).
 			WithWebsiteURL(string(params.Body.WebsiteURL)))
 	if err != nil {

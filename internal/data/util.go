@@ -29,9 +29,14 @@ func DecodeUUID(sid strfmt.UUID) (*uuid.UUID, error) {
 	return &u, e
 }
 
-// EmailToString converts a value of *strfmt.Email into a string
-func EmailToString(email *strfmt.Email) string {
+// EmailPtrToString converts a value of *strfmt.Email into a string
+func EmailPtrToString(email *strfmt.Email) string {
 	return TrimmedString((*string)(email))
+}
+
+// PathToString converts a value of models.Path into a string
+func PathToString(v models.Path) string {
+	return strings.TrimSpace(string(v))
 }
 
 // RandomHexID creates and returns a new, random hex ID
@@ -51,10 +56,15 @@ func TrimmedString(s *string) string {
 	return strings.TrimSpace(*s)
 }
 
-// URIToString converts a value of *strfmt.URI into a string
-func URIToString(v *strfmt.URI) string {
+// URIPtrToString converts a value of *strfmt.URI into a string
+func URIPtrToString(v *strfmt.URI) string {
 	if v == nil {
 		return ""
 	}
-	return string(*v)
+	return URIToString(*v)
+}
+
+// URIToString converts a value of strfmt.URI into a string
+func URIToString(v strfmt.URI) string {
+	return strings.TrimSpace(string(v))
 }
