@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"fmt"
+	"github.com/go-openapi/strfmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -584,4 +585,14 @@ func TestStripPort(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestToStringSlice(t *testing.T) {
+	in := []strfmt.UUID{"foo", "", "bar"}
+	want := []string{"foo", "", "bar"}
+	t.Run("convert []strfmt.UUID", func(t *testing.T) {
+		if got := ToStringSlice(in); !reflect.DeepEqual(got, want) {
+			t.Errorf("ToStringSlice() = %v, want %v", got, want)
+		}
+	})
 }

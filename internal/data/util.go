@@ -34,6 +34,14 @@ func EmailPtrToString(email *strfmt.Email) string {
 	return TrimmedString((*string)(email))
 }
 
+// NullUUIDStr converts a nullable UUID value into strfmt.UUID
+func NullUUIDStr(u *uuid.NullUUID) strfmt.UUID {
+	if !u.Valid {
+		return ""
+	}
+	return strfmt.UUID(u.UUID.String())
+}
+
 // PathToString converts a value of models.Path into a string
 func PathToString(v models.Path) string {
 	return strings.TrimSpace(string(v))

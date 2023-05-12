@@ -16,8 +16,6 @@ import (
 	"time"
 )
 
-const RootParentHexID = models.ParentHexID("root") // The "root" parent hex
-
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
 var AnonymousUser = &User{Name: "Anonymous"}
 
@@ -367,6 +365,14 @@ type DomainPage struct {
 	CountViews    int64     // Total number of views
 }
 
+// DisplayTitle returns a display title of the page: either its title if it's set, otherwise the domain's host and path
+func (p *DomainPage) DisplayTitle(domain *Domain) string {
+	if p.Title != "" {
+		return p.Title
+	}
+	return domain.Host + p.Path
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // Comment represents a comment
@@ -386,4 +392,31 @@ type Comment struct {
 	UserCreated  uuid.NullUUID // Reference to the user who created the comment
 	UserApproved uuid.NullUUID // Reference to the user who approved the comment
 	UserDeleted  uuid.NullUUID // Reference to the user who deleted the comment
+}
+
+// IsAnonymous returns whether the comment is authored by an anonymous or nonexistent (deleted) commenter
+func (c *Comment) IsAnonymous() bool {
+	return !c.UserCreated.Valid || c.UserCreated.UUID == AnonymousUser.ID
+}
+
+// IsRoot returns whether it's a root comment (i.e. its parent ID is null)
+func (c *Comment) IsRoot() bool {
+	return !c.ParentID.Valid
+}
+
+// ToDTO converts this model into an API model
+func (c *Comment) ToDTO() *models.Comment {
+	return &models.Comment{
+		CreatedTime: strfmt.DateTime(c.CreatedTime),
+		HTML:        c.HTML,
+		ID:          strfmt.UUID(c.ID.String()),
+		IsApproved:  c.IsApproved,
+		IsDeleted:   c.IsDeleted,
+		IsSpam:      c.IsSpam,
+		Markdown:    c.Markdown,
+		PageID:      strfmt.UUID(c.PageID.String()),
+		ParentID:    NullUUIDStr(&c.ParentID),
+		Score:       int64(c.Score),
+		UserCreated: NullUUIDStr(&c.UserCreated),
+	}
 }

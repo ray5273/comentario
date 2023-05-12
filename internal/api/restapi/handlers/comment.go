@@ -41,8 +41,14 @@ func CommentApprove(params api_commenter.CommentApproveParams, user *data.User) 
 }
 
 func CommentCount(params api_commenter.CommentCountParams) middleware.Responder {
+	// Fetch the domain for the given host
+	d, err := svc.TheDomainService.FindByHost(string(params.Body.Host))
+	if err != nil {
+		respServiceError(err)
+	}
+
 	// Fetch comment counts
-	cc, err := svc.ThePageService.CommentCounts(params.Body.Host, params.Body.Paths)
+	cc, err := svc.ThePageService.CommentCounts(&d.ID, util.ToStringSlice(params.Body.Paths))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -218,22 +224,22 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 	}
 
 	// Prepare a comment
-	c := &data.Comment{
-		ID:           uuid.New(),
-		ParentID:     parentID,
-		PageID:       page.ID,
-		Markdown:     strings.TrimSpace(params.Body.Markdown),
-		HTML:         "",
-		CreatedTime:  time.Now().UTC(),
-		UserCreated:  uuid.NullUUID{UUID:  user.ID, Valid: true},
+	comment := &data.Comment{
+		ID:          uuid.New(),
+		ParentID:    parentID,
+		PageID:      page.ID,
+		Markdown:    strings.TrimSpace(params.Body.Markdown),
+		CreatedTime: time.Now().UTC(),
+		UserCreated: uuid.NullUUID{UUID: user.ID, Valid: true},
 	}
+	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Determine comment state
 	if domainUser.IsModerator {
-		c.IsApproved = true
+		comment.IsApproved = true
 	} else if domain.ModerationPolicy == data.DomainModerationPolicyAll || user.IsAnonymous() && domain.ModerationPolicy == data.DomainModerationPolicyAnonymous {
 		// Not approved
-	} else if ... domain.AutoSpamFilter &&
+	} else /* TODO new-db if domain.AutoSpamFilter &&
 		svc.TheAntispamService.CheckForSpam(
 			domain.Host,
 			util.UserIP(params.HTTPRequest),
@@ -244,34 +250,39 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 			markdown,
 		) {
 		state = models.CommentStateFlagged
-	} else {
-		state = models.CommentStateApproved
+	} else*/{
+		comment.IsApproved = true
+	}
+
+	// If the comment is approved, also set the audit fields
+	if comment.IsApproved {
+		comment.UserApproved = comment.UserCreated
+		comment.ApprovedTime = comment.CreatedTime
 	}
 
 	// Persist a new comment record
-	comment, err := svc.TheCommentService.Create(
-		commenter.HexID,
-		domain.Host,
-		path,
-		markdown,
-		*params.Body.ParentHex,
-		state,
-		strfmt.DateTime(time.Now().UTC()))
-	if err != nil {
+	if err := svc.TheCommentService.Create(comment); err != nil {
 		return respServiceError(err)
 	}
 
-	// Send out an email notification
-	go emailNotificationNew(domain, comment)
-	*/
-	// Succeeded
+	// Send an email notification to moderators, if we notify about every comment or comments pending moderation and
+	// the comment isn't approved yet, in the background
+	if domain.ModNotifyPolicy == data.DomainModNotifyPolicyAll || !comment.IsApproved && domain.ModNotifyPolicy == data.DomainModNotifyPolicyPending {
+		// Best effort: ignore errors
+		go sendCommentModNotifications(domain, page, comment, user)
+	}
 
-	return api_commenter.NewCommentNewOK() /* TODO new-db.WithPayload(&api_commenter.CommentNewOKBody{
-		CommenterHex: commenter.HexID,
-		CommentHex:   comment.CommentHex,
-		HTML:         comment.HTML,
-		State:        state,
-	})*/
+	// If it's a reply and the comment is approved, send out a reply notifications, in the background
+	if !comment.IsRoot() && comment.IsApproved {
+		// Best effort: ignore errors
+		go sendCommentReplyNotifications(domain, page, comment, user)
+	}
+
+	// Succeeded
+	return api_commenter.NewCommentNewOK().WithPayload(&api_commenter.CommentNewOKBody{
+		Comment:   comment.ToDTO(),
+		Commenter: user.ToCommenter(domainUser.IsCommenter, domainUser.IsModerator),
+	})
 }
 
 func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middleware.Responder {

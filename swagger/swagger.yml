@@ -67,6 +67,7 @@ definitions:
   comment:
     description: Comment residing on a page
     type: object
+    readOnly: true
     properties:
       id:
         type: string
@@ -989,9 +990,6 @@ paths:
               commenter:
                 description: Commenter that corresponds to the current user
                 $ref: "#/definitions/commenter"
-              html:
-                description: Comment text rendered as HTML
-                type: string
 
   /comment/vote:
     post:

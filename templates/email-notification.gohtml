@@ -27,7 +27,7 @@
     {{ if eq .Kind "reply" }}
         Unread Reply: {{ .Title }}
     {{ end }}
-    {{ if eq .Kind "pending-moderation" }}
+    {{ if eq .Kind "moderation" }}
         Pending Moderation: {{ .Title }}
     {{ end }}
 </div>
@@ -36,7 +36,7 @@
         <div class="comment"
              style="border-radius:2px;width:calc(100% - 32px);padding:16px;margin:8px 0 8px 0;border-bottom:1px solid #eee;">
             <div class="options" style="float:right;">
-                {{ if eq .Kind "pending-moderation" }}
+                {{ if eq .Kind "moderation" }}
                     <a href="{{ .ApproveURL }}" target="_black" class="option green"
                        style="padding-right:5px;text-transform:uppercase;font-size:12px;font-weight:bold;text-decoration:none;color:#2f9e44;">Approve</a>
                 {{ end }}
@@ -44,14 +44,14 @@
                     <a href="{{ .DeleteURL }}" target="_black" class="option red"
                        style="padding-right:5px;text-transform:uppercase;font-size:12px;font-weight:bold;text-decoration:none;color:#f03e3e;">Delete</a>
                 {{ end }}
-                <a href="http://{{ .Domain }}{{ .Path }}#comentario-{{ .CommentHex }}" class="option gray"
+                <a href="http://{{ .Host }}{{ .Path }}#comentario-{{ .CommentID }}" class="option gray"
                    style="padding-right:5px;text-transform:uppercase;font-size:12px;font-weight:bold;text-decoration:none;color:#495057;">Context</a>
             </div>
             <div class="header" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding-right:10px;">
                 <div class="name"
                      style="display:inline;font-size:14px;font-weight:bold;color:#1e2127;">{{ .CommenterName }}</div>
                 on
-                <a href="http://{{ .Domain }}{{ .Path }}" class="page"
+                <a href="http://{{ .Host }}{{ .Path }}" class="page"
                    style="margin-bottom:10px;text-decoration:none;color:#228be6;">"{{ .Title }}"</a>
             </div>
             <div class="text" style="line-height:20px;padding:10px;">
@@ -70,7 +70,7 @@
                     <a href="{{ .UnsubscribeURL }}" style="color:#868e96;font-weight:bold;text-decoration:none;">click
                         here</a>.
                 {{ end }}
-                {{ if eq .Kind "pending-moderation" }}
+                {{ if eq .Kind "moderation" }}
                     You've received this email because the domain owner chose to notify moderators of comments pending moderation by email. To unsubscribe,
                     <a href="{{ .UnsubscribeURL }}" style="color:#868e96;font-weight:bold;text-decoration:none;">click
                         here</a>.

@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
@@ -16,7 +17,7 @@ var ThePageService PageService = &pageService{}
 // PageService is a service interface for dealing with pages
 type PageService interface {
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
-	CommentCounts(host string, paths []string) (map[string]int, error)
+	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
 	// FindByDomainPath finds and returns a pages for the specified domain ID and path combination
 	FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error)
 	// GetRegisteringView queries a page, registering a new pageview, inserting a new database record if necessary
@@ -32,12 +33,13 @@ type PageService interface {
 // pageService is a blueprint PageService implementation
 type pageService struct{}
 
-func (svc *pageService) CommentCounts(host string, paths []string) (map[string]int, error) {
-	logger.Debugf("pageService.CommentCounts(%s, ...)", host)
+func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error) {
+	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
 
-	/* TODO new-db
 	// Query paths/comment counts
-	rows, err := db.Query("select path, commentcount from pages where domain=$1 and path=any($2);", host, pq.Array(paths))
+	rows, err := db.Query(
+		"select path, count_comments from cm_domain_pages where domain_id=$1 and path=any($2);",
+		domainID, pq.Array(paths))
 	if err != nil {
 		logger.Errorf("pageService.CommentCounts: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -61,7 +63,6 @@ func (svc *pageService) CommentCounts(host string, paths []string) (map[string]i
 		logger.Errorf("pageService.CommentCounts: rows.Next() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	*/
 
 	// Succeeded
 	return nil, nil

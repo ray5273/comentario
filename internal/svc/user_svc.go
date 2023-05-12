@@ -30,6 +30,9 @@ type UserService interface {
 	DeleteUserByID(id *uuid.UUID) error
 	// DeleteUserSession removes a user session from the database
 	DeleteUserSession(id *uuid.UUID) error
+	// FindDomainUserByID fetches and returns a User and DomainUser by domain and user IDs. If the user exists, but
+	// there's no record for the user on that domain, returns nil for DomainUser
+	FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error)
 	// FindLocalUserByEmail finds and returns a locally-authenticated user by the given email
 	FindLocalUserByEmail(email string) (*data.User, error)
 	// FindUserByID finds and returns a user by the given user ID
@@ -38,6 +41,9 @@ type UserService interface {
 	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, error)
 	// IsUserEmailKnown returns whether there's any user present with the given email
 	IsUserEmailKnown(email string) (bool, error)
+	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
+	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
+	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
 	// UpdateLocalUser updates the given local user's data (name, email, password hash, website URL) in the database
 	UpdateLocalUser(user *data.User) error
 
@@ -166,6 +172,74 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 	return nil
 }
 
+func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error) {
+	logger.Debugf("userService.FindDomainUserByID(%s, %s)", userID, domainID)
+
+	// Query the database
+	var u data.User
+	var du data.DomainUser
+	var duUID, duDID *uuid.NullUUID
+	if err := db.QueryRow(
+		"select "+
+			// User fields
+			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
+			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url, "+
+			// DomainUser fields
+			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
+			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
+			"coalesce(du.notify_moderator, false) "+
+			"from cm_users u "+
+			"left join cm_domains_users du on du.user_id=u.id and du.domain_id=$1 "+
+			"where u.id=$2;",
+		userID, domainID,
+	).Scan(
+		// User
+		&u.ID,
+		&u.Email,
+		&u.Name,
+		&u.PasswordHash,
+		&u.SystemAccount,
+		&u.Superuser,
+		&u.Confirmed,
+		&u.ConfirmedTime,
+		&u.CreatedTime,
+		&u.UserCreated,
+		&u.SignupIP,
+		&u.SignupCountry,
+		&u.SignupURL,
+		&u.Banned,
+		&u.BannedTime,
+		&u.UserBanned,
+		&u.Remarks,
+		&u.FederatedIdP,
+		&u.FederatedID,
+		&u.Avatar,
+		&u.WebsiteURL,
+		// DomainUser
+		&duDID,
+		&duUID,
+		&du.IsOwner,
+		&du.IsModerator,
+		&du.IsCommenter,
+		&du.NotifyReplies,
+		&du.NotifyModerator,
+	); err != nil {
+		return nil, nil, translateDBErrors(err)
+	}
+
+	// If there's a DomainUser available
+	var pdu *data.DomainUser
+	if duDID.Valid && duUID.Valid {
+		du.DomainID = duDID.UUID
+		du.UserID = duUID.UUID
+		pdu = &du
+	}
+
+	// Succeeded
+	return &u, pdu, nil
+}
+
 func (svc *userService) FindLocalUserByEmail(email string) (*data.User, error) {
 	logger.Debugf("userService.FindLocalUserByEmail(%s)", email)
 
@@ -279,6 +353,47 @@ func (svc *userService) ListCommentersByHost(host models.Host) ([]models.Comment
 	// Check that Next() didn't error
 	if err := rows.Err(); err != nil {
 		logger.Errorf("commentService.ListCommentersByHost: Next() failed: %v", err)
+		return nil, err
+	}
+
+	// Succeeded
+	return res, nil
+}
+
+func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {
+	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
+
+	// Query domain's moderator users
+	s := "select " +
+		"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
+		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
+		"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url " +
+		"from cm_domains_users du " +
+		"join cm_users u on u.id=du.user_id " +
+		"where du.domain_id=$1 and (du.is_owner or du.is_moderator)"
+	if enabledNotifyOnly {
+		s += " and du.notify_moderator"
+	}
+	rows, err := db.Query(s+";", domainID)
+	if err != nil {
+		logger.Errorf("userService.ListDomainModerators: Query() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Fetch the users
+	var res []data.User
+	for rows.Next() {
+		if u, err := svc.fetchUser(rows); err != nil {
+			return nil, translateDBErrors(err)
+		} else {
+			res = append(res, *u)
+		}
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		logger.Errorf("userService.ListDomainModerators: rows.Next() failed: %v", err)
 		return nil, err
 	}
 

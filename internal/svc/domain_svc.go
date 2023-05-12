@@ -23,6 +23,8 @@ type DomainService interface {
 	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
 	// domain by its ID
 	DeleteByID(id *uuid.UUID) error
+	// FindByHost fetches and returns a domain by its host
+	FindByHost(host string) (*data.Domain, error)
 	// FindByID fetches and returns a domain by its ID
 	FindByID(id *uuid.UUID) (*data.Domain, error)
 	// FindDomainUserByHost fetches and returns a Domain and DomainUser by domain host and user ID. If the domain
@@ -185,6 +187,28 @@ func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	return nil
 }
 
+func (svc *domainService) FindByHost(host string) (*data.Domain, error) {
+	logger.Debugf("domainService.FindByHost(%s)", host)
+
+	// Query the row
+	row := db.QueryRow(
+		"select "+
+			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
+			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views "+
+			"from cm_domains d "+
+			"where d.host=$1;",
+		host)
+
+	// Fetch the domain
+	if d, err := svc.fetchDomain(row); err != nil {
+		return nil, translateDBErrors(err)
+	} else {
+		// Succeeded
+		return d, nil
+	}
+}
+
 func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	logger.Debugf("domainService.FindByID(%s)", id)
 
@@ -202,6 +226,7 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	if d, err := svc.fetchDomain(row); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
+		// Succeeded
 		return d, nil
 	}
 }
@@ -658,9 +683,11 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		return nil, nil, err
 	}
 
-	// If no record found for the domain user, we'll return nil
+	// If there's a DomainUser
 	var pdu *data.DomainUser
 	if uid.Valid {
+		du.DomainID = d.ID
+		du.UserID = uid.UUID
 		pdu = &du
 	}
 

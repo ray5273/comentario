@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
 
@@ -15,21 +14,26 @@ var TheCommentService CommentService = &commentService{}
 // CommentService is a service interface for dealing with comments
 type CommentService interface {
 	// Approve sets the status of a comment with the given hex ID to 'approved'
+	// Deprecated
 	Approve(commentHex models.HexID) error
 	// Create creates, persists, and returns a new comment
-	Create(commenterHex models.HexID, host models.Host, path, markdown string, parentHex models.ParentHexID, state models.CommentState, creationDate strfmt.DateTime) (*models.Comment, error)
+	Create(comment *data.Comment) error
 	// DeleteByHost deletes all comments for the specified domain
+	// Deprecated
 	DeleteByHost(host models.Host) error
-	// FindByHexID finds and returns a comment with the given hex ID
-	FindByHexID(commentHex models.HexID) (*models.Comment, error)
+	// FindByID finds and returns a comment with the given ID
+	FindByID(id *uuid.UUID) (*data.Comment, error)
 	// ListByHost returns a list of all comments for the given domain
+	// Deprecated
 	ListByHost(host models.Host) ([]models.Comment, error)
 	// ListWithCommentersByPage returns a list of comments and related commenters for the given page. user is the
 	// current authenticated/anonymous user
 	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted mark a comment with the given hex ID deleted in the database
+	// Deprecated
 	MarkDeleted(commentHex models.HexID, deleterHex models.HexID) error
 	// UpdateText updates the markdown and the HTML of a comment with the given hex ID in the database
+	// Deprecated
 	UpdateText(commentHex models.HexID, markdown, html string) error
 }
 
@@ -51,45 +55,24 @@ func (svc *commentService) Approve(commentHex models.HexID) error {
 	return nil
 }
 
-func (svc *commentService) Create(commenterHex models.HexID, host models.Host, path, markdown string, parentHex models.ParentHexID, state models.CommentState, creationDate strfmt.DateTime) (*models.Comment, error) {
-	logger.Debugf("commentService.Create(%s, %s, %s, ..., %s, %s, ...)", commenterHex, host, path, parentHex, state)
+func (svc *commentService) Create(c *data.Comment) error {
+	logger.Debugf("commentService.Create(%#v)", c)
 
-	// Generate a new comment hex ID
-	commentHex, err := data.RandomHexID()
-	if err != nil {
-		return nil, err
-	}
-
-	// Convert the markdown into HTML
-	html := util.MarkdownToHTML(markdown)
-
-	// Persist a new page record (if necessary)
-	if err = ThePageService.UpsertByHostPath(&models.Page{Host: host, Path: path}); err != nil {
-		return nil, err
-	}
-
-	// Persist a new comment record
-	c := models.Comment{
-		CommentHex:   commentHex,
-		CommenterHex: commenterHex,
-		CreationDate: creationDate,
-		Host:         host,
-		HTML:         html,
-		Markdown:     markdown,
-		ParentHex:    parentHex,
-		State:        state,
-		Path:         path,
-	}
-	err = db.Exec(
-		"insert into comments(commentHex, domain, path, commenterHex, parentHex, markdown, html, creationDate, state) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9);",
-		c.CommentHex, c.Host, c.Path, fixCommenterHex(c.CommenterHex), c.ParentHex, c.Markdown, c.HTML, c.CreationDate, c.State)
-	if err != nil {
+	// Insert a record into the database
+	if err := db.Exec(
+		"insert into cm_comments("+
+			"id, parent_id, page_id, markdown, html, score, is_approved, is_spam, is_deleted, ts_created, "+
+			"ts_approved, ts_deleted, user_created, user_approved, user_deleted) "+
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);",
+		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsApproved, c.IsSpam, c.IsDeleted, c.CreatedTime,
+		c.ApprovedTime, c.DeletedTime, &c.UserCreated, &c.UserApproved, &c.UserDeleted,
+	); err != nil {
 		logger.Errorf("commentService.Create: Exec() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return translateDBErrors(err)
 	}
 
-	return &c, nil
+	// Succeeded
+	return nil
 }
 
 func (svc *commentService) DeleteByHost(host models.Host) error {
@@ -105,28 +88,33 @@ func (svc *commentService) DeleteByHost(host models.Host) error {
 	return nil
 }
 
-func (svc *commentService) FindByHexID(commentHex models.HexID) (*models.Comment, error) {
-	logger.Debugf("commentService.FindByHexID(%s)", commentHex)
+func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
+	logger.Debugf("commentService.FindByID(%s)", id)
 
 	// Query the database
-	row := db.QueryRow(
-		"select commenthex, commenterhex, domain, path, markdown, html, parenthex, score, state, deleted, creationdate "+
-			"from comments "+
-			"where commenthex=$1;",
-		commentHex)
-
-	// Fetch the comment
-	var c models.Comment
-	var crHex string
-	err := row.Scan(
-		&c.CommentHex, &crHex, &c.Host, &c.Path, &c.Markdown, &c.HTML, &c.ParentHex, &c.Score, &c.State, &c.Deleted,
-		&c.CreationDate)
-	if err != nil {
+	var c data.Comment
+	if err := db.QueryRow(
+		"select "+
+			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_approved, c.is_spam, c.is_deleted, "+
+			"c.ts_created, c.user_created, "+
+			"from cm_comments c "+
+			"where c.id=$1;",
+		id,
+	).Scan(
+		&c.ID,
+		&c.ParentID,
+		&c.PageID,
+		&c.Markdown,
+		&c.HTML,
+		&c.Score,
+		&c.IsApproved,
+		&c.IsSpam,
+		&c.IsDeleted,
+		&c.CreatedTime,
+		&c.UserCreated,
+	); err != nil {
 		return nil, translateDBErrors(err)
 	}
-
-	// Apply necessary conversions
-	c.CommenterHex = unfixCommenterHex(crHex)
 
 	// Succeeded
 	return &c, nil

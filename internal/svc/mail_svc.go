@@ -2,7 +2,7 @@ package svc
 
 import (
 	"bytes"
-	"gitlab.com/comentario/comentario/internal/api/models"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
 	"html/template"
@@ -17,7 +17,7 @@ type MailService interface {
 	// Send sends an email and logs the outcome
 	Send(replyTo, recipient, subject, htmlMessage string) error
 	// SendCommentNotification sends an email notification about a comment to the given recipient
-	SendCommentNotification(recipientEmail, kind string, host models.Host, path, commenterName, title, html string, commentHex, unsubscribeToken models.HexID) error
+	SendCommentNotification(recipientEmail, kind, host, path, commenterName, title, html string, commentID *uuid.UUID) error
 	// SendFromTemplate sends an email from the provided template and logs the outcome
 	SendFromTemplate(replyTo, recipient, subject, templateFile string, templateData map[string]any) error
 }
@@ -27,29 +27,25 @@ type MailService interface {
 // mailService is a blueprint MailService implementation
 type mailService struct{}
 
-func (svc *mailService) SendCommentNotification(recipientEmail, kind string, host models.Host, path, commenterName, title, html string, commentHex, unsubscribeToken models.HexID) error {
+func (svc *mailService) SendCommentNotification(recipientEmail, kind, host, path, commenterName, title, html string, commentID *uuid.UUID) error {
+	id := commentID.String()
+	unsubToken := "" // TODO new-db do something with that
 	return svc.SendFromTemplate(
 		"",
 		recipientEmail,
 		"Comentario: "+title,
 		"email-notification.gohtml",
 		map[string]any{
-			"Kind":          kind,
-			"Title":         title,
-			"Domain":        host,
-			"Path":          path,
-			"CommentHex":    commentHex,
-			"CommenterName": commenterName,
-			"HTML":          template.HTML(html),
-			"ApproveURL": config.URLForAPI(
-				"email/moderate",
-				map[string]string{"action": "approve", "commentHex": string(commentHex), "unsubscribeSecretHex": string(unsubscribeToken)}),
-			"DeleteURL": config.URLForAPI(
-				"email/moderate",
-				map[string]string{"action": "delete", "commentHex": string(commentHex), "unsubscribeSecretHex": string(unsubscribeToken)}),
-			"UnsubscribeURL": config.URLFor(
-				"unsubscribe",
-				map[string]string{"unsubscribeSecretHex": string(unsubscribeToken)}),
+			"Kind":           kind,
+			"Title":          title,
+			"Host":           host,
+			"Path":           path,
+			"CommentID":      id,
+			"CommenterName":  commenterName,
+			"HTML":           template.HTML(html),
+			"ApproveURL":     config.URLForAPI("email/moderate", map[string]string{"action": "approve", "comment": id, "token": unsubToken}),
+			"DeleteURL":      config.URLForAPI("email/moderate", map[string]string{"action": "delete", "comment": id, "token": unsubToken}),
+			"UnsubscribeURL": config.URLFor("unsubscribe", map[string]string{"token": unsubToken}),
 		})
 }
 

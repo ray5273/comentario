@@ -292,6 +292,21 @@ func StripPort(hostOrIP string) string {
 	return rePortInHostname.ReplaceAllString(hostOrIP, "")
 }
 
+// ToStringSlice converts a slice of string-derived elements into a string slice
+func ToStringSlice[T ~string](in []T) []string {
+	// Don't convert nil
+	if in == nil {
+		return nil
+	}
+
+	// Convert the items
+	res := make([]string, len(in))
+	for i, s := range in {
+		res[i] = string(s)
+	}
+	return res
+}
+
 // UserAgent return the value of the User-Agent request header
 func UserAgent(r *http.Request) string {
 	return r.Header.Get("User-Agent")
