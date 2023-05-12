@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
@@ -12,33 +13,6 @@ import (
 	"strings"
 	"time"
 )
-
-func CommentApprove(params api_commenter.CommentApproveParams, user *data.User) middleware.Responder {
-	// Verify the commenter is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
-	/* TODO new-db
-	// Fetch the comment
-	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Verify the user is a domain moderator
-	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
-		return r
-	}
-
-	// Update the comment's state in the database
-	if err = svc.TheCommentService.Approve(comment.CommentHex); err != nil {
-		return respServiceError(err)
-	}
-	*/
-	// Succeeded
-	return api_commenter.NewCommentApproveNoContent()
-}
 
 func CommentCount(params api_commenter.CommentCountParams) middleware.Responder {
 	// Fetch the domain for the given host
@@ -62,61 +36,33 @@ func CommentDelete(params api_commenter.CommentDeleteParams, user *data.User) mi
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
-	/* TODO new-db
 
-	// Find the comment
-	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// If not deleting their own comment, the user must be a domain moderator
-	if comment.CommenterHex != principal.GetHexID() {
-		if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
-			return r
-		}
-	}
-
-	// Mark the comment deleted
-	if err = svc.TheCommentService.MarkDeleted(comment.CommentHex, principal.GetHexID()); err != nil {
-		return respServiceError(err)
-	}
-	*/
-	// Succeeded
-	return api_commenter.NewCommentDeleteNoContent()
-}
-
-func CommentEdit(params api_commenter.CommentEditParams, user *data.User) middleware.Responder {
-	// Verify the commenter is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
+	// Find the comment and related objects
+	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
 		return r
 	}
 
-	/* TODO new-db
-	// Find the existing comment
-	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
-	if err != nil {
+	// Check the user is allowed to update the comment
+	if r := Verifier.UserCanUpdateComment(comment, domainUser); r != nil {
+		return r
+	}
+
+	// Mark the comment deleted
+	if err := svc.TheCommentService.MarkDeleted(&comment.ID, &user.ID); err != nil {
+		return respServiceError(err)
+
+		// Decrement page comment count
+	} else if err := svc.ThePageService.IncrementCounts(&page.ID, -1, 0); err != nil {
+		return respServiceError(err)
+
+		// Decrement domain comment count
+	} else if err := svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0); err != nil {
 		return respServiceError(err)
 	}
 
-	// If not updating their own comment, the user must be a domain moderator
-	if comment.CommenterHex != principal.GetHexID() {
-		if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
-			return r
-		}
-	}
-
-	// Render the comment into HTML
-	markdown := swag.StringValue(params.Body.Markdown)
-	html := util.MarkdownToHTML(markdown)
-
-	// Persist the edits in the database
-	if err := svc.TheCommentService.UpdateText(comment.CommentHex, markdown, html); err != nil {
-		return respServiceError(err)
-	}
-	*/
 	// Succeeded
-	return api_commenter.NewCommentEditOK() //.WithPayload(&api_commenter.CommentEditOKBody{HTML: html})
+	return api_commenter.NewCommentDeleteNoContent()
 }
 
 func CommentList(params api_commenter.CommentListParams, user *data.User) middleware.Responder {
@@ -168,6 +114,33 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 		Comments:   comments,
 		PageInfo:   nil,
 	})
+}
+
+func CommentModerate(params api_commenter.CommentModerateParams, user *data.User) middleware.Responder {
+	// Verify the commenter is authenticated
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
+		return r
+	}
+
+	/* TODO new-db
+	// Fetch the comment
+	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Verify the user is a domain moderator
+	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
+		return r
+	}
+
+	// Update the comment's state in the database
+	if err = svc.TheCommentService.Moderate(comment.CommentHex); err != nil {
+		return respServiceError(err)
+	}
+	*/
+	// Succeeded
+	return api_commenter.NewCommentModerateNoContent()
 }
 
 func CommentNew(params api_commenter.CommentNewParams, user *data.User) middleware.Responder {
@@ -263,6 +236,14 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 	// Persist a new comment record
 	if err := svc.TheCommentService.Create(comment); err != nil {
 		return respServiceError(err)
+
+		// Increment page comment count
+	} else if err := svc.ThePageService.IncrementCounts(&page.ID, 1, 0); err != nil {
+		return respServiceError(err)
+
+		// Increment domain comment count
+	} else if err := svc.TheDomainService.IncrementCounts(&domain.ID, 1, 0); err != nil {
+		return respServiceError(err)
 	}
 
 	// Send an email notification to moderators, if we notify about every comment or comments pending moderation and
@@ -285,37 +266,81 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 	})
 }
 
+func CommentUpdate(params api_commenter.CommentUpdateParams, user *data.User) middleware.Responder {
+	// Verify the commenter is authenticated
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
+		return r
+	}
+
+	// Find the comment and related objects
+	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
+		return r
+	}
+
+	// Check the user is allowed to update the comment
+	if r := Verifier.UserCanUpdateComment(comment, domainUser); r != nil {
+		return r
+	}
+
+	// Render the comment into HTML
+	html := util.MarkdownToHTML(params.Body.Markdown)
+
+	// Persist the edits in the database
+	if err := svc.TheCommentService.UpdateText(&comment.ID, params.Body.Markdown, html); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_commenter.NewCommentUpdateOK().WithPayload(&api_commenter.CommentUpdateOKBody{Comment: comment.ToDTO()})
+}
+
 func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middleware.Responder {
 	// Verify the commenter is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
 
-	/* TODO new-db
-	// Calculate the direction
-	direction := 0
-	if *params.Body.Direction > 0 {
-		direction = 1
-	} else if *params.Body.Direction < 0 {
-		direction = -1
-	}
+	// Parse comment ID
+	if commentID, err := data.DecodeUUID(params.UUID); err != nil {
+		return respBadRequest(ErrorInvalidUUID)
 
-	// Find the comment
-	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
-	if err != nil {
+		// Find the comment
+	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
 		return respServiceError(err)
-	}
 
-	// Make sure the commenter is not voting for their own comment
-	if comment.CommenterHex == principal.GetHexID() {
+		// Make sure the commenter is not voting for their own comment
+	} else if comment.UserCreated.UUID == user.ID {
 		return respForbidden(ErrorSelfVote)
-	}
 
-	// Update the vote in the database
-	if err := svc.TheVoteService.SetVote(comment.CommentHex, principal.GetHexID(), direction); err != nil {
+		// Update the vote and the comment
+	} else if err := svc.TheCommentService.Vote(&comment.ID, &user.ID, int(swag.Int64Value(params.Body.Direction))); err != nil {
 		return respServiceError(err)
 	}
-	*/
+
 	// Succeeded
 	return api_commenter.NewCommentVoteNoContent()
+}
+
+func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
+	// Parse comment ID
+	if commentID, err := data.DecodeUUID(commentUUID); err != nil {
+		return nil, nil, nil, nil, respBadRequest(ErrorInvalidUUID)
+
+		// Find the comment
+	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
+		return nil, nil, nil, nil, respServiceError(err)
+
+		// Find the domain page
+	} else if page, err := svc.ThePageService.FindByID(&comment.PageID); err != nil {
+		return nil, nil, nil, nil, respServiceError(err)
+
+		// Fetch the domain and the user
+	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, userID); err != nil {
+		return nil, nil, nil, nil, respServiceError(err)
+
+	} else {
+		// Succeeded
+		return comment, page, domain, domainUser, nil
+	}
 }

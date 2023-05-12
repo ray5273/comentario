@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"database/sql"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -23,18 +24,15 @@ type CommentService interface {
 	DeleteByHost(host models.Host) error
 	// FindByID finds and returns a comment with the given ID
 	FindByID(id *uuid.UUID) (*data.Comment, error)
-	// ListByHost returns a list of all comments for the given domain
-	// Deprecated
-	ListByHost(host models.Host) ([]models.Comment, error)
 	// ListWithCommentersByPage returns a list of comments and related commenters for the given page. user is the
 	// current authenticated/anonymous user
 	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error)
-	// MarkDeleted mark a comment with the given hex ID deleted in the database
-	// Deprecated
-	MarkDeleted(commentHex models.HexID, deleterHex models.HexID) error
-	// UpdateText updates the markdown and the HTML of a comment with the given hex ID in the database
-	// Deprecated
-	UpdateText(commentHex models.HexID, markdown, html string) error
+	// MarkDeleted marks a comment with the given ID deleted by the given user
+	MarkDeleted(commentID, userID *uuid.UUID) error
+	// UpdateText updates the markdown and the HTML of a comment with the given ID in the database
+	UpdateText(commentID *uuid.UUID, markdown, html string) error
+	// Vote sets a vote for the given comment and user and updates the comment
+	Vote(commentID, userID *uuid.UUID, direction int) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -118,46 +116,6 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 
 	// Succeeded
 	return &c, nil
-}
-
-func (svc *commentService) ListByHost(host models.Host) ([]models.Comment, error) {
-	logger.Debugf("commentService.ListByHost(%s)", host)
-
-	// Query all domain's comments
-	rows, err := db.Query(
-		"select commenthex, domain, path, commenterhex, markdown, parenthex, score, state, creationdate from comments where domain=$1;",
-		host)
-	if err != nil {
-		logger.Errorf("commentService.ListByHost: Query() failed: %v", host, err)
-		return nil, translateDBErrors(err)
-	}
-	defer rows.Close()
-
-	// Fetch the comments
-	var res []models.Comment
-	for rows.Next() {
-		c := models.Comment{}
-		var crHex string
-		if err = rows.Scan(&c.CommentHex, &c.Host, &c.Path, &crHex, &c.Markdown, &c.ParentHex, &c.Score, &c.State, &c.CreationDate); err != nil {
-			logger.Errorf("commentService.ListByHost: rows.Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-
-		// Apply necessary conversions
-		c.CommenterHex = unfixCommenterHex(crHex)
-
-		// Add the comment to the list
-		res = append(res, c)
-	}
-
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("commentService.ListByHost: Next() failed: %v", err)
-		return nil, err
-	}
-
-	// Succeeded
-	return res, nil
 }
 
 func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error) {
@@ -266,17 +224,13 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	return comments, commenters, nil
 }
 
-func (svc *commentService) MarkDeleted(commentHex models.HexID, deleterHex models.HexID) error {
-	logger.Debugf("commentService.MarkDeleted(%s, %s)", commentHex, deleterHex)
+func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
+	logger.Debugf("commentService.MarkDeleted(%s, %s)", commentID, userID)
 
 	// Update the record in the database
 	err := db.Exec(
-		"update comments "+
-			"set deleted=true, markdown='[deleted]', html='[deleted]', deleterhex=$1, deletiondate=$2 "+
-			"where commenthex=$3;",
-		deleterHex,
-		time.Now().UTC(),
-		commentHex)
+		"update cm_comments set is_deleted=true, markdown='', html='', ts_deleted=$1, user_deleted=$2 where id=$3;",
+		time.Now().UTC(), userID, commentID)
 	if err != nil {
 		logger.Errorf("commentService.MarkDeleted: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -286,12 +240,83 @@ func (svc *commentService) MarkDeleted(commentHex models.HexID, deleterHex model
 	return nil
 }
 
-func (svc *commentService) UpdateText(commentHex models.HexID, markdown, html string) error {
-	logger.Debugf("commentService.UpdateText(%s, ...)", commentHex)
+func (svc *commentService) UpdateText(commentID *uuid.UUID, markdown, html string) error {
+	logger.Debugf("commentService.UpdateText(%s, ...)", commentID)
 
 	// Update the row in the database
-	if err := db.Exec("update comments set markdown=$1, html=$2 where commentHex=$3;", markdown, html, commentHex); err != nil {
+	if err := db.Exec("update cm_comments set markdown=$1, html=$2 where id=$3;", markdown, html, commentID); err != nil {
 		logger.Errorf("commentService.UpdateText: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int) error {
+	// Try to retrieve an existing vote for the user
+	neg, exists := false, true
+	if err := db.QueryRow(
+		"select negative from cm_comment_votes where comment_id=$1 and user_id=$2;",
+		commentID, userID,
+	).Scan(&neg); err == sql.ErrNoRows {
+		// No vote found
+		exists = false
+	} else if err != nil {
+		// Any other DB error
+		return translateDBErrors(err)
+	}
+
+	// Determine if a change is necessary
+	if !exists {
+		if direction == 0 {
+			return nil
+		}
+	} else {
+		if direction < 0 && neg || direction > 0 && !neg {
+			return nil
+		}
+	}
+
+	// A change is necessary
+	var err error
+	inc := 0
+	if !exists {
+		// No vote exists, an insert is needed
+		err = db.Exec(
+			"insert into cm_comment_votes(comment_id, user_id, negative, ts_voted) values($1, $2, $3, $4);",
+			commentID, userID, direction < 0, time.Now().UTC())
+		if direction < 0 {
+			inc = -1
+		} else {
+			inc = 1
+		}
+
+	} else if direction == 0 {
+		// Vote exists and must be removed
+		err = db.Exec("delete from cm_comment_votes where comment_id=$1 and user_id=$2;", commentID, userID)
+		if neg {
+			inc = 1
+		} else {
+			inc = -1
+		}
+
+	} else {
+		// Vote exists and must be updated
+		err = db.Exec("update cm_comment_votes set negative=$1, ts_voted=$2 where comment_id=$3 and user_id=$4;",
+			direction < 0, time.Now().UTC(), commentID, userID)
+		if neg {
+			inc = 2
+		} else {
+			inc = -2
+		}
+	}
+	if err != nil {
+		return translateDBErrors(err)
+	}
+
+	// Update the comment score
+	if err := db.ExecOne("update cm_comments set score=score+$1 where id=$2;", inc, commentID); err != nil {
 		return translateDBErrors(err)
 	}
 

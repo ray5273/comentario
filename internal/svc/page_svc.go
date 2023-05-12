@@ -18,14 +18,16 @@ var ThePageService PageService = &pageService{}
 type PageService interface {
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
-	// FindByDomainPath finds and returns a pages for the specified domain ID and path combination
+	// FindByDomainPath finds and returns a page for the specified domain ID and path combination
 	FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error)
+	// FindByID finds and returns a page by its ID
+	FindByID(id *uuid.UUID) (*data.DomainPage, error)
 	// GetRegisteringView queries a page, registering a new pageview, inserting a new database record if necessary
 	GetRegisteringView(domainID *uuid.UUID, path string) (*data.DomainPage, error)
+	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
+	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
 	// UpdateTitleByHostPath updates page title for the specified host and path combination
 	UpdateTitleByHostPath(host, path string) (string, error)
-	// UpsertByHostPath updates or inserts the page for the specified host and path combination
-	UpsertByHostPath(page *data.DomainPage) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -107,6 +109,22 @@ func (svc *pageService) GetRegisteringView(domainID *uuid.UUID, path string) (*d
 	return &p, nil
 }
 
+func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error {
+	logger.Debugf("pageService.IncrementCounts(%s, %d, %d)", pageID, incComments, incViews)
+
+	// Update the page record
+	if err := db.ExecOne(
+		"update cm_domain_pages set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
+		pageID, incComments, incViews,
+	); err != nil {
+		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
 func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error) {
 	logger.Debugf("pageService.FindByDomainPath(%s, %s)", domainID, path)
 
@@ -120,6 +138,25 @@ func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*dat
 		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
 	); err != nil {
 		logger.Errorf("pageService.FindByDomainPath: Scan() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return &p, nil
+}
+
+func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
+	logger.Debugf("pageService.FindByID(%s)", id)
+
+	// Query a page row
+	var p data.DomainPage
+	if err := db.QueryRow(
+		"select id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views from cm_domain_pages where id=$1;",
+		id,
+	).Scan(
+		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
+	); err != nil {
+		logger.Errorf("pageService.FindByID: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -147,24 +184,4 @@ func (svc *pageService) UpdateTitleByHostPath(host, path string) (string, error)
 
 	// Succeeded
 	return title, nil
-}
-
-func (svc *pageService) UpsertByHostPath(page *data.DomainPage) error {
-	logger.Debugf("pageService.UpsertByHostPath(%v)", page)
-
-	// Persist a new record, ignoring when it already exists
-	err := db.Exec(
-		"insert into pages(domain, path, islocked, stickycommenthex) values($1, $2, $3, $4) "+
-			"on conflict (domain, path) do update set isLocked=$3, stickyCommentHex=$4;",
-		page.Host,
-		page.Path,
-		page.IsLocked,
-		fixNone(page.StickyCommentHex))
-	if err != nil {
-		logger.Errorf("pageService.UpsertByHostPath: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
 }

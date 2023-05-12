@@ -33,6 +33,8 @@ type DomainService interface {
 	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
+	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
 	// ListByOwnerID fetches and returns a list of domains for the specified owner
 	ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
@@ -277,6 +279,22 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 		// Succeeded
 		return d, du, nil
 	}
+}
+
+func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error {
+	logger.Debugf("domainService.IncrementCounts(%s, %d, %d)", domainID, incComments, incViews)
+
+	// Update the page record
+	if err := db.ExecOne(
+		"update cm_domains set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
+		domainID, incComments, incViews,
+	); err != nil {
+		logger.Errorf("domainService.IncrementCounts: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 // TODO new-db DEPRECATED

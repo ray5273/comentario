@@ -6,7 +6,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
 )
 
 // Verifier is a global VerifierService implementation
@@ -20,12 +19,15 @@ type VerifierService interface {
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
+	// UserCanUpdateComment verifies the given domain user is allowed to update the specified comment. domainUser can be
+	// nil
+	UserCanUpdateComment(comment *data.Comment, domainUser *data.DomainUser) middleware.Responder
 	// UserIsAuthenticated verifies the given user is an authenticated one
 	UserIsAuthenticated(user *data.User) middleware.Responder
-	// UserIsDomainModerator verifies the owner with the given email is a moderator in the specified domain
-	UserIsDomainModerator(email string, host models.Host) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
 	UserIsLocal(user *data.User) middleware.Responder
+	// UserIsModerator verifies the given domain user is a moderator. domainUser can be nil
+	UserIsModerator(domainUser *data.DomainUser) middleware.Responder
 	// UserOwnsDomain verifies the given domain user is an owner. domainUser can be nil
 	UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder
 }
@@ -66,6 +68,21 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 	return nil, nil
 }
 
+func (v *verifier) UserCanUpdateComment(comment *data.Comment, domainUser *data.DomainUser) middleware.Responder {
+	// If no domain user provided, it's a fail
+	if domainUser == nil {
+		return respForbidden(ErrorNotModerator)
+	}
+
+	// If the user doesn't own the comment, they must be a domain moderator
+	if comment.IsAnonymous() || comment.UserCreated.UUID != domainUser.UserID {
+		if r := v.UserIsModerator(domainUser); r != nil {
+			return r
+		}
+	}
+	return nil
+}
+
 func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {
 	if user.IsAnonymous() {
 		return respUnauthorized(ErrorUnauthenticated)
@@ -80,10 +97,8 @@ func (v *verifier) UserIsLocal(user *data.User) middleware.Responder {
 	return nil
 }
 
-func (v *verifier) UserIsDomainModerator(email string, host models.Host) middleware.Responder {
-	if b, err := svc.TheDomainService.IsDomainModerator(email, host); err != nil {
-		return respServiceError(err)
-	} else if !b {
+func (v *verifier) UserIsModerator(domainUser *data.DomainUser) middleware.Responder {
+	if domainUser == nil || (!domainUser.IsOwner && !domainUser.IsModerator) {
 		return respForbidden(ErrorNotModerator)
 	}
 	return nil

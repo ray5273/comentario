@@ -4,10 +4,10 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
 )
 
-func PageUpdate(params api_commenter.PageUpdateParams, principal data.Principal) middleware.Responder {
+func PageUpdate(params api_commenter.PageUpdateParams, user *data.User) middleware.Responder {
+	/* TODO new-db
 	// Verify the commenter is authenticated
 	if r := Verifier.PrincipalIsAuthenticated(principal); r != nil {
 		return r
@@ -23,6 +23,7 @@ func PageUpdate(params api_commenter.PageUpdateParams, principal data.Principal)
 	if err := svc.ThePageService.UpsertByHostPath(page); err != nil {
 		return respServiceError(err)
 	}
+	*/
 
 	// Succeeded
 	return api_commenter.NewPageUpdateNoContent()

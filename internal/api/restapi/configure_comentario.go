@@ -103,12 +103,12 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	//------------------------------------------------------------------------------------------------------------------
 
 	// Comment
-	api.APICommenterCommentApproveHandler = api_commenter.CommentApproveHandlerFunc(handlers.CommentApprove)
 	api.APICommenterCommentCountHandler = api_commenter.CommentCountHandlerFunc(handlers.CommentCount)
 	api.APICommenterCommentDeleteHandler = api_commenter.CommentDeleteHandlerFunc(handlers.CommentDelete)
-	api.APICommenterCommentEditHandler = api_commenter.CommentEditHandlerFunc(handlers.CommentEdit)
 	api.APICommenterCommentListHandler = api_commenter.CommentListHandlerFunc(handlers.CommentList)
+	api.APICommenterCommentModerateHandler = api_commenter.CommentModerateHandlerFunc(handlers.CommentModerate)
 	api.APICommenterCommentNewHandler = api_commenter.CommentNewHandlerFunc(handlers.CommentNew)
+	api.APICommenterCommentUpdateHandler = api_commenter.CommentUpdateHandlerFunc(handlers.CommentUpdate)
 	api.APICommenterCommentVoteHandler = api_commenter.CommentVoteHandlerFunc(handlers.CommentVote)
 	// Commenter
 	api.APICommenterCommenterLoginHandler = api_commenter.CommenterLoginHandlerFunc(handlers.CommenterLogin)
@@ -116,12 +116,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APICommenterCommenterSignupHandler = api_commenter.CommenterSignupHandlerFunc(handlers.CommenterSignup)
 	api.APICommenterCommenterPwdResetSendEmailHandler = api_commenter.CommenterPwdResetSendEmailHandlerFunc(handlers.CommenterPwdResetSendEmail)
 	api.APICommenterCommenterSelfHandler = api_commenter.CommenterSelfHandlerFunc(handlers.CommenterSelf)
-	api.APICommenterCommenterTokenNewHandler = api_commenter.CommenterTokenNewHandlerFunc(handlers.CommenterTokenNew)
 	api.APICommenterCommenterUpdateHandler = api_commenter.CommenterUpdateHandlerFunc(handlers.CommenterUpdate)
-	// Email
-	api.APICommenterEmailGetHandler = api_commenter.EmailGetHandlerFunc(handlers.EmailGet)
-	api.APICommenterEmailModerateHandler = api_commenter.EmailModerateHandlerFunc(handlers.EmailModerate)
-	api.APICommenterEmailUpdateHandler = api_commenter.EmailUpdateHandlerFunc(handlers.EmailUpdate)
 	// OAuth
 	api.APICommenterOauthInitHandler = api_commenter.OauthInitHandlerFunc(handlers.OauthInit)
 	api.APICommenterOauthCallbackHandler = api_commenter.OauthCallbackHandlerFunc(handlers.OauthCallback)

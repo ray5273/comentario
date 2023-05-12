@@ -2,7 +2,6 @@ package svc
 
 import (
 	"database/sql"
-	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -44,18 +43,15 @@ type UserService interface {
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
-	// UpdateLocalUser updates the given local user's data (name, email, password hash, website URL) in the database
-	UpdateLocalUser(user *data.User) error
-
-	//------------------------------------------------------------------
-
-	// ListCommentersByHost returns a list of all commenters for the (comments of) given domain
-	ListCommentersByHost(host models.Host) ([]models.Commenter, error)
 	// UpdateCommenter updates the given commenter's data in the database. If no idp is provided, the local auth
 	// provider is assumed
+	// Deprecated
 	UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error
 	// UpdateCommenterSession links a commenter token to the given commenter, by updating the session record
+	// Deprecated
 	UpdateCommenterSession(token, id models.HexID) error
+	// UpdateLocalUser updates the given local user's data (name, email, password hash, website URL) in the database
+	UpdateLocalUser(user *data.User) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -315,51 +311,6 @@ func (svc *userService) IsUserEmailKnown(email string) (bool, error) {
 	}
 }
 
-func (svc *userService) ListCommentersByHost(host models.Host) ([]models.Commenter, error) {
-	logger.Debugf("userService.ListCommentersByHost(%s)", host)
-
-	// Query all commenters of the domain's comments
-	rows, err := db.Query(
-		"select r.commenterhex, r.email, r.name, r.link, r.photo, r.provider, r.joindate "+
-			"from comments c "+
-			"join commenters r on r.commenterhex=c.commenterhex "+
-			"where c.domain=$1;",
-		host)
-	if err != nil {
-		logger.Errorf("commentService.ListCommentersByHost: Query() failed: %v", host, err)
-		return nil, translateDBErrors(err)
-	}
-	defer rows.Close()
-
-	// Fetch the comments
-	var res []models.Commenter
-	var link, photo, provider string
-	for rows.Next() {
-		r := models.Commenter{}
-		if err = rows.Scan(&r.CommenterHex, &r.Email, &r.Name, &link, &photo, &provider, &r.JoinDate); err != nil {
-			logger.Errorf("commentService.ListCommentersByHost: rows.Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-
-		// Apply necessary conversions
-		r.WebsiteURL = strfmt.URI(unfixUndefined(link))
-		r.AvatarURL = strfmt.URI(unfixUndefined(photo))
-		r.Provider = unfixIdP(provider)
-
-		// Add the commenter to the result
-		res = append(res, r)
-	}
-
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("commentService.ListCommentersByHost: Next() failed: %v", err)
-		return nil, err
-	}
-
-	// Succeeded
-	return res, nil
-}
-
 func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {
 	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
 
@@ -403,6 +354,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 
 func (svc *userService) UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error {
 	logger.Debugf("userService.UpdateCommenter(%s, %s, %s, %s, %s, %s)", commenterHex, email, name, websiteURL, photoURL, idp)
+	/* TODO new-db
 
 	// Update the database record
 	err := db.Exec(
@@ -412,7 +364,7 @@ func (svc *userService) UpdateCommenter(commenterHex models.HexID, email, name, 
 		logger.Errorf("userService.UpdateCommenter: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
-
+	*/
 	// Succeeded
 	return nil
 }

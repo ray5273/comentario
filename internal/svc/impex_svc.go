@@ -1,15 +1,9 @@
 package svc
 
 import (
-	"encoding/json"
 	"encoding/xml"
-	"fmt"
-	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
-	"github.com/lunny/html2md"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
 	"io"
 	"time"
 )
@@ -85,7 +79,10 @@ type disqusXML struct {
 func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 	logger.Debugf("importExportService.Export(%s)", domainID)
 
-	// Create an export data object
+	gzippedData := []byte{}
+	/* TODO new-db
+
+		// Create an export data object
 	exp := commentoExportV1{Version: 1}
 
 	// Fetch comments
@@ -112,7 +109,7 @@ func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 		logger.Errorf("importExportService.Export: CompressGzip() failed: %v", err)
 		return nil, err
 	}
-
+	*/
 	// Succeeded
 	return gzippedData, nil
 }
@@ -120,6 +117,8 @@ func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 func (svc *importExportService) ImportCommento(host models.Host, reader io.Reader) (int64, error) {
 	logger.Debugf("importExportService.ImportCommento(%s, ...)", host)
 
+	count := int64(0)
+	/* TODO new-db
 	// Fetch and decompress the export tarball
 	d, err := util.DecompressGzip(reader)
 	if err != nil {
@@ -178,7 +177,6 @@ func (svc *importExportService) ImportCommento(host models.Host, reader io.Reade
 
 	// Import comments, creating a map of comment hex (old hex, new hex)
 	commentHex := map[models.ParentHexID]models.ParentHexID{data.RootParentHexID: data.RootParentHexID}
-	count := int64(0)
 	keys := []models.ParentHexID{data.RootParentHexID}
 	for i := 0; i < len(keys); i++ {
 		for _, comment := range comments[keys[i]] {
@@ -210,13 +208,16 @@ func (svc *importExportService) ImportCommento(host models.Host, reader io.Reade
 			count++
 		}
 	}
-
+	*/
 	// Succeeded
 	return count, nil
 }
 
 func (svc *importExportService) ImportDisqus(host models.Host, reader io.Reader) (int64, error) {
 	logger.Debugf("importExportService.ImportDisqus(%s, ...)", host)
+
+	count := int64(0)
+	/* TODO new-db
 
 	// Fetch and decompress the export tarball
 	d, err := util.DecompressGzip(reader)
@@ -327,7 +328,7 @@ func (svc *importExportService) ImportDisqus(host models.Host, reader io.Reader)
 		// Import record counter
 		count++
 	}
-
+	*/
 	// Succeeded
 	return count, nil
 }

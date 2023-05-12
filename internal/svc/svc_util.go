@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/api/models"
 )
 
 // logger represents a package-wide logger instance
@@ -26,31 +25,6 @@ func checkErrors(errs ...error) error {
 	return nil
 }
 
-// fixIdP handles default value (i.e. local authentication) for the identity provider when persisting a database record.
-func fixIdP(idp string) string {
-	// IdP defaults to local
-	if idp == "" {
-		return "commento"
-	}
-	return idp
-}
-
-// fixNone returns "none" if s is empty; meant for persisting a database record.
-func fixNone(id models.HexID) string {
-	if id == "" {
-		return "none"
-	}
-	return string(id)
-}
-
-// fixUndefined returns "undefined" if s is empty; meant for persisting a database record.
-func fixUndefined(s string) string {
-	if s == "" {
-		return "undefined"
-	}
-	return s
-}
-
 // translateDBErrors "translates" database errors into a service error, picking the first non-nil error
 func translateDBErrors(errs ...error) error {
 	switch checkErrors(errs...) {
@@ -64,28 +38,4 @@ func translateDBErrors(errs ...error) error {
 		// Any other database error
 		return ErrDB
 	}
-}
-
-// unfixIdP handles the default value (i.e. local authentication) for the identity provider when reading a database record.
-func unfixIdP(idp string) string {
-	if idp == "commento" {
-		return ""
-	}
-	return idp
-}
-
-// unfixNone returns an empty string if s is "none"; meant for reading a database record.
-func unfixNone(s string) models.HexID {
-	if s == "none" {
-		return ""
-	}
-	return models.HexID(s)
-}
-
-// unfixUndefined returns an empty string if s is "undefined"; meant for reading a database record.
-func unfixUndefined(s string) string {
-	if s == "undefined" {
-		return ""
-	}
-	return s
 }

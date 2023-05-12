@@ -233,11 +233,27 @@ create table cm_comments (
 );
 
 -- Constraints
-alter table cm_comments add constraint fk_comments_parent_id     foreign key (parent_id)    references cm_comments(id)     on delete cascade;
-alter table cm_comments add constraint fk_comments_page_id       foreign key (page_id)      references cm_domain_pages(id) on delete cascade;
-alter table cm_comments add constraint fk_comments_user_created  foreign key (user_created)  references cm_users(id)       on delete set null;
-alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id)       on delete set null;
-alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id)       on delete set null;
+alter table cm_comments add constraint fk_comments_parent_id     foreign key (parent_id)     references cm_comments(id)     on delete cascade;
+alter table cm_comments add constraint fk_comments_page_id       foreign key (page_id)       references cm_domain_pages(id) on delete cascade;
+alter table cm_comments add constraint fk_comments_user_created  foreign key (user_created)  references cm_users(id)        on delete set null;
+alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id)        on delete set null;
+alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id)        on delete set null;
+
+------------------------------------------------------------------------------------------------------------------------
+-- Comment votes
+------------------------------------------------------------------------------------------------------------------------
+
+create table cm_comment_votes (
+    comment_id uuid      not null, -- Reference to the comment
+    user_id    uuid      not null, -- Reference to the user
+    negative   boolean   not null, -- Whether the vote is negative (true) or positive (false)
+    ts_voted   timestamp not null  -- When the vote was created or updated
+);
+
+-- Constraints
+alter table cm_comment_votes add constraint uk_comment_votes_comment_id_user_id unique (comment_id, user_id);
+alter table cm_comment_votes add constraint fk_comment_votes_comment_id         foreign key (comment_id) references cm_comments(id) on delete cascade;
+alter table cm_comment_votes add constraint fk_comment_votes_user_id            foreign key (user_id)    references cm_users(id)    on delete cascade;
 
 --======================================================================================================================
 -- Migrate the legacy schema
@@ -372,6 +388,14 @@ begin
                 -- user deleted
                 left join temp_commenterhex_map cmd on cmd.commenterhex=c.deleterhex
                 left join cm_users ud on ud.id=cmd.id;
+
+        -- Migrate comment votes
+        insert into cm_comment_votes(comment_id, user_id, negative, ts_voted)
+            select cm.id, crm.id, v.direction<0, v.votedate
+                from votes v
+                join temp_commenthex_map cm on cm.commenthex=v.commenthex
+                join temp_commenterhex_map crm on crm.commenterhex=v.commenterhex
+                where v.direction=-1 or v.direction=1;
 
         -- TODO update domains.count_comments, count_views
         -- TODO update cm_domain_pages.count_views

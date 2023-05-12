@@ -790,118 +790,7 @@ paths:
   # Comments
   #---------------------------------------------------------------------------------------------------------------------
 
-  /comment/approve:
-    post:
-      operationId: CommentApprove
-      summary: Approve specified unapproved comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - commentHex
-            properties:
-              commentHex:
-                $ref: "#/definitions/hexId"
-      responses:
-        204:
-          description: Comment has been approved
-
-  /comment/count:
-    post:
-      operationId: CommentCount
-      summary: Request comment counts for specified paths on given domain
-      tags:
-        - ApiCommenter
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - host
-              - paths
-            properties:
-              host:
-                $ref: "#/definitions/host"
-              paths:
-                type: array
-                items:
-                  $ref: "#/definitions/path"
-                minItems: 1
-                maxItems: 32
-      responses:
-        200:
-          description: Comment counts per path
-          schema:
-            type: object
-            properties:
-              commentCounts:
-                type: object # map[string]int
-
-  /comment/delete:
-    post:
-      operationId: CommentDelete
-      summary: Delete specified comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - commentHex
-            properties:
-              commentHex:
-                $ref: "#/definitions/hexId"
-      responses:
-        204:
-          description: Comment has been deleted
-
-  /comment/edit:
-    post:
-      operationId: CommentEdit
-      summary: Update specified comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - commentHex
-              - markdown
-            properties:
-              commentHex:
-                $ref: "#/definitions/hexId"
-              markdown:
-                type: string
-      responses:
-        200:
-          description: Comment is updated, returning the resulting HTML
-          schema:
-            type: object
-            properties:
-              html:
-                type: string
-
-  /comment/list:
+  /comments:
     post:
       operationId: CommentList
       summary: Get a list of comments and commenters for the given host/path combination
@@ -943,8 +832,7 @@ paths:
                 items:
                   $ref: "#/definitions/commenter"
 
-  /comment/new:
-    post:
+    put:
       operationId: CommentNew
       summary: Add a new comment
       tags:
@@ -991,7 +879,87 @@ paths:
                 description: Commenter that corresponds to the current user
                 $ref: "#/definitions/commenter"
 
-  /comment/vote:
+  /comments/counts:
+    post:
+      operationId: CommentCount
+      summary: Request comment counts for specified paths on given domain
+      tags:
+        - ApiCommenter
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - host
+              - paths
+            properties:
+              host:
+                $ref: "#/definitions/host"
+              paths:
+                type: array
+                items:
+                  $ref: "#/definitions/path"
+                minItems: 1
+                maxItems: 32
+      responses:
+        200:
+          description: Comment counts per path
+          schema:
+            type: object
+            properties:
+              commentCounts:
+                type: object # map[string]int
+
+  /comments/{uuid}:
+    parameters:
+      - $ref: "#/parameters/pathUuid"
+
+    delete:
+      operationId: CommentDelete
+      summary: Delete specified comment
+      tags:
+        - ApiCommenter
+      security:
+        - userSessionHeader: []
+      responses:
+        204:
+          description: Comment has been deleted
+
+    put:
+      operationId: CommentUpdate
+      summary: Update specified comment
+      tags:
+        - ApiCommenter
+      security:
+        - userSessionHeader: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - markdown
+            properties:
+              markdown:
+                description: Comment text in the markdown format
+                type: string
+                minLength: 1
+                maxLength: 4096
+                x-isnullable: false
+      responses:
+        200:
+          description: Comment is updated, the updated comment is returned
+          schema:
+            type: object
+            properties:
+              comment:
+                description: Updated comment
+                $ref: "#/definitions/comment"
+
     post:
       operationId: CommentVote
       summary: Vote for specified comment
@@ -1006,11 +974,8 @@ paths:
           schema:
             type: object
             required:
-              - commentHex
               - direction
             properties:
-              commentHex:
-                $ref: "#/definitions/hexId"
               direction:
                 type: integer
                 enum:
@@ -1020,6 +985,31 @@ paths:
       responses:
         204:
           description: Vote has been applied
+
+  /comments/{uuid}/moderate:
+    post:
+      operationId: CommentModerate
+      summary: Moderate specified unapproved comment
+      tags:
+        - ApiCommenter
+      security:
+        - userSessionHeader: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - approve
+            properties:
+              approve:
+                description: Whether to approve the comment
+                type: boolean
+      responses:
+        204:
+          description: Comment has been approved
 
   #---------------------------------------------------------------------------------------------------------------------
   # Commenters
