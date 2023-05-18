@@ -3,7 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MockComponent, MockDirective, MockProviders } from 'ng-mocks';
 import { ResetPasswordComponent } from './reset-password.component';
-import { ApiAuthService } from '../../../../generated-api';
+import { ApiAuthService, Configuration } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
@@ -21,7 +21,10 @@ describe('ResetPasswordComponent', () => {
                 MockDirective(SpinnerDirective),
             ],
             imports: [RouterTestingModule, ReactiveFormsModule],
-            providers: MockProviders(ToastService, ApiAuthService),
+            providers: [
+                {provide: Configuration, useValue: new Configuration()},
+                ...MockProviders(ToastService, ApiAuthService),
+            ]
         })
             .compileComponents();
 

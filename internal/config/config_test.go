@@ -5,6 +5,65 @@ import (
 	"testing"
 )
 
+func TestKeySecret_Usable(t *testing.T) {
+	tests := []struct {
+		name    string
+		disable bool
+		key     string
+		secret  string
+		want    bool
+	}{
+		{"all empty              ", false, "", "", false},
+		{"disabled, values empty ", true, "", "", false},
+		{"enabled, key only      ", false, "SomeValue", "", false},
+		{"enabled, secret only   ", false, "", "SomeValue", false},
+		{"enabled, values filled ", false, "XYZ", "ABC", true},
+		{"disabled, values filled", true, "XYZ", "ABC", false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := &KeySecret{Disable: tt.disable, Key: tt.key, Secret: tt.secret}
+			if got := c.Usable(); got != tt.want {
+				t.Errorf("Usable() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestMaskIP(t *testing.T) {
+	tests := []struct {
+		name    string
+		fullIPs bool
+		ip      string
+		want    string
+	}{
+		{"full on, empty     ", true, "", ""},
+		{"full on, short IP  ", true, "2.2.2.2", "2.2.2.2"},
+		{"full on, long IP   ", true, "255.255.255.255", "255.255.255.255"},
+		{"full on, garbage   ", true, "Sunsets. Are red...", "Sunsets. Are red..."},
+		{"full off, empty    ", false, "", ""},
+		{"full off, short IP ", false, "2.2.2.2", "2.2.x.x"},
+		{"full off, long IP  ", false, "255.255.255.255", "255.255.x.x"},
+		{"full off, dot      ", false, ".", "."},
+		{"full off, 2 dots   ", false, "..", "..x.x"},
+		{"full off, 3 dots   ", false, "...", "..x.x"},
+		{"full off, 4 dots   ", false, "....", "..x.x"},
+		{"full off, 5 dots   ", false, ".....", "..x.x"},
+		{"full off, garbage  ", false, "Sunsets. Are red...", "Sunsets. Are red.x.x"},
+		{"full off, garbage2 ", false, "Whatever", "Whatever"},
+		{"full off, unicode  ", false, "🥕.🥔.🍅.🍎.🍐.🍌", "🥕.🥔.x.x"},
+		{"full off, mix chars", false, "\x00.🥔.\t.🍎.🍐.🍌", "\x00.🥔.x.x"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			CLIFlags.LogFullIPs = tt.fullIPs
+			if got := MaskIP(tt.ip); got != tt.want {
+				t.Errorf("MaskIP() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestPathOfBaseURL(t *testing.T) {
 	tests := []struct {
 		name     string

@@ -33,7 +33,7 @@ export class ForgotPasswordComponent {
 
         // Submit the form if it's valid
         if (this.form.valid) {
-            this.api.curUserPwdResetSendEmail({email: this.email.value})
+            this.api.authPwdResetSendEmail({email: this.email.value})
                 .pipe(this.submitting.processing())
                 .subscribe(() => {
                     // Add a success toast

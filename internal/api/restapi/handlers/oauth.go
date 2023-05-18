@@ -1,23 +1,12 @@
 package handlers
 
 import (
-	"crypto/hmac"
-	"crypto/sha256"
-	"encoding/hex"
-	"encoding/json"
-	"fmt"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/markbates/goth"
-	"github.com/pkg/errors"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"net/http"
-	"net/url"
-	"time"
 )
+
+/* TODO new-db
 
 type ssoPayload struct {
 	Domain string `json:"domain"`
@@ -34,9 +23,11 @@ var oauthSessions = &util.SafeStringMap[models.HexID]{}
 // commenterTokens maps temporary OAuth token to the related CommenterToken. It's required for those nasty identity
 // providers that don't support the state parameter (such as Twitter)
 var commenterTokens = &util.SafeStringMap[models.HexID]{}
+*/
 
 // OauthInit initiates a federated authentication process
 func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
+	/* TODO new-db
 	// Find the provider
 	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
 	if r != nil {
@@ -73,19 +64,21 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	} else if originalState == "" {
 		commenterTokens.Put(sessID, params.Token)
 	}
+	*/
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
-	return NewCookieResponder(api_commenter.NewOauthInitTemporaryRedirect().WithLocation(sessURL)).
-		WithCookie(
-			util.CookieNameAuthSession,
-			string(sessID),
-			"/",
-			time.Hour, // One hour must be sufficient to complete authentication
-			true,
-			http.SameSiteLaxMode)
+	return NewCookieResponder(api_commenter.NewOauthInitTemporaryRedirect()) /* TODO new-db .WithLocation(sessURL)).
+	WithCookie(
+		util.CookieNameAuthSession,
+		string(sessID),
+		"/",
+		time.Hour, // One hour must be sufficient to complete authentication
+		true,
+		http.SameSiteLaxMode)*/
 }
 
 func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responder {
+	/* TODO new-db
 	// Find the provider
 	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
 	if r != nil {
@@ -194,12 +187,14 @@ func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responde
 	if err := svc.TheUserService.UpdateCommenterSession(commenterToken, commenterHex); err != nil {
 		return oauthFailure(err)
 	}
+	*/
 
 	// Succeeded: close the parent window, removing the auth session cookie
 	return NewCookieResponder(closeParentWindowResponse()).WithoutCookie(util.CookieNameAuthSession, "/")
 }
 
 func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder {
+	/* TODO new-db
 	domainURL, err := util.ParseAbsoluteURL(params.HTTPRequest.Header.Get("Referer"))
 	if err != nil {
 		return oauthFailure(err)
@@ -269,12 +264,13 @@ func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder 
 	q.Set("token", string(token))
 	q.Set("hmac", signature)
 	ssoURL.RawQuery = q.Encode()
-
+	*/
 	// Succeeded: redirect to SSO
-	return api_commenter.NewOauthSsoInitTemporaryRedirect().WithLocation(ssoURL.String())
+	return api_commenter.NewOauthSsoInitTemporaryRedirect() // TODO new-db .WithLocation(ssoURL.String())
 }
 
 func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Responder {
+	/* TODO new-db
 	payloadBytes, err := hex.DecodeString(params.Payload)
 	if err != nil {
 		return oauthFailure(fmt.Errorf("payload: invalid hex encoding: %s", err.Error()))
@@ -367,10 +363,12 @@ func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Re
 	if err := svc.TheUserService.UpdateCommenterSession(commenterToken, commenterHex); err != nil {
 		return oauthFailure(err)
 	}
-
+	*/
 	// Succeeded: close the parent window
 	return closeParentWindowResponse()
 }
+
+/* TODO new-db
 
 // getSessionState extracts the state parameter from the given session's URL
 func getSessionState(sess goth.Session) (string, error) {
@@ -438,3 +436,4 @@ func validateDomainSSOConfig(domain *models.Domain) error {
 	}
 	return nil
 }
+*/

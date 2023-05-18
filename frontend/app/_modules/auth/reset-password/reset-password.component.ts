@@ -1,8 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { ProcessingStatus } from '../../../_utils/processing-status';
-import { ApiAuthService } from '../../../../generated-api';
+import { ApiAuthService, Configuration } from '../../../../generated-api';
 import { Paths } from '../../../_utils/consts';
 import { ToastService } from '../../../_services/toast.service';
 
@@ -10,13 +10,12 @@ import { ToastService } from '../../../_services/toast.service';
     selector: 'app-reset-password',
     templateUrl: './reset-password.component.html',
 })
-export class ResetPasswordComponent {
+export class ResetPasswordComponent implements OnDestroy {
 
     readonly submitting = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
         newPassword: '',
     });
-    readonly token: string;
 
     constructor(
         private readonly router: Router,
@@ -24,8 +23,15 @@ export class ResetPasswordComponent {
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
         private readonly api: ApiAuthService,
+        private readonly apiConfig: Configuration,
     ) {
-        this.token = router.getCurrentNavigation()?.extras?.state?.token;
+        // Set the auth token in the API config to be used for the password change
+        this.apiConfig.credentials.token = router.getCurrentNavigation()?.extras?.state?.token;
+    }
+
+    ngOnDestroy(): void {
+        // Remove any reset token on exit
+        delete this.apiConfig.credentials.token;
     }
 
     submit() {
@@ -34,10 +40,7 @@ export class ResetPasswordComponent {
 
         // Submit the form if it's valid
         if (this.form.valid) {
-            this.api.curUserPwdResetChange({
-                password: this.form.value.newPassword!,
-                token:    this.token,
-            })
+            this.api.authPwdResetChange({password: this.form.value.newPassword!})
                 .pipe(this.submitting.processing())
                 .subscribe(() => {
                     // Add a success toast

@@ -6,7 +6,6 @@ import (
 	"encoding/hex"
 	"github.com/avct/uasurfer"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/strfmt/conv"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -322,7 +321,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		CreatedTime:      strfmt.DateTime(d.CreatedTime),
 		DefaultSort:      models.CommentSort(d.DefaultSort),
 		Host:             models.Host(d.Host),
-		ID:               conv.UUID(strfmt.UUID(d.ID.String())),
+		ID:               strfmt.UUID(d.ID.String()),
 		IsReadonly:       d.IsReadonly,
 		ModNotifyPolicy:  models.DomainModNotifyPolicy(d.ModNotifyPolicy),
 		ModerationPolicy: models.DomainModerationPolicy(d.ModerationPolicy),

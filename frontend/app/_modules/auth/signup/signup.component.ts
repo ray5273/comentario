@@ -56,7 +56,7 @@ export class SignupComponent {
                 .pipe(this.submitting.processing())
                 .subscribe(r => {
                     // If there's no confirmation email expected, redirect the user to login at once
-                    if (!r.confirmEmail) {
+                    if (r.isConfirmed) {
                         this.router.navigate([Paths.auth.login]);
 
                     // Show the info message otherwise

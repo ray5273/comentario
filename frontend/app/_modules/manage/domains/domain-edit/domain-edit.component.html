@@ -14,8 +14,8 @@
             <label for="host" class="col-sm-3 col-form-label colon" i18n>Host</label>
             <div class="col-sm-9">
                 <input formControlName="host" type="text" class="form-control" id="host"
-                       [class.is-valid]="isNew && host.touched && host.valid"
-                       [class.is-invalid]="isNew && host.touched && host.invalid"
+                       [class.is-valid]="isNew && ctlHost.touched && ctlHost.valid"
+                       [class.is-invalid]="isNew && ctlHost.touched && ctlHost.invalid"
                        required minlength="1" maxlength="253" placeholder="example.com">
                 <!-- Invalid feedback -->
                 <div class="invalid-feedback">
@@ -27,13 +27,13 @@
                 </small>
             </div>
         </div>
-        <!-- Display name -->
+        <!-- Name -->
         <div class="mb-3 row">
-            <label for="displayName" class="col-sm-3 col-form-label colon" i18n>Display name</label>
+            <label for="name" class="col-sm-3 col-form-label colon" i18n>Name</label>
             <div class="col-sm-9">
-                <input formControlName="displayName" type="text" class="form-control" id="displayName"
-                       [class.is-valid]="displayName.touched && displayName.valid"
-                       [class.is-invalid]="displayName.touched && displayName.invalid"
+                <input formControlName="name" type="text" class="form-control" id="name"
+                       [class.is-valid]="ctlName.touched && ctlName.valid"
+                       [class.is-invalid]="ctlName.touched && ctlName.invalid"
                        maxlength="255" placeholder="My blog" i18n-placeholder>
                 <div class="invalid-feedback" i18n>Value is too long.</div>
             </div>
@@ -45,21 +45,17 @@
                 <!-- Subheading -->
                 <div class="fw-bold mt-3 mb-1" i18n>Comment moderation</div>
 
-                <!-- Automatic spam filtering -->
-                <div class="form-check me-3">
-                    <input formControlName="autoSpamFilter" type="checkbox" class="form-check-input" id="autoSpamFilter">
-                    <label class="form-check-label" for="autoSpamFilter" i18n>Automatic spam filtering</label>
-                </div>
-                <!-- Require all comments to be approved manually -->
-                <div class="form-check me-3">
-                    <input formControlName="requireModeration" type="checkbox" class="form-check-input" id="requireModeration">
-                    <label class="form-check-label" for="requireModeration" i18n>Require all comments to be approved manually</label>
-                </div>
-                <!-- Require anonymous comments to be approved manually -->
-                <div class="form-check me-3">
-                    <input formControlName="moderateAllAnonymous" type="checkbox" class="form-check-input" id="moderateAllAnonymous">
-                    <label class="form-check-label" for="moderateAllAnonymous" i18n>Require anonymous comments to be approved manually</label>
-                </div>
+<!-- TODO new-db -->
+<!--                &lt;!&ndash; Require all comments to be approved manually &ndash;&gt;-->
+<!--                <div class="form-check me-3">-->
+<!--                    <input formControlName="requireModeration" type="checkbox" class="form-check-input" id="requireModeration">-->
+<!--                    <label class="form-check-label" for="requireModeration" i18n>Require all comments to be approved manually</label>-->
+<!--                </div>-->
+<!--                &lt;!&ndash; Require anonymous comments to be approved manually &ndash;&gt;-->
+<!--                <div class="form-check me-3">-->
+<!--                    <input formControlName="moderateAllAnonymous" type="checkbox" class="form-check-input" id="moderateAllAnonymous">-->
+<!--                    <label class="form-check-label" for="moderateAllAnonymous" i18n>Require anonymous comments to be approved manually</label>-->
+<!--                </div>-->
             </div>
         </div>
 
@@ -71,21 +67,23 @@
 
                 <!-- Most upvoted first -->
                 <div class="form-check">
-                    <input formControlName="defaultSortPolicy" class="form-check-input" type="radio"
-                           id="sortUpvoted" value="score-desc">
-                    <label class="form-check-label" for="sortUpvoted" i18n>Most upvoted first</label>
+                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortSD" value="sd">
+                    <label class="form-check-label" for="sortSD" i18n>Most upvoted first</label>
+                </div>
+                <!-- Least upvoted first -->
+                <div class="form-check">
+                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortSA" value="sa">
+                    <label class="form-check-label" for="sortSA" i18n>Least upvoted first</label>
                 </div>
                 <!-- Newest first -->
                 <div class="form-check">
-                    <input formControlName="defaultSortPolicy" class="form-check-input" type="radio"
-                           id="sortNewest" value="creationdate-desc">
-                    <label class="form-check-label" for="sortNewest" i18n>Newest first</label>
+                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortTD" value="td">
+                    <label class="form-check-label" for="sortTD" i18n>Newest first</label>
                 </div>
                 <!-- Oldest first -->
                 <div class="form-check">
-                    <input formControlName="defaultSortPolicy" class="form-check-input" type="radio"
-                           id="sortOldest" value="creationdate-asc">
-                    <label class="form-check-label" for="sortOldest" i18n>Oldest first</label>
+                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortTA" value="ta">
+                    <label class="form-check-label" for="sortTA" i18n>Oldest first</label>
                 </div>
             </div>
         </div>
@@ -98,21 +96,18 @@
 
                 <!-- Don't email -->
                 <div class="form-check">
-                    <input formControlName="emailNotificationPolicy" class="form-check-input" type="radio"
-                           id="emailPolicyNone" value="none">
-                    <label class="form-check-label" for="emailPolicyNone" i18n>Don't email</label>
+                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" id="modNotifyPolicyNone" value="none">
+                    <label class="form-check-label" for="modNotifyPolicyNone" i18n>Don't email</label>
                 </div>
                 <!-- Only for comments pending moderation -->
                 <div class="form-check">
-                    <input formControlName="emailNotificationPolicy" class="form-check-input" type="radio"
-                           id="emailPolicyPendingModeration" value="pending-moderation">
-                    <label class="form-check-label" for="emailPolicyPendingModeration" i18n>Only for comments pending moderation</label>
+                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" id="modNotifyPolicyPending" value="pending">
+                    <label class="form-check-label" for="modNotifyPolicyPending" i18n>Only for comments pending moderation</label>
                 </div>
                 <!-- For every new comment -->
                 <div class="form-check">
-                    <input formControlName="emailNotificationPolicy" class="form-check-input" type="radio"
-                           id="emailPolicyAll" value="all">
-                    <label class="form-check-label" for="emailPolicyAll" i18n>For every new comment</label>
+                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" id="modNotifyPolicyAll" value="all">
+                    <label class="form-check-label" for="modNotifyPolicyAll" i18n>For every new comment</label>
                 </div>
             </div>
         </div>
@@ -125,14 +120,21 @@
 
                 <!-- Anonymous comments -->
                 <div class="form-check me-3">
-                    <input formControlName="allowAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
+                    <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
                     <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
                 </div>
 
                 <!-- Identity providers -->
-                <div formArrayName="idps">
-                    <div *ngFor="let idp of idps; index as idx" class="form-check me-3">
-                        <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
+                <div formArrayName="fedIdps">
+                    <!-- Local auth -->
+                    <input [formControlName]="0" type="checkbox" class="form-check-input" id="auth-local">
+                    <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
+                    <!-- SSO -->
+                    <input [formControlName]="1" type="checkbox" class="form-check-input" id="auth-sso">
+                    <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
+                    <!-- Federated IdPs -->
+                    <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
+                        <input [formControlName]="idx+2" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
                         <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
                     </div>
                 </div>

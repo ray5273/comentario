@@ -1,12 +1,12 @@
-import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faCalendarXmark, faCircleQuestion, faSnowflake, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { ApiOwnerService, Domain, DomainState } from '../../../../../../generated-api';
-import { Paths } from '../../../../../_utils/consts';
-import { ToastService } from '../../../../../_services/toast.service';
-import { DomainDetailComponent } from '../domain-detail.component';
-import { ProcessingStatus } from '../../../../../_utils/processing-status';
+import {Component} from '@angular/core';
+import {Router} from '@angular/router';
+import {UntilDestroy, untilDestroyed} from '@ngneat/until-destroy';
+import {faCalendarXmark, faCircleQuestion, faSnowflake, faTrashAlt} from '@fortawesome/free-solid-svg-icons';
+import {ApiOwnerService, Domain} from '../../../../../../generated-api';
+import {Paths} from '../../../../../_utils/consts';
+import {ToastService} from '../../../../../_services/toast.service';
+import {DomainDetailComponent} from '../domain-detail.component';
+import {ProcessingStatus} from '../../../../../_utils/processing-status';
 
 @UntilDestroy()
 @Component({
@@ -41,7 +41,7 @@ export class DomainDangerZoneComponent {
     }
 
     get freezeAction(): string {
-        return this.domain?.state === DomainState.Frozen ? $localize`Unfreeze` : $localize`Freeze`;
+        return this.domain?.isReadonly ? $localize`Unfreeze` : $localize`Freeze`;
     }
 
     delete() {
@@ -66,7 +66,7 @@ export class DomainDangerZoneComponent {
 
     toggleFrozen() {
         // Run toggle with the API
-        this.api.domainToggleFrozen(this.domain!.host)
+        this.api.domainReadonly(this.domain!.id!, {readonly: !this.domain!.isReadonly})
             .pipe(this.freezing.processing())
             .subscribe(() => {
                 // Add a toast

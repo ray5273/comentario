@@ -4,10 +4,11 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import {
     ApiOwnerService,
+    CommentSort,
     Domain,
-    DomainState,
-    EmailNotificationPolicy,
-    SortPolicy,
+    DomainModerationPolicy,
+    DomainModNotifyPolicy,
+    FederatedIdpId
 } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ConfigService } from '../../../../_services/config.service';
@@ -26,22 +27,25 @@ export class DomainEditComponent implements OnInit {
     /** Domain being edited. */
     domain?: Domain;
 
+    /** IDs of federated identity providers enabled for the domain being edited. */
+    domainFedIdpIds?: FederatedIdpId[];
+
     readonly Paths = Paths;
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
-    readonly idps = this.cfgSvc.allIdps;
+    readonly fedIdps = this.cfgSvc.clientConfig.federatedIdps;
     readonly form = this.fb.nonNullable.group({
-        host:                    '',
-        displayName:             '',
-        state:                   DomainState.Unfrozen,
-        autoSpamFilter:          false,
-        requireModeration:       false,
-        allowAnonymous:          false,
-        moderateAllAnonymous:    false,
-        emailNotificationPolicy: EmailNotificationPolicy.PendingModeration,
-        ssoUrl:                  '',
-        defaultSortPolicy:       SortPolicy.CreationdateAsc,
-        idps:                    this.fb.array(this.idps.map(idp => idp.id !== 'sso')), // Enable all but SSO by default
+        host:             '',
+        name:             '',
+        isReadonly:       false,
+        authAnonymous:    false,
+        authLocal:        true,
+        authSso:          false,
+        moderationPolicy: DomainModerationPolicy.Anonymous,
+        modNotifyPolicy:  DomainModNotifyPolicy.Pending,
+        ssoUrl:           '',
+        defaultSort:      CommentSort.Td,
+        fedIdps:          this.fb.array(Array(this.fedIdps.length).fill(true) as boolean[]), // Enable all by default
     });
 
     // Icons
@@ -56,12 +60,12 @@ export class DomainEditComponent implements OnInit {
         private readonly toastSvc: ToastService,
     ) {}
 
-    get host(): AbstractControl<string> {
+    get ctlHost(): AbstractControl<string> {
         return this.form.get('host')!;
     }
 
-    get displayName(): AbstractControl<string> {
-        return this.form.get('displayName')!;
+    get ctlName(): AbstractControl<string> {
+        return this.form.get('name')!;
     }
 
     ngOnInit(): void {
@@ -72,28 +76,28 @@ export class DomainEditComponent implements OnInit {
         if (host) {
             this.api.domainGet(host)
                 .pipe(this.loading.processing())
-                .subscribe(d => {
-                    this.domain = d;
-                    this.form.setValue({
-                        host:                    d.host,
-                        displayName:             d.displayName || '',
-                        state:                   d.state,
-                        autoSpamFilter:          !!d.autoSpamFilter,
-                        requireModeration:       !!d.requireModeration,
-                        allowAnonymous:          !d.requireIdentification,
-                        moderateAllAnonymous:    !!d.moderateAllAnonymous,
-                        emailNotificationPolicy: d.emailNotificationPolicy,
-                        ssoUrl:                  d.ssoUrl || '',
-                        defaultSortPolicy:       d.defaultSortPolicy,
-                        // Checkbox for a specific IdP is on if that IdP is present among the enabled ones for the domain
-                        idps:                    this.idps.map(idp => !!d.idps?.includes(idp.id)),
+                .subscribe(r => {
+                    this.domain          = r.domain;
+                    this.domainFedIdpIds = r.federatedIdpIds;
+                    this.form.patchValue({
+                        host:             this.domain!.host,
+                        name:             this.domain!.name,
+                        isReadonly:       this.domain!.isReadonly,
+                        authAnonymous:    this.domain!.authAnonymous,
+                        authLocal:        this.domain!.authLocal,
+                        authSso:          this.domain!.authSso,
+                        moderationPolicy: this.domain!.moderationPolicy,
+                        modNotifyPolicy:  this.domain!.modNotifyPolicy,
+                        ssoUrl:           this.domain!.ssoUrl,
+                        defaultSort:      this.domain!.defaultSort,
+                        fedIdps:          this.fedIdps.map(idp => !!this.domainFedIdpIds?.includes(idp.id)),
                     });
                 });
         }
 
         // Host can't be changed for an existing domain
         if (!this.isNew) {
-            this.host.disable();
+            this.ctlHost.disable();
         }
     }
 
@@ -104,28 +108,29 @@ export class DomainEditComponent implements OnInit {
         // Submit the form if it's valid
         if (this.form.valid) {
             const vals = this.form.value;
-            const dto: Domain = {
+            const domain: Domain = {
                 // Host cannot be changed once set
-                host:                    vals.host || this.domain!.host,
-                displayName:             vals.displayName,
-                state:                   vals.state!,
-                autoSpamFilter:          vals.autoSpamFilter,
-                requireModeration:       vals.requireModeration,
-                requireIdentification:   !vals.allowAnonymous,
-                moderateAllAnonymous:    vals.moderateAllAnonymous,
-                defaultSortPolicy:       vals.defaultSortPolicy!,
-                emailNotificationPolicy: vals.emailNotificationPolicy!,
-                idps:                    this.idps.filter((_, idx) => vals.idps?.[idx]).map(idp => idp.id),
+                host:             vals.host || this.domain!.host,
+                name:             vals.name,
+                isReadonly:       vals.isReadonly,
+                authAnonymous:    vals.authAnonymous,
+                authLocal:        vals.authLocal,
+                authSso:          vals.authSso,
+                moderationPolicy: vals.moderationPolicy,
+                modNotifyPolicy:  vals.modNotifyPolicy,
+                ssoUrl:           vals.ssoUrl,
+                defaultSort:      vals.defaultSort,
             };
+            const federatedIdpIds = this.fedIdps.filter((_, idx) => vals.fedIdps?.[idx]).map(idp => idp.id);
 
             // Run creation/updating with the API
-            (this.isNew ? this.api.domainNew({domain: dto}) : this.api.domainUpdate({domain: dto}))
+            (this.isNew ? this.api.domainNew({domain, federatedIdpIds}) : this.api.domainUpdate(this.domain!.id!, {domain, federatedIdpIds}))
                 .pipe(this.saving.processing())
-                .subscribe(() => {
+                .subscribe(newDomain => {
                     // Add a success toast
                     this.toastSvc.success('data-saved').keepOnRouteChange();
                     // Navigate to the edited/created domain
-                    const commands = [Paths.manage.domains, dto.host];
+                    const commands = [Paths.manage.domains, newDomain.id];
                     if (!this.isNew) {
                         commands.push('settings');
                     }

@@ -14,7 +14,7 @@ import { PageNotFoundComponent } from './page-not-found/page-not-found.component
 import { HomeComponent } from './home/home.component';
 import { DocEmbedDirective } from './_directives/doc-embed.directive';
 import { HttpInterceptorService } from './_services/http-interceptor.service';
-import { BASE_PATH } from '../generated-api';
+import { ApiModule, Configuration } from '../generated-api';
 import { environment } from '../environments/environment';
 import { ToolsModule } from './_modules/tools/tools.module';
 import { ConfigService } from './_services/config.service';
@@ -37,12 +37,13 @@ import { ConfigService } from './_services/config.service';
         ReactiveFormsModule,
         FontAwesomeModule,
         NgbToastModule,
+        ApiModule,
         AppRoutingModule,
         ToolsModule,
     ],
     providers: [
-        // Base API path
-        {provide: BASE_PATH, useValue: environment.apiBaseUrl},
+        // API configuration
+        {provide: Configuration, useFactory: () => new Configuration({basePath: environment.apiBaseUrl})},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
         // Initialise the config service
         {

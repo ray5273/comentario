@@ -263,12 +263,16 @@ do $$
 begin
     if legacySchema() then
         -- Create a ownerhex mapping table
-        create temporary table temp_ownerhex_map(ownerhex varchar(64) primary key, id uuid not null unique);
-        insert into temp_ownerhex_map(ownerhex, id) select ownerhex, gen_random_uuid() from owners;
+        create temporary table temp_ownerhex_map(ownerhex varchar(64) primary key, id uuid not null unique, email varchar(254) not null unique);
+        insert into temp_ownerhex_map(ownerhex, id, email) select ownerhex, gen_random_uuid(), email from owners;
 
         -- Create a commenterhex mapping table
         create temporary table temp_commenterhex_map(commenterhex varchar(64) primary key, id uuid not null unique);
-        insert into temp_commenterhex_map(commenterhex, id) select commenterhex, gen_random_uuid() from commenters;
+        insert into temp_commenterhex_map(commenterhex, id)
+            -- Map to the existing owner user, if there is one with the same email, otherwise to a new random UUID
+            select cr.commenterhex, coalesce(m.id, gen_random_uuid())
+                from commenters cr
+                left join temp_ownerhex_map m on m.email=cr.email;
 
         -- Create a domain mapping table
         create temporary table temp_domain_map(domain varchar(259) primary key, id uuid not null unique);
@@ -300,7 +304,7 @@ begin
         insert into cm_domains(
                 id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret, moderation_policy, mod_notify_policy, default_sort)
             select
-                    m.id, d.name, d.domain, d.creationdate, d.state='frozen', !d.requireidentification, d.commentoprovider, d.ssoprovider, d.ssourl, d.ssosecret,
+                    m.id, d.name, d.domain, d.creationdate, d.state='frozen', d.requireidentification != true, d.commentoprovider, d.ssoprovider, d.ssourl, d.ssosecret,
                     case
                         when d.requiremoderation then 'all'
                         when d.moderateallanonymous then 'anonymous'

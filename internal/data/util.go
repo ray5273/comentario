@@ -25,8 +25,11 @@ func DecodeHexID(id models.HexID) (*[32]byte, error) {
 
 // DecodeUUID converts a strfmt.UUID into a binary UUID
 func DecodeUUID(sid strfmt.UUID) (*uuid.UUID, error) {
-	u, e := uuid.Parse(string(sid))
-	return &u, e
+	if u, e := uuid.Parse(string(sid)); e != nil {
+		return nil, e
+	} else {
+		return &u, e
+	}
 }
 
 // EmailPtrToString converts a value of *strfmt.Email into a string

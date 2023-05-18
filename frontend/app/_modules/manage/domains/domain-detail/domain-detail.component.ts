@@ -15,10 +15,10 @@ export class DomainDetailComponent implements OnInit {
 
     _domain?: Domain;
 
-    /**
-     * Observable for retrieving the domain in question.
-     */
+    /** Observable for retrieving the domain in question. */
     readonly domain = new BehaviorSubject<Domain | undefined>(undefined);
+    /** Observable for retrieving domain federated identity providers. */
+    readonly federatedIdpIds = new BehaviorSubject<string[] | undefined>(undefined);
 
     readonly loading = new ProcessingStatus();
     readonly Paths = Paths;
@@ -52,7 +52,10 @@ export class DomainDetailComponent implements OnInit {
         if (this._host) {
             this.api.domainGet(this._host)
                 .pipe(this.loading.processing())
-                .subscribe(d => this.setDomain(d));
+                .subscribe(r => {
+                    this.setDomain(r.domain);
+                    this.setFederatedIdpIds(r.federatedIdpIds);
+                });
         } else {
             this.setDomain(undefined);
         }
@@ -61,5 +64,9 @@ export class DomainDetailComponent implements OnInit {
     private setDomain(d: Domain | undefined) {
         this._domain = d;
         this.domain.next(d);
+    }
+
+    private setFederatedIdpIds(v: string[] | undefined) {
+        this.federatedIdpIds.next(v);
     }
 }

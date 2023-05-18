@@ -178,13 +178,13 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 		WithSignup(params.HTTPRequest, "")
 
 	// If it's the first registered user, make them a superuser
-	if cnt, err := svc.TheUserService.CountUsers(); err != nil {
+	if cnt, err := svc.TheUserService.CountUsers(false); err != nil {
 		return respServiceError(err)
 	} else if cnt == 0 {
 		user.WithConfirmed(true).Superuser = true
 
 	} else {
-		// If SMTP isn't configured, mark the user as confirmed right away
+		// If SMTP isn't configured, mark the user confirmed right away
 		user.WithConfirmed(!config.SMTPConfigured)
 	}
 

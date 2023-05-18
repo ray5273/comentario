@@ -206,7 +206,7 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 	}
 
 	// Succeeded
-	return api_owner.NewDomainNewNoContent()
+	return api_owner.NewDomainNewOK().WithPayload(d.ToDTO())
 }
 
 func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
@@ -277,11 +277,13 @@ func DomainReadonly(params api_owner.DomainReadonlyParams, user *data.User) midd
 func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	newDomain := params.Body.Domain
-	if exDomain, _, r := domainGetDomainAndOwner(*newDomain.ID, user); r != nil {
+	domain, _, r := domainGetDomainAndOwner(params.UUID, user)
+	if r != nil {
 		return r
+	}
 
-		// Verify the host isn't changing
-	} else if string(newDomain.Host) != exDomain.Host {
+	// Verify the host isn't changing
+	if string(newDomain.Host) != domain.Host {
 		return respBadRequest(ErrorImmutableProperty.WithDetails("host"))
 	}
 
@@ -292,24 +294,23 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 		}
 	}
 
-	// Persist a new domain record in the database
-	d := &data.Domain{
-		ID:               uuid.New(),
-		Name:             newDomain.Name,
-		AuthAnonymous:    newDomain.AuthAnonymous,
-		AuthLocal:        newDomain.AuthLocal,
-		AuthSso:          newDomain.AuthSso,
-		SsoURL:           newDomain.SsoURL,
-		ModerationPolicy: data.DomainModerationPolicy(newDomain.ModerationPolicy),
-		ModNotifyPolicy:  data.DomainModNotifyPolicy(newDomain.ModNotifyPolicy),
-		DefaultSort:      string(newDomain.DefaultSort),
-	}
-	if err := svc.TheDomainService.Update(d, params.Body.FederatedIdpIds); err != nil {
+	// Update domain properties
+	domain.Name = newDomain.Name
+	domain.AuthAnonymous = newDomain.AuthAnonymous
+	domain.AuthLocal = newDomain.AuthLocal
+	domain.AuthSso = newDomain.AuthSso
+	domain.SsoURL = newDomain.SsoURL
+	domain.ModerationPolicy = data.DomainModerationPolicy(newDomain.ModerationPolicy)
+	domain.ModNotifyPolicy = data.DomainModNotifyPolicy(newDomain.ModNotifyPolicy)
+	domain.DefaultSort = string(newDomain.DefaultSort)
+
+	// Persist the updated properties
+	if err := svc.TheDomainService.Update(domain, params.Body.FederatedIdpIds); err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_owner.NewDomainUpdateNoContent()
+	return api_owner.NewDomainUpdateOK().WithPayload(domain.ToDTO())
 }
 
 // domainGetDomainAndOwner parses a string UUID and fetches the corresponding domain and its user, verifying they own

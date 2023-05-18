@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"time"
@@ -17,8 +18,8 @@ var TheUserService UserService = &userService{}
 type UserService interface {
 	// ConfirmUser confirms the user's email by their ID
 	ConfirmUser(id *uuid.UUID) error
-	// CountUsers returns a number of registered users (ignoring the anonymous)
-	CountUsers() (int, error)
+	// CountUsers returns a number of registered users. If includeSystem == false, skips system users
+	CountUsers(includeSystem bool) (int, error)
 	// CreateDomainUser persists a new domain user (linking a user to a domain)
 	CreateDomainUser(du *data.DomainUser) error
 	// CreateUser persists a new user
@@ -72,11 +73,18 @@ func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	return nil
 }
 
-func (svc *userService) CountUsers() (int, error) {
-	logger.Debug("userService.CountUsers()")
-	row := db.QueryRow("select count(*) from cm_users where id!=$1);", data.AnonymousUser.ID)
+func (svc *userService) CountUsers(includeSystem bool) (int, error) {
+	logger.Debug("userService.CountUsers(%v)", includeSystem)
+
+	// Prepare the statement
+	s := "select count(*) from cm_users"
+	if !includeSystem {
+		s += " where system_account=false"
+	}
+
+	// Query the count
 	var i int
-	if err := row.Scan(&i); err != nil {
+	if err := db.QueryRow(s).Scan(&i); err != nil {
 		return 0, translateDBErrors(err)
 	} else {
 		return i, nil
@@ -111,8 +119,8 @@ func (svc *userService) CreateUser(u *data.User) error {
 			"federated_idp, federated_id, avatar, website_url) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21);",
 		u.ID, u.Email, u.Name, u.PasswordHash, u.SystemAccount, u.Superuser, u.Confirmed, u.ConfirmedTime,
-		u.CreatedTime, u.UserCreated, u.SignupIP, u.SignupCountry, u.SignupURL, u.Banned, u.BannedTime, u.UserBanned,
-		u.Remarks, u.FederatedIdP, u.FederatedID, u.Avatar, u.WebsiteURL)
+		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupURL, u.Banned, u.BannedTime,
+		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedID, u.Avatar, u.WebsiteURL)
 	if err != nil {
 		logger.Errorf("userService.CreateUser: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -131,8 +139,8 @@ func (svc *userService) CreateUserSession(s *data.UserSession) error {
 			"id, user_id, ts_created, ts_expires, host, proto, ip, country, ua_browser_name, ua_browser_version, "+
 			"ua_os_name, ua_os_version, ua_device) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
-		s.ID, s.UserID, s.CreatedTime, s.ExpiresTime, s.Host, s.Proto, s.IP, s.Country, s.BrowserName, s.BrowserVersion,
-		s.OSName, s.OSVersion, s.Device)
+		s.ID, s.UserID, s.CreatedTime, s.ExpiresTime, s.Host, s.Proto, config.MaskIP(s.IP), s.Country, s.BrowserName,
+		s.BrowserVersion, s.OSName, s.OSVersion, s.Device)
 	if err != nil {
 		logger.Errorf("userService.CreateUserSession: Exec() failed: %v", err)
 		return translateDBErrors(err)

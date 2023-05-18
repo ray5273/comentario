@@ -1,7 +1,7 @@
 <section class="container">
     <!-- Heading & subheading -->
     <h1 i18n="heading">Domain details</h1>
-    <div *ngIf="_domain" class="subheading">{{ _domain.displayName || _domain.host }}</div>
+    <div *ngIf="_domain" class="subheading">{{ _domain.name || _domain.host }}</div>
 
     <!-- Tabs -->
     <section [appSpinner]="loading.active" spinnerSize="lg">
@@ -21,7 +21,9 @@
                 <a ngbNavLink routerLink="moderators">
                     <ng-container i18n>Moderators</ng-container>
                     <!-- Badge with the number -->
+                    <!-- TODO new-db
                     <span *ngIf="_domain.moderators?.length as num" class="ms-2 badge bg-secondary">{{ num }}</span>
+                    -->
                 </a>
             </li>
 

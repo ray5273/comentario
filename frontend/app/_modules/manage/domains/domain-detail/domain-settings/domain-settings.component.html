@@ -11,10 +11,10 @@
     <!-- Detail table -->
     <div class="col-sm-9">
         <dl *ngIf="_domain as d" id="domainDetailTable" class="detail-table">
-            <!-- Display name -->
+            <!-- Name -->
             <div>
-                <dt i18n>Display name</dt>
-                <dd>{{ d.displayName }}</dd>
+                <dt i18n>Name</dt>
+                <dd>{{ d.name }}</dd>
             </div>
             <!-- Host -->
             <div>
@@ -23,49 +23,40 @@
             </div>
             <!-- State -->
             <div>
-                <dt i18n>State</dt>
-                <dd>{{ d.state }}</dd>
+                <dt i18n>Read-only</dt>
+                <dd><app-checkmark [value]="d.isReadonly"></app-checkmark></dd>
             </div>
-
-            <!-- Auto spam filter -->
+            <!-- Moderation policy -->
             <div>
-                <dt i18n>Auto spam filter</dt>
-                <dd><app-checkmark [value]="d.autoSpamFilter"></app-checkmark></dd>
+                <dt i18n>Moderation policy</dt>
+                <dd>{{ d.moderationPolicy }}</dd>
             </div>
-            <!-- Moderate all anonymous -->
+            <!-- Moderator notification policy -->
             <div>
-                <dt i18n>Moderate all anonymous</dt>
-                <dd><app-checkmark [value]="d.moderateAllAnonymous"></app-checkmark></dd>
-            </div>
-            <!-- Require moderation -->
-            <div>
-                <dt i18n>Require moderation</dt>
-                <dd><app-checkmark [value]="d.requireModeration"></app-checkmark></dd>
+                <dt i18n>Moderator notification policy</dt>
+                <dd>{{ d.modNotifyPolicy }}</dd>
             </div>
             <!-- Comment sorting -->
             <div>
                 <dt i18n>Comment sorting</dt>
-                <dd>{{ d.defaultSortPolicy }}</dd>
-            </div>
-            <!-- Email moderators -->
-            <div>
-                <dt i18n>Email moderators</dt>
-                <dd>{{ d.emailNotificationPolicy }}</dd>
+                <dd>{{ d.defaultSort }}</dd>
             </div>
             <!-- Authentication -->
             <div>
                 <dt i18n>Authentication</dt>
                 <dd>
                     <ul class="list-unstyled">
-                        <li *ngIf="!d.requireIdentification">Anonymous comments</li>
-                        <li *ngFor="let idp of _idps">{{ idp.name }}</li>
+                        <li *ngIf="d.authAnonymous">Anonymous comments</li>
+                        <li *ngIf="d.authLocal">Local (password-based)</li>
+                        <li *ngIf="d.authSso">Single Sign-On</li>
+                        <li *ngFor="let idp of _fedIdps">{{ idp.name }}</li>
                     </ul>
                 </dd>
             </div>
             <!-- Created -->
             <div>
                 <dt i18n>Created</dt>
-                <dd>{{ d.creationDate | date:'short' }}</dd>
+                <dd>{{ d.createdTime | date:'short' }}</dd>
             </div>
         </dl>
     </div>

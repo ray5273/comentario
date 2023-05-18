@@ -20,7 +20,7 @@ describe('DomainSettingsComponent', () => {
             providers: [
                 {provide: ConfigService,   useValue: MockService(ConfigService)},
                 {provide: ApiOwnerService, useValue: MockService(ApiOwnerService, {domainGet: () => of(null)} as any)},
-                MockProvider(DomainDetailComponent, {domain: of(undefined)} as any),
+                MockProvider(DomainDetailComponent, {domain: of(undefined), federatedIdpIds: of([])} as any),
             ],
         })
             .compileComponents();

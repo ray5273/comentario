@@ -47,8 +47,8 @@
 
 <!-- Freeze domain confirmation dialog content template -->
 <ng-template #freezeDlg>
-    <p *ngIf="domain!.state === 'frozen'" i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
-    <p *ngIf="domain!.state !== 'frozen'" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
+    <p *ngIf="domain!.isReadonly"  i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
+    <p *ngIf="!domain!.isReadonly" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
 </ng-template>
 
 <!-- Clear comments confirmation dialog content template -->

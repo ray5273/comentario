@@ -15,7 +15,7 @@ describe('DomainInstallationComponent', () => {
     const clientConfig: ClientConfig = {
         baseUrl:       '',
         signupAllowed: false,
-        idps:          [],
+        federatedIdps: [],
     };
 
     beforeEach(async () => {

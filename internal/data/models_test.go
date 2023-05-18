@@ -65,7 +65,7 @@ func TestComment_IsAnonymous(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &Comment{ParentID: tt.uid}
+			c := &Comment{UserCreated: tt.uid}
 			if got := c.IsAnonymous(); got != tt.want {
 				t.Errorf("IsAnonymous() = %v, want %v", got, tt.want)
 			}

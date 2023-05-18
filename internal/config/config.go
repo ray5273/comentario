@@ -29,10 +29,10 @@ var (
 	BuildDate  string // Application build date set during bootstrapping
 )
 
-// logger represents a package-wide logger instance
-var logger = logging.MustGetLogger("config")
-
 var (
+	// logger represents a package-wide logger instance
+	logger = logging.MustGetLogger("config")
+
 	// SecretsConfig is a configuration object for storing sensitive information
 	SecretsConfig = &struct {
 		Postgres struct {
@@ -76,6 +76,7 @@ var (
 		TemplatePath    string `long:"template-path"     description:"Path to template files"                     default:"./templates"            env:"TEMPLATE_PATH"`
 		SecretsFile     string `long:"secrets"           description:"Path to YAML file with secrets"             default:"secrets.yaml"           env:"SECRETS_FILE"`
 		AllowNewOwners  bool   `long:"allow-new-owners"  description:"Allow new owner signups"                                                     env:"ALLOW_NEW_OWNERS"`
+		LogFullIPs      bool   `long:"log-full-ips"      description:"Log IP addresses in full"                                                    env:"LOG_FULL_IPS"`
 		GitLabURL       string `long:"gitlab-url"        description:"Custom GitLab URL for authentication"       default:""                       env:"GITLAB_URL"`
 		E2e             bool   `long:"e2e"               description:"End-2-end testing mode"`
 	}{}
@@ -146,6 +147,24 @@ func GuessUserLanguage(r *http.Request) string {
 	tag, _ := language.MatchStrings(util.UILangMatcher, cookieLang, r.Header.Get("Accept-Language"))
 	base, _ := tag.Base()
 	return base.String()
+}
+
+// MaskIP hides the second half of the given IP address if full IP logging isn't enabled, otherwise returns the IP as-is
+func MaskIP(ip string) string {
+	if !CLIFlags.LogFullIPs {
+		// Find the second dot
+		idx := 0
+		for i, c := range ip {
+			if c == '.' {
+				idx++
+				if idx == 2 {
+					// Second dot found, replace the rest of the string
+					return ip[:i] + ".x.x"
+				}
+			}
+		}
+	}
+	return ip
 }
 
 // PathOfBaseURL returns whether the given path is under the Base URL's path, and the path part relative to the base

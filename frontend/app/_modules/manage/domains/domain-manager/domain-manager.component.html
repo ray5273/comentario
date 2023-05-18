@@ -8,7 +8,7 @@
         <div *ngFor="let d of domains" class="col">
             <div class="card h-100">
                 <a [routerLink]="d.host" class="card-body text-center">
-                    <h5 class="card-title">{{ d.displayName || d.host }}</h5>
+                    <h5 class="card-title">{{ d.name || d.host }}</h5>
                     <div class="card-text">{{ d.host }}</div>
                 </a>
             </div>

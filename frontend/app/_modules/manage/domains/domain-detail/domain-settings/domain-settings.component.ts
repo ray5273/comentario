@@ -2,7 +2,7 @@ import { Component, Inject } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Domain, IdentityProvider } from '../../../../../../generated-api';
+import { Domain, FederatedIdentityProvider } from '../../../../../../generated-api';
 import { ConfigService } from '../../../../../_services/config.service';
 import { Paths } from '../../../../../_utils/consts';
 import { DomainDetailComponent } from '../domain-detail.component';
@@ -15,7 +15,7 @@ import { DomainDetailComponent } from '../domain-detail.component';
 export class DomainSettingsComponent {
 
     _domain?: Domain;
-    _idps?: IdentityProvider[];
+    _fedIdps?: FederatedIdentityProvider[];
 
     readonly Paths = Paths;
 
@@ -28,11 +28,11 @@ export class DomainSettingsComponent {
         details: DomainDetailComponent,
     ) {
         // Subscribe to domain changes
-        details.domain
+        details.domain.pipe(untilDestroyed(this)).subscribe(d => this._domain = d);
+        // Subscribe to domain IdP changes
+        details.federatedIdpIds
             .pipe(untilDestroyed(this))
-            .subscribe(d => {
-                this._domain = d;
-                this._idps = d ? this.cfgSvc.allIdps.filter(idp => d.idps.includes(idp.id)) : undefined;
-            });
+            // Only add those federated identity providers available globally
+            .subscribe(ids => this._fedIdps = ids && this.cfgSvc.clientConfig.federatedIdps.filter(idp => ids.includes(idp.id)));
     }
 }

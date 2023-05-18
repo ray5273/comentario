@@ -5,17 +5,18 @@
 
     <!-- List of moderators -->
     <div [appSpinner]="deleting.active" spinnerSize="lg" class="list-group list-group-flush">
-        <div *ngFor="let m of domain?.moderators" class="list-group-item d-flex flex-wrap">
-            <!-- Moderator email -->
-            <div class="flex-grow-1 d-flex align-items-center">{{ m.email }}</div>
-            <!-- Delete button -->
-            <button appConfirm="Are you sure you want to remove this moderator?"
-                    confirmAction="Remove moderator" (confirmed)="removeModerator(m.email)"
-                    type="button" class="btn btn-outline-danger" i18n-appConfirm i18n-confirmAction>
-                <fa-icon [icon]="faXmark" class="me-1"></fa-icon>
-                <ng-container i18n>Remove</ng-container>
-            </button>
-        </div>
+        <!-- TODO new-db -->
+<!--        <div *ngFor="let m of domain?.moderators" class="list-group-item d-flex flex-wrap">-->
+<!--            &lt;!&ndash; Moderator email &ndash;&gt;-->
+<!--            <div class="flex-grow-1 d-flex align-items-center">{{ m.email }}</div>-->
+<!--            &lt;!&ndash; Delete button &ndash;&gt;-->
+<!--            <button appConfirm="Are you sure you want to remove this moderator?"-->
+<!--                    confirmAction="Remove moderator" (confirmed)="removeModerator(m.email)"-->
+<!--                    type="button" class="btn btn-outline-danger" i18n-appConfirm i18n-confirmAction>-->
+<!--                <fa-icon [icon]="faXmark" class="me-1"></fa-icon>-->
+<!--                <ng-container i18n>Remove</ng-container>-->
+<!--            </button>-->
+<!--        </div>-->
 
         <!-- New moderator form -->
         <form [formGroup]="form" (ngSubmit)="addModerator()" id="moderator-form" class="list-group-item">
