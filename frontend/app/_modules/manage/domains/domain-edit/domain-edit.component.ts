@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder } from '@angular/forms';
+import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import {
@@ -13,6 +13,7 @@ import { Paths } from '../../../../_utils/consts';
 import { ConfigService } from '../../../../_services/config.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
+import { Utils } from '../../../../_utils/utils';
 
 @Component({
     selector: 'app-domain-edit',
@@ -40,12 +41,12 @@ export class DomainEditComponent implements OnInit {
         authAnonymous:    false,
         authLocal:        true,
         authSso:          false,
-        modAnonymous:     false,
+        modAnonymous:     true,
         modAuthenticated: false,
-        modImages:        false,
-        modLinks:         false,
+        modImages:        true,
+        modLinks:         true,
         modNotifyPolicy:  DomainModNotifyPolicy.Pending,
-        ssoUrl:           '',
+        ssoUrl:           ['', [Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
         defaultSort:      CommentSort.Td,
         fedIdps:          this.fb.array(Array(this.fedIdps.length).fill(true) as boolean[]), // Enable all by default
     });
@@ -62,12 +63,20 @@ export class DomainEditComponent implements OnInit {
         private readonly toastSvc: ToastService,
     ) {}
 
+    get ctlAuthSso(): AbstractControl<boolean> {
+        return this.form.get('authSso')!;
+    }
+
     get ctlHost(): AbstractControl<string> {
         return this.form.get('host')!;
     }
 
     get ctlName(): AbstractControl<string> {
         return this.form.get('name')!;
+    }
+
+    get ctlSsoUrl(): AbstractControl<string> {
+        return this.form.get('ssoUrl')!;
     }
 
     ngOnInit(): void {
@@ -104,6 +113,9 @@ export class DomainEditComponent implements OnInit {
         if (!this.isNew) {
             this.ctlHost.disable();
         }
+
+        // SSO URL is only relevant when SSO auth is enabled
+        this.ctlAuthSso.valueChanges.subscribe(b => Utils.enableControls(b, this.ctlSsoUrl));
     }
 
     submit() {
@@ -126,7 +138,7 @@ export class DomainEditComponent implements OnInit {
                 modImages:        vals.modImages,
                 modLinks:         vals.modLinks,
                 modNotifyPolicy:  vals.modNotifyPolicy,
-                ssoUrl:           vals.ssoUrl,
+                ssoUrl:           vals.ssoUrl ?? '',
                 defaultSort:      vals.defaultSort,
             };
             const federatedIdpIds = this.fedIdps.filter((_, idx) => vals.fedIdps?.[idx]).map(idp => idp.id);

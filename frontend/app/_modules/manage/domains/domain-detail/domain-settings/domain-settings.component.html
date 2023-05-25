@@ -11,40 +11,32 @@
     <!-- Detail table -->
     <div class="col-sm-9">
         <dl *ngIf="_domain as d" id="domainDetailTable" class="detail-table">
-            <!-- Name -->
-            <div>
-                <dt i18n>Name</dt>
-                <dd>{{ d.name }}</dd>
-            </div>
             <!-- Host -->
             <div>
                 <dt i18n>Host</dt>
                 <dd>{{ d.host }}</dd>
+            </div>
+            <!-- Name -->
+            <div>
+                <dt i18n>Name</dt>
+                <dd>{{ d.name }}</dd>
             </div>
             <!-- State -->
             <div>
                 <dt i18n>Read-only</dt>
                 <dd><app-checkmark [value]="d.isReadonly"></app-checkmark></dd>
             </div>
-            <!-- Moderate comments by anonymous users -->
-            <div>
-                <dt i18n>Moderate comments by anonymous users</dt>
-                <dd><app-checkmark [value]="d.modAnonymous"></app-checkmark></dd>
-            </div>
-            <!-- Moderate comments by authenticated users -->
-            <div>
-                <dt i18n>Moderate comments by authenticated users</dt>
-                <dd><app-checkmark [value]="d.modAuthenticated"></app-checkmark></dd>
-            </div>
-            <!-- Moderate comments containing links -->
-            <div>
-                <dt i18n>Moderate comments containing links</dt>
-                <dd><app-checkmark [value]="d.modLinks"></app-checkmark></dd>
-            </div>
-            <!-- Moderate comments containing images -->
-            <div>
-                <dt i18n>Moderate comments containing images</dt>
-                <dd><app-checkmark [value]="d.modImages"></app-checkmark></dd>
+            <!-- Require moderator approval on comments -->
+            <div *ngIf="d.modAnonymous || d.modAuthenticated || d.modLinks || d.modImages">
+                <dt i18n>Require moderator approval on comments</dt>
+                <dd>
+                    <ul class="list-unstyled mb-0">
+                        <li *ngIf="d.modAnonymous"     i18n>By anonymous users</li>
+                        <li *ngIf="d.modAuthenticated" i18n>By authenticated users</li>
+                        <li *ngIf="d.modLinks"         i18n>Containing links</li>
+                        <li *ngIf="d.modImages"        i18n>Containing images</li>
+                    </ul>
+                </dd>
             </div>
             <!-- Moderator notification policy -->
             <div>
@@ -60,10 +52,10 @@
             <div>
                 <dt i18n>Authentication</dt>
                 <dd>
-                    <ul class="list-unstyled">
-                        <li *ngIf="d.authAnonymous">Anonymous comments</li>
-                        <li *ngIf="d.authLocal">Local (password-based)</li>
-                        <li *ngIf="d.authSso">Single Sign-On</li>
+                    <ul class="list-unstyled mb-0">
+                        <li *ngIf="d.authAnonymous" i18n>Anonymous comments</li>
+                        <li *ngIf="d.authLocal" i18n>Local (password-based)</li>
+                        <li *ngIf="d.authSso"><ng-container i18n>Single Sign-On</ng-container>&ngsp;<i i18n>via</i> {{ d.ssoUrl }}</li>
                         <li *ngFor="let idp of _fedIdps">{{ idp.name }}</li>
                     </ul>
                 </dd>

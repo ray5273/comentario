@@ -133,22 +133,36 @@
                     <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
                 </div>
 
-                <!-- Identity providers -->
                 <!-- Local auth -->
                 <div class="form-check me-3">
                     <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
                     <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
                 </div>
+
+                <!-- Federated IdPs -->
+                <div formArrayName="fedIdps">
+                    <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
+                        <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
+                        <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+                    </div>
+                </div>
+
                 <!-- SSO -->
                 <div class="form-check me-3">
                     <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
                     <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
                 </div>
-                    <!-- Federated IdPs -->
-                <div formArrayName="fedIdps">
-                    <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
-                        <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
-                        <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+
+                <!-- SSO server URL -->
+                <div *ngIf="ctlAuthSso.value" class="mb-3">
+                    <label for="ssoUrl" class="col-sm-3 col-form-label colon" i18n>SSO server URL</label>
+                    <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
+                           [class.is-valid]="ctlSsoUrl.touched && ctlSsoUrl.valid"
+                           [class.is-invalid]="ctlSsoUrl.touched && ctlSsoUrl.invalid"
+                           required minlength="1" maxlength="253" placeholder="https://sso.example.com">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback">
+                        <ng-container i18n>Please enter a valid URL.</ng-container>
                     </div>
                 </div>
             </div>
