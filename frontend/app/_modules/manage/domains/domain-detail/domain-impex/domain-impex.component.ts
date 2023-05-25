@@ -39,7 +39,7 @@ export class DomainImpexComponent {
 
     exportData() {
         // Trigger an export
-        this.api.domainExport(this.domain!.host)
+        this.api.domainExport(this.domain!.id!)
             .pipe(this.downloading.processing())
             .subscribe(b => {
                 // Create a link element

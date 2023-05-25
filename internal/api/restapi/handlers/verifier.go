@@ -16,6 +16,8 @@ type VerifierService interface {
 	// FederatedIdProvider verifies the federated identity provider specified by its ID is properly configured for
 	// authentication
 	FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder)
+	// NeedsModeration returns whether the given comment needs to be moderated
+	NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) bool
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
@@ -47,6 +49,42 @@ func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider,
 		// Succeeded
 		return p, nil
 	}
+}
+
+func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) bool {
+	// Comments by moderators are always pre-approved
+	if domainUser.IsModerator {
+		return false
+	}
+
+	// Check domain moderation settings
+	switch user.IsAnonymous() {
+	// Authenticated user
+	case false:
+		if domain.ModAuthenticated {
+			return true
+		}
+	// Anonymous user
+	case true:
+		if domain.ModAnonymous {
+			return true
+		}
+	}
+
+	// TODO new-db check link and image moderation policies
+
+	// TODO new-db if domain.AutoSpamFilter &&
+	//	svc.TheAntispamService.CheckForSpam(
+	//		domain.Host,
+	//		util.UserIP(params.HTTPRequest),
+	//		util.UserAgent(params.HTTPRequest),
+	//		commenter.Name,
+	//		commenter.Email,
+	//		commenter.WebsiteURL,
+	//		markdown,
+	//	) {
+	//	state = models.CommentStateFlagged
+	return false
 }
 
 func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder) {

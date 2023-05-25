@@ -38,12 +38,12 @@ func DashboardStatisticsGet(params api_owner.DashboardStatisticsGetParams, user 
 	if err != nil {
 		return respServiceError(err)
 	}
+	*/
 
 	// Succeeded
+	var comments, views []int64
 	return api_owner.NewDashboardStatisticsGetOK().WithPayload(&api_owner.DashboardStatisticsGetOKBody{
 		CommentCounts: comments,
 		ViewCounts:    views,
 	})
-	*/
-	return api_owner.NewDashboardStatisticsGetOK()
 }

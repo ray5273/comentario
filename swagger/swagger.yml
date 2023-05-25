@@ -206,9 +206,22 @@ definitions:
       ssoUrl:
         type: string
         description: SSO provider URL
-      moderationPolicy:
-        $ref: "#/definitions/domainModerationPolicy"
-        description: Moderation policy for domain
+      modAnonymous:
+        type: boolean
+        description: Whether all anonymous comments are to be approved by a moderator
+        x-omitempty: false
+      modAuthenticated:
+        type: boolean
+        description: Whether all non-anonymous comments are to be approved by a moderator
+        x-omitempty: false
+      modLinks:
+        type: boolean
+        description: Whether all comments containing a link are to be approved by a moderator
+        x-omitempty: false
+      modImages:
+        type: boolean
+        description: Whether all comments containing an image are to be approved by a moderator
+        x-omitempty: false
       modNotifyPolicy:
         $ref: "#/definitions/domainModNotifyPolicy"
         description: Moderator notification policy for domain
@@ -226,15 +239,6 @@ definitions:
         description: Total number of views
         x-omitempty: false
 
-  domainModerationPolicy:
-    description: Moderation policy for domain
-    type: string
-    enum:
-      - none
-      - anonymous
-      - all
-    x-isnullable: false
-
   domainModNotifyPolicy:
     description: Moderator notification policy for domain
     type: string
@@ -244,8 +248,8 @@ definitions:
       - all
     x-isnullable: false
 
-  error:
-    description: Generic error object
+  apiError:
+    description: Generic API error object
     type: object
     readOnly: true
     properties:
@@ -481,37 +485,37 @@ responses:
   BadRequest:
     description: Invalid input data has been passed
     schema:
-      $ref: "#/definitions/error"
+      $ref: "#/definitions/apiError"
 
   # 401
   Unauthorised:
     description: User is not authorised
     schema:
-      $ref: "#/definitions/error"
+      $ref: "#/definitions/apiError"
 
   # 403
   Forbidden:
     description: The specified operation is not allowed
     schema:
-      $ref: "#/definitions/error"
+      $ref: "#/definitions/apiError"
 
   # 404
   NotFound:
     description: The specified resource was not found
     schema:
-      $ref: "#/definitions/error"
+      $ref: "#/definitions/apiError"
 
   # 422
   UnprocessableEntity:
     description: Invalid input data has been passed
     schema:
-      $ref: "#/definitions/error"
+      $ref: "#/definitions/apiError"
 
   # 500
   InternalError:
     description: Server experiences an internal error
     schema:
-      $ref: "#/definitions/error"
+      $ref: "#/definitions/apiError"
 
   # 307
   OAuthRedirect:
@@ -1398,7 +1402,6 @@ paths:
               readonly:
                 type: boolean
                 description: Readonly status to set
-                x-isnullable: false
       responses:
         204:
           description: Domain status has been set

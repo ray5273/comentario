@@ -14,7 +14,7 @@ import { Paths } from '../../../../_utils/consts';
 })
 export class DomainImportComponent implements OnInit {
 
-    host = '';
+    id = '';
     isComplete = false;
     impCount?: number;
 
@@ -40,7 +40,7 @@ export class DomainImportComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        this.host = this.route.snapshot.paramMap.get('host') || '';
+        this.id = this.route.snapshot.paramMap.get('id') || '';
     }
 
     submit() {
@@ -48,9 +48,9 @@ export class DomainImportComponent implements OnInit {
         this.form.markAllAsTouched();
 
         // Submit the form if it's valid
-        if (this.form.valid && this.host) {
+        if (this.form.valid && this.id) {
             const val = this.form.value;
-            this.api.domainImport(this.host, val.source!, val.file)
+            this.api.domainImport(this.id, val.source!, val.file)
                 .pipe(this.importing.processing())
                 .subscribe(r => {
                     this.impCount = r.numImported;

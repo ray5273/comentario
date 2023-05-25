@@ -23,7 +23,7 @@ export class DomainDetailComponent implements OnInit {
     readonly loading = new ProcessingStatus();
     readonly Paths = Paths;
 
-    private _host?: string | null;
+    private _id?: string | null;
 
     constructor(
         private readonly router: Router,
@@ -42,15 +42,15 @@ export class DomainDetailComponent implements OnInit {
         // Subscribe to route parameter changes to reload data
         this.route.paramMap
             .subscribe(pm => {
-                this._host = pm.get('host');
+                this._id = pm.get('id');
                 this.reload();
             });
     }
 
     reload() {
         // Load the domain, if the host is known
-        if (this._host) {
-            this.api.domainGet(this._host)
+        if (this._id) {
+            this.api.domainGet(this._id)
                 .pipe(this.loading.processing())
                 .subscribe(r => {
                     this.setDomain(r.domain);

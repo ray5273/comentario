@@ -208,29 +208,8 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Determine comment state
-	if domainUser.IsModerator {
-		comment.IsApproved = true
-	} else if domain.ModerationPolicy == data.DomainModerationPolicyAll || user.IsAnonymous() && domain.ModerationPolicy == data.DomainModerationPolicyAnonymous {
-		// Not approved
-	} else /* TODO new-db if domain.AutoSpamFilter &&
-		svc.TheAntispamService.CheckForSpam(
-			domain.Host,
-			util.UserIP(params.HTTPRequest),
-			util.UserAgent(params.HTTPRequest),
-			commenter.Name,
-			commenter.Email,
-			commenter.WebsiteURL,
-			markdown,
-		) {
-		state = models.CommentStateFlagged
-	} else*/{
-		comment.IsApproved = true
-	}
-
-	// If the comment is approved, also set the audit fields
-	if comment.IsApproved {
-		comment.UserApproved = comment.UserCreated
-		comment.ApprovedTime = comment.CreatedTime
+	if !Verifier.NeedsModeration(comment, domain, user, domainUser) {
+		comment.MarkApprovedBy(&user.ID)
 	}
 
 	// Persist a new comment record

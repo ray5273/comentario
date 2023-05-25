@@ -26,7 +26,7 @@ const children: Routes = [
     {path: 'domains',              component: DomainManagerComponent},
     {path: 'domains/create',       component: DomainEditComponent, data: {new: true}},
     {
-        path: 'domains/:host',
+        path: 'domains/:id',
         component: DomainDetailComponent,
         children: [
             {path: '', pathMatch: 'full', redirectTo: 'installation'},
@@ -38,9 +38,9 @@ const children: Routes = [
             {path: 'danger',       component: DomainDangerZoneComponent},
         ],
     },
-    {path: 'domains/:host/edit',   component: DomainEditComponent},
-    {path: 'domains/:host/clone',  component: DomainEditComponent, data: {new: true}},
-    {path: 'domains/:host/import', component: DomainImportComponent},
+    {path: 'domains/:id/edit',   component: DomainEditComponent},
+    {path: 'domains/:id/clone',  component: DomainEditComponent, data: {new: true}},
+    {path: 'domains/:id/import', component: DomainImportComponent},
 
     // Account
     {path: 'account/profile', component: ProfileComponent},

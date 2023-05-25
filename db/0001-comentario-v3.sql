@@ -92,9 +92,9 @@ create table cm_users (
     user_banned    uuid,                                        -- Reference to the user who banned this one
     remarks        text          default ''    not null,        -- Optional remarks for the user
     federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty, it's a local user
-    federated_id   varchar(255),                                -- User ID as reported by the federated identity provider (only when federated_idp is set)
+    federated_id   varchar(255)  default ''    not null,        -- User ID as reported by the federated identity provider (only when federated_idp is set)
     avatar         bytea,                                       -- Optional user's avatar image
-    website_url    varchar(2083)                                -- Optional user's website URL
+    website_url    varchar(2083) default ''    not null         -- Optional user's website URL
 );
 
 -- Constraints
@@ -148,21 +148,24 @@ alter table cm_tokens add constraint fk_tokens_user_id foreign key (user_id) ref
 ------------------------------------------------------------------------------------------------------------------------
 
 create table cm_domains (
-    id                uuid primary key,                      -- Unique record ID
-    name              varchar(255)          not null,        -- Domain display name
-    host              varchar(259)          not null unique, -- Domain host
-    ts_created        timestamp             not null,        -- When the record was created
-    is_readonly       boolean default false not null,        -- Whether the domain is readonly (no new comments are allowed)
-    auth_anonymous    boolean default false not null,        -- Whether anonymous comments are allowed
-    auth_local        boolean default false not null,        -- Whether local authentication is allowed
-    auth_sso          boolean default false not null,        -- Whether SSO authentication is allowed
-    sso_url           varchar(2083),                         -- SSO provider URL
-    sso_secret        char(64),                              -- SSO secret
-    moderation_policy varchar(16)           not null,        -- Moderation policy for domain: 'none', 'anonymous', 'all'
-    mod_notify_policy varchar(16)           not null,        -- Moderator notification policy for domain: 'none', 'pending', 'all'
-    default_sort      char(2)               not null,        -- Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
-    count_comments    integer default 0     not null,        -- Total number of comments
-    count_views       integer default 0     not null         -- Total number of views
+    id                uuid primary key,                            -- Unique record ID
+    name              varchar(255)                not null,        -- Domain display name
+    host              varchar(259)                not null unique, -- Domain host
+    ts_created        timestamp                   not null,        -- When the record was created
+    is_readonly       boolean       default false not null,        -- Whether the domain is readonly (no new comments are allowed)
+    auth_anonymous    boolean       default false not null,        -- Whether anonymous comments are allowed
+    auth_local        boolean       default false not null,        -- Whether local authentication is allowed
+    auth_sso          boolean       default false not null,        -- Whether SSO authentication is allowed
+    sso_url           varchar(2083) default ''    not null,        -- SSO provider URL
+    sso_secret        char(64),                                    -- SSO secret
+    mod_anonymous     boolean                     not null,        -- Whether all anonymous comments are to be approved by a moderator
+    mod_authenticated boolean                     not null,        -- Whether all non-anonymous comments are to be approved by a moderator
+    mod_links         boolean                     not null,        -- Whether all comments containing a link are to be approved by a moderator
+    mod_images        boolean                     not null,        -- Whether all comments containing an image are to be approved by a moderator
+    mod_notify_policy varchar(16)                 not null,        -- Moderator notification policy for domain: 'none', 'pending', 'all'
+    default_sort      char(2)                     not null,        -- Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+    count_comments    integer       default 0     not null,        -- Total number of comments
+    count_views       integer       default 0     not null         -- Total number of views
 );
 
 -- Links between domains and users
@@ -294,7 +297,7 @@ begin
                     m.id, c.email, c.name, c.passwordhash, true, c.joindate, c.joindate,
                     'Migrated from Commento, commenterhex=' || c.commenterhex,
                     case when c.provider='commento' then null else c.provider end,
-                    case when c.link='undefined' then null else c.link end
+                    case when c.link='undefined' then '' else c.link end
                 from commenters c
                 join temp_commenterhex_map m on m.commenterhex=c.commenterhex
                 -- Prevent adding commenter for an already registered owner user
@@ -302,14 +305,12 @@ begin
 
         -- Migrate domains
         insert into cm_domains(
-                id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret, moderation_policy, mod_notify_policy, default_sort)
+                id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret,
+                mod_anonymous, mod_authenticated, mod_links, mod_images, mod_notify_policy, default_sort)
             select
-                    m.id, d.name, d.domain, d.creationdate, d.state='frozen', d.requireidentification != true, d.commentoprovider, d.ssoprovider, d.ssourl, d.ssosecret,
-                    case
-                        when d.requiremoderation then 'all'
-                        when d.moderateallanonymous then 'anonymous'
-                        else 'none'
-                    end,
+                    m.id, d.name, d.domain, d.creationdate, d.state='frozen', d.requireidentification != true,
+                    d.commentoprovider, d.ssoprovider, d.ssourl, d.ssosecret,
+                    d.moderateallanonymous or d.requiremoderation, d.requiremoderation, false, false,
                     case
                         when d.emailnotificationpolicy='all' then 'all'
                         when d.emailnotificationpolicy='none' then 'none'

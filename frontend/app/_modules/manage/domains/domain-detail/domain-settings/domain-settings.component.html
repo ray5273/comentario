@@ -2,7 +2,7 @@
     <!-- Buttons -->
     <div class="col-sm-3 order-sm-last pb-3">
         <!-- Edit settings button -->
-        <button [routerLink]="[Paths.manage.domains, _domain?.host, 'edit']" type="button" class="btn btn-secondary w-100">
+        <button [routerLink]="[Paths.manage.domains, _domain?.id, 'edit']" type="button" class="btn btn-secondary w-100">
             <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
             <ng-container i18n>Edit settings</ng-container>
         </button>
@@ -26,10 +26,25 @@
                 <dt i18n>Read-only</dt>
                 <dd><app-checkmark [value]="d.isReadonly"></app-checkmark></dd>
             </div>
-            <!-- Moderation policy -->
+            <!-- Moderate comments by anonymous users -->
             <div>
-                <dt i18n>Moderation policy</dt>
-                <dd>{{ d.moderationPolicy }}</dd>
+                <dt i18n>Moderate comments by anonymous users</dt>
+                <dd><app-checkmark [value]="d.modAnonymous"></app-checkmark></dd>
+            </div>
+            <!-- Moderate comments by authenticated users -->
+            <div>
+                <dt i18n>Moderate comments by authenticated users</dt>
+                <dd><app-checkmark [value]="d.modAuthenticated"></app-checkmark></dd>
+            </div>
+            <!-- Moderate comments containing links -->
+            <div>
+                <dt i18n>Moderate comments containing links</dt>
+                <dd><app-checkmark [value]="d.modLinks"></app-checkmark></dd>
+            </div>
+            <!-- Moderate comments containing images -->
+            <div>
+                <dt i18n>Moderate comments containing images</dt>
+                <dd><app-checkmark [value]="d.modImages"></app-checkmark></dd>
             </div>
             <!-- Moderator notification policy -->
             <div>

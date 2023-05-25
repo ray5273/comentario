@@ -43,19 +43,28 @@
         <div class="mb-3 row">
             <div class="offset-sm-3 col-sm-9">
                 <!-- Subheading -->
-                <div class="fw-bold mt-3 mb-1" i18n>Comment moderation</div>
+                <div class="fw-bold mt-3 mb-1" i18n>Require moderator approval on comments</div>
 
-<!-- TODO new-db -->
-<!--                &lt;!&ndash; Require all comments to be approved manually &ndash;&gt;-->
-<!--                <div class="form-check me-3">-->
-<!--                    <input formControlName="requireModeration" type="checkbox" class="form-check-input" id="requireModeration">-->
-<!--                    <label class="form-check-label" for="requireModeration" i18n>Require all comments to be approved manually</label>-->
-<!--                </div>-->
-<!--                &lt;!&ndash; Require anonymous comments to be approved manually &ndash;&gt;-->
-<!--                <div class="form-check me-3">-->
-<!--                    <input formControlName="moderateAllAnonymous" type="checkbox" class="form-check-input" id="moderateAllAnonymous">-->
-<!--                    <label class="form-check-label" for="moderateAllAnonymous" i18n>Require anonymous comments to be approved manually</label>-->
-<!--                </div>-->
+                <!-- By anonymous users -->
+                <div class="form-check me-3">
+                    <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="modAnonymous">
+                    <label class="form-check-label" for="modAnonymous" i18n>By anonymous users</label>
+                </div>
+                <!-- By authenticated users -->
+                <div class="form-check me-3">
+                    <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="modAuthenticated">
+                    <label class="form-check-label" for="modAuthenticated" i18n>By authenticated users</label>
+                </div>
+                <!-- Containing links -->
+                <div class="form-check me-3">
+                    <input formControlName="modLinks" type="checkbox" class="form-check-input" id="modLinks">
+                    <label class="form-check-label" for="modLinks" i18n>Containing links</label>
+                </div>
+                <!-- Containing images -->
+                <div class="form-check me-3">
+                    <input formControlName="modImages" type="checkbox" class="form-check-input" id="modImages">
+                    <label class="form-check-label" for="modImages" i18n>Containing images</label>
+                </div>
             </div>
         </div>
 
@@ -125,16 +134,20 @@
                 </div>
 
                 <!-- Identity providers -->
-                <div formArrayName="fedIdps">
-                    <!-- Local auth -->
-                    <input [formControlName]="0" type="checkbox" class="form-check-input" id="auth-local">
+                <!-- Local auth -->
+                <div class="form-check me-3">
+                    <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
                     <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
-                    <!-- SSO -->
-                    <input [formControlName]="1" type="checkbox" class="form-check-input" id="auth-sso">
+                </div>
+                <!-- SSO -->
+                <div class="form-check me-3">
+                    <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
                     <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
+                </div>
                     <!-- Federated IdPs -->
+                <div formArrayName="fedIdps">
                     <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
-                        <input [formControlName]="idx+2" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
+                        <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
                         <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
                     </div>
                 </div>

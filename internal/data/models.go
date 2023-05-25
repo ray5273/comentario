@@ -2,6 +2,7 @@ package data
 
 import (
 	"crypto/rand"
+	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
 	"github.com/avct/uasurfer"
@@ -106,14 +107,14 @@ type User struct {
 	SystemAccount bool          // Whether the user is a system account (cannot sign in)
 	Superuser     bool          // Whether the user is a "super user" (instance admin)
 	Confirmed     bool          // Whether the user's email has been confirmed
-	ConfirmedTime time.Time     // When the user's email has been confirmed
+	ConfirmedTime sql.NullTime  // When the user's email has been confirmed
 	CreatedTime   time.Time     // When the user was created
 	UserCreated   uuid.NullUUID // Reference to the user who created this one. null if the used signed up themselves
 	SignupIP      string        // IP address the user signed up or was created from
 	SignupCountry string        // 2-letter country code matching the SignupIP
 	SignupURL     string        // URL the user signed up on (only for commenter signup, empty for UI signup)
 	Banned        bool          // Whether the user is banned
-	BannedTime    time.Time     // When the user was banned
+	BannedTime    sql.NullTime  // When the user was banned
 	UserBanned    uuid.NullUUID // Reference to the user who banned this one
 	Remarks       string        // Optional remarks for the user
 	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
@@ -174,7 +175,7 @@ func (u *User) VerifyPassword(s string) bool {
 func (u *User) WithConfirmed(b bool) *User {
 	u.Confirmed = b
 	if b {
-		u.ConfirmedTime = time.Now().UTC()
+		u.ConfirmedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 	}
 	return u
 }
@@ -273,15 +274,6 @@ func (us *UserSession) EncodeIDs() string {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-// DomainModerationPolicy describes comment moderation policy on a specific domain
-type DomainModerationPolicy string
-
-const (
-	DomainModerationPolicyNone      DomainModerationPolicy = "none"      // No comments require moderation
-	DomainModerationPolicyAnonymous                        = "anonymous" // Comments by anonymous commenters require moderation
-	DomainModerationPolicyAll                              = "all"       // All comments require moderation
-)
-
 // DomainModNotifyPolicy describes moderator notification policy on a specific domain
 type DomainModNotifyPolicy string
 
@@ -293,21 +285,24 @@ const (
 
 // Domain holds domain configuration
 type Domain struct {
-	ID               uuid.UUID              // Unique record ID
-	Name             string                 // Domain display name
-	Host             string                 // Domain host
-	CreatedTime      time.Time              // When the domain was created
-	IsReadonly       bool                   // Whether the domain is readonly (no new comments are allowed)
-	AuthAnonymous    bool                   // Whether anonymous comments are allowed
-	AuthLocal        bool                   // Whether local authentication is allowed
-	AuthSso          bool                   // Whether SSO authentication is allowed
-	SsoURL           string                 // SSO provider URL
-	SsoSecret        string                 // SSO secret
-	ModerationPolicy DomainModerationPolicy // Moderation policy for domain: 'none', 'anonymous', 'all'
-	ModNotifyPolicy  DomainModNotifyPolicy  // Moderator notification policy for domain: 'none', 'pending', 'all'
-	DefaultSort      string                 // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
-	CountComments    int64                  // Total number of comments
-	CountViews       int64                  // Total number of views
+	ID               uuid.UUID             // Unique record ID
+	Name             string                // Domain display name
+	Host             string                // Domain host
+	CreatedTime      time.Time             // When the domain was created
+	IsReadonly       bool                  // Whether the domain is readonly (no new comments are allowed)
+	AuthAnonymous    bool                  // Whether anonymous comments are allowed
+	AuthLocal        bool                  // Whether local authentication is allowed
+	AuthSso          bool                  // Whether SSO authentication is allowed
+	SsoURL           string                // SSO provider URL
+	SsoSecret        string                // SSO secret
+	ModAnonymous     bool                  // Whether all anonymous comments are to be approved by a moderator
+	ModAuthenticated bool                  // Whether all non-anonymous comments are to be approved by a moderator
+	ModLinks         bool                  // Whether all comments containing a link are to be approved by a moderator
+	ModImages        bool                  // Whether all comments containing an image are to be approved by a moderator
+	ModNotifyPolicy  DomainModNotifyPolicy // Moderator notification policy for domain: 'none', 'pending', 'all'
+	DefaultSort      string                // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+	CountComments    int64                 // Total number of comments
+	CountViews       int64                 // Total number of views
 }
 
 // ToDTO converts this model into an API model
@@ -323,8 +318,11 @@ func (d *Domain) ToDTO() *models.Domain {
 		Host:             models.Host(d.Host),
 		ID:               strfmt.UUID(d.ID.String()),
 		IsReadonly:       d.IsReadonly,
+		ModAnonymous:     d.ModAnonymous,
+		ModAuthenticated: d.ModAuthenticated,
+		ModImages:        d.ModImages,
+		ModLinks:         d.ModLinks,
 		ModNotifyPolicy:  models.DomainModNotifyPolicy(d.ModNotifyPolicy),
-		ModerationPolicy: models.DomainModerationPolicy(d.ModerationPolicy),
 		Name:             d.Name,
 		SsoURL:           d.SsoURL,
 	}
@@ -386,8 +384,8 @@ type Comment struct {
 	IsSpam       bool          // Whether the comment is flagged as (potential) spam
 	IsDeleted    bool          // Whether the comment is marked as deleted
 	CreatedTime  time.Time     // When the comment was created
-	ApprovedTime time.Time     // When the comment was approved
-	DeletedTime  time.Time     // When the comment was marked as deleted
+	ApprovedTime sql.NullTime  // When the comment was approved
+	DeletedTime  sql.NullTime  // When the comment was marked as deleted
 	UserCreated  uuid.NullUUID // Reference to the user who created the comment
 	UserApproved uuid.NullUUID // Reference to the user who approved the comment
 	UserDeleted  uuid.NullUUID // Reference to the user who deleted the comment
@@ -401,6 +399,13 @@ func (c *Comment) IsAnonymous() bool {
 // IsRoot returns whether it's a root comment (i.e. its parent ID is null)
 func (c *Comment) IsRoot() bool {
 	return !c.ParentID.Valid
+}
+
+// MarkApprovedBy sets the value of Approved to true and updates related fields
+func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
+	c.IsApproved = true
+	c.UserApproved = uuid.NullUUID{UUID: *userID, Valid: true}
+	c.ApprovedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 }
 
 // ToDTO converts this model into an API model

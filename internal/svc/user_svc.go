@@ -116,7 +116,7 @@ func (svc *userService) CreateUser(u *data.User) error {
 		"insert into cm_users("+
 			"id, email, name, password_hash, system_account, superuser, confirmed, ts_confirmed, ts_created, "+
 			"user_created, signup_ip, signup_country, signup_url, banned, ts_banned, user_banned, remarks, "+
-			"federated_idp, federated_id, avatar, website_url) "+
+			"nullif(federated_idp, ''), federated_id, avatar, website_url) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21);",
 		u.ID, u.Email, u.Name, u.PasswordHash, u.SystemAccount, u.Superuser, u.Confirmed, u.ConfirmedTime,
 		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupURL, u.Banned, u.BannedTime,
@@ -188,7 +188,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url, "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url, "+
 			// DomainUser fields
 			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
 			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
@@ -252,7 +252,7 @@ func (svc *userService) FindLocalUserByEmail(email string) (*data.User, error) {
 		"select "+
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url "+
+			"u.user_banned, u.remarks, '', '', u.avatar, u.website_url "+
 			"from cm_users u "+
 			"where u.email=$1 and u.federated_idp is null;",
 		email)
@@ -273,7 +273,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 		"select "+
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url "+
 			"from cm_users u "+
 			"where u.id=$1;",
 		id)
@@ -294,9 +294,9 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 		"select "+
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url "+
 			"from cm_users u "+
-			"join cm_user_sessions s on s.user_id=u.id"+
+			"join cm_user_sessions s on s.user_id=u.id "+
 			"where u.id=$1 and s.id=$2 and s.ts_created<$3 and s.ts_expires>=$3;",
 		userID, sessionID, time.Now().UTC())
 
@@ -326,7 +326,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	s := "select " +
 		"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
 		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
-		"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.avatar, u.website_url " +
+		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url " +
 		"from cm_domains_users du " +
 		"join cm_users u on u.id=du.user_id " +
 		"where du.domain_id=$1 and (du.is_owner or du.is_moderator)"

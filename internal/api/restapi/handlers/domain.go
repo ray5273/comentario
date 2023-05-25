@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
@@ -197,7 +198,10 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 		AuthLocal:        domain.AuthLocal,
 		AuthSso:          domain.AuthSso,
 		SsoURL:           domain.SsoURL,
-		ModerationPolicy: data.DomainModerationPolicy(domain.ModerationPolicy),
+		ModAnonymous:     domain.ModAnonymous,
+		ModAuthenticated: domain.ModAuthenticated,
+		ModImages:        domain.ModImages,
+		ModLinks:         domain.ModLinks,
 		ModNotifyPolicy:  data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
 		DefaultSort:      string(domain.DefaultSort),
 	}
@@ -266,7 +270,7 @@ func DomainReadonly(params api_owner.DomainReadonlyParams, user *data.User) midd
 		return r
 
 		// Update the domain status
-	} else if err := svc.TheDomainService.SetReadonly(&d.ID, params.Body.Readonly); err != nil {
+	} else if err := svc.TheDomainService.SetReadonly(&d.ID, swag.BoolValue(params.Body.Readonly)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -300,7 +304,10 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 	domain.AuthLocal = newDomain.AuthLocal
 	domain.AuthSso = newDomain.AuthSso
 	domain.SsoURL = newDomain.SsoURL
-	domain.ModerationPolicy = data.DomainModerationPolicy(newDomain.ModerationPolicy)
+	domain.ModAnonymous = newDomain.ModAnonymous
+	domain.ModAuthenticated = newDomain.ModAuthenticated
+	domain.ModImages = newDomain.ModImages
+	domain.ModLinks = newDomain.ModLinks
 	domain.ModNotifyPolicy = data.DomainModNotifyPolicy(newDomain.ModNotifyPolicy)
 	domain.DefaultSort = string(newDomain.DefaultSort)
 

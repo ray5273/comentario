@@ -1,12 +1,12 @@
-import {Component} from '@angular/core';
-import {Router} from '@angular/router';
-import {UntilDestroy, untilDestroyed} from '@ngneat/until-destroy';
-import {faCalendarXmark, faCircleQuestion, faSnowflake, faTrashAlt} from '@fortawesome/free-solid-svg-icons';
-import {ApiOwnerService, Domain} from '../../../../../../generated-api';
-import {Paths} from '../../../../../_utils/consts';
-import {ToastService} from '../../../../../_services/toast.service';
-import {DomainDetailComponent} from '../domain-detail.component';
-import {ProcessingStatus} from '../../../../../_utils/processing-status';
+import { Component } from '@angular/core';
+import { Router } from '@angular/router';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { faCalendarXmark, faCircleQuestion, faSnowflake, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { ApiOwnerService, Domain } from '../../../../../../generated-api';
+import { Paths } from '../../../../../_utils/consts';
+import { ToastService } from '../../../../../_services/toast.service';
+import { DomainDetailComponent } from '../domain-detail.component';
+import { ProcessingStatus } from '../../../../../_utils/processing-status';
 
 @UntilDestroy()
 @Component({
@@ -46,7 +46,7 @@ export class DomainDangerZoneComponent {
 
     delete() {
         // Run deletion with the API
-        this.api.domainDelete(this.domain!.host)
+        this.api.domainDelete(this.domain!.id!)
             .pipe(this.deleting.processing())
             .subscribe(() => {
                 // Add a toast
@@ -58,7 +58,7 @@ export class DomainDangerZoneComponent {
 
     clearComments() {
         // Run cleaning with the API
-        this.api.domainClear(this.domain!.host)
+        this.api.domainClear(this.domain!.id!)
             .pipe(this.clearing.processing())
             // Add a toast
             .subscribe(() => this.toastSvc.success('domain-cleared'));

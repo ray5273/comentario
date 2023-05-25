@@ -2,6 +2,7 @@ package svc
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -82,10 +83,7 @@ type domainService struct{}
 func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.ClearByID(%v)", id)
 
-	err := checkErrors(
-		db.Exec("delete from cm_domain_users where domain_id=$1;", id),
-		db.Exec("delete from cm_domain_pages where domain_id=$1;", id))
-	if err != nil {
+	if err := db.Exec("delete from cm_domain_pages where domain_id=$1;", id); err != nil {
 		logger.Errorf("domainService.ClearByID: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -100,10 +98,11 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 	// Insert a new domain record
 	if err := db.Exec(
 		"insert into cm_domains("+
-			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, moderation_policy, mod_notify_policy, default_sort) "+
-			"values($1, $2, $3, $4, false, $5, $6, $7, $8, $9, $10, $11);",
+			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, mod_anonymous, mod_authenticated, mod_links, mod_images, mod_notify_policy, default_sort) "+
+			"values($1, $2, $3, $4, false, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);",
 		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.AuthAnonymous, domain.AuthLocal,
-		domain.AuthSso, domain.SsoURL, domain.ModerationPolicy, domain.ModNotifyPolicy, domain.DefaultSort,
+		domain.AuthSso, domain.SsoURL, domain.ModAnonymous, domain.ModAuthenticated, domain.ModLinks, domain.ModImages,
+		domain.ModNotifyPolicy, domain.DefaultSort,
 	); err != nil {
 		logger.Errorf("domainService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -196,8 +195,8 @@ func (svc *domainService) FindByHost(host string) (*data.Domain, error) {
 	row := db.QueryRow(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
-			"d.count_views "+
+			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
 			"from cm_domains d "+
 			"where d.host=$1;",
 		host)
@@ -218,8 +217,8 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	row := db.QueryRow(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
-			"d.count_views "+
+			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
 			"from cm_domains d "+
 			"where d.id=$1;",
 		id)
@@ -239,10 +238,14 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID) (
 	// Query the row
 	row := db.QueryRow(
 		"select "+
+			// Domain fields
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
-			"d.count_views, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
-			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), coalesce(du.notify_moderator, false) "+
+			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
+			// Domain user fields
+			"du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
+			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
+			"coalesce(du.notify_moderator, false) "+
 			"from cm_domains d "+
 			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$2 "+
 			"where d.host=$1;",
@@ -263,10 +266,14 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 	// Query the row
 	row := db.QueryRow(
 		"select "+
+			// Domain fields
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
-			"d.count_views, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
-			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), coalesce(du.notify_moderator, false) "+
+			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
+			// Domain user fields
+			"du.user_id, coalesce(du.is_owner, false), "+
+			"coalesce(du.is_moderator, false), coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
+			"coalesce(du.notify_moderator, false) "+
 			"from cm_domains d "+
 			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$2 "+
 			"where d.id=$1;",
@@ -346,10 +353,10 @@ func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error
 	rows, err := db.Query(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.moderation_policy, d.mod_notify_policy, d.default_sort, d.count_comments, "+
-			"d.count_views "+
+			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
 			"from cm_domains d "+
-			"where d.id in (select du.domain_id from cm_domain_users du where du.user_id=$1 and (du.is_owner or du.is_moderator));",
+			"where d.id in (select du.domain_id from cm_domains_users du where du.user_id=$1 and (du.is_owner or du.is_moderator));",
 		userID)
 	if err != nil {
 		logger.Errorf("domainService.ListByOwnerID: Query() failed: %v", err)
@@ -553,10 +560,12 @@ func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdp
 	// Update the domain record
 	if err := db.ExecOne(
 		"update cm_domains "+
-			"set name=$1, auth_anonymous=$2, auth_local=$3, auth_sso=$4, sso_url=$5, moderation_policy=$6, mod_notify_policy=$7, default_sort=$8 "+
-			"where id=$9;",
-		domain.Name, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSso, domain.SsoURL, domain.ModerationPolicy,
-		domain.ModNotifyPolicy, domain.DefaultSort, &domain.ID,
+			"set name=$1, auth_anonymous=$2, auth_local=$3, auth_sso=$4, sso_url=$5, mod_anonymous=$6, "+
+			"mod_authenticated=$7, mod_links=$8, mod_images=$9, mod_notify_policy=$10, default_sort=$11 "+
+			"where id=$12;",
+		domain.Name, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSso, domain.SsoURL, domain.ModAnonymous,
+		domain.ModAuthenticated, domain.ModLinks, domain.ModImages, domain.ModNotifyPolicy, domain.DefaultSort,
+		&domain.ID,
 	); err != nil {
 		logger.Errorf("domainService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -632,7 +641,10 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 		&d.AuthSso,
 		&d.SsoURL,
 		&d.SsoSecret,
-		&d.ModerationPolicy,
+		&d.ModAnonymous,
+		&d.ModAuthenticated,
+		&d.ModLinks,
+		&d.ModImages,
 		&d.ModNotifyPolicy,
 		&d.DefaultSort,
 		&d.CountComments,
@@ -685,7 +697,10 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&d.AuthSso,
 		&d.SsoURL,
 		&d.SsoSecret,
-		&d.ModerationPolicy,
+		&d.ModAnonymous,
+		&d.ModAuthenticated,
+		&d.ModLinks,
+		&d.ModImages,
 		&d.ModNotifyPolicy,
 		&d.DefaultSort,
 		&d.CountComments,
@@ -745,13 +760,23 @@ func (svc *domainService) saveIdPs(domainID *uuid.UUID, idps []models.FederatedI
 
 	// Insert domain IdP records, if any
 	if len(idps) > 0 {
-		var vals []string
+		// Prepare an insert statement
+		var s strings.Builder
+		s.WriteString("insert into cm_domains_idps(domain_id, fed_idp_id) values")
+
+		// Add IdPs to the statement and params
 		var params []any
-		for _, id := range idps {
-			vals = append(vals, "(?,?)")
+		for i, id := range idps {
+			if i > 0 {
+				s.WriteByte(',')
+			}
+			s.WriteString(fmt.Sprintf("($%d,$%d)", i*2+1, i*2+2))
 			params = append(params, &domainID, id)
 		}
-		if err := db.Exec("insert into cm_domains_idps(domain_id, fed_idp_id) values"+strings.Join(vals, ",")+";", params...); err != nil {
+		s.WriteByte(';')
+
+		// Execute the statement
+		if err := db.Exec(s.String(), params...); err != nil {
 			logger.Errorf("domainService.saveIdPs: Exec() failed for inserting links: %v", err)
 			return translateDBErrors(err)
 		}

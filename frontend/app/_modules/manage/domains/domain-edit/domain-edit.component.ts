@@ -6,7 +6,6 @@ import {
     ApiOwnerService,
     CommentSort,
     Domain,
-    DomainModerationPolicy,
     DomainModNotifyPolicy,
     FederatedIdpId
 } from '../../../../../generated-api';
@@ -41,7 +40,10 @@ export class DomainEditComponent implements OnInit {
         authAnonymous:    false,
         authLocal:        true,
         authSso:          false,
-        moderationPolicy: DomainModerationPolicy.Anonymous,
+        modAnonymous:     false,
+        modAuthenticated: false,
+        modImages:        false,
+        modLinks:         false,
         modNotifyPolicy:  DomainModNotifyPolicy.Pending,
         ssoUrl:           '',
         defaultSort:      CommentSort.Td,
@@ -72,9 +74,9 @@ export class DomainEditComponent implements OnInit {
         this.isNew = this.route.snapshot.data.new;
 
         // Fetch the domain, if any
-        const host = this.route.snapshot.paramMap.get('host');
-        if (host) {
-            this.api.domainGet(host)
+        const id = this.route.snapshot.paramMap.get('id');
+        if (id) {
+            this.api.domainGet(id)
                 .pipe(this.loading.processing())
                 .subscribe(r => {
                     this.domain          = r.domain;
@@ -86,7 +88,10 @@ export class DomainEditComponent implements OnInit {
                         authAnonymous:    this.domain!.authAnonymous,
                         authLocal:        this.domain!.authLocal,
                         authSso:          this.domain!.authSso,
-                        moderationPolicy: this.domain!.moderationPolicy,
+                        modAnonymous:     this.domain!.modAnonymous,
+                        modAuthenticated: this.domain!.modAuthenticated,
+                        modImages:        this.domain!.modImages,
+                        modLinks:         this.domain!.modLinks,
                         modNotifyPolicy:  this.domain!.modNotifyPolicy,
                         ssoUrl:           this.domain!.ssoUrl,
                         defaultSort:      this.domain!.defaultSort,
@@ -116,7 +121,10 @@ export class DomainEditComponent implements OnInit {
                 authAnonymous:    vals.authAnonymous,
                 authLocal:        vals.authLocal,
                 authSso:          vals.authSso,
-                moderationPolicy: vals.moderationPolicy,
+                modAnonymous:     vals.modAnonymous,
+                modAuthenticated: vals.modAuthenticated,
+                modImages:        vals.modImages,
+                modLinks:         vals.modLinks,
                 modNotifyPolicy:  vals.modNotifyPolicy,
                 ssoUrl:           vals.ssoUrl,
                 defaultSort:      vals.defaultSort,
