@@ -91,6 +91,10 @@ definitions:
         type: integer
         description: Comment score
         x-omitempty: false
+      isSticky:
+        type: boolean
+        description: Whether the comment is sticky (attached to the top of page)
+        x-omitempty: false
       isApproved:
         type: boolean
         description: Whether the comment is approved and can be seen by everyone
@@ -111,6 +115,10 @@ definitions:
         type: string
         format: uuid
         description: ID of the user who created the comment
+      direction:
+        type: integer
+        format: int8
+        description: Vote direction for the current user
 
   commenter:
     description: Stripped-down, read-only version of the user who authored a comment
@@ -297,6 +305,7 @@ definitions:
       - twitter
     x-isnullable: false
 
+  # TODO new-db deprecated
   hexId:
     description: ID consisting of 64 hex digits
     type: string
@@ -313,6 +322,7 @@ definitions:
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
 
+  # TODO new-db deprecated
   page:
     description: Page hosting comments
     type: object
@@ -326,8 +336,6 @@ definitions:
       isLocked:
         type: boolean
         x-omitempty: false
-      stickyCommentHex:
-        $ref: "#/definitions/hexId"
       commentCount:
         type: integer
         readOnly: true
@@ -381,12 +389,6 @@ definitions:
           $ref: "#/definitions/federatedIdpId"
         description: List of IDs of enabled federated identity providers
 
-  parentHexId:
-    description: ID similar to HexID, consisting of 64 hex digits, which can also be 'root'
-    type: string
-    maxLength: 64
-    pattern: 'root|[0-9a-f]{64}'
-
   path:
     description: Path on a certain host
     example: /foo
@@ -412,10 +414,38 @@ definitions:
       name:
         type: string
         description: Full name of the user
+      websiteUrl:
+        type: string
+        format: uri
+        description: Optional website URL of the user
+      isLocal:
+        type: boolean
+        description: Whether the user is authenticated locally (as opposed to via a federated identity provider)
+        x-omitempty: false
       isConfirmed:
         type: boolean
-        x-omitempty: false
         description: Whether the user has confirmed their email address
+        x-omitempty: false
+      isOwner:
+        type: boolean
+        description: Whether the user is an owner of the domain (only for commenter auth)
+        x-omitempty: false
+      isModerator:
+        type: boolean
+        description: Whether the user is a moderator on this specific domain (only for commenter auth)
+        x-omitempty: false
+      isCommenter:
+        type: boolean
+        description: Whether the user is a commenter on this specific domain (false means the user is read-only; only for commenter auth)
+        x-omitempty: false
+      notifyReplies:
+        type: boolean
+        description: Whether the user is to be notified about replies to their comments (only for commenter auth)
+        x-omitempty: false
+      notifyModerator:
+        type: boolean
+        description: Whether the user is to receive moderator notifications (only for commenter auth)
+        x-omitempty: false
 
 parameters:
 
@@ -450,16 +480,6 @@ parameters:
     minLength: 1
     maxLength: 259
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
-
-  pathId:
-    in: path
-    name: id
-    required: true
-    description: ID consisting of 64 hex digits, in the path
-    type: string
-    minLength: 64
-    maxLength: 64
-    pattern: '[0-9a-f]{64}'
 
   pathUuid:
     in: path
@@ -814,8 +834,10 @@ paths:
             properties:
               host:
                 $ref: "#/definitions/host"
+                description: Host the comments reside on
               path:
                 $ref: "#/definitions/path"
+                description: Path of the page the comments reside on
       responses:
         200:
           description: Comment and commenter list
@@ -961,7 +983,8 @@ paths:
             type: object
             properties:
               comment:
-                description: Updated comment
+                description: >
+                  Updated comment. NB: Vote direction in the returned comment is always 0
                 $ref: "#/definitions/comment"
 
     post:
@@ -982,13 +1005,22 @@ paths:
             properties:
               direction:
                 type: integer
+                format: int8
                 enum:
                   - -1
                   - 0
                   - 1
+                description: Vote direction
       responses:
-        204:
+        200:
           description: Vote has been applied
+          schema:
+            type: object
+            properties:
+              score:
+                type: integer
+                description: The updated comment score
+                x-omitempty: false
 
   /comments/{uuid}/moderate:
     post:
@@ -1056,8 +1088,10 @@ paths:
             properties:
               sessionToken:
                 type: string
+                description: Session token to authenticate subsequent API requests with
               principal:
                 $ref: "#/definitions/principal"
+                description: Authenticated principal
 
   /commenter/logout:
     post:
@@ -1114,9 +1148,14 @@ paths:
                 description: URL the user signed up on
       responses:
         200:
-          description: Commenter signed up successfully, principal is returned
+          description: Commenter signed up successfully
           schema:
-            $ref: "#/definitions/principal"
+            type: object
+            properties:
+              isConfirmed:
+                type: boolean
+                description: Whether the user has been immediately confirmed
+                x-omitempty: false
 
   /commenter/pwdreset:
     post:
@@ -1212,21 +1251,25 @@ paths:
               countDomains:
                 description: Total number of domains belonging to the user
                 type: integer
+                format: uint
                 x-omitempty: false
                 x-isnullable: false
               countPages:
                 description: Total number of pages with comments on the user's domains
                 type: integer
+                format: uint
                 x-omitempty: false
                 x-isnullable: false
               countComments:
                 description: Total number of comments on the user's domains
                 type: integer
+                format: uint
                 x-omitempty: false
                 x-isnullable: false
               countCommenters:
                 description: Total number of commenters, who left comments on the user's domains
                 type: integer
+                format: uint
                 x-omitempty: false
                 x-isnullable: false
 
@@ -1240,6 +1283,7 @@ paths:
         - in: query
           name: numDays
           type: integer
+          format: uint
           minimum: 1
           maximum: 30
           default: 30
@@ -1254,10 +1298,12 @@ paths:
                 type: array
                 items:
                   type: integer
+                  format: uint
               commentCounts:
                 type: array
                 items:
                   type: integer
+                  format: uint
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domains
@@ -1449,6 +1495,7 @@ paths:
             properties:
               numImported:
                 type: integer
+                format: uint
                 description: Number of imported comments
                 x-omitempty: false
 
@@ -1526,6 +1573,7 @@ paths:
         - in: query
           name: numDays
           type: integer
+          format: uint
           minimum: 1
           maximum: 30
           default: 30
@@ -1540,10 +1588,12 @@ paths:
                 type: array
                 items:
                   type: integer
+                  format: uint
               commentCounts:
                 type: array
                 items:
                   type: integer
+                  format: uint
 
   #---------------------------------------------------------------------------------------------------------------------
   # Pages

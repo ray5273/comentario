@@ -41,7 +41,7 @@ func DashboardStatisticsGet(params api_owner.DashboardStatisticsGetParams, user 
 	*/
 
 	// Succeeded
-	var comments, views []int64
+	var comments, views []uint64
 	return api_owner.NewDashboardStatisticsGetOK().WithPayload(&api_owner.DashboardStatisticsGetOKBody{
 		CommentCounts: comments,
 		ViewCounts:    views,

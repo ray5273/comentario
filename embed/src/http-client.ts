@@ -13,6 +13,24 @@ export class HttpClient {
     ) {}
 
     /**
+     * Run an HTTP DELETE request to the given endpoint.
+     * @param path Endpoint path, relative to the client's baseURl.
+     * @param commenterToken Optional commenter token to set in the request header.
+     * @param body Optional request body.
+     */
+    delete<T>(path: string, commenterToken?: string, body?: any): Promise<T> {
+        return this.request<T>('DELETE', path, body, commenterToken ? {'X-User-Session': commenterToken} : undefined);
+    }
+
+    /**
+     * Run an HTTP GET request to the given endpoint.
+     * @param path Endpoint path, relative to the client's baseURl.
+     */
+    get<T>(path: string): Promise<T> {
+        return this.request<T>('GET', path);
+    }
+
+    /**
      * Run an HTTP POST request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
      * @param commenterToken Optional commenter token to set in the request header.
@@ -23,11 +41,13 @@ export class HttpClient {
     }
 
     /**
-     * Run an HTTP GET request to the given endpoint.
+     * Run an HTTP PUT request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
+     * @param commenterToken Optional commenter token to set in the request header.
+     * @param body Optional request body.
      */
-    get<T>(path: string): Promise<T> {
-        return this.request<T>('GET', path);
+    put<T>(path: string, commenterToken?: string, body?: any): Promise<T> {
+        return this.request<T>('PUT', path, body, commenterToken ? {'X-User-Session': commenterToken} : undefined);
     }
 
     /**
@@ -40,7 +60,7 @@ export class HttpClient {
         return this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/') + (path.startsWith('/') ? path.substring(1) : path);
     }
 
-    private request<T>(method: 'POST' | 'GET', path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+    private request<T>(method: 'DELETE' | 'GET' | 'POST' | 'PUT', path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
         return new Promise((resolve, reject) => {
             try {
                 // Prepare an XMLHttpRequest
@@ -68,7 +88,7 @@ export class HttpClient {
 
                     // Resolve with an empty object otherwise
                     } else {
-                        resolve({} as T);
+                        resolve(undefined as T);
                     }
                 };
                 req.onerror = handleError;

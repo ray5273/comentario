@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
@@ -66,8 +65,8 @@ func CommentDelete(params api_commenter.CommentDeleteParams, user *data.User) mi
 }
 
 func CommentList(params api_commenter.CommentListParams, user *data.User) middleware.Responder {
-	// Fetch the domain and the user
-	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID)
+	// Fetch the domain and the user (don't create one yet if there's none)
+	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
 	if err == svc.ErrNotFound {
 		// No domain found for this host
 		return respForbidden(ErrorUnknownHost)
@@ -82,7 +81,7 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	}
 
 	// Prepare page info
-	pi := &models.PageInfo{
+	pageInfo := &models.PageInfo{
 		AuthAnonymous:    domain.AuthAnonymous,
 		AuthLocal:        domain.AuthLocal,
 		AuthSso:          domain.AuthSso,
@@ -95,7 +94,7 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	}
 
 	// Fetch the domain's identity providers
-	if pi.Idps, err = svc.TheDomainService.ListDomainFederatedIdPs(&domain.ID); err != nil {
+	if pageInfo.Idps, err = svc.TheDomainService.ListDomainFederatedIdPs(&domain.ID); err != nil {
 		return respServiceError(err)
 	}
 
@@ -112,7 +111,7 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	return api_commenter.NewCommentListOK().WithPayload(&api_commenter.CommentListOKBody{
 		Commenters: commenters,
 		Comments:   comments,
-		PageInfo:   nil,
+		PageInfo:   pageInfo,
 	})
 }
 
@@ -144,8 +143,8 @@ func CommentModerate(params api_commenter.CommentModerateParams, user *data.User
 }
 
 func CommentNew(params api_commenter.CommentNewParams, user *data.User) middleware.Responder {
-	// Fetch the domain and the user
-	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID)
+	// Fetch the domain and the user, creating one if necessary
+	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if err == svc.ErrNotFound {
 		// No domain found for this host
 		return respForbidden(ErrorUnknownHost)
@@ -169,8 +168,11 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 
 	// Parse the parent ID
 	var parentID uuid.NullUUID
-	if err := parentID.Scan(params.Body.ParentID); err != nil {
-		return respBadRequest(ErrorInvalidUUID)
+	if params.Body.ParentID != "" {
+		if parentID.UUID, err = uuid.Parse(string(params.Body.ParentID)); err != nil {
+			return respBadRequest(ErrorInvalidUUID)
+		}
+		parentID.Valid = true
 	}
 
 	// Verify the domain, the page, and the user aren't readonly
@@ -180,20 +182,6 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 		return respForbidden(ErrorPageReadonly)
 	} else if domainUser.IsReadonly() {
 		return respForbidden(ErrorUserReadonly)
-	}
-
-	// If the domain user doesn't exist yet, add one
-	if domainUser == nil {
-		domainUser = &data.DomainUser{
-			DomainID:        domain.ID,
-			UserID:          user.ID,
-			IsCommenter:     true,
-			NotifyReplies:   true,
-			NotifyModerator: true,
-		}
-		if err := svc.TheUserService.CreateDomainUser(domainUser); err != nil {
-			return respServiceError(err)
-		}
 	}
 
 	// Prepare a comment
@@ -293,12 +281,13 @@ func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middle
 		return respForbidden(ErrorSelfVote)
 
 		// Update the vote and the comment
-	} else if err := svc.TheCommentService.Vote(&comment.ID, &user.ID, int(swag.Int64Value(params.Body.Direction))); err != nil {
+	} else if score, err := svc.TheCommentService.Vote(&comment.ID, &user.ID, *params.Body.Direction); err != nil {
 		return respServiceError(err)
-	}
 
-	// Succeeded
-	return api_commenter.NewCommentVoteNoContent()
+	} else {
+		// Succeeded
+		return api_commenter.NewCommentVoteOK().WithPayload(&api_commenter.CommentVoteOKBody{Score: int64(score)})
+	}
 }
 
 func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {

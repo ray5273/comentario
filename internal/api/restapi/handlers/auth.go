@@ -109,7 +109,7 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal())).
+	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
 		WithCookie(
 			util.CookieNameUserSession,
 			session.EncodeIDs(),
@@ -122,7 +122,7 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 // AuthLogout logs currently logged user out
 func AuthLogout(params api_auth.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
-	_, sessionID, err := FetchUserSessionFromCookie(params.HTTPRequest)
+	_, sessionID, err := FetchUserSessionIDFromCookie(params.HTTPRequest)
 	if err != nil {
 		return respUnauthorized(nil)
 	}
@@ -199,7 +199,7 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return api_auth.NewAuthSignupOK().WithPayload(user.ToPrincipal())
+	return api_auth.NewAuthSignupOK().WithPayload(user.ToPrincipal(nil))
 }
 
 // AuthUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header
@@ -222,25 +222,13 @@ func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
 
 // AuthUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
 func AuthUserBySessionHeader(headerValue string) (*data.User, error) {
-	// Extract session from the header value
-	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err == nil {
-		// If it's an anonymous user
-		if *userID == data.AnonymousUser.ID {
-			return data.AnonymousUser, nil
-		}
-
-		// Find the user
-		if user, err := svc.TheUserService.FindUserBySession(userID, sessionID); err == nil {
-			// Verify the user is allowed to authenticate
-			if errm, _ := Verifier.UserCanAuthenticate(user, true); errm == nil {
-				// Succeeded
-				return user, nil
-			}
-		}
+	if user, _, err := FetchUserBySessionHeader(headerValue); err != nil {
+		// Authentication failed
+		return nil, ErrUnauthorised
+	} else {
+		// Succeeded
+		return user, nil
 	}
-
-	// Authentication failed
-	return nil, ErrUnauthorised
 }
 
 // ExtractUserSessionIDs parses and return the given string value that combines user and session ID
@@ -267,8 +255,33 @@ func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 	}
 }
 
-// FetchUserSessionFromCookie extracts user ID and session ID from a session cookie contained in the given request
-func FetchUserSessionFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error) {
+// FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
+// X-User-Session header. If the user is anonymous, returns AnonymousUser and a nil for session
+func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
+	// Extract session from the header value
+	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err != nil {
+		return nil, nil, err
+
+		// If it's an anonymous user
+	} else if *userID == data.AnonymousUser.ID {
+		return data.AnonymousUser, nil, nil
+
+		// Find the user and the session
+	} else if user, us, err := svc.TheUserService.FindUserBySession(userID, sessionID); err != nil {
+		return nil, nil, err
+
+		// Verify the user is allowed to authenticate
+	} else if errm, _ := Verifier.UserCanAuthenticate(user, true); errm != nil {
+		return nil, nil, errm.Error()
+
+	} else {
+		// Succeeded
+		return user, us, nil
+	}
+}
+
+// FetchUserSessionIDFromCookie extracts user ID and session ID from a session cookie contained in the given request
+func FetchUserSessionIDFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error) {
 	// Extract user-session data from the cookie
 	cookie, err := r.Cookie(util.CookieNameUserSession)
 	if err != nil {
@@ -282,13 +295,13 @@ func FetchUserSessionFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error)
 // GetUserBySessionCookie parses the session cookie contained in the given request and returns the corresponding user
 func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 	// Extract session from the cookie
-	userID, sessionID, err := FetchUserSessionFromCookie(r)
+	userID, sessionID, err := FetchUserSessionIDFromCookie(r)
 	if err != nil {
 		return nil, err
 	}
 
 	// Find the user
-	user, err := svc.TheUserService.FindUserBySession(userID, sessionID)
+	user, _, err := svc.TheUserService.FindUserBySession(userID, sessionID)
 	if err != nil {
 		return nil, err
 	}

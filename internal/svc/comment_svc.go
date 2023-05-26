@@ -31,8 +31,8 @@ type CommentService interface {
 	MarkDeleted(commentID, userID *uuid.UUID) error
 	// UpdateText updates the markdown and the HTML of a comment with the given ID in the database
 	UpdateText(commentID *uuid.UUID, markdown, html string) error
-	// Vote sets a vote for the given comment and user and updates the comment
-	Vote(commentID, userID *uuid.UUID, direction int) error
+	// Vote sets a vote for the given comment and user and updates the comment, return the updated comment's score
+	Vote(commentID, userID *uuid.UUID, direction int8) (int, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -59,11 +59,11 @@ func (svc *commentService) Create(c *data.Comment) error {
 	// Insert a record into the database
 	if err := db.Exec(
 		"insert into cm_comments("+
-			"id, parent_id, page_id, markdown, html, score, is_approved, is_spam, is_deleted, ts_created, "+
+			"id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_spam, is_deleted, ts_created, "+
 			"ts_approved, ts_deleted, user_created, user_approved, user_deleted) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15);",
-		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsApproved, c.IsSpam, c.IsDeleted, c.CreatedTime,
-		c.ApprovedTime, c.DeletedTime, &c.UserCreated, &c.UserApproved, &c.UserDeleted,
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
+		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsSticky, c.IsApproved, c.IsSpam, c.IsDeleted,
+		c.CreatedTime, c.ApprovedTime, c.DeletedTime, &c.UserCreated, &c.UserApproved, &c.UserDeleted,
 	); err != nil {
 		logger.Errorf("commentService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -93,8 +93,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	var c data.Comment
 	if err := db.QueryRow(
 		"select "+
-			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_approved, c.is_spam, c.is_deleted, "+
-			"c.ts_created, c.user_created, "+
+			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_spam, c.is_deleted, c.ts_created, c.user_created, "+
 			"from cm_comments c "+
 			"where c.id=$1;",
 		id,
@@ -105,6 +104,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 		&c.Markdown,
 		&c.HTML,
 		&c.Score,
+		&c.IsSticky,
 		&c.IsApproved,
 		&c.IsSpam,
 		&c.IsDeleted,
@@ -125,18 +125,22 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	statement :=
 		"select " +
 			// Comment fields
-			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_approved, c.is_spam, c.is_deleted, " +
-			"c.ts_created, c.user_created, " +
+			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_spam, " +
+			"c.is_deleted, c.ts_created, c.user_created, " +
 			// Commenter fields
-			"u.id, u.email, u.name, u.website_url, coalesce(du.is_commenter, true), coalesce(du.is_moderator, false) " +
+			"u.id, u.email, u.name, u.website_url, coalesce(du.is_commenter, true), coalesce(du.is_moderator, false), " +
+			// Votes fields
+			"v.negative " +
 			// Iterate comments
 			"from cm_comments c " +
 			// Outer-join commenter users
 			"left join cm_users u on u.id=c.user_created " +
 			// Outer-join domain users
 			"left join cm_domains_users du on du.user_id=c.user_created and du.domain_id=$1 " +
-			"where c.page_id=$2 and !c.is_deleted"
-	params := []any{&page.DomainID, &page.ID}
+			// Outer-join comment votes
+			"left join cm_comment_votes v on v.comment_id=c.id and v.user_id=$2 " +
+			"where c.page_id=$3 and c.is_deleted=false"
+	params := []any{&page.DomainID, &user.ID, &page.ID}
 
 	// Anonymous user: only include approved
 	if user.IsAnonymous() {
@@ -144,8 +148,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 
 	} else if !isModerator {
 		// Authenticated, non-moderator user: show only approved and all own comments
-		statement += " and (c.is_approved or c.user_created=$3)"
-		params = append(params, &user.ID)
+		statement += " and (c.is_approved or c.user_created=$2)"
 	}
 	statement += ";"
 
@@ -164,34 +167,41 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	var comments []*models.Comment
 	for rs.Next() {
 		// Fetch the comment and the related commenter
-		cm := models.Comment{}
+		c := data.Comment{}
 		uc := models.Commenter{}
 		var uid uuid.UUID
 		var email strfmt.Email
+		var negVote sql.NullBool
 		err := rs.Scan(
 			// Comment
-			&cm.ID,
-			&cm.ParentID,
-			&cm.PageID,
-			&cm.Markdown,
-			&cm.HTML,
-			&cm.Score,
-			&cm.IsApproved,
-			&cm.IsSpam,
-			&cm.IsDeleted,
-			&cm.CreatedTime,
-			&cm.UserCreated,
+			&c.ID,
+			&c.ParentID,
+			&c.PageID,
+			&c.Markdown,
+			&c.HTML,
+			&c.Score,
+			&c.IsSticky,
+			&c.IsApproved,
+			&c.IsSpam,
+			&c.IsDeleted,
+			&c.CreatedTime,
+			&c.UserCreated,
 			// User
 			&uid,
 			&email,
 			&uc.Name,
 			&uc.WebsiteURL,
 			&uc.IsCommenter,
-			&uc.IsModerator)
+			&uc.IsModerator,
+			// Vote
+			&negVote)
 		if err != nil {
 			logger.Errorf("commentService.ListWithCommentersByPage: Scan() failed: %v", err)
 			return nil, nil, translateDBErrors(err)
 		}
+
+		// Convert the comment
+		cm := c.ToDTO()
 
 		// Add the authenticated user to the map
 		if uid != data.AnonymousUser.ID {
@@ -205,8 +215,17 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			}
 		}
 
+		// Determine comment vote direction for the user
+		if negVote.Valid {
+			if negVote.Bool {
+				cm.Direction = -1
+			} else {
+				cm.Direction = 1
+			}
+		}
+
 		// Append the comment to the list
-		comments = append(comments, &cm)
+		comments = append(comments, cm)
 	}
 
 	// Check that Next() didn't error
@@ -253,35 +272,37 @@ func (svc *commentService) UpdateText(commentID *uuid.UUID, markdown, html strin
 	return nil
 }
 
-func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int) error {
-	// Try to retrieve an existing vote for the user
-	neg, exists := false, true
+func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (int, error) {
+	// Retrieve the current score and any vote for the user
+	var score int
+	var neg sql.NullBool
 	if err := db.QueryRow(
-		"select negative from cm_comment_votes where comment_id=$1 and user_id=$2;",
-		commentID, userID,
-	).Scan(&neg); err == sql.ErrNoRows {
-		// No vote found
-		exists = false
-	} else if err != nil {
-		// Any other DB error
-		return translateDBErrors(err)
+		"select c.score, v.negative "+
+			"from cm_comments c "+
+			"left join cm_comment_votes v on v.comment_id=c.id and v.user_id=$1 "+
+			"where c.id=$2;",
+		userID, commentID,
+	).Scan(&score, &neg); err != nil {
+		return 0, translateDBErrors(err)
 	}
 
 	// Determine if a change is necessary
-	if !exists {
+	if !neg.Valid {
+		// No vote exists: don't bother if direction is 0
 		if direction == 0 {
-			return nil
+			return score, nil
 		}
 	} else {
-		if direction < 0 && neg || direction > 0 && !neg {
-			return nil
+		// Vote exists: don't bother if the direction already matches the vote
+		if direction < 0 && neg.Bool || direction > 0 && !neg.Bool {
+			return score, nil
 		}
 	}
 
 	// A change is necessary
 	var err error
 	inc := 0
-	if !exists {
+	if !neg.Valid {
 		// No vote exists, an insert is needed
 		err = db.Exec(
 			"insert into cm_comment_votes(comment_id, user_id, negative, ts_voted) values($1, $2, $3, $4);",
@@ -295,7 +316,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int) err
 	} else if direction == 0 {
 		// Vote exists and must be removed
 		err = db.Exec("delete from cm_comment_votes where comment_id=$1 and user_id=$2;", commentID, userID)
-		if neg {
+		if neg.Bool {
 			inc = 1
 		} else {
 			inc = -1
@@ -305,21 +326,21 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int) err
 		// Vote exists and must be updated
 		err = db.Exec("update cm_comment_votes set negative=$1, ts_voted=$2 where comment_id=$3 and user_id=$4;",
 			direction < 0, time.Now().UTC(), commentID, userID)
-		if neg {
+		if neg.Bool {
 			inc = 2
 		} else {
 			inc = -2
 		}
 	}
 	if err != nil {
-		return translateDBErrors(err)
+		return 0, translateDBErrors(err)
 	}
 
 	// Update the comment score
 	if err := db.ExecOne("update cm_comments set score=score+$1 where id=$2;", inc, commentID); err != nil {
-		return translateDBErrors(err)
+		return 0, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return nil
+	return score + inc, nil
 }

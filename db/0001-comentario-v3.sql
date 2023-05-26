@@ -213,6 +213,9 @@ create table cm_domain_pages (
 alter table cm_domain_pages add constraint fk_domain_pages_domain_id      foreign key (domain_id) references cm_domains(id) on delete cascade;
 alter table cm_domain_pages add constraint uk_domain_pages_domain_id_path unique (domain_id, path);
 
+-- Indices
+create index idx_domain_pages_domain_id on cm_domain_pages(domain_id);
+
 ------------------------------------------------------------------------------------------------------------------------
 -- Comments
 ------------------------------------------------------------------------------------------------------------------------
@@ -224,6 +227,7 @@ create table cm_comments (
     markdown      text                  not null, -- Comment text in markdown
     html          text                  not null, -- Rendered comment text in HTML
     score         integer default 0     not null, -- Comment score
+    is_sticky     boolean default false not null, -- Whether the comment is sticky (attached to the top of page)
     is_approved   boolean default false not null, -- Whether the comment is approved and can be seen by everyone
     is_spam       boolean default false not null, -- Whether the comment is flagged as (potential) spam
     is_deleted    boolean default false not null, -- Whether the comment is marked as deleted
@@ -242,6 +246,10 @@ alter table cm_comments add constraint fk_comments_user_created  foreign key (us
 alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id)        on delete set null;
 alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id)        on delete set null;
 
+-- Indices
+create index idx_comments_page_id    on cm_comments(page_id);
+create index idx_comments_ts_created on cm_comments(ts_created);
+
 ------------------------------------------------------------------------------------------------------------------------
 -- Comment votes
 ------------------------------------------------------------------------------------------------------------------------
@@ -257,6 +265,10 @@ create table cm_comment_votes (
 alter table cm_comment_votes add constraint uk_comment_votes_comment_id_user_id unique (comment_id, user_id);
 alter table cm_comment_votes add constraint fk_comment_votes_comment_id         foreign key (comment_id) references cm_comments(id) on delete cascade;
 alter table cm_comment_votes add constraint fk_comment_votes_user_id            foreign key (user_id)    references cm_users(id)    on delete cascade;
+
+-- Indices
+create index idx_comment_votes_comment_id on cm_comment_votes(comment_id);
+create index idx_comment_votes_user_id    on cm_comment_votes(user_id);
 
 --======================================================================================================================
 -- Migrate the legacy schema

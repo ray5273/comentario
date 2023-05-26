@@ -15,10 +15,6 @@ import (
 	"strings"
 )
 
-var (
-	ErrInternal = errors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-)
-
 // notFoundBypassWriter is an object that pretends to be a ResponseWriter but refrains from writing a 404 response
 type notFoundBypassWriter struct {
 	http.ResponseWriter
@@ -49,6 +45,7 @@ func (w *notFoundBypassWriter) Write(p []byte) (int, error) {
 func corsHandler(next http.Handler) http.Handler {
 	return handlers.CORS(
 		handlers.AllowedHeaders([]string{"Content-Type", "X-Requested-With", util.HeaderUserSession}),
+		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
 	)(next)
 }
 
@@ -136,15 +133,22 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 }
 
 // serveFileWithPlaceholders serves out files that contain placeholders, i.e. HTML, CSS, and JS files
-func serveFileWithPlaceholders(filePath string, w http.ResponseWriter) {
+func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.Request) {
 	logger.Debugf("Serving file /%s replacing placeholders", filePath)
 
 	// Read in the file
 	filename := path.Join(config.CLIFlags.StaticPath, filePath)
 	b, err := os.ReadFile(filename)
-	if err != nil {
+
+	// If file doesn't exists, respond with 404 Not Found
+	if os.IsNotExist(err) {
+		logger.Warningf("File doesn't exist: %s", filename)
+		errors.ServeError(w, r, errors.NotFound(""))
+		return
+	} else if err != nil {
+		// Any other error
 		logger.Warningf("Failed to read %s: %v", filename, err)
-		http.Error(w, ErrInternal.Error(), int(ErrInternal.Code()))
+		errors.ServeError(w, r, err)
 		return
 	}
 
@@ -207,7 +211,7 @@ func staticHandler(next http.Handler) http.Handler {
 
 				// If it's a static file with placeholders, serve it with replacements
 				if static && repl {
-					serveFileWithPlaceholders(p, w)
+					serveFileWithPlaceholders(p, w, r)
 					return
 				}
 
@@ -229,7 +233,7 @@ func staticHandler(next http.Handler) http.Handler {
 
 					// Language root or file wasn't found: serve the main application script for the given language
 					if hasLang {
-						serveFileWithPlaceholders(fmt.Sprintf("%s/index.html", p[0:2]), w)
+						serveFileWithPlaceholders(fmt.Sprintf("%s/index.html", p[0:2]), w, r)
 						return
 					}
 

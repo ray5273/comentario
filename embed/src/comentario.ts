@@ -1,31 +1,24 @@
-import { HttpClient, HttpClientError } from './http-client';
+import { HttpClientError } from './http-client';
 import {
-    AnonymousCommenterId,
-    Comment, Commenter,
+    Comment,
     CommenterMap,
-    CommentsGroupedByHex,
-    Email,
-    IdentityProvider,
+    CommentsGroupedById,
+    CommentSort,
+    IdentityProvider, PageInfo,
+    Principal,
     ProfileSettings,
     SignupData,
-    SortPolicy,
     StringBooleanMap,
+    UUID,
 } from './models';
-import {
-    ApiClientConfigResponse,
-    ApiCommentEditResponse,
-    ApiCommenterLoginResponse,
-    ApiCommenterTokenNewResponse,
-    ApiCommentListResponse,
-    ApiCommentNewResponse, ApiErrorResponse,
-    ApiSelfResponse,
-} from './api';
+import { ApiCommentListResponse, ApiCommentVoteResponse, ApiErrorResponse, ApiService, } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { CommentCard, CommentRenderingContext, CommentTree } from './comment-card';
 import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
+import { Utils } from './utils';
 
 export class Comentario {
 
@@ -36,8 +29,8 @@ export class Comentario {
     /** App version, which gets replaced by the backend on serving the file. */
     private readonly version = '[[[.Version]]]';
 
-    /** HTTP client we'll use for API requests. */
-    private readonly apiClient = new HttpClient(`${this.origin}/api`);
+    /** Service handling API requests. */
+    private readonly apiService = new ApiService(`${this.origin}/api`, this.doc);
 
     /** Default ID of the container element Comentario will be embedded into. */
     private rootId = 'comentario';
@@ -67,23 +60,32 @@ export class Comentario {
     /** Comments panel inside the mainArea. */
     private commentsArea?: Wrap<HTMLDivElement>;
 
-    /** Map of commenters by their hsx ID. */
+    /** Map of commenters by their ID. */
     private readonly commenters: CommenterMap = {};
 
     /** Map of loaded CSS stylesheet URLs. */
     private readonly loadedCss: StringBooleanMap = {};
 
-    /** Map of comments, grouped by their parentHex. */
-    private parentHexMap?: CommentsGroupedByHex;
+    /** Map of comments, grouped by their ID. */
+    private parentIdMap?: CommentsGroupedById;
 
-    /** Identity providers configured on the backend. */
-    private configuredIdps: IdentityProvider[] = [];
-
-    /** Identity providers allowed for commenter authentication on the current page. */
-    private allowedIdps: IdentityProvider[] = [];
+    /** Federated identity providers configured on the backend. */
+    private federatedIdps: IdentityProvider[] = [];
 
     /** Identifier of the page for loading comments. Defaults to page path. */
     private pageId = parent.location.pathname;
+
+    /** Current host. */
+    private host = parent.location.host;
+
+    /** Currently authenticated principal or undefined if the user isn't authenticated. */
+    private principal?: Principal;
+
+    /** Current page settings as retrieved from the server. */
+    private pageInfo?: PageInfo;
+
+    /** Currently applied comment sort. */
+    private commentSort: CommentSort = 'sd';
 
     /**
      * Optional CSS stylesheet URL that gets loaded after the default one. Setting to 'false' disables loading any CSS
@@ -93,46 +95,12 @@ export class Comentario {
     private noFonts = false;
     private hideDeleted = false;
     private autoInit = true;
-    private requireIdentification = true;
-    private isAuthenticated = false;
-    private isModerator = false;
-    private isFrozen = false;
-    private isLocked = false;
-    private stickyCommentHex = '';
-    private anonymousOnly = false;
-    private sortPolicy: SortPolicy = 'score-desc';
-    private selfHex?: string;
     private initialised = false;
-
-    /** The currently authenticated user. */
-    private commenter?: Commenter;
-
-    /** The email instance of the currently authenticated user. */
-    private email?: Email;
 
     constructor(
         private readonly doc: Document,
     ) {
         this.whenDocReady().then(() => this.init());
-    }
-
-    /**
-     * Retrieve a token of the authenticated user. If the user isn't authenticated, return the fake anonymous commenter token.
-     */
-    get token(): string {
-        return `; ${this.doc.cookie}`.split('; comentario_auth_token=').pop()?.split(';').shift() || AnonymousCommenterId;
-    }
-
-    /**
-     * Store a token of the authenticated user in a cookie.
-     */
-    set token(v: string) {
-        // Set the cookie expiration date one year in the future
-        const date = new Date();
-        date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
-
-        // Store the cookie
-        this.doc.cookie = `comentario_auth_token=${v}; expires=${date.toUTCString()}; path=/`;
     }
 
     /**
@@ -162,6 +130,9 @@ export class Comentario {
             }
         }
 
+        // Load client configuration
+        await this.loadClientConfig();
+
         // Set up the root content
         this.root
             .classes('root', !this.noFonts && 'root-font')
@@ -170,6 +141,7 @@ export class Comentario {
                 this.profileBar = new ProfileBar(
                     this.origin,
                     this.root,
+                    this.federatedIdps,
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.openOAuthPopup(idp),
                     email => this.requestPasswordReset(email),
@@ -187,11 +159,8 @@ export class Comentario {
                                     .html('Powered by ')
                                     .append(Wrap.new('span').classes('logo-brand').inner('Comentario')))));
 
-        // Load client configuration
-        await this.loadClientConfig();
-
         // Load information about ourselves
-        await this.getAuthStatus();
+        await this.updateAuthStatus();
 
         // Load the UI
         await this.reload();
@@ -328,17 +297,17 @@ export class Comentario {
     }
 
     /**
-     * Scroll to the comment with the specified hex ID.
-     * @param commentHex Comment hex ID.
+     * Scroll to the comment with the specified ID.
+     * @param id Comment ID to scroll to.
      * @private
      */
-    private scrollToComment(commentHex: string) {
-        Wrap.byId(`card-${commentHex}`)
+    private scrollToComment(id: UUID) {
+        Wrap.byId(`card-${id}`)
             .classes('bg-highlight')
             .scrollTo()
             .else(() => {
-                // Make sure it's a (sort of) valid ID before showing the user a message
-                if (commentHex?.length === 64) {
+                // Make sure it's a valid ID before showing the user a message
+                if (Utils.isUuid(id)) {
                     this.setError('The comment you\'re looking for doesn\'t exist; possibly it was deleted.');
                 }
             });
@@ -351,7 +320,7 @@ export class Comentario {
     private renderComments() {
         this.commentsArea!
             .html('')
-            .append(...new CommentTree().render(this.makeCommentRenderingContext(), 'root'));
+            .append(...new CommentTree().render(this.makeCommentRenderingContext()));
     }
 
     /**
@@ -413,15 +382,11 @@ export class Comentario {
      * @private
      */
     private async loadClientConfig(): Promise<void> {
-        this.configuredIdps = [];
+        this.federatedIdps = [];
         try {
             this.setError();
-            const r = await this.apiClient.get<ApiClientConfigResponse>('config/client');
-            this.configuredIdps = [
-                {id: '',    name: 'Local'},
-                {id: 'sso', name: 'SSO'},
-                ...r.idps,
-            ];
+            const r = await this.apiService.configClientGet();
+            this.federatedIdps = r.federatedIdps;
 
         } catch (e) {
             this.setError(e);
@@ -434,43 +399,16 @@ export class Comentario {
      * soon as the status becomes definite.
      * @private
      */
-    private async getAuthStatus(): Promise<void> {
-        this.isAuthenticated = false;
-        this.isModerator = false;
-        this.selfHex = undefined;
-        this.commenter = undefined;
-        this.email = undefined;
+    private async updateAuthStatus(): Promise<void> {
+        this.principal = await this.apiService.getPrincipal();
 
-        // If we're not already (knowingly) anonymous
-        const token = this.token;
-        if (token !== AnonymousCommenterId) {
-            // Fetch the status from the backend
-            try {
-                const r = await this.apiClient.post<ApiSelfResponse>('commenter/self', token);
-                if (!r.commenter || !r.email) {
-                    // Commenter isn't authenticated
-                    this.token = AnonymousCommenterId;
-                } else {
-                    // Commenter is authenticated
-                    this.commenter = r.commenter;
-                    this.email = r.email;
+        // User is authenticated
+        if (this.principal) {
+            // Update the profile bar
+            this.profileBar!.authenticated(this.principal, () => this.logout());
 
-                    // Update the profile bar
-                    this.profileBar!.authenticated(r.commenter, r.email, token, () => this.logout());
-                    this.isAuthenticated = true;
-
-                    // Store ourselves' data as commenter data
-                    this.commenters[r.commenter.commenterHex!] = r.commenter;
-                    this.selfHex = r.commenter.commenterHex;
-                }
-            } catch (e) {
-                // On any error consider the user unauthenticated
-                console.error(e);
-            }
-        }
-
-        // Clean up the profile bar in the case the user isn't authenticated (known auth methods will be set up later)
-        if (!this.isAuthenticated) {
+        } else {
+            // User isn't authenticated: clean up the profile bar (known auth methods will be set up later)
             this.profileBar!.notAuthenticated();
         }
     }
@@ -487,7 +425,7 @@ export class Comentario {
         this.commentsArea = undefined;
 
         // Add a moderator toolbar, in necessary
-        if (this.isModerator) {
+        if (this.principal?.isModerator) {
             this.mainArea!.append(
                 this.modTools = UIToolkit.div('mod-tools')
                     .append(
@@ -495,12 +433,12 @@ export class Comentario {
                         Wrap.new('span').classes('mod-tools-title').inner('Moderator tools'),
                         // Lock/Unlock button
                         this.modToolsLockBtn = UIToolkit.button(
-                            this.isLocked ? 'Unlock thread' : 'Lock thread',
+                            this.pageInfo?.isPageReadonly ? 'Unlock thread' : 'Lock thread',
                             () => this.threadLockToggle())));
         }
 
-        // If commenting is locked/frozen, add a corresponding message
-        if (this.isLocked || this.isFrozen) {
+        // If the domain or the page are readonly, add a corresponding message
+        if (this.pageInfo?.isDomainReadonly || this.pageInfo?.isPageReadonly) {
             this.mainArea!.append(UIToolkit.div('moderation-notice').inner('This thread is locked. You cannot add new comments.'));
 
         // Otherwise, add a comment editor host, which will get an editor for creating a new comment
@@ -513,14 +451,14 @@ export class Comentario {
         }
 
         // If there's any comment, add sort buttons
-        if (this.parentHexMap) {
+        if (this.parentIdMap) {
             this.mainArea!.append(new SortBar(
                 sp => {
-                    this.sortPolicy = sp;
+                    this.commentSort = sp;
                     // Re-render comments using the new sort
                     this.renderComments();
                 },
-                this.sortPolicy));
+                this.commentSort));
         }
 
         // Create a panel for comments
@@ -551,9 +489,8 @@ export class Comentario {
             this.root!,
             false,
             '',
-            this.isAuthenticated,
-            this.requireIdentification,
-            this.anonymousOnly,
+            !!this.principal,
+            this.pageInfo!,
             () => this.cancelCommentEdits(),
             trySubmit);
     }
@@ -583,8 +520,7 @@ export class Comentario {
             true,
             card.comment.markdown!,
             true,
-            true,
-            false,
+            this.pageInfo!,
             () => this.cancelCommentEdits(),
             trySubmit);
     }
@@ -598,46 +534,27 @@ export class Comentario {
      */
     private async submitNewComment(parentCard: CommentCard | undefined, markdown: string, anonymous: boolean): Promise<void> {
         // Authenticate the user, if required
-        const auth = this.requireIdentification || !anonymous;
-        if (!this.isAuthenticated && auth) {
+        const auth = !this.pageInfo?.authAnonymous || !anonymous;
+        if (!this.principal && auth) {
             await this.profileBar!.loginUser();
         }
 
         // If we can proceed: user logged in or that wasn't required
-        if (this.isAuthenticated || !auth) {
+        if (this.principal || !auth) {
             // Submit the comment to the backend
-            const parentHex = parentCard?.comment.commentHex || 'root';
-            const r = await this.apiClient.post<ApiCommentNewResponse>('comment/new', this.token, {
-                host:      parent.location.host,
-                path:      this.pageId,
-                parentHex,
-                markdown,
-            });
-
-            // Add a new comment card
-            const comment: Comment = {
-                commentHex:   r.commentHex,
-                commenterHex: r.commenterHex,
-                markdown,
-                html:         r.html,
-                parentHex,
-                score:        0,
-                state:        r.state,
-                direction:    0,
-                creationDate: new Date().toISOString(),
-                deleted:      false,
-            };
+            const r = await this.apiService.commentNew(this.host, this.pageId, parentCard?.comment.id, markdown);
 
             // Make sure parent map exists
-            if (!this.parentHexMap) {
-                this.parentHexMap = {};
+            if (!this.parentIdMap) {
+                this.parentIdMap = {};
             }
 
             // Add the comment to the parent map
-            if (parentHex in this.parentHexMap) {
-                this.parentHexMap[parentHex].push(comment);
+            const parentId = parentCard?.comment.id ?? '';
+            if (parentId in this.parentIdMap) {
+                this.parentIdMap[parentId].push(r.comment);
             } else {
-                this.parentHexMap[parentHex] = [comment];
+                this.parentIdMap[parentId] = [r.comment];
             }
 
             // Remove the editor
@@ -647,7 +564,7 @@ export class Comentario {
             this.renderComments();
 
             // Scroll to the added comment
-            this.scrollToComment(comment.commentHex);
+            this.scrollToComment(r.comment.id);
         }
     }
 
@@ -657,16 +574,12 @@ export class Comentario {
      * @param markdown Markdown text entered by the user.
      */
     private async submitCommentEdits(card: CommentCard, markdown: string): Promise<void> {
-        // Submit the edit to the backend
-        const r = await this.apiClient.post<ApiCommentEditResponse>('comment/edit', this.token, {commentHex: card.comment.commentHex, markdown});
+        // Submit the edits to the backend
+        const r = await this.apiService.commentUpdate(card.comment.id, markdown);
 
-        // Update the locally stored comment's data
-        card.comment.markdown = markdown;
-        card.comment.html = r.html;
-
-        // Update the state of the card and its text
-        card.update();
-        card.updateText();
+        // Update the comment in the card, replacing the original in the parentIdMap and preserving the vote direction
+        // (it isn't provided in the returned comment)
+        card.comment = this.replaceCommentById(r.comment, {direction: card.comment.direction});
 
         // Remove the editor
         this.cancelCommentEdits();
@@ -685,6 +598,7 @@ export class Comentario {
      * @param email Email address to request a password reset for.
      */
     private async requestPasswordReset(email: string): Promise<void> {
+        /* TODO new-db
         try {
             this.setError();
             await this.apiClient.post<void>('commenter/pwdreset', undefined, {email});
@@ -693,6 +607,7 @@ export class Comentario {
             this.setError(e);
             throw e;
         }
+        */
     }
 
     /**
@@ -701,17 +616,24 @@ export class Comentario {
      */
     private async signup(data: SignupData): Promise<void> {
         // Sign the user up
+        let isConfirmed = false;
         try {
             this.setError();
-            await this.apiClient.post<void>('commenter/new', undefined, data);
+            isConfirmed = await this.apiService.commenterSignup(data.email, data.name, data.password, data.websiteUrl, parent.location.href);
 
         } catch (e) {
             this.setError(e);
             throw e;
         }
 
-        // Log the user in
-        return this.authenticateLocally(data.email, data.password);
+        // If the user is confirmed, log them immediately in
+        if (isConfirmed) {
+            await this.authenticateLocally(data.email, data.password);
+
+        } else {
+            // Otherwise, show a message that the user should confirm their email
+            // TODO new-db
+        }
     }
 
     /**
@@ -721,24 +643,20 @@ export class Comentario {
      */
     private async authenticateLocally(email: string, password: string): Promise<void> {
         // Log the user in
-        let r: ApiCommenterLoginResponse;
         try {
             this.setError();
-            r = await this.apiClient.post<ApiCommenterLoginResponse>('commenter/login', undefined, {email, password});
+            await this.apiService.commenterLogin(email, password, this.host);
 
         } catch (e) {
             this.setError(e);
             throw e;
         }
 
-        // Store the authenticated token in a cookie
-        this.token = r.commenterToken;
-
         // Refresh the auth status
-        await this.getAuthStatus();
+        await this.updateAuthStatus();
 
         // If authenticated, reload all comments and page data
-        if (this.isAuthenticated) {
+        if (this.principal) {
             await this.reload();
         }
     }
@@ -750,6 +668,7 @@ export class Comentario {
      * @private
      */
     private async openOAuthPopup(idp: string): Promise<void> {
+        /* TODO new-db
         // Request a token
         let r: ApiCommenterTokenNewResponse;
         try {
@@ -760,9 +679,6 @@ export class Comentario {
             this.setError(e);
             throw e;
         }
-
-        // Store the obtained auth token
-        this.token = r.commenterToken;
 
         // Open a popup window
         const popup = window.open(
@@ -786,12 +702,13 @@ export class Comentario {
         });
 
         // Refresh the auth status
-        await this.getAuthStatus();
+        await this.updateAuthStatus();
 
         // If authenticated, reload all comments and page data
         if (this.isAuthenticated) {
             await this.reload();
         }
+        */
     }
 
     /**
@@ -800,11 +717,9 @@ export class Comentario {
      */
     private async logout(): Promise<void> {
         // Terminate the server session
-        await this.apiClient.post('commenter/logout', this.token);
-        // Wipe the token cookie
-        this.token = AnonymousCommenterId;
+        await this.apiService.commenterLogout();
         // Update auth status controls
-        await this.getAuthStatus();
+        await this.updateAuthStatus();
         // Reload the comments and other stuff
         return this.reload();
     }
@@ -818,53 +733,37 @@ export class Comentario {
         let r: ApiCommentListResponse;
         try {
             this.setError();
-            r = await this.apiClient.post<ApiCommentListResponse>('comment/list', this.token, {
-                host: parent.location.host,
-                path: this.pageId,
-            });
+            r = await this.apiService.commentList(this.host, this.pageId);
 
         } catch (e) {
-            // Disable login on error
-            this.profileBar!.idps = undefined;
+            // Remove the page from the profile bar on error: this will disable login
+            this.profileBar!.pageInfo = undefined;
             this.setError(e);
             throw e;
         }
 
         // Store page- and backend-related properties
-        this.requireIdentification = r.requireIdentification;
-        this.isModerator           = r.isModerator;
-        this.isFrozen              = r.isFrozen;
-        this.isLocked              = r.attributes.isLocked;
-        this.stickyCommentHex      = r.attributes.stickyCommentHex;
-        this.sortPolicy            = r.defaultSortPolicy;
+        this.pageInfo    = r.pageInfo;
+        this.commentSort = r.pageInfo.defaultSort;
 
-        // Select from all available IdPs those allowed on this page
-        this.allowedIdps = this.configuredIdps.filter(idp => r.idps.includes(idp.id));
-
-        // Check if no auth provider available, but we allow anonymous commenting
-        this.anonymousOnly = !this.requireIdentification && this.allowedIdps.length === 0;
-
-        // Configure methods and moderator status in the profile bar
-        this.profileBar!.idps        = this.allowedIdps;
-        this.profileBar!.isModerator = this.isModerator;
+        // Configure the page in the profile bar
+        this.profileBar!.pageInfo = r.pageInfo;
 
         // Build a map by grouping all comments by their parentHex value
-        this.parentHexMap = r.comments?.reduce(
+        this.parentIdMap = r.comments?.reduce(
             (m, c) => {
-                // Also calculate each comment's creation time in milliseconds
-                c.creationMs = new Date(c.creationDate).getTime();
-                const ph = c.parentHex;
-                if (ph in m) {
-                    m[ph].push(c);
+                const pid = c.parentId ?? '';
+                if (pid in m) {
+                    m[pid].push(c);
                 } else {
-                    m[ph] = [c];
+                    m[pid] = [c];
                 }
                 return m;
             },
-            {} as CommentsGroupedByHex) || {};
+            {} as CommentsGroupedById) || {};
 
-        // Store all known commenters
-        Object.assign(this.commenters, r.commenters);
+        // Convert commenter list into a map
+        r.commenters?.forEach(c => this.commenters[c.id] = c);
     }
 
     /**
@@ -872,11 +771,13 @@ export class Comentario {
      * @private
      */
     private async threadLockToggle(): Promise<void> {
+        /* TODO new-db
         this.modToolsLockBtn!.attr({disabled: 'true'});
         this.isLocked = !this.isLocked;
         await this.submitPageAttrs();
         this.modToolsLockBtn!.attr({disabled: 'false'});
         return this.reload();
+        */
     }
 
     /**
@@ -887,16 +788,15 @@ export class Comentario {
         // Submit the approval to the backend
         try {
             this.setError();
-            await this.apiClient.post<void>('comment/approve', this.token, {commentHex: card.comment.commentHex});
+            await this.apiService.commentModerate(card.comment.id, true);
 
         } catch (e) {
             this.setError(e);
             throw e;
         }
 
-        // Update the comment and card
-        card.comment.state = 'approved';
-        card.update();
+        // Update the comment and the card
+        card.comment = this.replaceCommentById(card.comment, {isApproved: true});
     }
 
     /**
@@ -907,16 +807,15 @@ export class Comentario {
         // Run deletion with the backend
         try {
             this.setError();
-            await this.apiClient.post<void>('comment/delete', this.token, {commentHex: card.comment.commentHex});
+            await this.apiService.commentDelete(card.comment.id);
 
         } catch (e) {
             this.setError(e);
             throw e;
         }
 
-        // Update the comment and card
-        card.comment.deleted = true;
-        card.update();
+        // Update the comment and the card
+        card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '[deleted]', html: '[deleted]'});
     }
 
     /**
@@ -924,12 +823,14 @@ export class Comentario {
      * @private
      */
     private async stickyComment(card: CommentCard): Promise<void> {
+        /* TODO new-db
         // Save the page's sticky comment ID
-        this.stickyCommentHex = this.stickyCommentHex === card.comment.commentHex ? '' : card.comment.commentHex;
+        this.stickyCommentHex = this.stickyCommentHex === card._comment.commentHex ? '' : card._comment.commentHex;
         await this.submitPageAttrs();
 
         // Reload all comments
         return this.reload();
+        */
     }
 
     /**
@@ -938,31 +839,28 @@ export class Comentario {
      */
     private async voteComment(card: CommentCard, direction: -1 | 0 | 1): Promise<void> {
         // Only registered users can vote
-        if (!this.isAuthenticated) {
+        if (!this.principal) {
             await this.profileBar!.loginUser();
 
             // Failed to authenticate
-            if (!this.isAuthenticated) {
+            if (!this.principal) {
                 return;
             }
         }
 
         // Run the vote with the API
+        let r: ApiCommentVoteResponse;
         try {
             this.setError();
-            await this.apiClient.post<void>('comment/vote', this.token, {commentHex: card.comment.commentHex, direction});
+            r = await this.apiService.commentVote(card.comment.id, direction);
 
         } catch (e) {
             this.setError(e);
             throw e;
         }
 
-        // Update the vote and the score
-        card.comment.score += direction - (card.comment.direction || 0);
-        card.comment.direction = direction;
-
-        // Update the card
-        card.update();
+        // Update the comment and the card
+        card.comment = this.replaceCommentById(card.comment, {score: r.score});
     }
 
     /**
@@ -970,11 +868,12 @@ export class Comentario {
      * @private
      */
     private async submitPageAttrs(): Promise<void> {
+        /* TODO new-db
         try {
             this.setError();
             await this.apiClient.post<void>('page/update', this.token, {
                 page: {
-                    host:             parent.location.host,
+                    host:             this.host,
                     path:             this.pageId,
                     isLocked:         this.isLocked,
                     stickyCommentHex: this.stickyCommentHex,
@@ -985,6 +884,7 @@ export class Comentario {
             this.setError(e);
             throw e;
         }
+        */
     }
 
     /**
@@ -992,24 +892,21 @@ export class Comentario {
      */
     private makeCommentRenderingContext(): CommentRenderingContext {
         return {
-            apiUrl:          this.apiClient.baseUrl,
-            root:            this.root!,
-            parentMap:       this.parentHexMap!,
-            commenters:      this.commenters,
-            selfHex:         this.selfHex,
-            stickyHex:       this.stickyCommentHex,
-            sortPolicy:      this.sortPolicy,
-            isAuthenticated: this.isAuthenticated,
-            isModerator:     this.isModerator,
-            isLocked:        this.isLocked || this.isFrozen,
-            hideDeleted:     this.hideDeleted,
-            curTimeMs:       new Date().getTime(),
-            onApprove:       card => this.approveComment(card),
-            onDelete:        card => this.deleteComment(card),
-            onEdit:          card => this.editComment(card),
-            onReply:         card => this.addComment(card),
-            onSticky:        card => this.stickyComment(card),
-            onVote:          (card, direction) => this.voteComment(card, direction),
+            apiUrl:      this.apiService.basePath,
+            root:        this.root!,
+            parentMap:   this.parentIdMap!,
+            commenters:  this.commenters,
+            principal:   this.principal,
+            commentSort: this.commentSort,
+            isReadonly:  this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
+            hideDeleted: this.hideDeleted,
+            curTimeMs:   new Date().getTime(),
+            onApprove:   card => this.approveComment(card),
+            onDelete:    card => this.deleteComment(card),
+            onEdit:      card => this.editComment(card),
+            onReply:     card => this.addComment(card),
+            onSticky:    card => this.stickyComment(card),
+            onVote:      (card, direction) => this.voteComment(card, direction),
         };
     }
 
@@ -1021,6 +918,7 @@ export class Comentario {
         try {
             this.setError();
 
+            /* TODO new-db
             // Update commenter settings (only for a locally-authenticated user)
             if (!this.commenter!.provider) {
                 await this.apiClient.post<void>('commenter/update', this.token, {
@@ -1035,6 +933,7 @@ export class Comentario {
             this.email!.sendModeratorNotifications = data.notifyModerator;
             this.email!.sendReplyNotifications     = data.notifyReplies;
             await this.apiClient.post<void>('email/update', this.token, {email: this.email});
+            */
 
         } catch (e) {
             this.setError(e);
@@ -1042,9 +941,32 @@ export class Comentario {
         }
 
         // Refresh the auth status and update the profile bar
-        await this.getAuthStatus();
+        await this.updateAuthStatus();
 
         // Reload all comments to reflect new commenter settings
         await this.reload();
+    }
+
+    /**
+     * Make a clone of the original comment, replacing the provided properties, and replace that comment in parentIdMap
+     * based on its ID.
+     * NB: parentId should not change!
+     * @param c Original comment.
+     * @param props Property overrides for the new clone.
+     * @private
+     */
+    private replaceCommentById(c: Comment, props?: Partial<Comment>): Comment {
+        // Make a clone of the comment, overriding any property in props
+        const cc = {...c, ...props};
+
+        // Replace the comment instance in the appropriate list in the parentIdMap
+        const a = this.parentIdMap?.[c.parentId ?? ''];
+        if (a) {
+            const idx = a.findIndex(ci => ci.id === c.id);
+            if (idx >= 0) {
+                a[idx] = cc;
+            }
+        }
+        return cc;
     }
 }

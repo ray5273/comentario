@@ -29,8 +29,10 @@ type DomainService interface {
 	// FindByID fetches and returns a domain by its ID
 	FindByID(id *uuid.UUID) (*data.Domain, error)
 	// FindDomainUserByHost fetches and returns a Domain and DomainUser by domain host and user ID. If the domain
-	// exists, but there's no record for the user on that domain, returns nil for DomainUser
-	FindDomainUserByHost(host string, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	// exists, but there's no record for the user on that domain:
+	//  - if createIfMissing == true, creates a new domain user and returns it
+	//  - if createIfMissing == false, returns nil for DomainUser
+	FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error)
 	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
@@ -232,8 +234,8 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	}
 }
 
-func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
-	logger.Debugf("domainService.FindDomainUserByHost(%s, %s)", host, userID)
+func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error) {
+	logger.Debugf("domainService.FindDomainUserByHost(%s, %s, %v)", host, userID, createIfMissing)
 
 	// Query the row
 	row := db.QueryRow(
@@ -247,17 +249,33 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID) (
 			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
 			"coalesce(du.notify_moderator, false) "+
 			"from cm_domains d "+
-			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$2 "+
-			"where d.host=$1;",
-		host, userID)
+			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 "+
+			"where d.host=$2;",
+		userID, host)
 
 	// Fetch the domain and the domain user
-	if d, du, err := svc.fetchDomainUser(row); err != nil {
+	d, du, err := svc.fetchDomainUser(row)
+	if err != nil {
 		return nil, nil, translateDBErrors(err)
-	} else {
-		// Succeeded
-		return d, du, nil
 	}
+
+	// If no domain user found and we need to create one
+	if du == nil && createIfMissing {
+		du = &data.DomainUser{
+			DomainID:        d.ID,
+			UserID:          *userID,
+			IsCommenter:     true, // User can comment by default, until made readonly
+			NotifyReplies:   true,
+			NotifyModerator: true,
+		}
+
+		if err := svc.UserAdd(du); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// Succeeded
+	return d, du, nil
 }
 
 func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
@@ -294,7 +312,7 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	// Update the page record
 	if err := db.ExecOne(
 		"update cm_domains set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
-		domainID, incComments, incViews,
+		incComments, incViews, domainID,
 	); err != nil {
 		logger.Errorf("domainService.IncrementCounts: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -583,14 +601,17 @@ func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdp
 func (svc *domainService) UserAdd(du *data.DomainUser) error {
 	logger.Debugf("domainService.UserAdd(%#v)", du)
 
-	// Insert a new domain-user link record
-	if err := db.Exec(
-		"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
-			"values($1, $2, $3, $4, $5, $6, $7);",
-		&du.DomainID, &du.UserID, du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator,
-	); err != nil {
-		logger.Errorf("domainService.UserAdd: Exec() failed: %v", err)
-		return translateDBErrors(err)
+	// Don't bother if the user is an anonymous one
+	if du.UserID != data.AnonymousUser.ID {
+		// Insert a new domain-user link record
+		if err := db.Exec(
+			"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
+				"values($1, $2, $3, $4, $5, $6, $7);",
+			&du.DomainID, &du.UserID, du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator,
+		); err != nil {
+			logger.Errorf("domainService.UserAdd: Exec() failed: %v", err)
+			return translateDBErrors(err)
+		}
 	}
 
 	// Succeeded
@@ -600,14 +621,17 @@ func (svc *domainService) UserAdd(du *data.DomainUser) error {
 func (svc *domainService) UserModify(du *data.DomainUser) error {
 	logger.Debugf("domainService.UserModify(%#v)", du)
 
-	// Update the domain-user link record
-	if err := db.ExecOne(
-		"update cm_domains_users set is_owner=$1, is_moderator=$2, is_commenter=$3, notify_replies=$4, notify_moderator=$5 "+
-			"where domain_id=$6 and user_id=$7;",
-		du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator, &du.DomainID, &du.UserID,
-	); err != nil {
-		logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+	// Don't bother if the user is an anonymous one
+	if du.UserID != data.AnonymousUser.ID {
+		// Update the domain-user link record
+		if err := db.ExecOne(
+			"update cm_domains_users set is_owner=$1, is_moderator=$2, is_commenter=$3, notify_replies=$4, notify_moderator=$5 "+
+				"where domain_id=$6 and user_id=$7;",
+			du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator, &du.DomainID, &du.UserID,
+		); err != nil {
+			logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
+			return translateDBErrors(err)
+		}
 	}
 
 	// Succeeded
@@ -617,10 +641,13 @@ func (svc *domainService) UserModify(du *data.DomainUser) error {
 func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 	logger.Debugf("domainService.UserRemove(%s, %s)", userID, domainID)
 
-	// Delete the domain-user link record
-	if err := db.ExecOne("delete from cm_domains_users where domain_id=$1 and user_id=$2;", &domainID, userID); err != nil {
-		logger.Errorf("domainService.UserRemove: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+	// Don't bother if the user is an anonymous one
+	if *userID != data.AnonymousUser.ID {
+		// Delete the domain-user link record
+		if err := db.ExecOne("delete from cm_domains_users where domain_id=$1 and user_id=$2;", &domainID, userID); err != nil {
+			logger.Errorf("domainService.UserRemove: ExecOne() failed: %v", err)
+			return translateDBErrors(err)
+		}
 	}
 
 	// Succeeded

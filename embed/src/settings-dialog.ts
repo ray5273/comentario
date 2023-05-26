@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { Commenter, ProfileSettings, Email } from './models';
+import { Principal, ProfileSettings } from './models';
 
 export class SettingsDialog extends Dialog {
 
@@ -12,7 +12,7 @@ export class SettingsDialog extends Dialog {
     private _cbNotifyModerator?: Wrap<HTMLInputElement>;
     private _cbNotifyReplies?: Wrap<HTMLInputElement>;
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly commenter: Commenter, private readonly email: Email) {
+    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly principal: Principal) {
         super(parent, 'Profile settings', pos);
     }
 
@@ -20,11 +20,10 @@ export class SettingsDialog extends Dialog {
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
-     * @param commenter Commenter whose profile settings are being edited.
-     * @param email Email that defines notification settings.
+     * @param principal Principal whose profile settings are being edited.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, commenter: Commenter, email: Email): Promise<SettingsDialog> {
-        const dlg = new SettingsDialog(parent, pos, commenter, email);
+    static run(parent: Wrap<any>, pos: DialogPositioning, principal: Principal): Promise<SettingsDialog> {
+        const dlg = new SettingsDialog(parent, pos, principal);
         return dlg.run(dlg);
     }
 
@@ -45,11 +44,11 @@ export class SettingsDialog extends Dialog {
     override renderContent(): Wrap<any> {
         // Create inputs if it's a local user
         const inputs: Wrap<any>[] = [];
-        if (!this.commenter.provider) {
-            this._email   = UIToolkit.input('email',   'email', 'Email address', 'email', true).value(this.commenter.email      || '');
-            this._name    = UIToolkit.input('name',    'text',  'Real name',     'name', true) .value(this.commenter.name       || '');
-            this._website = UIToolkit.input('website', 'url',   'Website',       'url')        .value(this.commenter.websiteUrl || '');
-            this._avatar  = UIToolkit.input('avatar',  'url',   'Avatar URL')                  .value(this.commenter.avatarUrl  || '');
+        if (!this.principal.isLocal) {
+            this._email   = UIToolkit.input('email',   'email', 'Email address', 'email', true).value(this.principal.email      || '');
+            this._name    = UIToolkit.input('name',    'text',  'Real name',     'name', true) .value(this.principal.name       || '');
+            this._website = UIToolkit.input('website', 'url',   'Website',       'url')        .value(this.principal.websiteUrl || '');
+            // TODO new-db this._avatar  = UIToolkit.input('avatar',  'url',   'Avatar URL')                  .value(this.principal.avatarUrl  || '');
             inputs.push(
                 UIToolkit.div('input-group').append(this._email),
                 UIToolkit.div('input-group').append(this._name),
@@ -64,12 +63,12 @@ export class SettingsDialog extends Dialog {
                 // Checkboxes
                 UIToolkit.div('checkbox-group').append(
                     // Moderator notifications checkbox (only if the current commenter is a moderator)
-                    this.commenter.isModerator && UIToolkit.div('checkbox-container')
+                    this.principal.isModerator && UIToolkit.div('checkbox-container')
                         .append(
                             this._cbNotifyModerator = Wrap.new('input')
                                 .id('cb-notify-moderator')
                                 .attr({type: 'checkbox'})
-                                .checked(!!this.email.sendModeratorNotifications),
+                                .checked(this.principal.notifyModerator),
                             Wrap.new('label').attr({for: this._cbNotifyModerator.getAttr('id')}).inner('Moderator notifications')),
                     // Reply notifications checkbox
                     UIToolkit.div('checkbox-container')
@@ -77,7 +76,7 @@ export class SettingsDialog extends Dialog {
                             this._cbNotifyReplies = Wrap.new('input')
                                 .id('cb-notify-replies')
                                 .attr({type: 'checkbox'})
-                                .checked(!!this.email.sendReplyNotifications),
+                                .checked(this.principal.notifyReplies),
                             Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner('Reply notifications'))),
                 // Submit button
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit('Save', false)));

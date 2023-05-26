@@ -20,8 +20,6 @@ type UserService interface {
 	ConfirmUser(id *uuid.UUID) error
 	// CountUsers returns a number of registered users. If includeSystem == false, skips system users
 	CountUsers(includeSystem bool) (int, error)
-	// CreateDomainUser persists a new domain user (linking a user to a domain)
-	CreateDomainUser(du *data.DomainUser) error
 	// CreateUser persists a new user
 	CreateUser(u *data.User) error
 	// CreateUserSession persists a new user session
@@ -37,8 +35,8 @@ type UserService interface {
 	FindLocalUserByEmail(email string) (*data.User, error)
 	// FindUserByID finds and returns a user by the given user ID
 	FindUserByID(id *uuid.UUID) (*data.User, error)
-	// FindUserBySession finds and returns a user by the given user and session ID
-	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, error)
+	// FindUserBySession finds and returns a user and the related session by the given user and session ID
+	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error)
 	// IsUserEmailKnown returns whether there's any user present with the given email
 	IsUserEmailKnown(email string) (bool, error)
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
@@ -89,23 +87,6 @@ func (svc *userService) CountUsers(includeSystem bool) (int, error) {
 	} else {
 		return i, nil
 	}
-}
-
-func (svc *userService) CreateDomainUser(du *data.DomainUser) error {
-	logger.Debugf("userService.CreateDomainUser(%v)", du)
-
-	// Insert a new record
-	err := db.Exec(
-		"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator) "+
-			"values($1, $2, $3, $4, $5, $6, $7);",
-		du.DomainID, du.UserID, du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator)
-	if err != nil {
-		logger.Errorf("userService.CreateDomainUser: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
 }
 
 func (svc *userService) CreateUser(u *data.User) error {
@@ -258,7 +239,7 @@ func (svc *userService) FindLocalUserByEmail(email string) (*data.User, error) {
 		email)
 
 	// Fetch the owner user
-	if u, err := svc.fetchUser(row); err != nil {
+	if u, _, err := svc.fetchUserSession(row, false); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
@@ -279,32 +260,36 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 		id)
 
 	// Fetch the user
-	if u, err := svc.fetchUser(row); err != nil {
+	if u, _, err := svc.fetchUserSession(row, false); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
 	}
 }
 
-func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, error) {
+func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error) {
 	logger.Debugf("userService.FindUserBySession(%s, %s)", userID, sessionID)
 
 	// Query the database
 	row := db.QueryRow(
 		"select "+
+			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url, "+
+			// User session fields
+			"s.id, s.user_id, s.ts_created, s.ts_expires, s.host, s.proto, s.ip, s.country, s.ua_browser_name, "+
+			"s.ua_browser_version, s.ua_os_name, s.ua_os_version, s.ua_device "+
 			"from cm_users u "+
 			"join cm_user_sessions s on s.user_id=u.id "+
 			"where u.id=$1 and s.id=$2 and s.ts_created<$3 and s.ts_expires>=$3;",
 		userID, sessionID, time.Now().UTC())
 
-	// Fetch the user
-	if u, err := svc.fetchUser(row); err != nil {
-		return nil, translateDBErrors(err)
+	// Fetch the user and their session
+	if u, us, err := svc.fetchUserSession(row, true); err != nil {
+		return nil, nil, translateDBErrors(err)
 	} else {
-		return u, nil
+		return u, us, nil
 	}
 }
 
@@ -343,7 +328,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	// Fetch the users
 	var res []data.User
 	for rows.Next() {
-		if u, err := svc.fetchUser(rows); err != nil {
+		if u, _, err := svc.fetchUserSession(rows, false); err != nil {
 			return nil, translateDBErrors(err)
 		} else {
 			res = append(res, *u)
@@ -406,10 +391,11 @@ func (svc *userService) UpdateLocalUser(user *data.User) error {
 	return nil
 }
 
-// fetchUser returns a new user instance from the provided database row
-func (svc *userService) fetchUser(s util.Scanner) (*data.User, error) {
+// fetchUser returns a new user, and, optionally, user session instance from the provided database row
+func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*data.User, *data.UserSession, error) {
+	// Prepare user fields
 	u := data.User{}
-	if err := s.Scan(
+	args := []any{
 		&u.ID,
 		&u.Email,
 		&u.Name,
@@ -431,12 +417,37 @@ func (svc *userService) fetchUser(s util.Scanner) (*data.User, error) {
 		&u.FederatedID,
 		&u.Avatar,
 		&u.WebsiteURL,
-	); err != nil {
+	}
+
+	// Prepare session fields, if necessary
+	var us *data.UserSession
+	if fetchSession {
+		us = &data.UserSession{}
+		args = append(
+			args,
+			&us.ID,
+			&us.UserID,
+			&us.CreatedTime,
+			&us.ExpiresTime,
+			&us.Host,
+			&us.Proto,
+			&us.IP,
+			&us.Country,
+			&us.BrowserName,
+			&us.BrowserVersion,
+			&us.OSName,
+			&us.OSVersion,
+			&us.Device,
+		)
+	}
+
+	// Fetch the data
+	if err := s.Scan(args...); err != nil {
 		// Log "not found" errors only in debug
 		if err != sql.ErrNoRows || logger.IsEnabledFor(logging.DEBUG) {
-			logger.Errorf("userService.fetchUser: Scan() failed: %v", err)
+			logger.Errorf("userService.fetchUserSession: Scan() failed: %v", err)
 		}
-		return nil, err
+		return nil, nil, err
 	}
-	return &u, nil
+	return &u, us, nil
 }

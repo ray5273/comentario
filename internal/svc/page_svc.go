@@ -78,9 +78,9 @@ func (svc *pageService) GetRegisteringView(domainID *uuid.UUID, path string) (*d
 
 	// Query a page row
 	row := db.QueryRow(
-		"insert into cm_domain_pages(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
+		"insert into cm_domain_pages as p(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
 			"values($1, $2, $3, '', false, $4, 0, 1) "+
-			"on conflict update set count_views=count_views+1 "+
+			"on conflict (domain_id, path) do update set count_views=p.count_views+1 "+
 			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
 		&id, domainID, path, time.Now().UTC())
 
@@ -115,7 +115,7 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 	// Update the page record
 	if err := db.ExecOne(
 		"update cm_domain_pages set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
-		pageID, incComments, incViews,
+		incComments, incViews, pageID,
 	); err != nil {
 		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
 		return translateDBErrors(err)

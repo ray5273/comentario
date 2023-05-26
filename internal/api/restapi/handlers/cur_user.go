@@ -21,7 +21,7 @@ func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 	}
 
 	// Succeeded: owner's logged in
-	return api_auth.NewCurUserGetOK().WithPayload(user.ToPrincipal())
+	return api_auth.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
 }
 
 func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, user *data.User) middleware.Responder {

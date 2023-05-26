@@ -97,7 +97,7 @@ func DomainImport(params api_owner.DomainImportParams, user *data.User) middlewa
 
 	// Perform import
 	*/
-	var count int64
+	var count uint64
 	/*var err error
 	switch params.Source {
 	case "commento":

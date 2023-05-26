@@ -21,10 +21,16 @@ func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Respon
 		return r
 	}
 
+	// Find the domain user, creating one if necessary
+	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Succeeded
 	return api_commenter.NewCommenterLoginOK().WithPayload(&api_commenter.CommenterLoginOKBody{
 		SessionToken: session.EncodeIDs(),
-		Principal:    user.ToPrincipal(),
+		Principal:    user.ToPrincipal(du),
 	})
 }
 
@@ -75,7 +81,7 @@ func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Resp
 	}
 
 	// Succeeded
-	return api_commenter.NewCommenterSignupOK().WithPayload(user.ToPrincipal())
+	return api_commenter.NewCommenterSignupOK().WithPayload(&api_commenter.CommenterSignupOKBody{IsConfirmed: user.Confirmed})
 }
 
 func CommenterPwdResetSendEmail(params api_commenter.CommenterPwdResetSendEmailParams) middleware.Responder {
@@ -91,13 +97,16 @@ func CommenterSelf(params api_commenter.CommenterSelfParams) middleware.Responde
 	// Fetch the session header value
 	if s := params.HTTPRequest.Header.Get(util.HeaderUserSession); s != "" {
 		// Try to fetch the user
-		if user, err := AuthUserBySessionHeader(s); err == nil && !user.IsAnonymous() {
-			// User is authenticated
-			return api_commenter.NewCommenterSelfOK().WithPayload(user.ToPrincipal())
+		if user, userSession, err := FetchUserBySessionHeader(s); err == nil && !user.IsAnonymous() && userSession != nil {
+			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
+			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
+				// Succeeded: user is authenticated
+				return api_commenter.NewCommenterSelfOK().WithPayload(user.ToPrincipal(domainUser))
+			}
 		}
 	}
 
-	// Not logged in, bad header value, the user is anonymous or doesn't exist
+	// Not logged in, bad header value, the user is anonymous or doesn't exist, or domain was deleted
 	return api_commenter.NewCommenterSelfNoContent()
 }
 

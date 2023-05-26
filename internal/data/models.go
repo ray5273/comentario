@@ -156,13 +156,21 @@ func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 	}
 }
 
-// ToPrincipal converts this user into a Principal model
-func (u *User) ToPrincipal() *models.Principal {
+// ToPrincipal converts this user into a Principal model. du is an optional domain user model, applying for commenter
+// authentication only; should be nil for UI authentication
+func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 	return &models.Principal{
-		Email:       strfmt.Email(u.Email),
-		ID:          strfmt.UUID(u.ID.String()),
-		IsConfirmed: u.Confirmed,
-		Name:        u.Name,
+		Email:           strfmt.Email(u.Email),
+		ID:              strfmt.UUID(u.ID.String()),
+		IsCommenter:     du != nil && du.IsCommenter,
+		IsConfirmed:     u.Confirmed,
+		IsLocal:         u.FederatedIdP == "",
+		IsModerator:     du != nil && du.IsModerator,
+		IsOwner:         du != nil && du.IsOwner,
+		Name:            u.Name,
+		NotifyModerator: du != nil && du.NotifyModerator,
+		NotifyReplies:   du != nil && du.NotifyReplies,
+		WebsiteURL:      strfmt.URI(u.WebsiteURL),
 	}
 }
 
@@ -380,6 +388,7 @@ type Comment struct {
 	Markdown     string        // Comment text in markdown
 	HTML         string        // Rendered comment text in HTML
 	Score        int           // Comment score
+	IsSticky     bool          // Whether the comment is sticky (attached to the top of page)
 	IsApproved   bool          // Whether the comment is approved and can be seen by everyone
 	IsSpam       bool          // Whether the comment is flagged as (potential) spam
 	IsDeleted    bool          // Whether the comment is marked as deleted
@@ -409,6 +418,7 @@ func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 }
 
 // ToDTO converts this model into an API model
+// NB: leaves the Direction at 0
 func (c *Comment) ToDTO() *models.Comment {
 	return &models.Comment{
 		CreatedTime: strfmt.DateTime(c.CreatedTime),
@@ -417,6 +427,7 @@ func (c *Comment) ToDTO() *models.Comment {
 		IsApproved:  c.IsApproved,
 		IsDeleted:   c.IsDeleted,
 		IsSpam:      c.IsSpam,
+		IsSticky:    c.IsSticky,
 		Markdown:    c.Markdown,
 		PageID:      strfmt.UUID(c.PageID.String()),
 		ParentID:    NullUUIDStr(&c.ParentID),

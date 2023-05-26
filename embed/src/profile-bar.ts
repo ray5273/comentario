@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { Commenter, Email, IdentityProvider, ProfileSettings, SignupData } from './models';
+import { IdentityProvider, PageInfo, Principal, ProfileSettings, SignupData } from './models';
 import { Utils } from './utils';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
@@ -11,13 +11,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
 
     private btnSettings?: Wrap<HTMLAnchorElement>;
     private btnLogin?: Wrap<HTMLButtonElement>;
-    private commenter?: Commenter;
-    private email?: Email;
-    private _idps?: IdentityProvider[];
+    private principal?: Principal;
+    private _pageInfo?: PageInfo;
 
     /**
      * @param baseUrl Comentario's base URL.
      * @param root Root element (for showing popups).
+     * @param federatedIdps Federated identity providers configured on the backend.
      * @param onLocalAuth Callback for executing a local authentication.
      * @param onOAuth Callback for executing external (OAuth) authentication.
      * @param onPasswordReset Callback for resetting user password.
@@ -27,6 +27,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     constructor(
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
+        private readonly federatedIdps: IdentityProvider[],
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
         private readonly onPasswordReset: (email: string) => Promise<void>,
@@ -37,46 +38,34 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     }
 
     /**
-     * Map of allowed identity providers.
+     * Current page data.
      */
-    set idps(idps: IdentityProvider[] | undefined) {
-        this._idps = idps;
+    set pageInfo(v: PageInfo | undefined) {
+        this._pageInfo = v;
         // Hide or show the login button based on the availability of any auth method
-        this.btnLogin?.setClasses(!idps?.length, 'hidden');
-    }
-
-    /**
-     * Sets whether the currently logged-in commenter is a moderator on this page.
-     */
-    set isModerator(b: boolean) {
-        if (this.commenter) {
-            this.commenter.isModerator = b;
-        }
+        this.btnLogin?.setClasses(!(v?.authLocal || v?.authSso || v?.idps?.length), 'hidden');
     }
 
     /**
      * Called whenever there's an authenticated user. Sets up the controls related to the current user.
-     * @param commenter Currently authenticated user.
-     * @param email Email of the commenter.
-     * @param token Authenticated user's token.
+     * @param principal Currently authenticated user.
      * @param onLogout Logout button click handler.
      */
-    authenticated(commenter: Commenter, email: Email, token: string, onLogout: () => void): void {
+    authenticated(principal: Principal, onLogout: () => void): void {
         this.btnLogin = undefined;
-        this.commenter = commenter;
-        this.email     = email;
+        this.principal = principal;
 
         // Create an avatar element
-        const idxColor = Utils.colourIndex(`${this.commenter.commenterHex}-${this.commenter.name}`);
-        const avatar = this.commenter.avatarUrl ?
+        const idxColor = Utils.colourIndex(`${this.principal.id}-${this.principal.name}`);
+        const avatar = /* TODO new-db this.principal.avatarUrl ?
             Wrap.new('img')
                 .classes('avatar-img')
                 .attr({
-                    src: `${this.baseUrl}/api/commenter/photo/${this.commenter.commenterHex}`,
+                    src: `${this.baseUrl}/api/commenter/photo/${this.principal.id}`,
                     loading: 'lazy',
                     alt: '',
-                }) :
-            UIToolkit.div('avatar', `bg-${idxColor}`).html(this.commenter.name![0].toUpperCase());
+                }) :*/
+            UIToolkit.div('avatar', `bg-${idxColor}`).html(this.principal.name![0].toUpperCase());
 
         // Recreate the content
         this.html('')
@@ -87,12 +76,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                         // Avatar
                         avatar,
                         // Name and link
-                        Wrap.new(this.commenter.websiteUrl ? 'a' : 'div')
+                        Wrap.new(this.principal.websiteUrl ? 'a' : 'div')
                             .classes('name')
-                            .inner(this.commenter.name!)
+                            .inner(this.principal.name!)
                             .attr({
-                                href: this.commenter.websiteUrl,
-                                rel:  this.commenter.websiteUrl && 'nofollow noopener noreferrer',
+                                href: this.principal.websiteUrl,
+                                rel:  this.principal.websiteUrl && 'nofollow noopener noreferrer',
                             })),
                 // Buttons on the right
                 UIToolkit.div()
@@ -135,13 +124,26 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a login dialog and return a promise that's resolved when the dialog is closed.
      */
     async loginUser(): Promise<void> {
-        if (!this._idps) {
-            return Promise.reject('No configured authentication methods.');
+        // Make a list of available identity providers
+        const idps: IdentityProvider[] = [];
+        // -- Local
+        if (this._pageInfo?.authLocal) {
+            idps.push({id: '', name: 'Local'});
         }
-        const dlg = await LoginDialog.run(
-            this.root,
-            {ref: this.btnLogin!, placement: 'bottom-end'},
-            this._idps);
+        // -- SSO
+        if (this._pageInfo?.authSso) {
+            idps.push({id: 'sso', name: 'SSO'});
+        }
+        // -- Available federated IdPs enabled on the domain
+        this.federatedIdps.filter(idp => this.pageInfo?.idps?.includes(idp.id)).forEach(idp => idps.push(idp));
+
+        // Make sure there's any IdP available
+        if (!idps.length) {
+            return Promise.reject('Cannot login: no configured authentication methods.');
+        }
+
+        // Display the login dialog
+        const dlg = await LoginDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, idps);
         if (dlg.confirmed) {
             switch (dlg.navigateTo) {
                 case null:
@@ -187,7 +189,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show the settings dialog and return a promise that's resolved when the dialog is closed.
      */
     async editSettings(): Promise<void> {
-        const dlg = await SettingsDialog.run(this.root, {ref: this.btnSettings!, placement: 'bottom-end'}, this.commenter!, this.email!);
+        const dlg = await SettingsDialog.run(this.root, {ref: this.btnSettings!, placement: 'bottom-end'}, this.principal!);
         if (dlg.confirmed) {
             await this.onSaveSettings(dlg.data);
         }
