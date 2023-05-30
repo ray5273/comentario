@@ -2,7 +2,7 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
 	"gitlab.com/comentario/comentario/internal/util"
 )
 
@@ -25,8 +25,8 @@ var oauthSessions = &util.SafeStringMap[models.HexID]{}
 var commenterTokens = &util.SafeStringMap[models.HexID]{}
 */
 
-// OauthInit initiates a federated authentication process
-func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
+// AuthOauthInit initiates a federated authentication process
+func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 	/* TODO new-db
 	// Find the provider
 	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
@@ -42,14 +42,14 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	// Initiate an authentication session
 	sess, err := provider.BeginAuth(params.Token)
 	if err != nil {
-		logger.Warningf("OauthInit(): provider.BeginAuth() failed: %v", err)
+		logger.Warningf("AuthOauthInit(): provider.BeginAuth() failed: %v", err)
 		return respInternalError(nil)
 	}
 
 	// Fetch the redirection URL
 	sessURL, err := sess.GetAuthURL()
 	if err != nil {
-		logger.Warningf("OauthInit(): sess.GetAuthURL() failed: %v", err)
+		logger.Warningf("AuthOauthInit(): sess.GetAuthURL() failed: %v", err)
 		return respInternalError(nil)
 	}
 
@@ -59,7 +59,7 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 
 	// If the session doesn't have the state param, also store the commenter token locally, for subsequent use
 	if originalState, err := getSessionState(sess); err != nil {
-		logger.Warningf("OauthInit(): failed to extract session state: %v", err)
+		logger.Warningf("AuthOauthInit(): failed to extract session state: %v", err)
 		return respInternalError(nil)
 	} else if originalState == "" {
 		commenterTokens.Put(sessID, params.Token)
@@ -67,7 +67,7 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 	*/
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
-	return NewCookieResponder(api_commenter.NewOauthInitTemporaryRedirect()) /* TODO new-db .WithLocation(sessURL)).
+	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect()) /* TODO new-db .WithLocation(sessURL)).
 	WithCookie(
 		util.CookieNameAuthSession,
 		string(sessID),
@@ -77,7 +77,7 @@ func OauthInit(params api_commenter.OauthInitParams) middleware.Responder {
 		http.SameSiteLaxMode)*/
 }
 
-func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responder {
+func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Responder {
 	/* TODO new-db
 	// Find the provider
 	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
@@ -193,83 +193,7 @@ func OauthCallback(params api_commenter.OauthCallbackParams) middleware.Responde
 	return NewCookieResponder(closeParentWindowResponse()).WithoutCookie(util.CookieNameAuthSession, "/")
 }
 
-func OauthSsoInit(params api_commenter.OauthSsoInitParams) middleware.Responder {
-	/* TODO new-db
-	domainURL, err := util.ParseAbsoluteURL(params.HTTPRequest.Header.Get("Referer"))
-	if err != nil {
-		return oauthFailure(err)
-	}
-
-	// Try to find the commenter by token
-	commenterToken := models.HexID(params.Token)
-	if _, err = svc.TheUserService.FindCommenterByToken(commenterToken); err != nil && err != svc.ErrNotFound {
-		return oauthFailure(err)
-	}
-
-	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByHost(models.Host(domainURL.Host))
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Make sure the domain allows SSO authentication
-	found := false
-	for _, id := range domain.Idps {
-		if id == models.IdentityProviderIDSso {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return oauthFailure(fmt.Errorf("SSO not configured for %s", domain.Host))
-	}
-
-	// Verify the domain's SSO config is complete
-	if err := validateDomainSSOConfig(domain); err != nil {
-		return oauthFailure(err)
-	}
-
-	key, err := hex.DecodeString(domain.SsoSecret)
-	if err != nil {
-		logger.Errorf("OauthSsoInit: failed to decode SSO secret: %v", err)
-		return oauthFailure(err)
-	}
-
-	// Create and persist a new SSO token
-	token, err := svc.TheDomainService.CreateSSOToken(domain.Host, commenterToken)
-	if err != nil {
-		return oauthFailure(err)
-	}
-
-	tokenBytes, err := hex.DecodeString(string(token))
-	if err != nil {
-		logger.Errorf("OauthSsoInit: failed to decode SSO token: %v", err)
-		return oauthFailure(err)
-	}
-
-	// Parse the domain's SSO URL
-	ssoURL, err := util.ParseAbsoluteURL(string(domain.SsoURL))
-	if err != nil {
-		logger.Errorf("OauthSsoInit: failed to parse SSO URL: %v", err)
-		return oauthFailure(err)
-	}
-
-	// Generate a new HMAC signature hash
-	h := hmac.New(sha256.New, key)
-	h.Write(tokenBytes)
-	signature := hex.EncodeToString(h.Sum(nil))
-
-	// Add the token and the signature to the SSO URL
-	q := ssoURL.Query()
-	q.Set("token", string(token))
-	q.Set("hmac", signature)
-	ssoURL.RawQuery = q.Encode()
-	*/
-	// Succeeded: redirect to SSO
-	return api_commenter.NewOauthSsoInitTemporaryRedirect() // TODO new-db .WithLocation(ssoURL.String())
-}
-
-func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Responder {
+func AuthOauthSsoCallback(params api_auth.AuthOauthSsoCallbackParams) middleware.Responder {
 	/* TODO new-db
 	payloadBytes, err := hex.DecodeString(params.Payload)
 	if err != nil {
@@ -368,6 +292,82 @@ func OauthSsoCallback(params api_commenter.OauthSsoCallbackParams) middleware.Re
 	return closeParentWindowResponse()
 }
 
+func AuthOauthSsoInit(params api_auth.AuthOauthSsoInitParams) middleware.Responder {
+	/* TODO new-db
+	domainURL, err := util.ParseAbsoluteURL(params.HTTPRequest.Header.Get("Referer"))
+	if err != nil {
+		return oauthFailure(err)
+	}
+
+	// Try to find the commenter by token
+	commenterToken := models.HexID(params.Token)
+	if _, err = svc.TheUserService.FindCommenterByToken(commenterToken); err != nil && err != svc.ErrNotFound {
+		return oauthFailure(err)
+	}
+
+	// Fetch the domain
+	domain, err := svc.TheDomainService.FindByHost(models.Host(domainURL.Host))
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Make sure the domain allows SSO authentication
+	found := false
+	for _, id := range domain.Idps {
+		if id == models.IdentityProviderIDSso {
+			found = true
+			break
+		}
+	}
+	if !found {
+		return oauthFailure(fmt.Errorf("SSO not configured for %s", domain.Host))
+	}
+
+	// Verify the domain's SSO config is complete
+	if err := validateDomainSSOConfig(domain); err != nil {
+		return oauthFailure(err)
+	}
+
+	key, err := hex.DecodeString(domain.SsoSecret)
+	if err != nil {
+		logger.Errorf("AuthOauthSsoInit: failed to decode SSO secret: %v", err)
+		return oauthFailure(err)
+	}
+
+	// Create and persist a new SSO token
+	token, err := svc.TheDomainService.CreateSSOToken(domain.Host, commenterToken)
+	if err != nil {
+		return oauthFailure(err)
+	}
+
+	tokenBytes, err := hex.DecodeString(string(token))
+	if err != nil {
+		logger.Errorf("AuthOauthSsoInit: failed to decode SSO token: %v", err)
+		return oauthFailure(err)
+	}
+
+	// Parse the domain's SSO URL
+	ssoURL, err := util.ParseAbsoluteURL(string(domain.SsoURL))
+	if err != nil {
+		logger.Errorf("AuthOauthSsoInit: failed to parse SSO URL: %v", err)
+		return oauthFailure(err)
+	}
+
+	// Generate a new HMAC signature hash
+	h := hmac.New(sha256.New, key)
+	h.Write(tokenBytes)
+	signature := hex.EncodeToString(h.Sum(nil))
+
+	// Add the token and the signature to the SSO URL
+	q := ssoURL.Query()
+	q.Set("token", string(token))
+	q.Set("hmac", signature)
+	ssoURL.RawQuery = q.Encode()
+	*/
+	// Succeeded: redirect to SSO
+	return api_auth.NewAuthOauthSsoInitTemporaryRedirect() // TODO new-db .WithLocation(ssoURL.String())
+}
+
 /* TODO new-db
 
 // getSessionState extracts the state parameter from the given session's URL
@@ -392,7 +392,7 @@ func getSessionState(sess goth.Session) (string, error) {
 // auth session cookie
 func oauthFailure(err error) middleware.Responder {
 	return NewCookieResponder(
-		api_commenter.NewOauthInitUnauthorized().
+		api_auth.NewAuthOauthInitUnauthorized().
 			WithPayload(fmt.Sprintf(
 				`<html lang="en">
 				<head>

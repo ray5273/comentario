@@ -17,12 +17,10 @@ require (
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/justinas/alice v1.2.0
 	github.com/lib/pq v1.10.8
-	github.com/lunny/html2md v0.0.0-20181018071239-7d234de44546
 	github.com/markbates/goth v1.77.0
 	github.com/microcosm-cc/bluemonday v1.0.23
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/phuslu/iploc v1.0.20230330
-	github.com/pkg/errors v0.9.1
 	github.com/russross/blackfriday v1.6.0
 	golang.org/x/crypto v0.8.0
 	golang.org/x/net v0.9.0

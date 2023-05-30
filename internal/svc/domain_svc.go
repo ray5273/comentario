@@ -309,7 +309,7 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error {
 	logger.Debugf("domainService.IncrementCounts(%s, %d, %d)", domainID, incComments, incViews)
 
-	// Update the page record
+	// Update the domain record
 	if err := db.ExecOne(
 		"update cm_domains set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
 		incComments, incViews, domainID,

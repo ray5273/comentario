@@ -5,7 +5,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -13,7 +13,7 @@ import (
 	"time"
 )
 
-func CommentCount(params api_commenter.CommentCountParams) middleware.Responder {
+func EmbedCommentCount(params api_embed.EmbedCommentCountParams) middleware.Responder {
 	// Fetch the domain for the given host
 	d, err := svc.TheDomainService.FindByHost(string(params.Body.Host))
 	if err != nil {
@@ -27,11 +27,11 @@ func CommentCount(params api_commenter.CommentCountParams) middleware.Responder 
 	}
 
 	// Succeeded
-	return api_commenter.NewCommentCountOK().WithPayload(&api_commenter.CommentCountOKBody{CommentCounts: cc})
+	return api_embed.NewEmbedCommentCountOK().WithPayload(&api_embed.EmbedCommentCountOKBody{CommentCounts: cc})
 }
 
-func CommentDelete(params api_commenter.CommentDeleteParams, user *data.User) middleware.Responder {
-	// Verify the commenter is authenticated
+func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
@@ -61,10 +61,10 @@ func CommentDelete(params api_commenter.CommentDeleteParams, user *data.User) mi
 	}
 
 	// Succeeded
-	return api_commenter.NewCommentDeleteNoContent()
+	return api_embed.NewEmbedCommentDeleteNoContent()
 }
 
-func CommentList(params api_commenter.CommentListParams, user *data.User) middleware.Responder {
+func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) middleware.Responder {
 	// Fetch the domain and the user (don't create one yet if there's none)
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
 	if err == svc.ErrNotFound {
@@ -108,15 +108,15 @@ func CommentList(params api_commenter.CommentListParams, user *data.User) middle
 	// TODO new-db _ = svc.TheDomainService.RegisterView(domain.Host, commenter)
 
 	// Succeeded
-	return api_commenter.NewCommentListOK().WithPayload(&api_commenter.CommentListOKBody{
+	return api_embed.NewEmbedCommentListOK().WithPayload(&api_embed.EmbedCommentListOKBody{
 		Commenters: commenters,
 		Comments:   comments,
 		PageInfo:   pageInfo,
 	})
 }
 
-func CommentModerate(params api_commenter.CommentModerateParams, user *data.User) middleware.Responder {
-	// Verify the commenter is authenticated
+func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
@@ -139,10 +139,10 @@ func CommentModerate(params api_commenter.CommentModerateParams, user *data.User
 	}
 	*/
 	// Succeeded
-	return api_commenter.NewCommentModerateNoContent()
+	return api_embed.NewEmbedCommentModerateNoContent()
 }
 
-func CommentNew(params api_commenter.CommentNewParams, user *data.User) middleware.Responder {
+func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) middleware.Responder {
 	// Fetch the domain and the user, creating one if necessary
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if err == svc.ErrNotFound {
@@ -152,7 +152,7 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 		return respServiceError(err)
 	}
 
-	// If the domain disallows anonymous commenting, verify the commenter is authenticated
+	// If the domain disallows anonymous commenting, verify the user is authenticated
 	if !domain.AuthAnonymous {
 		if r := Verifier.UserIsAuthenticated(user); r != nil {
 			return r
@@ -227,14 +227,14 @@ func CommentNew(params api_commenter.CommentNewParams, user *data.User) middlewa
 	}
 
 	// Succeeded
-	return api_commenter.NewCommentNewOK().WithPayload(&api_commenter.CommentNewOKBody{
+	return api_embed.NewEmbedCommentNewOK().WithPayload(&api_embed.EmbedCommentNewOKBody{
 		Comment:   comment.ToDTO(),
 		Commenter: user.ToCommenter(domainUser.IsCommenter, domainUser.IsModerator),
 	})
 }
 
-func CommentUpdate(params api_commenter.CommentUpdateParams, user *data.User) middleware.Responder {
-	// Verify the commenter is authenticated
+func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
@@ -251,19 +251,20 @@ func CommentUpdate(params api_commenter.CommentUpdateParams, user *data.User) mi
 	}
 
 	// Render the comment into HTML
-	html := util.MarkdownToHTML(params.Body.Markdown)
+	comment.Markdown = strings.TrimSpace(params.Body.Markdown)
+	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Persist the edits in the database
-	if err := svc.TheCommentService.UpdateText(&comment.ID, params.Body.Markdown, html); err != nil {
+	if err := svc.TheCommentService.UpdateText(&comment.ID, comment.Markdown, comment.HTML); err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_commenter.NewCommentUpdateOK().WithPayload(&api_commenter.CommentUpdateOKBody{Comment: comment.ToDTO()})
+	return api_embed.NewEmbedCommentUpdateOK().WithPayload(&api_embed.EmbedCommentUpdateOKBody{Comment: comment.ToDTO()})
 }
 
-func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middleware.Responder {
-	// Verify the commenter is authenticated
+func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
 	}
@@ -276,7 +277,7 @@ func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middle
 	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
 		return respServiceError(err)
 
-		// Make sure the commenter is not voting for their own comment
+		// Make sure the user is not voting for their own comment
 	} else if comment.UserCreated.UUID == user.ID {
 		return respForbidden(ErrorSelfVote)
 
@@ -286,7 +287,7 @@ func CommentVote(params api_commenter.CommentVoteParams, user *data.User) middle
 
 	} else {
 		// Succeeded
-		return api_commenter.NewCommentVoteOK().WithPayload(&api_commenter.CommentVoteOKBody{Score: int64(score)})
+		return api_embed.NewEmbedCommentVoteOK().WithPayload(&api_embed.EmbedCommentVoteOKBody{Score: int64(score)})
 	}
 }
 

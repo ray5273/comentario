@@ -92,8 +92,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	// Query the database
 	var c data.Comment
 	if err := db.QueryRow(
-		"select "+
-			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_spam, c.is_deleted, c.ts_created, c.user_created, "+
+		"select c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_spam, c.is_deleted, c.ts_created, c.user_created "+
 			"from cm_comments c "+
 			"where c.id=$1;",
 		id,
@@ -111,6 +110,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 		&c.CreatedTime,
 		&c.UserCreated,
 	); err != nil {
+		logger.Errorf("commentService.FindByID: QueryRow() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 

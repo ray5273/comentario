@@ -26,6 +26,8 @@ type PageService interface {
 	GetRegisteringView(domainID *uuid.UUID, path string) (*data.DomainPage, error)
 	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
 	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
+	// Update updates the page by its ID
+	Update(page *data.DomainPage) error
 	// UpdateTitleByHostPath updates page title for the specified host and path combination
 	UpdateTitleByHostPath(host, path string) (string, error)
 }
@@ -162,6 +164,22 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 
 	// Succeeded
 	return &p, nil
+}
+
+func (svc *pageService) Update(page *data.DomainPage) error {
+	logger.Debugf("pageService.Update(%#v)", page)
+
+	// Update the page record
+	if err := db.ExecOne(
+		"update cm_domain_pages set title=$1,is_readonly=$2 where id=$3",
+		page.Title, page.IsReadonly, &page.ID,
+	); err != nil {
+		logger.Errorf("pageService.Update: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 func (svc *pageService) UpdateTitleByHostPath(host, path string) (string, error) {

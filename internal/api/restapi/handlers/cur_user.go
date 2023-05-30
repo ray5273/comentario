@@ -24,7 +24,7 @@ func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 	return api_auth.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
 }
 
-func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, user *data.User) middleware.Responder {
+func CurUserUpdate(params api_auth.CurUserUpdateParams, user *data.User) middleware.Responder {
 	// Verify it's a local user
 	if r := Verifier.UserIsLocal(user); r != nil {
 		return r
@@ -46,5 +46,5 @@ func CurUserProfileUpdate(params api_auth.CurUserProfileUpdateParams, user *data
 	}
 
 	// Succeeded
-	return api_auth.NewCurUserProfileUpdateNoContent()
+	return api_auth.NewCurUserUpdateNoContent()
 }

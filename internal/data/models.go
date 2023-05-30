@@ -378,6 +378,12 @@ func (p *DomainPage) DisplayTitle(domain *Domain) string {
 	return domain.Host + p.Path
 }
 
+// WithIsReadonly sets the IsReadonly value
+func (p *DomainPage) WithIsReadonly(b bool) *DomainPage {
+	p.IsReadonly = b
+	return p
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // Comment represents a comment

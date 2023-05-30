@@ -13,8 +13,8 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -88,6 +88,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Auth API
 	//------------------------------------------------------------------------------------------------------------------
 
+	// Auth
 	api.APIAuthAuthConfirmHandler = api_auth.AuthConfirmHandlerFunc(handlers.AuthConfirm)
 	api.APIAuthAuthDeleteProfileHandler = api_auth.AuthDeleteProfileHandlerFunc(handlers.AuthDeleteProfile)
 	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
@@ -95,35 +96,36 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIAuthAuthPwdResetChangeHandler = api_auth.AuthPwdResetChangeHandlerFunc(handlers.AuthPwdResetChange)
 	api.APIAuthAuthPwdResetSendEmailHandler = api_auth.AuthPwdResetSendEmailHandlerFunc(handlers.AuthPwdResetSendEmail)
 	api.APIAuthAuthSignupHandler = api_auth.AuthSignupHandlerFunc(handlers.AuthSignup)
-	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
-	api.APIAuthCurUserProfileUpdateHandler = api_auth.CurUserProfileUpdateHandlerFunc(handlers.CurUserProfileUpdate)
-
-	//------------------------------------------------------------------------------------------------------------------
-	// Commenter API
-	//------------------------------------------------------------------------------------------------------------------
-
-	// Comment
-	api.APICommenterCommentCountHandler = api_commenter.CommentCountHandlerFunc(handlers.CommentCount)
-	api.APICommenterCommentDeleteHandler = api_commenter.CommentDeleteHandlerFunc(handlers.CommentDelete)
-	api.APICommenterCommentListHandler = api_commenter.CommentListHandlerFunc(handlers.CommentList)
-	api.APICommenterCommentModerateHandler = api_commenter.CommentModerateHandlerFunc(handlers.CommentModerate)
-	api.APICommenterCommentNewHandler = api_commenter.CommentNewHandlerFunc(handlers.CommentNew)
-	api.APICommenterCommentUpdateHandler = api_commenter.CommentUpdateHandlerFunc(handlers.CommentUpdate)
-	api.APICommenterCommentVoteHandler = api_commenter.CommentVoteHandlerFunc(handlers.CommentVote)
-	// Commenter
-	api.APICommenterCommenterLoginHandler = api_commenter.CommenterLoginHandlerFunc(handlers.CommenterLogin)
-	api.APICommenterCommenterLogoutHandler = api_commenter.CommenterLogoutHandlerFunc(handlers.CommenterLogout)
-	api.APICommenterCommenterSignupHandler = api_commenter.CommenterSignupHandlerFunc(handlers.CommenterSignup)
-	api.APICommenterCommenterPwdResetSendEmailHandler = api_commenter.CommenterPwdResetSendEmailHandlerFunc(handlers.CommenterPwdResetSendEmail)
-	api.APICommenterCommenterSelfHandler = api_commenter.CommenterSelfHandlerFunc(handlers.CommenterSelf)
-	api.APICommenterCommenterUpdateHandler = api_commenter.CommenterUpdateHandlerFunc(handlers.CommenterUpdate)
 	// OAuth
-	api.APICommenterOauthInitHandler = api_commenter.OauthInitHandlerFunc(handlers.OauthInit)
-	api.APICommenterOauthCallbackHandler = api_commenter.OauthCallbackHandlerFunc(handlers.OauthCallback)
-	api.APICommenterOauthSsoCallbackHandler = api_commenter.OauthSsoCallbackHandlerFunc(handlers.OauthSsoCallback)
-	api.APICommenterOauthSsoInitHandler = api_commenter.OauthSsoInitHandlerFunc(handlers.OauthSsoInit)
+	api.APIAuthAuthOauthCallbackHandler = api_auth.AuthOauthCallbackHandlerFunc(handlers.AuthOauthCallback)
+	api.APIAuthAuthOauthInitHandler = api_auth.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
+	api.APIAuthAuthOauthSsoCallbackHandler = api_auth.AuthOauthSsoCallbackHandlerFunc(handlers.AuthOauthSsoCallback)
+	api.APIAuthAuthOauthSsoInitHandler = api_auth.AuthOauthSsoInitHandlerFunc(handlers.AuthOauthSsoInit)
+	// CurUser
+	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIAuthCurUserUpdateHandler = api_auth.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
+
+	//------------------------------------------------------------------------------------------------------------------
+	// Embed API
+	//------------------------------------------------------------------------------------------------------------------
+
+	// Auth
+	api.APIEmbedEmbedAuthLoginHandler = api_embed.EmbedAuthLoginHandlerFunc(handlers.EmbedAuthLogin)
+	api.APIEmbedEmbedAuthLogoutHandler = api_embed.EmbedAuthLogoutHandlerFunc(handlers.EmbedAuthLogout)
+	api.APIEmbedEmbedAuthSignupHandler = api_embed.EmbedAuthSignupHandlerFunc(handlers.EmbedAuthSignup)
+	api.APIEmbedEmbedAuthPwdResetSendEmailHandler = api_embed.EmbedAuthPwdResetSendEmailHandlerFunc(handlers.EmbedAuthPwdResetSendEmail)
+	api.APIEmbedEmbedAuthCurUserGetHandler = api_embed.EmbedAuthCurUserGetHandlerFunc(handlers.EmbedAuthCurUserGet)
+	api.APIEmbedEmbedAuthCurUserUpdateHandler = api_embed.EmbedAuthCurUserUpdateHandlerFunc(handlers.EmbedAuthCurUserUpdate)
+	// Comment
+	api.APIEmbedEmbedCommentCountHandler = api_embed.EmbedCommentCountHandlerFunc(handlers.EmbedCommentCount)
+	api.APIEmbedEmbedCommentDeleteHandler = api_embed.EmbedCommentDeleteHandlerFunc(handlers.EmbedCommentDelete)
+	api.APIEmbedEmbedCommentListHandler = api_embed.EmbedCommentListHandlerFunc(handlers.EmbedCommentList)
+	api.APIEmbedEmbedCommentModerateHandler = api_embed.EmbedCommentModerateHandlerFunc(handlers.EmbedCommentModerate)
+	api.APIEmbedEmbedCommentNewHandler = api_embed.EmbedCommentNewHandlerFunc(handlers.EmbedCommentNew)
+	api.APIEmbedEmbedCommentUpdateHandler = api_embed.EmbedCommentUpdateHandlerFunc(handlers.EmbedCommentUpdate)
+	api.APIEmbedEmbedCommentVoteHandler = api_embed.EmbedCommentVoteHandlerFunc(handlers.EmbedCommentVote)
 	// Page
-	api.APICommenterPageUpdateHandler = api_commenter.PageUpdateHandlerFunc(handlers.PageUpdate)
+	api.APIEmbedEmbedPageUpdateHandler = api_embed.EmbedPageUpdateHandlerFunc(handlers.EmbedPageUpdate)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Owner API

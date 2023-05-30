@@ -31,21 +31,26 @@ export class SettingsDialog extends Dialog {
      * Entered settings.
      */
     get data(): ProfileSettings {
-        return {
-            email:           this._email?.val   || '',
-            name:            this._name?.val    || '',
-            websiteUrl:      this._website?.val || '',
-            avatarUrl:       this._avatar?.val  || '',
+        // Prepare a settings object
+        const d: ProfileSettings = {
             notifyModerator: !!this._cbNotifyModerator?.isChecked,
             notifyReplies:   !!this._cbNotifyReplies?.isChecked,
         };
+
+        // If the user is local, include profile data
+        if (this.principal.isLocal) {
+            d.name       = this._name?.val    || '';
+            d.websiteUrl = this._website?.val || '';
+            d.avatarUrl  = this._avatar?.val  || '';
+        }
+        return d;
     }
 
     override renderContent(): Wrap<any> {
         // Create inputs if it's a local user
         const inputs: Wrap<any>[] = [];
-        if (!this.principal.isLocal) {
-            this._email   = UIToolkit.input('email',   'email', 'Email address', 'email', true).value(this.principal.email      || '');
+        if (this.principal.isLocal) {
+            this._email   = UIToolkit.input('email',   'email', 'Email address', 'email')      .value(this.principal.email      || '').attr({disabled: ''});
             this._name    = UIToolkit.input('name',    'text',  'Real name',     'name', true) .value(this.principal.name       || '');
             this._website = UIToolkit.input('website', 'url',   'Website',       'url')        .value(this.principal.websiteUrl || '');
             // TODO new-db this._avatar  = UIToolkit.input('avatar',  'url',   'Avatar URL')                  .value(this.principal.avatarUrl  || '');
@@ -83,6 +88,6 @@ export class SettingsDialog extends Dialog {
     }
 
     override onShow(): void {
-        this._email?.focus();
+        this._name?.focus();
     }
 }

@@ -81,12 +81,11 @@ export interface SignupData {
 }
 
 export interface ProfileSettings {
-    readonly email:           string;  // Commenter's email address
-    readonly name:            string;  // Commenter's name
-    readonly websiteUrl?:     string;  // Optional commenter's website URL
-    readonly avatarUrl?:      string;  // Optional commenter's avatar URL
-    readonly notifyModerator: boolean; // Whether to send moderator notifications to the user
-    readonly notifyReplies:   boolean; // Whether to send reply notifications to the user
+    name?:            string;  // Commenter's name (only for a locally-authenticated user)
+    websiteUrl?:     string;  // Optional commenter's website URL (only for a locally-authenticated user)
+    avatarUrl?:      string;  // Optional commenter's avatar URL
+    notifyModerator: boolean; // Whether to send moderator notifications to the user
+    notifyReplies:   boolean; // Whether to send reply notifications to the user
 }
 
 export const ANONYMOUS_ID: UUID = '00000000-0000-0000-0000-000000000000';
@@ -104,5 +103,3 @@ export interface IdentityProvider {
     readonly name:  string; // Provider name
     readonly icon?: string; // Provider icon name
 }
-
-export const cloneComment = (c: Comment) => JSON.parse(JSON.stringify(c)) as Comment;

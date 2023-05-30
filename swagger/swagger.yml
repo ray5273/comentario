@@ -758,6 +758,86 @@ paths:
         204:
           description: Password has been reset
 
+  # OAuth
+
+  /auth/oauth/{provider}:
+    get:
+      operationId: AuthOauthInit
+      summary: Initiate signing in using federated authentication
+      tags:
+        - ApiAuth
+      security: []
+      produces:
+        - text/html # For an error response only, otherwise a redirect is issued
+      parameters:
+        - $ref: "#/parameters/federatedIdpId"
+        - $ref: "#/parameters/queryToken"
+      responses:
+        307:
+          $ref: "#/responses/OAuthRedirect"
+        401:
+          $ref: "#/responses/OAuthFailure"
+
+  /auth/oauth/{provider}/callback:
+    get:
+      operationId: AuthOauthCallback
+      summary: Endpoint that gets called back by the federated authentication provider
+      tags:
+        - ApiAuth
+      security: []
+      produces:
+        - text/html
+      parameters:
+        - $ref: "#/parameters/federatedIdpId"
+      responses:
+        200:
+          description: User has successfully signed in
+        401:
+          $ref: "#/responses/OAuthFailure"
+
+  /auth/oauth/sso:
+    get:
+      operationId: AuthOauthSsoInit
+      summary: Initiate signing in using federated SSO authentication
+      tags:
+        - ApiAuth
+      security: []
+      produces:
+        - text/html # For an error response only, otherwise a redirect is issued
+      parameters:
+        - $ref: "#/parameters/queryToken"
+      responses:
+        307:
+          $ref: "#/responses/OAuthRedirect"
+        401:
+          $ref: "#/responses/OAuthFailure"
+
+  /auth/oauth/sso/callback:
+    get:
+      operationId: AuthOauthSsoCallback
+      summary: Endpoint that gets called back by the SSO authentication provider
+      tags:
+        - ApiAuth
+      security: []
+      produces:
+        - text/html
+      parameters:
+        - in: query
+          name: payload
+          type: string
+          required: true
+          minLength: 1
+        - in: query
+          name: hmac
+          type: string
+          required: true
+          minLength: 1
+      responses:
+        200:
+          description: User has successfully signed in
+        401:
+          $ref: "#/responses/OAuthFailure"
+
   #---------------------------------------------------------------------------------------------------------------------
   # Current user
   #---------------------------------------------------------------------------------------------------------------------
@@ -778,7 +858,7 @@ paths:
           description: User is not authenticated
 
     put:
-      operationId: CurUserProfileUpdate
+      operationId: CurUserUpdate
       summary: Update profile details of the current user
       tags:
         - ApiAuth
@@ -811,252 +891,17 @@ paths:
           description: User profile has been updated
 
   #---------------------------------------------------------------------------------------------------------------------
-  # Comments
+  # Embed API
   #---------------------------------------------------------------------------------------------------------------------
 
-  /comments:
+  # Auth
+
+  /embed/auth/login:
     post:
-      operationId: CommentList
-      summary: Get a list of comments and commenters for the given host/path combination
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - host
-              - path
-            properties:
-              host:
-                $ref: "#/definitions/host"
-                description: Host the comments reside on
-              path:
-                $ref: "#/definitions/path"
-                description: Path of the page the comments reside on
-      responses:
-        200:
-          description: Comment and commenter list
-          schema:
-            type: object
-            properties:
-              pageInfo:
-                description: Page info
-                $ref: "#/definitions/pageInfo"
-              comments:
-                description: Comments on the page
-                type: array
-                items:
-                  $ref: "#/definitions/comment"
-              commenters:
-                description: Commenters, who authored comments on the page
-                type: array
-                items:
-                  $ref: "#/definitions/commenter"
-
-    put:
-      operationId: CommentNew
-      summary: Add a new comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - host
-              - path
-              - markdown
-            properties:
-              host:
-                description: Host the page resides on
-                $ref: "#/definitions/host"
-              path:
-                description: Path to the page to create a comment on
-                $ref: "#/definitions/path"
-              parentId:
-                description: Optional ID of the parent comment for the new one. If omitted, a root comment will be added
-                type: string
-                format: uuid
-              markdown:
-                description: Comment text in the markdown format
-                type: string
-                minLength: 1
-                maxLength: 4096
-                x-isnullable: false
-      responses:
-        200:
-          description: Comment is added
-          schema:
-            type: object
-            properties:
-              comment:
-                description: Added comment
-                $ref: "#/definitions/comment"
-              commenter:
-                description: Commenter that corresponds to the current user
-                $ref: "#/definitions/commenter"
-
-  /comments/counts:
-    post:
-      operationId: CommentCount
-      summary: Request comment counts for specified paths on given domain
-      tags:
-        - ApiCommenter
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - host
-              - paths
-            properties:
-              host:
-                $ref: "#/definitions/host"
-              paths:
-                type: array
-                items:
-                  $ref: "#/definitions/path"
-                minItems: 1
-                maxItems: 32
-      responses:
-        200:
-          description: Comment counts per path
-          schema:
-            type: object
-            properties:
-              commentCounts:
-                type: object # map[string]int
-
-  /comments/{uuid}:
-    parameters:
-      - $ref: "#/parameters/pathUuid"
-
-    delete:
-      operationId: CommentDelete
-      summary: Delete specified comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      responses:
-        204:
-          description: Comment has been deleted
-
-    put:
-      operationId: CommentUpdate
-      summary: Update specified comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - markdown
-            properties:
-              markdown:
-                description: Comment text in the markdown format
-                type: string
-                minLength: 1
-                maxLength: 4096
-                x-isnullable: false
-      responses:
-        200:
-          description: Comment is updated, the updated comment is returned
-          schema:
-            type: object
-            properties:
-              comment:
-                description: >
-                  Updated comment. NB: Vote direction in the returned comment is always 0
-                $ref: "#/definitions/comment"
-
-    post:
-      operationId: CommentVote
-      summary: Vote for specified comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - direction
-            properties:
-              direction:
-                type: integer
-                format: int8
-                enum:
-                  - -1
-                  - 0
-                  - 1
-                description: Vote direction
-      responses:
-        200:
-          description: Vote has been applied
-          schema:
-            type: object
-            properties:
-              score:
-                type: integer
-                description: The updated comment score
-                x-omitempty: false
-
-  /comments/{uuid}/moderate:
-    post:
-      operationId: CommentModerate
-      summary: Moderate specified unapproved comment
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - $ref: "#/parameters/pathUuid"
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - approve
-            properties:
-              approve:
-                description: Whether to approve the comment
-                type: boolean
-      responses:
-        204:
-          description: Comment has been approved
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # Commenters
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /commenter/login:
-    post:
-      operationId: CommenterLogin
+      operationId: EmbedAuthLogin
       summary: Sign a commenter in
       tags:
-        - ApiCommenter
+        - ApiEmbed
       security: []
       parameters:
         - in: body
@@ -1093,24 +938,24 @@ paths:
                 $ref: "#/definitions/principal"
                 description: Authenticated principal
 
-  /commenter/logout:
+  /embed/auth/logout:
     post:
-      operationId: CommenterLogout
+      operationId: EmbedAuthLogout
       summary: Log the currently signed-in commenter out
       tags:
-        - ApiCommenter
+        - ApiEmbed
       security:
         - userSessionHeader: []
       responses:
         204:
           description: Logged out successfully
 
-  /commenter/signup:
+  /embed/auth/signup:
     post:
-      operationId: CommenterSignup
+      operationId: EmbedAuthSignup
       summary: Sign up as a new commenter
       tags:
-        - ApiCommenter
+        - ApiEmbed
       security: []
       parameters:
         - in: body
@@ -1157,12 +1002,12 @@ paths:
                 description: Whether the user has been immediately confirmed
                 x-omitempty: false
 
-  /commenter/pwdreset:
+  /embed/auth/pwdreset:
     post:
-      operationId: CommenterPwdResetSendEmail
+      operationId: EmbedAuthPwdResetSendEmail
       summary: Request commenter's password reset by sending them an email
       tags:
-        - ApiCommenter
+        - ApiEmbed
       security: []
       parameters:
         - in: body
@@ -1180,12 +1025,12 @@ paths:
         204:
           description: Reset email has been sent, if the email address is known
 
-  /commenter/self:
+  /embed/auth/user:
     post:
-      operationId: CommenterSelf
+      operationId: EmbedAuthCurUserGet
       summary: Request commenter's sign-in status and, if the commenter's signed in, their details
       tags:
-        - ApiCommenter
+        - ApiEmbed
       security: []
       responses:
         204:
@@ -1195,12 +1040,11 @@ paths:
           schema:
             $ref: "#/definitions/principal"
 
-  /commenter/update:
-    post:
-      operationId: CommenterUpdate
+    put:
+      operationId: EmbedAuthCurUserUpdate
       summary: Update commenter details
       tags:
-        - ApiCommenter
+        - ApiEmbed
       security:
         - userSessionHeader: []
       parameters:
@@ -1210,22 +1054,292 @@ paths:
           schema:
             type: object
             required:
-              - email
-              - name
+              - pageId
             properties:
-              email:
+              pageId:
                 type: string
-                format: email
+                format: uuid
+                description: ID of the page to apply user notification settings on
               name:
                 type: string
                 minLength: 1
                 maxLength: 63
+                description: Full name of the user. Required for a locally-authenticated user, ignored otherwise
               websiteUrl:
                 type: string
                 format: uri
+                description: Optional website URL of the user. Ignored for a federated user
+              notifyReplies:
+                type: boolean
+                description: Whether the user is to be notified about replies to their comments
+              notifyModerator:
+                type: boolean
+                description: Whether the user is to receive moderator notifications
       responses:
         204:
           description: Commenter details haven been updated
+
+  # Comments
+
+  /embed/comments:
+    post:
+      operationId: EmbedCommentList
+      summary: Get a list of comments and commenters for the given host/path combination
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - host
+              - path
+            properties:
+              host:
+                $ref: "#/definitions/host"
+                description: Host the comments reside on
+              path:
+                $ref: "#/definitions/path"
+                description: Path of the page the comments reside on
+      responses:
+        200:
+          description: Comment and commenter list
+          schema:
+            type: object
+            properties:
+              pageInfo:
+                description: Page info
+                $ref: "#/definitions/pageInfo"
+              comments:
+                description: Comments on the page
+                type: array
+                items:
+                  $ref: "#/definitions/comment"
+              commenters:
+                description: Commenters, who authored comments on the page
+                type: array
+                items:
+                  $ref: "#/definitions/commenter"
+
+    put:
+      operationId: EmbedCommentNew
+      summary: Add a new comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - host
+              - path
+              - markdown
+            properties:
+              host:
+                description: Host the page resides on
+                $ref: "#/definitions/host"
+              path:
+                description: Path to the page to create a comment on
+                $ref: "#/definitions/path"
+              parentId:
+                description: Optional ID of the parent comment for the new one. If omitted, a root comment will be added
+                type: string
+                format: uuid
+              markdown:
+                description: Comment text in the markdown format
+                type: string
+                minLength: 1
+                maxLength: 4096
+                x-isnullable: false
+      responses:
+        200:
+          description: Comment is added
+          schema:
+            type: object
+            properties:
+              comment:
+                description: Added comment
+                $ref: "#/definitions/comment"
+              commenter:
+                description: Commenter that corresponds to the current user
+                $ref: "#/definitions/commenter"
+
+  /embed/comments/counts:
+    post:
+      operationId: EmbedCommentCount
+      summary: Request comment counts for specified paths on given domain
+      tags:
+        - ApiEmbed
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - host
+              - paths
+            properties:
+              host:
+                $ref: "#/definitions/host"
+              paths:
+                type: array
+                items:
+                  $ref: "#/definitions/path"
+                minItems: 1
+                maxItems: 32
+      responses:
+        200:
+          description: Comment counts per path
+          schema:
+            type: object
+            properties:
+              commentCounts:
+                type: object # map[string]int
+
+  /embed/comments/{uuid}:
+    parameters:
+      - $ref: "#/parameters/pathUuid"
+
+    delete:
+      operationId: EmbedCommentDelete
+      summary: Delete specified comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      responses:
+        204:
+          description: Comment has been deleted
+
+    put:
+      operationId: EmbedCommentUpdate
+      summary: Update specified comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - markdown
+            properties:
+              markdown:
+                description: Comment text in the markdown format
+                type: string
+                minLength: 1
+                maxLength: 4096
+                x-isnullable: false
+      responses:
+        200:
+          description: Comment is updated, the updated comment is returned
+          schema:
+            type: object
+            properties:
+              comment:
+                description: >
+                  Updated comment. NB: Vote direction in the returned comment is always 0
+                $ref: "#/definitions/comment"
+
+    post:
+      operationId: EmbedCommentVote
+      summary: Vote for specified comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - direction
+            properties:
+              direction:
+                type: integer
+                format: int8
+                enum:
+                  - -1
+                  - 0
+                  - 1
+                description: Vote direction
+      responses:
+        200:
+          description: Vote has been applied
+          schema:
+            type: object
+            properties:
+              score:
+                type: integer
+                description: The updated comment score
+                x-omitempty: false
+
+  /embed/comments/{uuid}/moderate:
+    # TODO new-db this must probably redirect to the UI
+    post:
+      operationId: EmbedCommentModerate
+      summary: Moderate specified unapproved comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - approve
+            properties:
+              approve:
+                description: Whether to approve the comment
+                type: boolean
+      responses:
+        204:
+          description: Comment has been approved
+
+  /embed/page/{uuid}:
+    put:
+      operationId: EmbedPageUpdate
+      summary: Update specified page's properties
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - isReadonly
+            properties:
+              isReadonly:
+                type: boolean
+                description: Whether the page is to be made readonly (no new comments are allowed)
+
+      responses:
+        204:
+          description: Page properties have been updated
 
   #---------------------------------------------------------------------------------------------------------------------
   # Dashboard
@@ -1594,115 +1708,6 @@ paths:
                 items:
                   type: integer
                   format: uint
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # Pages
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /page/update:
-    post:
-      operationId: PageUpdate
-      summary: Update specified page's properties
-      tags:
-        - ApiCommenter
-      security:
-        - userSessionHeader: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - page
-            properties:
-              page:
-                $ref: "#/definitions/page"
-      responses:
-        204:
-          description: Page properties have been updated
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # OAuth
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /oauth/{provider}:
-    get:
-      operationId: OauthInit
-      summary: Initiate signing in using federated authentication
-      tags:
-        - ApiCommenter
-      security: []
-      produces:
-        - text/html # For an error response only, otherwise a redirect is issued
-      parameters:
-        - $ref: "#/parameters/federatedIdpId"
-        - $ref: "#/parameters/queryToken"
-      responses:
-        307:
-          $ref: "#/responses/OAuthRedirect"
-        401:
-          $ref: "#/responses/OAuthFailure"
-
-  /oauth/{provider}/callback:
-    get:
-      operationId: OauthCallback
-      summary: Endpoint that gets called back by the federated authentication provider
-      tags:
-        - ApiCommenter
-      security: []
-      produces:
-        - text/html
-      parameters:
-        - $ref: "#/parameters/federatedIdpId"
-      responses:
-        200:
-          description: User has successfully signed in
-        401:
-          $ref: "#/responses/OAuthFailure"
-
-  /oauth/sso:
-    get:
-      operationId: OauthSsoInit
-      summary: Initiate signing in using federated SSO authentication
-      tags:
-        - ApiCommenter
-      security: []
-      produces:
-        - text/html # For an error response only, otherwise a redirect is issued
-      parameters:
-        - $ref: "#/parameters/queryToken"
-      responses:
-        307:
-          $ref: "#/responses/OAuthRedirect"
-        401:
-          $ref: "#/responses/OAuthFailure"
-
-  /oauth/sso/callback:
-    get:
-      operationId: OauthSsoCallback
-      summary: Endpoint that gets called back by the SSO authentication provider
-      tags:
-        - ApiCommenter
-      security: []
-      produces:
-        - text/html
-      parameters:
-        - in: query
-          name: payload
-          type: string
-          required: true
-          minLength: 1
-        - in: query
-          name: hmac
-          type: string
-          required: true
-          minLength: 1
-      responses:
-        200:
-          description: User has successfully signed in
-        401:
-          $ref: "#/responses/OAuthFailure"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

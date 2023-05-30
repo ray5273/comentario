@@ -32,7 +32,7 @@ export interface ApiCommentVoteResponse {
     readonly score: number;
 }
 
-export interface ApiCommenterSignupResponse {
+export interface ApiAuthSignupResponse {
     readonly isConfirmed: boolean; // Whether the user has been immediately confirmed
 }
 
@@ -43,7 +43,7 @@ export interface ApiCommenterTokenNewResponse {
     readonly commenterToken: string;
 }
 
-export interface ApiCommenterLoginResponse {
+export interface ApiAuthLoginResponse {
     readonly sessionToken: string;    // Session token to authenticate subsequent API requests with
     readonly principal:    Principal; // Authenticated principal
 }
@@ -68,9 +68,32 @@ export class ApiService {
     ) {}
 
     /**
+     * Sign a commenter in.
+     * @param email Commenter's email.
+     * @param password Commenter's password.
+     * @param host Host the commenter is signing in on.
+     */
+    async authLogin(email: string, password: string, host: string): Promise<void> {
+        const r = await this.apiClient.post<ApiAuthLoginResponse>('embed/auth/login', undefined, {email, password, host});
+        this.userSessionToken = r.sessionToken;
+        this.principal        = r.principal;
+        this.storeSessionToken();
+    }
+
+    /**
+     * Log the currently signed-in commenter out.
+     */
+    async authLogout(): Promise<void> {
+        await this.apiClient.post<void>('embed/auth/logout', this.userSessionToken);
+        this.userSessionToken = ApiService.AnonymousUserSessionToken;
+        this.principal        = undefined;
+        this.storeSessionToken();
+    }
+
+    /**
      * Return the currently authenticated principal or undefined if the user isn't authenticated.
      */
-    async getPrincipal(): Promise<Principal | undefined> {
+    async authPrincipal(): Promise<Principal | undefined> {
         // If there's an authenticated principal, return it
         if (this.principal) {
             return this.principal;
@@ -87,12 +110,7 @@ export class ApiService {
         }
 
         // Retrieve the currently authenticated principal, if any
-        try {
-            this.principal = await this.apiClient.post<Principal | undefined>('commenter/self', this.userSessionToken);
-        } catch (e) {
-            // On any error consider the user unauthenticated
-            console.error(e);
-        }
+        await this.updatePrincipal();
 
         // User isn't authenticated
         if (!this.principal) {
@@ -103,33 +121,18 @@ export class ApiService {
     }
 
     /**
-     * Obtain client configuration.
+     * Update the current user's profile.
+     * @param pageId ID of the page to apply user notification settings on.
+     * @param name User's full name.
+     * @param websiteUrl Optional website URL of the user.
+     * @param notifyReplies Whether the user is to be notified about replies to their comments.
+     * @param notifyModerator Whether the user is to receive moderator notifications.
      */
-    async configClientGet(): Promise<ApiClientConfigResponse> {
-        return this.apiClient.get<ApiClientConfigResponse>('config/client');
-    }
+    async authProfileUpdate(pageId: UUID, name: string | undefined, websiteUrl: string | undefined, notifyReplies: boolean, notifyModerator: boolean): Promise<void> {
+        await this.apiClient.put<void>('embed/auth/user', this.userSessionToken, {pageId, name, websiteUrl, notifyReplies, notifyModerator});
 
-    /**
-     * Sign a commenter in.
-     * @param email Commenter's email.
-     * @param password Commenter's password.
-     * @param host Host the commenter is signing in on.
-     */
-    async commenterLogin(email: string, password: string, host: string): Promise<void> {
-        const r = await this.apiClient.post<ApiCommenterLoginResponse>('commenter/login', undefined, {email, password, host});
-        this.userSessionToken = r.sessionToken;
-        this.principal        = r.principal;
-        this.storeSessionToken();
-    }
-
-    /**
-     * Log the currently signed-in commenter out.
-     */
-    async commenterLogout(): Promise<void> {
-        await this.apiClient.post<void>('commenter/logout', this.userSessionToken);
-        this.userSessionToken = ApiService.AnonymousUserSessionToken;
-        this.principal        = undefined;
-        this.storeSessionToken();
+        // Reload the principal to reflect the updates
+        return this.updatePrincipal();
     }
 
     /**
@@ -140,8 +143,8 @@ export class ApiService {
      * @param websiteUrl Optional website URL of the user.
      * @param url URL the user signed up on.
      */
-    async commenterSignup(email: string, name: string, password: string, websiteUrl: string | undefined, url: string): Promise<boolean> {
-        const r = await this.apiClient.post<ApiCommenterSignupResponse>('commenter/signup', undefined, {email, name, password, websiteUrl, url});
+    async authSignup(email: string, name: string, password: string, websiteUrl: string | undefined, url: string): Promise<boolean> {
+        const r = await this.apiClient.post<ApiAuthSignupResponse>('embed/auth/signup', undefined, {email, name, password, websiteUrl, url});
         return r.isConfirmed;
     }
 
@@ -150,7 +153,7 @@ export class ApiService {
      * @param id ID of the comment to delete.
      */
     async commentDelete(id: UUID): Promise<void> {
-        return this.apiClient.delete<void>(`comments/${id}`, this.userSessionToken);
+        return this.apiClient.delete<void>(`embed/comments/${id}`, this.userSessionToken);
     }
 
     /**
@@ -159,16 +162,16 @@ export class ApiService {
      * @param path Path of the page the comments reside on.
      */
     async commentList(host: string, path: string): Promise<ApiCommentListResponse> {
-        return this.apiClient.post<ApiCommentListResponse>('comments', this.userSessionToken, {host, path});
+        return this.apiClient.post<ApiCommentListResponse>('embed/comments', this.userSessionToken, {host, path});
     }
 
     /**
      * Moderate a comment.
      * @param id ID of the comment to moderate.
-     * @param approve Whether to approve the comment
+     * @param approve Whether to approve the comment.
      */
     async commentModerate(id: UUID, approve: boolean): Promise<void> {
-        return this.apiClient.post<void>(`comments/${id}/moderate`, this.userSessionToken, {approve});
+        return this.apiClient.post<void>(`embed/comments/${id}/moderate`, this.userSessionToken, {approve});
     }
 
     /**
@@ -179,7 +182,7 @@ export class ApiService {
      * @param markdown Comment text in the markdown format.
      */
     async commentNew(host: string, path: string, parentId: UUID | undefined, markdown: string): Promise<ApiCommentNewResponse> {
-        return this.apiClient.put<ApiCommentNewResponse>('comments', this.userSessionToken, {host, path, parentId, markdown});
+        return this.apiClient.put<ApiCommentNewResponse>('embed/comments', this.userSessionToken, {host, path, parentId, markdown});
     }
 
     /**
@@ -188,16 +191,32 @@ export class ApiService {
      * @param markdown Comment text in the markdown format.
      */
     async commentUpdate(id: UUID, markdown: string): Promise<ApiCommentUpdateResponse> {
-        return this.apiClient.put<ApiCommentUpdateResponse>(`comments/${id}`, this.userSessionToken, {markdown});
+        return this.apiClient.put<ApiCommentUpdateResponse>(`embed/comments/${id}`, this.userSessionToken, {markdown});
     }
 
     /**
      * Vote for specified comment.
      * @param id ID of the comment to update.
-     * @param direction Vote direction
+     * @param direction Vote direction.
      */
     async commentVote(id: UUID, direction: -1 | 0 | 1): Promise<ApiCommentVoteResponse> {
-        return this.apiClient.post<ApiCommentVoteResponse>(`comments/${id}`, this.userSessionToken, {direction});
+        return this.apiClient.post<ApiCommentVoteResponse>(`embed/comments/${id}`, this.userSessionToken, {direction});
+    }
+
+    /**
+     * Obtain client configuration.
+     */
+    async configClientGet(): Promise<ApiClientConfigResponse> {
+        return this.apiClient.get<ApiClientConfigResponse>('config/client');
+    }
+
+    /**
+     * Update specified page's properties
+     * @param id ID of the page to update.
+     * @param isReadonly Whether to set the page to readonly.
+     */
+    async pageUpdate(id: UUID, isReadonly: boolean): Promise<void> {
+        return this.apiClient.put<void>(`embed/page/${id}`, this.userSessionToken, {isReadonly});
     }
 
     /**
@@ -222,5 +241,17 @@ export class ApiService {
 
         // Store the cookie
         this.doc.cookie = `comentario_auth_token=${this.userSessionToken || ''}; expires=${exp}; path=/`;
+    }
+
+    /**
+     * Forcefully fetch the logged-in principal.
+     */
+    private async updatePrincipal() {
+        try {
+            this.principal = await this.apiClient.post<Principal | undefined>('embed/auth/user', this.userSessionToken);
+        } catch (e) {
+            // On any error consider the user unauthenticated
+            console.error(e);
+        }
     }
 }

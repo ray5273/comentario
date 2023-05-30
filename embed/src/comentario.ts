@@ -72,8 +72,8 @@ export class Comentario {
     /** Federated identity providers configured on the backend. */
     private federatedIdps: IdentityProvider[] = [];
 
-    /** Identifier of the page for loading comments. Defaults to page path. */
-    private pageId = parent.location.pathname;
+    /** Path of the page for loading comments. Defaults to the actual path on the host. */
+    private pagePath = parent.location.pathname;
 
     /** Current host. */
     private host = parent.location.host;
@@ -81,7 +81,7 @@ export class Comentario {
     /** Currently authenticated principal or undefined if the user isn't authenticated. */
     private principal?: Principal;
 
-    /** Current page settings as retrieved from the server. */
+    /** Current page info as retrieved from the server. */
     private pageInfo?: PageInfo;
 
     /** Currently applied comment sort. */
@@ -146,7 +146,7 @@ export class Comentario {
                     idp => this.openOAuthPopup(idp),
                     email => this.requestPasswordReset(email),
                     data => this.signup(data),
-                    data => this.saveSettings(data)),
+                    data => this.saveProfile(data)),
                 // Main area
                 this.mainArea = UIToolkit.div('main-area'),
                 // Footer
@@ -264,7 +264,7 @@ export class Comentario {
                 const ws = new Wrap(script);
                 let s = ws.getAttr('data-page-id');
                 if (s) {
-                    this.pageId = s;
+                    this.pagePath = s;
                 }
                 this.cssOverride = ws.getAttr('data-css-override');
                 this.autoInit = ws.getAttr('data-auto-init') !== 'false';
@@ -400,7 +400,7 @@ export class Comentario {
      * @private
      */
     private async updateAuthStatus(): Promise<void> {
-        this.principal = await this.apiService.getPrincipal();
+        this.principal = await this.apiService.authPrincipal();
 
         // User is authenticated
         if (this.principal) {
@@ -434,7 +434,7 @@ export class Comentario {
                         // Lock/Unlock button
                         this.modToolsLockBtn = UIToolkit.button(
                             this.pageInfo?.isPageReadonly ? 'Unlock thread' : 'Lock thread',
-                            () => this.threadLockToggle())));
+                            () => this.pageReadonlyToggle())));
         }
 
         // If the domain or the page are readonly, add a corresponding message
@@ -542,7 +542,7 @@ export class Comentario {
         // If we can proceed: user logged in or that wasn't required
         if (this.principal || !auth) {
             // Submit the comment to the backend
-            const r = await this.apiService.commentNew(this.host, this.pageId, parentCard?.comment.id, markdown);
+            const r = await this.apiService.commentNew(this.host, this.pagePath, parentCard?.comment.id, markdown);
 
             // Make sure parent map exists
             if (!this.parentIdMap) {
@@ -619,7 +619,7 @@ export class Comentario {
         let isConfirmed = false;
         try {
             this.setError();
-            isConfirmed = await this.apiService.commenterSignup(data.email, data.name, data.password, data.websiteUrl, parent.location.href);
+            isConfirmed = await this.apiService.authSignup(data.email, data.name, data.password, data.websiteUrl, parent.location.href);
 
         } catch (e) {
             this.setError(e);
@@ -645,7 +645,7 @@ export class Comentario {
         // Log the user in
         try {
             this.setError();
-            await this.apiService.commenterLogin(email, password, this.host);
+            await this.apiService.authLogin(email, password, this.host);
 
         } catch (e) {
             this.setError(e);
@@ -717,7 +717,7 @@ export class Comentario {
      */
     private async logout(): Promise<void> {
         // Terminate the server session
-        await this.apiService.commenterLogout();
+        await this.apiService.authLogout();
         // Update auth status controls
         await this.updateAuthStatus();
         // Reload the comments and other stuff
@@ -733,7 +733,7 @@ export class Comentario {
         let r: ApiCommentListResponse;
         try {
             this.setError();
-            r = await this.apiService.commentList(this.host, this.pageId);
+            r = await this.apiService.commentList(this.host, this.pagePath);
 
         } catch (e) {
             // Remove the page from the profile bar on error: this will disable login
@@ -767,17 +767,21 @@ export class Comentario {
     }
 
     /**
-     * Toggle the current comment's thread lock status.
+     * Toggle the current page's readonly status.
      * @private
      */
-    private async threadLockToggle(): Promise<void> {
-        /* TODO new-db
-        this.modToolsLockBtn!.attr({disabled: 'true'});
-        this.isLocked = !this.isLocked;
-        await this.submitPageAttrs();
-        this.modToolsLockBtn!.attr({disabled: 'false'});
+    private async pageReadonlyToggle(): Promise<void> {
+        try {
+            this.setError();
+            await this.apiService.pageUpdate(this.pageInfo!.pageId, !this.pageInfo?.isPageReadonly);
+
+        } catch (e) {
+            this.setError(e);
+            throw e;
+        }
+
+        // Reload the page to reflect the state change
         return this.reload();
-        */
     }
 
     /**
@@ -860,31 +864,7 @@ export class Comentario {
         }
 
         // Update the comment and the card
-        card.comment = this.replaceCommentById(card.comment, {score: r.score});
-    }
-
-    /**
-     * Submit the currently set page state (sticky comment and lock) to the backend.
-     * @private
-     */
-    private async submitPageAttrs(): Promise<void> {
-        /* TODO new-db
-        try {
-            this.setError();
-            await this.apiClient.post<void>('page/update', this.token, {
-                page: {
-                    host:             this.host,
-                    path:             this.pageId,
-                    isLocked:         this.isLocked,
-                    stickyCommentHex: this.stickyCommentHex,
-                },
-            });
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
-        */
+        card.comment = this.replaceCommentById(card.comment, {score: r.score, direction});
     }
 
     /**
@@ -911,29 +891,13 @@ export class Comentario {
     }
 
     /**
-     * Save current commenter's profile settings.
+     * Save current user's profile settings.
      * @private
      */
-    private async saveSettings(data: ProfileSettings) {
+    private async saveProfile(data: ProfileSettings) {
         try {
             this.setError();
-
-            /* TODO new-db
-            // Update commenter settings (only for a locally-authenticated user)
-            if (!this.commenter!.provider) {
-                await this.apiClient.post<void>('commenter/update', this.token, {
-                    email:      data.email,
-                    name:       data.name,
-                    websiteUrl: data.websiteUrl,
-                    avatarUrl:  data.avatarUrl,
-                });
-            }
-
-            // Update email settings
-            this.email!.sendModeratorNotifications = data.notifyModerator;
-            this.email!.sendReplyNotifications     = data.notifyReplies;
-            await this.apiClient.post<void>('email/update', this.token, {email: this.email});
-            */
+            await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.name, data.websiteUrl, data.notifyReplies, data.notifyModerator);
 
         } catch (e) {
             this.setError(e);

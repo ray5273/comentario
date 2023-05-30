@@ -3,14 +3,15 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_commenter"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 )
 
-func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Responder {
+func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder {
 	// Log the user in
 	user, session, r := loginLocalUser(
 		data.EmailPtrToString(params.Body.Email),
@@ -28,13 +29,13 @@ func CommenterLogin(params api_commenter.CommenterLoginParams) middleware.Respon
 	}
 
 	// Succeeded
-	return api_commenter.NewCommenterLoginOK().WithPayload(&api_commenter.CommenterLoginOKBody{
+	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
 		SessionToken: session.EncodeIDs(),
 		Principal:    user.ToPrincipal(du),
 	})
 }
 
-func CommenterLogout(params api_commenter.CommenterLogoutParams, user *data.User) middleware.Responder {
+func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, user *data.User) middleware.Responder {
 	// Verify the user is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
 		return r
@@ -50,10 +51,10 @@ func CommenterLogout(params api_commenter.CommenterLogoutParams, user *data.User
 	_ = svc.TheUserService.DeleteUserSession(sessionID)
 
 	// Regardless of whether the above was successful, return a success response
-	return api_commenter.NewCommenterLogoutNoContent()
+	return api_embed.NewEmbedAuthLogoutNoContent()
 }
 
-func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Responder {
+func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responder {
 	// Verify no such email is registered yet
 	email := data.EmailPtrToString(params.Body.Email)
 	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
@@ -81,19 +82,19 @@ func CommenterSignup(params api_commenter.CommenterSignupParams) middleware.Resp
 	}
 
 	// Succeeded
-	return api_commenter.NewCommenterSignupOK().WithPayload(&api_commenter.CommenterSignupOKBody{IsConfirmed: user.Confirmed})
+	return api_embed.NewEmbedAuthSignupOK().WithPayload(&api_embed.EmbedAuthSignupOKBody{IsConfirmed: user.Confirmed})
 }
 
-func CommenterPwdResetSendEmail(params api_commenter.CommenterPwdResetSendEmailParams) middleware.Responder {
+func EmbedAuthPwdResetSendEmail(params api_embed.EmbedAuthPwdResetSendEmailParams) middleware.Responder {
 	if r := sendPasswordResetEmail(data.EmailPtrToString(params.Body.Email)); r != nil {
 		return r
 	}
 
 	// Succeeded
-	return api_commenter.NewCommenterPwdResetSendEmailNoContent()
+	return api_embed.NewEmbedAuthPwdResetSendEmailNoContent()
 }
 
-func CommenterSelf(params api_commenter.CommenterSelfParams) middleware.Responder {
+func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.Responder {
 	// Fetch the session header value
 	if s := params.HTTPRequest.Header.Get(util.HeaderUserSession); s != "" {
 		// Try to fetch the user
@@ -101,33 +102,60 @@ func CommenterSelf(params api_commenter.CommenterSelfParams) middleware.Responde
 			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
 			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
 				// Succeeded: user is authenticated
-				return api_commenter.NewCommenterSelfOK().WithPayload(user.ToPrincipal(domainUser))
+				return api_embed.NewEmbedAuthCurUserGetOK().WithPayload(user.ToPrincipal(domainUser))
 			}
 		}
 	}
 
 	// Not logged in, bad header value, the user is anonymous or doesn't exist, or domain was deleted
-	return api_commenter.NewCommenterSelfNoContent()
+	return api_embed.NewEmbedAuthCurUserGetNoContent()
 }
 
-func CommenterUpdate(params api_commenter.CommenterUpdateParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated and local
+func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
 	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	} else if r := Verifier.UserIsLocal(user); r != nil {
 		return r
 	}
 
-	// Update the user
-	err := svc.TheUserService.UpdateLocalUser(
-		user.
-			WithEmail(data.EmailPtrToString(params.Body.Email)).
-			WithName(data.TrimmedString(params.Body.Name)).
-			WithWebsiteURL(string(params.Body.WebsiteURL)))
-	if err != nil {
+	// Parse page ID
+	var domainUser *data.DomainUser
+	if pageID, err := data.DecodeUUID(*params.Body.PageID); err != nil {
+		return respBadRequest(ErrorInvalidUUID)
+
+		// Find the page
+	} else if page, err := svc.ThePageService.FindByID(pageID); err != nil {
+		return respServiceError(err)
+
+		// Fetch the domain user
+	} else if _, domainUser, err = svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
 		return respServiceError(err)
 	}
 
+	// If user is local, update their profile
+	if user.IsLocal() {
+		name := strings.TrimSpace(params.Body.Name)
+		wURL := string(params.Body.WebsiteURL)
+		if name == "" {
+			return respBadRequest(ErrorInvalidPropertyValue.WithDetails("name"))
+		}
+
+		// Update user properties
+		if name != user.Name || wURL != user.WebsiteURL {
+			if err := svc.TheUserService.UpdateLocalUser(user.WithName(name).WithWebsiteURL(wURL)); err != nil {
+				return respServiceError(err)
+			}
+		}
+	}
+
+	// Update the domain user, if needed
+	if domainUser.NotifyReplies != params.Body.NotifyReplies || domainUser.NotifyModerator != params.Body.NotifyModerator {
+		domainUser.NotifyReplies = params.Body.NotifyReplies
+		domainUser.NotifyModerator = params.Body.NotifyModerator
+		if err := svc.TheDomainService.UserModify(domainUser); err != nil {
+			return respServiceError(err)
+		}
+	}
+
 	// Succeeded
-	return api_commenter.NewCommenterUpdateNoContent()
+	return api_embed.NewEmbedAuthCurUserUpdateNoContent()
 }

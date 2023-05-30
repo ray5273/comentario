@@ -18,6 +18,10 @@ input[type=password] {
     &::placeholder {
         color: $gray-5;
     }
+
+    &:disabled {
+        color: $gray-6;
+    }
 }
 
 textarea {
