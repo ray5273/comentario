@@ -14,9 +14,8 @@ var TheCommentService CommentService = &commentService{}
 
 // CommentService is a service interface for dealing with comments
 type CommentService interface {
-	// Approve sets the status of a comment with the given hex ID to 'approved'
-	// Deprecated
-	Approve(commentHex models.HexID) error
+	// TODO new-db Approve sets the status of a comment with the given hex ID to 'approved'
+	// Approve(commentHex models.HexID) error
 	// Create creates, persists, and returns a new comment
 	Create(comment *data.Comment) error
 	// DeleteByHost deletes all comments for the specified domain
@@ -40,6 +39,7 @@ type CommentService interface {
 // commentService is a blueprint CommentService implementation
 type commentService struct{}
 
+/* TODO new-db
 func (svc *commentService) Approve(commentHex models.HexID) error {
 	logger.Debugf("commentService.Approve(%s)", commentHex)
 
@@ -52,6 +52,7 @@ func (svc *commentService) Approve(commentHex models.HexID) error {
 	// Succeeded
 	return nil
 }
+*/
 
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)

@@ -217,6 +217,30 @@ alter table cm_domain_pages add constraint uk_domain_pages_domain_id_path unique
 create index idx_domain_pages_domain_id on cm_domain_pages(domain_id);
 
 ------------------------------------------------------------------------------------------------------------------------
+-- Domain page views
+------------------------------------------------------------------------------------------------------------------------
+
+create table cm_domain_page_views (
+    page_id            uuid                   not null, -- Reference to the page
+    ts_created         timestamp              not null, -- When the record was created
+    proto              varchar(32) default '' not null, -- The protocol version, like "HTTP/1.0"
+    ip                 varchar(15) default '' not null, -- IP address the session was created from
+    country            varchar(2)  default '' not null, -- 2-letter country code matching the ip
+    ua_browser_name    varchar(63) default '' not null, -- Name of the user's browser
+    ua_browser_version varchar(63) default '' not null, -- Version of the user's browser
+    ua_os_name         varchar(63) default '' not null, -- Name of the user's OS
+    ua_os_version      varchar(63) default '' not null, -- Version of the user's OS
+    ua_device          varchar(63) default '' not null  -- User's device type
+);
+
+-- Constraints
+alter table cm_domain_page_views add constraint fk_domain_page_views_page_id foreign key (page_id) references cm_domain_pages(id) on delete cascade;
+
+-- Indices
+create index idx_domain_page_views_page_id    on cm_domain_page_views(page_id);
+create index idx_domain_page_views_ts_created on cm_domain_page_views(ts_created);
+
+------------------------------------------------------------------------------------------------------------------------
 -- Comments
 ------------------------------------------------------------------------------------------------------------------------
 
@@ -413,6 +437,8 @@ begin
                 join temp_commenthex_map cm on cm.commenthex=v.commenthex
                 join temp_commenterhex_map crm on crm.commenterhex=v.commenterhex
                 where v.direction=-1 or v.direction=1;
+
+        -- NB: domain page views cannot be migrated because the "views" table lacks path (views are on the domain level only)
 
         -- TODO update domains.count_comments, count_views
         -- TODO update cm_domain_pages.count_views

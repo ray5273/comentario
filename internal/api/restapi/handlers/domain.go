@@ -227,7 +227,7 @@ func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.Us
 		return respServiceError(err)
 	}
 	*/
-	token := models.HexID("")
+	token := ""
 
 	// Succeeded
 	return api_owner.NewDomainSsoSecretNewOK().WithPayload(&api_owner.DomainSsoSecretNewOKBody{SsoSecret: token})

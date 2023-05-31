@@ -47,6 +47,11 @@ type DomainService interface {
 	RegisterView(pageID, domainID, userID *uuid.UUID) error
 	// SetReadonly sets the readonly status for the given domain
 	SetReadonly(domainID *uuid.UUID, readonly bool) error
+	// StatsDaily collects and returns daily comment and views statistics for the given domain and number of days. If
+	// domainID is nil, statistics is collected for all domains owned by the user
+	StatsDaily(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error)
+	// StatsTotalsForUser collects and returns total figures for all domains of the specified owner
+	StatsTotalsForUser(userID *uuid.UUID) (countDomains, countPages, countComments, countCommenters uint64, err error)
 	// Update updates an existing domain record in the database
 	Update(domain *data.Domain, idps []models.FederatedIdpID) error
 	// UserAdd links the specified user to the given domain
@@ -56,25 +61,14 @@ type DomainService interface {
 	// UserRemove unlinks the specified user from the given domain
 	UserRemove(userID, domainID *uuid.UUID) error
 
-	///////////////////////////////////////// TODO OLD Methods
+	/* TODO new-db
 	// CreateSSOSecret generates a new SSO secret token for the given domain and saves that in the domain properties
 	CreateSSOSecret(host models.Host) (models.HexID, error)
 	// CreateSSOToken generates, persists, and returns a new SSO token for the given domain and commenter token
 	CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error)
-	// IsDomainModerator returns whether the given email is a moderator in the given domain
-	IsDomainModerator(email string, host models.Host) (bool, error)
-	// IsDomainOwner returns whether the given owner hex ID is an owner of the given domain
-	IsDomainOwner(id models.HexID, host models.Host) (bool, error)
-	// StatsForComments collects and returns comment statistics for the given domain and number of days. If no host is
-	// given, statistics is collected for all domains owner by the user
-	StatsForComments(host models.Host, ownerID models.HexID, numDays int) ([]int64, error)
-	// StatsForOwner collects and returns overall statistics for all domains of the specified owner
-	StatsForOwner(ownerHex models.HexID) (countDomains, countPages, countComments, countCommenters int64, err error)
-	// StatsForViews collects and returns view statistics for the given domain and number of days. If no host is given,
-	// statistics is collected for all domains owner by the user
-	StatsForViews(host models.Host, ownerID models.HexID, numDays int) ([]int64, error)
 	// TakeSSOToken queries and removes the provided token from the database, returning its host and commenter token
 	TakeSSOToken(token models.HexID) (models.Host, models.HexID, error)
+	*/
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -132,51 +126,52 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 	return nil
 }
 
-// TODO new-db DEPRECATED
-func (svc *domainService) CreateSSOSecret(host models.Host) (models.HexID, error) {
-	logger.Debugf("domainService.CreateSSOSecret(%s)", host)
+/*
+TODO new-db
 
-	// Generate a new token
-	token, err := data.RandomHexID()
-	if err != nil {
-		logger.Errorf("userService.CreateSSOSecret: RandomHexID() failed: %v", err)
-		return "", err
+	func (svc *domainService) CreateSSOSecret(host models.Host) (models.HexID, error) {
+		logger.Debugf("domainService.CreateSSOSecret(%s)", host)
+
+		// Generate a new token
+		token, err := data.RandomHexID()
+		if err != nil {
+			logger.Errorf("userService.CreateSSOSecret: RandomHexID() failed: %v", err)
+			return "", err
+		}
+
+		// Update the domain record
+		if err = db.Exec("update domains set ssosecret=$1 where domain=$2;", token, host); err != nil {
+			logger.Errorf("domainService.CreateSSOSecret: Exec() failed: %v", err)
+			return "", translateDBErrors(err)
+		}
+
+		// Succeeded
+		return token, nil
 	}
 
-	// Update the domain record
-	if err = db.Exec("update domains set ssosecret=$1 where domain=$2;", token, host); err != nil {
-		logger.Errorf("domainService.CreateSSOSecret: Exec() failed: %v", err)
-		return "", translateDBErrors(err)
+	func (svc *domainService) CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error) {
+		logger.Debugf("domainService.CreateSSOToken(%s, %s)", host, commenterToken)
+
+		// Generate a new token
+		token, err := data.RandomHexID()
+		if err != nil {
+			logger.Errorf("userService.CreateSSOToken: RandomHexID() failed: %v", err)
+			return "", err
+		}
+
+		// Insert a new token record
+		err = db.Exec(
+			"insert into ssotokens(token, domain, commentertoken, creationdate) values($1, $2, $3, $4);",
+			token, host, commenterToken, time.Now().UTC())
+		if err != nil {
+			logger.Errorf("domainService.CreateSSOToken: Exec() failed: %v", err)
+			return "", translateDBErrors(err)
+		}
+
+		// Succeeded
+		return token, nil
 	}
-
-	// Succeeded
-	return token, nil
-}
-
-// TODO new-db DEPRECATED
-func (svc *domainService) CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error) {
-	logger.Debugf("domainService.CreateSSOToken(%s, %s)", host, commenterToken)
-
-	// Generate a new token
-	token, err := data.RandomHexID()
-	if err != nil {
-		logger.Errorf("userService.CreateSSOToken: RandomHexID() failed: %v", err)
-		return "", err
-	}
-
-	// Insert a new token record
-	err = db.Exec(
-		"insert into ssotokens(token, domain, commentertoken, creationdate) values($1, $2, $3, $4);",
-		token, host, commenterToken, time.Now().UTC())
-	if err != nil {
-		logger.Errorf("domainService.CreateSSOToken: Exec() failed: %v", err)
-		return "", translateDBErrors(err)
-	}
-
-	// Succeeded
-	return token, nil
-}
-
+*/
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.DeleteByID(%v)", id)
 
@@ -322,48 +317,6 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	return nil
 }
 
-// TODO new-db DEPRECATED
-func (svc *domainService) IsDomainModerator(email string, host models.Host) (bool, error) {
-	logger.Debugf("domainService.IsDomainModerator(%s, %s)", email, host)
-
-	// Query the row
-	row := db.QueryRow("select 1 from moderators where domain=$1 and email=$2;", host, email)
-	var b byte
-	if err := row.Scan(&b); err == sql.ErrNoRows {
-		// No rows means it isn't a moderator
-		return false, nil
-
-	} else if err != nil {
-		// Any other database error
-		logger.Errorf("domainService.IsDomainModerator: QueryRow() failed: %v", err)
-		return false, translateDBErrors(err)
-	}
-
-	// Succeeded: the email belongs to a domain moderator
-	return true, nil
-}
-
-// TODO new-db DEPRECATED
-func (svc *domainService) IsDomainOwner(id models.HexID, host models.Host) (bool, error) {
-	logger.Debugf("domainService.IsDomainOwner(%s, %s)", id, host)
-
-	// Query the row
-	row := db.QueryRow("select 1 from domains where ownerhex=$1 and domain=$2", id, host)
-	var b byte
-	if err := row.Scan(&b); err == sql.ErrNoRows {
-		// No rows means it isn't an owner
-		return false, nil
-
-	} else if err != nil {
-		// Any other database error
-		logger.Errorf("domainService.IsDomainOwner: QueryRow() failed: %v", err)
-		return false, translateDBErrors(err)
-	}
-
-	// Succeeded: the ID belongs to a domain owner
-	return true, nil
-}
-
 func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error) {
 	logger.Debugf("domainService.ListByOwnerID(%s)", userID)
 
@@ -458,64 +411,107 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	return nil
 }
 
-// TODO new-db DEPRECATED
-func (svc *domainService) StatsForComments(host models.Host, ownerID models.HexID, numDays int) ([]int64, error) {
-	logger.Debugf("domainService.StatsForComments(%s, %s, %d)", host, ownerID, numDays)
+func (svc *domainService) StatsDaily(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error) {
+	logger.Debugf("domainService.StatsDaily(%s, %s, %d)", userID, domainID, numDays)
 
 	// Correct the number of days if needed
 	if numDays > util.MaxNumberStatsDays {
 		numDays = util.MaxNumberStatsDays
 	}
 
-	// Query the data from the database, grouped by day
-	rows, err := db.Query(
-		"select count(c.creationdate) "+
-			"from (select date_trunc('day', current_date-x) as d1, date_trunc('day', current_date-x+1) as d2 from generate_series(0, $1) as x) d "+
-			"left join comments c on c.creationdate >= d.d1 and c.creationdate < d.d2 and ($2='' or c.domain=$2) and c.domain in (select domain from domains where ownerhex=$3) "+
-			"group by d.d1 "+
-			"order by d.d1;",
-		numDays-1, host, ownerID)
-	if err != nil {
-		logger.Errorf("domainService.StatsForComments: Query() failed: %v", err)
-		return nil, translateDBErrors(err)
+	// Prepare params
+	start := time.Now().UTC().Truncate(util.OneDay).AddDate(0, 0, -numDays)
+	params := []any{userID, start}
+
+	// Prepare a filter
+	domainFilter := ""
+	if domainID != nil {
+		domainFilter = "and d.id=$3 "
+		params = append(params, domainID)
 	}
-	defer rows.Close()
+
+	// Query comment data from the database, grouped by day
+	var cRows *sql.Rows
+	cRows, err = db.Query(
+		"select count(*), date_trunc('day', c.ts_created) "+
+			"from cm_comments c "+
+			"join cm_domain_pages p on p.id=c.page_id "+
+			// Filter by domain
+			"join cm_domains d on d.id=p.domain_id "+domainFilter+
+			// Filter by owner user
+			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and is_owner=true "+
+			// Select only last N days
+			"where c.ts_created>=$2"+
+			"group by date_trunc('day', c.ts_created) "+
+			"order by date_trunc('day', c.ts_created);",
+		params...)
+	if err != nil {
+		logger.Errorf("domainService.StatsDaily: Query() failed: %v", err)
+		return nil, nil, translateDBErrors(err)
+	}
+	defer cRows.Close()
 
 	// Collect the data
-	if res, err := svc.fetchStats(rows); err != nil {
-		return nil, translateDBErrors(err)
-	} else {
-		// Succeeded
-		return res, nil
+	if comments, err = svc.fetchStats(cRows, start); err != nil {
+		return nil, nil, translateDBErrors(err)
 	}
+
+	// Query view data from the database, grouped by day
+	var vRows *sql.Rows
+	vRows, err = db.Query(
+		"select count(*), date_trunc('day', v.ts_created) "+
+			"from cm_domain_page_views v "+
+			"join cm_domain_pages p on p.id=v.page_id "+
+			// Filter by domain
+			"join cm_domains d on d.id=p.domain_id "+domainFilter+
+			// Filter by owner user
+			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and is_owner=true "+
+			// Select only last N days
+			"where v.ts_created>=$2"+
+			"group by date_trunc('day', v.ts_created) "+
+			"order by date_trunc('day', v.ts_created);",
+		params...)
+	if err != nil {
+		logger.Errorf("domainService.StatsDaily: Query() failed: %v", err)
+		return nil, nil, translateDBErrors(err)
+	}
+	defer vRows.Close()
+
+	// Collect the data
+	if views, err = svc.fetchStats(vRows, start); err != nil {
+		return nil, nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return
 }
 
-// TODO new-db DEPRECATED
-func (svc *domainService) StatsForOwner(ownerHex models.HexID) (countDomains, countPages, countComments, countCommenters int64, err error) {
-	logger.Debugf("domainService.StatsForOwner(%s)", ownerHex)
+func (svc *domainService) StatsTotalsForUser(userID *uuid.UUID) (countDomains, countPages, countComments, countCommenters uint64, err error) {
+	logger.Debugf("domainService.StatsTotalsForUser(%s)", userID)
 
 	// Query domain and page counts
 	rdp := db.QueryRow(
-		"select count(distinct d.*), count(p.*) "+
-			"from domains d "+
-			"left join pages p on p.domain = d.domain "+
-			"where d.ownerhex=$1",
-		ownerHex)
+		"select count(distinct d.id), count(p.id) "+
+			"from cm_domains d "+
+			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and du.is_owner=true "+
+			"left join cm_domain_pages p on p.domain_id=d.id",
+		userID)
 	if err = rdp.Scan(&countDomains, &countPages); err != nil {
 		// Any other database error
-		logger.Errorf("domainService.StatsForOwner: QueryRow() for domains/pages failed: %v", err)
+		logger.Errorf("domainService.StatsTotalsForUser: QueryRow() for domains/pages failed: %v", err)
 		return 0, 0, 0, 0, translateDBErrors(err)
 	}
 
 	// Query comment and commenter counts
 	rcc := db.QueryRow(
-		"select count(*), count(distinct commenterhex) "+
-			"from comments "+
-			"where domain in (select domain from domains where ownerhex=$1)",
-		ownerHex)
+		"select count(c.id), count(distinct c.user_created) "+
+			"from cm_comments c "+
+			"join cm_domain_pages p on p.id=c.page_id "+
+			"join cm_domains_users du on du.domain_id=p.domain_id and du.user_id=$1 and du.is_owner=true",
+		userID)
 	if err = rcc.Scan(&countComments, &countCommenters); err != nil {
 		// Any other database error
-		logger.Errorf("domainService.StatsForOwner: QueryRow() for comments/commenters failed: %v", err)
+		logger.Errorf("domainService.StatsTotalsForUser: QueryRow() for comments/commenters failed: %v", err)
 		return 0, 0, 0, 0, translateDBErrors(err)
 	}
 
@@ -523,39 +519,7 @@ func (svc *domainService) StatsForOwner(ownerHex models.HexID) (countDomains, co
 	return
 }
 
-// TODO new-db DEPRECATED
-func (svc *domainService) StatsForViews(host models.Host, ownerID models.HexID, numDays int) ([]int64, error) {
-	logger.Debugf("domainService.StatsForViews(%s, %s, %d)", host, ownerID, numDays)
-
-	// Correct the number of days if needed
-	if numDays > util.MaxNumberStatsDays {
-		numDays = util.MaxNumberStatsDays
-	}
-
-	// Query the data from the database, grouped by day
-	rows, err := db.Query(
-		"select count(v.viewdate) "+
-			"from (select date_trunc('day', current_date-x) as d1, date_trunc('day', current_date-x+1) as d2 from generate_series(0, $1) as x) d "+
-			"left join views v on v.viewdate >= d.d1 and v.viewdate < d.d2 and ($2='' or v.domain=$2) and v.domain in (select domain from domains where ownerhex=$3) "+
-			"group by d.d1 "+
-			"order by d.d1;",
-		numDays-1, host, ownerID)
-	if err != nil {
-		logger.Errorf("domainService.StatsForViews: Query() failed: %v", err)
-		return nil, translateDBErrors(err)
-	}
-	defer rows.Close()
-
-	// Collect the data
-	if res, err := svc.fetchStats(rows); err != nil {
-		return nil, translateDBErrors(err)
-	} else {
-		// Succeeded
-		return res, nil
-	}
-}
-
-// TODO new-db DEPRECATED
+/* TODO new-db DEPRECATED
 func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.HexID, error) {
 	logger.Debugf("domainService.TakeSSOToken(%s)", token)
 
@@ -571,6 +535,7 @@ func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.
 	// Succeeded
 	return host, commenterToken, nil
 }
+*/
 
 func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID) error {
 	logger.Debugf("domainService.Update(%#v, %v)", domain, idps)
@@ -756,15 +721,28 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 }
 
 // fetchStats collects and returns a daily statistics using the provided database rows
-func (svc *domainService) fetchStats(rs *sql.Rows) ([]int64, error) {
-	// Collect the data
-	var res []int64
+func (svc *domainService) fetchStats(rs *sql.Rows, start time.Time) ([]uint64, error) {
+	// Iterate data rows
+	var res []uint64
 	for rs.Next() {
-		var i int64
-		if err := rs.Scan(&i); err != nil {
+		// Fetch a count and a time
+		var i uint64
+		var t time.Time
+		if err := rs.Scan(&i, &t); err != nil {
 			logger.Errorf("domainService.fetchStats: rs.Scan() failed: %v", err)
 			return nil, err
 		}
+
+		// UTC-ise the time, just in case it's in a different timezone
+		t = t.UTC()
+
+		// Fill any gap in the day sequence with zeroes
+		for start.Before(t) {
+			res = append(res, 0)
+			start = start.AddDate(0, 0, 1)
+		}
+
+		// Append a "real" data row
 		res = append(res, i)
 	}
 

@@ -305,14 +305,6 @@ definitions:
       - twitter
     x-isnullable: false
 
-  # TODO new-db deprecated
-  hexId:
-    description: ID consisting of 64 hex digits
-    type: string
-    minLength: 64
-    maxLength: 64
-    pattern: '[0-9a-f]{64}'
-
   host:
     description: DNS hostname, with an optional port number
     example: example.com:8080
@@ -321,28 +313,6 @@ definitions:
     maxLength: 259  # 253 (max length of a DNS name) + ":" + 5 (port number 1..65535)
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
-
-  # TODO new-db deprecated
-  page:
-    description: Page hosting comments
-    type: object
-    required:
-      - host
-    properties:
-      host:
-        $ref: "#/definitions/host"
-      path:
-        $ref: "#/definitions/path"
-      isLocked:
-        type: boolean
-        x-omitempty: false
-      commentCount:
-        type: integer
-        readOnly: true
-        x-omitempty: false
-      title:
-        type: string
-        readOnly: true
 
   pageInfo:
     description: Information about a page displaying comments
@@ -1345,10 +1315,10 @@ paths:
   # Dashboard
   #---------------------------------------------------------------------------------------------------------------------
 
-  /dashboard:
+  /dashboard/stats/totals:
     get:
-      operationId: DashboardDataGet
-      summary: Get summary ("dashboard") data for the user
+      operationId: DashboardTotals
+      summary: Get summary (totals) data for the user
       tags:
         - ApiOwner
       responses:
@@ -1387,10 +1357,10 @@ paths:
                 x-omitempty: false
                 x-isnullable: false
 
-  /dashboard/stats:
+  /dashboard/stats/daily:
     get:
-      operationId: DashboardStatisticsGet
-      summary: Get comment and view statistics for the user
+      operationId: DashboardDailyStats
+      summary: Get daily comment and view statistics for the user
       tags:
         - ApiOwner
       parameters:
@@ -1674,7 +1644,7 @@ paths:
             type: object
             properties:
               ssoSecret:
-                $ref: "#/definitions/hexId"
+                type: string
 
   /domains/{host}/stats:
     get:

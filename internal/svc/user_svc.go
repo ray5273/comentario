@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -42,13 +41,6 @@ type UserService interface {
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
-	// UpdateCommenter updates the given commenter's data in the database. If no idp is provided, the local auth
-	// provider is assumed
-	// Deprecated
-	UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error
-	// UpdateCommenterSession links a commenter token to the given commenter, by updating the session record
-	// Deprecated
-	UpdateCommenterSession(token, id models.HexID) error
 	// UpdateLocalUser updates the given local user's data (name, email, password hash, website URL) in the database
 	UpdateLocalUser(user *data.User) error
 }
@@ -343,36 +335,6 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 
 	// Succeeded
 	return res, nil
-}
-
-func (svc *userService) UpdateCommenter(commenterHex models.HexID, email, name, websiteURL, photoURL, idp string) error {
-	logger.Debugf("userService.UpdateCommenter(%s, %s, %s, %s, %s, %s)", commenterHex, email, name, websiteURL, photoURL, idp)
-	/* TODO new-db
-
-	// Update the database record
-	err := db.Exec(
-		"update commenters set email=$1, name=$2, link=$3, photo=$4 where commenterhex=$5 and provider=$6;",
-		email, name, fixUndefined(websiteURL), fixUndefined(photoURL), commenterHex, fixIdP(idp))
-	if err != nil {
-		logger.Errorf("userService.UpdateCommenter: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	}
-	*/
-	// Succeeded
-	return nil
-}
-
-func (svc *userService) UpdateCommenterSession(token, id models.HexID) error {
-	logger.Debugf("userService.UpdateCommenterSession(%s, %s)", token, id)
-
-	// Update the record
-	if err := db.Exec("update commentersessions set commenterhex=$1 where commentertoken=$2;", id, token); err != nil {
-		logger.Errorf("userService.UpdateCommenterSession: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
 }
 
 func (svc *userService) UpdateLocalUser(user *data.User) error {

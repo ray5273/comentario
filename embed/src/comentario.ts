@@ -280,13 +280,13 @@ export class Comentario {
     }
 
     /**
-     * Scroll to the comment whose hex ID is provided in the current window's fragment (if any).
+     * Scroll to the comment whose ID is provided in the current window's fragment (if any).
      * @private
      */
     private scrollToCommentHash() {
         const h = window.location.hash;
 
-        // If the hash starts with a valid hex ID
+        // If the hash starts with a valid ID
         if (h?.startsWith('#comentario-')) {
             this.scrollToComment(h.substring(12));
 
@@ -749,7 +749,7 @@ export class Comentario {
         // Configure the page in the profile bar
         this.profileBar!.pageInfo = r.pageInfo;
 
-        // Build a map by grouping all comments by their parentHex value
+        // Build a map by grouping all comments by their parentId value
         this.parentIdMap = r.comments?.reduce(
             (m, c) => {
                 const pid = c.parentId ?? '';
