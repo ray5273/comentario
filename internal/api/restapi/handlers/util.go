@@ -1,12 +1,14 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"net/http"
 	"time"
@@ -15,9 +17,17 @@ import (
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("handlers")
 
-// closeParentWindowResponse returns a responder that renders an HTML script closing the parent window
-func closeParentWindowResponse() middleware.Responder {
-	return NewHTMLResponder(http.StatusOK, "<html><script>window.parent.close()</script></html>")
+// closeParentWindowResponse returns a responder that renders an HTML script closing the parent window, communicating
+// the obtained user session ID
+func closeParentWindowResponse(us *data.UserSession) middleware.Responder {
+	return NewHTMLResponder(
+		http.StatusOK,
+		fmt.Sprintf(
+			"<html><script>"+
+				"window.opener._comentarioUserSession='%s';"+
+				"window.parent.close();"+
+				"</script></html>",
+			us.EncodeIDs()))
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -102,11 +112,6 @@ func respForbidden(err *exmodels.Error) middleware.Responder {
 // respInternalError returns a responder that responds with HTTP Internal Server Error
 func respInternalError(err *exmodels.Error) middleware.Responder {
 	return api_generic.NewGenericInternalServerError().WithPayload(err)
-}
-
-// respNotFound returns a responder that responds with HTTP Not Found error
-func respNotFound(err *exmodels.Error) middleware.Responder {
-	return api_generic.NewGenericNotFound().WithPayload(err)
 }
 
 // respServiceError translates the provided error, returned by a service, into an appropriate error responder

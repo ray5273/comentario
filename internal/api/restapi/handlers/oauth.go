@@ -1,9 +1,19 @@
 package handlers
 
 import (
+	"encoding/base64"
+	"errors"
+	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/google/uuid"
+	"github.com/markbates/goth"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
+	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"net/http"
+	"net/url"
 )
 
 /* TODO new-db
@@ -27,20 +37,23 @@ var commenterTokens = &util.SafeStringMap[models.HexID]{}
 
 // AuthOauthInit initiates a federated authentication process
 func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
-	/* TODO new-db
 	// Find the provider
 	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
 	if r != nil {
 		return r
 	}
 
-	// Verify the provided commenter token
-	if _, err := svc.TheUserService.FindCommenterByToken(models.HexID(params.Token)); err != nil && err != svc.ErrNotFound {
-		return oauthFailure(err)
+	// Generate a random base64-encoded nonce to use as the state on the auth URL
+	var state string
+	if b, err := util.RandomBytes(64); err != nil {
+		logger.Warningf("AuthOauthInit(): RandomBytes() failed: %v", err)
+		return respInternalError(nil)
+	} else {
+		state = base64.URLEncoding.EncodeToString(b)
 	}
 
 	// Initiate an authentication session
-	sess, err := provider.BeginAuth(params.Token)
+	sess, err := provider.BeginAuth(state)
 	if err != nil {
 		logger.Warningf("AuthOauthInit(): provider.BeginAuth() failed: %v", err)
 		return respInternalError(nil)
@@ -53,144 +66,32 @@ func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 		return respInternalError(nil)
 	}
 
-	// Store the session in memory, to verify it later
-	sessID, _ := data.RandomHexID()
-	oauthSessions.Put(sessID, sess.Marshal())
-
-	// If the session doesn't have the state param, also store the commenter token locally, for subsequent use
-	if originalState, err := getSessionState(sess); err != nil {
-		logger.Warningf("AuthOauthInit(): failed to extract session state: %v", err)
-		return respInternalError(nil)
-	} else if originalState == "" {
-		commenterTokens.Put(sessID, params.Token)
+	// Store the session in the cookie/DB
+	authSession, err := svc.TheAuthSessionService.Create(sess.Marshal(), data.URIPtrToString(params.URL))
+	if err != nil {
+		return respServiceError(err)
 	}
-	*/
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
-	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect()) /* TODO new-db .WithLocation(sessURL)).
-	WithCookie(
-		util.CookieNameAuthSession,
-		string(sessID),
-		"/",
-		time.Hour, // One hour must be sufficient to complete authentication
-		true,
-		http.SameSiteLaxMode)*/
+	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect().WithLocation(sessURL)).
+		WithCookie(util.CookieNameAuthSession, authSession.ID.String(), "/", util.AuthSessionDuration, true, http.SameSiteLaxMode)
 }
 
 func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Responder {
-	/* TODO new-db
-	// Find the provider
-	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
+	// Authenticate the user
+	user, host, r := oauthAuthenticate(params.Provider, params.HTTPRequest)
 	if r != nil {
 		return r
 	}
 
-	// Obtain the auth session ID from the cookie
-	var sessID models.HexID
-	if cookie, err := params.HTTPRequest.Cookie(util.CookieNameAuthSession); err != nil {
-		logger.Debugf("Auth session cookie error: %v", err)
-		return oauthFailure(errors.New("auth session cookie missing"))
-	} else {
-		sessID = models.HexID(cookie.Value)
+	// Create a user session
+	us := data.NewUserSession(&user.ID, host, params.HTTPRequest)
+	if err := svc.TheUserService.CreateUserSession(us); err != nil {
+		return respServiceError(err)
 	}
-
-	// Find and delete the session
-	var sess goth.Session
-	var err error
-	if sessData, ok := oauthSessions.Take(sessID); !ok {
-		logger.Debugf("No auth session found with ID=%v", sessID)
-		return oauthFailure(errors.New("auth session not found"))
-
-		// Recover the original provider session
-	} else if sess, err = provider.UnmarshalSession(sessData); err != nil {
-		logger.Debugf("provider.UnmarshalSession() failed: %v", err)
-		return oauthFailure(errors.New("auth session unmarshalling"))
-	}
-
-	// Validate the session state
-	if err := validateAuthSessionState(sess, params.HTTPRequest); err != nil {
-		return oauthFailure(err)
-	}
-
-	// Obtain the tokens
-	reqParams := params.HTTPRequest.URL.Query()
-	_, err = sess.Authorize(provider, reqParams)
-	if err != nil {
-		logger.Debugf("sess.Authorize() failed: %v", err)
-		return oauthFailure(errors.New("auth session unauthorised"))
-	}
-
-	// Fetch the federated user
-	fedUser, err := provider.FetchUser(sess)
-	if err != nil {
-		logger.Debugf("provider.FetchUser() failed: %v", err)
-		return oauthFailure(errors.New("fetching user"))
-	}
-
-	// Obtain the commenter token: if it isn't present in the state param (Twitter doesn't support state), try to find
-	// it in the token store
-	commenterToken := models.HexID(reqParams.Get("state"))
-	if commenterToken == "" {
-		if t, ok := commenterTokens.Take(sessID); ok {
-			commenterToken = models.HexID(t)
-		}
-	}
-	if commenterToken == "" {
-		return oauthFailure(errors.New("failed to obtain commenter token"))
-	}
-
-	// Validate the returned user
-	// -- UserID
-	if fedUser.UserID == "" {
-		return oauthFailure(errors.New("user ID missing"))
-	}
-	// -- Email
-	if fedUser.Email == "" {
-		return oauthFailure(errors.New("user email missing"))
-	}
-	// -- Name
-	if fedUser.Name == "" {
-		return oauthFailure(errors.New("user name missing"))
-	}
-
-	// Try to find the corresponding commenter by their token
-	if _, err := svc.TheUserService.FindCommenterByToken(commenterToken); err != nil && err != svc.ErrNotFound {
-		return oauthFailure(err)
-	}
-
-	// Now try to find an existing commenter by their email
-	var commenterHex models.HexID
-	if commenter, err := svc.TheUserService.FindCommenterByIdPEmail(params.Provider, fedUser.Email, false); err == nil {
-		// Commenter found
-		commenterHex = commenter.HexID
-
-	} else if err != svc.ErrNotFound {
-		// Any other error than "not found"
-		return oauthFailure(err)
-	}
-
-	// No such commenter yet: it's a signup
-	if commenterHex == "" {
-		// Create a new commenter
-		if c, err := svc.TheUserService.CreateCommenter(fedUser.Email, fedUser.Name, "", fedUser.AvatarURL, params.Provider, ""); err != nil {
-			return oauthFailure(err)
-		} else {
-			commenterHex = c.HexID
-		}
-
-		// Commenter already exists: it's a login. Update commenter's details
-	} else if err := svc.TheUserService.UpdateCommenter(commenterHex, fedUser.Email, fedUser.Name, "", fedUser.AvatarURL, params.Provider); err != nil {
-		return oauthFailure(err)
-	}
-
-	// Link the commenter to the session token
-	if err := svc.TheUserService.UpdateCommenterSession(commenterToken, commenterHex); err != nil {
-		return oauthFailure(err)
-	}
-	*/
 
 	// Succeeded: close the parent window, removing the auth session cookie
-	return NewCookieResponder(closeParentWindowResponse()).WithoutCookie(util.CookieNameAuthSession, "/")
+	return NewCookieResponder(closeParentWindowResponse(us)).WithoutCookie(util.CookieNameAuthSession, "/")
 }
 
 func AuthOauthSsoCallback(params api_auth.AuthOauthSsoCallbackParams) middleware.Responder {
@@ -289,7 +190,7 @@ func AuthOauthSsoCallback(params api_auth.AuthOauthSsoCallbackParams) middleware
 	}
 	*/
 	// Succeeded: close the parent window
-	return closeParentWindowResponse()
+	return closeParentWindowResponse(nil) // TODO new-db must pass a user session here
 }
 
 func AuthOauthSsoInit(params api_auth.AuthOauthSsoInitParams) middleware.Responder {
@@ -368,6 +269,182 @@ func AuthOauthSsoInit(params api_auth.AuthOauthSsoInitParams) middleware.Respond
 	return api_auth.NewAuthOauthSsoInitTemporaryRedirect() // TODO new-db .WithLocation(ssoURL.String())
 }
 
+// oauthAuthenticate tries to authenticate user with the given federated auth provider, and returns either an
+// authenticated user and source host, or an error responder
+func oauthAuthenticate(providerID string, req *http.Request) (*data.User, string, middleware.Responder) {
+	// Get the registered provider instance by its name (coming from the path parameter)
+	// Find the provider
+	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(providerID))
+	if r != nil {
+		return nil, "", r
+	}
+
+	// Obtain the auth session ID from the cookie
+	var authSession *data.AuthSession
+	var host string
+	if cookie, err := req.Cookie(util.CookieNameAuthSession); err != nil {
+		logger.Debugf("Auth session cookie error: %v", err)
+		return nil, "", oauthFailure(errors.New("auth session cookie missing"))
+
+		// Parse the session ID
+	} else if authSessID, err := uuid.Parse(cookie.Value); err != nil {
+		logger.Debugf("Invalid auth session ID in cookie: %v", err)
+		return nil, "", oauthFailure(errors.New("invalid auth session ID"))
+
+		// Find and delete the session
+	} else if authSession, err = svc.TheAuthSessionService.TakeByID(&authSessID); err == svc.ErrNotFound {
+		logger.Debugf("No auth session found with ID=%v: %v", authSessID, err)
+		return nil, "", oauthFailure(errors.New("auth session not found"))
+
+	} else if err != nil {
+		// Any other DB-related error
+		return nil, "", oauthFailure(err)
+
+		// Parse the source URL to extract the host
+	} else if su, err := url.Parse(authSession.SourceURL); err != nil {
+		return nil, "", oauthFailure(err)
+
+	} else {
+		// Store the host
+		host = su.Host
+	}
+
+	// Recover the original provider session
+	sess, err := provider.UnmarshalSession(authSession.Data)
+	if err != nil {
+		logger.Debugf("provider.UnmarshalSession() failed: %v", err)
+		return nil, "", oauthFailure(errors.New("auth session unmarshalling"))
+	}
+
+	// Validate the session state
+	if err := validateAuthSessionState(sess, req); err != nil {
+		return nil, "", oauthFailure(err)
+	}
+
+	// Obtain the tokens
+	reqParams := req.URL.Query()
+	_, err = sess.Authorize(provider, reqParams)
+	if err != nil {
+		logger.Debugf("sess.Authorize() failed: %v", err)
+		return nil, "", oauthFailure(errors.New("auth session unauthorised"))
+	}
+
+	// Fetch the federated user
+	fedUser, err := provider.FetchUser(sess)
+	if err != nil {
+		logger.Debugf("provider.FetchUser() failed: %v", err)
+		return nil, "", oauthFailure(errors.New("fetching user"))
+	}
+
+	// Validate the returned user
+	// -- UserID
+	if fedUser.UserID == "" {
+		return nil, "", oauthFailure(errors.New("user ID missing"))
+	}
+	// -- Email
+	if fedUser.Email == "" {
+		return nil, "", oauthFailure(errors.New("user email missing"))
+	}
+	// -- Name
+	if fedUser.Name == "" {
+		return nil, "", oauthFailure(errors.New("user name missing"))
+	}
+
+	// Try to find an existing user by email
+	isNew := false
+	if u, err := svc.TheUserService.FindUserByEmail(fedUser.Email, false); err == svc.ErrNotFound {
+		// No such email/user
+		isNew = true
+	} else if err != nil {
+		// Any other DB error
+		return nil, "", respServiceError(err)
+
+		// Email found. If a local account exists
+	} else if u.IsLocal() {
+		return nil, "", oauthFailure(ErrorLoginLocally.Error())
+
+		// Existing account is a federated one. Make sure the user isn't changing their IdP
+	} else if u.FederatedIdP != providerID {
+		return nil, "", oauthFailure(ErrorLoginUsingIdP.WithDetails(u.FederatedIdP).Error())
+	}
+
+	// If it's a new user, i.e. a signup
+	var user *data.User
+	if isNew {
+		// Insert a new user
+		user = data.NewUser(fedUser.Email, fedUser.Name).
+			WithConfirmed(true). // Confirm the user right away as we trust the IdP
+			WithSignup(req, authSession.SourceURL).
+			WithFederated(fedUser.UserID, providerID)
+		if err := svc.TheUserService.Create(user); err != nil {
+			return nil, "", respServiceError(err)
+		}
+
+		// It's an existing user. Verify they're allowed to log in
+	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
+		return nil, "", r
+
+		// Update user details
+	} else {
+		user.
+			WithEmail(fedUser.Email).
+			WithName(fedUser.Name).
+			WithFederated(fedUser.UserID, providerID)
+		if err := svc.TheUserService.Update(user); err != nil {
+			return nil, "", respServiceError(err)
+		}
+	}
+
+	// TODO new-db fetch and update the avatar
+
+	// Succeeded
+	return user, host, nil
+}
+
+// oauthFailure returns a generic "Unauthorized" responder, with the error message in the details. Also wipes out any
+// auth session cookie
+func oauthFailure(err error) middleware.Responder {
+	return NewCookieResponder(
+		api_auth.NewAuthOauthInitUnauthorized().
+			WithPayload(fmt.Sprintf(
+				`<html lang="en">
+				<head>
+					<title>401 Unauthorized</title>
+				</head>
+				<body>
+					<h1>Unauthorized</h1>
+					<p>Federated authentication failed with the error: %s</p>
+				</body>
+				</html>`,
+				err.Error()))).
+		WithoutCookie(util.CookieNameAuthSession, "/")
+}
+
+// validateAuthSessionState verifies the session token initially submitted, if any, is matching the one returned with
+// the given callback request
+func validateAuthSessionState(sess goth.Session, req *http.Request) error {
+	// Fetch the original session's URL
+	rawAuthURL, err := sess.GetAuthURL()
+	if err != nil {
+		return err
+	}
+
+	// Parse it
+	authURL, err := url.Parse(rawAuthURL)
+	if err != nil {
+		return err
+	}
+
+	// If there was a state initially, the value returned with the request must be the same
+	if originalState := authURL.Query().Get("state"); originalState != "" {
+		if reqState := req.URL.Query().Get("state"); reqState != originalState {
+			logger.Debugf("Auth session state mismatch: want '%s', got '%s'", originalState, reqState)
+			return errors.New("auth session state mismatch")
+		}
+	}
+	return nil
+}
+
 /* TODO new-db
 
 // getSessionState extracts the state parameter from the given session's URL
@@ -386,44 +463,6 @@ func getSessionState(sess goth.Session) (string, error) {
 
 	// Extract the state param
 	return authURL.Query().Get("state"), nil
-}
-
-// oauthFailure returns a generic "Unauthorized" responder, with the error message in the details. Also wipes out any
-// auth session cookie
-func oauthFailure(err error) middleware.Responder {
-	return NewCookieResponder(
-		api_auth.NewAuthOauthInitUnauthorized().
-			WithPayload(fmt.Sprintf(
-				`<html lang="en">
-				<head>
-					<title>401 Unauthorized</title>
-				</head>
-				<body>
-					<h1>Unauthorized</h1>
-					<p>OAuth authentication failed with the error: %s</p>
-				</body>
-				</html>`,
-				err.Error()))).
-		WithoutCookie(util.CookieNameAuthSession, "/")
-}
-
-// validateAuthSessionState verifies the session token initially submitted, if any, is matching the one returned with
-// the given callback request
-func validateAuthSessionState(sess goth.Session, req *http.Request) error {
-	// Extract the original session state
-	originalState, err := getSessionState(sess)
-	if err != nil {
-		return err
-	}
-
-	// If there was a state initially, the value returned with the request must be the same
-	if originalState != "" {
-		if reqState := req.URL.Query().Get("state"); reqState != originalState {
-			logger.Debugf("Auth session state mismatch: want '%s', got '%s'", originalState, reqState)
-			return errors.New("auth session state mismatch")
-		}
-	}
-	return nil
 }
 
 // validateDomainSSOConfig verifies the SSO configuration of the domain is valid

@@ -668,47 +668,38 @@ export class Comentario {
      * @private
      */
     private async openOAuthPopup(idp: string): Promise<void> {
-        /* TODO new-db
-        // Request a token
-        let r: ApiCommenterTokenNewResponse;
-        try {
-            this.setError();
-            r = await this.apiClient.post<ApiCommenterTokenNewResponse>('commenter/token/new');
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
-
         // Open a popup window
-        const popup = window.open(
-            `${this.apiClient.baseUrl}/oauth/${idp}?token=${r.commenterToken}`,
-            '_blank',
-            'popup,width=800,height=600');
+        const popup = window.open(`${this.apiService.basePath}/oauth/${idp}`, '_blank', 'popup,width=800,height=600');
         if (!popup) {
             return this.reject('Failed to open OAuth popup');
         }
 
         // Wait until the popup is closed
-        await new Promise<void>(resolve => {
+        const sessionToken = await new Promise<string>(resolve => {
             const interval = setInterval(
                 () => {
                     if (popup.closed) {
                         clearInterval(interval);
-                        resolve();
+
+                        // Collect the returned session token
+                        const t = (window as any)._comentarioUserSession;
+                        delete (window as any)._comentarioUserSession;
+                        resolve(t);
                     }
                 },
                 500);
         });
 
+        // Store the obtained token
+        this.apiService.setUserSessionToken(sessionToken);
+
         // Refresh the auth status
         await this.updateAuthStatus();
 
         // If authenticated, reload all comments and page data
-        if (this.isAuthenticated) {
+        if (this.principal) {
             await this.reload();
         }
-        */
     }
 
     /**

@@ -730,7 +730,7 @@ paths:
 
   # OAuth
 
-  /auth/oauth/{provider}:
+  /oauth/{provider}:
     get:
       operationId: AuthOauthInit
       summary: Initiate signing in using federated authentication
@@ -741,14 +741,18 @@ paths:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
         - $ref: "#/parameters/federatedIdpId"
-        - $ref: "#/parameters/queryToken"
+        - in: query
+          name: url
+          description: Optional URL of the page user signing in on (only for commenter auth)
+          type: string
+          format: uri
       responses:
         307:
           $ref: "#/responses/OAuthRedirect"
         401:
           $ref: "#/responses/OAuthFailure"
 
-  /auth/oauth/{provider}/callback:
+  /oauth/{provider}/callback:
     get:
       operationId: AuthOauthCallback
       summary: Endpoint that gets called back by the federated authentication provider
@@ -765,7 +769,7 @@ paths:
         401:
           $ref: "#/responses/OAuthFailure"
 
-  /auth/oauth/sso:
+  /oauth/sso:
     get:
       operationId: AuthOauthSsoInit
       summary: Initiate signing in using federated SSO authentication
@@ -782,7 +786,7 @@ paths:
         401:
           $ref: "#/responses/OAuthFailure"
 
-  /auth/oauth/sso/callback:
+  /oauth/sso/callback:
     get:
       operationId: AuthOauthSsoCallback
       summary: Endpoint that gets called back by the SSO authentication provider

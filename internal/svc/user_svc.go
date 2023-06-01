@@ -19,8 +19,8 @@ type UserService interface {
 	ConfirmUser(id *uuid.UUID) error
 	// CountUsers returns a number of registered users. If includeSystem == false, skips system users
 	CountUsers(includeSystem bool) (int, error)
-	// CreateUser persists a new user
-	CreateUser(u *data.User) error
+	// Create persists a new user
+	Create(u *data.User) error
 	// CreateUserSession persists a new user session
 	CreateUserSession(s *data.UserSession) error
 	// DeleteUserByID removes an owner user by their ID
@@ -30,19 +30,18 @@ type UserService interface {
 	// FindDomainUserByID fetches and returns a User and DomainUser by domain and user IDs. If the user exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error)
-	// FindLocalUserByEmail finds and returns a locally-authenticated user by the given email
-	FindLocalUserByEmail(email string) (*data.User, error)
+	// FindUserByEmail finds and returns a user by the given email. If localOnly == true, only looks for a
+	// locally-authenticated user
+	FindUserByEmail(email string, localOnly bool) (*data.User, error)
 	// FindUserByID finds and returns a user by the given user ID
 	FindUserByID(id *uuid.UUID) (*data.User, error)
 	// FindUserBySession finds and returns a user and the related session by the given user and session ID
 	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error)
-	// IsUserEmailKnown returns whether there's any user present with the given email
-	IsUserEmailKnown(email string) (bool, error)
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
-	// UpdateLocalUser updates the given local user's data (name, email, password hash, website URL) in the database
-	UpdateLocalUser(user *data.User) error
+	// Update updates the given user's data in the database
+	Update(user *data.User) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,21 +80,21 @@ func (svc *userService) CountUsers(includeSystem bool) (int, error) {
 	}
 }
 
-func (svc *userService) CreateUser(u *data.User) error {
-	logger.Debugf("userService.CreateUser(%v)", u)
+func (svc *userService) Create(u *data.User) error {
+	logger.Debugf("userService.Create(%v)", u)
 
 	// Insert a new record
 	err := db.Exec(
 		"insert into cm_users("+
 			"id, email, name, password_hash, system_account, superuser, confirmed, ts_confirmed, ts_created, "+
 			"user_created, signup_ip, signup_country, signup_url, banned, ts_banned, user_banned, remarks, "+
-			"nullif(federated_idp, ''), federated_id, avatar, website_url) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21);",
+			"federated_idp, federated_id, avatar, website_url) "+
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, nullif($18, ''), $19, $20, $21);",
 		u.ID, u.Email, u.Name, u.PasswordHash, u.SystemAccount, u.Superuser, u.Confirmed, u.ConfirmedTime,
 		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupURL, u.Banned, u.BannedTime,
 		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedID, u.Avatar, u.WebsiteURL)
 	if err != nil {
-		logger.Errorf("userService.CreateUser: Exec() failed: %v", err)
+		logger.Errorf("userService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -217,21 +216,22 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	return &u, pdu, nil
 }
 
-func (svc *userService) FindLocalUserByEmail(email string) (*data.User, error) {
-	logger.Debugf("userService.FindLocalUserByEmail(%s)", email)
+func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.User, error) {
+	logger.Debugf("userService.FindUserByEmail(%s, %v)", email, localOnly)
+
+	// Prepare the query
+	s := "select " +
+		"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
+		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
+		"u.user_banned, u.remarks, '', '', u.avatar, u.website_url " +
+		"from cm_users u " +
+		"where u.email=$1"
+	if localOnly {
+		s += "and u.federated_idp is null"
+	}
 
 	// Query the database
-	row := db.QueryRow(
-		"select "+
-			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, '', '', u.avatar, u.website_url "+
-			"from cm_users u "+
-			"where u.email=$1 and u.federated_idp is null;",
-		email)
-
-	// Fetch the owner user
-	if u, _, err := svc.fetchUserSession(row, false); err != nil {
+	if u, _, err := svc.fetchUserSession(db.QueryRow(s+";", email), false); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
@@ -285,17 +285,6 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 	}
 }
 
-func (svc *userService) IsUserEmailKnown(email string) (bool, error) {
-	logger.Debugf("userService.IsUserEmailKnown(%s)", email)
-	row := db.QueryRow("select exists(select 1 from cm_users where email=$1);", email)
-	var b bool
-	if err := row.Scan(&b); err != nil {
-		return false, translateDBErrors(err)
-	} else {
-		return b, nil
-	}
-}
-
 func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {
 	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
 
@@ -337,15 +326,15 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	return res, nil
 }
 
-func (svc *userService) UpdateLocalUser(user *data.User) error {
-	logger.Debugf("userService.UpdateLocalUser(%v)", user)
+func (svc *userService) Update(user *data.User) error {
+	logger.Debugf("userService.Update(%v)", user)
 
 	// Update the record
 	if err := db.ExecOne(
-		"update cm_users set email=$1, name=$2, password_hash=$3, website_url=$4 where id=$5 and federated_idp is null;",
-		user.Email, user.Name, user.PasswordHash, user.WebsiteURL, &user.ID,
+		"update cm_users set email=$1, name=$2, password_hash=$3, website_url=$4, federated_id=$5 where id=$6;",
+		user.Email, user.Name, user.PasswordHash, user.WebsiteURL, user.FederatedID, &user.ID,
 	); err != nil {
-		logger.Errorf("userService.UpdateLocalUser: ExecOne() failed: %v", err)
+		logger.Errorf("userService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

@@ -8,7 +8,6 @@ var (
 	ErrorDomainReadonly       = &exmodels.Error{ID: "domain-readonly", Message: "This domain is read-only"}
 	ErrorEmailAlreadyExists   = &exmodels.Error{ID: "email-already-exists", Message: "This email address is already registered"}
 	ErrorEmailNotConfirmed    = &exmodels.Error{ID: "email-not-confirmed", Message: "User's email address is not confirmed yet"}
-	ErrorFederatedProfile     = &exmodels.Error{ID: "federated-profile", Message: "Federated user profile can't be updated"}
 	ErrorIdPUnconfigured      = &exmodels.Error{ID: "idp-unconfigured", Message: "Identity provider isn't configured"}
 	ErrorIdPUnknown           = &exmodels.Error{ID: "idp-unknown", Message: "Unknown identity provider"}
 	ErrorImmutableProperty    = &exmodels.Error{ID: "immutable-property", Message: "Property cannot be updated"}
@@ -16,6 +15,8 @@ var (
 	ErrorInvalidModAction     = &exmodels.Error{ID: "invalid-mod-action", Message: "Invalid moderation action"}
 	ErrorInvalidPropertyValue = &exmodels.Error{ID: "invalid-prop-value", Message: "Value of the property is invalid"}
 	ErrorInvalidUUID          = &exmodels.Error{ID: "invalid-uuid", Message: "Invalid UUID value"}
+	ErrorLoginLocally         = &exmodels.Error{ID: "login-locally", Message: "Login with your email and password instead"}
+	ErrorLoginUsingIdP        = &exmodels.Error{ID: "login-using-idp", Message: "Login via federated identity provider"}
 	ErrorNoLocalUser          = &exmodels.Error{ID: "no-local-user", Message: "User is not locally authenticated"}
 	ErrorNotDomainOwner       = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator         = &exmodels.Error{ID: "not-moderator", Message: "User is not a moderator"}

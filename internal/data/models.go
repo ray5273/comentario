@@ -98,6 +98,28 @@ func (t *Token) String() string {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// AuthSession holds information about federated authentication session
+type AuthSession struct {
+	ID          uuid.UUID // Unique session ID
+	Data        string    // Opaque serialised session data
+	SourceURL   string    // Optional source page URL
+	CreatedTime time.Time // When the session was created
+	ExpiresTime time.Time // When the session expires
+}
+
+// NewAuthSession instantiates a new AuthSession
+func NewAuthSession(data, sourceURL string) *AuthSession {
+	now := time.Now().UTC()
+	return &AuthSession{
+		ID:          uuid.New(),
+		Data:        data,
+		CreatedTime: now,
+		ExpiresTime: now.Add(util.AuthSessionDuration),
+	}
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 // User represents an authenticated or an anonymous user
 type User struct {
 	ID            uuid.UUID     // Unique user ID
@@ -138,7 +160,7 @@ func (u *User) IsAnonymous() bool {
 	return u.ID == AnonymousUser.ID
 }
 
-// IsLocal returns whether the user is local (as opposed to federated)
+// IsLocal returns whether the user is local (as opposed to a federated one)
 func (u *User) IsLocal() bool {
 	return u.FederatedIdP == ""
 }
@@ -181,9 +203,11 @@ func (u *User) VerifyPassword(s string) bool {
 
 // WithConfirmed sets the value of Confirmed and ConfirmedTime
 func (u *User) WithConfirmed(b bool) *User {
-	u.Confirmed = b
-	if b {
-		u.ConfirmedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+	if u.Confirmed != b {
+		u.Confirmed = b
+		if b {
+			u.ConfirmedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+		}
 	}
 	return u
 }
@@ -191,6 +215,13 @@ func (u *User) WithConfirmed(b bool) *User {
 // WithEmail sets the Email value
 func (u *User) WithEmail(s string) *User {
 	u.Email = s
+	return u
+}
+
+// WithFederated sets the federated IdP values
+func (u *User) WithFederated(id, idpID string) *User {
+	u.FederatedID = id
+	u.FederatedIdP = idpID
 	return u
 }
 

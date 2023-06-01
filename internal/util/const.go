@@ -21,6 +21,7 @@ const (
 	CookieNameUserSession    = "comentario_user_session"  // Cookie name to store the session of the authenticated user
 	UserSessionDuration      = 28 * OneDay                // How long a user session stays valid
 	CookieNameAuthSession    = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
+	AuthSessionDuration      = 15 * time.Minute           // How long auth session stays valid
 	LangCookieDuration       = 365 * OneDay               // How long the language cookie stays valid
 	HeaderUserSession        = "X-User-Session"           // Name of the header that contains the session of the authenticated user
 	UserConfirmEmailDuration = 3 * OneDay                 // How long the token in the confirmation email stays valid

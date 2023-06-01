@@ -116,7 +116,7 @@ func sendConfirmationEmail(user *data.User) middleware.Responder {
 // sendPasswordResetEmail sends an email containing a password reset link
 func sendPasswordResetEmail(email string) middleware.Responder {
 	// Find the local user with that email
-	if user, err := svc.TheUserService.FindLocalUserByEmail(email); err == svc.ErrNotFound {
+	if user, err := svc.TheUserService.FindUserByEmail(email, true); err == svc.ErrNotFound {
 		// No such email: apply a random delay to discourage email polling
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 

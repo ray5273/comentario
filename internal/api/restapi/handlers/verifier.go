@@ -6,6 +6,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/svc"
 )
 
 // Verifier is a global VerifierService implementation
@@ -21,6 +22,8 @@ type VerifierService interface {
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
+	// UserCanSignupWithEmail verifies the user can sign up locally (using email and password)
+	UserCanSignupWithEmail(email string) middleware.Responder
 	// UserCanUpdateComment verifies the given domain user is allowed to update the specified comment. domainUser can be
 	// nil
 	UserCanUpdateComment(comment *data.Comment, domainUser *data.DomainUser) middleware.Responder
@@ -104,6 +107,27 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 
 	// Succeeded
 	return nil, nil
+}
+
+func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
+	// Try to find an existing user by email
+	user, err := svc.TheUserService.FindUserByEmail(email, false)
+	if err == svc.ErrNotFound {
+		// Success: no such email
+		return nil
+	} else if err != nil {
+		// Any other DB error
+		return respServiceError(err)
+	}
+
+	// Email found. If a local account exists
+	if user.IsLocal() {
+		// Account already exists
+		return respUnauthorized(ErrorEmailAlreadyExists)
+	}
+
+	// Existing account is a federated one
+	return respUnauthorized(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP))
 }
 
 func (v *verifier) UserCanUpdateComment(comment *data.Comment, domainUser *data.DomainUser) middleware.Responder {

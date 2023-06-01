@@ -539,6 +539,27 @@ func TestMarkdownToHTML(t *testing.T) {
 	}
 }
 
+func TestRandomBytesLength(t *testing.T) {
+	tests := []struct {
+		name string
+		len  int
+	}{
+		{"no bytes random buffer", 0},
+		{"1 byte random buffer", 1},
+		{"5 byte random buffer", 5},
+		{"100 byte random buffer", 100},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if b, err := RandomBytes(tt.len); err != nil {
+				t.Errorf("RandomBytes() errored with %v", err)
+			} else if got := len(b); got != tt.len {
+				t.Errorf("RandomBytes() length = %v, want %v", got, tt.len)
+			}
+		})
+	}
+}
+
 func TestSafeStringMap(t *testing.T) {
 	m := SafeStringMap[string]{}
 	var wg sync.WaitGroup

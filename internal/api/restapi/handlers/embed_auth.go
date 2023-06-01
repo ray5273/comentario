@@ -57,10 +57,8 @@ func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, user *data.User) mi
 func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responder {
 	// Verify no such email is registered yet
 	email := data.EmailPtrToString(params.Body.Email)
-	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
-		return respServiceError(err)
-	} else if exists {
-		return respBadRequest(ErrorEmailAlreadyExists)
+	if r := Verifier.UserCanSignupWithEmail(email); r != nil {
+		return r
 	}
 
 	// Create a new user
@@ -72,7 +70,7 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 		WithConfirmed(!config.SMTPConfigured)
 
 	// Save the new user
-	if err := svc.TheUserService.CreateUser(user); err != nil {
+	if err := svc.TheUserService.Create(user); err != nil {
 		return respServiceError(err)
 	}
 
@@ -141,7 +139,7 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 
 		// Update user properties
 		if name != user.Name || wURL != user.WebsiteURL {
-			if err := svc.TheUserService.UpdateLocalUser(user.WithName(name).WithWebsiteURL(wURL)); err != nil {
+			if err := svc.TheUserService.Update(user.WithName(name).WithWebsiteURL(wURL)); err != nil {
 				return respServiceError(err)
 			}
 		}

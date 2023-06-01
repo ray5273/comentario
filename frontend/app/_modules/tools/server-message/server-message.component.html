@@ -28,6 +28,7 @@
         <ng-container i18n>Please check your email and click the confirmation link in it.</ng-container>&ngsp;
         <ng-container i18n>If you don't see the email, check your Spam folder.</ng-container>
     </ng-container>
+    <ng-container *ngSwitchCase="'federated-auth'"       i18n>Federated authentication failed.</ng-container>
     <ng-container *ngSwitchCase="'federated-profile'"    i18n>Profile of an external (federated) user cannot be updated.</ng-container>
     <ng-container *ngSwitchCase="'idp-unconfigured'"     i18n>Identity provider isn't configured.</ng-container>
     <ng-container *ngSwitchCase="'idp-unknown'"          i18n>Identity provider is unknown.</ng-container>
@@ -37,6 +38,8 @@
     <ng-container *ngSwitchCase="'invalid-mod-action'"   i18n>Invalid moderation action.</ng-container>
     <ng-container *ngSwitchCase="'invalid-prop-value'"   i18n>Property value is invalid.</ng-container>
     <ng-container *ngSwitchCase="'invalid-uuid'"         i18n>Invalid UUID value.</ng-container>
+    <ng-container *ngSwitchCase="'login-locally'"        i18n>You already have an account. Please login with your email and password.</ng-container>
+    <ng-container *ngSwitchCase="'login-using-idp'"      i18n>You already have an account. Please login via external provider:</ng-container>
     <ng-container *ngSwitchCase="'no-local-user'"        i18n>This operation is only applicable to locally authenticated users.</ng-container>
     <ng-container *ngSwitchCase="'not-domain-owner'"     i18n>You have to be a domain owner in order to do that.</ng-container>
     <ng-container *ngSwitchCase="'not-moderator'"        i18n>You have to be a moderator in order to do that.</ng-container>

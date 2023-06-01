@@ -141,7 +141,7 @@ func AuthPwdResetChange(params api_auth.AuthPwdResetChangeParams, user *data.Use
 	}
 
 	// Update the user's password
-	if err := svc.TheUserService.UpdateLocalUser(user.WithPassword(swag.StringValue(params.Body.Password))); err != nil {
+	if err := svc.TheUserService.Update(user.WithPassword(swag.StringValue(params.Body.Password))); err != nil {
 		return respServiceError(err)
 	}
 
@@ -166,10 +166,8 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 
 	// Verify no such email is registered yet
 	email := data.EmailPtrToString(params.Body.Email)
-	if exists, err := svc.TheUserService.IsUserEmailKnown(email); err != nil {
-		return respServiceError(err)
-	} else if exists {
-		return respBadRequest(ErrorEmailAlreadyExists)
+	if r := Verifier.UserCanSignupWithEmail(email); r != nil {
+		return r
 	}
 
 	// Create a new user
@@ -189,7 +187,7 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	}
 
 	// Save the new user
-	if err := svc.TheUserService.CreateUser(user); err != nil {
+	if err := svc.TheUserService.Create(user); err != nil {
 		return respServiceError(err)
 	}
 
@@ -319,7 +317,7 @@ func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 // session. In case of error an error responder is returned
 func loginLocalUser(email, password, host string, req *http.Request) (*data.User, *data.UserSession, middleware.Responder) {
 	// Find the user
-	user, err := svc.TheUserService.FindLocalUserByEmail(email)
+	user, err := svc.TheUserService.FindUserByEmail(email, true)
 	if err == svc.ErrNotFound {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)

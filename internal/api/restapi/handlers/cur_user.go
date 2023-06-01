@@ -41,7 +41,7 @@ func CurUserUpdate(params api_auth.CurUserUpdateParams, user *data.User) middlew
 	}
 
 	// Update the user
-	if err := svc.TheUserService.UpdateLocalUser(user.WithName(data.TrimmedString(params.Body.Name))); err != nil {
+	if err := svc.TheUserService.Update(user.WithName(data.TrimmedString(params.Body.Name))); err != nil {
 		return respServiceError(err)
 	}
 

@@ -132,16 +132,29 @@ alter table cm_user_sessions add constraint fk_user_sessions_user_id foreign key
 ------------------------------------------------------------------------------------------------------------------------
 -- Tokens
 ------------------------------------------------------------------------------------------------------------------------
+
 create table cm_tokens (
     value      char(64) primary key, -- Token value, a random byte sequence
-    user_id    uuid not null,        -- Reference to the user owning the token
-    scope      varchar(32),          -- Token's scope
-    ts_expires timestamp,            -- When the token expires
-    multiuse   boolean               -- Whether the token is to be kept until expired; if false, the token gets deleted after first use
+    user_id    uuid        not null, -- Reference to the user owning the token
+    scope      varchar(32) not null, -- Token's scope
+    ts_expires timestamp   not null, -- When the token expires
+    multiuse   boolean     not null  -- Whether the token is to be kept until expired; if false, the token gets deleted after first use
 );
 
 -- Constraints
 alter table cm_tokens add constraint fk_tokens_user_id foreign key (user_id) references cm_users(id) on delete cascade;
+
+------------------------------------------------------------------------------------------------------------------------
+-- Auth sessions
+------------------------------------------------------------------------------------------------------------------------
+
+create table cm_auth_sessions (
+    id         uuid primary key,       -- Unique record ID
+    data       text          not null, -- Opaque session data
+    source_url varchar(2083) not null, -- Optional source page URL
+    ts_created timestamp     not null, -- When the session was created
+    ts_expires timestamp     not null  -- When the session expires
+);
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Domains

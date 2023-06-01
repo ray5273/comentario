@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"compress/gzip"
+	cryptorand "crypto/rand"
 	"errors"
 	"fmt"
 	"github.com/avct/uasurfer"
@@ -277,6 +278,15 @@ func ParseAbsoluteURL(s string) (*url.URL, error) {
 		u.Path = strings.TrimSuffix(u.Path, "/")
 	}
 	return u, nil
+}
+
+// RandomBytes makes a random byte slice of the desired size
+func RandomBytes(n int) ([]byte, error) {
+	b := make([]byte, n)
+	if _, err := io.ReadFull(cryptorand.Reader, b); err != nil {
+		return nil, err
+	}
+	return b, nil
 }
 
 // RandomSleep sleeps a random duration of time within the given interval

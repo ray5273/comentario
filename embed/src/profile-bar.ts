@@ -135,7 +135,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             idps.push({id: 'sso', name: 'SSO'});
         }
         // -- Available federated IdPs enabled on the domain
-        this.federatedIdps.filter(idp => this.pageInfo?.idps?.includes(idp.id)).forEach(idp => idps.push(idp));
+        this.federatedIdps.filter(idp => this._pageInfo?.idps?.includes(idp.id)).forEach(idp => idps.push(idp));
 
         // Make sure there's any IdP available
         if (!idps.length) {
