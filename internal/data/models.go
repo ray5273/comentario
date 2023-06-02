@@ -1,7 +1,6 @@
 package data
 
 import (
-	"crypto/rand"
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
@@ -63,32 +62,46 @@ func GetFederatedIdP(id models.FederatedIdpID) (known, configured bool, provider
 type TokenScope string
 
 const (
-	TokenResetPassword = TokenScope("pwd-reset")
-	TokenConfirmEmail  = TokenScope("confirm-email")
+	TokenScopeResetPassword = TokenScope("pwd-reset")     // Bearer can reset their password
+	TokenScopeConfirmEmail  = TokenScope("confirm-email") // Bearer makes their account confirmed
+	TokenScopeLogin         = TokenScope("login")         // Bearer is eligible for a one-time login
 )
 
 // Token is, well, a token
 type Token struct {
 	Value       []byte     // Token value, a random byte sequence
-	Owner       uuid.UUID  // UUID of the user owning the token
+	Owner       uuid.UUID  // UUID of the user owning the token. If zero (i.e. AnonymousUser.ID), the token is anonymous
 	Scope       TokenScope // Token's scope
 	ExpiresTime time.Time  // UTC timestamp of the expiration
 	Multiuse    bool       // Whether the token is to be kept until expired; if false, the token gets deleted after first use
 }
 
-// NewToken creates a new token instance
+// NewToken creates a new token instance. If owner == nil, an anonymous token is created
 func NewToken(owner *uuid.UUID, scope TokenScope, maxAge time.Duration, multiuse bool) (*Token, error) {
+	// If it's an anonymous token
+	if owner == nil {
+		owner = &AnonymousUser.ID
+	}
+
+	// Instantiate a new token
 	t := &Token{
-		Value:       make([]byte, 32),
 		Owner:       *owner,
 		Scope:       scope,
 		ExpiresTime: time.Now().UTC().Add(maxAge),
 		Multiuse:    multiuse,
 	}
-	if _, err := rand.Read(t.Value); err != nil {
+
+	// Generate a random 32-byte value
+	var err error
+	if t.Value, err = util.RandomBytes(32); err != nil {
 		return nil, err
 	}
 	return t, nil
+}
+
+// IsAnonymous returns whether the token is anonymous (i.e. belonging to an anonymous user)
+func (t *Token) IsAnonymous() bool {
+	return t.Owner == AnonymousUser.ID
 }
 
 // String converts the token's value into a hex string
@@ -101,18 +114,21 @@ func (t *Token) String() string {
 // AuthSession holds information about federated authentication session
 type AuthSession struct {
 	ID          uuid.UUID // Unique session ID
+	TokenValue  []byte    // Reference to the anonymous token authenticated was initiated with
 	Data        string    // Opaque serialised session data
-	SourceURL   string    // Optional source page URL
+	Host        string    // Optional source page host
 	CreatedTime time.Time // When the session was created
 	ExpiresTime time.Time // When the session expires
 }
 
 // NewAuthSession instantiates a new AuthSession
-func NewAuthSession(data, sourceURL string) *AuthSession {
+func NewAuthSession(data, host string, token []byte) *AuthSession {
 	now := time.Now().UTC()
 	return &AuthSession{
 		ID:          uuid.New(),
+		TokenValue:  token,
 		Data:        data,
+		Host:        host,
 		CreatedTime: now,
 		ExpiresTime: now.Add(util.AuthSessionDuration),
 	}
@@ -134,7 +150,7 @@ type User struct {
 	UserCreated   uuid.NullUUID // Reference to the user who created this one. null if the used signed up themselves
 	SignupIP      string        // IP address the user signed up or was created from
 	SignupCountry string        // 2-letter country code matching the SignupIP
-	SignupURL     string        // URL the user signed up on (only for commenter signup, empty for UI signup)
+	SignupHost    string        // Host the user signed up on (only for commenter signup, empty for UI signup)
 	Banned        bool          // Whether the user is banned
 	BannedTime    sql.NullTime  // When the user was banned
 	UserBanned    uuid.NullUUID // Reference to the user who banned this one
@@ -250,7 +266,7 @@ func (u *User) WithPassword(s string) *User {
 // WithSignup sets the SignupIP and SignupCountry values based on the provided HTTP request and URL
 func (u *User) WithSignup(req *http.Request, url string) *User {
 	u.SignupIP, u.SignupCountry = util.UserIPCountry(req)
-	u.SignupURL = url
+	u.SignupHost = url
 	return u
 }
 

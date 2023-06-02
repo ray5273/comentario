@@ -16,8 +16,12 @@ type TokenService interface {
 	Create(t *data.Token) error
 	// DeleteByValue deletes a token by its binary value
 	DeleteByValue(value []byte) error
+	// FindByStrValue finds and returns a token by its string value, or nil if not found
+	FindByStrValue(s string, allowExpired bool) (*data.Token, error)
 	// FindByValue finds and returns a token by its binary value, or nil if not found
 	FindByValue(value []byte, allowExpired bool) (*data.Token, error)
+	// Update updates the token record in the database
+	Update(t *data.Token) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -58,6 +62,17 @@ func (svc *tokenService) DeleteByValue(value []byte) error {
 	return nil
 }
 
+func (svc *tokenService) FindByStrValue(s string, allowExpired bool) (*data.Token, error) {
+	logger.Debugf("tokenService.FindByStrValue(%x, %v)", s, allowExpired)
+
+	// Try to parse the value
+	if val, err := hex.DecodeString(s); err != nil || len(val) != 32 {
+		return nil, ErrBadToken
+	} else {
+		return svc.FindByValue(val, allowExpired)
+	}
+}
+
 func (svc *tokenService) FindByValue(value []byte, allowExpired bool) (*data.Token, error) {
 	logger.Debugf("tokenService.FindByValue(%x, %v)", value, allowExpired)
 
@@ -73,7 +88,7 @@ func (svc *tokenService) FindByValue(value []byte, allowExpired bool) (*data.Tok
 	var v string
 	var t data.Token
 	row := db.QueryRow(s, params...)
-	if err := row.Scan(&v, t.Owner, t.Scope, t.ExpiresTime, t.Multiuse); err != nil {
+	if err := row.Scan(&v, &t.Owner, &t.Scope, &t.ExpiresTime, &t.Multiuse); err != nil {
 		logger.Errorf("tokenService.FindByValue: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	} else if t.Value, err = hex.DecodeString(v); err != nil {
@@ -83,4 +98,20 @@ func (svc *tokenService) FindByValue(value []byte, allowExpired bool) (*data.Tok
 
 	// Succeeded
 	return &t, nil
+}
+
+func (svc *tokenService) Update(t *data.Token) error {
+	logger.Debugf("tokenService.Update(%v)", t)
+
+	// Insert a new record
+	err := db.ExecOne(
+		"update cm_tokens set user_id=$1, scope=$2, ts_expires=$3, multiuse=$4 where value=$5",
+		t.Owner, t.Scope, t.ExpiresTime, t.Multiuse, t.String())
+	if err != nil {
+		logger.Errorf("tokenService.Update: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }

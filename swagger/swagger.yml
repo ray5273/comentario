@@ -460,6 +460,16 @@ parameters:
     format: uuid
     x-isnullable: false
 
+  queryHost:
+    name: host
+    in: query
+    required: true
+    description: Domain host query parameter
+    type: string
+    minLength: 1
+    maxLength: 259
+    pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
+
   queryToken:
     in: query
     name: token
@@ -626,6 +636,36 @@ paths:
           schema:
             $ref: "#/definitions/principal"
 
+  /auth/login/token:
+    post:
+      operationId: AuthLoginTokenNew
+      summary: Request a new anonymous token with the "login" scope, which is to be used for subsequent federated authentication
+      tags:
+        - ApiAuth
+      security: []
+      responses:
+        200:
+          description: New anonymous token is returned
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: New anonymous token
+
+    put:
+      operationId: AuthLoginTokenRedeem
+      summary: Log in using the provided, no longer anonymous, token
+      tags:
+        - ApiAuth
+      security:
+        - token: [login]
+      responses:
+        200:
+          description: Login successful
+          schema:
+            $ref: "#/definitions/principal"
+
   /auth/logout:
     post:
       operationId: AuthLogout
@@ -733,7 +773,7 @@ paths:
   /oauth/{provider}:
     get:
       operationId: AuthOauthInit
-      summary: Initiate signing in using federated authentication
+      summary: Initiate signing in via federated authentication using an anonymous token
       tags:
         - ApiAuth
       security: []
@@ -741,11 +781,8 @@ paths:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
         - $ref: "#/parameters/federatedIdpId"
-        - in: query
-          name: url
-          description: Optional URL of the page user signing in on (only for commenter auth)
-          type: string
-          format: uri
+        - $ref: "#/parameters/queryHost"
+        - $ref: "#/parameters/queryToken"
       responses:
         307:
           $ref: "#/responses/OAuthRedirect"
@@ -896,6 +933,39 @@ paths:
                 type: string
                 minLength: 1
                 description: Commenter's password
+              host:
+                $ref: "#/definitions/host"
+                description: Host the commenter is signing in on
+      responses:
+        200:
+          description: Logged in successfully
+          schema:
+            type: object
+            properties:
+              sessionToken:
+                type: string
+                description: Session token to authenticate subsequent API requests with
+              principal:
+                $ref: "#/definitions/principal"
+                description: Authenticated principal
+
+  /embed/auth/login/token:
+    put:
+      operationId: EmbedAuthLoginTokenRedeem
+      summary: Log in using the provided, no longer anonymous, token
+      tags:
+        - ApiEmbed
+      security:
+        - token: [login]
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - host
+            properties:
               host:
                 $ref: "#/definitions/host"
                 description: Host the commenter is signing in on

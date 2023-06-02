@@ -87,11 +87,11 @@ func (svc *userService) Create(u *data.User) error {
 	err := db.Exec(
 		"insert into cm_users("+
 			"id, email, name, password_hash, system_account, superuser, confirmed, ts_confirmed, ts_created, "+
-			"user_created, signup_ip, signup_country, signup_url, banned, ts_banned, user_banned, remarks, "+
+			"user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, "+
 			"federated_idp, federated_id, avatar, website_url) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, nullif($18, ''), $19, $20, $21);",
 		u.ID, u.Email, u.Name, u.PasswordHash, u.SystemAccount, u.Superuser, u.Confirmed, u.ConfirmedTime,
-		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupURL, u.Banned, u.BannedTime,
+		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupHost, u.Banned, u.BannedTime,
 		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedID, u.Avatar, u.WebsiteURL)
 	if err != nil {
 		logger.Errorf("userService.Create: Exec() failed: %v", err)
@@ -159,7 +159,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		"select "+
 			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
 			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url, "+
 			// DomainUser fields
 			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
@@ -183,7 +183,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		&u.UserCreated,
 		&u.SignupIP,
 		&u.SignupCountry,
-		&u.SignupURL,
+		&u.SignupHost,
 		&u.Banned,
 		&u.BannedTime,
 		&u.UserBanned,
@@ -222,8 +222,8 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 	// Prepare the query
 	s := "select " +
 		"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
-		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
-		"u.user_banned, u.remarks, '', '', u.avatar, u.website_url " +
+		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, " +
+		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url " +
 		"from cm_users u " +
 		"where u.email=$1"
 	if localOnly {
@@ -245,7 +245,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	row := db.QueryRow(
 		"select "+
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
 			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url "+
 			"from cm_users u "+
 			"where u.id=$1;",
@@ -267,7 +267,7 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 		"select "+
 			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, "+
+			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
 			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url, "+
 			// User session fields
 			"s.id, s.user_id, s.ts_created, s.ts_expires, s.host, s.proto, s.ip, s.country, s.ua_browser_name, "+
@@ -291,7 +291,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	// Query domain's moderator users
 	s := "select " +
 		"u.id, u.email, u.name, u.password_hash, u.system_account, u.superuser, u.confirmed, u.ts_confirmed, " +
-		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_url, u.banned, u.ts_banned, " +
+		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, " +
 		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url " +
 		"from cm_domains_users du " +
 		"join cm_users u on u.id=du.user_id " +
@@ -327,7 +327,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 }
 
 func (svc *userService) Update(user *data.User) error {
-	logger.Debugf("userService.Update(%v)", user)
+	logger.Debugf("userService.Update(%#v)", user)
 
 	// Update the record
 	if err := db.ExecOne(
@@ -359,7 +359,7 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		&u.UserCreated,
 		&u.SignupIP,
 		&u.SignupCountry,
-		&u.SignupURL,
+		&u.SignupHost,
 		&u.Banned,
 		&u.BannedTime,
 		&u.UserBanned,

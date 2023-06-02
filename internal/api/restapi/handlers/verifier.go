@@ -92,8 +92,8 @@ func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, u
 
 func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder) {
 	switch {
-	// Only non-system users may login
-	case user.SystemAccount:
+	// Only non-system, non-anonymous users may login
+	case user.SystemAccount || user.IsAnonymous():
 		return ErrorInvalidCredentials, respUnauthorized(ErrorInvalidCredentials)
 
 	// Check if the user is banned

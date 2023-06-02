@@ -88,7 +88,7 @@ func sendConfirmationEmail(user *data.User) middleware.Responder {
 	}
 
 	// Create a new confirmation token
-	token, err := data.NewToken(&user.ID, data.TokenConfirmEmail, util.UserConfirmEmailDuration, false)
+	token, err := data.NewToken(&user.ID, data.TokenScopeConfirmEmail, util.UserConfirmEmailDuration, false)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -125,7 +125,7 @@ func sendPasswordResetEmail(email string) middleware.Responder {
 		return respServiceError(err)
 
 		// User found. Generate a random password-reset token
-	} else if token, err := data.NewToken(&user.ID, data.TokenResetPassword, util.UserPwdResetDuration, false); err != nil {
+	} else if token, err := data.NewToken(&user.ID, data.TokenScopeResetPassword, util.UserPwdResetDuration, false); err != nil {
 		return respServiceError(err)
 
 		// Persist the token

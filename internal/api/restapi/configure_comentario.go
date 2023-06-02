@@ -92,6 +92,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIAuthAuthConfirmHandler = api_auth.AuthConfirmHandlerFunc(handlers.AuthConfirm)
 	api.APIAuthAuthDeleteProfileHandler = api_auth.AuthDeleteProfileHandlerFunc(handlers.AuthDeleteProfile)
 	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
+	api.APIAuthAuthLoginTokenNewHandler = api_auth.AuthLoginTokenNewHandlerFunc(handlers.AuthLoginTokenNew)
+	api.APIAuthAuthLoginTokenRedeemHandler = api_auth.AuthLoginTokenRedeemHandlerFunc(handlers.AuthLoginTokenRedeem)
 	api.APIAuthAuthLogoutHandler = api_auth.AuthLogoutHandlerFunc(handlers.AuthLogout)
 	api.APIAuthAuthPwdResetChangeHandler = api_auth.AuthPwdResetChangeHandlerFunc(handlers.AuthPwdResetChange)
 	api.APIAuthAuthPwdResetSendEmailHandler = api_auth.AuthPwdResetSendEmailHandlerFunc(handlers.AuthPwdResetSendEmail)
@@ -111,6 +113,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 
 	// Auth
 	api.APIEmbedEmbedAuthLoginHandler = api_embed.EmbedAuthLoginHandlerFunc(handlers.EmbedAuthLogin)
+	api.APIEmbedEmbedAuthLoginTokenRedeemHandler = api_embed.EmbedAuthLoginTokenRedeemHandlerFunc(handlers.EmbedAuthLoginTokenRedeem)
 	api.APIEmbedEmbedAuthLogoutHandler = api_embed.EmbedAuthLogoutHandlerFunc(handlers.EmbedAuthLogout)
 	api.APIEmbedEmbedAuthSignupHandler = api_embed.EmbedAuthSignupHandlerFunc(handlers.EmbedAuthSignup)
 	api.APIEmbedEmbedAuthPwdResetSendEmailHandler = api_embed.EmbedAuthPwdResetSendEmailHandlerFunc(handlers.EmbedAuthPwdResetSendEmail)

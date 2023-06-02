@@ -44,7 +44,7 @@ func (w *notFoundBypassWriter) Write(p []byte) (int, error) {
 // corsHandler returns a middleware that adds CORS headers to responses
 func corsHandler(next http.Handler) http.Handler {
 	return handlers.CORS(
-		handlers.AllowedHeaders([]string{"Content-Type", "X-Requested-With", util.HeaderUserSession}),
+		handlers.AllowedHeaders([]string{"Authorization", "Content-Type", "X-Requested-With", util.HeaderUserSession}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
 	)(next)
 }

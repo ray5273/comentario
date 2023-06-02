@@ -86,7 +86,7 @@ create table cm_users (
     user_created   uuid,                                        -- Reference to the user who created this one. null if the used signed up themselves
     signup_ip      varchar(15)   default ''    not null,        -- IP address the user signed up or was created from
     signup_country varchar(2)    default ''    not null,        -- 2-letter country code matching the signup_ip
-    signup_url     varchar(2083) default ''    not null,        -- URL the user signed up on (only for commenter signup, empty for UI signup)
+    signup_host    varchar(259)  default ''    not null,        -- Host the user signed up on (only for commenter signup, empty for UI signup)
     banned         boolean       default false not null,        -- Whether the user is banned
     ts_banned      timestamp,                                   -- When the user was banned
     user_banned    uuid,                                        -- Reference to the user who banned this one
@@ -149,12 +149,16 @@ alter table cm_tokens add constraint fk_tokens_user_id foreign key (user_id) ref
 ------------------------------------------------------------------------------------------------------------------------
 
 create table cm_auth_sessions (
-    id         uuid primary key,       -- Unique record ID
-    data       text          not null, -- Opaque session data
-    source_url varchar(2083) not null, -- Optional source page URL
-    ts_created timestamp     not null, -- When the session was created
-    ts_expires timestamp     not null  -- When the session expires
+    id          uuid primary key,             -- Unique record ID
+    token_value char(64)     not null unique, -- Reference to the anonymous token authentication was initiated with. Unique because a token may be used at most for one auth session
+    data        text         not null,        -- Opaque session data
+    host        varchar(259) not null,        -- Optional source page host
+    ts_created  timestamp    not null,        -- When the session was created
+    ts_expires  timestamp    not null         -- When the session expires
 );
+
+-- Constraints
+alter table cm_auth_sessions add constraint fk_auth_sessions_token_value foreign key (token_value) references cm_tokens(value) on delete cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Domains

@@ -15,11 +15,12 @@ export class HttpClient {
     /**
      * Run an HTTP DELETE request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
-     * @param commenterToken Optional commenter token to set in the request header.
+     * @param sessionToken Optional session token to set in the request header.
      * @param body Optional request body.
+     * @param headers Optional additional headers.
      */
-    delete<T>(path: string, commenterToken?: string, body?: any): Promise<T> {
-        return this.request<T>('DELETE', path, body, commenterToken ? {'X-User-Session': commenterToken} : undefined);
+    delete<T>(path: string, sessionToken?: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        return this.request<T>('DELETE', path, body, sessionToken ? {'X-User-Session': sessionToken, ...headers} : headers);
     }
 
     /**
@@ -33,21 +34,23 @@ export class HttpClient {
     /**
      * Run an HTTP POST request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
-     * @param commenterToken Optional commenter token to set in the request header.
+     * @param sessionToken Optional session token to set in the request header.
      * @param body Optional request body.
+     * @param headers Optional additional headers.
      */
-    post<T>(path: string, commenterToken?: string, body?: any): Promise<T> {
-        return this.request<T>('POST', path, body, commenterToken ? {'X-User-Session': commenterToken} : undefined);
+    post<T>(path: string, sessionToken?: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        return this.request<T>('POST', path, body, sessionToken ? {'X-User-Session': sessionToken, ...headers} : headers);
     }
 
     /**
      * Run an HTTP PUT request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
-     * @param commenterToken Optional commenter token to set in the request header.
+     * @param sessionToken Optional session token to set in the request header.
      * @param body Optional request body.
+     * @param headers Optional additional headers.
      */
-    put<T>(path: string, commenterToken?: string, body?: any): Promise<T> {
-        return this.request<T>('PUT', path, body, commenterToken ? {'X-User-Session': commenterToken} : undefined);
+    put<T>(path: string, sessionToken?: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        return this.request<T>('PUT', path, body, sessionToken ? {'X-User-Session': sessionToken, ...headers} : headers);
     }
 
     /**

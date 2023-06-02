@@ -35,12 +35,154 @@ var oauthSessions = &util.SafeStringMap[models.HexID]{}
 var commenterTokens = &util.SafeStringMap[models.HexID]{}
 */
 
+func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Responder {
+	// Get the registered provider instance by its name (coming from the path parameter)
+	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
+	if r != nil {
+		return r
+	}
+
+	// Obtain the auth session ID from the cookie
+	var authSession *data.AuthSession
+	if cookie, err := params.HTTPRequest.Cookie(util.CookieNameAuthSession); err != nil {
+		logger.Debugf("Auth session cookie error: %v", err)
+		return oauthFailure(errors.New("auth session cookie missing"))
+
+		// Parse the session ID
+	} else if authSessID, err := uuid.Parse(cookie.Value); err != nil {
+		logger.Debugf("Invalid auth session ID in cookie: %v", err)
+		return oauthFailure(errors.New("invalid auth session ID"))
+
+		// Find and delete the session
+	} else if authSession, err = svc.TheAuthSessionService.TakeByID(&authSessID); err == svc.ErrNotFound {
+		logger.Debugf("No auth session found with ID=%v: %v", authSessID, err)
+		return oauthFailure(errors.New("auth session not found"))
+
+	} else if err != nil {
+		// Any other DB-related error
+		return oauthFailure(err)
+	}
+
+	// Obtain the token linked by the auth session
+	token, err := svc.TheTokenService.FindByValue(authSession.TokenValue, false)
+	if err != nil {
+		return oauthFailure(err)
+
+		// Make sure the token is still anonymous
+	} else if !token.IsAnonymous() {
+		logger.Debugf("Token isn't anonymous but belongs to user %v", &token.Owner)
+		return oauthFailure(ErrorBadToken.Error())
+	}
+
+	// Recover the original provider session
+	sess, err := provider.UnmarshalSession(authSession.Data)
+	if err != nil {
+		logger.Debugf("provider.UnmarshalSession() failed: %v", err)
+		return oauthFailure(errors.New("auth session unmarshalling"))
+	}
+
+	// Validate the session state
+	if err := validateAuthSessionState(sess, params.HTTPRequest); err != nil {
+		return oauthFailure(err)
+	}
+
+	// Obtain the OAuth tokens
+	reqParams := params.HTTPRequest.URL.Query()
+	_, err = sess.Authorize(provider, reqParams)
+	if err != nil {
+		logger.Debugf("sess.Authorize() failed: %v", err)
+		return oauthFailure(errors.New("auth session unauthorised"))
+	}
+
+	// Fetch the federated user
+	fedUser, err := provider.FetchUser(sess)
+	if err != nil {
+		logger.Debugf("provider.FetchUser() failed: %v", err)
+		return oauthFailure(errors.New("fetching user"))
+	}
+
+	// Validate the returned user
+	// -- UserID
+	if fedUser.UserID == "" {
+		return oauthFailure(errors.New("user ID missing"))
+	}
+	// -- Email
+	if fedUser.Email == "" {
+		return oauthFailure(errors.New("user email missing"))
+	}
+	// -- Name
+	if fedUser.Name == "" {
+		return oauthFailure(errors.New("user name missing"))
+	}
+
+	// Try to find an existing user by email
+	var user *data.User
+	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); err == svc.ErrNotFound {
+		// No such email/user: it's a signup. Insert a new user
+		user = data.NewUser(fedUser.Email, fedUser.Name).
+			WithConfirmed(true). // Confirm the user right away as we trust the IdP
+			WithSignup(params.HTTPRequest, authSession.Host).
+			WithFederated(fedUser.UserID, params.Provider)
+		if err := svc.TheUserService.Create(user); err != nil {
+			return respServiceError(err)
+		}
+
+	} else if err != nil {
+		// Any other DB error
+		return respServiceError(err)
+
+		// Email found. If a local account exists
+	} else if user.IsLocal() {
+		return oauthFailure(ErrorLoginLocally.Error())
+
+		// Existing account is a federated one. Make sure the user isn't changing their IdP
+	} else if user.FederatedIdP != params.Provider {
+		return oauthFailure(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).Error())
+
+		// Verify they're allowed to log in
+	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
+		return r
+
+	} else {
+		// Update user details
+		user.
+			WithEmail(fedUser.Email).
+			WithName(fedUser.Name).
+			WithFederated(fedUser.UserID, params.Provider)
+		if err := svc.TheUserService.Update(user); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// TODO new-db fetch and update the avatar
+
+	// Update the token by binding it to the authenticated user
+	token.Owner = user.ID
+	if err := svc.TheTokenService.Update(token); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded: close the parent window, removing the auth session cookie
+	return NewCookieResponder(closeParentWindowResponse()).WithoutCookie(util.CookieNameAuthSession, "/")
+}
+
 // AuthOauthInit initiates a federated authentication process
 func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 	// Find the provider
 	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
 	if r != nil {
 		return r
+	}
+
+	// Try to find the passed anonymous token
+	token, err := svc.TheTokenService.FindByStrValue(params.Token, false)
+	if err != nil {
+		return respBadRequest(ErrorBadToken)
+	}
+
+	// Make sure the token is anonymous
+	if !token.IsAnonymous() {
+		return respBadRequest(ErrorBadToken)
 	}
 
 	// Generate a random base64-encoded nonce to use as the state on the auth URL
@@ -67,7 +209,7 @@ func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 	}
 
 	// Store the session in the cookie/DB
-	authSession, err := svc.TheAuthSessionService.Create(sess.Marshal(), data.URIPtrToString(params.URL))
+	authSession, err := svc.TheAuthSessionService.Create(sess.Marshal(), params.Host, token.Value)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -75,23 +217,6 @@ func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
 	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect().WithLocation(sessURL)).
 		WithCookie(util.CookieNameAuthSession, authSession.ID.String(), "/", util.AuthSessionDuration, true, http.SameSiteLaxMode)
-}
-
-func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Responder {
-	// Authenticate the user
-	user, host, r := oauthAuthenticate(params.Provider, params.HTTPRequest)
-	if r != nil {
-		return r
-	}
-
-	// Create a user session
-	us := data.NewUserSession(&user.ID, host, params.HTTPRequest)
-	if err := svc.TheUserService.CreateUserSession(us); err != nil {
-		return respServiceError(err)
-	}
-
-	// Succeeded: close the parent window, removing the auth session cookie
-	return NewCookieResponder(closeParentWindowResponse(us)).WithoutCookie(util.CookieNameAuthSession, "/")
 }
 
 func AuthOauthSsoCallback(params api_auth.AuthOauthSsoCallbackParams) middleware.Responder {
@@ -190,7 +315,7 @@ func AuthOauthSsoCallback(params api_auth.AuthOauthSsoCallbackParams) middleware
 	}
 	*/
 	// Succeeded: close the parent window
-	return closeParentWindowResponse(nil) // TODO new-db must pass a user session here
+	return closeParentWindowResponse()
 }
 
 func AuthOauthSsoInit(params api_auth.AuthOauthSsoInitParams) middleware.Responder {
@@ -267,138 +392,6 @@ func AuthOauthSsoInit(params api_auth.AuthOauthSsoInitParams) middleware.Respond
 	*/
 	// Succeeded: redirect to SSO
 	return api_auth.NewAuthOauthSsoInitTemporaryRedirect() // TODO new-db .WithLocation(ssoURL.String())
-}
-
-// oauthAuthenticate tries to authenticate user with the given federated auth provider, and returns either an
-// authenticated user and source host, or an error responder
-func oauthAuthenticate(providerID string, req *http.Request) (*data.User, string, middleware.Responder) {
-	// Get the registered provider instance by its name (coming from the path parameter)
-	// Find the provider
-	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(providerID))
-	if r != nil {
-		return nil, "", r
-	}
-
-	// Obtain the auth session ID from the cookie
-	var authSession *data.AuthSession
-	var host string
-	if cookie, err := req.Cookie(util.CookieNameAuthSession); err != nil {
-		logger.Debugf("Auth session cookie error: %v", err)
-		return nil, "", oauthFailure(errors.New("auth session cookie missing"))
-
-		// Parse the session ID
-	} else if authSessID, err := uuid.Parse(cookie.Value); err != nil {
-		logger.Debugf("Invalid auth session ID in cookie: %v", err)
-		return nil, "", oauthFailure(errors.New("invalid auth session ID"))
-
-		// Find and delete the session
-	} else if authSession, err = svc.TheAuthSessionService.TakeByID(&authSessID); err == svc.ErrNotFound {
-		logger.Debugf("No auth session found with ID=%v: %v", authSessID, err)
-		return nil, "", oauthFailure(errors.New("auth session not found"))
-
-	} else if err != nil {
-		// Any other DB-related error
-		return nil, "", oauthFailure(err)
-
-		// Parse the source URL to extract the host
-	} else if su, err := url.Parse(authSession.SourceURL); err != nil {
-		return nil, "", oauthFailure(err)
-
-	} else {
-		// Store the host
-		host = su.Host
-	}
-
-	// Recover the original provider session
-	sess, err := provider.UnmarshalSession(authSession.Data)
-	if err != nil {
-		logger.Debugf("provider.UnmarshalSession() failed: %v", err)
-		return nil, "", oauthFailure(errors.New("auth session unmarshalling"))
-	}
-
-	// Validate the session state
-	if err := validateAuthSessionState(sess, req); err != nil {
-		return nil, "", oauthFailure(err)
-	}
-
-	// Obtain the tokens
-	reqParams := req.URL.Query()
-	_, err = sess.Authorize(provider, reqParams)
-	if err != nil {
-		logger.Debugf("sess.Authorize() failed: %v", err)
-		return nil, "", oauthFailure(errors.New("auth session unauthorised"))
-	}
-
-	// Fetch the federated user
-	fedUser, err := provider.FetchUser(sess)
-	if err != nil {
-		logger.Debugf("provider.FetchUser() failed: %v", err)
-		return nil, "", oauthFailure(errors.New("fetching user"))
-	}
-
-	// Validate the returned user
-	// -- UserID
-	if fedUser.UserID == "" {
-		return nil, "", oauthFailure(errors.New("user ID missing"))
-	}
-	// -- Email
-	if fedUser.Email == "" {
-		return nil, "", oauthFailure(errors.New("user email missing"))
-	}
-	// -- Name
-	if fedUser.Name == "" {
-		return nil, "", oauthFailure(errors.New("user name missing"))
-	}
-
-	// Try to find an existing user by email
-	isNew := false
-	if u, err := svc.TheUserService.FindUserByEmail(fedUser.Email, false); err == svc.ErrNotFound {
-		// No such email/user
-		isNew = true
-	} else if err != nil {
-		// Any other DB error
-		return nil, "", respServiceError(err)
-
-		// Email found. If a local account exists
-	} else if u.IsLocal() {
-		return nil, "", oauthFailure(ErrorLoginLocally.Error())
-
-		// Existing account is a federated one. Make sure the user isn't changing their IdP
-	} else if u.FederatedIdP != providerID {
-		return nil, "", oauthFailure(ErrorLoginUsingIdP.WithDetails(u.FederatedIdP).Error())
-	}
-
-	// If it's a new user, i.e. a signup
-	var user *data.User
-	if isNew {
-		// Insert a new user
-		user = data.NewUser(fedUser.Email, fedUser.Name).
-			WithConfirmed(true). // Confirm the user right away as we trust the IdP
-			WithSignup(req, authSession.SourceURL).
-			WithFederated(fedUser.UserID, providerID)
-		if err := svc.TheUserService.Create(user); err != nil {
-			return nil, "", respServiceError(err)
-		}
-
-		// It's an existing user. Verify they're allowed to log in
-	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
-		return nil, "", r
-
-		// Update user details
-	} else {
-		user.
-			WithEmail(fedUser.Email).
-			WithName(fedUser.Name).
-			WithFederated(fedUser.UserID, providerID)
-		if err := svc.TheUserService.Update(user); err != nil {
-			return nil, "", respServiceError(err)
-		}
-	}
-
-	// TODO new-db fetch and update the avatar
-
-	// Succeeded
-	return user, host, nil
 }
 
 // oauthFailure returns a generic "Unauthorized" responder, with the error message in the details. Also wipes out any

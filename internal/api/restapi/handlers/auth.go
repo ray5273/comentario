@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"encoding/base64"
-	"encoding/hex"
 	"fmt"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
@@ -23,11 +22,9 @@ var (
 
 // AuthBearerToken inspects the header and determines if the token is of one of the provided scopes
 func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
-	// Try to parse and find the token
-	var token *data.Token
-	if val, err := hex.DecodeString(tokenStr); err != nil || len(val) != 32 {
-		return nil, ErrUnauthorised
-	} else if token, err = svc.TheTokenService.FindByValue(val, false); err != nil {
+	// Try to find the token
+	token, err := svc.TheTokenService.FindByStrValue(tokenStr, false)
+	if err != nil {
 		return nil, ErrUnauthorised
 	}
 
@@ -38,7 +35,6 @@ func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
 
 	// Token seems legitimate, now find its owner
 	var user *data.User
-	var err error
 	if user, err = svc.TheUserService.FindUserByID(&token.Owner); err != nil {
 		return nil, ErrInternalError
 
@@ -67,7 +63,7 @@ func AuthConfirm(_ api_auth.AuthConfirmParams, user *data.User) middleware.Respo
 	}
 
 	// Determine the redirect location: if there's a signup URL, use it
-	loc := user.SignupURL
+	loc := user.SignupHost
 	if loc == "" {
 		// Redirect to the UI login page otherwise
 		loc = config.URLFor("login", map[string]string{"confirmed": "true"})
@@ -99,7 +95,7 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) midd
 // AuthLogin logs a user in using local authentication (email and password)
 func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	// Log the user in
-	user, session, r := loginLocalUser(
+	user, us, r := loginLocalUser(
 		data.EmailPtrToString(params.Body.Email),
 		swag.StringValue(params.Body.Password),
 		"",
@@ -112,7 +108,40 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
 		WithCookie(
 			util.CookieNameUserSession,
-			session.EncodeIDs(),
+			us.EncodeIDs(),
+			"/",
+			util.UserSessionDuration,
+			true,
+			http.SameSiteLaxMode)
+}
+
+func AuthLoginTokenNew(params api_auth.AuthLoginTokenNewParams) middleware.Responder {
+	// Create a new, anonymous token
+	if t, err := data.NewToken(nil, data.TokenScopeLogin, util.AuthSessionDuration, false); err != nil {
+		return respInternalError(nil)
+
+		// Persist the token
+	} else if err := svc.TheTokenService.Create(t); err != nil {
+		return respServiceError(err)
+
+	} else {
+		// Succeeded
+		return api_auth.NewAuthLoginTokenNewOK().WithPayload(&api_auth.AuthLoginTokenNewOKBody{Token: t.String()})
+	}
+}
+
+func AuthLoginTokenRedeem(params api_auth.AuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
+	// Verify the user can login and create a new session
+	us, r := loginUser(user, "", params.HTTPRequest)
+	if r != nil {
+		return r
+	}
+
+	// Succeeded. Return a principal and a session cookie
+	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
+		WithCookie(
+			util.CookieNameUserSession,
+			us.EncodeIDs(),
 			"/",
 			util.UserSessionDuration,
 			true,
@@ -325,23 +354,35 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 		return nil, nil, respServiceError(err)
 	}
 
-	// Verify the user is allowed to log in
-	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
-		return nil, nil, r
-	}
-
 	// Verify the provided password
 	if !user.VerifyPassword(password) {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
 	}
 
+	// Verify the user can login and create a new session
+	if us, r := loginUser(user, host, req); r != nil {
+		return nil, nil, r
+	} else {
+		// Succeeded
+		return user, us, nil
+	}
+}
+
+// loginUser verifies the user is allowed to authenticate, logs the given user in, and returns a new user session. In
+// case of error an error responder is returned
+func loginUser(user *data.User, host string, req *http.Request) (*data.UserSession, middleware.Responder) {
+	// Verify the user is allowed to log in
+	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
+		return nil, r
+	}
+
 	// Create a new session
-	session := data.NewUserSession(&user.ID, host, req)
-	if err := svc.TheUserService.CreateUserSession(session); err != nil {
-		return nil, nil, respServiceError(err)
+	us := data.NewUserSession(&user.ID, host, req)
+	if err := svc.TheUserService.CreateUserSession(us); err != nil {
+		return nil, respServiceError(err)
 	}
 
 	// Succeeded
-	return user, session, nil
+	return us, nil
 }

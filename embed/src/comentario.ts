@@ -668,30 +668,29 @@ export class Comentario {
      * @private
      */
     private async openOAuthPopup(idp: string): Promise<void> {
+        // Request a new, anonymous login token
+        const token = await this.apiService.authNewLoginToken();
+
         // Open a popup window
-        const popup = window.open(`${this.apiService.basePath}/oauth/${idp}`, '_blank', 'popup,width=800,height=600');
+        const popup = window.open(`${this.apiService.basePath}/oauth/${idp}?host=${encodeURIComponent(this.host)}&token=${token}`, '_blank', 'popup,width=800,height=600');
         if (!popup) {
             return this.reject('Failed to open OAuth popup');
         }
 
         // Wait until the popup is closed
-        const sessionToken = await new Promise<string>(resolve => {
+        await new Promise<void>(resolve => {
             const interval = setInterval(
                 () => {
                     if (popup.closed) {
                         clearInterval(interval);
-
-                        // Collect the returned session token
-                        const t = (window as any)._comentarioUserSession;
-                        delete (window as any)._comentarioUserSession;
-                        resolve(t);
+                        resolve();
                     }
                 },
                 500);
         });
 
-        // Store the obtained token
-        this.apiService.setUserSessionToken(sessionToken);
+        // If the authentication was successful, the token is supposed to be bound to the user now. Use it for login
+        await this.apiService.authLoginToken(token, this.host);
 
         // Refresh the auth status
         await this.updateAuthStatus();

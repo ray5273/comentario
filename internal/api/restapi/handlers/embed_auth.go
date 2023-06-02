@@ -13,7 +13,7 @@ import (
 
 func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder {
 	// Log the user in
-	user, session, r := loginLocalUser(
+	user, us, r := loginLocalUser(
 		data.EmailPtrToString(params.Body.Email),
 		swag.StringValue(params.Body.Password),
 		string(params.Body.Host),
@@ -30,7 +30,27 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 
 	// Succeeded
 	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
-		SessionToken: session.EncodeIDs(),
+		SessionToken: us.EncodeIDs(),
+		Principal:    user.ToPrincipal(du),
+	})
+}
+
+func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
+	// Verify the user can login and create a new session
+	us, r := loginUser(user, "", params.HTTPRequest)
+	if r != nil {
+		return r
+	}
+
+	// Find the domain user, creating one if necessary
+	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
+		SessionToken: us.EncodeIDs(),
 		Principal:    user.ToPrincipal(du),
 	})
 }

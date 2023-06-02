@@ -41,6 +41,10 @@ export interface ApiAuthLoginResponse {
     readonly principal:    Principal; // Authenticated principal
 }
 
+export interface ApiAuthLoginTokenNewResponse {
+    readonly token: string; // New anonymous token
+}
+
 export class ApiService {
 
     /** Base64-encoded representation of a 32-byte zero-filled array (2 zero UUIDs). */
@@ -61,7 +65,7 @@ export class ApiService {
     ) {}
 
     /**
-     * Sign a commenter in.
+     * Sign a commenter in using local (password-based) authentication.
      * @param email Commenter's email.
      * @param password Commenter's password.
      * @param host Host the commenter is signing in on.
@@ -73,11 +77,35 @@ export class ApiService {
     }
 
     /**
+     * Sign a commenter in using token authentication (after a successful federated authentication).
+     * @param token Token.
+     * @param host Host the commenter is signing in on.
+     */
+    async authLoginToken(token: string, host: string): Promise<void> {
+        const r = await this.apiClient.put<ApiAuthLoginResponse>(
+            'embed/auth/login/token',
+            undefined,
+            {host},
+            {Authorization: `Bearer ${token}`});
+        this.setUserSessionToken(r.sessionToken);
+        this.principal = r.principal;
+    }
+
+    /**
      * Log the currently signed-in commenter out.
      */
     async authLogout(): Promise<void> {
         await this.apiClient.post<void>('embed/auth/logout', this.userSessionToken);
         this.setUserSessionToken(ApiService.AnonymousUserSessionToken);
+    }
+
+    /**
+     * Obtain an anonymous token with the "login" scope. It's supposed to be used for subsequent federated
+     * authentication.
+     */
+    async authNewLoginToken(): Promise<string> {
+        const r = await this.apiClient.post<ApiAuthLoginTokenNewResponse>('auth/login/token', undefined);
+        return r.token;
     }
 
     /**
@@ -212,7 +240,7 @@ export class ApiService {
      * Set the user session token and persist it in a cookie
      * @param t Token to set
      */
-    setUserSessionToken(t: string | undefined) {
+    private setUserSessionToken(t: string | undefined) {
         this.userSessionToken = t;
         this.storeSessionToken();
 
