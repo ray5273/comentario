@@ -359,7 +359,8 @@ begin
         -- Migrate domains
         insert into cm_domains(
                 id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret,
-                mod_anonymous, mod_authenticated, mod_links, mod_images, mod_notify_policy, default_sort)
+                mod_anonymous, mod_authenticated, mod_links, mod_images, mod_notify_policy, default_sort,
+                count_comments, count_views)
             select
                     m.id, d.name, d.domain, d.creationdate, d.state='frozen', d.requireidentification != true,
                     d.commentoprovider, d.ssoprovider, d.ssourl, d.ssosecret,
@@ -373,9 +374,16 @@ begin
                         when d.defaultsortpolicy='score-desc' then 'sd'
                         when d.defaultsortpolicy='creationdate-desc' then 'td'
                         else 'ta'
-                    end
+                    end,
+                    coalesce(cc.cnt, 0),
+                    coalesce(vc.cnt, 0)
                 from domains d
-                join temp_domain_map m on m.domain=d.domain;
+                -- domain ID map
+                join temp_domain_map m on m.domain=d.domain
+                -- comment counts per domain
+                left join (select count(*) cnt, domain from comments group by domain) cc on cc.domain=d.domain
+                -- view counts per domain
+                left join (select count(*) cnt, domain from views    group by domain) vc on vc.domain=d.domain;
 
         -- Migrate domain owners
         insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator)
@@ -425,10 +433,12 @@ begin
 
         -- Migrate comments
         insert into cm_comments(
-                id, parent_id, page_id, markdown, html, score, is_approved, is_spam, is_deleted, ts_created, ts_approved,
-                ts_deleted, user_created, user_approved, user_deleted)
+                id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_spam, is_deleted, ts_created,
+                ts_approved, ts_deleted, user_created, user_approved, user_deleted)
             select
-                    cm.id, pcm.id, p.id, c.markdown, c.html, c.score, c.state='approved', c.state='flagged', c.deleted,
+                    cm.id, pcm.id, p.id, c.markdown, c.html, c.score,
+                    c.parenthex='root' and op.stickycommenthex=c.commenthex,
+                    c.state='approved', c.state='flagged', c.deleted,
                     c.creationdate, case when c.state='approved' then current_timestamp end, c.deletiondate, uc.id,
                     case when c.state='approved' then uc.id end, ud.id
                 from comments c
@@ -439,7 +449,9 @@ begin
                 -- domain map
                 join temp_domain_map dm on dm.domain=c.domain
                 -- pages
-                join cm_domain_pages p on p.domain_id=dm.id and p.path = c.path
+                join cm_domain_pages p on p.domain_id=dm.id and p.path=c.path
+                -- old pages
+                left join pages op on op.domain=c.domain and op.path=c.path
                 -- user created
                 join temp_commenterhex_map cmc on cmc.commenterhex=c.commenterhex
                 join cm_users uc on uc.id=cmc.id
@@ -456,11 +468,6 @@ begin
                 where v.direction=-1 or v.direction=1;
 
         -- NB: domain page views cannot be migrated because the "views" table lacks path (views are on the domain level only)
-
-        -- TODO update domains.count_comments, count_views
-        -- TODO update cm_domain_pages.count_views
-        -- TODO migrate sticky comments
-
     end if;
 end $$;
 
