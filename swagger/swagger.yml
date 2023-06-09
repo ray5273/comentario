@@ -172,6 +172,24 @@ definitions:
       - unapproved
       - flagged
 
+  dailyViewCommentStats:
+    description: Daily statistical data on views and comments
+    type: object
+    readOnly: true
+    properties:
+      viewCounts:
+        type: array
+        items:
+          type: integer
+          format: uint
+        description: Numbers of views, one value per day
+      commentCounts:
+        type: array
+        items:
+          type: integer
+          format: uint
+        description: Numbers of comments, one value per day
+
   domain:
     description: Registered domain
     type: object
@@ -430,6 +448,7 @@ parameters:
       - gitlab
       - google
       - twitter
+      - sso  # SSO is a special case of federated authentication, which requires additional configuration for a specific domain
 
   pathImportSource:
     name: source
@@ -479,6 +498,17 @@ parameters:
     minLength: 64
     maxLength: 64
     pattern: '[0-9a-f]{64}'
+
+  queryStatsDays:
+    in: query
+    name: days
+    required: false
+    type: integer
+    format: uint
+    minimum: 1
+    maximum: 30
+    default: 30
+    description: Number of days to get statistics for
 
 responses:
   # 400
@@ -800,49 +830,6 @@ paths:
         - text/html
       parameters:
         - $ref: "#/parameters/federatedIdpId"
-      responses:
-        200:
-          description: User has successfully signed in
-        401:
-          $ref: "#/responses/OAuthFailure"
-
-  /oauth/sso:
-    get:
-      operationId: AuthOauthSsoInit
-      summary: Initiate signing in using federated SSO authentication
-      tags:
-        - ApiAuth
-      security: []
-      produces:
-        - text/html # For an error response only, otherwise a redirect is issued
-      parameters:
-        - $ref: "#/parameters/queryToken"
-      responses:
-        307:
-          $ref: "#/responses/OAuthRedirect"
-        401:
-          $ref: "#/responses/OAuthFailure"
-
-  /oauth/sso/callback:
-    get:
-      operationId: AuthOauthSsoCallback
-      summary: Endpoint that gets called back by the SSO authentication provider
-      tags:
-        - ApiAuth
-      security: []
-      produces:
-        - text/html
-      parameters:
-        - in: query
-          name: payload
-          type: string
-          required: true
-          minLength: 1
-        - in: query
-          name: hmac
-          type: string
-          required: true
-          minLength: 1
       responses:
         200:
           description: User has successfully signed in
@@ -1298,6 +1285,32 @@ paths:
                   Updated comment. NB: Vote direction in the returned comment is always 0
                 $ref: "#/definitions/comment"
 
+  /embed/comments/{uuid}/sticky:
+    post:
+      operationId: EmbedCommentSticky
+      summary: Set the stickiness for specified comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - sticky
+            properties:
+              sticky:
+                type: boolean
+                description: New sticky value for the comment
+      responses:
+        204:
+          description: Stickiness has been applied
+
+  /embed/comments/{uuid}/vote:
     post:
       operationId: EmbedCommentVote
       summary: Vote for specified comment
@@ -1306,6 +1319,7 @@ paths:
       security:
         - userSessionHeader: []
       parameters:
+        - $ref: "#/parameters/pathUuid"
         - in: body
           name: body
           required: true
@@ -1438,30 +1452,12 @@ paths:
       tags:
         - ApiOwner
       parameters:
-        - in: query
-          name: numDays
-          type: integer
-          format: uint
-          minimum: 1
-          maximum: 30
-          default: 30
-          description: Number of days to get statistics for
+        - $ref: "#/parameters/queryStatsDays"
       responses:
         200:
           description: Statistical data on comments and views for the current user
           schema:
-            type: object
-            properties:
-              viewCounts:
-                type: array
-                items:
-                  type: integer
-                  format: uint
-              commentCounts:
-                type: array
-                items:
-                  type: integer
-                  format: uint
+            $ref: "#/definitions/dailyViewCommentStats"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domains
@@ -1657,9 +1653,9 @@ paths:
                 description: Number of imported comments
                 x-omitempty: false
 
-  /domains/{host}/moderators:
+  /domains/{uuid}/moderators:
     parameters:
-      - $ref: "#/parameters/pathHost"
+      - $ref: "#/parameters/pathUuid"
 
     post:
       operationId: DomainModeratorNew
@@ -1703,14 +1699,14 @@ paths:
         204:
           description: Domain moderator has been deleted
 
-  /domains/{host}/sso/new:
+  /domains/{uuid}/sso/new:
     post:
       operationId: DomainSsoSecretNew
       summary: Generate an SSO secret for specified domain
       tags:
         - ApiOwner
       parameters:
-        - $ref: "#/parameters/pathHost"
+        - $ref: "#/parameters/pathUuid"
       responses:
         200:
           description: SSO secret has been generated for the domain
@@ -1720,38 +1716,20 @@ paths:
               ssoSecret:
                 type: string
 
-  /domains/{host}/stats:
+  /domains/{uuid}/stats:
     get:
-      operationId: DomainStatistics
+      operationId: DomainDailyStats
       summary: Get comment and view statistics for specified domain
       tags:
         - ApiOwner
       parameters:
-        - $ref: "#/parameters/pathHost"
-        - in: query
-          name: numDays
-          type: integer
-          format: uint
-          minimum: 1
-          maximum: 30
-          default: 30
-          description: Number of days to get statistics for
+        - $ref: "#/parameters/pathUuid"
+        - $ref: "#/parameters/queryStatsDays"
       responses:
         200:
           description: Statistical data on comments and views for the domain
           schema:
-            type: object
-            properties:
-              viewCounts:
-                type: array
-                items:
-                  type: integer
-                  format: uint
-              commentCounts:
-                type: array
-                items:
-                  type: integer
-                  format: uint
+            $ref: "#/definitions/dailyViewCommentStats"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

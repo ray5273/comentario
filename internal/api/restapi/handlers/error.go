@@ -18,13 +18,14 @@ var (
 	ErrorLoginLocally         = &exmodels.Error{ID: "login-locally", Message: "Login with your email and password instead"}
 	ErrorLoginUsingIdP        = &exmodels.Error{ID: "login-using-idp", Message: "Login via federated identity provider"}
 	ErrorNoLocalUser          = &exmodels.Error{ID: "no-local-user", Message: "User is not locally authenticated"}
+	ErrorNoRootComment        = &exmodels.Error{ID: "no-root-comment", Message: "Comment is not a root comment"}
 	ErrorNotDomainOwner       = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator         = &exmodels.Error{ID: "not-moderator", Message: "User is not a moderator"}
 	ErrorOwnerHasDomains      = &exmodels.Error{ID: "owner-has-domains", Message: "Owner can't be deleted as it still owns domains"}
 	ErrorPageReadonly         = &exmodels.Error{ID: "page-readonly", Message: "This page is read-only"}
 	ErrorSelfVote             = &exmodels.Error{ID: "self-vote", Message: "You cannot vote for your own comment"}
 	ErrorSignupsForbidden     = &exmodels.Error{ID: "signups-forbidden", Message: "New signups are forbidden"}
-	ErrorSSOURLMissing        = &exmodels.Error{ID: "sso-url-missing", Message: "SSO URL is missing"}
+	ErrorSSOMisconfigured     = &exmodels.Error{ID: "sso-misconfigured", Message: "Domain's SSO configuration is invalid"}
 	ErrorUnauthenticated      = &exmodels.Error{ID: "unauthenticated", Message: "User isn't authenticated"}
 	ErrorUnknownHost          = &exmodels.Error{ID: "unknown-host", Message: "Unknown host"}
 	ErrorUserBanned           = &exmodels.Error{ID: "user-banned", Message: "User is banned"}

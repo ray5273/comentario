@@ -1,7 +1,11 @@
 package handlers
 
 import (
+	"crypto/hmac"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
@@ -16,8 +20,6 @@ import (
 	"net/url"
 )
 
-/* TODO new-db
-
 type ssoPayload struct {
 	Domain string `json:"domain"`
 	Token  string `json:"token"`
@@ -27,18 +29,14 @@ type ssoPayload struct {
 	Photo  string `json:"photo"`
 }
 
-// oauthSessions stores initiated OAuth (federated authentication) sessions
-var oauthSessions = &util.SafeStringMap[models.HexID]{}
-
-// commenterTokens maps temporary OAuth token to the related CommenterToken. It's required for those nasty identity
-// providers that don't support the state parameter (such as Twitter)
-var commenterTokens = &util.SafeStringMap[models.HexID]{}
-*/
-
 func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Responder {
-	// Get the registered provider instance by its name (coming from the path parameter)
-	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
-	if r != nil {
+	// SSO authentication is a special case
+	var provider goth.Provider
+	var r middleware.Responder
+	if params.Provider == "sso" {
+
+		// Otherwise it's a goth provider: find it
+	} else if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider)); r != nil {
 		return r
 	}
 
@@ -74,34 +72,86 @@ func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Respo
 		return oauthFailure(ErrorBadToken.Error())
 	}
 
-	// Recover the original provider session
-	sess, err := provider.UnmarshalSession(authSession.Data)
-	if err != nil {
-		logger.Debugf("provider.UnmarshalSession() failed: %v", err)
-		return oauthFailure(errors.New("auth session unmarshalling"))
-	}
-
-	// Validate the session state
-	if err := validateAuthSessionState(sess, params.HTTPRequest); err != nil {
-		return oauthFailure(err)
-	}
-
-	// Obtain the OAuth tokens
 	reqParams := params.HTTPRequest.URL.Query()
-	_, err = sess.Authorize(provider, reqParams)
-	if err != nil {
-		logger.Debugf("sess.Authorize() failed: %v", err)
-		return oauthFailure(errors.New("auth session unauthorised"))
+	var fedUser goth.User
+
+	// SSO auth
+	if provider == nil {
+		// Find the domain the user is authenticating on
+		domain, err := svc.TheDomainService.FindByHost(authSession.Host)
+		if err != nil {
+			return oauthFailure(err)
+		}
+
+		// Validate domain SSO config
+		if r := Verifier.DomainSSOConfig(domain); r != nil {
+			return r
+		}
+
+		// Verify the payload
+		payload := ssoPayload{}
+		var payloadBytes []byte
+		if s := reqParams.Get("payload"); s == "" {
+			return oauthFailure(errors.New("payload is missing"))
+		} else if payloadBytes, err = hex.DecodeString(s); err != nil {
+			return oauthFailure(fmt.Errorf("payload: invalid hex encoding: %s", err.Error()))
+		} else if err = json.Unmarshal(payloadBytes, &payload); err != nil {
+			return oauthFailure(fmt.Errorf("payload: failed to unmarshal: %s", err.Error()))
+		} else if payload.Token != token.String() {
+			return oauthFailure(errors.New("payload: invalid token"))
+		}
+
+		// Verify the HMAC signature
+		if s := reqParams.Get("hmac"); s == "" {
+			return oauthFailure(errors.New("hmac is missing"))
+		} else if signature, err := hex.DecodeString(s); err != nil {
+			return oauthFailure(fmt.Errorf("hmac: invalid hex encoding: %s", err.Error()))
+		} else {
+			h := hmac.New(sha256.New, domain.SSOSecret)
+			h.Write(payloadBytes)
+			if !hmac.Equal(h.Sum(nil), signature) {
+				return oauthFailure(fmt.Errorf("hmac: signature verification failed"))
+			}
+		}
+
+		// Prepare a federated user
+		fedUser = goth.User{
+			Email:     payload.Email,
+			Name:      payload.Name,
+			UserID:    payload.Email,
+			AvatarURL: payload.Photo,
+		}
+
+		// Non-SSO auth
+	} else {
+		// Recover the original provider session
+		sess, err := provider.UnmarshalSession(authSession.Data)
+		if err != nil {
+			logger.Debugf("provider.UnmarshalSession() failed: %v", err)
+			return oauthFailure(errors.New("auth session unmarshalling"))
+		}
+
+		// Validate the session state
+		if err := validateAuthSessionState(sess, params.HTTPRequest); err != nil {
+			return oauthFailure(err)
+		}
+
+		// Obtain the OAuth tokens
+		_, err = sess.Authorize(provider, reqParams)
+		if err != nil {
+			logger.Debugf("sess.Authorize() failed: %v", err)
+			return oauthFailure(errors.New("auth session unauthorised"))
+		}
+
+		// Fetch the federated user
+		fedUser, err = provider.FetchUser(sess)
+		if err != nil {
+			logger.Debugf("provider.FetchUser() failed: %v", err)
+			return oauthFailure(errors.New("fetching user"))
+		}
 	}
 
-	// Fetch the federated user
-	fedUser, err := provider.FetchUser(sess)
-	if err != nil {
-		logger.Debugf("provider.FetchUser() failed: %v", err)
-		return oauthFailure(errors.New("fetching user"))
-	}
-
-	// Validate the returned user
+	// Validate the federated user
 	// -- UserID
 	if fedUser.UserID == "" {
 		return oauthFailure(errors.New("user ID missing"))
@@ -168,9 +218,13 @@ func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Respo
 
 // AuthOauthInit initiates a federated authentication process
 func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
-	// Find the provider
-	provider, r := Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider))
-	if r != nil {
+	// SSO authentication is a special case
+	var provider goth.Provider
+	var r middleware.Responder
+	if params.Provider == "sso" {
+
+		// Otherwise it's a goth provider: find it
+	} else if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider)); r != nil {
 		return r
 	}
 
@@ -185,213 +239,76 @@ func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 		return respBadRequest(ErrorBadToken)
 	}
 
-	// Generate a random base64-encoded nonce to use as the state on the auth URL
-	var state string
-	if b, err := util.RandomBytes(64); err != nil {
-		logger.Warningf("AuthOauthInit(): RandomBytes() failed: %v", err)
-		return respInternalError(nil)
+	// SSO auth
+	var authURL, sessionData string
+	if provider == nil {
+		// Find the domain the user is authenticating on
+		domain, err := svc.TheDomainService.FindByHost(params.Host)
+		if err != nil {
+			return oauthFailure(err)
+		}
+
+		// Validate domain SSO config
+		if r := Verifier.DomainSSOConfig(domain); r != nil {
+			return r
+		}
+
+		// Parse the SSO URL
+		ssoURL, err := util.ParseAbsoluteURL(domain.SSOURL, false)
+		if err != nil {
+			return oauthFailure(err)
+		}
+
+		// Generate a new HMAC signature
+		h := hmac.New(sha256.New, domain.SSOSecret)
+		h.Write(token.Value)
+		signature := hex.EncodeToString(h.Sum(nil))
+
+		// Add the token and the signature to the SSO URL
+		q := ssoURL.Query()
+		q.Set("token", token.String())
+		q.Set("hmac", signature)
+		ssoURL.RawQuery = q.Encode()
+		authURL = ssoURL.String()
+
+		// Non-SSO auth
 	} else {
-		state = base64.URLEncoding.EncodeToString(b)
-	}
+		// Generate a random base64-encoded nonce to use as the state on the auth URL
+		var state string
+		if b, err := util.RandomBytes(64); err != nil {
+			logger.Warningf("AuthOauthInit(): RandomBytes() failed: %v", err)
+			return respInternalError(nil)
+		} else {
+			state = base64.URLEncoding.EncodeToString(b)
+		}
 
-	// Initiate an authentication session
-	sess, err := provider.BeginAuth(state)
-	if err != nil {
-		logger.Warningf("AuthOauthInit(): provider.BeginAuth() failed: %v", err)
-		return respInternalError(nil)
-	}
+		// Initiate an authentication session
+		sess, err := provider.BeginAuth(state)
+		if err != nil {
+			logger.Warningf("AuthOauthInit(): provider.BeginAuth() failed: %v", err)
+			return respInternalError(nil)
+		}
 
-	// Fetch the redirection URL
-	sessURL, err := sess.GetAuthURL()
-	if err != nil {
-		logger.Warningf("AuthOauthInit(): sess.GetAuthURL() failed: %v", err)
-		return respInternalError(nil)
+		// Fetch the URL for authenticating with the provider
+		authURL, err = sess.GetAuthURL()
+		if err != nil {
+			logger.Warningf("AuthOauthInit(): sess.GetAuthURL() failed: %v", err)
+			return respInternalError(nil)
+		}
+
+		// Serialise the session for persisting
+		sessionData = sess.Marshal()
 	}
 
 	// Store the session in the cookie/DB
-	authSession, err := svc.TheAuthSessionService.Create(sess.Marshal(), params.Host, token.Value)
+	authSession, err := svc.TheAuthSessionService.Create(sessionData, params.Host, token.Value)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
-	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect().WithLocation(sessURL)).
+	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect().WithLocation(authURL)).
 		WithCookie(util.CookieNameAuthSession, authSession.ID.String(), "/", util.AuthSessionDuration, true, http.SameSiteLaxMode)
-}
-
-func AuthOauthSsoCallback(params api_auth.AuthOauthSsoCallbackParams) middleware.Responder {
-	/* TODO new-db
-	payloadBytes, err := hex.DecodeString(params.Payload)
-	if err != nil {
-		return oauthFailure(fmt.Errorf("payload: invalid hex encoding: %s", err.Error()))
-	}
-
-	signatureBytes, err := hex.DecodeString(params.Hmac)
-	if err != nil {
-		return oauthFailure(fmt.Errorf("HMAC signature: invalid hex encoding: %s", err.Error()))
-	}
-
-	payload := ssoPayload{}
-	err = json.Unmarshal(payloadBytes, &payload)
-	if err != nil {
-		return oauthFailure(fmt.Errorf("payload: failed to unmarshal: %s", err.Error()))
-	}
-
-	// Validate payload fields
-	if payload.Token == "" {
-		return oauthFailure(errors.New("token is missing in the payload"))
-	}
-	if payload.Email == "" {
-		return oauthFailure(errors.New("email is missing in the payload"))
-	}
-	if payload.Name == "" {
-		return oauthFailure(errors.New("name is missing in the payload"))
-	}
-
-	// Fetch domain/commenter token for the token, removing the token
-	domainName, commenterToken, err := svc.TheDomainService.TakeSSOToken(models.HexID(payload.Token))
-	if err != nil {
-		return oauthFailure(err)
-	}
-
-	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByHost(domainName)
-	if err != nil {
-		return oauthFailure(err)
-	}
-
-	// Verify the domain's SSO config is complete
-	if err := validateDomainSSOConfig(domain); err != nil {
-		return oauthFailure(err)
-	}
-
-	key, err := hex.DecodeString(domain.SsoSecret)
-	if err != nil {
-		logger.Errorf("cannot decode SSO secret as hex: %v", err)
-		return oauthFailure(err)
-	}
-
-	h := hmac.New(sha256.New, key)
-	h.Write(payloadBytes)
-	expectedSignatureBytes := h.Sum(nil)
-	if !hmac.Equal(expectedSignatureBytes, signatureBytes) {
-		return oauthFailure(fmt.Errorf("HMAC signature verification failed"))
-	}
-
-	// Try to find the corresponding commenter by their token
-	if _, err := svc.TheUserService.FindCommenterByToken(commenterToken); err != nil && err != svc.ErrNotFound {
-		return oauthFailure(err)
-	}
-
-	// Now try to find an existing commenter by their email
-	var commenterHex models.HexID
-	idp := "sso:" + string(domain.Host)
-	if commenter, err := svc.TheUserService.FindCommenterByIdPEmail(idp, payload.Email, false); err == nil {
-		// Commenter found
-		commenterHex = commenter.HexID
-
-	} else if err != svc.ErrNotFound {
-		// Any other error than "not found"
-		return oauthFailure(err)
-	}
-
-	// No such commenter yet: it's a signup
-	if commenterHex == "" {
-		// Create a new commenter
-		if c, err := svc.TheUserService.CreateCommenter(payload.Email, payload.Name, payload.Link, payload.Photo, idp, ""); err != nil {
-			return oauthFailure(err)
-		} else {
-			commenterHex = c.HexID
-		}
-
-		// Commenter already exists: it's a login. Update commenter's details
-	} else if err := svc.TheUserService.UpdateCommenter(commenterHex, payload.Email, payload.Name, payload.Link, payload.Photo, idp); err != nil {
-		return oauthFailure(err)
-	}
-
-	// Link the commenter to the session token
-	if err := svc.TheUserService.UpdateCommenterSession(commenterToken, commenterHex); err != nil {
-		return oauthFailure(err)
-	}
-	*/
-	// Succeeded: close the parent window
-	return closeParentWindowResponse()
-}
-
-func AuthOauthSsoInit(params api_auth.AuthOauthSsoInitParams) middleware.Responder {
-	/* TODO new-db
-	domainURL, err := util.ParseAbsoluteURL(params.HTTPRequest.Header.Get("Referer"))
-	if err != nil {
-		return oauthFailure(err)
-	}
-
-	// Try to find the commenter by token
-	commenterToken := models.HexID(params.Token)
-	if _, err = svc.TheUserService.FindCommenterByToken(commenterToken); err != nil && err != svc.ErrNotFound {
-		return oauthFailure(err)
-	}
-
-	// Fetch the domain
-	domain, err := svc.TheDomainService.FindByHost(models.Host(domainURL.Host))
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Make sure the domain allows SSO authentication
-	found := false
-	for _, id := range domain.Idps {
-		if id == models.IdentityProviderIDSso {
-			found = true
-			break
-		}
-	}
-	if !found {
-		return oauthFailure(fmt.Errorf("SSO not configured for %s", domain.Host))
-	}
-
-	// Verify the domain's SSO config is complete
-	if err := validateDomainSSOConfig(domain); err != nil {
-		return oauthFailure(err)
-	}
-
-	key, err := hex.DecodeString(domain.SsoSecret)
-	if err != nil {
-		logger.Errorf("AuthOauthSsoInit: failed to decode SSO secret: %v", err)
-		return oauthFailure(err)
-	}
-
-	// Create and persist a new SSO token
-	token, err := svc.TheDomainService.CreateSSOToken(domain.Host, commenterToken)
-	if err != nil {
-		return oauthFailure(err)
-	}
-
-	tokenBytes, err := hex.DecodeString(string(token))
-	if err != nil {
-		logger.Errorf("AuthOauthSsoInit: failed to decode SSO token: %v", err)
-		return oauthFailure(err)
-	}
-
-	// Parse the domain's SSO URL
-	ssoURL, err := util.ParseAbsoluteURL(string(domain.SsoURL))
-	if err != nil {
-		logger.Errorf("AuthOauthSsoInit: failed to parse SSO URL: %v", err)
-		return oauthFailure(err)
-	}
-
-	// Generate a new HMAC signature hash
-	h := hmac.New(sha256.New, key)
-	h.Write(tokenBytes)
-	signature := hex.EncodeToString(h.Sum(nil))
-
-	// Add the token and the signature to the SSO URL
-	q := ssoURL.Query()
-	q.Set("token", string(token))
-	q.Set("hmac", signature)
-	ssoURL.RawQuery = q.Encode()
-	*/
-	// Succeeded: redirect to SSO
-	return api_auth.NewAuthOauthSsoInitTemporaryRedirect() // TODO new-db .WithLocation(ssoURL.String())
 }
 
 // oauthFailure returns a generic "Unauthorized" responder, with the error message in the details. Also wipes out any
@@ -437,35 +354,3 @@ func validateAuthSessionState(sess goth.Session, req *http.Request) error {
 	}
 	return nil
 }
-
-/* TODO new-db
-
-// getSessionState extracts the state parameter from the given session's URL
-func getSessionState(sess goth.Session) (string, error) {
-	// Fetch the original session's URL
-	rawAuthURL, err := sess.GetAuthURL()
-	if err != nil {
-		return "", err
-	}
-
-	// Parse it
-	authURL, err := url.Parse(rawAuthURL)
-	if err != nil {
-		return "", err
-	}
-
-	// Extract the state param
-	return authURL.Query().Get("state"), nil
-}
-
-// validateDomainSSOConfig verifies the SSO configuration of the domain is valid
-func validateDomainSSOConfig(domain *models.Domain) error {
-	if domain.SsoSecret == "" {
-		return errors.New("domain SSO secret is not configured")
-	}
-	if domain.SsoURL == "" {
-		return errors.New("domain SSO URL is not configured")
-	}
-	return nil
-}
-*/

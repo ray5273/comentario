@@ -20,7 +20,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"sync"
 	"time"
 )
 
@@ -166,12 +165,6 @@ func IndexOfString(s string, slice []string) int {
 	return -1
 }
 
-// IsValidURL returns whether the passed string is a valid absolute URL
-func IsValidURL(s string) bool {
-	_, err := ParseAbsoluteURL(s)
-	return err == nil
-}
-
 // IsValidEmail returns whether the passed string is a valid email address
 func IsValidEmail(s string) bool {
 	// First validate the part before the '@'
@@ -223,6 +216,12 @@ func IsValidPort(s string) bool {
 	return err == nil && i > 0 && i < 65536
 }
 
+// IsValidURL returns whether the passed string is a valid absolute URL. If allowHTTP == false, HTTPS URLs are enforced
+func IsValidURL(s string, allowHTTP bool) bool {
+	_, err := ParseAbsoluteURL(s, allowHTTP)
+	return err == nil
+}
+
 // IsUILang returns whether the provided 2-letter string is a supported UI language
 func IsUILang(s string) bool {
 	// Only 2-letter codes are in scope
@@ -249,8 +248,9 @@ func MarkdownToHTML(markdown string) string {
 	return string(markdownPolicy.SanitizeBytes(unsafe))
 }
 
-// ParseAbsoluteURL parses and returns the passed string as an absolute URL
-func ParseAbsoluteURL(s string) (*url.URL, error) {
+// ParseAbsoluteURL parses and returns the passed string as an absolute URL. If allowHTTP == false, HTTPS URLs are
+// enforced
+func ParseAbsoluteURL(s string, allowHTTP bool) (*url.URL, error) {
 	// Parse the base URL
 	var u *url.URL
 	var err error
@@ -259,7 +259,7 @@ func ParseAbsoluteURL(s string) (*url.URL, error) {
 	}
 
 	// Check the scheme
-	if u.Scheme != "http" && u.Scheme != "https" {
+	if u.Scheme != "https" && !(allowHTTP && u.Scheme == "http") {
 		return nil, fmt.Errorf("invalid URL scheme: '%s'", u.Scheme)
 	}
 
@@ -365,50 +365,4 @@ func createMarkdownRenderer() {
 	htmlFlags |= blackfriday.HTML_HREF_TARGET_BLANK
 
 	markdownRenderer = blackfriday.HtmlRenderer(htmlFlags, "", "")
-}
-
-// ---------------------------------------------------------------------------------------------------------------------
-
-// SafeStringMap is a thread-safe map[string]string. Its zero value is a usable map
-type SafeStringMap[K ~string] struct {
-	m  map[K]string
-	mu sync.Mutex
-}
-
-// Put stores a value under the given key
-func (m *SafeStringMap[K]) Put(k K, v string) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.m == nil {
-		m.m = make(map[K]string)
-	}
-	m.m[k] = v
-}
-
-// Take retrieves and deletes a values by its key, thread-safely
-func (m *SafeStringMap[K]) Take(k K) (string, bool) {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-
-	// Don't bother if there's no data
-	if m.m == nil {
-		return "", false
-	}
-
-	// Fetch the value
-	v, ok := m.m[k]
-
-	// Remove the entry
-	delete(m.m, k)
-	return v, ok
-}
-
-// Len returns the number of entries in the map
-func (m *SafeStringMap[K]) Len() int {
-	m.mu.Lock()
-	defer m.mu.Unlock()
-	if m.m == nil {
-		return 0
-	}
-	return len(m.m)
 }

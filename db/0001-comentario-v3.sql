@@ -363,7 +363,7 @@ begin
                 count_comments, count_views)
             select
                     m.id, d.name, d.domain, d.creationdate, d.state='frozen', d.requireidentification != true,
-                    d.commentoprovider, d.ssoprovider, d.ssourl, d.ssosecret,
+                    d.commentoprovider, d.ssoprovider, d.ssourl, nullif(d.ssosecret, ''),
                     d.moderateallanonymous or d.requiremoderation, d.requiremoderation, false, false,
                     case
                         when d.emailnotificationpolicy='all' then 'all'

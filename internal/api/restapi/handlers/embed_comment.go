@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
@@ -84,13 +85,13 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	pageInfo := &models.PageInfo{
 		AuthAnonymous:    domain.AuthAnonymous,
 		AuthLocal:        domain.AuthLocal,
-		AuthSso:          domain.AuthSso,
+		AuthSso:          domain.AuthSSO,
 		DefaultSort:      models.CommentSort(domain.DefaultSort),
 		DomainID:         strfmt.UUID(domain.ID.String()),
 		IsDomainReadonly: domain.IsReadonly,
 		IsPageReadonly:   page.IsReadonly,
 		PageID:           strfmt.UUID(page.ID.String()),
-		SsoURL:           domain.SsoURL,
+		SsoURL:           domain.SSOURL,
 	}
 
 	// Fetch the domain's identity providers
@@ -231,6 +232,40 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 		Comment:   comment.ToDTO(),
 		Commenter: user.ToCommenter(domainUser.IsCommenter, domainUser.IsModerator),
 	})
+}
+
+func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
+		return r
+	}
+
+	// Find the comment and related objects
+	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
+		return r
+	}
+
+	// Verify the user is a moderator
+	if r := Verifier.UserIsModerator(domainUser); r != nil {
+		return r
+	}
+
+	// Verify it's a top-level comment
+	if !comment.IsRoot() {
+		return respBadRequest(ErrorNoRootComment)
+	}
+
+	// Update the comment, if necessary
+	b := swag.BoolValue(params.Body.Sticky)
+	if comment.IsSticky != b {
+		if err := svc.TheCommentService.UpdateSticky(&comment.ID, b); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// Succeeded or no change
+	return api_embed.NewEmbedCommentStickyNoContent()
 }
 
 func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.User) middleware.Responder {

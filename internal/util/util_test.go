@@ -2,11 +2,9 @@ package util
 
 import (
 	"bytes"
-	"fmt"
 	"github.com/go-openapi/strfmt"
 	"reflect"
 	"strings"
-	"sync"
 	"testing"
 )
 
@@ -171,37 +169,6 @@ func TestIndexOfString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := IndexOfString(tt.s, slice); got != tt.want {
 				t.Errorf("IndexOfString() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestIsValidURL(t *testing.T) {
-	tests := []struct {
-		name string
-		s    string
-		want bool
-	}{
-		{"empty             ", "", false},
-		{"root path         ", "/", false},
-		{"path only         ", "/path", false},
-		{"path#             ", "/path#foo", false},
-		{"schemaless        ", "//example.org/path#foo", false},
-		{"ftp URL root      ", "ftp://example.org/path#foo", false},
-		{"ftp URL path      ", "ftp://example.org/path", false},
-		{"ftp URL path#     ", "ftp://example.org/path#foo", false},
-		{"http URL root     ", "http://example.org/path#foo", true},
-		{"http URL path     ", "http://example.org/path", true},
-		{"http URL path,#   ", "http://example.org/path#foo", true},
-		{"http URL path,?,# ", "http://example.org/path?param=value&x=42#foo", true},
-		{"https URL root    ", "https://example.org/path#foo", true},
-		{"https URL path    ", "https://example.org/path", true},
-		{"https URL path,?,#", "https://example.org/path?param=value&x=42#foo", true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := IsValidURL(tt.s); got != tt.want {
-				t.Errorf("IsValidURL() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -426,6 +393,53 @@ func TestIsValidPort(t *testing.T) {
 	}
 }
 
+func TestIsValidURL(t *testing.T) {
+	tests := []struct {
+		name      string
+		s         string
+		allowHTTP bool
+		want      bool
+	}{
+		{"http on, empty              ", "", true, false},
+		{"http off, empty             ", "", false, false},
+		{"http on, root path          ", "/", true, false},
+		{"http off, root path         ", "/", false, false},
+		{"http on, path only          ", "/path", true, false},
+		{"http off, path only         ", "/path", false, false},
+		{"http on, path#              ", "/path#foo", true, false},
+		{"http off, path#             ", "/path#foo", false, false},
+		{"http on, schemaless         ", "//example.org/path#foo", true, false},
+		{"http off, schemaless        ", "//example.org/path#foo", false, false},
+		{"http on, ftp URL root       ", "ftp://example.org/path#foo", true, false},
+		{"http off, ftp URL root      ", "ftp://example.org/path#foo", false, false},
+		{"http on, ftp URL path       ", "ftp://example.org/path", true, false},
+		{"http off, ftp URL path      ", "ftp://example.org/path", false, false},
+		{"http on, ftp URL path#      ", "ftp://example.org/path#foo", true, false},
+		{"http off, ftp URL path#     ", "ftp://example.org/path#foo", false, false},
+		{"http on, http URL root      ", "http://example.org/path#foo", true, true},
+		{"http off, http URL root     ", "http://example.org/path#foo", false, false},
+		{"http on, http URL path      ", "http://example.org/path", true, true},
+		{"http off, http URL path     ", "http://example.org/path", false, false},
+		{"http on, http URL path,#    ", "http://example.org/path#foo", true, true},
+		{"http off, http URL path,#   ", "http://example.org/path#foo", false, false},
+		{"http on, http URL path,?,#  ", "http://example.org/path?param=value&x=42#foo", true, true},
+		{"http off, http URL path,?,# ", "http://example.org/path?param=value&x=42#foo", false, false},
+		{"http on, https URL root     ", "https://example.org/path#foo", true, true},
+		{"http off, https URL root    ", "https://example.org/path#foo", false, true},
+		{"http on, https URL path     ", "https://example.org/path", true, true},
+		{"http off, https URL path    ", "https://example.org/path", false, true},
+		{"http on, https URL path,?,# ", "https://example.org/path?param=value&x=42#foo", true, true},
+		{"http off, https URL path,?,#", "https://example.org/path?param=value&x=42#foo", false, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsValidURL(tt.s, tt.allowHTTP); got != tt.want {
+				t.Errorf("IsValidURL() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsUILang(t *testing.T) {
 	tests := []struct {
 		name string
@@ -557,39 +571,6 @@ func TestRandomBytesLength(t *testing.T) {
 				t.Errorf("RandomBytes() length = %v, want %v", got, tt.len)
 			}
 		})
-	}
-}
-
-func TestSafeStringMap(t *testing.T) {
-	m := SafeStringMap[string]{}
-	var wg sync.WaitGroup
-
-	// Run 500 parallel threads
-	for i := 0; i < 500; i++ {
-		wg.Add(1)
-		go func(idx int) {
-			defer wg.Done()
-			// Insert 500 values into the map
-			for j := 0; j < 500; j++ {
-				m.Put(fmt.Sprintf("v-%d-%d", idx, j), "xyz")
-			}
-			// Now take all those values, in reverse order
-			for j := 499; j >= 0; j-- {
-				if got, ok := m.Take(fmt.Sprintf("v-%d-%d", idx, j)); !ok {
-					t.Errorf("SafeStringMap.Take() misses a value for i = %d, j = %d", idx, j)
-				} else if got != "xyz" {
-					t.Errorf("SafeStringMap.Take() returned %v for i = %d, j = %d (want \"xyz\")", got, idx, j)
-				}
-			}
-		}(i)
-	}
-
-	// Wait for the crunch to finish
-	wg.Wait()
-
-	// Verify the map is empty
-	if got := m.Len(); got != 0 {
-		t.Errorf("SafeStringMap.Len() returned %d, want 0", got)
 	}
 }
 

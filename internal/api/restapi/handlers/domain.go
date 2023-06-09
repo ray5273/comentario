@@ -196,8 +196,8 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 		IsReadonly:       domain.IsReadonly,
 		AuthAnonymous:    domain.AuthAnonymous,
 		AuthLocal:        domain.AuthLocal,
-		AuthSso:          domain.AuthSso,
-		SsoURL:           domain.SsoURL,
+		AuthSSO:          domain.AuthSso,
+		SSOURL:           domain.SsoURL,
 		ModAnonymous:     domain.ModAnonymous,
 		ModAuthenticated: domain.ModAuthenticated,
 		ModImages:        domain.ModImages,
@@ -233,34 +233,22 @@ func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.Us
 	return api_owner.NewDomainSsoSecretNewOK().WithPayload(&api_owner.DomainSsoSecretNewOKBody{SsoSecret: token})
 }
 
-func DomainStatistics(params api_owner.DomainStatisticsParams, user *data.User) middleware.Responder {
-	/* TODO new-db
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+func DomainDailyStats(params api_owner.DomainDailyStatsParams, user *data.User) middleware.Responder {
+	// Find the domain and verify the user's ownership
+	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
-	}
 
-	numDays := int(swag.Int64Value(params.NumDays))
-
-	// Collect view stats
-	views, err := svc.TheDomainService.StatsForViews(host, principal.GetHexID(), numDays)
-	if err != nil {
+		// Collect comment/view stats
+	} else if comments, views, err := svc.TheDomainService.StatsDaily(&user.ID, &d.ID, int(swag.Uint64Value(params.Days))); err != nil {
 		return respServiceError(err)
-	}
 
-	// Collect comment stats
-	comments, err := svc.TheDomainService.StatsForComments(host, principal.GetHexID(), numDays)
-	if err != nil {
-		return respServiceError(err)
+	} else {
+		// Succeeded
+		return api_owner.NewDashboardDailyStatsOK().WithPayload(&models.DailyViewCommentStats{
+			CommentCounts: comments,
+			ViewCounts:    views,
+		})
 	}
-	*/
-
-	// Succeeded
-	return api_owner.NewDomainStatisticsOK() /* TODO new-db .WithPayload(&api_owner.DomainStatisticsOKBody{
-		CommentCounts: comments,
-		ViewCounts:    views,
-	})*/
 }
 
 // DomainReadonly sets the domain's readonly state
@@ -302,8 +290,8 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 	domain.Name = newDomain.Name
 	domain.AuthAnonymous = newDomain.AuthAnonymous
 	domain.AuthLocal = newDomain.AuthLocal
-	domain.AuthSso = newDomain.AuthSso
-	domain.SsoURL = newDomain.SsoURL
+	domain.AuthSSO = newDomain.AuthSso
+	domain.SSOURL = newDomain.SsoURL
 	domain.ModAnonymous = newDomain.ModAnonymous
 	domain.ModAuthenticated = newDomain.ModAuthenticated
 	domain.ModImages = newDomain.ModImages

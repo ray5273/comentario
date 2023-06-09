@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/internal/util"
 )
 
 // Verifier is a global VerifierService implementation
@@ -14,6 +15,8 @@ var Verifier VerifierService = &verifier{}
 
 // VerifierService is an API service interface for data and permission verification
 type VerifierService interface {
+	// DomainSSOConfig verifies the given domain is properly configured for SSO authentication
+	DomainSSOConfig(domain *data.Domain) middleware.Responder
 	// FederatedIdProvider verifies the federated identity provider specified by its ID is properly configured for
 	// authentication
 	FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder)
@@ -40,6 +43,28 @@ type VerifierService interface {
 // ----------------------------------------------------------------------------------------------------------------------
 // verifier is a blueprint VerifierService implementation
 type verifier struct{}
+
+func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
+	// Verify SSO is at all enabled
+	if !domain.AuthSSO {
+		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO isn't enabled"))
+
+		// Verify SSO URL is set
+	} else if domain.SSOURL == "" {
+		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO URL is missing"))
+
+		// Verify SSO URL is valid and secure
+	} else if _, err := util.ParseAbsoluteURL(domain.SSOURL, false); err != nil {
+		respBadRequest(ErrorSSOMisconfigured.WithDetails(err.Error()))
+
+		// Verify SSO secret is configured
+	} else if !domain.SSOSecretStr().Valid {
+		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO secret isn't configured"))
+	}
+
+	// Succeeded
+	return nil
+}
 
 func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder) {
 	if known, conf, p := data.GetFederatedIdP(id); !known {

@@ -227,7 +227,7 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 		"from cm_users u " +
 		"where u.email=$1"
 	if localOnly {
-		s += "and u.federated_idp is null"
+		s += " and u.federated_idp is null"
 	}
 
 	// Query the database

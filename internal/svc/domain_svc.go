@@ -97,7 +97,7 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, mod_anonymous, mod_authenticated, mod_links, mod_images, mod_notify_policy, default_sort) "+
 			"values($1, $2, $3, $4, false, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14);",
 		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.AuthAnonymous, domain.AuthLocal,
-		domain.AuthSso, domain.SsoURL, domain.ModAnonymous, domain.ModAuthenticated, domain.ModLinks, domain.ModImages,
+		domain.AuthSSO, domain.SSOURL, domain.ModAnonymous, domain.ModAuthenticated, domain.ModLinks, domain.ModImages,
 		domain.ModNotifyPolicy, domain.DefaultSort,
 	); err != nil {
 		logger.Errorf("domainService.Create: Exec() failed: %v", err)
@@ -192,7 +192,7 @@ func (svc *domainService) FindByHost(host string) (*data.Domain, error) {
 	row := db.QueryRow(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
 			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
 			"from cm_domains d "+
 			"where d.host=$1;",
@@ -214,7 +214,7 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	row := db.QueryRow(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
 			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
 			"from cm_domains d "+
 			"where d.id=$1;",
@@ -237,7 +237,7 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 		"select "+
 			// Domain fields
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
 			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
 			// Domain user fields
 			"du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
@@ -281,7 +281,7 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 		"select "+
 			// Domain fields
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
 			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
 			// Domain user fields
 			"du.user_id, coalesce(du.is_owner, false), "+
@@ -324,7 +324,7 @@ func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error
 	rows, err := db.Query(
 		"select "+
 			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, coalesce(d.sso_secret, ''), d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
+			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_links, d.mod_images, "+
 			"d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
 			"from cm_domains d "+
 			"where d.id in (select du.domain_id from cm_domains_users du where du.user_id=$1 and (du.is_owner or du.is_moderator));",
@@ -546,7 +546,7 @@ func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdp
 			"set name=$1, auth_anonymous=$2, auth_local=$3, auth_sso=$4, sso_url=$5, mod_anonymous=$6, "+
 			"mod_authenticated=$7, mod_links=$8, mod_images=$9, mod_notify_policy=$10, default_sort=$11 "+
 			"where id=$12;",
-		domain.Name, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSso, domain.SsoURL, domain.ModAnonymous,
+		domain.Name, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSSO, domain.SSOURL, domain.ModAnonymous,
 		domain.ModAuthenticated, domain.ModLinks, domain.ModImages, domain.ModNotifyPolicy, domain.DefaultSort,
 		&domain.ID,
 	); err != nil {
@@ -622,6 +622,7 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 // fetchDomain fetches and returns a domain instance from the provided Scanner
 func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 	var d data.Domain
+	var ssoSecret sql.NullString
 	err := sc.Scan(
 		&d.ID,
 		&d.Name,
@@ -630,9 +631,9 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 		&d.IsReadonly,
 		&d.AuthAnonymous,
 		&d.AuthLocal,
-		&d.AuthSso,
-		&d.SsoURL,
-		&d.SsoSecret,
+		&d.AuthSSO,
+		&d.SSOURL,
+		&ssoSecret,
 		&d.ModAnonymous,
 		&d.ModAuthenticated,
 		&d.ModLinks,
@@ -643,6 +644,9 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 		&d.CountViews)
 	if err != nil {
 		logger.Errorf("domainService.fetchDomain: Scan() failed: %v", err)
+		return nil, err
+	} else if err := d.SetSSOSecretStr(ssoSecret); err != nil {
+		logger.Errorf("domainService.fetchDomain: SetSSOSecretStr() failed: %v", err)
 		return nil, err
 	}
 
@@ -676,6 +680,7 @@ func (svc *domainService) fetchDomains(rows *sql.Rows) ([]data.Domain, error) {
 // fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner
 func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.DomainUser, error) {
 	var d data.Domain
+	var ssoSecret sql.NullString
 	var du data.DomainUser
 	var uid uuid.NullUUID
 	err := sc.Scan(
@@ -686,9 +691,9 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&d.IsReadonly,
 		&d.AuthAnonymous,
 		&d.AuthLocal,
-		&d.AuthSso,
-		&d.SsoURL,
-		&d.SsoSecret,
+		&d.AuthSSO,
+		&d.SSOURL,
+		&ssoSecret,
 		&d.ModAnonymous,
 		&d.ModAuthenticated,
 		&d.ModLinks,
@@ -705,6 +710,9 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&du.NotifyModerator)
 	if err != nil {
 		logger.Errorf("domainService.fetchDomainUser: Scan() failed: %v", err)
+		return nil, nil, err
+	} else if err := d.SetSSOSecretStr(ssoSecret); err != nil {
+		logger.Errorf("domainService.fetchDomainUser: SetSSOSecretStr() failed: %v", err)
 		return nil, nil, err
 	}
 

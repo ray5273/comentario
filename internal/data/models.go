@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/base64"
 	"encoding/hex"
+	"fmt"
 	"github.com/avct/uasurfer"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
@@ -347,9 +348,9 @@ type Domain struct {
 	IsReadonly       bool                  // Whether the domain is readonly (no new comments are allowed)
 	AuthAnonymous    bool                  // Whether anonymous comments are allowed
 	AuthLocal        bool                  // Whether local authentication is allowed
-	AuthSso          bool                  // Whether SSO authentication is allowed
-	SsoURL           string                // SSO provider URL
-	SsoSecret        string                // SSO secret
+	AuthSSO          bool                  // Whether SSO authentication is allowed
+	SSOURL           string                // SSO provider URL
+	SSOSecret        []byte                // SSO secret
 	ModAnonymous     bool                  // Whether all anonymous comments are to be approved by a moderator
 	ModAuthenticated bool                  // Whether all non-anonymous comments are to be approved by a moderator
 	ModLinks         bool                  // Whether all comments containing a link are to be approved by a moderator
@@ -360,12 +361,42 @@ type Domain struct {
 	CountViews       int64                 // Total number of views
 }
 
+// SSOSecretStr returns the SSO secret as a nullable hex string
+func (d *Domain) SSOSecretStr() sql.NullString {
+	if len(d.SSOSecret) == 0 {
+		return sql.NullString{}
+	}
+	return sql.NullString{Valid: true, String: hex.EncodeToString(d.SSOSecret)}
+}
+
+// SetSSOSecretStr sets the SSO secret from the given nullable hex string
+func (d *Domain) SetSSOSecretStr(s sql.NullString) error {
+	if !s.Valid {
+		// Null value
+		d.SSOSecret = nil
+		return nil
+
+		// Non-null value. Try to decode
+	} else if b, err := hex.DecodeString(s.String); err != nil {
+		return err
+
+		// Verify secret length
+	} else if l := len(b); l != 32 {
+		return fmt.Errorf("invalid SSO secret length: %d, want 32", l)
+
+	} else {
+		// Succeeded
+		d.SSOSecret = b
+		return nil
+	}
+}
+
 // ToDTO converts this model into an API model
 func (d *Domain) ToDTO() *models.Domain {
 	return &models.Domain{
 		AuthAnonymous:    d.AuthAnonymous,
 		AuthLocal:        d.AuthLocal,
-		AuthSso:          d.AuthSso,
+		AuthSso:          d.AuthSSO,
 		CountComments:    d.CountComments,
 		CountViews:       d.CountViews,
 		CreatedTime:      strfmt.DateTime(d.CreatedTime),
@@ -379,7 +410,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		ModLinks:         d.ModLinks,
 		ModNotifyPolicy:  models.DomainModNotifyPolicy(d.ModNotifyPolicy),
 		Name:             d.Name,
-		SsoURL:           d.SsoURL,
+		SsoURL:           d.SSOURL,
 	}
 }
 

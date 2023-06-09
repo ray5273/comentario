@@ -41,13 +41,14 @@
     <ng-container *ngSwitchCase="'login-locally'"        i18n>You already have an account. Please login with your email and password.</ng-container>
     <ng-container *ngSwitchCase="'login-using-idp'"      i18n>You already have an account. Please login via external provider:</ng-container>
     <ng-container *ngSwitchCase="'no-local-user'"        i18n>This operation is only applicable to locally authenticated users.</ng-container>
+    <ng-container *ngSwitchCase="'no-root-comment'"      i18n>This operation is only applicable to a root comment.</ng-container>
     <ng-container *ngSwitchCase="'not-domain-owner'"     i18n>You have to be a domain owner in order to do that.</ng-container>
     <ng-container *ngSwitchCase="'not-moderator'"        i18n>You have to be a moderator in order to do that.</ng-container>
     <ng-container *ngSwitchCase="'owner-has-domains'"    i18n>Account cannot be deleted: all domains linked to it must be deleted first.</ng-container>
     <ng-container *ngSwitchCase="'page-readonly'"        i18n>No comment can be added: comment thread on this page is read-only.</ng-container>
     <ng-container *ngSwitchCase="'self-vote'"            i18n>You cannot vote for your own comment.</ng-container>
     <ng-container *ngSwitchCase="'signups-forbidden'"    i18n>Unfortunately, registration of new users is currently disabled.</ng-container>
-    <ng-container *ngSwitchCase="'sso-url-missing'"      i18n>SSO URL is missing.</ng-container>
+    <ng-container *ngSwitchCase="'sso-misconfigured'"    i18n>SSO configuration for this domain is invalid.</ng-container>
     <ng-container *ngSwitchCase="'unauthenticated'"      i18n>This operation requires you to be signed in.</ng-container>
     <ng-container *ngSwitchCase="'unknown-host'"         i18n>This domain is not registered in Comentario.</ng-container>
     <ng-container *ngSwitchCase="'user-banned'"          i18n>This account is terminated due to a violation of our Terms of Service. If you believe it's an error, please contact support.</ng-container>

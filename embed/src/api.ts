@@ -202,6 +202,16 @@ export class ApiService {
         return this.apiClient.put<ApiCommentNewResponse>('embed/comments', this.userSessionToken, {host, path, parentId, markdown});
     }
 
+
+    /**
+     * Set sticky value for specified comment.
+     * @param id ID of the comment to update.
+     * @param sticky Stickiness value.
+     */
+    async commentSticky(id: UUID, sticky: boolean): Promise<void> {
+        return this.apiClient.post<void>(`embed/comments/${id}/sticky`, this.userSessionToken, {sticky});
+    }
+
     /**
      * Update an existing comment.
      * @param id ID of the comment to update.
@@ -217,7 +227,7 @@ export class ApiService {
      * @param direction Vote direction.
      */
     async commentVote(id: UUID, direction: -1 | 0 | 1): Promise<ApiCommentVoteResponse> {
-        return this.apiClient.post<ApiCommentVoteResponse>(`embed/comments/${id}`, this.userSessionToken, {direction});
+        return this.apiClient.post<ApiCommentVoteResponse>(`embed/comments/${id}/vote`, this.userSessionToken, {direction});
     }
 
     /**

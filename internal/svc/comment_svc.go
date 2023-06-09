@@ -28,6 +28,8 @@ type CommentService interface {
 	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
+	// UpdateSticky updates the stickiness flag of a comment with the given ID in the database
+	UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	// UpdateText updates the markdown and the HTML of a comment with the given ID in the database
 	UpdateText(commentID *uuid.UUID, markdown, html string) error
 	// Vote sets a vote for the given comment and user and updates the comment, return the updated comment's score
@@ -248,7 +250,7 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 	logger.Debugf("commentService.MarkDeleted(%s, %s)", commentID, userID)
 
 	// Update the record in the database
-	err := db.Exec(
+	err := db.ExecOne(
 		"update cm_comments set is_deleted=true, markdown='', html='', ts_deleted=$1, user_deleted=$2 where id=$3;",
 		time.Now().UTC(), userID, commentID)
 	if err != nil {
@@ -260,11 +262,24 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 	return nil
 }
 
+func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error {
+	logger.Debugf("commentService.UpdateSticky(%s, %v)", commentID, sticky)
+
+	// Update the row in the database
+	if err := db.ExecOne("update cm_comments set is_sticky=$1 where id=$2;", sticky, commentID); err != nil {
+		logger.Errorf("commentService.UpdateSticky: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
 func (svc *commentService) UpdateText(commentID *uuid.UUID, markdown, html string) error {
 	logger.Debugf("commentService.UpdateText(%s, ...)", commentID)
 
 	// Update the row in the database
-	if err := db.Exec("update cm_comments set markdown=$1, html=$2 where id=$3;", markdown, html, commentID); err != nil {
+	if err := db.ExecOne("update cm_comments set markdown=$1, html=$2 where id=$3;", markdown, html, commentID); err != nil {
 		logger.Errorf("commentService.UpdateText: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -316,7 +331,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 
 	} else if direction == 0 {
 		// Vote exists and must be removed
-		err = db.Exec("delete from cm_comment_votes where comment_id=$1 and user_id=$2;", commentID, userID)
+		err = db.ExecOne("delete from cm_comment_votes where comment_id=$1 and user_id=$2;", commentID, userID)
 		if neg.Bool {
 			inc = 1
 		} else {
@@ -325,7 +340,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 
 	} else {
 		// Vote exists and must be updated
-		err = db.Exec("update cm_comment_votes set negative=$1, ts_voted=$2 where comment_id=$3 and user_id=$4;",
+		err = db.ExecOne("update cm_comment_votes set negative=$1, ts_voted=$2 where comment_id=$3 and user_id=$4;",
 			direction < 0, time.Now().UTC(), commentID, userID)
 		if neg.Bool {
 			inc = 2

@@ -453,8 +453,8 @@ export class Comentario {
         // If there's any comment, add sort buttons
         if (this.parentIdMap) {
             this.mainArea!.append(new SortBar(
-                sp => {
-                    this.commentSort = sp;
+                cs => {
+                    this.commentSort = cs;
                     // Re-render comments using the new sort
                     this.renderComments();
                 },
@@ -817,14 +817,22 @@ export class Comentario {
      * @private
      */
     private async stickyComment(card: CommentCard): Promise<void> {
-        /* TODO new-db
-        // Save the page's sticky comment ID
-        this.stickyCommentHex = this.stickyCommentHex === card._comment.commentHex ? '' : card._comment.commentHex;
-        await this.submitPageAttrs();
+        // Run the stickiness update with the API
+        const isSticky = !card.comment.isSticky;
+        try {
+            this.setError();
+            await this.apiService.commentSticky(card.comment.id, isSticky);
 
-        // Reload all comments
-        return this.reload();
-        */
+        } catch (e) {
+            this.setError(e);
+            throw e;
+        }
+
+        // Update the comment
+        this.replaceCommentById(card.comment, {isSticky});
+
+        // Rerender comments to reflect the changed stickiness
+        this.renderComments();
     }
 
     /**

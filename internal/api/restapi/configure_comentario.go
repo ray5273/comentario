@@ -55,9 +55,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	eml := strfmt.Email("")
 	api.Formats().Add("email", &eml, util.IsValidEmail)
 
-	// Validate URI as an absolute URL
+	// Validate URI as an absolute URL (HTTP is allowed in general)
 	uri := strfmt.URI("")
-	api.Formats().Add("uri", &uri, util.IsValidURL)
+	api.Formats().Add("uri", &uri, func(s string) bool { return util.IsValidURL(s, true) })
 
 	// Update the config based on the CLI flags
 	if err := config.CLIParsed(); err != nil {
@@ -101,8 +101,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// OAuth
 	api.APIAuthAuthOauthCallbackHandler = api_auth.AuthOauthCallbackHandlerFunc(handlers.AuthOauthCallback)
 	api.APIAuthAuthOauthInitHandler = api_auth.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
-	api.APIAuthAuthOauthSsoCallbackHandler = api_auth.AuthOauthSsoCallbackHandlerFunc(handlers.AuthOauthSsoCallback)
-	api.APIAuthAuthOauthSsoInitHandler = api_auth.AuthOauthSsoInitHandlerFunc(handlers.AuthOauthSsoInit)
 	// CurUser
 	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
 	api.APIAuthCurUserUpdateHandler = api_auth.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
@@ -125,6 +123,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIEmbedEmbedCommentListHandler = api_embed.EmbedCommentListHandlerFunc(handlers.EmbedCommentList)
 	api.APIEmbedEmbedCommentModerateHandler = api_embed.EmbedCommentModerateHandlerFunc(handlers.EmbedCommentModerate)
 	api.APIEmbedEmbedCommentNewHandler = api_embed.EmbedCommentNewHandlerFunc(handlers.EmbedCommentNew)
+	api.APIEmbedEmbedCommentStickyHandler = api_embed.EmbedCommentStickyHandlerFunc(handlers.EmbedCommentSticky)
 	api.APIEmbedEmbedCommentUpdateHandler = api_embed.EmbedCommentUpdateHandlerFunc(handlers.EmbedCommentUpdate)
 	api.APIEmbedEmbedCommentVoteHandler = api_embed.EmbedCommentVoteHandlerFunc(handlers.EmbedCommentVote)
 	// Page
@@ -149,7 +148,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIOwnerDomainModeratorNewHandler = api_owner.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
 	api.APIOwnerDomainNewHandler = api_owner.DomainNewHandlerFunc(handlers.DomainNew)
 	api.APIOwnerDomainSsoSecretNewHandler = api_owner.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
-	api.APIOwnerDomainStatisticsHandler = api_owner.DomainStatisticsHandlerFunc(handlers.DomainStatistics)
+	api.APIOwnerDomainDailyStatsHandler = api_owner.DomainDailyStatsHandlerFunc(handlers.DomainDailyStats)
 	api.APIOwnerDomainReadonlyHandler = api_owner.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
 	api.APIOwnerDomainUpdateHandler = api_owner.DomainUpdateHandlerFunc(handlers.DomainUpdate)
 

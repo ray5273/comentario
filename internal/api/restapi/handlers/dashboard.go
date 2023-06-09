@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -23,13 +24,13 @@ func DashboardTotals(_ api_owner.DashboardTotalsParams, user *data.User) middlew
 
 func DashboardDailyStats(params api_owner.DashboardDailyStatsParams, user *data.User) middleware.Responder {
 	// Collect comment/view stats
-	comments, views, err := svc.TheDomainService.StatsDaily(&user.ID, nil, int(swag.Uint64Value(params.NumDays)))
+	comments, views, err := svc.TheDomainService.StatsDaily(&user.ID, nil, int(swag.Uint64Value(params.Days)))
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_owner.NewDashboardDailyStatsOK().WithPayload(&api_owner.DashboardDailyStatsOKBody{
+	return api_owner.NewDashboardDailyStatsOK().WithPayload(&models.DailyViewCommentStats{
 		CommentCounts: comments,
 		ViewCounts:    views,
 	})

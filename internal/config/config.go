@@ -93,7 +93,7 @@ var (
 func CLIParsed() error {
 	// Parse the base URL
 	var err error
-	if BaseURL, err = util.ParseAbsoluteURL(CLIFlags.BaseURL); err != nil {
+	if BaseURL, err = util.ParseAbsoluteURL(CLIFlags.BaseURL, true); err != nil {
 		return fmt.Errorf("invalid Base URL: %v", err)
 	}
 	UseHTTPS = BaseURL.Scheme == "https"
@@ -102,7 +102,7 @@ func CLIParsed() error {
 	if CLIFlags.CDNURL == "" {
 		CDNURL = BaseURL
 
-	} else if CDNURL, err = util.ParseAbsoluteURL(CLIFlags.CDNURL); err != nil {
+	} else if CDNURL, err = util.ParseAbsoluteURL(CLIFlags.CDNURL, true); err != nil {
 		return fmt.Errorf("invalid CDN URL: %v", err)
 	}
 
