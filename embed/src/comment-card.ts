@@ -4,14 +4,17 @@ import {
     Comment,
     CommenterMap,
     CommentsGroupedById,
-    sortingProps,
     CommentSort,
-    Principal, UUID
+    Principal,
+    sortingProps,
+    User,
+    UUID,
 } from './models';
 import { UIToolkit } from './ui-toolkit';
 import { Utils } from './utils';
 import { ConfirmDialog } from './confirm-dialog';
 
+export type CommentCardGetAvatarHandler = (user: User) => Wrap<any> | undefined;
 export type CommentCardEventHandler = (c: CommentCard) => void;
 export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1) => void;
 
@@ -39,12 +42,13 @@ export interface CommentRenderingContext {
     readonly curTimeMs: number;
 
     // Events
-    readonly onApprove: CommentCardEventHandler;
-    readonly onDelete: CommentCardEventHandler;
-    readonly onEdit: CommentCardEventHandler;
-    readonly onReply: CommentCardEventHandler;
-    readonly onSticky: CommentCardEventHandler;
-    readonly onVote: CommentCardVoteEventHandler;
+    readonly onGetAvatar: CommentCardGetAvatarHandler;
+    readonly onApprove:   CommentCardEventHandler;
+    readonly onDelete:    CommentCardEventHandler;
+    readonly onEdit:      CommentCardEventHandler;
+    readonly onReply:     CommentCardEventHandler;
+    readonly onSticky:    CommentCardEventHandler;
+    readonly onVote:      CommentCardVoteEventHandler;
 }
 
 /**
@@ -209,15 +213,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
     /**
      * Render the content of the card.
-     * @private
      */
     private render(ctx: CommentRenderingContext): void {
         const id = this._comment.id;
         const commenter = ctx.commenters[this._comment.userCreated];
-        const anonymous = this._comment.userCreated === ANONYMOUS_ID;
 
         // Pick a color for the commenter
-        const bgColor = anonymous ? 'anonymous' : Utils.colourIndex(`${this._comment.userCreated}-${commenter.name}`);
+        const bgColor = this._comment.userCreated === ANONYMOUS_ID ? 'anonymous' : Utils.colourIndex(this._comment.userCreated);
 
         // Render children
         this.children = UIToolkit.div('card-children').append(...new CommentTree().render(ctx, id));
@@ -233,11 +235,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 this.eHeader = UIToolkit.div('card-header')
                     .append(
                         // Avatar
-                        !anonymous && commenter.avatarUrl ?
-                            Wrap.new('img')
-                                .classes('avatar-img')
-                                .attr({src: `${ctx.apiUrl}/commenter/photo/${commenter.id}`, alt: ''}) :
-                            UIToolkit.div('avatar', `bg-${bgColor}`).html(anonymous ? '' : commenter.name![0].toUpperCase()),
+                        ctx.onGetAvatar(commenter),
                         // Name and subtitle
                         UIToolkit.div('name-container')
                             .append(
@@ -264,7 +262,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
     /**
      * Return a wrapped options toolbar for a comment.
-     * @private
      */
     private commentOptionsBar(ctx: CommentRenderingContext): Wrap<HTMLDivElement> | null {
         if (this._comment.isDeleted) {
@@ -345,7 +342,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      * @param icon Name of the icon to put on the button.
      * @param cls Optional additional class.
      * @param onClick Button's click handler.
-     * @private
      */
     private getOptionButton(icon: 'approve' | 'collapse' | 'delete' | 'downvote' | 'edit' | 'reply' | 'sticky' | 'upvote', cls?: string | null, onClick?: (btn: Wrap<HTMLButtonElement>) => void): Wrap<any> {
         let title: string;

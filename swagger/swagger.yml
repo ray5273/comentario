@@ -139,10 +139,10 @@ definitions:
         type: string
         format: uri
         description: URL of the user's website
-      avatarUrl:
-        type: string
-        format: uri
-        description: URL of the user's avatar
+      hasAvatar:
+        type: boolean
+        description: Whether the user has an avatar image
+        x-omitempty: false
       isModerator:
         type: boolean
         description: Whether the user is a moderator on this specific domain
@@ -406,6 +406,10 @@ definitions:
         type: string
         format: uri
         description: Optional website URL of the user
+      hasAvatar:
+        type: boolean
+        description: Whether the user has an avatar image
+        x-omitempty: false
       isLocal:
         type: boolean
         description: Whether the user is authenticated locally (as opposed to via a federated identity provider)
@@ -597,25 +601,6 @@ paths:
           description: Client configuration
           schema:
             $ref: "#/definitions/clientConfig"
-
-  /user/{uuid}/avatar:
-    get:
-      operationId: UserAvatarGet
-      summary: Get an avatar for given user in JPEG format
-      tags:
-        - ApiGeneral
-      security: []
-      produces:
-        - image/jpeg
-      parameters:
-        - $ref: "#/parameters/pathUuid"
-      responses:
-        200:
-          description: User avatar in the JPEG format
-          schema:
-            type: file
-        204:
-          description: User has no avatar
 
   #---------------------------------------------------------------------------------------------------------------------
   # Auth
@@ -887,6 +872,29 @@ paths:
       responses:
         204:
           description: User profile has been updated
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Users
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /users/{uuid}/avatar:
+    get:
+      operationId: UsersAvatarGet
+      summary: Get an avatar for given user in JPEG format
+      tags:
+        - ApiGeneral
+      security: []
+      produces:
+        - image/jpeg
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+      responses:
+        200:
+          description: User avatar in the JPEG format
+          schema:
+            type: file
+        204:
+          description: User has no avatar
 
   #---------------------------------------------------------------------------------------------------------------------
   # Embed API

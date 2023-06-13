@@ -113,7 +113,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainReadonlyHandler = api_general.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
 	api.APIGeneralDomainUpdateHandler = api_general.DomainUpdateHandlerFunc(handlers.DomainUpdate)
 	// User
-	api.APIGeneralUserAvatarGetHandler = api_general.UserAvatarGetHandlerFunc(handlers.UserAvatarGet)
+	api.APIGeneralUsersAvatarGetHandler = api_general.UsersAvatarGetHandlerFunc(handlers.UsersAvatarGet)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Embed API

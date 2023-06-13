@@ -56,7 +56,6 @@ export class HttpClient {
     /**
      * Convert the relative endpoint path to an absolute one by prepending it with the base URL.
      * @param path Relative endpoint path.
-     * @private
      */
     private getEndpointUrl(path: string): string {
         // Combine the two paths, making sure there's exactly one slash in between

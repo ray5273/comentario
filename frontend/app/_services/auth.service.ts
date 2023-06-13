@@ -69,7 +69,6 @@ export class AuthService {
 
     /**
      * An Observable that returns a Principal and never errors, returning a null instead.
-     * @private
      */
     private safeFetchPrincipal(): Observable<Principal | null> {
         return this.api.curUserGet()

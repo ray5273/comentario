@@ -1,14 +1,17 @@
 import { HttpClientError } from './http-client';
 import {
+    ANONYMOUS_ID,
     Comment,
     CommenterMap,
     CommentsGroupedById,
     CommentSort,
-    IdentityProvider, PageInfo,
+    IdentityProvider,
+    PageInfo,
     Principal,
     ProfileSettings,
     SignupData,
     StringBooleanMap,
+    User,
     UUID,
 } from './models';
 import { ApiCommentListResponse, ApiCommentVoteResponse, ApiErrorResponse, ApiService } from './api';
@@ -139,9 +142,9 @@ export class Comentario {
             .append(
                 // Profile bar
                 this.profileBar = new ProfileBar(
-                    this.origin,
                     this.root,
                     this.federatedIdps,
+                    () => this.createAvatarElement(this.principal),
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.openOAuthPopup(idp),
                     email => this.requestPasswordReset(email),
@@ -172,7 +175,6 @@ export class Comentario {
     /**
      * Return a rejected promise with the given message.
      * @param message Message to reject the promise with.
-     * @private
      */
     private reject(message: string): Promise<never> {
         return Promise.reject(`Comentario: ${message}`);
@@ -180,7 +182,6 @@ export class Comentario {
 
     /**
      * Returns a promise that gets resolved as soon as the document reaches at least its 'interactive' state.
-     * @private
      */
     private whenDocReady(): Promise<void> {
         return new Promise(resolved => {
@@ -203,7 +204,6 @@ export class Comentario {
 
     /**
      * Initialise the Comentario engine on the current page.
-     * @private
      */
     private async init(): Promise<void> {
         // Only perform initialisation once
@@ -281,7 +281,6 @@ export class Comentario {
 
     /**
      * Scroll to the comment whose ID is provided in the current window's fragment (if any).
-     * @private
      */
     private scrollToCommentHash() {
         const h = window.location.hash;
@@ -299,7 +298,6 @@ export class Comentario {
     /**
      * Scroll to the comment with the specified ID.
      * @param id Comment ID to scroll to.
-     * @private
      */
     private scrollToComment(id: UUID) {
         Wrap.byId(`card-${id}`)
@@ -315,7 +313,6 @@ export class Comentario {
 
     /**
      * (Re)render all comments recursively, adding them to the comments area.
-     * @private
      */
     private renderComments() {
         this.commentsArea!
@@ -326,7 +323,6 @@ export class Comentario {
     /**
      * Return a textual description of the provided error.
      * @param error Error do return a description for.
-     * @private
      */
     private describeError(error: any): string {
         if (error instanceof HttpClientError) {
@@ -358,7 +354,6 @@ export class Comentario {
     /**
      * Set and display (message is given) or clean (message is falsy) an error message in the error panel.
      * @param error Error object to set. If falsy, the error panel gets removed.
-     * @private
      */
     private setError(error?: any) {
         // No error means removing any error
@@ -379,7 +374,6 @@ export class Comentario {
 
     /**
      * Fetch client configuration from the backend.
-     * @private
      */
     private async loadClientConfig(): Promise<void> {
         this.federatedIdps = [];
@@ -397,7 +391,6 @@ export class Comentario {
     /**
      * Request the authentication status of the current user from the backend, and return a promise that resolves as
      * soon as the status becomes definite.
-     * @private
      */
     private async updateAuthStatus(): Promise<void> {
         this.principal = await this.apiService.authPrincipal();
@@ -415,7 +408,6 @@ export class Comentario {
 
     /**
      * Create and return a main area element.
-     * @private
      */
     private setupMainArea() {
         // Clean up everything from the main area
@@ -468,7 +460,6 @@ export class Comentario {
     /**
      * Start editing new comment.
      * @param parentCard Parent card for adding a reply to. If falsy, a top-level comment is being added
-     * @private
      */
     private addComment(parentCard?: CommentCard) {
         // Kill any existing editor
@@ -498,7 +489,6 @@ export class Comentario {
     /**
      * Start editing existing comment.
      * @param card Card hosting the comment.
-     * @private
      */
     private editComment(card: CommentCard) {
         // Kill any existing editor
@@ -530,7 +520,6 @@ export class Comentario {
      * @param parentCard Parent card for adding a reply to. If falsy, a top-level comment is being added
      * @param markdown Markdown text entered by the user.
      * @param anonymous Whether the user chose to comment anonymously.
-     * @private
      */
     private async submitNewComment(parentCard: CommentCard | undefined, markdown: string, anonymous: boolean): Promise<void> {
         // Authenticate the user, if required
@@ -587,7 +576,6 @@ export class Comentario {
 
     /**
      * Stop editing comment and remove any existing editor.
-     * @private
      */
     private cancelCommentEdits() {
         this.editor?.remove();
@@ -665,7 +653,6 @@ export class Comentario {
      * Open a new browser popup window for authenticating with the given identity provider and return a promise that
      * resolves as soon as the user is authenticated, or rejects when the authentication has been unsuccessful.
      * @param idp Identity provider to initiate authentication with.
-     * @private
      */
     private async openOAuthPopup(idp: string): Promise<void> {
         // Request a new, anonymous login token
@@ -703,7 +690,6 @@ export class Comentario {
 
     /**
      * Log the current user out.
-     * @private
      */
     private async logout(): Promise<void> {
         // Terminate the server session
@@ -716,7 +702,6 @@ export class Comentario {
 
     /**
      * Load data for the current page URL, including the comments, from the backend and store them locally
-     * @private
      */
     private async loadPageData(): Promise<void> {
         // Retrieve page settings and a comment list from the backend
@@ -758,7 +743,6 @@ export class Comentario {
 
     /**
      * Toggle the current page's readonly status.
-     * @private
      */
     private async pageReadonlyToggle(): Promise<void> {
         try {
@@ -776,7 +760,6 @@ export class Comentario {
 
     /**
      * Approve the comment of the given card.
-     * @private
      */
     private async approveComment(card: CommentCard): Promise<void> {
         // Submit the approval to the backend
@@ -795,7 +778,6 @@ export class Comentario {
 
     /**
      * Delete the comment of the given card.
-     * @private
      */
     private async deleteComment(card: CommentCard): Promise<void> {
         // Run deletion with the backend
@@ -814,7 +796,6 @@ export class Comentario {
 
     /**
      * Toggle the given comment's sticky status.
-     * @private
      */
     private async stickyComment(card: CommentCard): Promise<void> {
         // Run the stickiness update with the API
@@ -837,7 +818,6 @@ export class Comentario {
 
     /**
      * Vote (upvote, downvote, or undo vote) for the given comment.
-     * @private
      */
     private async voteComment(card: CommentCard, direction: -1 | 0 | 1): Promise<void> {
         // Only registered users can vote
@@ -879,6 +859,7 @@ export class Comentario {
             isReadonly:  this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
             hideDeleted: this.hideDeleted,
             curTimeMs:   new Date().getTime(),
+            onGetAvatar: user => this.createAvatarElement(user),
             onApprove:   card => this.approveComment(card),
             onDelete:    card => this.deleteComment(card),
             onEdit:      card => this.editComment(card),
@@ -890,7 +871,6 @@ export class Comentario {
 
     /**
      * Save current user's profile settings.
-     * @private
      */
     private async saveProfile(data: ProfileSettings) {
         try {
@@ -915,7 +895,6 @@ export class Comentario {
      * NB: parentId should not change!
      * @param c Original comment.
      * @param props Property overrides for the new clone.
-     * @private
      */
     private replaceCommentById(c: Comment, props?: Partial<Comment>): Comment {
         // Make a clone of the comment, overriding any property in props
@@ -930,5 +909,29 @@ export class Comentario {
             }
         }
         return cc;
+    }
+
+    /**
+     * Create and return a new element representing the avatar for the given user.
+     * @param user User to create an avatar element for.
+     */
+    private createAvatarElement(user?: User): Wrap<any> | undefined {
+        // Don't bother if no user
+        if (!user) {
+            return undefined;
+        }
+
+        // Determine if the user is anonymous
+        const anonymous = user.id === ANONYMOUS_ID;
+
+        // Render a new element
+        return !anonymous && user.hasAvatar ?
+            // The user has an avatar: create a new image pointing to the API avatar endpoint
+            Wrap.new('img')
+                .classes('avatar-img')
+                .attr({src: `${this.apiService.basePath}/users/${user.id}/avatar`, loading: 'lazy', alt: ''}) :
+            // The user has no avatar: render a circle containing the initial
+            UIToolkit.div('avatar', `bg-${anonymous ? 'anonymous' : Utils.colourIndex(user.id)}`)
+                .html(anonymous ? '' : user.name[0].toUpperCase());
     }
 }

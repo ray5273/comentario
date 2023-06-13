@@ -297,7 +297,6 @@ export class Wrap<T extends HTMLElement> {
 
     /**
      * Return whether the underlying element is fully visible on the screen along its vertical axis.
-     * @private
      */
     private vertVisible(): boolean {
         const r = this.el?.getBoundingClientRect();

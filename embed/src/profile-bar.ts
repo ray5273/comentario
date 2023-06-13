@@ -1,7 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { IdentityProvider, PageInfo, Principal, ProfileSettings, SignupData } from './models';
-import { Utils } from './utils';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -15,9 +14,9 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     private _pageInfo?: PageInfo;
 
     /**
-     * @param baseUrl Comentario's base URL.
      * @param root Root element (for showing popups).
      * @param federatedIdps Federated identity providers configured on the backend.
+     * @param onGetAvatar Callback for obtaining an element for the user's avatar.
      * @param onLocalAuth Callback for executing a local authentication.
      * @param onOAuth Callback for executing external (OAuth) authentication.
      * @param onPasswordReset Callback for resetting user password.
@@ -25,9 +24,9 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onSaveSettings Callback for saving user profile settings.
      */
     constructor(
-        private readonly baseUrl: string,
         private readonly root: Wrap<any>,
         private readonly federatedIdps: IdentityProvider[],
+        private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
         private readonly onPasswordReset: (email: string) => Promise<void>,
@@ -55,18 +54,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         this.btnLogin = undefined;
         this.principal = principal;
 
-        // Create an avatar element
-        const idxColor = Utils.colourIndex(`${this.principal.id}-${this.principal.name}`);
-        const avatar = /* TODO new-db this.principal.avatarUrl ?
-            Wrap.new('img')
-                .classes('avatar-img')
-                .attr({
-                    src: `${this.baseUrl}/api/commenter/photo/${this.principal.id}`,
-                    loading: 'lazy',
-                    alt: '',
-                }) :*/
-            UIToolkit.div('avatar', `bg-${idxColor}`).html(this.principal.name![0].toUpperCase());
-
         // Recreate the content
         this.html('')
             .append(
@@ -74,7 +61,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 UIToolkit.div('logged-in-as')
                     .append(
                         // Avatar
-                        avatar,
+                        this.onGetAvatar(),
                         // Name and link
                         Wrap.new(this.principal.websiteUrl ? 'a' : 'div')
                             .classes('name')

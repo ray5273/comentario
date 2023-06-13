@@ -2,17 +2,22 @@ export type UUID = string;
 
 export type StringBooleanMap = { [k: string]: boolean };
 
+/** User abstraction. **/
+export interface User {
+    readonly id:          UUID;    // Unique user ID
+    readonly email:       string;  // Email address of the user
+    readonly name:        string;  // Full name of the user
+    readonly websiteUrl:  string;  // URL of the user's website
+    readonly hasAvatar:   boolean; // Whether the user has an avatar image
+    readonly isModerator: boolean; // Whether the user is a moderator on this specific domain
+    readonly isCommenter: boolean; // Whether the user is a commenter on this specific domain (false means the user is read-only)
+}
+
 /** Authenticated or anonymous user. */
-export interface Principal {
-    readonly id:              string;  // Unique user ID
-    readonly email:           string;  // Email address of the user
-    readonly name:            string;  // Full name of the user
-    readonly websiteUrl:      string;  // Optional website URL of the user
+export interface Principal extends User {
     readonly isLocal:         boolean; // Whether the user is authenticated locally (as opposed to via a federated identity provider)
     readonly isConfirmed:     boolean; // Whether the user has confirmed their email address
     readonly isOwner:         boolean; // Whether the user is an owner of the domain (only for commenter auth)
-    readonly isModerator:     boolean; // Whether the user is a moderator on this specific domain (only for commenter auth)
-    readonly isCommenter:     boolean; // Whether the user is a commenter on this specific domain (false means the user is read-only; only for commenter auth)
     readonly notifyReplies:   boolean; // Whether the user is to be notified about replies to their comments (only for commenter auth)
     readonly notifyModerator: boolean; // Whether the user is to receive moderator notifications (only for commenter auth)
 }
@@ -34,16 +39,8 @@ export interface Comment {
     readonly direction:   number;  // Vote direction for the current user
 }
 
-/** Stripped-down, read-only version of the user who authored a comment. */
-export interface Commenter {
-    readonly id:          UUID;    // Unique user ID
-    readonly email:       string;  // Email address of the user
-    readonly name:        string;  // Full name of the user
-    readonly websiteUrl:  string;  // URL of the user's website
-    readonly avatarUrl:   string;  // URL of the user's avatar
-    readonly isModerator: boolean; // Whether the user is a moderator on this specific domain
-    readonly isCommenter: boolean; // Whether the user is a commenter on this specific domain (false means the user is read-only)
-}
+/** Stripped-down, read-only version of the user who authored a comment. For now equivalent to User. */
+export type Commenter = User;
 
 /** Information about a page displaying comments. */
 export interface PageInfo {

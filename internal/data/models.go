@@ -185,8 +185,8 @@ func (u *User) IsLocal() bool {
 // ToCommenter converts this user into a Commenter model
 func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 	return &models.Commenter{
-		AvatarURL:   "", // TODO new-db
 		Email:       strfmt.Email(u.Email),
+		HasAvatar:   len(u.Avatar) > 0,
 		ID:          strfmt.UUID(u.ID.String()),
 		IsCommenter: commenter,
 		IsModerator: moderator,
@@ -200,6 +200,7 @@ func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 	return &models.Principal{
 		Email:           strfmt.Email(u.Email),
+		HasAvatar:       len(u.Avatar) > 0,
 		ID:              strfmt.UUID(u.ID.String()),
 		IsCommenter:     du != nil && du.IsCommenter,
 		IsConfirmed:     u.Confirmed,
