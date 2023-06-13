@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { ApiOwnerService, DashboardDataGet200Response } from '../../../../generated-api';
+import { ApiGeneralService, DashboardTotals200Response } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 
 @Component({
@@ -8,17 +8,17 @@ import { ProcessingStatus } from '../../../_utils/processing-status';
 })
 export class DashboardComponent implements OnInit {
 
-    data?: DashboardDataGet200Response;
+    data?: DashboardTotals200Response;
 
     readonly loading = new ProcessingStatus();
 
     constructor(
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     ngOnInit(): void {
         // Fetch the data from the backend
-        this.api.dashboardDataGet()
+        this.api.dashboardTotals()
             .pipe(this.loading.processing())
             .subscribe(d => this.data = d);
     }

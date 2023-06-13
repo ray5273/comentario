@@ -566,7 +566,7 @@ paths:
       operationId: Generic
       summary: Fake endpoint to provide generic errors
       tags:
-        - ApiGeneric
+        - ApiGeneral
       responses:
         400:
           $ref: "#/responses/BadRequest"
@@ -590,7 +590,7 @@ paths:
       operationId: ConfigClientGet
       summary: Obtain client configuration
       tags:
-        - ApiGeneric
+        - ApiGeneral
       security: []
       responses:
         200:
@@ -603,7 +603,7 @@ paths:
       operationId: UserAvatarGet
       summary: Get an avatar for given user in JPEG format
       tags:
-        - ApiGeneric
+        - ApiGeneral
       security: []
       produces:
         - image/jpeg
@@ -626,7 +626,7 @@ paths:
       operationId: AuthConfirm
       summary: Confirm the user's email using the provided token
       tags:
-        - ApiAuth
+        - ApiGeneral
       security:
         - token: [confirm-email]
       responses:
@@ -641,7 +641,7 @@ paths:
       operationId: AuthLogin
       summary: Sign in as an existing user
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       parameters:
         - in: body
@@ -671,7 +671,7 @@ paths:
       operationId: AuthLoginTokenNew
       summary: Request a new anonymous token with the "login" scope, which is to be used for subsequent federated authentication
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       responses:
         200:
@@ -687,7 +687,7 @@ paths:
       operationId: AuthLoginTokenRedeem
       summary: Log in using the provided, no longer anonymous, token
       tags:
-        - ApiAuth
+        - ApiGeneral
       security:
         - token: [login]
       responses:
@@ -701,7 +701,7 @@ paths:
       operationId: AuthLogout
       summary: Log the current user out
       tags:
-        - ApiAuth
+        - ApiGeneral
       responses:
         204:
           description: User has been logged out
@@ -711,7 +711,7 @@ paths:
       operationId: AuthSignup
       summary: Sign up as a new owner
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       parameters:
         - in: body
@@ -745,7 +745,7 @@ paths:
       operationId: AuthDeleteProfile
       summary: Delete the account of the current user
       tags:
-        - ApiAuth
+        - ApiGeneral
       responses:
         204:
           description: Owner's account has been deleted
@@ -755,7 +755,7 @@ paths:
       operationId: AuthPwdResetSendEmail
       summary: Request a password reset for a local user by sending them an email
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       parameters:
         - in: body
@@ -777,7 +777,7 @@ paths:
       operationId: AuthPwdResetChange
       summary: Give a local user a new password
       tags:
-        - ApiAuth
+        - ApiGeneral
       security:
         - token: [pwd-reset]
       parameters:
@@ -805,7 +805,7 @@ paths:
       operationId: AuthOauthInit
       summary: Initiate signing in via federated authentication using an anonymous token
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       produces:
         - text/html # For an error response only, otherwise a redirect is issued
@@ -824,7 +824,7 @@ paths:
       operationId: AuthOauthCallback
       summary: Endpoint that gets called back by the federated authentication provider
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       produces:
         - text/html
@@ -845,7 +845,7 @@ paths:
       operationId: CurUserGet
       summary: Fetch the currently authenticated user, if any
       tags:
-        - ApiAuth
+        - ApiGeneral
       security: []
       responses:
         200:
@@ -859,7 +859,7 @@ paths:
       operationId: CurUserUpdate
       summary: Update profile details of the current user
       tags:
-        - ApiAuth
+        - ApiGeneral
       parameters:
         - in: body
           name: body
@@ -1408,7 +1408,7 @@ paths:
       operationId: DashboardTotals
       summary: Get summary (totals) data for the user
       tags:
-        - ApiOwner
+        - ApiGeneral
       responses:
         200:
           description: Dashboard data
@@ -1450,7 +1450,7 @@ paths:
       operationId: DashboardDailyStats
       summary: Get daily comment and view statistics for the user
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - $ref: "#/parameters/queryStatsDays"
       responses:
@@ -1468,7 +1468,7 @@ paths:
       operationId: DomainList
       summary: Get a list of registered domains
       tags:
-        - ApiOwner
+        - ApiGeneral
       responses:
         200:
           description: List of domains
@@ -1484,7 +1484,7 @@ paths:
       operationId: DomainNew
       summary: Register a new domain
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - in: body
           name: body
@@ -1517,7 +1517,7 @@ paths:
       operationId: DomainGet
       summary: Get properties of a domain
       tags:
-        - ApiOwner
+        - ApiGeneral
       responses:
         200:
           description: Domain properties
@@ -1537,7 +1537,7 @@ paths:
       operationId: DomainUpdate
       summary: Update properties of specified domain
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - in: body
           name: body
@@ -1566,7 +1566,7 @@ paths:
       operationId: DomainDelete
       summary: Delete a domain
       tags:
-        - ApiOwner
+        - ApiGeneral
       responses:
         204:
           description: Domain has been deleted
@@ -1576,7 +1576,7 @@ paths:
       operationId: DomainClear
       summary: Clear all domain's pages/comments/votes
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - $ref: "#/parameters/pathUuid"
       responses:
@@ -1588,7 +1588,7 @@ paths:
       operationId: DomainReadonly
       summary: Set the domain's readonly state
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -1611,7 +1611,7 @@ paths:
       operationId: DomainExport
       summary: Export domain data and download as a gzip-archive file
       tags:
-        - ApiOwner
+        - ApiGeneral
       produces:
         - application/gzip
       parameters:
@@ -1630,7 +1630,7 @@ paths:
       operationId: DomainImport
       summary: Import comments and commenters into specified domain from exported data, downloaded from certain URL
       tags:
-        - ApiOwner
+        - ApiGeneral
       consumes:
         - multipart/form-data
       parameters:
@@ -1661,7 +1661,7 @@ paths:
       operationId: DomainModeratorNew
       summary: Add a new domain moderator
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - in: body
           name: body
@@ -1682,7 +1682,7 @@ paths:
       operationId: DomainModeratorDelete
       summary: Delete specified domain moderator
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - in: body
           name: body
@@ -1704,7 +1704,7 @@ paths:
       operationId: DomainSsoSecretNew
       summary: Generate an SSO secret for specified domain
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - $ref: "#/parameters/pathUuid"
       responses:
@@ -1721,7 +1721,7 @@ paths:
       operationId: DomainDailyStats
       summary: Get comment and view statistics for specified domain
       tags:
-        - ApiOwner
+        - ApiGeneral
       parameters:
         - $ref: "#/parameters/pathUuid"
         - $ref: "#/parameters/queryStatsDays"

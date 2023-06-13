@@ -1,8 +1,16 @@
 import { Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { Observable } from 'rxjs';
+import { map } from "rxjs/operators";
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from '../../environments/environment';
-import { ApiGenericService, ClientConfig } from '../../generated-api';
+import { ApiGeneralService, ClientConfig } from '../../generated-api';
+
+declare global {
+    // noinspection JSUnusedGlobalSymbols
+    interface Window {
+        Cypress?: never; // Set when run under Cypress
+    }
+}
 
 @Injectable({
     providedIn: 'root',
@@ -24,10 +32,10 @@ export class ConfigService {
     constructor(
         private readonly ngbConfig: NgbConfig,
         private readonly toastConfig: NgbToastConfig,
-        private readonly api: ApiGenericService,
+        private readonly api: ApiGeneralService,
     ) {
         // Detect if the e2e-test is active
-        this.isUnderTest = !!(window as any).Cypress;
+        this.isUnderTest = !!window.Cypress;
 
         // Disable animations with e2e to speed up the tests
         ngbConfig.animation = !this.isUnderTest;
@@ -51,8 +59,8 @@ export class ConfigService {
     /**
      * Initialise the app configuration.
      */
-    init(): Observable<any> {
+    init(): Observable<unknown> {
         // Fetch client config
-        return this.api.configClientGet().pipe(tap(cc => this._clientConfig = cc));
+        return this.api.configClientGet().pipe(map(cc => this._clientConfig = cc));
     }
 }

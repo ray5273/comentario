@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faCalendarXmark, faCircleQuestion, faSnowflake, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { ApiOwnerService, Domain } from '../../../../../../generated-api';
+import { ApiGeneralService, Domain } from '../../../../../../generated-api';
 import { Paths } from '../../../../../_utils/consts';
 import { ToastService } from '../../../../../_services/toast.service';
 import { DomainDetailComponent } from '../domain-detail.component';
@@ -31,7 +31,7 @@ export class DomainDangerZoneComponent {
     constructor(
         private readonly router: Router,
         private readonly toastSvc: ToastService,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
         private readonly details: DomainDetailComponent,
     ) {
         // Subscribe to domain changes

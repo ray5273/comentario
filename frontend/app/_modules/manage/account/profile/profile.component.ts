@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder } from '@angular/forms';
 import { faAngleDown, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
-import { ApiAuthService, Principal } from '../../../../../generated-api';
+import { ApiGeneralService, Principal } from '../../../../../generated-api';
 import { Router } from '@angular/router';
 import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
@@ -48,7 +48,7 @@ export class ProfileComponent implements OnInit {
         private readonly router: Router,
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
-        private readonly api: ApiAuthService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     get name(): AbstractControl<string> {
@@ -98,7 +98,7 @@ export class ProfileComponent implements OnInit {
         // Submit the form if it's valid
         if (this.userForm.valid) {
             const vals = this.userForm.value;
-            this.api.curUserProfileUpdate({name: vals.name!, curPassword: vals.curPassword, newPassword: vals.newPassword})
+            this.api.curUserUpdate({name: vals.name!, curPassword: vals.curPassword, newPassword: vals.newPassword})
                 .pipe(this.saving.processing())
                 .subscribe(() => {
                     // Update the logged-in principal

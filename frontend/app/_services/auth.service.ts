@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { merge, Observable, of, Subject, tap } from 'rxjs';
 import { catchError, map, shareReplay, switchMap, take } from 'rxjs/operators';
-import { ApiAuthService, Principal } from '../../generated-api';
+import { ApiGeneralService, Principal } from '../../generated-api';
 
 @Injectable({
     providedIn: 'root',
@@ -18,7 +18,7 @@ export class AuthService {
     private readonly _update$ = new Subject<Principal | null | undefined>();
 
     constructor(
-        private readonly api: ApiAuthService,
+        private readonly api: ApiGeneralService,
     ) {
         this.principal = merge(
             // Initially fetch a user

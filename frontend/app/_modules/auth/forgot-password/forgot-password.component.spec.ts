@@ -3,7 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MockProviders } from 'ng-mocks';
 import { ForgotPasswordComponent } from './forgot-password.component';
-import { ApiAuthService } from '../../../../generated-api';
+import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
 import { ToolsModule } from '../../tools/tools.module';
 
@@ -16,7 +16,7 @@ describe('ForgotPasswordComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [ForgotPasswordComponent],
             imports: [RouterTestingModule, ReactiveFormsModule, ToolsModule],
-            providers: MockProviders(ToastService, ApiAuthService),
+            providers: MockProviders(ToastService, ApiGeneralService),
         })
             .compileComponents();
 

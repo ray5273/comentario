@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiOwnerService, Domain } from '../../../../../../generated-api';
+import { ApiGeneralService, Domain } from '../../../../../../generated-api';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ToastService } from '../../../../../_services/toast.service';
 import { DomainDetailComponent } from '../domain-detail.component';
@@ -28,7 +28,7 @@ export class DomainModeratorsComponent {
     constructor(
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
         private readonly details: DomainDetailComponent,
     ) {
         // Subscribe to domain changes

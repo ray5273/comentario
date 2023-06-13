@@ -36,7 +36,7 @@ func Test_translateError(t *testing.T) {
 		{"Empty errors", []error{}, nil},
 		{"Multiple nils", []error{nil, nil, nil, nil, nil, nil, nil}, nil},
 		{"NotFound error", []error{sql.ErrNoRows}, ErrNotFound},
-		{"Other Mongo error", []error{sql.ErrConnDone}, ErrDB},
+		{"Other DB error", []error{sql.ErrConnDone}, ErrDB},
 		{"Custom error", []error{errors.New("ouch")}, ErrDB},
 		{"Multiple errors", []error{errors.New("ouch"), sql.ErrNoRows, sql.ErrConnDone}, ErrDB},
 		{"Mix of nils and errors", []error{nil, nil, nil, nil, nil, nil, nil, sql.ErrNoRows, nil}, ErrNotFound},

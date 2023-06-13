@@ -5,7 +5,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockProvider, MockService } from 'ng-mocks';
 import { DomainSettingsComponent } from './domain-settings.component';
 import { ConfigService } from '../../../../../_services/config.service';
-import { ApiOwnerService } from '../../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../../generated-api';
 import { DomainDetailComponent } from '../domain-detail.component';
 
 describe('DomainSettingsComponent', () => {
@@ -19,7 +19,7 @@ describe('DomainSettingsComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 {provide: ConfigService,   useValue: MockService(ConfigService)},
-                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService, {domainGet: () => of(null)} as any)},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService, {domainGet: () => of(null)} as any)},
                 MockProvider(DomainDetailComponent, {domain: of(undefined), federatedIdpIds: of([])} as any),
             ],
         })

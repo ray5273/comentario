@@ -12,7 +12,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -29,7 +29,7 @@ type ssoPayload struct {
 	Photo  string `json:"photo"`
 }
 
-func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Responder {
+func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Responder {
 	// SSO authentication is a special case
 	var provider goth.Provider
 	var r middleware.Responder
@@ -217,7 +217,7 @@ func AuthOauthCallback(params api_auth.AuthOauthCallbackParams) middleware.Respo
 }
 
 // AuthOauthInit initiates a federated authentication process
-func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
+func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder {
 	// SSO authentication is a special case
 	var provider goth.Provider
 	var r middleware.Responder
@@ -307,7 +307,7 @@ func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 	}
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
-	return NewCookieResponder(api_auth.NewAuthOauthInitTemporaryRedirect().WithLocation(authURL)).
+	return NewCookieResponder(api_general.NewAuthOauthInitTemporaryRedirect().WithLocation(authURL)).
 		WithCookie(util.CookieNameAuthSession, authSession.ID.String(), "/", util.AuthSessionDuration, true, http.SameSiteLaxMode)
 }
 
@@ -315,7 +315,7 @@ func AuthOauthInit(params api_auth.AuthOauthInitParams) middleware.Responder {
 // auth session cookie
 func oauthFailure(err error) middleware.Responder {
 	return NewCookieResponder(
-		api_auth.NewAuthOauthInitUnauthorized().
+		api_general.NewAuthOauthInitUnauthorized().
 			WithPayload(fmt.Sprintf(
 				`<html lang="en">
 				<head>

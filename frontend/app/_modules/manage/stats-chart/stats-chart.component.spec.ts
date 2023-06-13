@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MockService } from 'ng-mocks';
 import { StatsChartComponent } from './stats-chart.component';
-import { ApiOwnerService } from '../../../../generated-api';
+import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
 
 describe('StatsChartComponent', () => {
@@ -13,7 +13,7 @@ describe('StatsChartComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [StatsChartComponent],
             providers: [
-                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService)},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService)},
             ],
             imports: [ToolsModule],
         })

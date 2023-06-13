@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import {
-    ApiOwnerService,
+    ApiGeneralService,
     CommentSort,
     Domain,
     DomainModNotifyPolicy,
@@ -58,7 +58,7 @@ export class DomainEditComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly route: ActivatedRoute,
         private readonly router: Router,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
         private readonly cfgSvc: ConfigService,
         private readonly toastSvc: ToastService,
     ) {}

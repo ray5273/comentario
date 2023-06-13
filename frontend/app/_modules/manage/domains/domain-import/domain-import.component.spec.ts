@@ -5,7 +5,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockService } from 'ng-mocks';
 import { ToolsModule } from '../../../tools/tools.module';
-import { ApiOwnerService } from '../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../generated-api';
 
 describe('DomainImportComponent', () => {
 
@@ -17,7 +17,7 @@ describe('DomainImportComponent', () => {
             declarations: [DomainImportComponent],
             imports: [RouterTestingModule, ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
-                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService)},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService)},
             ],
         })
             .compileComponents();

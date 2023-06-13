@@ -7,7 +7,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -53,7 +53,7 @@ func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
 	return user, nil
 }
 
-func AuthConfirm(_ api_auth.AuthConfirmParams, user *data.User) middleware.Responder {
+func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Responder {
 	// Don't bother if the user is already confirmed
 	if !user.Confirmed {
 		// Update the user
@@ -70,10 +70,10 @@ func AuthConfirm(_ api_auth.AuthConfirmParams, user *data.User) middleware.Respo
 	}
 
 	// Redirect the user's browser
-	return api_auth.NewAuthConfirmTemporaryRedirect().WithLocation(loc)
+	return api_general.NewAuthConfirmTemporaryRedirect().WithLocation(loc)
 }
 
-func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) middleware.Responder {
+func AuthDeleteProfile(_ api_general.AuthDeleteProfileParams, user *data.User) middleware.Responder {
 	// Fetch a list of domains
 	if domains, err := svc.TheDomainService.ListByOwnerID(&user.ID); err != nil {
 		return respServiceError(err)
@@ -89,11 +89,11 @@ func AuthDeleteProfile(_ api_auth.AuthDeleteProfileParams, user *data.User) midd
 	}
 
 	// Succeeded
-	return api_auth.NewAuthDeleteProfileNoContent()
+	return api_general.NewAuthDeleteProfileNoContent()
 }
 
 // AuthLogin logs a user in using local authentication (email and password)
-func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
+func AuthLogin(params api_general.AuthLoginParams) middleware.Responder {
 	// Log the user in
 	user, us, r := loginLocalUser(
 		data.EmailPtrToString(params.Body.Email),
@@ -105,7 +105,7 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
+	return NewCookieResponder(api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
 		WithCookie(
 			util.CookieNameUserSession,
 			us.EncodeIDs(),
@@ -115,7 +115,7 @@ func AuthLogin(params api_auth.AuthLoginParams) middleware.Responder {
 			http.SameSiteLaxMode)
 }
 
-func AuthLoginTokenNew(params api_auth.AuthLoginTokenNewParams) middleware.Responder {
+func AuthLoginTokenNew(_ api_general.AuthLoginTokenNewParams) middleware.Responder {
 	// Create a new, anonymous token
 	if t, err := data.NewToken(nil, data.TokenScopeLogin, util.AuthSessionDuration, false); err != nil {
 		return respInternalError(nil)
@@ -126,19 +126,19 @@ func AuthLoginTokenNew(params api_auth.AuthLoginTokenNewParams) middleware.Respo
 
 	} else {
 		// Succeeded
-		return api_auth.NewAuthLoginTokenNewOK().WithPayload(&api_auth.AuthLoginTokenNewOKBody{Token: t.String()})
+		return api_general.NewAuthLoginTokenNewOK().WithPayload(&api_general.AuthLoginTokenNewOKBody{Token: t.String()})
 	}
 }
 
-func AuthLoginTokenRedeem(params api_auth.AuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
-	// Verify the user can login and create a new session
+func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
+	// Verify the user can log in and create a new session
 	us, r := loginUser(user, "", params.HTTPRequest)
 	if r != nil {
 		return r
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(api_auth.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
+	return NewCookieResponder(api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
 		WithCookie(
 			util.CookieNameUserSession,
 			us.EncodeIDs(),
@@ -149,7 +149,7 @@ func AuthLoginTokenRedeem(params api_auth.AuthLoginTokenRedeemParams, user *data
 }
 
 // AuthLogout logs currently logged user out
-func AuthLogout(params api_auth.AuthLogoutParams, _ *data.User) middleware.Responder {
+func AuthLogout(params api_general.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
 	_, sessionID, err := FetchUserSessionIDFromCookie(params.HTTPRequest)
 	if err != nil {
@@ -160,10 +160,10 @@ func AuthLogout(params api_auth.AuthLogoutParams, _ *data.User) middleware.Respo
 	_ = svc.TheUserService.DeleteUserSession(sessionID)
 
 	// Regardless of whether the above was successful, return a success response, removing the session cookie
-	return NewCookieResponder(api_auth.NewAuthLogoutNoContent()).WithoutCookie(util.CookieNameUserSession, "/")
+	return NewCookieResponder(api_general.NewAuthLogoutNoContent()).WithoutCookie(util.CookieNameUserSession, "/")
 }
 
-func AuthPwdResetChange(params api_auth.AuthPwdResetChangeParams, user *data.User) middleware.Responder {
+func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.User) middleware.Responder {
 	// Verify it's a local user
 	if r := Verifier.UserIsLocal(user); r != nil {
 		return r
@@ -175,19 +175,19 @@ func AuthPwdResetChange(params api_auth.AuthPwdResetChangeParams, user *data.Use
 	}
 
 	// Succeeded
-	return api_auth.NewAuthPwdResetChangeNoContent()
+	return api_general.NewAuthPwdResetChangeNoContent()
 }
 
-func AuthPwdResetSendEmail(params api_auth.AuthPwdResetSendEmailParams) middleware.Responder {
+func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middleware.Responder {
 	if r := sendPasswordResetEmail(data.EmailPtrToString(params.Body.Email)); r != nil {
 		return r
 	}
 
 	// Succeeded
-	return api_auth.NewAuthPwdResetSendEmailNoContent()
+	return api_general.NewAuthPwdResetSendEmailNoContent()
 }
 
-func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
+func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	// Verify new owners are allowed
 	if !config.CLIFlags.AllowNewOwners {
 		return respForbidden(ErrorSignupsForbidden)
@@ -226,7 +226,7 @@ func AuthSignup(params api_auth.AuthSignupParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return api_auth.NewAuthSignupOK().WithPayload(user.ToPrincipal(nil))
+	return api_general.NewAuthSignupOK().WithPayload(user.ToPrincipal(nil))
 }
 
 // AuthUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header
@@ -360,7 +360,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
 	}
 
-	// Verify the user can login and create a new session
+	// Verify the user can log in and create a new session
 	if us, r := loginUser(user, host, req); r != nil {
 		return nil, nil, r
 	} else {

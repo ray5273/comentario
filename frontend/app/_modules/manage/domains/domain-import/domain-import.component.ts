@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import { ApiOwnerService } from '../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Animations } from '../../../../_utils/animations';
 import { Paths } from '../../../../_utils/consts';
@@ -32,7 +32,7 @@ export class DomainImportComponent implements OnInit {
     constructor(
         private readonly fb: FormBuilder,
         private readonly route: ActivatedRoute,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     get file(): AbstractControl<File | undefined> {

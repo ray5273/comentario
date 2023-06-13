@@ -11,7 +11,7 @@ import {
     StringBooleanMap,
     UUID,
 } from './models';
-import { ApiCommentListResponse, ApiCommentVoteResponse, ApiErrorResponse, ApiService, } from './api';
+import { ApiCommentListResponse, ApiCommentVoteResponse, ApiErrorResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { CommentCard, CommentRenderingContext, CommentTree } from './comment-card';

@@ -5,7 +5,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -14,7 +14,7 @@ import (
 )
 
 // ConfigClientGet returns client config
-func ConfigClientGet(api_generic.ConfigClientGetParams) middleware.Responder {
+func ConfigClientGet(api_general.ConfigClientGetParams) middleware.Responder {
 	// Prepare a slice of IdP IDs
 	var idps []*models.FederatedIdentityProvider
 	for fid, fidp := range data.FederatedIdProviders {
@@ -30,14 +30,14 @@ func ConfigClientGet(api_generic.ConfigClientGetParams) middleware.Responder {
 	})
 
 	// Succeeded
-	return api_generic.NewConfigClientGetOK().WithPayload(&models.ClientConfig{
+	return api_general.NewConfigClientGetOK().WithPayload(&models.ClientConfig{
 		BaseURL:       config.BaseURL.String(),
 		FederatedIdps: idps,
 		SignupAllowed: config.CLIFlags.AllowNewOwners,
 	})
 }
 
-func UserAvatarGet(params api_generic.UserAvatarGetParams) middleware.Responder {
+func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder {
 	// Parse the UUID
 	if id, err := uuid.Parse(string(params.UUID)); err != nil {
 		return respBadRequest(ErrorInvalidUUID)
@@ -48,10 +48,10 @@ func UserAvatarGet(params api_generic.UserAvatarGetParams) middleware.Responder 
 
 	} else if len(user.Avatar) == 0 {
 		// No avatar
-		return api_generic.NewUserAvatarGetNoContent()
+		return api_general.NewUserAvatarGetNoContent()
 
 	} else {
 		// Avatar is present
-		return api_generic.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(user.Avatar)))
+		return api_general.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(user.Avatar)))
 	}
 }

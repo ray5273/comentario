@@ -4,9 +4,9 @@ import { Router } from '@angular/router';
 import { faBan, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { Paths } from '../../../_utils/consts';
-import { ApiAuthService } from '../../../../generated-api';
 import { ConfigService } from '../../../_services/config.service';
 import { Animations } from '../../../_utils/animations';
+import { ApiGeneralService } from "../../../../generated-api";
 
 @Component({
     selector: 'app-signup',
@@ -34,7 +34,7 @@ export class SignupComponent {
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly cfgSvc: ConfigService,
-        private readonly api: ApiAuthService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     get email(): AbstractControl<string> {

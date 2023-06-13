@@ -8,7 +8,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-func DomainClear(params api_owner.DomainClearParams, user *data.User) middleware.Responder {
+func DomainClear(params api_general.DomainClearParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
@@ -28,11 +28,11 @@ func DomainClear(params api_owner.DomainClearParams, user *data.User) middleware
 	}
 
 	// Succeeded
-	return api_owner.NewDomainClearNoContent()
+	return api_general.NewDomainClearNoContent()
 }
 
 // DomainDelete deletes an existing domain belonging to the current user
-func DomainDelete(params api_owner.DomainDeleteParams, user *data.User) middleware.Responder {
+func DomainDelete(params api_general.DomainDeleteParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
@@ -43,10 +43,10 @@ func DomainDelete(params api_owner.DomainDeleteParams, user *data.User) middlewa
 	}
 
 	// Succeeded
-	return api_owner.NewDomainDeleteNoContent()
+	return api_general.NewDomainDeleteNoContent()
 }
 
-func DomainExport(params api_owner.DomainExportParams, user *data.User) middleware.Responder {
+func DomainExport(params api_general.DomainExportParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
@@ -56,7 +56,7 @@ func DomainExport(params api_owner.DomainExportParams, user *data.User) middlewa
 		return respServiceError(err)
 	} else {
 		// Succeeded. Send the data as a file
-		return api_owner.NewDomainExportOK().
+		return api_general.NewDomainExportOK().
 			WithContentDisposition(
 				fmt.Sprintf(
 					`inline; filename="%s-%s.json.gz"`,
@@ -67,7 +67,7 @@ func DomainExport(params api_owner.DomainExportParams, user *data.User) middlewa
 }
 
 // DomainGet returns properties of a domain belonging to the current user
-func DomainGet(params api_owner.DomainGetParams, user *data.User) middleware.Responder {
+func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
@@ -78,14 +78,14 @@ func DomainGet(params api_owner.DomainGetParams, user *data.User) middleware.Res
 
 	} else {
 		// Succeeded
-		return api_owner.NewDomainGetOK().WithPayload(&api_owner.DomainGetOKBody{
+		return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
 			Domain:          d.ToDTO(),
 			FederatedIdpIds: idps,
 		})
 	}
 }
 
-func DomainImport(params api_owner.DomainImportParams, user *data.User) middleware.Responder {
+func DomainImport(params api_general.DomainImportParams, user *data.User) middleware.Responder {
 	defer params.Data.Close()
 
 	/* TODO new-db
@@ -115,11 +115,11 @@ func DomainImport(params api_owner.DomainImportParams, user *data.User) middlewa
 	*/
 
 	// Succeeded
-	return api_owner.NewDomainImportOK().WithPayload(&api_owner.DomainImportOKBody{NumImported: count})
+	return api_general.NewDomainImportOK().WithPayload(&api_general.DomainImportOKBody{NumImported: count})
 }
 
 // DomainList returns a list of domain belonging to the user
-func DomainList(_ api_owner.DomainListParams, user *data.User) middleware.Responder {
+func DomainList(_ api_general.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
 	domains, err := svc.TheDomainService.ListByOwnerID(&user.ID)
 	if err != nil {
@@ -133,10 +133,10 @@ func DomainList(_ api_owner.DomainListParams, user *data.User) middleware.Respon
 	}
 
 	// Succeeded
-	return api_owner.NewDomainListOK().WithPayload(&api_owner.DomainListOKBody{Domains: ds})
+	return api_general.NewDomainListOK().WithPayload(&api_general.DomainListOKBody{Domains: ds})
 }
 
-func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *data.User) middleware.Responder {
+func DomainModeratorDelete(params api_general.DomainModeratorDeleteParams, user *data.User) middleware.Responder {
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
@@ -151,10 +151,10 @@ func DomainModeratorDelete(params api_owner.DomainModeratorDeleteParams, user *d
 	*/
 
 	// Succeeded
-	return api_owner.NewDomainModeratorDeleteNoContent()
+	return api_general.NewDomainModeratorDeleteNoContent()
 }
 
-func DomainModeratorNew(params api_owner.DomainModeratorNewParams, user *data.User) middleware.Responder {
+func DomainModeratorNew(params api_general.DomainModeratorNewParams, user *data.User) middleware.Responder {
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
@@ -169,10 +169,10 @@ func DomainModeratorNew(params api_owner.DomainModeratorNewParams, user *data.Us
 	*/
 
 	// Succeeded
-	return api_owner.NewDomainModeratorNewNoContent()
+	return api_general.NewDomainModeratorNewNoContent()
 }
 
-func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Responder {
+func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
 	// Properly validate the domain's host (the Swagger pattern only performs a superficial check)
 	domain := params.Body.Domain
 	if ok, _, _ := util.IsValidHostPort(string(domain.Host)); !ok {
@@ -210,10 +210,10 @@ func DomainNew(params api_owner.DomainNewParams, user *data.User) middleware.Res
 	}
 
 	// Succeeded
-	return api_owner.NewDomainNewOK().WithPayload(d.ToDTO())
+	return api_general.NewDomainNewOK().WithPayload(d.ToDTO())
 }
 
-func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
+func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
@@ -230,10 +230,10 @@ func DomainSsoSecretNew(params api_owner.DomainSsoSecretNewParams, user *data.Us
 	token := ""
 
 	// Succeeded
-	return api_owner.NewDomainSsoSecretNewOK().WithPayload(&api_owner.DomainSsoSecretNewOKBody{SsoSecret: token})
+	return api_general.NewDomainSsoSecretNewOK().WithPayload(&api_general.DomainSsoSecretNewOKBody{SsoSecret: token})
 }
 
-func DomainDailyStats(params api_owner.DomainDailyStatsParams, user *data.User) middleware.Responder {
+func DomainDailyStats(params api_general.DomainDailyStatsParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
@@ -244,7 +244,7 @@ func DomainDailyStats(params api_owner.DomainDailyStatsParams, user *data.User) 
 
 	} else {
 		// Succeeded
-		return api_owner.NewDashboardDailyStatsOK().WithPayload(&models.DailyViewCommentStats{
+		return api_general.NewDashboardDailyStatsOK().WithPayload(&models.DailyViewCommentStats{
 			CommentCounts: comments,
 			ViewCounts:    views,
 		})
@@ -252,7 +252,7 @@ func DomainDailyStats(params api_owner.DomainDailyStatsParams, user *data.User) 
 }
 
 // DomainReadonly sets the domain's readonly state
-func DomainReadonly(params api_owner.DomainReadonlyParams, user *data.User) middleware.Responder {
+func DomainReadonly(params api_general.DomainReadonlyParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
 		return r
@@ -263,10 +263,10 @@ func DomainReadonly(params api_owner.DomainReadonlyParams, user *data.User) midd
 	}
 
 	// Succeeded
-	return api_owner.NewDomainReadonlyNoContent()
+	return api_general.NewDomainReadonlyNoContent()
 }
 
-func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middleware.Responder {
+func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
 	newDomain := params.Body.Domain
 	domain, _, r := domainGetDomainAndOwner(params.UUID, user)
@@ -305,7 +305,7 @@ func DomainUpdate(params api_owner.DomainUpdateParams, user *data.User) middlewa
 	}
 
 	// Succeeded
-	return api_owner.NewDomainUpdateOK().WithPayload(domain.ToDTO())
+	return api_general.NewDomainUpdateOK().WithPayload(domain.ToDTO())
 }
 
 // domainGetDomainAndOwner parses a string UUID and fetches the corresponding domain and its user, verifying they own

@@ -2,7 +2,7 @@ import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { ProcessingStatus } from '../../../_utils/processing-status';
-import { ApiAuthService, Configuration } from '../../../../generated-api';
+import { ApiGeneralService, Configuration } from '../../../../generated-api';
 import { Paths } from '../../../_utils/consts';
 import { ToastService } from '../../../_services/toast.service';
 
@@ -22,7 +22,7 @@ export class ResetPasswordComponent implements OnDestroy {
         private readonly route: ActivatedRoute,
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
-        private readonly api: ApiAuthService,
+        private readonly api: ApiGeneralService,
         private readonly apiConfig: Configuration,
     ) {
         // Set the auth token in the API config to be used for the password change

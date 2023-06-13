@@ -2,14 +2,14 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
 
-func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
+func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	// Try to authenticate the user
 	user, err := GetUserBySessionCookie(params.HTTPRequest)
 	if err == svc.ErrDB {
@@ -17,14 +17,14 @@ func CurUserGet(params api_auth.CurUserGetParams) middleware.Responder {
 		return respInternalError(nil)
 	} else if err != nil {
 		// Authentication failed for whatever reason
-		return api_auth.NewCurUserGetNoContent()
+		return api_general.NewCurUserGetNoContent()
 	}
 
 	// Succeeded: owner's logged in
-	return api_auth.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
+	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
 }
 
-func CurUserUpdate(params api_auth.CurUserUpdateParams, user *data.User) middleware.Responder {
+func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) middleware.Responder {
 	// Verify it's a local user
 	if r := Verifier.UserIsLocal(user); r != nil {
 		return r
@@ -46,5 +46,5 @@ func CurUserUpdate(params api_auth.CurUserUpdateParams, user *data.User) middlew
 	}
 
 	// Succeeded
-	return api_auth.NewCurUserUpdateNoContent()
+	return api_general.NewCurUserUpdateNoContent()
 }

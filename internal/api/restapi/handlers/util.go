@@ -5,7 +5,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"net/http"
@@ -91,24 +91,24 @@ func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
 
 // respBadRequest returns a responder that responds with HTTP Bad Request error
 func respBadRequest(err *exmodels.Error) middleware.Responder {
-	return api_generic.NewGenericBadRequest().WithPayload(err)
+	return api_general.NewGenericBadRequest().WithPayload(err)
 }
 
 // respForbidden returns a responder that responds with HTTP Forbidden error
 func respForbidden(err *exmodels.Error) middleware.Responder {
-	return api_generic.NewGenericForbidden().WithPayload(err)
+	return api_general.NewGenericForbidden().WithPayload(err)
 }
 
 // respInternalError returns a responder that responds with HTTP Internal Server Error
 func respInternalError(err *exmodels.Error) middleware.Responder {
-	return api_generic.NewGenericInternalServerError().WithPayload(err)
+	return api_general.NewGenericInternalServerError().WithPayload(err)
 }
 
 // respServiceError translates the provided error, returned by a service, into an appropriate error responder
 func respServiceError(err error) middleware.Responder {
 	switch err {
 	case svc.ErrNotFound:
-		return api_generic.NewGenericNotFound()
+		return api_general.NewGenericNotFound()
 	}
 
 	// Not recognised: return an internal error response
@@ -118,5 +118,5 @@ func respServiceError(err error) middleware.Responder {
 
 // respUnauthorized returns a responder that responds with HTTP Unauthorized error
 func respUnauthorized(err *exmodels.Error) middleware.Responder {
-	return api_generic.NewGenericUnauthorized().WithPayload(err)
+	return api_general.NewGenericUnauthorized().WithPayload(err)
 }

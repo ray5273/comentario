@@ -4,7 +4,7 @@ import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider, MockService } from 'ng-mocks';
 import { DomainImpexComponent } from './domain-impex.component';
-import { ApiOwnerService } from '../../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../../generated-api';
 import { ToastService } from '../../../../../_services/toast.service';
 import { ToolsModule } from '../../../../tools/tools.module';
 import { DomainDetailComponent } from '../domain-detail.component';
@@ -19,7 +19,7 @@ describe('DomainImpexComponent', () => {
             declarations: [DomainImpexComponent],
             imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
-                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService)},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService)},
                 {provide: ToastService,    useValue: MockService(ToastService)},
                 MockProvider(DomainDetailComponent, {domain: of(undefined)} as any),
             ],

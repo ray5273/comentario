@@ -3,7 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockService } from 'ng-mocks';
 import { DomainManagerComponent } from './domain-manager.component';
-import { ApiOwnerService } from '../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { of } from 'rxjs';
 
@@ -17,7 +17,7 @@ describe('DomainManagerComponent', () => {
             declarations: [DomainManagerComponent],
             imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
-                {provide: ApiOwnerService, useValue: MockService(ApiOwnerService, {domainList: () => of({domains: []} as any)})},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService, {domainList: () => of({domains: []} as any)})},
             ],
         })
             .compileComponents();

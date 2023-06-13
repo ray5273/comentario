@@ -12,11 +12,9 @@ import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_auth"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_generic"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_owner"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/e2e"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -76,34 +74,46 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.UserCookieAuth = handlers.AuthUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
-	// Generic API
-	//------------------------------------------------------------------------------------------------------------------
-
-	// Config
-	api.APIGenericConfigClientGetHandler = api_generic.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
-	// User
-	api.APIGenericUserAvatarGetHandler = api_generic.UserAvatarGetHandlerFunc(handlers.UserAvatarGet)
-
-	//------------------------------------------------------------------------------------------------------------------
-	// Auth API
+	// General API
 	//------------------------------------------------------------------------------------------------------------------
 
 	// Auth
-	api.APIAuthAuthConfirmHandler = api_auth.AuthConfirmHandlerFunc(handlers.AuthConfirm)
-	api.APIAuthAuthDeleteProfileHandler = api_auth.AuthDeleteProfileHandlerFunc(handlers.AuthDeleteProfile)
-	api.APIAuthAuthLoginHandler = api_auth.AuthLoginHandlerFunc(handlers.AuthLogin)
-	api.APIAuthAuthLoginTokenNewHandler = api_auth.AuthLoginTokenNewHandlerFunc(handlers.AuthLoginTokenNew)
-	api.APIAuthAuthLoginTokenRedeemHandler = api_auth.AuthLoginTokenRedeemHandlerFunc(handlers.AuthLoginTokenRedeem)
-	api.APIAuthAuthLogoutHandler = api_auth.AuthLogoutHandlerFunc(handlers.AuthLogout)
-	api.APIAuthAuthPwdResetChangeHandler = api_auth.AuthPwdResetChangeHandlerFunc(handlers.AuthPwdResetChange)
-	api.APIAuthAuthPwdResetSendEmailHandler = api_auth.AuthPwdResetSendEmailHandlerFunc(handlers.AuthPwdResetSendEmail)
-	api.APIAuthAuthSignupHandler = api_auth.AuthSignupHandlerFunc(handlers.AuthSignup)
+	api.APIGeneralAuthConfirmHandler = api_general.AuthConfirmHandlerFunc(handlers.AuthConfirm)
+	api.APIGeneralAuthDeleteProfileHandler = api_general.AuthDeleteProfileHandlerFunc(handlers.AuthDeleteProfile)
+	api.APIGeneralAuthLoginHandler = api_general.AuthLoginHandlerFunc(handlers.AuthLogin)
+	api.APIGeneralAuthLoginTokenNewHandler = api_general.AuthLoginTokenNewHandlerFunc(handlers.AuthLoginTokenNew)
+	api.APIGeneralAuthLoginTokenRedeemHandler = api_general.AuthLoginTokenRedeemHandlerFunc(handlers.AuthLoginTokenRedeem)
+	api.APIGeneralAuthLogoutHandler = api_general.AuthLogoutHandlerFunc(handlers.AuthLogout)
+	api.APIGeneralAuthPwdResetChangeHandler = api_general.AuthPwdResetChangeHandlerFunc(handlers.AuthPwdResetChange)
+	api.APIGeneralAuthPwdResetSendEmailHandler = api_general.AuthPwdResetSendEmailHandlerFunc(handlers.AuthPwdResetSendEmail)
+	api.APIGeneralAuthSignupHandler = api_general.AuthSignupHandlerFunc(handlers.AuthSignup)
 	// OAuth
-	api.APIAuthAuthOauthCallbackHandler = api_auth.AuthOauthCallbackHandlerFunc(handlers.AuthOauthCallback)
-	api.APIAuthAuthOauthInitHandler = api_auth.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
+	api.APIGeneralAuthOauthCallbackHandler = api_general.AuthOauthCallbackHandlerFunc(handlers.AuthOauthCallback)
+	api.APIGeneralAuthOauthInitHandler = api_general.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
+	// Config
+	api.APIGeneralConfigClientGetHandler = api_general.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
 	// CurUser
-	api.APIAuthCurUserGetHandler = api_auth.CurUserGetHandlerFunc(handlers.CurUserGet)
-	api.APIAuthCurUserUpdateHandler = api_auth.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
+	api.APIGeneralCurUserGetHandler = api_general.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIGeneralCurUserUpdateHandler = api_general.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
+	// Dashboard
+	api.APIGeneralDashboardTotalsHandler = api_general.DashboardTotalsHandlerFunc(handlers.DashboardTotals)
+	api.APIGeneralDashboardDailyStatsHandler = api_general.DashboardDailyStatsHandlerFunc(handlers.DashboardDailyStats)
+	// Domain
+	api.APIGeneralDomainClearHandler = api_general.DomainClearHandlerFunc(handlers.DomainClear)
+	api.APIGeneralDomainDeleteHandler = api_general.DomainDeleteHandlerFunc(handlers.DomainDelete)
+	api.APIGeneralDomainExportHandler = api_general.DomainExportHandlerFunc(handlers.DomainExport)
+	api.APIGeneralDomainGetHandler = api_general.DomainGetHandlerFunc(handlers.DomainGet)
+	api.APIGeneralDomainImportHandler = api_general.DomainImportHandlerFunc(handlers.DomainImport)
+	api.APIGeneralDomainListHandler = api_general.DomainListHandlerFunc(handlers.DomainList)
+	api.APIGeneralDomainModeratorDeleteHandler = api_general.DomainModeratorDeleteHandlerFunc(handlers.DomainModeratorDelete)
+	api.APIGeneralDomainModeratorNewHandler = api_general.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
+	api.APIGeneralDomainNewHandler = api_general.DomainNewHandlerFunc(handlers.DomainNew)
+	api.APIGeneralDomainSsoSecretNewHandler = api_general.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
+	api.APIGeneralDomainDailyStatsHandler = api_general.DomainDailyStatsHandlerFunc(handlers.DomainDailyStats)
+	api.APIGeneralDomainReadonlyHandler = api_general.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
+	api.APIGeneralDomainUpdateHandler = api_general.DomainUpdateHandlerFunc(handlers.DomainUpdate)
+	// User
+	api.APIGeneralUserAvatarGetHandler = api_general.UserAvatarGetHandlerFunc(handlers.UserAvatarGet)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Embed API
@@ -128,29 +138,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIEmbedEmbedCommentVoteHandler = api_embed.EmbedCommentVoteHandlerFunc(handlers.EmbedCommentVote)
 	// Page
 	api.APIEmbedEmbedPageUpdateHandler = api_embed.EmbedPageUpdateHandlerFunc(handlers.EmbedPageUpdate)
-
-	//------------------------------------------------------------------------------------------------------------------
-	// Owner API
-	//------------------------------------------------------------------------------------------------------------------
-
-	// Dashboard
-	api.APIOwnerDashboardTotalsHandler = api_owner.DashboardTotalsHandlerFunc(handlers.DashboardTotals)
-	api.APIOwnerDashboardDailyStatsHandler = api_owner.DashboardDailyStatsHandlerFunc(handlers.DashboardDailyStats)
-
-	// Domain
-	api.APIOwnerDomainClearHandler = api_owner.DomainClearHandlerFunc(handlers.DomainClear)
-	api.APIOwnerDomainDeleteHandler = api_owner.DomainDeleteHandlerFunc(handlers.DomainDelete)
-	api.APIOwnerDomainExportHandler = api_owner.DomainExportHandlerFunc(handlers.DomainExport)
-	api.APIOwnerDomainGetHandler = api_owner.DomainGetHandlerFunc(handlers.DomainGet)
-	api.APIOwnerDomainImportHandler = api_owner.DomainImportHandlerFunc(handlers.DomainImport)
-	api.APIOwnerDomainListHandler = api_owner.DomainListHandlerFunc(handlers.DomainList)
-	api.APIOwnerDomainModeratorDeleteHandler = api_owner.DomainModeratorDeleteHandlerFunc(handlers.DomainModeratorDelete)
-	api.APIOwnerDomainModeratorNewHandler = api_owner.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
-	api.APIOwnerDomainNewHandler = api_owner.DomainNewHandlerFunc(handlers.DomainNew)
-	api.APIOwnerDomainSsoSecretNewHandler = api_owner.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
-	api.APIOwnerDomainDailyStatsHandler = api_owner.DomainDailyStatsHandlerFunc(handlers.DomainDailyStats)
-	api.APIOwnerDomainReadonlyHandler = api_owner.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
-	api.APIOwnerDomainUpdateHandler = api_owner.DomainUpdateHandlerFunc(handlers.DomainUpdate)
 
 	// Shutdown functions
 	api.PreServerShutdown = func() {}
@@ -231,7 +218,7 @@ func configureE2eMode(api *operations.ComentarioAPI) error {
 	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(func(api_e2e.E2eResetParams) middleware.Responder {
 		if err := e2eHandler.HandleReset(); err != nil {
 			logger.Errorf("E2eReset failed: %v", err)
-			return api_generic.NewGenericInternalServerError()
+			return api_general.NewGenericInternalServerError()
 		}
 		return api_e2e.NewE2eResetNoContent()
 	})

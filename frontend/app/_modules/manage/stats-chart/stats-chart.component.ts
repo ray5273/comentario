@@ -2,7 +2,7 @@ import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { debounceTime, Subject } from 'rxjs';
 import { ChartDataset, ChartOptions } from 'chart.js';
-import { ApiOwnerService } from '../../../../generated-api';
+import { ApiGeneralService } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 
 @Component({
@@ -40,7 +40,7 @@ export class StatsChartComponent {
 
     constructor(
         @Inject(LOCALE_ID) private readonly locale: string,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
     ) {
         // Reload on a property change, with some delay
         this.reload$.pipe(debounceTime(200)).subscribe(() => this.reload());
@@ -74,7 +74,7 @@ export class StatsChartComponent {
         }
 
         // Request data from the backend
-        (this._host ? this.api.domainStatistics(this._host, this._numberOfDays) : this.api.dashboardStatisticsGet(this._numberOfDays))
+        (this._host ? this.api.domainDailyStats(this._host, this._numberOfDays) : this.api.dashboardDailyStats(this._numberOfDays))
             .pipe(this.loading.processing())
             .subscribe(r => {
                 // Fetch the number of days

@@ -3,7 +3,7 @@ import { DOCUMENT } from '@angular/common';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faClone, faFileExport, faFileImport } from '@fortawesome/free-solid-svg-icons';
 import { Paths } from '../../../../../_utils/consts';
-import { ApiOwnerService, Domain } from '../../../../../../generated-api';
+import { ApiGeneralService, Domain } from '../../../../../../generated-api';
 import { ToastService } from '../../../../../_services/toast.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { DomainDetailComponent } from '../domain-detail.component';
@@ -28,7 +28,7 @@ export class DomainImpexComponent {
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
         private readonly toastSvc: ToastService,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
         details: DomainDetailComponent,
     ) {
         // Subscribe to domain changes

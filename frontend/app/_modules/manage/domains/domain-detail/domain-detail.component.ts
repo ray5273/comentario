@@ -3,7 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { BehaviorSubject } from 'rxjs';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { ApiOwnerService, Domain } from '../../../../../generated-api';
+import { ApiGeneralService, Domain } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 
 @UntilDestroy()
@@ -28,7 +28,7 @@ export class DomainDetailComponent implements OnInit {
     constructor(
         private readonly router: Router,
         private readonly route: ActivatedRoute,
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     /**

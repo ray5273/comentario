@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { faPlus } from '@fortawesome/free-solid-svg-icons';
-import { ApiOwnerService, Domain } from '../../../../../generated-api';
+import { ApiGeneralService, Domain } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 
@@ -19,7 +19,7 @@ export class DomainManagerComponent implements OnInit {
     readonly faPlus = faPlus;
 
     constructor(
-        private readonly api: ApiOwnerService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     ngOnInit(): void {

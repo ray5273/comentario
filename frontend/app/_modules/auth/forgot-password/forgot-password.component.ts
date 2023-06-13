@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ToastService } from '../../../_services/toast.service';
-import { ApiAuthService } from '../../../../generated-api';
+import { ApiGeneralService } from '../../../../generated-api';
 
 @Component({
     selector: 'app-forgot-password',
@@ -20,7 +20,7 @@ export class ForgotPasswordComponent {
         private readonly router: Router,
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
-        private readonly api: ApiAuthService,
+        private readonly api: ApiGeneralService,
     ) {}
 
     get email(): AbstractControl<string> {

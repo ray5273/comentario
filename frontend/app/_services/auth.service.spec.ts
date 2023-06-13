@@ -4,12 +4,12 @@ import { TestBed } from '@angular/core/testing';
 import { of, skip, throwError } from 'rxjs';
 import { MockService } from 'ng-mocks';
 import { AuthService } from './auth.service';
-import { ApiAuthService, Principal } from '../../generated-api';
+import { ApiGeneralService, Principal } from '../../generated-api';
 
 describe('AuthService', () => {
 
     let service: AuthService;
-    let api: ApiAuthService;
+    let api: ApiGeneralService;
     let principalResponse: any;
 
     const principal1: Principal = {
@@ -22,10 +22,10 @@ describe('AuthService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: ApiAuthService, useValue: MockService(ApiAuthService)},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService)},
             ],
         });
-        api = TestBed.inject(ApiAuthService);
+        api = TestBed.inject(ApiGeneralService);
         spyOn(api, 'curUserGet').and.callFake(() => principalResponse);
     });
 

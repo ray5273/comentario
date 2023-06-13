@@ -4,7 +4,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockProviders, MockService } from 'ng-mocks';
 import { SignupComponent } from './signup.component';
 import { ConfigService } from '../../../_services/config.service';
-import { ApiAuthService, ClientConfig } from '../../../../generated-api';
+import { ApiGeneralService, ClientConfig } from '../../../../generated-api';
 
 describe('SignupComponent', () => {
 
@@ -17,7 +17,7 @@ describe('SignupComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 {provide: ConfigService,  useValue: MockService(ConfigService, {clientConfig: {} as ClientConfig})},
-                MockProviders(ApiAuthService),
+                MockProviders(ApiGeneralService),
             ],
         })
             .compileComponents();
