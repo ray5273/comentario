@@ -6,7 +6,7 @@ import gulpSass from 'gulp-sass';
 import gif from 'gulp-if';
 import sourcemaps from 'gulp-sourcemaps';
 import cleanCss from 'gulp-clean-css';
-import eslint from 'gulp-eslint';
+import eslint from 'gulp-eslint-new';
 import webpack from 'webpack-stream';
 
 const sass = gulpSass(dartSass);
