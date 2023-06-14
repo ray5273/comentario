@@ -140,13 +140,11 @@ export class ApiService {
     /**
      * Update the current user's profile.
      * @param pageId ID of the page to apply user notification settings on.
-     * @param name User's full name.
-     * @param websiteUrl Optional website URL of the user.
      * @param notifyReplies Whether the user is to be notified about replies to their comments.
      * @param notifyModerator Whether the user is to receive moderator notifications.
      */
-    async authProfileUpdate(pageId: UUID, name: string | undefined, websiteUrl: string | undefined, notifyReplies: boolean, notifyModerator: boolean): Promise<void> {
-        await this.apiClient.put<void>('embed/auth/user', this.userSessionToken, {pageId, name, websiteUrl, notifyReplies, notifyModerator});
+    async authProfileUpdate(pageId: UUID, notifyReplies: boolean, notifyModerator: boolean): Promise<void> {
+        await this.apiClient.put<void>('embed/auth/user', this.userSessionToken, {pageId, notifyReplies, notifyModerator});
 
         // Reload the principal to reflect the updates
         return this.updatePrincipal();

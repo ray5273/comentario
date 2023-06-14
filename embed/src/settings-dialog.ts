@@ -1,70 +1,48 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { Principal, ProfileSettings } from './models';
+import {PageInfo, Principal, UserSettings} from './models';
 
 export class SettingsDialog extends Dialog {
 
-    private _name?: Wrap<HTMLInputElement>;
-    private _website?: Wrap<HTMLInputElement>;
-    private _email?: Wrap<HTMLInputElement>;
-    private _avatar?: Wrap<HTMLInputElement>;
     private _cbNotifyModerator?: Wrap<HTMLInputElement>;
     private _cbNotifyReplies?: Wrap<HTMLInputElement>;
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly principal: Principal) {
-        super(parent, 'Profile settings', pos);
+    private constructor(
+        parent: Wrap<any>, pos: DialogPositioning,
+        private readonly baseUrl: string,
+        private readonly principal: Principal,
+        private readonly pageInfo: PageInfo,
+    ) {
+        super(parent, `User settings for ${pageInfo.domainName}`, pos);
     }
 
     /**
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
-     * @param principal Principal whose profile settings are being edited.
+     * @param baseUrl Base URL of the Comentario instance
+     * @param principal Principal whose settings are being edited.
+     * @param pageInfo Data about the current page.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, principal: Principal): Promise<SettingsDialog> {
-        const dlg = new SettingsDialog(parent, pos, principal);
+    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, principal: Principal, pageInfo: PageInfo): Promise<SettingsDialog> {
+        const dlg = new SettingsDialog(parent, pos, baseUrl, principal, pageInfo);
         return dlg.run(dlg);
     }
 
     /**
      * Entered settings.
      */
-    get data(): ProfileSettings {
-        // Prepare a settings object
-        const d: ProfileSettings = {
+    get data(): UserSettings {
+        return {
             notifyModerator: !!this._cbNotifyModerator?.isChecked,
             notifyReplies:   !!this._cbNotifyReplies?.isChecked,
         };
-
-        // If the user is local, include profile data
-        if (this.principal.isLocal) {
-            d.name       = this._name?.val    || '';
-            d.websiteUrl = this._website?.val || '';
-            d.avatarUrl  = this._avatar?.val  || '';
-        }
-        return d;
     }
 
     override renderContent(): Wrap<any> {
-        // Create inputs if it's a local user
-        const inputs: Wrap<any>[] = [];
-        if (this.principal.isLocal) {
-            this._email   = UIToolkit.input('email',   'email', 'Email address', 'email')      .value(this.principal.email      || '').attr({disabled: ''});
-            this._name    = UIToolkit.input('name',    'text',  'Real name',     'name', true) .value(this.principal.name       || '');
-            this._website = UIToolkit.input('website', 'url',   'Website',       'url')        .value(this.principal.websiteUrl || '');
-            // TODO new-db this._avatar  = UIToolkit.input('avatar',  'url',   'Avatar URL')                  .value(this.principal.avatarUrl  || '');
-            inputs.push(
-                UIToolkit.div('input-group').append(this._email),
-                UIToolkit.div('input-group').append(this._name),
-                UIToolkit.div('input-group').append(this._website),
-                UIToolkit.div('input-group').append(this._avatar));
-        }
-
-        // Add the inputs to a new form
         return UIToolkit.form(() => this.dismiss(true), () => this.dismiss())
             .append(
-                ...inputs,
                 // Checkboxes
                 UIToolkit.div('checkbox-group').append(
                     // Moderator notifications checkbox (only if the current commenter is a moderator)
@@ -84,10 +62,12 @@ export class SettingsDialog extends Dialog {
                                 .checked(this.principal.notifyReplies),
                             Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner('Reply notifications'))),
                 // Submit button
-                UIToolkit.div('dialog-centered').append(UIToolkit.submit('Save', false)));
-    }
-
-    override onShow(): void {
-        this._name?.focus();
+                UIToolkit.div('dialog-centered').append(UIToolkit.submit('Save', false)),
+                // Edit profile link
+                Wrap.new('hr'),
+                UIToolkit.div('dialog-centered').append(
+                    Wrap.new('a')
+                        .inner('Edit Comentario profile')
+                        .attr({href: `${this.baseUrl}/en/manage/account/profile`, target: '_blank'})));
     }
 }

@@ -59,6 +59,7 @@ export const build = parallel(compileCss, compileTypescript);
 
 /** Watch the source tree and rebuild the code on changes. */
 export const start = () => {
+    build();
     watch(sources.scss,       compileCss);
     watch(sources.typescript, compileTypescript);
 }

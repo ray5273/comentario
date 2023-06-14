@@ -341,6 +341,9 @@ definitions:
         type: string
         format: uuid
         description: Domain ID
+      domainName:
+        type: string
+        description: Domain display name
       pageId:
         type: string
         format: uuid
@@ -1099,15 +1102,6 @@ paths:
                 type: string
                 format: uuid
                 description: ID of the page to apply user notification settings on
-              name:
-                type: string
-                minLength: 1
-                maxLength: 63
-                description: Full name of the user. Required for a locally-authenticated user, ignored otherwise
-              websiteUrl:
-                type: string
-                format: uri
-                description: Optional website URL of the user. Ignored for a federated user
               notifyReplies:
                 type: boolean
                 description: Whether the user is to be notified about replies to their comments

@@ -45,6 +45,7 @@ export type Commenter = User;
 /** Information about a page displaying comments. */
 export interface PageInfo {
     readonly domainId:         UUID;        // Domain ID
+    readonly domainName:       string;      // Domain display name
     readonly pageId:           UUID;        // Page ID
     readonly isDomainReadonly: boolean;     // Whether the domain is readonly (no new comments are allowed)
     readonly isPageReadonly:   boolean;     // Whether the page is readonly (no new comments are allowed)
@@ -77,10 +78,7 @@ export interface SignupData {
     readonly websiteUrl?: string;
 }
 
-export interface ProfileSettings {
-    name?:            string;  // Commenter's name (only for a locally-authenticated user)
-    websiteUrl?:     string;  // Optional commenter's website URL (only for a locally-authenticated user)
-    avatarUrl?:      string;  // Optional commenter's avatar URL
+export interface UserSettings {
     notifyModerator: boolean; // Whether to send moderator notifications to the user
     notifyReplies:   boolean; // Whether to send reply notifications to the user
 }

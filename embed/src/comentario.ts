@@ -8,7 +8,7 @@ import {
     IdentityProvider,
     PageInfo,
     Principal,
-    ProfileSettings,
+    UserSettings,
     SignupData,
     StringBooleanMap,
     User,
@@ -142,6 +142,7 @@ export class Comentario {
             .append(
                 // Profile bar
                 this.profileBar = new ProfileBar(
+                    this.origin,
                     this.root,
                     this.federatedIdps,
                     () => this.createAvatarElement(this.principal),
@@ -149,7 +150,7 @@ export class Comentario {
                     idp => this.openOAuthPopup(idp),
                     email => this.requestPasswordReset(email),
                     data => this.signup(data),
-                    data => this.saveProfile(data)),
+                    data => this.saveUserSettings(data)),
                 // Main area
                 this.mainArea = UIToolkit.div('main-area'),
                 // Footer
@@ -870,12 +871,12 @@ export class Comentario {
     }
 
     /**
-     * Save current user's profile settings.
+     * Save current user's settings.
      */
-    private async saveProfile(data: ProfileSettings) {
+    private async saveUserSettings(data: UserSettings) {
         try {
             this.setError();
-            await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.name, data.websiteUrl, data.notifyReplies, data.notifyModerator);
+            await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.notifyReplies, data.notifyModerator);
 
         } catch (e) {
             this.setError(e);

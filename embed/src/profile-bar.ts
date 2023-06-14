@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { IdentityProvider, PageInfo, Principal, ProfileSettings, SignupData } from './models';
+import { IdentityProvider, PageInfo, Principal, UserSettings, SignupData } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -14,6 +14,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     private _pageInfo?: PageInfo;
 
     /**
+     * @param baseUrl Base URL of the Comentario instance
      * @param root Root element (for showing popups).
      * @param federatedIdps Federated identity providers configured on the backend.
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
@@ -21,9 +22,10 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onOAuth Callback for executing external (OAuth) authentication.
      * @param onPasswordReset Callback for resetting user password.
      * @param onSignup Callback for executing user registration.
-     * @param onSaveSettings Callback for saving user profile settings.
+     * @param onSaveSettings Callback for saving user settings.
      */
     constructor(
+        private readonly baseUrl: string,
         private readonly root: Wrap<any>,
         private readonly federatedIdps: IdentityProvider[],
         private readonly onGetAvatar: () => Wrap<any> | undefined,
@@ -31,7 +33,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly onOAuth: (idp: string) => Promise<void>,
         private readonly onPasswordReset: (email: string) => Promise<void>,
         private readonly onSignup: (data: SignupData) => Promise<void>,
-        private readonly onSaveSettings: (data: ProfileSettings) => Promise<void>,
+        private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
     ) {
         super(UIToolkit.div('profile-bar').element);
     }
@@ -176,7 +178,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show the settings dialog and return a promise that's resolved when the dialog is closed.
      */
     async editSettings(): Promise<void> {
-        const dlg = await SettingsDialog.run(this.root, {ref: this.btnSettings!, placement: 'bottom-end'}, this.principal!);
+        const dlg = await SettingsDialog.run(
+            this.root,
+            {ref: this.btnSettings!, placement: 'bottom-end'},
+            this.baseUrl,
+            this.principal!,
+            this._pageInfo!);
         if (dlg.confirmed) {
             await this.onSaveSettings(dlg.data);
         }

@@ -8,7 +8,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"strings"
 )
 
 func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder {
@@ -136,7 +135,7 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 	}
 
 	// Parse page ID
-	var domainUser *data.DomainUser
+	var du *data.DomainUser
 	if pageID, err := data.DecodeUUID(*params.Body.PageID); err != nil {
 		return respBadRequest(ErrorInvalidUUID)
 
@@ -145,31 +144,15 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 		return respServiceError(err)
 
 		// Fetch the domain user
-	} else if _, domainUser, err = svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
+	} else if _, du, err = svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
 		return respServiceError(err)
 	}
 
-	// If user is local, update their profile
-	if user.IsLocal() {
-		name := strings.TrimSpace(params.Body.Name)
-		wURL := string(params.Body.WebsiteURL)
-		if name == "" {
-			return respBadRequest(ErrorInvalidPropertyValue.WithDetails("name"))
-		}
-
-		// Update user properties
-		if name != user.Name || wURL != user.WebsiteURL {
-			if err := svc.TheUserService.Update(user.WithName(name).WithWebsiteURL(wURL)); err != nil {
-				return respServiceError(err)
-			}
-		}
-	}
-
 	// Update the domain user, if needed
-	if domainUser.NotifyReplies != params.Body.NotifyReplies || domainUser.NotifyModerator != params.Body.NotifyModerator {
-		domainUser.NotifyReplies = params.Body.NotifyReplies
-		domainUser.NotifyModerator = params.Body.NotifyModerator
-		if err := svc.TheDomainService.UserModify(domainUser); err != nil {
+	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator {
+		du.NotifyReplies = params.Body.NotifyReplies
+		du.NotifyModerator = params.Body.NotifyModerator
+		if err := svc.TheDomainService.UserModify(du); err != nil {
 			return respServiceError(err)
 		}
 	}

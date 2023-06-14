@@ -88,6 +88,8 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		AuthSso:          domain.AuthSSO,
 		DefaultSort:      models.CommentSort(domain.DefaultSort),
 		DomainID:         strfmt.UUID(domain.ID.String()),
+		DomainName:       domain.DisplayName(),
+		Idps:             nil,
 		IsDomainReadonly: domain.IsReadonly,
 		IsPageReadonly:   page.IsReadonly,
 		PageID:           strfmt.UUID(page.ID.String()),

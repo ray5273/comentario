@@ -362,6 +362,14 @@ type Domain struct {
 	CountViews       int64                 // Total number of views
 }
 
+// DisplayName returns the domain's display name, if set, otherwise the host
+func (d *Domain) DisplayName() string {
+	if d.Name != "" {
+		return d.Name
+	}
+	return d.Host
+}
+
 // SSOSecretStr returns the SSO secret as a nullable hex string
 func (d *Domain) SSOSecretStr() sql.NullString {
 	if len(d.SSOSecret) == 0 {
