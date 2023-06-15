@@ -179,11 +179,35 @@ func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.
 }
 
 func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middleware.Responder {
-	if r := sendPasswordResetEmail(data.EmailPtrToString(params.Body.Email)); r != nil {
-		return r
+	// Find the local user with that email
+	if user, err := svc.TheUserService.FindUserByEmail(data.EmailPtrToString(params.Body.Email), true); err == svc.ErrNotFound {
+		// No such email: apply a random delay to discourage email polling
+		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
+
+	} else if err != nil {
+		// Any other error
+		return respServiceError(err)
+
+		// User found. Generate a random password-reset token
+	} else if token, err := data.NewToken(&user.ID, data.TokenScopeResetPassword, util.UserPwdResetDuration, false); err != nil {
+		return respServiceError(err)
+
+		// Persist the token
+	} else if err := svc.TheTokenService.Create(token); err != nil {
+		return respServiceError(err)
+
+		// Send out an email
+	} else if err := svc.TheMailService.SendFromTemplate(
+		"",
+		user.Email,
+		"Reset your password",
+		"reset-password.gohtml",
+		map[string]any{"URL": config.URLForUI("en", "", map[string]string{"passwordResetToken": token.String()})},
+	); err != nil {
+		return respServiceError(err)
 	}
 
-	// Succeeded
+	// Succeeded (or no user found)
 	return api_general.NewAuthPwdResetSendEmailNoContent()
 }
 

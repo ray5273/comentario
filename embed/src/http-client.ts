@@ -9,7 +9,12 @@ export class HttpClientError {
 export class HttpClient {
 
     constructor(
+        /** Base API URL. */
         readonly baseUrl: string,
+        /** Callback executed before an HTTP request is run. */
+        private readonly onBeforeRequest?: () => void,
+        /** Callback executed in a case of a failed HTTP request. */
+        private readonly onError?: (error: any) => void,
     ) {}
 
     /**
@@ -63,6 +68,10 @@ export class HttpClient {
     }
 
     private request<T>(method: 'DELETE' | 'GET' | 'POST' | 'PUT', path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        // Run the before callback, if any
+        this.onBeforeRequest?.();
+
+        // Run the request
         return new Promise((resolve, reject) => {
             try {
                 // Prepare an XMLHttpRequest
@@ -78,7 +87,15 @@ export class HttpClient {
                 }
 
                 // Resolve or reject the promise on load, based on the return status
-                const handleError = () => reject(new HttpClientError(req.status, req.statusText, req.response));
+                const handleError = () => {
+                    const e = new HttpClientError(req.status, req.statusText, req.response);
+                    // Run the error callback, if any
+                    this.onError?.(e);
+                    // Reject the promise
+                    reject(e);
+                };
+
+                // Set up the request callbacks
                 req.onload = () => {
                     // Only statuses 200..299 are considered successful
                     if (req.status < 200 || req.status > 299) {
@@ -99,6 +116,8 @@ export class HttpClient {
                 req.send(body ? JSON.stringify(body) : undefined);
 
             } catch (e) {
+                // Run the error callback, if any
+                this.onError?.(e);
                 // Reject the promise on any failure
                 reject(e);
             }

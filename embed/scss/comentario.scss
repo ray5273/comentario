@@ -32,16 +32,19 @@
         backdrop-filter: blur(3px);
     }
 
-    .comentario-error-box {
+    .comentario-message-box {
         width: 100%;
         padding: 2rem;
         margin-top: 1rem;
         margin-bottom: 1rem;
         border-radius: 4px;
-        text-align: center;
-        background-color: $red-1;
-        color: $red-7;
-        font-weight: 700;
+        background-color: $green-1;
+        color: $green-8;
+
+        &.comentario-error {
+            background-color: $red-1;
+            color: $red-8;
+        }
     }
 
     .comentario-moderation-notice {

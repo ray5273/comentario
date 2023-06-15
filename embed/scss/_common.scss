@@ -67,10 +67,20 @@ blockquote {
     font-weight: bold !important;
 }
 
+// Font size
+
+.comentario-small {
+    font-size: 85%;
+}
+
 // Utilities
 
 .comentario-hidden {
     display: none !important;
+}
+
+.comentario-text-center {
+    text-align: center;
 }
 
 // Colourising

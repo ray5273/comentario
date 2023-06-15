@@ -57,11 +57,13 @@ export class ApiService {
     private principal?: Principal;
 
     /** HTTP client we'll use for API requests. */
-    private readonly apiClient = new HttpClient(this.basePath);
+    private readonly apiClient = new HttpClient(this.basePath, this.onBeforeRequest, this.onError);
 
     constructor(
         readonly basePath: string,
         private readonly doc: Document,
+        private readonly onBeforeRequest?: () => void,
+        private readonly onError?: (error: any) => void,
     ) {}
 
     /**

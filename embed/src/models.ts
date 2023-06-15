@@ -1,3 +1,6 @@
+import { HttpClientError } from './http-client';
+import { ApiErrorResponse } from './api';
+
 export type UUID = string;
 
 export type StringBooleanMap = { [k: string]: boolean };
@@ -97,4 +100,71 @@ export interface IdentityProvider {
     readonly id:    string; // Provider ID
     readonly name:  string; // Provider name
     readonly icon?: string; // Provider icon name
+}
+
+/** Generic message displayed to the user. */
+export interface Message {
+    readonly severity: 'ok' | 'error'; // Message severity
+    readonly text:     string;         // Message text
+    readonly details?: string;         // Optional technical details
+}
+
+/**
+ * Message variant signifying a success.
+ */
+export class OkMessage implements Message {
+
+    readonly severity = 'ok';
+
+    constructor(
+        readonly text: string,
+    ) {}
+}
+
+/**
+ * Message variant signifying an error.
+ */
+export class ErrorMessage implements Message {
+
+    readonly severity = 'error';
+
+    constructor(
+        readonly text: string,
+        readonly details?: string,
+    ) {}
+
+    /**
+     * Instantiate a new ErrorMessage instance from the given error object.
+     * @param err Source error object.
+     */
+    static of(err: any): ErrorMessage {
+        let text = 'Unknown error';
+
+        // For now, only handle an HTTP error in a special way
+        if (err instanceof HttpClientError) {
+            // If there's a response, try to parse it as JSON
+            let resp: ApiErrorResponse | undefined;
+            if (typeof err.response === 'string') {
+                try {
+                    resp = JSON.parse(err.response);
+                } catch (e) {
+                    // Do nothing
+                }
+            }
+
+            // Translate error ID
+            switch (resp?.id) {
+                case 'unknown-host':
+                    text = 'This domain is not registered in Comentario';
+                    break;
+
+                // Not a known error ID
+                default:
+                    text = resp?.message || err.message || text;
+            }
+        }
+
+        // Details will be a JSON representation of the error
+        return new ErrorMessage(text, JSON.stringify(err, undefined, 2));
+    }
 }

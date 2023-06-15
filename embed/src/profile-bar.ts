@@ -1,10 +1,9 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { IdentityProvider, PageInfo, Principal, UserSettings, SignupData } from './models';
+import { IdentityProvider, PageInfo, Principal, SignupData, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
-import { ForgotPasswordDialog } from './forgot-password-dialog';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 
@@ -20,7 +19,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
      * @param onLocalAuth Callback for executing a local authentication.
      * @param onOAuth Callback for executing external (OAuth) authentication.
-     * @param onPasswordReset Callback for resetting user password.
      * @param onSignup Callback for executing user registration.
      * @param onSaveSettings Callback for saving user settings.
      */
@@ -31,7 +29,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
-        private readonly onPasswordReset: (email: string) => Promise<void>,
         private readonly onSignup: (data: SignupData) => Promise<void>,
         private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
     ) {
@@ -132,16 +129,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         }
 
         // Display the login dialog
-        const dlg = await LoginDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, idps);
+        const dlg = await LoginDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.baseUrl, idps);
         if (dlg.confirmed) {
             switch (dlg.navigateTo) {
                 case null:
                     // Local auth
                     return this.onLocalAuth(dlg.email, dlg.password);
-
-                case 'forgot':
-                    // Switch to password recovery
-                    return this.forgotPassword();
 
                 case 'signup':
                     // Switch to signup
@@ -151,16 +144,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                     // External auth
                     return this.onOAuth(dlg.navigateTo);
             }
-        }
-    }
-
-    /**
-     * Show a "forgot password" dialog and return a promise that's resolved when the dialog is closed.
-     */
-    async forgotPassword(): Promise<void> {
-        const dlg = await ForgotPasswordDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'});
-        if (dlg.confirmed) {
-            await this.onPasswordReset(dlg.email);
         }
     }
 

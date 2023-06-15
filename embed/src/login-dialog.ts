@@ -12,6 +12,7 @@ export class LoginDialog extends Dialog {
     private constructor(
         parent: Wrap<any>,
         pos: DialogPositioning,
+        private readonly baseUrl: string,
         private readonly idps: IdentityProvider[],
     ) {
         super(parent, 'Log in', pos);
@@ -32,7 +33,7 @@ export class LoginDialog extends Dialog {
     }
 
     /**
-     * Where to navigate ('forgot' | 'signup') or the name of an external IdP is chosen.
+     * Where to navigate ('signup') or the name of an external IdP is chosen.
      */
     get navigateTo(): string | null {
         return this._navigateTo;
@@ -42,10 +43,11 @@ export class LoginDialog extends Dialog {
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
+     * @param baseUrl Base URL of the Comentario instance
      * @param idps List of enabled identity providers.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, idps: IdentityProvider[]): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, idps);
+    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, idps: IdentityProvider[]): Promise<LoginDialog> {
+        const dlg = new LoginDialog(parent, pos, baseUrl, idps);
         return dlg.run(dlg);
     }
 
@@ -98,7 +100,9 @@ export class LoginDialog extends Dialog {
                 // Forgot password link
                 UIToolkit.div('dialog-centered')
                     .append(
-                        Wrap.new('a').inner('Forgot your password?').click(() => this.dismissWith('forgot'))),
+                        Wrap.new('a')
+                            .inner('Forgot your password?')
+                            .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})),
                 // Switch to signup link container
                 UIToolkit.div('dialog-centered')
                     .append(

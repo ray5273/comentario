@@ -1043,30 +1043,6 @@ paths:
                 type: boolean
                 description: Whether the user has been immediately confirmed
                 x-omitempty: false
-
-  /embed/auth/pwdreset:
-    post:
-      operationId: EmbedAuthPwdResetSendEmail
-      summary: Request commenter's password reset by sending them an email
-      tags:
-        - ApiEmbed
-      security: []
-      parameters:
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - email
-            properties:
-              email:
-                type: string
-                format: email
-      responses:
-        204:
-          description: Reset email has been sent, if the email address is known
-
   /embed/auth/user:
     post:
       operationId: EmbedAuthCurUserGet

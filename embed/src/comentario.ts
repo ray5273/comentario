@@ -1,20 +1,22 @@
-import { HttpClientError } from './http-client';
 import {
     ANONYMOUS_ID,
     Comment,
     CommenterMap,
     CommentsGroupedById,
     CommentSort,
+    ErrorMessage,
     IdentityProvider,
+    Message,
+    OkMessage,
     PageInfo,
     Principal,
-    UserSettings,
     SignupData,
     StringBooleanMap,
     User,
+    UserSettings,
     UUID,
 } from './models';
-import { ApiCommentListResponse, ApiCommentVoteResponse, ApiErrorResponse, ApiService } from './api';
+import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { CommentCard, CommentRenderingContext, CommentTree } from './comment-card';
@@ -33,7 +35,11 @@ export class Comentario {
     private readonly version = '[[[.Version]]]';
 
     /** Service handling API requests. */
-    private readonly apiService = new ApiService(`${this.origin}/api`, this.doc);
+    private readonly apiService = new ApiService(
+        `${this.origin}/api`,
+        this.doc,
+        () => this.setMessage(),
+        err => this.setMessage(ErrorMessage.of(err)));
 
     /** Default ID of the container element Comentario will be embedded into. */
     private rootId = 'comentario';
@@ -41,8 +47,8 @@ export class Comentario {
     /** The root element of Comentario embed. */
     private root?: Wrap<any>;
 
-    /** Error message panel (only shown when needed). */
-    private error?: Wrap<HTMLDivElement>;
+    /** Message panel (only shown when needed). */
+    private messagePanel?: Wrap<HTMLDivElement>;
 
     /** User profile toolbar. */
     private profileBar?: ProfileBar;
@@ -148,7 +154,6 @@ export class Comentario {
                     () => this.createAvatarElement(this.principal),
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.openOAuthPopup(idp),
-                    email => this.requestPasswordReset(email),
                     data => this.signup(data),
                     data => this.saveUserSettings(data)),
                 // Main area
@@ -307,7 +312,7 @@ export class Comentario {
             .else(() => {
                 // Make sure it's a valid ID before showing the user a message
                 if (Utils.isUuid(id)) {
-                    this.setError('The comment you\'re looking for doesn\'t exist; possibly it was deleted.');
+                    this.setMessage(new ErrorMessage('The comment you\'re looking for doesn\'t exist; possibly it was deleted.'));
                 }
             });
     }
@@ -322,55 +327,43 @@ export class Comentario {
     }
 
     /**
-     * Return a textual description of the provided error.
-     * @param error Error do return a description for.
+     * Set and display (message is given) or clean (message is falsy) a message in the message panel.
+     * @param message Message object to set. If undefined, the error panel gets removed.
      */
-    private describeError(error: any): string {
-        if (error instanceof HttpClientError) {
-            // If there's a response, try to parse it as JSON
-            let resp: ApiErrorResponse | undefined;
-            if (typeof error.response === 'string') {
-                try {
-                    resp = JSON.parse(error.response);
-                } catch (e) {
-                    // Do nothing
-                }
-            }
+    private setMessage(message?: Message) {
+        // Remove any existing message
+        this.messagePanel?.remove();
+        this.messagePanel = undefined;
 
-            // Translate error ID
-            switch (resp?.id) {
-                case 'unknown-host':
-                    return 'This domain is not registered in Comentario';
-
-                // Not a known error ID
-                default:
-                    return resp?.message || error.message;
-            }
-        }
-
-        // TODO put this under "technical details"
-        return JSON.stringify(error);
-    }
-
-    /**
-     * Set and display (message is given) or clean (message is falsy) an error message in the error panel.
-     * @param error Error object to set. If falsy, the error panel gets removed.
-     */
-    private setError(error?: any) {
-        // No error means removing any error
-        if (!error) {
-            this.error?.remove();
-            this.error = undefined;
+        // No message means remove any message
+        if (!message) {
             return;
         }
 
-        // Insert an error element, if necessary
-        if (!this.error) {
-            this.root!.prepend(this.error = UIToolkit.div('error-box'));
+        // Determine message severity
+        const err = message.severity === 'error';
+
+        // Create a message panel
+        this.root!.prepend(
+            this.messagePanel = UIToolkit.div('message-box')
+                .classes(err && 'error')
+                // Message text
+                .append(UIToolkit.div('text-center').inner(err ? `Error: ${message.text}.` : message.text)));
+
+        // If there are details
+        if (message.details) {
+            const details = Wrap.new('pre').classes('hidden').inner(message.details);
+            let hidden = true;
+            this.messagePanel.append(
+                // Details toggle link
+                Wrap.new('div').append(
+                    Wrap.new('a').classes('small').inner('Details ▾').click(() => details.setClasses(hidden = !hidden, 'hidden'))),
+                // Details text
+                details);
         }
 
-        // Set error text
-        this.error.inner(`Error: ${this.describeError(error)}.`);
+        // Scroll to the message
+        this.messagePanel.scrollTo();
     }
 
     /**
@@ -378,15 +371,8 @@ export class Comentario {
      */
     private async loadClientConfig(): Promise<void> {
         this.federatedIdps = [];
-        try {
-            this.setError();
-            const r = await this.apiService.configClientGet();
-            this.federatedIdps = r.federatedIdps;
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        const r = await this.apiService.configClientGet();
+        this.federatedIdps = r.federatedIdps;
     }
 
     /**
@@ -466,15 +452,6 @@ export class Comentario {
         // Kill any existing editor
         this.cancelCommentEdits();
 
-        const trySubmit = async (editor: CommentEditor) => {
-            this.setError();
-            try {
-                await this.submitNewComment(parentCard, editor.markdown, editor.anonymous);
-            } catch (e) {
-                this.setError(e);
-            }
-        };
-
         // Create a new editor
         this.editor = new CommentEditor(
             parentCard?.children || this.addCommentHost!,
@@ -484,7 +461,7 @@ export class Comentario {
             !!this.principal,
             this.pageInfo!,
             () => this.cancelCommentEdits(),
-            trySubmit);
+            async editor => await this.submitNewComment(parentCard, editor.markdown, editor.anonymous));
     }
 
     /**
@@ -495,15 +472,6 @@ export class Comentario {
         // Kill any existing editor
         this.cancelCommentEdits();
 
-        const trySubmit = async (editor: CommentEditor) => {
-            this.setError();
-            try {
-                await this.submitCommentEdits(card, editor.markdown);
-            } catch (e) {
-                this.setError(e);
-            }
-        };
-
         // Create a new editor
         this.editor = new CommentEditor(
             card,
@@ -513,7 +481,7 @@ export class Comentario {
             true,
             this.pageInfo!,
             () => this.cancelCommentEdits(),
-            trySubmit);
+            async editor => await this.submitCommentEdits(card, editor.markdown));
     }
 
     /**
@@ -583,37 +551,12 @@ export class Comentario {
     }
 
     /**
-     * Request a password reset for the given email.
-     * @param email Email address to request a password reset for.
-     */
-    private async requestPasswordReset(email: string): Promise<void> {
-        /* TODO new-db
-        try {
-            this.setError();
-            await this.apiClient.post<void>('commenter/pwdreset', undefined, {email});
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
-        */
-    }
-
-    /**
      * Register the user with the given details and log them in.
      * @param data User's signup data.
      */
     private async signup(data: SignupData): Promise<void> {
         // Sign the user up
-        let isConfirmed = false;
-        try {
-            this.setError();
-            isConfirmed = await this.apiService.authSignup(data.email, data.name, data.password, data.websiteUrl, parent.location.href);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        const isConfirmed = await this.apiService.authSignup(data.email, data.name, data.password, data.websiteUrl, parent.location.href);
 
         // If the user is confirmed, log them immediately in
         if (isConfirmed) {
@@ -621,7 +564,7 @@ export class Comentario {
 
         } else {
             // Otherwise, show a message that the user should confirm their email
-            // TODO new-db
+            this.setMessage(new OkMessage('Account is successfully created. Please check your email and click the confirmation link it contains.'));
         }
     }
 
@@ -632,14 +575,7 @@ export class Comentario {
      */
     private async authenticateLocally(email: string, password: string): Promise<void> {
         // Log the user in
-        try {
-            this.setError();
-            await this.apiService.authLogin(email, password, this.host);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        await this.apiService.authLogin(email, password, this.host);
 
         // Refresh the auth status
         await this.updateAuthStatus();
@@ -708,22 +644,20 @@ export class Comentario {
         // Retrieve page settings and a comment list from the backend
         let r: ApiCommentListResponse;
         try {
-            this.setError();
             r = await this.apiService.commentList(this.host, this.pagePath);
 
-        } catch (e) {
+            // Store page- and backend-related properties
+            this.pageInfo = r.pageInfo;
+            this.commentSort = r.pageInfo.defaultSort;
+
+            // Configure the page in the profile bar
+            this.profileBar!.pageInfo = r.pageInfo;
+
+        } catch (err) {
             // Remove the page from the profile bar on error: this will disable login
             this.profileBar!.pageInfo = undefined;
-            this.setError(e);
-            throw e;
+            throw err;
         }
-
-        // Store page- and backend-related properties
-        this.pageInfo    = r.pageInfo;
-        this.commentSort = r.pageInfo.defaultSort;
-
-        // Configure the page in the profile bar
-        this.profileBar!.pageInfo = r.pageInfo;
 
         // Build a map by grouping all comments by their parentId value
         this.parentIdMap = r.comments?.reduce(
@@ -746,14 +680,8 @@ export class Comentario {
      * Toggle the current page's readonly status.
      */
     private async pageReadonlyToggle(): Promise<void> {
-        try {
-            this.setError();
-            await this.apiService.pageUpdate(this.pageInfo!.pageId, !this.pageInfo?.isPageReadonly);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        // Run the status toggle with the backend
+        await this.apiService.pageUpdate(this.pageInfo!.pageId, !this.pageInfo?.isPageReadonly);
 
         // Reload the page to reflect the state change
         return this.reload();
@@ -764,14 +692,7 @@ export class Comentario {
      */
     private async approveComment(card: CommentCard): Promise<void> {
         // Submit the approval to the backend
-        try {
-            this.setError();
-            await this.apiService.commentModerate(card.comment.id, true);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        await this.apiService.commentModerate(card.comment.id, true);
 
         // Update the comment and the card
         card.comment = this.replaceCommentById(card.comment, {isApproved: true});
@@ -782,14 +703,7 @@ export class Comentario {
      */
     private async deleteComment(card: CommentCard): Promise<void> {
         // Run deletion with the backend
-        try {
-            this.setError();
-            await this.apiService.commentDelete(card.comment.id);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        await this.apiService.commentDelete(card.comment.id);
 
         // Update the comment and the card
         card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '[deleted]', html: '[deleted]'});
@@ -801,14 +715,7 @@ export class Comentario {
     private async stickyComment(card: CommentCard): Promise<void> {
         // Run the stickiness update with the API
         const isSticky = !card.comment.isSticky;
-        try {
-            this.setError();
-            await this.apiService.commentSticky(card.comment.id, isSticky);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        await this.apiService.commentSticky(card.comment.id, isSticky);
 
         // Update the comment
         this.replaceCommentById(card.comment, {isSticky});
@@ -831,16 +738,8 @@ export class Comentario {
             }
         }
 
-        // Run the vote with the API
-        let r: ApiCommentVoteResponse;
-        try {
-            this.setError();
-            r = await this.apiService.commentVote(card.comment.id, direction);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        // Run the vote with the backend
+        const r = await this.apiService.commentVote(card.comment.id, direction);
 
         // Update the comment and the card
         card.comment = this.replaceCommentById(card.comment, {score: r.score, direction});
@@ -874,14 +773,8 @@ export class Comentario {
      * Save current user's settings.
      */
     private async saveUserSettings(data: UserSettings) {
-        try {
-            this.setError();
-            await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.notifyReplies, data.notifyModerator);
-
-        } catch (e) {
-            this.setError(e);
-            throw e;
-        }
+        // Run the update with the backend
+        await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.notifyReplies, data.notifyModerator);
 
         // Refresh the auth status and update the profile bar
         await this.updateAuthStatus();

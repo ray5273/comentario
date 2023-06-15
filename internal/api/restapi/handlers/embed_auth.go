@@ -102,15 +102,6 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 	return api_embed.NewEmbedAuthSignupOK().WithPayload(&api_embed.EmbedAuthSignupOKBody{IsConfirmed: user.Confirmed})
 }
 
-func EmbedAuthPwdResetSendEmail(params api_embed.EmbedAuthPwdResetSendEmailParams) middleware.Responder {
-	if r := sendPasswordResetEmail(data.EmailPtrToString(params.Body.Email)); r != nil {
-		return r
-	}
-
-	// Succeeded
-	return api_embed.NewEmbedAuthPwdResetSendEmailNoContent()
-}
-
 func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.Responder {
 	// Fetch the session header value
 	if s := params.HTTPRequest.Header.Get(util.HeaderUserSession); s != "" {
