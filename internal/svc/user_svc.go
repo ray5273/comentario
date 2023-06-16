@@ -155,6 +155,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	var u data.User
 	var du data.DomainUser
 	var duUID, duDID *uuid.NullUUID
+	var duCreated sql.NullTime
 	if err := db.QueryRow(
 		"select "+
 			// User fields
@@ -164,7 +165,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			// DomainUser fields
 			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
 			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
-			"coalesce(du.notify_moderator, false) "+
+			"coalesce(du.notify_moderator, false), du.ts_created "+
 			"from cm_users u "+
 			"left join cm_domains_users du on du.user_id=u.id and du.domain_id=$1 "+
 			"where u.id=$2;",
@@ -200,6 +201,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		&du.IsCommenter,
 		&du.NotifyReplies,
 		&du.NotifyModerator,
+		&duCreated,
 	); err != nil {
 		return nil, nil, translateDBErrors(err)
 	}
@@ -209,6 +211,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	if duDID.Valid && duUID.Valid {
 		du.DomainID = duDID.UUID
 		du.UserID = duUID.UUID
+		du.CreatedTime = duCreated.Time
 		pdu = &du
 	}
 

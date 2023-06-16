@@ -34,7 +34,7 @@ func main() {
 	// Create new service API
 	apiInstance := operations.NewComentarioAPI(swaggerSpec)
 	server := restapi.NewServer(apiInstance)
-	defer server.Shutdown()
+	defer util.LogError(server.Shutdown, "server.Shutdown()")
 
 	// Configure command-line options
 	parser := flags.NewParser(server, flags.Default)

@@ -3,7 +3,29 @@ package data
 import (
 	"github.com/google/uuid"
 	"testing"
+	"time"
 )
+
+func TestDomainUser_AgeInDays(t *testing.T) {
+	tests := []struct {
+		name string
+		u    *DomainUser
+		want int
+	}{
+		{"nil            ", nil, 0},
+		{"now            ", &DomainUser{CreatedTime: time.Now().UTC()}, 0},
+		{"less than a day", &DomainUser{CreatedTime: time.Now().UTC().AddDate(0, 0, -1).Add(time.Second)}, 0},
+		{"3 days         ", &DomainUser{CreatedTime: time.Now().UTC().AddDate(0, 0, -3)}, 3},
+		{"687 days       ", &DomainUser{CreatedTime: time.Now().UTC().AddDate(0, 0, -687)}, 687},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.u.AgeInDays(); got != tt.want {
+				t.Errorf("AgeInDays() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestDomainUser_IsReadonly(t *testing.T) {
 	tests := []struct {

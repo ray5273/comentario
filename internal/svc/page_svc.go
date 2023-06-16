@@ -1,13 +1,13 @@
 package svc
 
 import (
-	"database/sql"
-	"fmt"
+	"github.com/avct/uasurfer"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"strings"
+	"net/http"
+	"net/url"
 	"time"
 )
 
@@ -22,14 +22,12 @@ type PageService interface {
 	FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error)
 	// FindByID finds and returns a page by its ID
 	FindByID(id *uuid.UUID) (*data.DomainPage, error)
-	// GetRegisteringView queries a page, registering a new pageview, inserting a new database record if necessary
-	GetRegisteringView(domainID *uuid.UUID, path string) (*data.DomainPage, error)
+	// GetRegisteringView queries a page, registering a new pageview, inserting a new page database record if necessary
+	GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
 	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
 	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
 	// Update updates the page by its ID
 	Update(page *data.DomainPage) error
-	// UpdateTitleByHostPath updates page title for the specified host and path combination
-	UpdateTitleByHostPath(host, path string) (string, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,8 +70,8 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	return nil, nil
 }
 
-func (svc *pageService) GetRegisteringView(domainID *uuid.UUID, path string) (*data.DomainPage, error) {
-	logger.Debugf("pageService.GetRegisteringView(%s, %s)", domainID, path)
+func (svc *pageService) GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
+	logger.Debugf("pageService.GetRegisteringView(%#v, %s, ...)", domain, path)
 
 	// Prepare a new UUID
 	id := uuid.New()
@@ -84,28 +82,31 @@ func (svc *pageService) GetRegisteringView(domainID *uuid.UUID, path string) (*d
 			"values($1, $2, $3, '', false, $4, 0, 1) "+
 			"on conflict (domain_id, path) do update set count_views=p.count_views+1 "+
 			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
-		&id, domainID, path, time.Now().UTC())
+		&id, &domain.ID, path, time.Now().UTC())
 
 	// Fetch the row
 	var p data.DomainPage
-	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err == sql.ErrNoRows {
-		logger.Debug("pageService.GetRegisteringView: no page found yet")
-		return nil, nil
-
-	} else if err != nil {
-		// Any other database error
+	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
 		logger.Errorf("pageService.GetRegisteringView: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
 	// If the page was added, fetch its title in the background
 	if p.ID == id {
-		// TODO new-db
-		// go fetchPageTitle(...)
+		logger.Debug("pageService.GetRegisteringView: page didn't exist, created a new one with ID=%s", &id)
+		go func() {
+			if err := svc.fetchUpdatePageTitle(domain.Host, p.Path, &p.ID); err != nil {
+				logger.Errorf("pageService.GetRegisteringView: fetchUpdatePageTitle() failed: %v", err)
+			}
+		}()
 	}
 
-	// TODO new-db also register visit details here (cm_page_views or so)
-	// go insertPageView(...)
+	// Also register visit details in the background
+	go func() {
+		if err := svc.insertPageView(&p, req); err != nil {
+			logger.Errorf("pageService.GetRegisteringView: insertPageView() failed: %v", err)
+		}
+	}()
 
 	// Succeeded
 	return &p, nil
@@ -182,24 +183,46 @@ func (svc *pageService) Update(page *data.DomainPage) error {
 	return nil
 }
 
-func (svc *pageService) UpdateTitleByHostPath(host, path string) (string, error) {
-	logger.Debugf("pageService.UpdateTitleByHostPath(%s, %s)", host, path)
+// fetchUpdatePageTitle fetches and updates the title of the provided page based on its URL
+func (svc *pageService) fetchUpdatePageTitle(host, path string, pageID *uuid.UUID) error {
+	logger.Debugf("pageService.fetchUpdatePageTitle(%s, %s)", host, path)
 
-	// Try to fetch the title
-	fullPath := fmt.Sprintf("%s/%s", host, strings.TrimPrefix(path, "/"))
-	title, err := util.HTMLTitleFromURL(fmt.Sprintf("http://%s", fullPath))
+	var title string
+	var err error
 
-	// If fetching the title failed, just use domain/path combined as title
-	if err != nil {
-		title = fullPath
+	// Try to fetch the title using HTTPS
+	u := &url.URL{Scheme: "https", Host: host, Path: path}
+	if title, err = util.HTMLTitleFromURL(u); err != nil {
+		// If failed, retry using HTTP
+		if err != nil {
+			u.Scheme = "http"
+			if title, err = util.HTMLTitleFromURL(u); err != nil {
+				// If still failed, just use the URL as the title
+				if err != nil {
+					title = u.String()
+				}
+			}
+		}
 	}
 
 	// Update the page in the database
-	if err = db.Exec("update pages set title=$1 where domain=$2 and path=$3;", title, host, path); err != nil {
-		logger.Errorf("pageService.UpdateTitleByHostPath: Exec() failed: %v", err)
-		return "", translateDBErrors(err)
-	}
+	return db.ExecOne("update cm_domain_pages set title=$1 where id=$2", title, pageID)
+}
 
-	// Succeeded
-	return title, nil
+// insertPageView registers a new page visit in the database
+func (svc *pageService) insertPageView(page *data.DomainPage, req *http.Request) error {
+	logger.Debugf("pageService.insertPageView(%#v, ...)", page)
+
+	// Extract the remote IP and country
+	ip, country := util.UserIPCountry(req)
+
+	// Parse the User Agent header
+	ua := uasurfer.Parse(util.UserAgent(req))
+
+	return db.Exec(
+		"insert into cm_domain_page_views(page_id, ts_created, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device) "+
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
+		&page.ID, time.Now().UTC(), req.Proto, ip, country, ua.Browser.Name.StringTrimPrefix(),
+		util.FormatVersion(&ua.Browser.Version), ua.OS.Name.StringTrimPrefix(), util.FormatVersion(&ua.OS.Version),
+		ua.DeviceType.StringTrimPrefix())
 }

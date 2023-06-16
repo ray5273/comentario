@@ -99,9 +99,9 @@ definitions:
         type: boolean
         description: Whether the comment is approved and can be seen by everyone
         x-omitempty: false
-      isSpam:
+      isPending:
         type: boolean
-        description: Whether the comment is flagged as (potential) spam
+        description: Whether the comment is pending approval
         x-omitempty: false
       isDeleted:
         type: boolean
@@ -239,6 +239,16 @@ definitions:
       modAuthenticated:
         type: boolean
         description: Whether all non-anonymous comments are to be approved by a moderator
+        x-omitempty: false
+      modNumComments:
+        type: integer
+        format: uint
+        description: Number of first comments by user on this domain that require a moderator approval
+        x-omitempty: false
+      modUserAgeDays:
+        type: integer
+        format: uint
+        description: Number of first days since user has registered on this domain to require a moderator approval on their comments
         x-omitempty: false
       modLinks:
         type: boolean

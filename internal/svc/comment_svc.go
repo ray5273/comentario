@@ -16,6 +16,10 @@ var TheCommentService CommentService = &commentService{}
 type CommentService interface {
 	// TODO new-db Approve sets the status of a comment with the given hex ID to 'approved'
 	// Approve(commentHex models.HexID) error
+
+	// CountByDomainUser returns number of comments the given domain user has created on the corresponding domain. If
+	// approvedOnly == true, only counts approved comments
+	CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error)
 	// Create creates, persists, and returns a new comment
 	Create(comment *data.Comment) error
 	// DeleteByHost deletes all comments for the specified domain
@@ -56,16 +60,37 @@ func (svc *commentService) Approve(commentHex models.HexID) error {
 }
 */
 
+func (svc *commentService) CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error) {
+	logger.Debugf("commentService.CountByDomainUser(%s, %s, %v)", domainID, userID, approvedOnly)
+
+	// Prepare a statement
+	s := "select count(*) from cm_comments c " +
+		"join cm_domain_pages p on p.id=c.page_id " +
+		"where p.domain_id=$1 and c.user_created=$2"
+	if approvedOnly {
+		s += " and c.is_approved=true"
+	}
+
+	// Query the database
+	var i int
+	if err := db.QueryRow(s+";", domainID, userID).Scan(&i); err != nil {
+		logger.Errorf("commentService.CountByDomainUser: QueryRow() failed: %v", err)
+		return 0, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return i, nil
+}
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 
 	// Insert a record into the database
 	if err := db.Exec(
 		"insert into cm_comments("+
-			"id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_spam, is_deleted, ts_created, "+
+			"id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, "+
 			"ts_approved, ts_deleted, user_created, user_approved, user_deleted) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
-		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsSticky, c.IsApproved, c.IsSpam, c.IsDeleted,
+		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsSticky, c.IsApproved, c.IsPending, c.IsDeleted,
 		c.CreatedTime, c.ApprovedTime, c.DeletedTime, &c.UserCreated, &c.UserApproved, &c.UserDeleted,
 	); err != nil {
 		logger.Errorf("commentService.Create: Exec() failed: %v", err)
@@ -95,7 +120,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	// Query the database
 	var c data.Comment
 	if err := db.QueryRow(
-		"select c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_spam, c.is_deleted, c.ts_created, c.user_created "+
+		"select c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_pending, c.is_deleted, c.ts_created, c.user_created "+
 			"from cm_comments c "+
 			"where c.id=$1;",
 		id,
@@ -108,7 +133,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 		&c.Score,
 		&c.IsSticky,
 		&c.IsApproved,
-		&c.IsSpam,
+		&c.IsPending,
 		&c.IsDeleted,
 		&c.CreatedTime,
 		&c.UserCreated,
@@ -128,7 +153,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	statement :=
 		"select " +
 			// Comment fields
-			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_spam, " +
+			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_pending, " +
 			"c.is_deleted, c.ts_created, c.user_created, " +
 			// Commenter fields
 			"u.id, u.email, u.name, u.website_url, coalesce(du.is_commenter, true), coalesce(du.is_moderator, false), " +
@@ -185,7 +210,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			&c.Score,
 			&c.IsSticky,
 			&c.IsApproved,
-			&c.IsSpam,
+			&c.IsPending,
 			&c.IsDeleted,
 			&c.CreatedTime,
 			&c.UserCreated,

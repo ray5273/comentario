@@ -138,13 +138,13 @@ func HTMLDocumentTitle(body io.Reader) (string, error) {
 }
 
 // HTMLTitleFromURL tries to fetch the specified URL and subsequently extract the title from its HTML document
-func HTMLTitleFromURL(url string) (string, error) {
+func HTMLTitleFromURL(u *url.URL) (string, error) {
 	// Fetch the URL
-	resp, err := http.Get(url)
+	resp, err := http.Get(u.String())
 	if err != nil {
 		return "", err
 	}
-	defer resp.Body.Close()
+	defer LogError(resp.Body.Close, "HTMLTitleFromURL, resp.Body.Close()")
 
 	// Verify we're dealing with a HTML document
 	if !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
@@ -234,6 +234,13 @@ func IsUILang(s string) bool {
 		}
 	}
 	return false
+}
+
+// LogError call a function that may return an error, and if it does, logs and discards it
+func LogError(f func() error, details string) {
+	if err := f(); err != nil {
+		logger.Errorf("Error occurred in %s: %v", details, err)
+	}
 }
 
 // MarkdownToHTML renders the provided markdown string as HTML

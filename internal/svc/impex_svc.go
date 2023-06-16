@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/data"
 	"io"
 	"time"
 )
@@ -17,10 +18,10 @@ type ImportExportService interface {
 	Export(domainID *uuid.UUID) ([]byte, error)
 	// ImportCommento performs data import in the "commento" format from the provided data buffer. Returns the number of
 	// imported comments
-	ImportCommento(host models.Host, reader io.Reader) (int64, error)
+	ImportCommento(domain *data.Domain, reader io.Reader) (uint64, error)
 	// ImportDisqus performs data import from Disqus from the provided data buffer. Returns the number of imported
 	// comments
-	ImportDisqus(host models.Host, reader io.Reader) (int64, error)
+	ImportDisqus(domain *data.Domain, reader io.Reader) (uint64, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -114,10 +115,10 @@ func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 	return gzippedData, nil
 }
 
-func (svc *importExportService) ImportCommento(host models.Host, reader io.Reader) (int64, error) {
-	logger.Debugf("importExportService.ImportCommento(%s, ...)", host)
+func (svc *importExportService) ImportCommento(domain *data.Domain, reader io.Reader) (uint64, error) {
+	logger.Debugf("importExportService.ImportCommento(%#v, ...)", domain)
 
-	count := int64(0)
+	count := uint64(0)
 	/* TODO new-db
 	// Fetch and decompress the export tarball
 	d, err := util.DecompressGzip(reader)
@@ -213,10 +214,10 @@ func (svc *importExportService) ImportCommento(host models.Host, reader io.Reade
 	return count, nil
 }
 
-func (svc *importExportService) ImportDisqus(host models.Host, reader io.Reader) (int64, error) {
-	logger.Debugf("importExportService.ImportDisqus(%s, ...)", host)
+func (svc *importExportService) ImportDisqus(domain *data.Domain, reader io.Reader) (uint64, error) {
+	logger.Debugf("importExportService.ImportDisqus(%#v, ...)", domain)
 
-	count := int64(0)
+	count := uint64(0)
 	/* TODO new-db
 
 	// Fetch and decompress the export tarball

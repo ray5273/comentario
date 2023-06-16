@@ -34,7 +34,7 @@ export class StatsChartComponent {
     chartLabels: string[] = [];
     chartData: ChartDataset[] = [];
 
-    private _host?: string;
+    private _domainId?: string;
     private _numberOfDays = 30;
     private reload$ = new Subject<void>();
 
@@ -47,12 +47,12 @@ export class StatsChartComponent {
     }
 
     /**
-     * Host to collect the statistics for. If an empty string, statistics for all domains of the current user is
-     * collected.
+     * ID of the domain to collect the statistics for. If an empty string, statistics for all domains of the current
+     * user is collected.
      */
     @Input()
-    set host(s: string | undefined) {
-        this._host = s;
+    set domainId(id: string | undefined) {
+        this._domainId = id;
         this.reload$.next();
     }
 
@@ -67,14 +67,14 @@ export class StatsChartComponent {
 
     private reload() {
         // Undefined domain means it's uninitialised yet
-        if (this._host === undefined) {
+        if (this._domainId === undefined) {
             this.chartLabels = [];
             this.chartData = [];
             return;
         }
 
         // Request data from the backend
-        (this._host ? this.api.domainDailyStats(this._host, this._numberOfDays) : this.api.dashboardDailyStats(this._numberOfDays))
+        (this._domainId ? this.api.domainDailyStats(this._domainId, this._numberOfDays) : this.api.dashboardDailyStats(this._numberOfDays))
             .pipe(this.loading.processing())
             .subscribe(r => {
                 // Fetch the number of days

@@ -303,7 +303,7 @@ func NewUserSession(userID *uuid.UUID, host string, req *http.Request) *UserSess
 	ip, country := util.UserIPCountry(req)
 
 	// Parse the User Agent header
-	ua := uasurfer.Parse(req.Header.Get("User-Agent"))
+	ua := uasurfer.Parse(util.UserAgent(req))
 
 	// Instantiate a session
 	now := time.Now().UTC()
@@ -334,6 +334,7 @@ func (us *UserSession) EncodeIDs() string {
 // DomainModNotifyPolicy describes moderator notification policy on a specific domain
 type DomainModNotifyPolicy string
 
+//goland:noinspection GoUnusedConst
 const (
 	DomainModNotifyPolicyNone    DomainModNotifyPolicy = "none"    // Do not notify domain moderators
 	DomainModNotifyPolicyPending                       = "pending" // Only notify domain moderator about comments pending moderation
@@ -354,6 +355,8 @@ type Domain struct {
 	SSOSecret        []byte                // SSO secret
 	ModAnonymous     bool                  // Whether all anonymous comments are to be approved by a moderator
 	ModAuthenticated bool                  // Whether all non-anonymous comments are to be approved by a moderator
+	ModNumComments   int                   // Number of first comments by user on this domain that require a moderator approval
+	ModUserAgeDays   int                   // Number of first days since user has registered on this domain to require a moderator approval on their comments
 	ModLinks         bool                  // Whether all comments containing a link are to be approved by a moderator
 	ModImages        bool                  // Whether all comments containing an image are to be approved by a moderator
 	ModNotifyPolicy  DomainModNotifyPolicy // Moderator notification policy for domain: 'none', 'pending', 'all'
@@ -418,6 +421,8 @@ func (d *Domain) ToDTO() *models.Domain {
 		ModImages:        d.ModImages,
 		ModLinks:         d.ModLinks,
 		ModNotifyPolicy:  models.DomainModNotifyPolicy(d.ModNotifyPolicy),
+		ModNumComments:   uint64(d.ModNumComments),
+		ModUserAgeDays:   uint64(d.ModUserAgeDays),
 		Name:             d.Name,
 		SsoURL:           d.SSOURL,
 	}
@@ -434,6 +439,15 @@ type DomainUser struct {
 	IsCommenter     bool      // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
 	NotifyReplies   bool      // Whether the user is to be notified about replies to their comments
 	NotifyModerator bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
+	CreatedTime     time.Time // When the domain user was created
+}
+
+// AgeInDays returns the number of full days passed since the user was created. Can be called against a nil receiver
+func (u *DomainUser) AgeInDays() int {
+	if u == nil {
+		return 0
+	}
+	return int(time.Now().UTC().Sub(u.CreatedTime) / util.OneDay)
 }
 
 // IsReadonly returns whether the domain user is not allowed to comment (is readonly). Can be called against a nil
@@ -483,7 +497,7 @@ type Comment struct {
 	Score        int           // Comment score
 	IsSticky     bool          // Whether the comment is sticky (attached to the top of page)
 	IsApproved   bool          // Whether the comment is approved and can be seen by everyone
-	IsSpam       bool          // Whether the comment is flagged as (potential) spam
+	IsPending    bool          // Whether the comment is pending approval
 	IsDeleted    bool          // Whether the comment is marked as deleted
 	CreatedTime  time.Time     // When the comment was created
 	ApprovedTime sql.NullTime  // When the comment was approved
@@ -503,9 +517,10 @@ func (c *Comment) IsRoot() bool {
 	return !c.ParentID.Valid
 }
 
-// MarkApprovedBy sets the value of Approved to true and updates related fields
+// MarkApprovedBy sets the value of Approved to true and updates related fields. Also removes any pending status
 func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 	c.IsApproved = true
+	c.IsPending = false
 	c.UserApproved = uuid.NullUUID{UUID: *userID, Valid: true}
 	c.ApprovedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 }
@@ -519,7 +534,7 @@ func (c *Comment) ToDTO() *models.Comment {
 		ID:          strfmt.UUID(c.ID.String()),
 		IsApproved:  c.IsApproved,
 		IsDeleted:   c.IsDeleted,
-		IsSpam:      c.IsSpam,
+		IsPending:   c.IsPending,
 		IsSticky:    c.IsSticky,
 		Markdown:    c.Markdown,
 		PageID:      strfmt.UUID(c.PageID.String()),

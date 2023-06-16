@@ -86,24 +86,22 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 }
 
 func DomainImport(params api_general.DomainImportParams, user *data.User) middleware.Responder {
-	defer params.Data.Close()
+	defer util.LogError(params.Data.Close, "DomainImport, defer Data.Close()")
 
-	/* TODO new-db
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	// Find the domain and verify the user's ownership
+	domain, _, r := domainGetDomainAndOwner(params.UUID, user)
+	if r != nil {
 		return r
 	}
 
 	// Perform import
-	*/
 	var count uint64
-	/*var err error
+	var err error
 	switch params.Source {
 	case "commento":
-		count, err = svc.TheImportExportService.ImportCommento(host, params.Data)
+		count, err = svc.TheImportExportService.ImportCommento(domain, params.Data)
 	case "disqus":
-		count, err = svc.TheImportExportService.ImportDisqus(host, params.Data)
+		count, err = svc.TheImportExportService.ImportDisqus(domain, params.Data)
 	default:
 		respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
 	}
@@ -112,7 +110,6 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	if err != nil {
 		return respServiceError(err)
 	}
-	*/
 
 	// Succeeded
 	return api_general.NewDomainImportOK().WithPayload(&api_general.DomainImportOKBody{NumImported: count})
@@ -200,8 +197,10 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		SSOURL:           domain.SsoURL,
 		ModAnonymous:     domain.ModAnonymous,
 		ModAuthenticated: domain.ModAuthenticated,
-		ModImages:        domain.ModImages,
+		ModNumComments:   int(domain.ModNumComments),
+		ModUserAgeDays:   int(domain.ModUserAgeDays),
 		ModLinks:         domain.ModLinks,
+		ModImages:        domain.ModImages,
 		ModNotifyPolicy:  data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
 		DefaultSort:      string(domain.DefaultSort),
 	}
@@ -294,6 +293,8 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	domain.SSOURL = newDomain.SsoURL
 	domain.ModAnonymous = newDomain.ModAnonymous
 	domain.ModAuthenticated = newDomain.ModAuthenticated
+	domain.ModNumComments = int(newDomain.ModNumComments)
+	domain.ModUserAgeDays = int(newDomain.ModUserAgeDays)
 	domain.ModImages = newDomain.ModImages
 	domain.ModLinks = newDomain.ModLinks
 	domain.ModNotifyPolicy = data.DomainModNotifyPolicy(newDomain.ModNotifyPolicy)

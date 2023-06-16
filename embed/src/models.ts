@@ -35,7 +35,7 @@ export interface Comment {
     readonly score:       number;  // Comment score
     readonly isSticky:    boolean; // Whether the comment is sticky (attached to the top of page)
     readonly isApproved:  boolean; // Whether the comment is approved and can be seen by everyone
-    readonly isSpam:      boolean; // Whether the comment is flagged as (potential) spam
+    readonly isPending:   boolean; // Whether the comment is pending moderator approval
     readonly isDeleted:   boolean; // Whether the comment is marked as deleted
     readonly createdTime: string;  // When the comment was created
     readonly userCreated: string;  // ID of the user who created the comment

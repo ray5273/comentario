@@ -51,15 +51,11 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 	// Mark the comment deleted
 	if err := svc.TheCommentService.MarkDeleted(&comment.ID, &user.ID); err != nil {
 		return respServiceError(err)
-
-		// Decrement page comment count
-	} else if err := svc.ThePageService.IncrementCounts(&page.ID, -1, 0); err != nil {
-		return respServiceError(err)
-
-		// Decrement domain comment count
-	} else if err := svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0); err != nil {
-		return respServiceError(err)
 	}
+
+	// Decrement page/domain comment count in the background, ignoring any errors
+	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, -1, 0) }()
+	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0) }()
 
 	// Succeeded
 	return api_embed.NewEmbedCommentDeleteNoContent()
@@ -76,7 +72,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	}
 
 	// Fetch the page, registering a new pageview
-	page, err := svc.ThePageService.GetRegisteringView(&domain.ID, data.PathToString(params.Body.Path))
+	page, err := svc.ThePageService.GetRegisteringView(domain, data.PathToString(params.Body.Path), params.HTTPRequest)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -107,8 +103,9 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		return respServiceError(err)
 	}
 
-	// Register a view in domain statistics, ignoring any error
-	// TODO new-db _ = svc.TheDomainService.RegisterView(domain.Host, commenter)
+	// Register a view in page/domain statistics in the background, ignoring any error
+	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, 0, 1) }()
+	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, 0, 1) }()
 
 	// Succeeded
 	return api_embed.NewEmbedCommentListOK().WithPayload(&api_embed.EmbedCommentListOKBody{
@@ -199,34 +196,34 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Determine comment state
-	if !Verifier.NeedsModeration(comment, domain, user, domainUser) {
+	if b, err := Verifier.NeedsModeration(comment, domain, user, domainUser); err != nil {
+		return respServiceError(err)
+	} else if b {
+		// Comment needs to be approved
+		comment.IsPending = true
+	} else {
+		// No need for moderator approval
 		comment.MarkApprovedBy(&user.ID)
 	}
 
 	// Persist a new comment record
 	if err := svc.TheCommentService.Create(comment); err != nil {
 		return respServiceError(err)
-
-		// Increment page comment count
-	} else if err := svc.ThePageService.IncrementCounts(&page.ID, 1, 0); err != nil {
-		return respServiceError(err)
-
-		// Increment domain comment count
-	} else if err := svc.TheDomainService.IncrementCounts(&domain.ID, 1, 0); err != nil {
-		return respServiceError(err)
 	}
+
+	// Increment page/domain comment counts in the background, ignoring any error
+	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, 1, 0) }()
+	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, 1, 0) }()
 
 	// Send an email notification to moderators, if we notify about every comment or comments pending moderation and
 	// the comment isn't approved yet, in the background
-	if domain.ModNotifyPolicy == data.DomainModNotifyPolicyAll || !comment.IsApproved && domain.ModNotifyPolicy == data.DomainModNotifyPolicyPending {
-		// Best effort: ignore errors
-		go sendCommentModNotifications(domain, page, comment, user)
+	if domain.ModNotifyPolicy == data.DomainModNotifyPolicyAll || comment.IsPending && domain.ModNotifyPolicy == data.DomainModNotifyPolicyPending {
+		go func() { _ = sendCommentModNotifications(domain, page, comment, user) }()
 	}
 
 	// If it's a reply and the comment is approved, send out a reply notifications, in the background
 	if !comment.IsRoot() && comment.IsApproved {
-		// Best effort: ignore errors
-		go sendCommentReplyNotifications(domain, page, comment, user)
+		go func() { _ = sendCommentReplyNotifications(domain, page, comment, user) }()
 	}
 
 	// Succeeded

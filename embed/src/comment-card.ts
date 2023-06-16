@@ -173,11 +173,11 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             ?.attr({title: this.collapsed ? 'Expand children' : 'Collapse children'})
             .setClasses(this.collapsed, 'collapsed');
 
-        // Approved
-        const flagged = this._comment.isSpam;
-        this.setClasses(flagged, 'dark-card');
-        this.eName?.setClasses(flagged, 'flagged');
-        if (!flagged && this.btnApprove) {
+        // Pending approval
+        const pending = this._comment.isPending;
+        this.setClasses(pending, 'dark-card');
+        this.eName?.setClasses(pending, 'flagged');
+        if (!pending && this.btnApprove) {
             // Remove the Approve button if the comment is approved
             this.btnApprove.remove();
             this.btnApprove = undefined;
@@ -185,10 +185,10 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Moderation notice
         let mn: string | undefined;
-        if (!c.isApproved) {
-            mn = 'Your comment is under moderation.';
-        } else if (c.isSpam) {
-            mn = 'Your comment was flagged as spam and is under moderation.';
+        if (c.isPending) {
+            mn = 'Your comment is awaiting moderator approval.';
+        } else if (!c.isApproved) {
+            mn = 'Your comment was flagged as spam.';
         }
         if (mn) {
             // If there's something to display, make sure the notice element exists and appended to the header

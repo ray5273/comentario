@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/util"
 	"io"
 	"net/http"
 	"net/url"
@@ -50,7 +51,7 @@ func (svc *versionCheckService) run() {
 						printedError = true
 					}
 				} else {
-					defer resp.Body.Close()
+					defer util.LogError(resp.Body.Close, "versionCheckService.run, resp.Body.Close()")
 					body, err = io.ReadAll(resp.Body)
 				}
 			}()

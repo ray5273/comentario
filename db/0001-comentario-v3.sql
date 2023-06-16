@@ -175,10 +175,12 @@ create table cm_domains (
     auth_sso          boolean       default false not null,        -- Whether SSO authentication is allowed
     sso_url           varchar(2083) default ''    not null,        -- SSO provider URL
     sso_secret        char(64),                                    -- SSO secret
-    mod_anonymous     boolean                     not null,        -- Whether all anonymous comments are to be approved by a moderator
-    mod_authenticated boolean                     not null,        -- Whether all non-anonymous comments are to be approved by a moderator
-    mod_links         boolean                     not null,        -- Whether all comments containing a link are to be approved by a moderator
-    mod_images        boolean                     not null,        -- Whether all comments containing an image are to be approved by a moderator
+    mod_anonymous     boolean       default true  not null,        -- Whether all anonymous comments are to be approved by a moderator
+    mod_authenticated boolean       default false not null,        -- Whether all non-anonymous comments are to be approved by a moderator
+    mod_num_comments  integer       default 0     not null,        -- Number of first comments by user on this domain that require a moderator approval
+    mod_user_age_days integer       default 0     not null,        -- Number of first days since user has registered on this domain to require a moderator approval on their comments
+    mod_links         boolean       default false not null,        -- Whether all comments containing a link are to be approved by a moderator
+    mod_images        boolean       default false not null,        -- Whether all comments containing an image are to be approved by a moderator
     mod_notify_policy varchar(16)                 not null,        -- Moderator notification policy for domain: 'none', 'pending', 'all'
     default_sort      char(2)                     not null,        -- Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
     count_comments    integer       default 0     not null,        -- Total number of comments
@@ -193,7 +195,8 @@ create table cm_domains_users (
     is_moderator     boolean default false not null, -- Whether the user is a moderator of the domain (assumes is_commenter)
     is_commenter     boolean default false not null, -- Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
     notify_replies   boolean default true  not null, -- Whether the user is to be notified about replies to their comments
-    notify_moderator boolean default true  not null  -- Whether the user is to receive moderator notifications (only when is_moderator is true)
+    notify_moderator boolean default true  not null, -- Whether the user is to receive moderator notifications (only when is_moderator is true)
+    ts_created       timestamp             not null  -- When the record was created
 );
 
 -- Constraints
@@ -270,7 +273,7 @@ create table cm_comments (
     score         integer default 0     not null, -- Comment score
     is_sticky     boolean default false not null, -- Whether the comment is sticky (attached to the top of page)
     is_approved   boolean default false not null, -- Whether the comment is approved and can be seen by everyone
-    is_spam       boolean default false not null, -- Whether the comment is flagged as (potential) spam
+    is_pending    boolean default false not null, -- Whether the comment is pending approval
     is_deleted    boolean default false not null, -- Whether the comment is marked as deleted
     ts_created    timestamp             not null, -- When the comment was created
     ts_approved   timestamp,                      -- When the comment was approved
@@ -386,8 +389,10 @@ begin
                 left join (select count(*) cnt, domain from views    group by domain) vc on vc.domain=d.domain;
 
         -- Migrate domain owners
-        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator)
-            select dm.id, om.id, true, true, true, coalesce(e.sendreplynotifications, false), coalesce(e.sendmoderatornotifications, false)
+        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
+            select
+                    dm.id, om.id, true, true, true, coalesce(e.sendreplynotifications, false),
+                    coalesce(e.sendmoderatornotifications, false), o.joindate
                 from domains d
                 join owners o on o.ownerhex=d.ownerhex
                 join temp_ownerhex_map om on om.ownerhex=o.ownerhex
@@ -395,8 +400,10 @@ begin
                 left join emails e on e.email=o.email;
 
         -- Migrate domain moderators
-        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator)
-            select dm.id, u.id, false, true, true, coalesce(e.sendreplynotifications, false), coalesce(e.sendmoderatornotifications, false)
+        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
+            select
+                    dm.id, u.id, false, true, true, coalesce(e.sendreplynotifications, false),
+                    coalesce(e.sendmoderatornotifications, false), mod.adddate
                 from moderators mod
                 join cm_users u on u.email=mod.email
                 join temp_domain_map dm on dm.domain=mod.domain
@@ -405,8 +412,10 @@ begin
                 where not exists(select 1 from cm_users xu where xu.email=mod.email);
 
         -- Migrate domain commenters
-        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator)
-            select dm.id, u.id, false, false, true, coalesce(e.sendreplynotifications, false), coalesce(e.sendmoderatornotifications, false)
+        insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
+            select
+                    dm.id, u.id, false, false, true, coalesce(e.sendreplynotifications, false),
+                    coalesce(e.sendmoderatornotifications, false), u.ts_created
                 from (select distinct commenterhex, domain from comments) c
                 join temp_commenterhex_map cm on cm.commenterhex=c.commenterhex
                 join cm_users u on u.id=cm.id
@@ -433,7 +442,7 @@ begin
 
         -- Migrate comments
         insert into cm_comments(
-                id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_spam, is_deleted, ts_created,
+                id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created,
                 ts_approved, ts_deleted, user_created, user_approved, user_deleted)
             select
                     cm.id, pcm.id, p.id, c.markdown, c.html, c.score,

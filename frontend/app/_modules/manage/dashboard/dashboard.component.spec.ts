@@ -16,7 +16,7 @@ describe('DashboardComponent', () => {
             declarations: [DashboardComponent, MockComponent(StatsChartComponent)],
             imports: [ToolsModule],
             providers: [
-                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService, {dashboardDataGet: () => of({}) as any})},
+                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService, {dashboardTotals: () => of({}) as any})},
             ],
         })
             .compileComponents();
