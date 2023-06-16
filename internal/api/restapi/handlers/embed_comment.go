@@ -44,7 +44,7 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 	}
 
 	// Check the user is allowed to update the comment
-	if r := Verifier.UserCanUpdateComment(comment, domainUser); r != nil {
+	if r := Verifier.UserCanUpdateComment(user, domainUser, comment); r != nil {
 		return r
 	}
 
@@ -246,7 +246,7 @@ func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.Us
 	}
 
 	// Verify the user is a moderator
-	if r := Verifier.UserIsModerator(domainUser); r != nil {
+	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
 		return r
 	}
 
@@ -280,7 +280,7 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Check the user is allowed to update the comment
-	if r := Verifier.UserCanUpdateComment(comment, domainUser); r != nil {
+	if r := Verifier.UserCanUpdateComment(user, domainUser, comment); r != nil {
 		return r
 	}
 

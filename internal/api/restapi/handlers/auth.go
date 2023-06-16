@@ -228,8 +228,8 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		WithPassword(swag.StringValue(params.Body.Password)).
 		WithSignup(params.HTTPRequest, "")
 
-	// If it's the first registered user, make them a superuser
-	if cnt, err := svc.TheUserService.CountUsers(false); err != nil {
+	// If it's the first registered LOCAL user, make them a superuser
+	if cnt, err := svc.TheUserService.CountUsers(false, true, false); err != nil {
 		return respServiceError(err)
 	} else if cnt == 0 {
 		user.WithConfirmed(true).Superuser = true

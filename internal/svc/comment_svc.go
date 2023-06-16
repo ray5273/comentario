@@ -156,7 +156,8 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_pending, " +
 			"c.is_deleted, c.ts_created, c.user_created, " +
 			// Commenter fields
-			"u.id, u.email, u.name, u.website_url, coalesce(du.is_commenter, true), coalesce(du.is_moderator, false), " +
+			"u.id, u.email, u.name, case when u.avatar is null then false else true end, u.website_url, u.superuser, " +
+			"du.is_owner, du.is_moderator, du.is_commenter, " +
 			// Votes fields
 			"v.negative " +
 			// Iterate comments
@@ -196,10 +197,10 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	for rs.Next() {
 		// Fetch the comment and the related commenter
 		c := data.Comment{}
-		uc := models.Commenter{}
-		var uid uuid.UUID
-		var email strfmt.Email
-		var negVote sql.NullBool
+		var uID uuid.NullUUID
+		var uEmail, uName, uWebsite sql.NullString
+		var uSuper, duIsOwner, duIsModerator, duIsCommenter, negVote sql.NullBool
+		var hasAvatar bool
 		err := rs.Scan(
 			// Comment
 			&c.ID,
@@ -215,12 +216,15 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			&c.CreatedTime,
 			&c.UserCreated,
 			// User
-			&uid,
-			&email,
-			&uc.Name,
-			&uc.WebsiteURL,
-			&uc.IsCommenter,
-			&uc.IsModerator,
+			&uID,
+			&uEmail,
+			&uName,
+			&hasAvatar,
+			&uWebsite,
+			&uSuper,
+			&duIsOwner,
+			&duIsModerator,
+			&duIsCommenter,
 			// Vote
 			&negVote)
 		if err != nil {
@@ -231,15 +235,32 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 		// Convert the comment
 		cm := c.ToDTO()
 
-		// Add the authenticated user to the map
-		if uid != data.AnonymousUser.ID {
-			uc.ID = strfmt.UUID(uid.String())
-			// Only include the email if the user is a moderator
-			if isModerator {
-				uc.Email = email
-			}
-			if _, ok := commenterMap[uid]; !ok {
-				commenterMap[uid] = &uc
+		// If the user exists and isn't anonymous
+		if uID.Valid && uID.UUID != data.AnonymousUser.ID {
+			// If the commenter isn't present in the map yet
+			if _, ok := commenterMap[uID.UUID]; !ok {
+				// Calculate commenter roles
+				isSuper := uSuper.Valid && uSuper.Bool
+				isOwner := isSuper || duIsOwner.Valid && duIsOwner.Bool
+				isMod := isOwner || duIsModerator.Valid && duIsModerator.Bool
+
+				// Instantiate a new commenter model
+				uc := models.Commenter{
+					HasAvatar:   hasAvatar,
+					ID:          strfmt.UUID(uID.UUID.String()),
+					IsCommenter: isMod || !duIsCommenter.Valid || duIsCommenter.Bool,
+					IsModerator: isMod,
+					Name:        uName.String,
+					WebsiteURL:  strfmt.URI(uWebsite.String),
+				}
+
+				// Only include the email if the querying user is a moderator
+				if isModerator {
+					uc.Email = strfmt.Email(uEmail.String)
+				}
+
+				// Add the commenter to the map
+				commenterMap[uID.UUID] = &uc
 			}
 		}
 

@@ -137,7 +137,7 @@ func DomainModeratorDelete(params api_general.DomainModeratorDeleteParams, user 
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	if r := Verifier.UserCanEditDomain(principal.GetHexID(), host); r != nil {
 		return r
 	}
 
@@ -155,7 +155,7 @@ func DomainModeratorNew(params api_general.DomainModeratorNewParams, user *data.
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	if r := Verifier.UserCanEditDomain(principal.GetHexID(), host); r != nil {
 		return r
 	}
 
@@ -216,7 +216,7 @@ func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
-	if r := Verifier.UserOwnsDomain(principal.GetHexID(), host); r != nil {
+	if r := Verifier.UserCanEditDomain(principal.GetHexID(), host); r != nil {
 		return r
 	}
 
@@ -321,7 +321,7 @@ func domainGetDomainAndOwner(domainUUID strfmt.UUID, user *data.User) (*data.Dom
 		return nil, nil, respServiceError(err)
 
 		// Verify the user owns the domain
-	} else if r := Verifier.UserOwnsDomain(domainUser); r != nil {
+	} else if r := Verifier.UserCanEditDomain(user, domainUser); r != nil {
 		return nil, nil, r
 
 	} else {

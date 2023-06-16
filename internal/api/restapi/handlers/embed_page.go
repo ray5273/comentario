@@ -27,7 +27,7 @@ func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) mi
 		return respServiceError(err)
 
 		// Verify the user is a domain moderator
-	} else if r := Verifier.UserIsModerator(domainUser); r != nil {
+	} else if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
 		return r
 
 		// Update the page

@@ -14,7 +14,7 @@ import { UIToolkit } from './ui-toolkit';
 import { Utils } from './utils';
 import { ConfirmDialog } from './confirm-dialog';
 
-export type CommentCardGetAvatarHandler = (user: User) => Wrap<any> | undefined;
+export type CommentCardGetAvatarHandler = (user: User | undefined) => Wrap<any>;
 export type CommentCardEventHandler = (c: CommentCard) => void;
 export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1) => void;
 
@@ -216,10 +216,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      */
     private render(ctx: CommentRenderingContext): void {
         const id = this._comment.id;
-        const commenter = ctx.commenters[this._comment.userCreated];
+        const commenter = this._comment.userCreated ? ctx.commenters[this._comment.userCreated] : undefined;
 
         // Pick a color for the commenter
-        const bgColor = this._comment.userCreated === ANONYMOUS_ID ? 'anonymous' : Utils.colourIndex(this._comment.userCreated);
+        let bgColor = 'deleted';
+        if (commenter) {
+            bgColor = commenter.id === ANONYMOUS_ID ? 'anonymous' : Utils.colourIndex(commenter.id).toString();
+        }
 
         // Render children
         this.children = UIToolkit.div('card-children').append(...new CommentTree().render(ctx, id));
@@ -240,12 +243,12 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                         UIToolkit.div('name-container')
                             .append(
                                 // Name
-                                this.eName = Wrap.new(commenter.websiteUrl ? 'a' : 'div')
-                                    .inner(this._comment.isDeleted ? '[deleted]' : commenter.name!)
-                                    .classes('name', commenter.isModerator && 'moderator')
+                                this.eName = Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
+                                    .inner(commenter?.name ?? '[Deleted User]')
+                                    .classes('name', commenter?.isModerator && 'moderator')
                                     .attr({
-                                        href: commenter.websiteUrl,
-                                        rel:  commenter.websiteUrl && 'nofollow noopener noreferrer',
+                                        href: commenter?.websiteUrl,
+                                        rel:  commenter?.websiteUrl && 'nofollow noopener noreferrer',
                                     }),
                                 // Subtitle
                                 UIToolkit.div('subtitle')

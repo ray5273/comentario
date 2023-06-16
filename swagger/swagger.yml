@@ -431,6 +431,10 @@ definitions:
         type: boolean
         description: Whether the user has confirmed their email address
         x-omitempty: false
+      isSuperuser:
+        type: boolean
+        description: Whether the user is a "super user" (instance admin)
+        x-omitempty: false
       isOwner:
         type: boolean
         description: Whether the user is an owner of the domain (only for commenter auth)

@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 	"time"
 )
 
@@ -17,8 +18,11 @@ var TheUserService UserService = &userService{}
 type UserService interface {
 	// ConfirmUser confirms the user's email by their ID
 	ConfirmUser(id *uuid.UUID) error
-	// CountUsers returns a number of registered users. If includeSystem == false, skips system users
-	CountUsers(includeSystem bool) (int, error)
+	// CountUsers returns a number of registered users.
+	//   - includeSystem: if false, skips system users
+	//   - includeLocal: if false, skips local users
+	//   - includeFederated: if false, skips federated users
+	CountUsers(includeSystem, includeLocal, includeFederated bool) (int, error)
 	// Create persists a new user
 	Create(u *data.User) error
 	// CreateUserSession persists a new user session
@@ -62,18 +66,28 @@ func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	return nil
 }
 
-func (svc *userService) CountUsers(includeSystem bool) (int, error) {
-	logger.Debug("userService.CountUsers(%v)", includeSystem)
+func (svc *userService) CountUsers(includeSystem, includeLocal, includeFederated bool) (int, error) {
+	logger.Debug("userService.CountUsers(%v, %v, %v)", includeSystem, includeLocal, includeFederated)
 
 	// Prepare the statement
 	s := "select count(*) from cm_users"
+	var filters []string
 	if !includeSystem {
-		s += " where system_account=false"
+		filters = append(filters, "system_account=false")
+	}
+	if !includeLocal {
+		filters = append(filters, "federated_idp is not null")
+	}
+	if !includeFederated {
+		filters = append(filters, "federated_idp is null")
+	}
+	if len(filters) > 0 {
+		s += " where " + strings.Join(filters, " and ")
 	}
 
 	// Query the count
 	var i int
-	if err := db.QueryRow(s).Scan(&i); err != nil {
+	if err := db.QueryRow(s + ";").Scan(&i); err != nil {
 		return 0, translateDBErrors(err)
 	} else {
 		return i, nil

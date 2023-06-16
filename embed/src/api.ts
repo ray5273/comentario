@@ -16,7 +16,7 @@ export interface ApiClientConfigResponse {
 export interface ApiCommentListResponse {
     readonly pageInfo:   PageInfo;    // Page info
     readonly comments:   Comment[];   // Comments on the page
-    readonly commenters: Commenter[]; // Commenters, who authored comments on the page
+    readonly commenters: Commenter[]; // Commenters, who authored comments on the page (except those corresponding to deleted users)
 }
 
 export interface ApiCommentNewResponse {

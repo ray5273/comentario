@@ -18,28 +18,29 @@ export interface User {
 
 /** Authenticated or anonymous user. */
 export interface Principal extends User {
+    readonly isSuperuser:     boolean; // Whether the user is a "super user" (instance admin)
     readonly isLocal:         boolean; // Whether the user is authenticated locally (as opposed to via a federated identity provider)
     readonly isConfirmed:     boolean; // Whether the user has confirmed their email address
-    readonly isOwner:         boolean; // Whether the user is an owner of the domain (only for commenter auth)
-    readonly notifyReplies:   boolean; // Whether the user is to be notified about replies to their comments (only for commenter auth)
-    readonly notifyModerator: boolean; // Whether the user is to receive moderator notifications (only for commenter auth)
+    readonly isOwner:         boolean; // Whether the user is an owner of the domain
+    readonly notifyReplies:   boolean; // Whether the user is to be notified about replies to their comments
+    readonly notifyModerator: boolean; // Whether the user is to receive moderator notifications
 }
 
 /** Comment residing on a page. */
 export interface Comment {
-    readonly id:          UUID;    // Unique record ID
-    readonly parentId?:   string;  // Parent record ID, null if it's a root comment on the page
-    readonly pageId:      string;  // ID of the page
-    readonly markdown:    string;  // Comment text in markdown
-    readonly html:        string;  // Rendered comment text in HTML
-    readonly score:       number;  // Comment score
-    readonly isSticky:    boolean; // Whether the comment is sticky (attached to the top of page)
-    readonly isApproved:  boolean; // Whether the comment is approved and can be seen by everyone
-    readonly isPending:   boolean; // Whether the comment is pending moderator approval
-    readonly isDeleted:   boolean; // Whether the comment is marked as deleted
-    readonly createdTime: string;  // When the comment was created
-    readonly userCreated: string;  // ID of the user who created the comment
-    readonly direction:   number;  // Vote direction for the current user
+    readonly id:           UUID;    // Unique record ID
+    readonly parentId?:    string;  // Parent record ID, null if it's a root comment on the page
+    readonly pageId:       string;  // ID of the page
+    readonly markdown:     string;  // Comment text in markdown
+    readonly html:         string;  // Rendered comment text in HTML
+    readonly score:        number;  // Comment score
+    readonly isSticky:     boolean; // Whether the comment is sticky (attached to the top of page)
+    readonly isApproved:   boolean; // Whether the comment is approved and can be seen by everyone
+    readonly isPending:    boolean; // Whether the comment is pending moderator approval
+    readonly isDeleted:    boolean; // Whether the comment is marked as deleted
+    readonly createdTime:  string;  // When the comment was created
+    readonly userCreated?: string;  // ID of the user who created the comment. Null if the user has since been deleted
+    readonly direction:    number;  // Vote direction for the current user
 }
 
 /** Stripped-down, read-only version of the user who authored a comment. For now equivalent to User. */
@@ -62,7 +63,8 @@ export interface PageInfo {
 
 export type CommentsGroupedById = { [k: UUID]: Comment[] };
 
-export type CommenterMap = { [k: UUID]: Commenter };
+/** Commenter users mapped by their IDs. There will be no entry for a commenter that corresponds to a deleted user. */
+export type CommenterMap = { [k: UUID]: Commenter | undefined };
 
 export type ComparatorFunc<T> = (a: T, b: T) => number;
 

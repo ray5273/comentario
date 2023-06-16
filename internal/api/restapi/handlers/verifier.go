@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 )
 
 // Verifier is a global VerifierService implementation
@@ -25,19 +26,21 @@ type VerifierService interface {
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
+	// UserCanEditDomain verifies the given user is a superuser or the domain user is a domain owner. domainUser can be
+	// nil
+	UserCanEditDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
+	// UserCanModerateDomain verifies the given user is a superuser or the domain user is a domain moderator. domainUser
+	// can be nil
+	UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
 	// UserCanSignupWithEmail verifies the user can sign up locally (using email and password)
 	UserCanSignupWithEmail(email string) middleware.Responder
 	// UserCanUpdateComment verifies the given domain user is allowed to update the specified comment. domainUser can be
 	// nil
-	UserCanUpdateComment(comment *data.Comment, domainUser *data.DomainUser) middleware.Responder
+	UserCanUpdateComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
 	// UserIsAuthenticated verifies the given user is an authenticated one
 	UserIsAuthenticated(user *data.User) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
 	UserIsLocal(user *data.User) middleware.Responder
-	// UserIsModerator verifies the given domain user is a moderator. domainUser can be nil
-	UserIsModerator(domainUser *data.DomainUser) middleware.Responder
-	// UserOwnsDomain verifies the given domain user is an owner. domainUser can be nil
-	UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder
 }
 
 // ----------------------------------------------------------------------------------------------------------------------
@@ -114,7 +117,13 @@ func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, u
 		}
 	}
 
-	// TODO new-db check link and image moderation policies
+	// Check link/image moderation policy
+	html := strings.ToLower(comment.HTML)
+	if domain.ModLinks && strings.Contains(html, "<a") {
+		return true, nil
+	} else if domain.ModImages && strings.Contains(html, "<img") {
+		return true, nil
+	}
 
 	// TODO new-db if domain.AutoSpamFilter &&
 	//	svc.TheAntispamService.CheckForSpam(
@@ -149,6 +158,20 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 	return nil, nil
 }
 
+func (v *verifier) UserCanEditDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
+	if !user.Superuser && (domainUser == nil || !domainUser.IsOwner) {
+		return respForbidden(ErrorNotDomainOwner)
+	}
+	return nil
+}
+
+func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
+	if !user.Superuser && (domainUser == nil || (!domainUser.IsOwner && !domainUser.IsModerator)) {
+		return respForbidden(ErrorNotModerator)
+	}
+	return nil
+}
+
 func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 	// Try to find an existing user by email
 	user, err := svc.TheUserService.FindUserByEmail(email, false)
@@ -170,7 +193,7 @@ func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 	return respUnauthorized(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP))
 }
 
-func (v *verifier) UserCanUpdateComment(comment *data.Comment, domainUser *data.DomainUser) middleware.Responder {
+func (v *verifier) UserCanUpdateComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
 	// If no domain user provided, it's a fail
 	if domainUser == nil {
 		return respForbidden(ErrorNotModerator)
@@ -178,7 +201,7 @@ func (v *verifier) UserCanUpdateComment(comment *data.Comment, domainUser *data.
 
 	// If the user doesn't own the comment, they must be a domain moderator
 	if comment.IsAnonymous() || comment.UserCreated.UUID != domainUser.UserID {
-		if r := v.UserIsModerator(domainUser); r != nil {
+		if r := v.UserCanModerateDomain(user, domainUser); r != nil {
 			return r
 		}
 	}
@@ -195,20 +218,6 @@ func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {
 func (v *verifier) UserIsLocal(user *data.User) middleware.Responder {
 	if !user.IsLocal() {
 		return respBadRequest(ErrorNoLocalUser)
-	}
-	return nil
-}
-
-func (v *verifier) UserIsModerator(domainUser *data.DomainUser) middleware.Responder {
-	if domainUser == nil || (!domainUser.IsOwner && !domainUser.IsModerator) {
-		return respForbidden(ErrorNotModerator)
-	}
-	return nil
-}
-
-func (v *verifier) UserOwnsDomain(domainUser *data.DomainUser) middleware.Responder {
-	if domainUser == nil || !domainUser.IsOwner {
-		return respForbidden(ErrorNotDomainOwner)
 	}
 	return nil
 }

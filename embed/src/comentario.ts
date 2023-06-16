@@ -807,25 +807,27 @@ export class Comentario {
 
     /**
      * Create and return a new element representing the avatar for the given user.
-     * @param user User to create an avatar element for.
+     * @param user User to create an avatar element for. If undefined, it means the user is deleted.
      */
-    private createAvatarElement(user?: User): Wrap<any> | undefined {
-        // Don't bother if no user
-        if (!user) {
-            return undefined;
+    private createAvatarElement(user?: User): Wrap<any> {
+        switch (true) {
+            // If no user, it (probably) means the user was deleted
+            case !user:
+                return UIToolkit.div('avatar', 'bg-deleted');
+
+            // If the user is anonymous
+            case user!.id === ANONYMOUS_ID:
+                return UIToolkit.div('avatar', 'bg-anonymous');
+
+            // If the user has an image avatar, create a new image pointing to the API avatar endpoint
+            case user!.hasAvatar:
+                return Wrap.new('img')
+                    .classes('avatar-img')
+                    .attr({src: `${this.apiService.basePath}/users/${user!.id}/avatar`, loading: 'lazy', alt: ''});
+
+            // The user has no avatar: render a circle containing their initial
+            default:
+                return UIToolkit.div('avatar', `bg-${Utils.colourIndex(user!.id)}`).html(user!.name[0].toUpperCase());
         }
-
-        // Determine if the user is anonymous
-        const anonymous = user.id === ANONYMOUS_ID;
-
-        // Render a new element
-        return !anonymous && user.hasAvatar ?
-            // The user has an avatar: create a new image pointing to the API avatar endpoint
-            Wrap.new('img')
-                .classes('avatar-img')
-                .attr({src: `${this.apiService.basePath}/users/${user.id}/avatar`, loading: 'lazy', alt: ''}) :
-            // The user has no avatar: render a circle containing the initial
-            UIToolkit.div('avatar', `bg-${anonymous ? 'anonymous' : Utils.colourIndex(user.id)}`)
-                .html(anonymous ? '' : user.name[0].toUpperCase());
     }
 }

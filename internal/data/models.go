@@ -195,8 +195,8 @@ func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 	}
 }
 
-// ToPrincipal converts this user into a Principal model. du is an optional domain user model, applying for commenter
-// authentication only; should be nil for UI authentication
+// ToPrincipal converts this user into a Principal model. du is an optional domain user model, which only applies to
+// commenter authentication; should be nil for UI authentication
 func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 	return &models.Principal{
 		Email:           strfmt.Email(u.Email),
@@ -207,6 +207,7 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		IsLocal:         u.FederatedIdP == "",
 		IsModerator:     du != nil && du.IsModerator,
 		IsOwner:         du != nil && du.IsOwner,
+		IsSuperuser:     u.Superuser,
 		Name:            u.Name,
 		NotifyModerator: du != nil && du.NotifyModerator,
 		NotifyReplies:   du != nil && du.NotifyReplies,
