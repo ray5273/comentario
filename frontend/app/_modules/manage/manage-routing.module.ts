@@ -8,8 +8,7 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
-import { DomainInstallationComponent } from './domains/domain-detail/domain-installation/domain-installation.component';
-import { DomainSettingsComponent } from './domains/domain-detail/domain-settings/domain-settings.component';
+import { DomainPropertiesComponent } from './domains/domain-detail/domain-properties/domain-properties.component';
 import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
 import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
 import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
@@ -29,9 +28,8 @@ const children: Routes = [
         path: 'domains/:id',
         component: DomainDetailComponent,
         children: [
-            {path: '', pathMatch: 'full', redirectTo: 'installation'},
-            {path: 'installation', component: DomainInstallationComponent},
-            {path: 'settings',     component: DomainSettingsComponent},
+            {path: '', pathMatch: 'full', redirectTo: 'settings'},
+            {path: 'settings',     component: DomainPropertiesComponent},
             {path: 'moderators',   component: DomainModeratorsComponent},
             {path: 'stats',        component: DomainStatsComponent},
             {path: 'impex',        component: DomainImpexComponent},

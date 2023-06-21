@@ -6,7 +6,7 @@ import { Paths } from '../../../../../_utils/consts';
 import { ApiGeneralService, Domain } from '../../../../../../generated-api';
 import { ToastService } from '../../../../../_services/toast.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
-import { DomainDetailComponent } from '../domain-detail.component';
+import { DomainSelectorService } from '../../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -29,10 +29,10 @@ export class DomainImpexComponent {
         @Inject(DOCUMENT) private readonly doc: Document,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
-        details: DomainDetailComponent,
+        domainSelectorSvc: DomainSelectorService,
     ) {
         // Subscribe to domain changes
-        details.domain
+        domainSelectorSvc.domain
             .pipe(untilDestroyed(this))
             .subscribe(d => this.domain = d);
     }

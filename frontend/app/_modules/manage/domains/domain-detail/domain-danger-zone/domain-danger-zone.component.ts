@@ -5,8 +5,8 @@ import { faCalendarXmark, faCircleQuestion, faSnowflake, faTrashAlt } from '@for
 import { ApiGeneralService, Domain } from '../../../../../../generated-api';
 import { Paths } from '../../../../../_utils/consts';
 import { ToastService } from '../../../../../_services/toast.service';
-import { DomainDetailComponent } from '../domain-detail.component';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
+import { DomainSelectorService } from '../../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -32,10 +32,10 @@ export class DomainDangerZoneComponent {
         private readonly router: Router,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
-        private readonly details: DomainDetailComponent,
+        private readonly domainSelectorSvc: DomainSelectorService,
     ) {
         // Subscribe to domain changes
-        details.domain
+        domainSelectorSvc.domain
             .pipe(untilDestroyed(this))
             .subscribe(d => this.domain = d);
     }
@@ -72,7 +72,7 @@ export class DomainDangerZoneComponent {
                 // Add a toast
                 this.toastSvc.success('data-saved');
                 // Reload the details
-                this.details.reload();
+                this.domainSelectorSvc.reload();
             });
     }
 }

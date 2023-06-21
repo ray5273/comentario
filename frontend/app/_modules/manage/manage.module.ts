@@ -14,13 +14,13 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
-import { DomainSettingsComponent } from './domains/domain-detail/domain-settings/domain-settings.component';
+import { DomainPropertiesComponent } from './domains/domain-detail/domain-properties/domain-properties.component';
 import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
 import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
 import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
 import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
-import { DomainInstallationComponent } from './domains/domain-detail/domain-installation/domain-installation.component';
 import { StatsChartComponent } from './stats-chart/stats-chart.component';
+import { DomainSelectorService } from './_services/domain-selector.service';
 
 @NgModule({
     declarations: [
@@ -33,10 +33,9 @@ import { StatsChartComponent } from './stats-chart/stats-chart.component';
         DomainImportComponent,
         DomainManagerComponent,
         DomainModeratorsComponent,
-        DomainSettingsComponent,
+        DomainPropertiesComponent,
         DomainStatsComponent,
         ProfileComponent,
-        DomainInstallationComponent,
         StatsChartComponent,
     ],
     imports: [
@@ -52,6 +51,9 @@ import { StatsChartComponent } from './stats-chart/stats-chart.component';
         NgChartsModule,
         ToolsModule,
         ManageRoutingModule,
+    ],
+    providers: [
+        DomainSelectorService,
     ],
 })
 export class ManageModule {}

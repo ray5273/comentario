@@ -20,8 +20,9 @@
             <ul class="nav">
                 <!-- Show/collapse button -->
                 <li class="nav-item d-md-none mw-100">
-                    <a [class.collapsed]="!expanded" [attr.aria-expanded]="expanded" (click)="expanded = !expanded"
-                       class="cc-toggler collapse-toggler" role="button" id="sidebarToggler">
+                    <a [class.collapsed]="!expanded" [attr.aria-expanded]="expanded"
+                       (click)="toggleExpanded()" (keydown.enter)="toggleExpanded()"
+                       class="cc-toggler collapse-toggler" role="button" tabindex="0" id="sidebarToggler">
                         <fa-icon class="cc-icon" [icon]="faChevronRight"></fa-icon>
                     </a>
                 </li>
@@ -32,13 +33,65 @@
                         <span class="cc-hide-collapsed" i18n>Dashboard</span>
                     </a>
                 </li>
-                <!-- Domains -->
-                <li class="nav-item">
-                    <a [routerLink]="Paths.manage.domains" routerLinkActive="active" class="cc-link">
-                        <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
-                        <span class="cc-hide-collapsed" i18n>Domains</span>
-                    </a>
-                </li>
+
+                <!-- Domain items: only when there's a domain selected -->
+                <ng-container *ngIf="domain | async as d else noDomain">
+                    <!-- Domain selector -->
+                    <li class="nav-item">
+                        <a [routerLink]="Paths.manage.domains" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
+                            <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                            <div class="cc-hide-collapsed overflow-hidden">
+                                <div class="colon" i18n>Domain</div>
+                                <div class="cc-vshrink-collapsed text-truncate">{{ d.name || d.host }}</div>
+                            </div>
+                        </a>
+                    </li>
+                    <!-- Properties -->
+                    <li class="nav-item">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'settings']" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon cc-indent" [icon]="faListCheck"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Properties</div>
+                        </a>
+                    </li>
+                    <!-- Comments -->
+                    <li class="nav-item">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon cc-indent" [icon]="faComments"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Comments</div>
+                        </a>
+                    </li>
+                    <!-- Users -->
+                    <li class="nav-item">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'users']" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon cc-indent" [icon]="faUsers"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Users</div>
+                        </a>
+                    </li>
+                    <!-- Stats -->
+                    <li class="nav-item">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'stats']" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon cc-indent" [icon]="faChartLine"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Stats</div>
+                        </a>
+                    </li>
+                    <!-- Administration -->
+                    <li class="nav-item">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'admin']" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon cc-indent" [icon]="faCog"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Administration</div>
+                        </a>
+                    </li>
+                </ng-container>
+
+                <!-- Domain selector when there's no domain -->
+                <ng-template #noDomain>
+                    <li class="nav-item">
+                        <a [routerLink]="Paths.manage.domains" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
+                            <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Domains</div>
+                        </a>
+                    </li>
+                </ng-template>
 
                 <!-- [Account] -->
                 <li class="nav-item cc-divider">
@@ -74,7 +127,8 @@
     </nav>
 
     <!-- Sidebar backdrop, only on a small screen and when the sidebar is expanded -->
-    <div class="cc-backdrop" [class.show]="expanded" (click)="expanded = false"></div>
+    <div [class.show]="expanded" (click)="toggleExpanded()" (keydown.enter)="toggleExpanded()"
+         class="cc-backdrop" tabindex="-1"></div>
 
     <!-- Main page content -->
     <div class="cc-content">

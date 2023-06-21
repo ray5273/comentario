@@ -5,7 +5,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain } from '../../../../../../generated-api';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ToastService } from '../../../../../_services/toast.service';
-import { DomainDetailComponent } from '../domain-detail.component';
+import { DomainSelectorService } from '../../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -29,10 +29,10 @@ export class DomainModeratorsComponent {
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
-        private readonly details: DomainDetailComponent,
+        private readonly domainSelectorSvc: DomainSelectorService,
     ) {
         // Subscribe to domain changes
-        details.domain
+        this.domainSelectorSvc.domain
             .pipe(untilDestroyed(this))
             .subscribe(d => this.domain = d);
     }
@@ -48,7 +48,7 @@ export class DomainModeratorsComponent {
                 // Add a toast
                 this.toastSvc.success('moderator-removed');
                 // Reload the details
-                this.details.reload();
+                this.domainSelectorSvc.reload();
             });
     }
 
@@ -67,7 +67,7 @@ export class DomainModeratorsComponent {
                     this.form.reset();
                     this.form.markAsUntouched();
                     // Reload the details
-                    this.details.reload();
+                    this.domainSelectorSvc.reload();
                 });
         }
     }

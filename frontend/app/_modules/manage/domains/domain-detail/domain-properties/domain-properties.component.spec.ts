@@ -3,19 +3,19 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider, MockService } from 'ng-mocks';
-import { DomainSettingsComponent } from './domain-settings.component';
+import { DomainPropertiesComponent } from './domain-properties.component';
 import { ConfigService } from '../../../../../_services/config.service';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { DomainDetailComponent } from '../domain-detail.component';
 
-describe('DomainSettingsComponent', () => {
+describe('DomainPropertiesComponent', () => {
 
-    let component: DomainSettingsComponent;
-    let fixture: ComponentFixture<DomainSettingsComponent>;
+    let component: DomainPropertiesComponent;
+    let fixture: ComponentFixture<DomainPropertiesComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainSettingsComponent],
+            declarations: [DomainPropertiesComponent],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 {provide: ConfigService,   useValue: MockService(ConfigService)},
@@ -25,7 +25,7 @@ describe('DomainSettingsComponent', () => {
         })
             .compileComponents();
 
-        fixture = TestBed.createComponent(DomainSettingsComponent);
+        fixture = TestBed.createComponent(DomainPropertiesComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

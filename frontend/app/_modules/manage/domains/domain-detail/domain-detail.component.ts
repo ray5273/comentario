@@ -1,10 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
-import { BehaviorSubject } from 'rxjs';
+import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy } from '@ngneat/until-destroy';
-import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { ApiGeneralService, Domain } from '../../../../../generated-api';
-import { Paths } from '../../../../_utils/consts';
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -13,60 +10,13 @@ import { Paths } from '../../../../_utils/consts';
 })
 export class DomainDetailComponent implements OnInit {
 
-    _domain?: Domain;
-
-    /** Observable for retrieving the domain in question. */
-    readonly domain = new BehaviorSubject<Domain | undefined>(undefined);
-    /** Observable for retrieving domain federated identity providers. */
-    readonly federatedIdpIds = new BehaviorSubject<string[] | undefined>(undefined);
-
-    readonly loading = new ProcessingStatus();
-    readonly Paths = Paths;
-
-    private _id?: string | null;
-
     constructor(
-        private readonly router: Router,
         private readonly route: ActivatedRoute,
-        private readonly api: ApiGeneralService,
+        private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
 
-    /**
-     * The last path segment, which is used for tab selection.
-     */
-    get subPath(): string {
-        return this.router.url.split('/').pop() || '';
-    }
-
     ngOnInit(): void {
-        // Subscribe to route parameter changes to reload data
-        this.route.paramMap
-            .subscribe(pm => {
-                this._id = pm.get('id');
-                this.reload();
-            });
-    }
-
-    reload() {
-        // Load the domain, if the host is known
-        if (this._id) {
-            this.api.domainGet(this._id)
-                .pipe(this.loading.processing())
-                .subscribe(r => {
-                    this.setDomain(r.domain);
-                    this.setFederatedIdpIds(r.federatedIdpIds);
-                });
-        } else {
-            this.setDomain(undefined);
-        }
-    }
-
-    private setDomain(d: Domain | undefined) {
-        this._domain = d;
-        this.domain.next(d);
-    }
-
-    private setFederatedIdpIds(v: string[] | undefined) {
-        this.federatedIdpIds.next(v);
+        // Subscribe to route parameter changes to update domain selector
+        this.route.paramMap.subscribe(pm => this.domainSelectorSvc.setDomainId(pm.get('id') || undefined, false));
     }
 }
