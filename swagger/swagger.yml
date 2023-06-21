@@ -48,6 +48,7 @@ definitions:
     required:
       - baseUrl
       - signupAllowed
+      - newOwnersAllowed
       - federatedIdps
     properties:
       baseUrl:
@@ -57,7 +58,11 @@ definitions:
       signupAllowed:
         type: boolean
         x-isnullable: false
-        description: Whether registration of new users is allowed
+        description: Whether registration of new users (including commenters) is allowed
+      newOwnersAllowed:
+        type: boolean
+        x-isnullable: false
+        description: Whether non-owner users can add domains (and become owners)
       federatedIdps:
         type: array
         items:

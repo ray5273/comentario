@@ -1,6 +1,7 @@
 package config
 
 import (
+	"encoding/json"
 	"fmt"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -75,7 +76,8 @@ var (
 		DBMigrationPath string `long:"db-migration-path" description:"Path to DB migration files"                 default:"./db"                   env:"DB_MIGRATION_PATH"`
 		TemplatePath    string `long:"template-path"     description:"Path to template files"                     default:"./templates"            env:"TEMPLATE_PATH"`
 		SecretsFile     string `long:"secrets"           description:"Path to YAML file with secrets"             default:"secrets.yaml"           env:"SECRETS_FILE"`
-		AllowNewOwners  bool   `long:"allow-new-owners"  description:"Allow new owner signups"                                                     env:"ALLOW_NEW_OWNERS"`
+		AllowSignups    bool   `long:"allow-signups"     description:"Allow new user registration"                                                 env:"ALLOW_SIGNUPS"`
+		AllowNewOwners  bool   `long:"allow-new-owners"  description:"Allow non-owner users to add domains"                                        env:"ALLOW_NEW_OWNERS"`
 		LogFullIPs      bool   `long:"log-full-ips"      description:"Log IP addresses in full"                                                    env:"LOG_FULL_IPS"`
 		GitLabURL       string `long:"gitlab-url"        description:"Custom GitLab URL for authentication"       default:""                       env:"GITLAB_URL"`
 		E2e             bool   `long:"e2e"               description:"End-2-end testing mode"`
@@ -91,6 +93,10 @@ var (
 
 // CLIParsed is a callback that signals the config the CLI flags have been parsed
 func CLIParsed() error {
+	// Log the currently used config
+	jc, _ := json.MarshalIndent(CLIFlags, "", "    ")
+	logger.Infof("Using configuration:\n%s", jc)
+
 	// Parse the base URL
 	var err error
 	if BaseURL, err = util.ParseAbsoluteURL(CLIFlags.BaseURL, true); err != nil {

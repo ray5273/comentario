@@ -79,7 +79,7 @@ create table cm_users (
     name           varchar(63)                 not null,        -- User's full name
     password_hash  varchar(100)                not null,        -- Password hash
     system_account boolean       default false not null,        -- Whether the user is a system account (cannot sign in)
-    superuser      boolean       default false not null,        -- Whether the user is a "super user" (instance admin)
+    is_superuser   boolean       default false not null,        -- Whether the user is a "super user" (instance admin)
     confirmed      boolean                     not null,        -- Whether the user's email has been confirmed
     ts_confirmed   timestamp,                                   -- When the user's email has been confirmed
     ts_created     timestamp                   not null,        -- When the user was created

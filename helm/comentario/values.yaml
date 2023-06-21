@@ -47,6 +47,7 @@ ingress:
 clusterIssuer: letsencrypt-staging
 
 comentario:
+  allowSignups: 'true'
   allowNewOwners: 'false'
   emailFrom: 'noreply@example.com'
   secretName: comentario-secrets

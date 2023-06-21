@@ -156,7 +156,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_pending, " +
 			"c.is_deleted, c.ts_created, c.user_created, " +
 			// Commenter fields
-			"u.id, u.email, u.name, case when u.avatar is null then false else true end, u.website_url, u.superuser, " +
+			"u.id, u.email, u.name, case when u.avatar is null then false else true end, u.website_url, u.is_superuser, " +
 			"du.is_owner, du.is_moderator, du.is_commenter, " +
 			// Votes fields
 			"v.negative " +

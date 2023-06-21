@@ -17,6 +17,7 @@ var (
 	ErrorInvalidUUID          = &exmodels.Error{ID: "invalid-uuid", Message: "Invalid UUID value"}
 	ErrorLoginLocally         = &exmodels.Error{ID: "login-locally", Message: "Login with your email and password instead"}
 	ErrorLoginUsingIdP        = &exmodels.Error{ID: "login-using-idp", Message: "Login via federated identity provider"}
+	ErrorNewOwnersForbidden   = &exmodels.Error{ID: "new-owners-forbidden", Message: "New owner users are forbidden"}
 	ErrorNoLocalUser          = &exmodels.Error{ID: "no-local-user", Message: "User is not locally authenticated"}
 	ErrorNoRootComment        = &exmodels.Error{ID: "no-root-comment", Message: "Comment is not a root comment"}
 	ErrorNotDomainOwner       = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}

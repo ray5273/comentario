@@ -84,7 +84,7 @@ func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider,
 
 func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error) {
 	// Comments by superusers, owners, and moderators are always pre-approved
-	if user.Superuser || domainUser.IsOwner || domainUser.IsModerator {
+	if user.IsSuperuser || domainUser.IsOwner || domainUser.IsModerator {
 		return false, nil
 	}
 
@@ -159,14 +159,14 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 }
 
 func (v *verifier) UserCanEditDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
-	if !user.Superuser && (domainUser == nil || !domainUser.IsOwner) {
+	if !user.IsSuperuser && (domainUser == nil || !domainUser.IsOwner) {
 		return respForbidden(ErrorNotDomainOwner)
 	}
 	return nil
 }
 
 func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
-	if !user.Superuser && (domainUser == nil || (!domainUser.IsOwner && !domainUser.IsModerator)) {
+	if !user.IsSuperuser && (domainUser == nil || (!domainUser.IsOwner && !domainUser.IsModerator)) {
 		return respForbidden(ErrorNotModerator)
 	}
 	return nil

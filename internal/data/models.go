@@ -144,7 +144,7 @@ type User struct {
 	Name          string        // User's full name
 	PasswordHash  string        // Password hash
 	SystemAccount bool          // Whether the user is a system account (cannot sign in)
-	Superuser     bool          // Whether the user is a "super user" (instance admin)
+	IsSuperuser   bool          // Whether the user is a "superuser" (instance admin)
 	Confirmed     bool          // Whether the user's email has been confirmed
 	ConfirmedTime sql.NullTime  // When the user's email has been confirmed
 	CreatedTime   time.Time     // When the user was created
@@ -207,7 +207,7 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		IsLocal:         u.FederatedIdP == "",
 		IsModerator:     du != nil && du.IsModerator,
 		IsOwner:         du != nil && du.IsOwner,
-		IsSuperuser:     u.Superuser,
+		IsSuperuser:     u.IsSuperuser,
 		Name:            u.Name,
 		NotifyModerator: du != nil && du.NotifyModerator,
 		NotifyReplies:   du != nil && du.NotifyReplies,

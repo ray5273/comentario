@@ -75,7 +75,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 
 func AuthDeleteProfile(_ api_general.AuthDeleteProfileParams, user *data.User) middleware.Responder {
 	// Fetch a list of domains
-	if domains, err := svc.TheDomainService.ListByOwnerID(&user.ID); err != nil {
+	if domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false); err != nil {
 		return respServiceError(err)
 
 		// Make sure the owner owns no domains
@@ -212,8 +212,8 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 }
 
 func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
-	// Verify new owners are allowed
-	if !config.CLIFlags.AllowNewOwners {
+	// Verify new users are allowed
+	if !config.CLIFlags.AllowSignups {
 		return respForbidden(ErrorSignupsForbidden)
 	}
 
@@ -232,7 +232,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	if cnt, err := svc.TheUserService.CountUsers(false, true, false); err != nil {
 		return respServiceError(err)
 	} else if cnt == 0 {
-		user.WithConfirmed(true).Superuser = true
+		user.WithConfirmed(true).IsSuperuser = true
 
 	} else {
 		// If SMTP isn't configured, mark the user confirmed right away

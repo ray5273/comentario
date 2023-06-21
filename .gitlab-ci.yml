@@ -102,7 +102,10 @@ build:
         --static-path=build
         --db-migration-path=build/db
         --template-path=build/templates
-        --secrets=k8s/secrets.yaml &> ./tmp/logs/comentario-server.log &
+        --secrets=k8s/secrets.yaml
+        --allow-signups
+        --allow-new-owners      
+        &> ./tmp/logs/comentario-server.log &
     - sleep 2
 
     # Test the server is up and running

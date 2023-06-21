@@ -38,8 +38,10 @@ type DomainService interface {
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
-	// ListByOwnerID fetches and returns a list of domains for the specified owner
-	ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error)
+	// ListByDomainUser fetches and returns a list of domains the specified user owns. If includeModerator == true, also
+	// includes domains where the user is a moderator. If includeAll == true, also includes domains where a domain user
+	// record is present for the user.
+	ListByDomainUser(userID *uuid.UUID, includeModerator, includeAll bool) ([]data.Domain, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
@@ -319,27 +321,37 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	return nil
 }
 
-func (svc *domainService) ListByOwnerID(userID *uuid.UUID) ([]data.Domain, error) {
-	logger.Debugf("domainService.ListByOwnerID(%s)", userID)
+func (svc *domainService) ListByDomainUser(userID *uuid.UUID, includeModerator, includeAll bool) ([]data.Domain, error) {
+	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v)", userID, includeModerator, includeAll)
 
-	// Query domains
-	rows, err := db.Query(
-		"select "+
-			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
-			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
-			"from cm_domains d "+
-			"where d.id in (select du.domain_id from cm_domains_users du where du.user_id=$1 and (du.is_owner or du.is_moderator));",
-		userID)
-	if err != nil {
-		logger.Errorf("domainService.ListByOwnerID: Query() failed: %v", err)
-		return nil, translateDBErrors(err)
+	// Prepare a statement
+	var s strings.Builder
+	s.WriteString(
+		"select " +
+			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, " +
+			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, " +
+			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views " +
+			"from cm_domains d " +
+			"join cm_domains_users du on du.domain_id=d.id " +
+			"where du.user_id=$1")
+	if !includeAll {
+		s.WriteString(" and (du.is_owner")
+		if includeModerator {
+			s.WriteString(" or du.is_moderator")
+		}
+		s.WriteString(");")
 	}
 
-	// Fetch the domains
-	if domains, err := svc.fetchDomains(rows); err != nil {
+	// Query domains
+	if rows, err := db.Query(s.String(), userID); err != nil {
+		logger.Errorf("domainService.ListByDomainUser: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
+
+	} else if domains, err := svc.fetchDomains(rows); err != nil {
+		return nil, translateDBErrors(err)
+
 	} else {
+		// Succeeded
 		return domains, nil
 	}
 }

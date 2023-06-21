@@ -9,6 +9,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -115,10 +116,9 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	return api_general.NewDomainImportOK().WithPayload(&api_general.DomainImportOKBody{NumImported: count})
 }
 
-// DomainList returns a list of domain belonging to the user
 func DomainList(_ api_general.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
-	domains, err := svc.TheDomainService.ListByOwnerID(&user.ID)
+	domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, true, true)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -170,6 +170,15 @@ func DomainModeratorNew(params api_general.DomainModeratorNewParams, user *data.
 }
 
 func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
+	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
+	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
+		if ds, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false); err != nil {
+			return respServiceError(err)
+		} else if len(ds) == 0 {
+			return respForbidden(ErrorNewOwnersForbidden)
+		}
+	}
+
 	// Properly validate the domain's host (the Swagger pattern only performs a superficial check)
 	domain := params.Body.Domain
 	if ok, _, _ := util.IsValidHostPort(string(domain.Host)); !ok {

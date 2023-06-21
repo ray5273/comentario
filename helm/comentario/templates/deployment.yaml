@@ -41,8 +41,10 @@ spec:
               value: '80'
             - name: BASE_URL
               value: 'https://{{ .Values.ingress.host }}/'
+            - name: ALLOW_SIGNUPS
+              value: '{{ .Values.comentario.allowSignups | default true }}'
             - name: ALLOW_NEW_OWNERS
-              value: '{{ .Values.comentario.allowNewOwners }}'
+              value: '{{ .Values.comentario.allowNewOwners | default false }}'
             - name: SECRETS_FILE
               value: /comentario-secrets/secrets.yaml
             - name: EMAIL_FROM

@@ -92,4 +92,7 @@ echo "Starting $build_dir/comentario"
     --static-path="$build_dir/frontend" \
     --db-migration-path="$build_dir/db" \
     --template-path="$build_dir/templates" \
-    --secrets="$secrets" "$@"
+    --secrets="$secrets" \
+    --allow-signups \
+    --allow-new-owners \
+    "$@"
