@@ -26,6 +26,7 @@
                         <fa-icon class="cc-icon" [icon]="faChevronRight"></fa-icon>
                     </a>
                 </li>
+
                 <!-- Dashboard -->
                 <li class="nav-item">
                     <a [routerLink]="Paths.manage.dashboard" routerLinkActive="active" class="cc-link">
@@ -36,9 +37,9 @@
 
                 <!-- Domain items: only when there's a domain selected -->
                 <ng-container *ngIf="domain | async as d else noDomain">
-                    <!-- Domain selector -->
+                    <!-- Properties -->
                     <li class="nav-item">
-                        <a [routerLink]="Paths.manage.domains" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
+                        <a [routerLink]="[Paths.manage.domains, d.id]" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
                             <div class="cc-hide-collapsed overflow-hidden">
                                 <div class="colon" i18n>Domain</div>
@@ -46,39 +47,32 @@
                             </div>
                         </a>
                     </li>
-                    <!-- Properties -->
-                    <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id, 'settings']" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon cc-indent" [icon]="faListCheck"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Properties</div>
-                        </a>
-                    </li>
                     <!-- Comments -->
                     <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon cc-indent" [icon]="faComments"></fa-icon>
+                        <a [routerLink]="Paths.manage.comments" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon" [icon]="faComments"></fa-icon>
                             <div class="cc-hide-collapsed" i18n>Comments</div>
                         </a>
                     </li>
                     <!-- Users -->
                     <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id, 'users']" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon cc-indent" [icon]="faUsers"></fa-icon>
+                        <a [routerLink]="Paths.manage.users" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon" [icon]="faUsers"></fa-icon>
                             <div class="cc-hide-collapsed" i18n>Users</div>
                         </a>
                     </li>
                     <!-- Stats -->
                     <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id, 'stats']" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon cc-indent" [icon]="faChartLine"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Stats</div>
+                        <a [routerLink]="Paths.manage.stats" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon" [icon]="faChartLine"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Statistics</div>
                         </a>
                     </li>
-                    <!-- Administration -->
+                    <!-- Operations -->
                     <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id, 'admin']" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon cc-indent" [icon]="faCog"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Administration</div>
+                        <a [routerLink]="Paths.manage.operations" routerLinkActive="active" class="cc-link">
+                            <fa-icon class="cc-icon" [icon]="faArrowDownUpAcrossLine"></fa-icon>
+                            <div class="cc-hide-collapsed" i18n>Operations</div>
                         </a>
                     </li>
                 </ng-container>

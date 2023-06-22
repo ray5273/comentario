@@ -12,8 +12,12 @@ export const Paths = {
 
     // Control Center
     manage: {
-        dashboard: '/manage/dashboard',
-        domains:   '/manage/domains',
+        dashboard:  '/manage/dashboard',
+        domains:    '/manage/domains',
+        comments:   '/manage/comments',
+        users:      '/manage/users',
+        stats:      '/manage/stats',
+        operations: '/manage/operations',
 
         // Account
         account: {

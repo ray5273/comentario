@@ -2,10 +2,10 @@ import { Component } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { faXmark } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, Domain } from '../../../../../../generated-api';
-import { ProcessingStatus } from '../../../../../_utils/processing-status';
-import { ToastService } from '../../../../../_services/toast.service';
-import { DomainSelectorService } from '../../../_services/domain-selector.service';
+import { ApiGeneralService, Domain } from '../../../../../generated-api';
+import { ProcessingStatus } from '../../../../_utils/processing-status';
+import { ToastService } from '../../../../_services/toast.service';
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({

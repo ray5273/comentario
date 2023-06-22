@@ -4,15 +4,14 @@ import { authGuardCanActivate } from '../../_guards/auth.guard';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { ControlCenterComponent } from './control-center/control-center.component';
 import { DomainManagerComponent } from './domains/domain-manager/domain-manager.component';
-import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
-import { DomainPropertiesComponent } from './domains/domain-detail/domain-properties/domain-properties.component';
-import { DomainModeratorsComponent } from './domains/domain-detail/domain-moderators/domain-moderators.component';
-import { DomainStatsComponent } from './domains/domain-detail/domain-stats/domain-stats.component';
-import { DomainImpexComponent } from './domains/domain-detail/domain-impex/domain-impex.component';
-import { DomainDangerZoneComponent } from './domains/domain-detail/domain-danger-zone/domain-danger-zone.component';
+import { DomainPropertiesComponent } from './domains/domain-properties/domain-properties.component';
+import { CommentManagerComponent } from './comments/comment-manager/comment-manager.component';
+import { UserManagerComponent } from './users/user-manager/user-manager.component';
+import { DomainStatsComponent } from './domain-stats/domain-stats.component';
+import { DomainOperationsComponent } from './domain-operations/domain-operations.component';
 
 const children: Routes = [
     // Default route
@@ -22,23 +21,24 @@ const children: Routes = [
     {path: 'dashboard', component: DashboardComponent},
 
     // Domains
-    {path: 'domains',              component: DomainManagerComponent},
-    {path: 'domains/create',       component: DomainEditComponent, data: {new: true}},
-    {
-        path: 'domains/:id',
-        component: DomainDetailComponent,
-        children: [
-            {path: '', pathMatch: 'full', redirectTo: 'settings'},
-            {path: 'settings',     component: DomainPropertiesComponent},
-            {path: 'moderators',   component: DomainModeratorsComponent},
-            {path: 'stats',        component: DomainStatsComponent},
-            {path: 'impex',        component: DomainImpexComponent},
-            {path: 'danger',       component: DomainDangerZoneComponent},
-        ],
-    },
+    {path: 'domains',            component: DomainManagerComponent},
+    {path: 'domains/create',     component: DomainEditComponent, data: {new: true}},
+    {path: 'domains/:id',        component: DomainPropertiesComponent},
     {path: 'domains/:id/edit',   component: DomainEditComponent},
     {path: 'domains/:id/clone',  component: DomainEditComponent, data: {new: true}},
     {path: 'domains/:id/import', component: DomainImportComponent},
+
+    // Comments
+    {path: 'comments', component: CommentManagerComponent},
+
+    // Users
+    {path: 'users', component: UserManagerComponent},
+
+    // Stats
+    {path: 'stats', component: DomainStatsComponent}, // TODO add DomainSelectedGuard
+
+    // Operations
+    {path: 'operations', component: DomainOperationsComponent}, // TODO add DomainSelectedGuard
 
     // Account
     {path: 'account/profile', component: ProfileComponent},

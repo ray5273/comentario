@@ -1,7 +1,40 @@
 <section class="container">
     <!-- Heading -->
-    <h1 i18n>Domain properties</h1>
+    <h1>
+        <span class="colon" i18n>Domain</span>&ngsp;
+        <span *ngIf="_domain">{{ _domain.name || _domain.host }}</span>
+    </h1>
 
+    <!-- Toolbar -->
+    <div class="toolbar">
+        <!-- Back to selector -->
+        <a routerLink=".." class="btn btn-secondary">
+            <fa-icon [icon]="faChevronLeft" class="me-1"></fa-icon>
+            <ng-container i18n>Select another domain</ng-container>
+        </a>
+    </div>
+
+    <!-- Installation -->
+    <section>
+        <!-- Heading -->
+        <h2 i18n>Installation</h2>
+
+        <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
+        <div class="border d-flex flex-wrap flex-md-nowrap justify-content-center justify-content-md-between align-items-center p-3 mb-3">
+            <!-- Code snippet -->
+            <code class="overflow-hidden m-2"><pre class="mb-0">{{ snippet }}</pre></code>
+            <!-- Copy button -->
+            <button [appCopyText]="snippet" type="button" class="btn btn-secondary" ngbTooltip="">
+                <fa-icon [icon]="faCopy" class="me-1"></fa-icon>
+                <ng-container i18n>Copy</ng-container>
+            </button>
+        </div>
+        <p i18n>That's all! Comentario will automatically load and render comments for every page based on its URL.</p>
+        <p i18n>Read more on Comentario installation and configuration in the <a [href]="installDocsUrl" target="_blank" rel="noopener">documentation</a>.</p>
+    </section>
+
+    <!-- Heading -->
+    <h2 i18n>Properties</h2>
     <div class="row">
         <!-- Buttons -->
         <div class="col-sm-3 order-sm-last pb-3">
@@ -11,30 +44,8 @@
                 <ng-container i18n>Edit settings</ng-container>
             </button>
         </div>
-
         <!-- Detail table -->
         <div class="col-sm-9">
-            <!-- Installation -->
-            <section>
-                <h2 i18n>Installation</h2>
-
-                <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
-
-                <div class="border d-flex flex-wrap flex-md-nowrap justify-content-center justify-content-md-between align-items-center p-3 mb-3">
-                    <!-- Code snippet -->
-                    <code class="overflow-hidden m-2"><pre class="mb-0">{{ snippet }}</pre></code>
-                    <!-- Copy button -->
-                    <button [appCopyText]="snippet" type="button" class="btn btn-secondary" ngbTooltip="">
-                        <fa-icon [icon]="faCopy" class="me-1"></fa-icon>
-                        <ng-container i18n>Copy</ng-container>
-                    </button>
-                </div>
-
-                <p i18n>That's all! Comentario will automatically load and render comments for every page based on its URL.</p>
-
-                <p i18n>Read more on Comentario installation and configuration in the <a [href]="installDocsUrl" target="_blank" rel="noopener">documentation</a>.</p>
-
-            </section>
 
             <dl *ngIf="_domain as d" id="domainDetailTable" class="detail-table">
                 <!-- Host -->

@@ -3,8 +3,8 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { MockProvider, MockService } from 'ng-mocks';
 import { DomainModeratorsComponent } from './domain-moderators.component';
-import { ApiGeneralService } from '../../../../../../generated-api';
-import { ToolsModule } from '../../../../tools/tools.module';
+import { ApiGeneralService } from '../../../../../generated-api';
+import { ToolsModule } from '../../../tools/tools.module';
 import { DomainDetailComponent } from '../domain-detail.component';
 
 describe('DomainModeratorsComponent', () => {

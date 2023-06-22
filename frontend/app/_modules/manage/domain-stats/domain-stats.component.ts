@@ -1,7 +1,7 @@
 import { Component } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Domain } from '../../../../../../generated-api';
-import { DomainSelectorService } from '../../../_services/domain-selector.service';
+import { Domain } from '../../../../generated-api';
+import { DomainSelectorService } from '../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({

@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { MockComponent, MockProvider } from 'ng-mocks';
 import { DomainStatsComponent } from './domain-stats.component';
 import { DomainDetailComponent } from '../domain-detail.component';
-import { StatsChartComponent } from '../../../stats-chart/stats-chart.component';
+import { StatsChartComponent } from '../stats-chart/stats-chart.component';
 
 describe('DomainStatsComponent', () => {
 

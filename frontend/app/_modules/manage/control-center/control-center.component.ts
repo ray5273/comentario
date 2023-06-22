@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { NavigationStart, Router } from '@angular/router';
 import {
+    faArrowDownUpAcrossLine,
     faAt,
     faChartLine,
     faChevronRight,
-    faCog,
     faComments,
-    faListCheck,
     faQuestionCircle,
     faSignOutAlt,
     faTachometerAlt,
@@ -40,17 +39,16 @@ export class ControlCenterComponent implements OnInit {
     readonly Paths = Paths;
 
     // Icons
-    readonly faAt             = faAt;
-    readonly faChevronRight   = faChevronRight;
-    readonly faChartLine      = faChartLine;
-    readonly faCog            = faCog;
-    readonly faComments       = faComments;
-    readonly faListCheck      = faListCheck;
-    readonly faQuestionCircle = faQuestionCircle;
-    readonly faSignOutAlt     = faSignOutAlt;
-    readonly faTachometerAlt  = faTachometerAlt;
-    readonly faUser           = faUser;
-    readonly faUsers          = faUsers;
+    readonly faArrowDownUpAcrossLine = faArrowDownUpAcrossLine;
+    readonly faAt                    = faAt;
+    readonly faChevronRight          = faChevronRight;
+    readonly faChartLine             = faChartLine;
+    readonly faComments              = faComments;
+    readonly faQuestionCircle        = faQuestionCircle;
+    readonly faSignOutAlt            = faSignOutAlt;
+    readonly faTachometerAlt         = faTachometerAlt;
+    readonly faUser                  = faUser;
+    readonly faUsers                 = faUsers;
 
     constructor(
         private readonly router: Router,

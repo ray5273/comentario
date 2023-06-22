@@ -1,0 +1,22 @@
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+
+import { UserManagerComponent } from './user-manager.component';
+
+describe('UserManagerComponent', () => {
+
+    let component: UserManagerComponent;
+    let fixture: ComponentFixture<UserManagerComponent>;
+
+    beforeEach(() => {
+        TestBed.configureTestingModule({
+            declarations: [UserManagerComponent],
+        });
+        fixture = TestBed.createComponent(UserManagerComponent);
+        component = fixture.componentInstance;
+        fixture.detectChanges();
+    });
+
+    it('is created', () => {
+        expect(component).toBeTruthy();
+    });
+});

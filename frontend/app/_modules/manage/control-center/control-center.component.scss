@@ -56,9 +56,6 @@ $sidebar-size-collapsed: 40px;
             .cc-divider:before {
                 opacity: 1;
             }
-            .cc-indent {
-                margin-left: 0;
-            }
         }
     }
 }
@@ -170,11 +167,6 @@ h2 {
     width: $sidebar-size-collapsed;
     flex: 0 0 $sidebar-size-collapsed;
     text-align: center;
-}
-
-.cc-indent {
-    margin-left: 1rem;
-    transition: margin-left 0.3s linear;
 }
 
 .cc-backdrop {

@@ -4,8 +4,8 @@ import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider, MockService } from 'ng-mocks';
 import { DomainPropertiesComponent } from './domain-properties.component';
-import { ConfigService } from '../../../../../_services/config.service';
-import { ApiGeneralService } from '../../../../../../generated-api';
+import { ConfigService } from '../../../../_services/config.service';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { DomainDetailComponent } from '../domain-detail.component';
 
 describe('DomainPropertiesComponent', () => {

@@ -7,7 +7,7 @@
         <!-- Domains -->
         <div *ngFor="let d of domains" class="col">
             <div class="card h-100">
-                <a (click)="setDomain(d)" (keydown.enter)="setDomain(d)" role="button" class="card-body text-center" tabindex="0">
+                <a [routerLink]="d.id" class="card-body text-center">
                     <h5 class="card-title">{{ d.name || d.host }}</h5>
                     <div class="card-text">{{ d.host }}</div>
                 </a>

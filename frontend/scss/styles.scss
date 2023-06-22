@@ -14,33 +14,17 @@ html, body, app-root {
 section {
     padding-top: $spacer;
     margin-bottom: 3rem;
+    transition: all 0.3s linear;
 
     // Section title
     &>h1, &>h2, &>h3 {
         margin-bottom: $spacer;
-
-        & + .subheading {
-            // Offset the bottom margin on section headings followed by a subheading
-            margin-top: -$spacer;
-        }
     }
 
     &.danger {
         border-top: #f67d8a 2px dashed;
-        color: #721c24;
-    }
-}
-
-.subheading {
-    @include font-size($lead-font-size);
-    text-align: center;
-    margin-bottom: $spacer;
-}
-
-// Center all headings
-@for $h from 1 through 6 {
-    h#{$h} {
-        text-align: center;
+        background-color: transparentize($danger-bg-subtle, 0.5);
+        color: $danger-text-emphasis;
     }
 }
 
