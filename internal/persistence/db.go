@@ -117,11 +117,9 @@ func (db *Database) Migrate() error {
 		}
 
 		// Register the migration in the database
-		/* TODO new-db: enable after 0000-comentario-legacy.sql is ditched
 		if _, err := db.db.Exec("insert into cm_migrations(filename, md5) values ($1, $2);", filename, hex.EncodeToString(csActual[:])); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
 		}
-		*/
 
 		// Succeeded
 		cntOK++

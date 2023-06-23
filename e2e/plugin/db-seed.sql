@@ -1,99 +1,79 @@
-/* TODO new-db
-
 -- Clean up all existing data (except migrations)
-delete from commenters;
-delete from commentersessions;
-delete from comments;
-delete from config;
-delete from domains;
-delete from emails;
-delete from exports;
-delete from moderators;
-delete from ownerconfirmhexes;
-delete from owners;
-delete from ownersessions;
-delete from pages;
-delete from resethexes;
-delete from ssotokens;
-delete from views;
-delete from votes;
+delete from cm_comment_votes;
+delete from cm_comments;
+delete from cm_domain_pages;
+delete from cm_domains;
+delete from cm_domains_idps;
+delete from cm_domains_users;
+delete from cm_fed_identity_providers;
+delete from cm_tokens;
+delete from cm_user_sessions;
+delete from cm_users;
 
 -- Insert seed test data
-insert into owners(ownerhex, email, name, passwordhash, confirmedemail, joindate)
-    values
-        ('0000000000000000000000000000000000000000000000000000000000000001', 'ace@comentario.app', 'Captain Ace', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', 'true', '2023-01-17 17:55:47.008851'),
-        ('0000000000000000000000000000000000000000000000000000000000000002', 'king@comentario.app', 'Engineer King', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', 'true', '2023-01-17 17:55:47.008851'),
-        ('0000000000000000000000000000000000000000000000000000000000000003', 'queen@comentario.app', 'Cook Queen', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', 'true', '2023-01-17 17:55:47.008851'),
-        ('0000000000000000000000000000000000000000000000000000000000000004', 'jack@comentario.app', 'Navigator Jack', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', 'true', '2023-01-17 17:55:47.008851');
+insert into cm_fed_identity_providers (id, name, icon)
+values  ('gitlab', 'GitLab', 'gitlab'),
+        ('github', 'GitHub', 'github'),
+        ('google', 'Google', 'google'),
+        ('twitter', 'Twitter', 'twitter');
 
-insert into commenters (commenterhex, email, name, link, photo, provider, joindate, state, passwordhash)
-    values
-        ('0000000000000000000000000000000000000000000000000000000000001001', 'ace@comentario.app', 'Captain Ace', 'undefined', 'undefined', 'commento', '2023-01-17 18:23:43.604399', 'ok', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu'),
-        ('0000000000000000000000000000000000000000000000000000000000001002', 'king@comentario.app', 'Engineer King', 'undefined', 'undefined', 'commento', '2023-01-17 18:23:43.604399', 'ok', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu'),
-        ('0000000000000000000000000000000000000000000000000000000000001003', 'queen@comentario.app', 'Cook Queen', 'undefined', 'undefined', 'commento', '2023-01-17 18:23:43.604399', 'ok', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu'),
-        ('0000000000000000000000000000000000000000000000000000000000001004', 'jack@comentario.app', 'Navigator Jack', 'undefined', 'undefined', 'commento', '2023-01-17 18:23:43.604399', 'ok', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu'),
-        ('0000000000000000000000000000000000000000000000000000000000001010', 'one@blog.com', 'Commenter One', 'undefined', 'undefined', 'commento', '2023-01-18 16:52:04.541982', 'ok', '$2a$10$3w4LEMCh1iKwJC2uMGCP0eb0BRULg77KmnZuvnlGBMs4ALDbJ5Syy'),
-        ('0000000000000000000000000000000000000000000000000000000000001011', 'two@blog.com', 'Commenter Two', 'https://wikipedia.org/', 'undefined', 'commento', '2023-01-18 16:52:04.541982', 'ok', '$2a$10$3w4LEMCh1iKwJC2uMGCP0eb0BRULg77KmnZuvnlGBMs4ALDbJ5Syy');
+insert into cm_users (id, email, name, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, federated_idp, federated_id, avatar, website_url)
+values  ('00000000-0000-0000-0000-000000000000', '', 'Anonymous', '', true, false, false, null, '2023-06-23 17:21:53.002826', null, '', '', '', false, null, null, '', null, '', null, ''),
+        ('5787eece-7aa3-44d7-bbba-51866edc4867', 'ace@comentario.app', 'Captain Ace', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '', false, null, null, 'Migrated from Commento, ownerhex=0000000000000000000000000000000000000000000000000000000000000001', null, '', null, ''),
+        ('2af9ecd2-a32a-4332-8717-396e9af28639', 'king@comentario.app', 'Engineer King', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '', false, null, null, 'Migrated from Commento, ownerhex=0000000000000000000000000000000000000000000000000000000000000002', null, '', null, ''),
+        ('98732142-bc83-48e0-be92-f6dbd6976702', 'queen@comentario.app', 'Cook Queen', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '', false, null, null, 'Migrated from Commento, ownerhex=0000000000000000000000000000000000000000000000000000000000000003', null, '', null, ''),
+        ('2d01d8dd-0bb1-4281-850e-e943b9f8128a', 'jack@comentario.app', 'Navigator Jack', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '', false, null, null, 'Migrated from Commento, ownerhex=0000000000000000000000000000000000000000000000000000000000000004', null, '', null, ''),
+        ('01d1cb57-d98c-46f6-b270-1198860f642f', 'one@blog.com', 'Commenter One', '$2a$10$3w4LEMCh1iKwJC2uMGCP0eb0BRULg77KmnZuvnlGBMs4ALDbJ5Syy', false, false, true, '2023-01-18 16:52:04.541982', '2023-01-18 16:52:04.541982', null, '', '', '', false, null, null, 'Migrated from Commento, commenterhex=0000000000000000000000000000000000000000000000000000000000001010', null, '', null, ''),
+        ('61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', 'two@blog.com', 'Commenter Two', '$2a$10$3w4LEMCh1iKwJC2uMGCP0eb0BRULg77KmnZuvnlGBMs4ALDbJ5Syy', false, false, true, '2023-01-18 16:52:04.541982', '2023-01-18 16:52:04.541982', null, '', '', '', false, null, null, 'Migrated from Commento, commenterhex=0000000000000000000000000000000000000000000000000000000000001011', null, '', null, 'https://wikipedia.org/');
 
-insert into domains(domain, ownerhex, name, creationdate, state, importedcomments, autospamfilter,
-                    requiremoderation, requireidentification, viewsthismonth, moderateallanonymous,
-                    emailnotificationpolicy, commentoprovider, googleprovider, twitterprovider, githubprovider,
-                    gitlabprovider, ssoprovider, ssosecret, ssourl, defaultsortpolicy)
-    values
-        ('localhost:8000', '0000000000000000000000000000000000000000000000000000000000000001', 'Test Domain',
-         '2023-01-17 17:56:10.966890', 'unfrozen', 'false', true, false, false, 0, false, 'pending-moderation', true, true,
-         true, true, true, false, '', '', 'score-desc');
+insert into cm_domains (id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret, mod_anonymous, mod_authenticated, mod_num_comments, mod_user_age_days, mod_links, mod_images, mod_notify_policy, default_sort, count_comments, count_views)
+values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'Test Domain', 'localhost:8000', '2023-01-17 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 16, 5);
 
-insert into emails(email, unsubscribesecrethex, lastemailnotificationdate, pendingemails, sendreplynotifications, sendmoderatornotifications)
-    values
-        ('ace@comentario.app', '1dae2342c9255a4ecc78f2f54380d90508aa49761f3471e94239f178a210bcb8', '2023-01-17 17:55:46.953534', 0, false, true),
-        ('king@comentario.app', '1dae2342c9255a4ecc78f2f54380d90508aa49761f3471e94239f178a210bcb9', '2023-01-17 17:55:46.953534', 0, false, true),
-        ('queen@comentario.app', '1dae2342c9255a4ecc78f2f54380d90508aa49761f3471e94239f178a210bcba', '2023-01-17 17:55:46.953534', 0, false, true),
-        ('jack@comentario.app', '1dae2342c9255a4ecc78f2f54380d90508aa49761f3471e94239f178a210bcbb', '2023-01-17 17:55:46.953534', 0, false, true),
-        ('one@blog.com', '2690cab8b021140dfb7d6a56ac60ac49cae3e4706a2e90b4b5645584f59451c7', '2023-01-18 16:52:04.448105', 0, false, true),
-        ('two@blog.com', '2690cab8b021140dfb7d6a56ac60ac49cae3e4706a2e90b4b5645584f59451c8', '2023-01-18 16:52:04.448105', 0, false, true);
+insert into cm_domains_idps (domain_id, fed_idp_id)
+values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'gitlab'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'github'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'google'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'twitter');
 
-insert into moderators(domain, email, adddate)
-    values
-        ('localhost:8000', 'root@comentario.app', '2023-01-17 17:56:10.968427'),
-        ('localhost:8000', 'ace@comentario.app', '2023-02-21 12:11:33.329872');
+insert into cm_domains_users (domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
+values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866edc4867', true, true, true, false, true, '2023-01-17 17:55:47.008851'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, false, true, false, true, '2023-01-17 17:55:47.008851'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, false, true, false, true, '2023-01-17 17:55:47.008851'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true, false, true, '2023-01-18 16:52:04.541982'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true, false, true, '2023-01-17 17:55:47.008851');
 
-insert into pages(domain, path, islocked, commentcount, stickycommenthex, title)
-    values
-        ('localhost:8000', '/', false, 1, 'none', '');
+insert into cm_domain_pages (id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
+values  ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', '', false, '2023-06-23 17:21:53.002826', 17, 10);
 
-insert into comments(commenthex, domain, path, commenterhex, markdown, html, parenthex, score, state, creationdate, deleted, deleterhex, deletiondate)
-    values
-        ('0000000000000000000000000000000000000000000000000000000000002001', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Alright crew, let''s gather around for a quick meeting. We''ve got a **long** voyage ahead of us, and I want to make sure everyone is on the same page.', '<p>Alright crew, let''s gather around for a quick meeting. We''ve got a <b>long</b> voyage ahead of us, and I want to make sure everyone is on the same page.</p>', 'root', 4, 'approved', '2023-01-18 16:52:36.161440', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002002', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001002', 'What''s on the agenda, captain?', '<p>What&#39;s on the agenda, captain?</p>', '0000000000000000000000000000000000000000000000000000000000002001', 0, 'approved', '2023-02-27 18:24:22.057000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002003', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'First off, we need to make sure the engine is in good working order. Any issues we need to address, *engineer*?', '<p>First off, we need to make sure the engine is in good working order. Any issues we need to address, <em>engineer</em>?</p>', '0000000000000000000000000000000000000000000000000000000000002002', 0, 'approved', '2023-02-27 18:25:04.104000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002004', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001002', 'Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.', '<p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>', '0000000000000000000000000000000000000000000000000000000000002003', 0, 'approved', '2023-02-27 18:26:05.636000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002005', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Good work, navigator. That''s what I was thinking too.', '<p>Good work, navigator. That&#39;s what I was thinking too.</p>', '000000000000000000000000000000000000000000000000000000000000200d', 0, 'approved', '2023-02-27 18:29:25.703000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002006', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'What about supplies, cook?', '<p>What about supplies, cook?</p>', '0000000000000000000000000000000000000000000000000000000000002002', 0, 'approved', '2023-02-27 18:29:39.719000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002007', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Absolutely, cook. I''ll make a note of it.', '<p>Absolutely, cook. I&#39;ll make a note of it.</p>', '0000000000000000000000000000000000000000000000000000000000002010', 0, 'approved', '2023-02-27 18:33:19.502000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002008', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Now, is there anything else anyone wants to bring up?', '<p>Now, is there anything else anyone wants to bring up?</p>', 'root', 0, 'approved', '2023-02-27 18:33:24.642000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002009', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001002', 'Captain, I''ve been noticing some strange vibrations in the engine room. It''s nothing too serious, but I''d like to take a look at it just to be safe.', '<p>Captain, I&#39;ve been noticing some strange vibrations in the engine room. It&#39;s nothing too serious, but I&#39;d like to take a look at it just to be safe.</p>', '0000000000000000000000000000000000000000000000000000000000002008', 0, 'approved', '2023-02-27 18:34:15.541000', false, null, null),
-        ('000000000000000000000000000000000000000000000000000000000000200a', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Good point, navigator. I''ll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.', '<p>Good point, navigator. I&#39;ll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.</p>', '000000000000000000000000000000000000000000000000000000000000200b', 0, 'approved', '2023-02-27 18:35:26.275000', false, null, null),
-        ('000000000000000000000000000000000000000000000000000000000000200b', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001004', '**Captain**, one more thing. We''ll be passing through some pirate-infested waters soon. Should we be concerned?', '<p><strong>Captain</strong>, one more thing. We&#39;ll be passing through some pirate-infested waters soon. Should we be concerned?</p>', '0000000000000000000000000000000000000000000000000000000000002008', -1, 'approved', '2023-02-27 18:35:04.089000', false, null, null),
-        ('000000000000000000000000000000000000000000000000000000000000200c', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Alright, engineer. Let''s schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.', '<p>Alright, engineer. Let&#39;s schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.</p>', '0000000000000000000000000000000000000000000000000000000000002009', 1, 'approved', '2023-02-27 18:34:35.679000', false, null, null),
-        ('000000000000000000000000000000000000000000000000000000000000200d', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001011', 'Captain, I''ve plotted our course, and I suggest we take the eastern route. It''ll take us a bit longer, but we''ll avoid any bad weather.', '<p>Captain, I&#39;ve plotted our course, and I suggest we take the eastern route. It&#39;ll take us a bit longer, but we&#39;ll avoid any bad weather.</p>', '0000000000000000000000000000000000000000000000000000000000002003', 2, 'approved', '2023-02-27 18:28:51.050000', false, null, null),
-        ('000000000000000000000000000000000000000000000000000000000000200e', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001003', 'I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣', '<p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>', '000000000000000000000000000000000000000000000000000000000000200a', 3, 'approved', '2023-02-27 18:36:37.704000', false, null, null),
-        ('000000000000000000000000000000000000000000000000000000000000200f', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001001', 'Let''s hope it doesn''t come to that, cook. But it''s good to know we have you on our side. Alright, everyone, let''s get to work. We''ve got a long journey ahead of us!', '<p>Let&#39;s hope it doesn&#39;t come to that, cook. But it&#39;s good to know we have you on our side.</p><p>Alright, everyone, let&#39;s get to work. We&#39;ve got a long journey ahead of us!</p>', '000000000000000000000000000000000000000000000000000000000000200e', 0, 'approved', '2023-02-27 18:37:24.355000', false, null, null),
-        ('0000000000000000000000000000000000000000000000000000000000002010', 'localhost:8000', '/', '0000000000000000000000000000000000000000000000000000000000001003', 'We''ve got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It''ll help us avoid scurvy.', '<p>We&#39;ve got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It&#39;ll help us avoid scurvy.</p>', '0000000000000000000000000000000000000000000000000000000000002006', 2, 'approved', '2023-02-27 18:32:46.248000', false, null, null);
+insert into cm_comments (id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, ts_approved, ts_deleted, user_created, user_approved, user_deleted)
+values  ('40330ddf-13de-4921-b123-7a32057988cd', 'ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'What''s on the agenda, captain?', '<p>What&#39;s on the agenda, captain?</p>', 0, false, true, false, false, '2023-02-27 18:24:22.057000', '2023-06-23 17:21:53.002826', null, '2af9ecd2-a32a-4332-8717-396e9af28639', '2af9ecd2-a32a-4332-8717-396e9af28639', null),
+        ('788c0b17-a922-4c2d-816b-98def34a0008', '40330ddf-13de-4921-b123-7a32057988cd', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'First off, we need to make sure the engine is in good working order. Any issues we need to address, *engineer*?', '<p>First off, we need to make sure the engine is in good working order. Any issues we need to address, <em>engineer</em>?</p>', 0, false, true, false, false, '2023-02-27 18:25:04.104000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('82acadba-3e77-4bcd-a366-78c7ff56c3b9', '788c0b17-a922-4c2d-816b-98def34a0008', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.', '<p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>', 0, false, true, false, false, '2023-02-27 18:26:05.636000', '2023-06-23 17:21:53.002826', null, '2af9ecd2-a32a-4332-8717-396e9af28639', '2af9ecd2-a32a-4332-8717-396e9af28639', null),
+        ('e8331f48-516d-45fc-80a1-d1b2d5a21d08', '64fb0078-92c8-419d-98ec-7f22c270ef3a', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Good work, navigator. That''s what I was thinking too.', '<p>Good work, navigator. That&#39;s what I was thinking too.</p>', 0, false, true, false, false, '2023-02-27 18:29:25.703000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('9a93d7bd-80cb-49bd-8dc1-67326df6fcaf', '40330ddf-13de-4921-b123-7a32057988cd', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'What about supplies, cook?', '<p>What about supplies, cook?</p>', 0, false, true, false, false, '2023-02-27 18:29:39.719000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('4922acc5-0330-4d1a-8092-ca7c67536b08', 'da05d978-9218-4263-886e-542068251787', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Absolutely, cook. I''ll make a note of it.', '<p>Absolutely, cook. I&#39;ll make a note of it.</p>', 0, false, true, false, false, '2023-02-27 18:33:19.502000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('bc460a63-f256-47e3-8915-3931acad132a', null, '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Now, is there anything else anyone wants to bring up?', '<p>Now, is there anything else anyone wants to bring up?</p>', 0, false, true, false, false, '2023-02-27 18:33:24.642000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('5f066198-03ab-41f8-bd80-c4efaeafd153', 'bc460a63-f256-47e3-8915-3931acad132a', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Captain, I''ve been noticing some strange vibrations in the engine room. It''s nothing too serious, but I''d like to take a look at it just to be safe.', '<p>Captain, I&#39;ve been noticing some strange vibrations in the engine room. It&#39;s nothing too serious, but I&#39;d like to take a look at it just to be safe.</p>', 0, false, true, false, false, '2023-02-27 18:34:15.541000', '2023-06-23 17:21:53.002826', null, '2af9ecd2-a32a-4332-8717-396e9af28639', '2af9ecd2-a32a-4332-8717-396e9af28639', null),
+        ('72314bae-a05d-4551-91df-270802e6b003', 'cb057a9b-e293-4e15-bdb9-c11880cb53bf', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Good point, navigator. I''ll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.', '<p>Good point, navigator. I&#39;ll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.</p>', 0, false, true, false, false, '2023-02-27 18:35:26.275000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('069f98da-bbc5-40ad-8c91-e8a089288ecb', '8f31a61b-e1e6-4090-a426-52ce91a5181b', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Let''s hope it doesn''t come to that, cook. But it''s good to know we have you on our side. Alright, everyone, let''s get to work. We''ve got a long journey ahead of us!', '<p>Let&#39;s hope it doesn&#39;t come to that, cook. But it&#39;s good to know we have you on our side.</p><p>Alright, everyone, let&#39;s get to work. We&#39;ve got a long journey ahead of us!</p>', 0, false, true, false, false, '2023-02-27 18:37:24.355000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('ef81dbe5-22f6-4d90-958f-834e6f2cdc63', null, '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Alright crew, let''s gather around for a quick meeting. We''ve got a **long** voyage ahead of us, and I want to make sure everyone is on the same page.', '<p>Alright crew, let''s gather around for a quick meeting. We''ve got a <b>long</b> voyage ahead of us, and I want to make sure everyone is on the same page.</p>', 8, false, true, false, false, '2023-01-18 16:52:36.161440', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('00e7320a-ecb4-44f4-84ca-ffc2f8c62729', '5f066198-03ab-41f8-bd80-c4efaeafd153', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Alright, engineer. Let''s schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.', '<p>Alright, engineer. Let&#39;s schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.</p>', 2, false, true, false, false, '2023-02-27 18:34:35.679000', '2023-06-23 17:21:53.002826', null, '5787eece-7aa3-44d7-bbba-51866edc4867', '5787eece-7aa3-44d7-bbba-51866edc4867', null),
+        ('da05d978-9218-4263-886e-542068251787', '9a93d7bd-80cb-49bd-8dc1-67326df6fcaf', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'We''ve got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It''ll help us avoid scurvy.', '<p>We&#39;ve got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It&#39;ll help us avoid scurvy.</p>', 4, false, true, false, false, '2023-02-27 18:32:46.248000', '2023-06-23 17:21:53.002826', null, '98732142-bc83-48e0-be92-f6dbd6976702', '98732142-bc83-48e0-be92-f6dbd6976702', null),
+        ('cb057a9b-e293-4e15-bdb9-c11880cb53bf', 'bc460a63-f256-47e3-8915-3931acad132a', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '**Captain**, one more thing. We''ll be passing through some pirate-infested waters soon. Should we be concerned?', '<p><strong>Captain</strong>, one more thing. We&#39;ll be passing through some pirate-infested waters soon. Should we be concerned?</p>', -2, false, true, false, false, '2023-02-27 18:35:04.089000', '2023-06-23 17:21:53.002826', null, '2d01d8dd-0bb1-4281-850e-e943b9f8128a', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', null),
+        ('8f31a61b-e1e6-4090-a426-52ce91a5181b', '72314bae-a05d-4551-91df-270802e6b003', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣', '<p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>', 6, false, true, false, false, '2023-02-27 18:36:37.704000', '2023-06-23 17:21:53.002826', null, '98732142-bc83-48e0-be92-f6dbd6976702', '98732142-bc83-48e0-be92-f6dbd6976702', null),
+        ('64fb0078-92c8-419d-98ec-7f22c270ef3a', '788c0b17-a922-4c2d-816b-98def34a0008', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'Captain, I''ve plotted our course, and I suggest we take the eastern route. It''ll take us a bit longer, but we''ll avoid any bad weather.', '<p>Captain, I&#39;ve plotted our course, and I suggest we take the eastern route. It&#39;ll take us a bit longer, but we&#39;ll avoid any bad weather.</p>', 4, false, true, false, false, '2023-02-27 18:28:51.050000', '2023-06-23 17:21:53.002826', null, '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', null);
 
-insert into votes(commenthex, commenterhex, direction, votedate)
-    values
-        ('0000000000000000000000000000000000000000000000000000000000002001', '0000000000000000000000000000000000000000000000000000000000001003', 1, '2023-02-27 18:38:03.542483'),
-        ('0000000000000000000000000000000000000000000000000000000000002001', '0000000000000000000000000000000000000000000000000000000000001002', 1, '2023-02-27 18:38:15.842977'),
-        ('0000000000000000000000000000000000000000000000000000000000002001', '0000000000000000000000000000000000000000000000000000000000001004', 1, '2023-02-27 18:38:24.880867'),
-        ('0000000000000000000000000000000000000000000000000000000000002001', '0000000000000000000000000000000000000000000000000000000000001011', 1, '2023-02-27 18:39:20.157638'),
-        ('0000000000000000000000000000000000000000000000000000000000002010', '0000000000000000000000000000000000000000000000000000000000001011', 1, '2023-02-27 18:39:23.238001'),
-        ('000000000000000000000000000000000000000000000000000000000000200e', '0000000000000000000000000000000000000000000000000000000000001011', 1, '2023-02-27 18:39:26.023446'),
-        ('000000000000000000000000000000000000000000000000000000000000200c', '0000000000000000000000000000000000000000000000000000000000001011', 1, '2023-02-27 18:39:30.894800'),
-        ('000000000000000000000000000000000000000000000000000000000000200e', '0000000000000000000000000000000000000000000000000000000000001001', 1, '2023-02-27 18:39:45.074171'),
-        ('0000000000000000000000000000000000000000000000000000000000002010', '0000000000000000000000000000000000000000000000000000000000001001', 1, '2023-02-27 18:40:04.176863'),
-        ('000000000000000000000000000000000000000000000000000000000000200d', '0000000000000000000000000000000000000000000000000000000000001001', 1, '2023-02-27 18:40:09.569962'),
-        ('000000000000000000000000000000000000000000000000000000000000200b', '0000000000000000000000000000000000000000000000000000000000001001', -1, '2023-02-27 18:40:20.406853'),
-        ('000000000000000000000000000000000000000000000000000000000000200e', '0000000000000000000000000000000000000000000000000000000000001004', 1, '2023-02-27 18:40:31.890010'),
-        ('000000000000000000000000000000000000000000000000000000000000200d', '0000000000000000000000000000000000000000000000000000000000001004', 1, '2023-02-27 18:40:45.479813');
-*/
+insert into cm_comment_votes (comment_id, user_id, negative, ts_voted)
+values  ('64fb0078-92c8-419d-98ec-7f22c270ef3a', '5787eece-7aa3-44d7-bbba-51866edc4867', false, '2023-02-27 18:40:09.569962'),
+        ('8f31a61b-e1e6-4090-a426-52ce91a5181b', '5787eece-7aa3-44d7-bbba-51866edc4867', false, '2023-02-27 18:39:45.074171'),
+        ('cb057a9b-e293-4e15-bdb9-c11880cb53bf', '5787eece-7aa3-44d7-bbba-51866edc4867', true, '2023-02-27 18:40:20.406853'),
+        ('da05d978-9218-4263-886e-542068251787', '5787eece-7aa3-44d7-bbba-51866edc4867', false, '2023-02-27 18:40:04.176863'),
+        ('ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '2af9ecd2-a32a-4332-8717-396e9af28639', false, '2023-02-27 18:38:15.842977'),
+        ('ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '98732142-bc83-48e0-be92-f6dbd6976702', false, '2023-02-27 18:38:03.542483'),
+        ('64fb0078-92c8-419d-98ec-7f22c270ef3a', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, '2023-02-27 18:40:45.479813'),
+        ('8f31a61b-e1e6-4090-a426-52ce91a5181b', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, '2023-02-27 18:40:31.890010'),
+        ('ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, '2023-02-27 18:38:24.880867'),
+        ('8f31a61b-e1e6-4090-a426-52ce91a5181b', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, '2023-02-27 18:39:26.023446'),
+        ('da05d978-9218-4263-886e-542068251787', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, '2023-02-27 18:39:23.238001'),
+        ('00e7320a-ecb4-44f4-84ca-ffc2f8c62729', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, '2023-02-27 18:39:30.894800'),
+        ('ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, '2023-02-27 18:39:20.157638');

@@ -20,11 +20,9 @@ func (h *handler) Init(app e2e.End2EndApp) error {
 	h.app = app
 
 	// Reinit the DB to install the seed
-	/* TODO new-db
 	if err := h.app.RecreateDBSchema(dbSeedSQL); err != nil {
 		return err
 	}
-	*/
 
 	h.app.LogInfo("Initialised e2e plugin")
 	return nil

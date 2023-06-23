@@ -486,8 +486,6 @@ end $$;
 
 do $$
 begin
-    return; -- TODO disable for now
-
     if legacySchema() then
         -- Drop all tables
         drop table migrations        cascade;
