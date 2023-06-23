@@ -1,25 +1,32 @@
-<section class="container">
-    <!-- Heading -->
-    <h1 i18n="heading">Domains</h1>
+<!-- Heading -->
+<h1 i18n="heading">Domains</h1>
 
-    <!-- Domain grid and the New domain button -->
-    <div [appSpinner]="domainsLoading.active" spinnerSize="lg" class="row row-cols-1 row-cols-md-2 g-4">
-        <!-- Domains -->
-        <div *ngFor="let d of domains" class="col">
-            <div class="card h-100">
-                <a [routerLink]="d.id" class="card-body text-center">
-                    <h5 class="card-title">{{ d.name || d.host }}</h5>
-                    <div class="card-text">{{ d.host }}</div>
-                </a>
-            </div>
-        </div>
-        <!-- New domain button -->
-        <div class="col">
-            <a [routerLink]="[Paths.manage.domains, 'create']"
-                 class="card py-4 h-100 bg-success text-light flex-row justify-content-center align-items-center lead">
-                <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
-                <ng-container i18n>New domain</ng-container>
+<!-- Domain grid and the New domain button -->
+<div [appSpinner]="domainsLoading.active" spinnerSize="lg" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
+    <!-- All domains button -->
+    <div class="col">
+        <a (click)="unselect()" (keydown.enter)="unselect()" [class.fw-bold]="!domain"
+           class="card h-100 py-4 flex-row justify-content-center align-items-center"
+           tabindex="0" role="button">
+            <fa-icon [icon]="faCheckDouble" class="me-1"></fa-icon>
+            <ng-container i18n>All domains</ng-container>
+        </a>
+    </div>
+    <!-- Domains -->
+    <div *ngFor="let d of domains" class="col">
+        <div class="card h-100">
+            <a [routerLink]="d.id" class="card-body text-center" [class.fw-bold]="d.id === domain?.id">
+                <div class="card-title">{{ d.name || d.host }}</div>
+                <div class="card-text">{{ d.host }}</div>
             </a>
         </div>
     </div>
-</section>
+    <!-- New domain button -->
+    <div class="col">
+        <a [routerLink]="[Paths.manage.domains, 'create']"
+             class="card h-100 py-4 bg-success text-light flex-row justify-content-center align-items-center">
+            <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
+            <ng-container i18n>New domain</ng-container>
+        </a>
+    </div>
+</div>

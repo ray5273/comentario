@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { RouterModule, Routes } from '@angular/router';
 import { PageNotFoundComponent } from '../page-not-found/page-not-found.component';
 import { HomeComponent } from '../home/home.component';
-import { authGuardCanLoad } from '../_guards/auth.guard';
+import { AuthGuard } from '../_guards/auth.guard';
 
 const routes: Routes = [
     // Auth
@@ -15,7 +15,7 @@ const routes: Routes = [
     {
         path:         'manage',
         loadChildren: () => import('./manage/manage.module').then(m => m.ManageModule),
-        canMatch:     [authGuardCanLoad],
+        canMatch:     [AuthGuard.isAuthenticatedMatch],
     },
 
     // Fallback routes

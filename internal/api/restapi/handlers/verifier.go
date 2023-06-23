@@ -16,11 +16,15 @@ var Verifier VerifierService = &verifier{}
 
 // VerifierService is an API service interface for data and permission verification
 type VerifierService interface {
+	// DomainHostCanBeAdded verifies the given host is valid and not existing yet
+	DomainHostCanBeAdded(host string) middleware.Responder
 	// DomainSSOConfig verifies the given domain is properly configured for SSO authentication
 	DomainSSOConfig(domain *data.Domain) middleware.Responder
 	// FederatedIdProvider verifies the federated identity provider specified by its ID is properly configured for
-	// authentication
+	// authentication, and returns the corresponding Provider interface
 	FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder)
+	// FederatedIdProviders verifies each federated identity provider is properly configured for authentication
+	FederatedIdProviders(ids []models.FederatedIdpID) middleware.Responder
 	// NeedsModeration returns whether the given comment needs to be moderated
 	NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error)
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
@@ -46,6 +50,26 @@ type VerifierService interface {
 // ----------------------------------------------------------------------------------------------------------------------
 // verifier is a blueprint VerifierService implementation
 type verifier struct{}
+
+func (v *verifier) DomainHostCanBeAdded(host string) middleware.Responder {
+	// Validate the host
+	if ok, _, _ := util.IsValidHostPort(host); !ok {
+		logger.Warningf("DomainNew(): '%s' is not a valid host[:port]", host)
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails(host))
+	}
+
+	// Make sure domain host isn't taken yet
+	if _, err := svc.TheDomainService.FindByHost(host); err == nil {
+		// Domain host already exists in the DB
+		return respBadRequest(ErrorHostAlreadyExists)
+	} else if err != svc.ErrNotFound {
+		// Any database error other than "not found"
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return nil
+}
 
 func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 	// Verify SSO is at all enabled
@@ -80,6 +104,19 @@ func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider,
 		// Succeeded
 		return p, nil
 	}
+}
+
+func (v *verifier) FederatedIdProviders(ids []models.FederatedIdpID) middleware.Responder {
+	// Iterate the IDs
+	for _, id := range ids {
+		// Exit on the first error
+		if _, r := v.FederatedIdProvider(id); r != nil {
+			return r
+		}
+	}
+
+	// Succeeded
+	return nil
 }
 
 func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error) {

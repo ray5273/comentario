@@ -91,7 +91,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralAuthOauthCallbackHandler = api_general.AuthOauthCallbackHandlerFunc(handlers.AuthOauthCallback)
 	api.APIGeneralAuthOauthInitHandler = api_general.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
 	// Config
-	api.APIGeneralConfigClientGetHandler = api_general.ConfigClientGetHandlerFunc(handlers.ConfigClientGet)
+	api.APIGeneralComentarioConfigHandler = api_general.ComentarioConfigHandlerFunc(handlers.ComentarioConfig)
 	// CurUser
 	api.APIGeneralCurUserGetHandler = api_general.CurUserGetHandlerFunc(handlers.CurUserGet)
 	api.APIGeneralCurUserUpdateHandler = api_general.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
@@ -105,8 +105,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainGetHandler = api_general.DomainGetHandlerFunc(handlers.DomainGet)
 	api.APIGeneralDomainImportHandler = api_general.DomainImportHandlerFunc(handlers.DomainImport)
 	api.APIGeneralDomainListHandler = api_general.DomainListHandlerFunc(handlers.DomainList)
-	api.APIGeneralDomainModeratorDeleteHandler = api_general.DomainModeratorDeleteHandlerFunc(handlers.DomainModeratorDelete)
-	api.APIGeneralDomainModeratorNewHandler = api_general.DomainModeratorNewHandlerFunc(handlers.DomainModeratorNew)
 	api.APIGeneralDomainNewHandler = api_general.DomainNewHandlerFunc(handlers.DomainNew)
 	api.APIGeneralDomainSsoSecretNewHandler = api_general.DomainSsoSecretNewHandlerFunc(handlers.DomainSsoSecretNew)
 	api.APIGeneralDomainDailyStatsHandler = api_general.DomainDailyStatsHandlerFunc(handlers.DomainDailyStats)

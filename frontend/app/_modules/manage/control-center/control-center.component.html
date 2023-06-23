@@ -11,8 +11,8 @@
             <!-- Logo -->
             <div class="cc-logo">
                 <a [routerLink]="Paths.home" role="button">
-                    <img src="images/logo.svg" width="192" height="48" class="cc-logo-expanded" alt="Comentario">
-                    <img src="images/icon.svg" width="32" height="32" class="cc-logo-collapsed" alt="Comentario">
+                    <img ngSrc="images/logo.svg" width="192" height="48" class="cc-logo-expanded" alt="Comentario">
+                    <img ngSrc="images/icon.svg" width="32" height="32" class="cc-logo-collapsed" alt="Comentario">
                 </a>
             </div>
 
@@ -35,57 +35,64 @@
                     </a>
                 </li>
 
-                <!-- Domain items: only when there's a domain selected -->
-                <ng-container *ngIf="domain | async as d else noDomain">
-                    <!-- Properties -->
-                    <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id]" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
-                            <div class="cc-hide-collapsed overflow-hidden">
-                                <div class="colon" i18n>Domain</div>
-                                <div class="cc-vshrink-collapsed text-truncate">{{ d.name || d.host }}</div>
-                            </div>
-                        </a>
-                    </li>
-                    <!-- Comments -->
-                    <li class="nav-item">
-                        <a [routerLink]="Paths.manage.comments" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faComments"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Comments</div>
-                        </a>
-                    </li>
-                    <!-- Users -->
-                    <li class="nav-item">
-                        <a [routerLink]="Paths.manage.users" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faUsers"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Users</div>
-                        </a>
-                    </li>
-                    <!-- Stats -->
-                    <li class="nav-item">
-                        <a [routerLink]="Paths.manage.stats" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faChartLine"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Statistics</div>
-                        </a>
-                    </li>
-                    <!-- Operations -->
-                    <li class="nav-item">
-                        <a [routerLink]="Paths.manage.operations" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faArrowDownUpAcrossLine"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Operations</div>
-                        </a>
-                    </li>
-                </ng-container>
+                <!-- Domain selector: if no domain -->
+                <li *ngIf="!domain" class="nav-item">
+                    <a [routerLink]="Paths.manage.domains" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Domains</div>
+                    </a>
+                </li>
 
-                <!-- Domain selector when there's no domain -->
-                <ng-template #noDomain>
-                    <li class="nav-item">
-                        <a [routerLink]="Paths.manage.domains" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
-                            <div class="cc-hide-collapsed" i18n>Domains</div>
-                        </a>
-                    </li>
-                </ng-template>
+                <!-- Domain properties: if there's a domain -->
+                <li *ngIf="domain" class="nav-item">
+                    <a [routerLink]="[Paths.manage.domains, domain.id]" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                        <div class="cc-hide-collapsed overflow-hidden">
+                            <div class="colon" i18n>Domain</div>
+                            <div class="cc-vshrink-collapsed text-truncate">{{ domain.name || domain.host }}</div>
+                        </div>
+                    </a>
+                </li>
+
+                <!-- Pages -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.pages" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faFileLines"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Pages</div>
+                    </a>
+                </li>
+
+                <!-- Comments -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.comments" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faComments"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Comments</div>
+                    </a>
+                </li>
+
+                <!-- Users -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.users" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faUsers"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Users</div>
+                    </a>
+                </li>
+
+                <!-- Stats -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.stats" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faChartLine"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Statistics</div>
+                    </a>
+                </li>
+
+                <!-- Operations: if there's a domain -->
+                <li *ngIf="domain" class="nav-item">
+                    <a [routerLink]="Paths.manage.operations" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faArrowDownUpAcrossLine"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Operations</div>
+                    </a>
+                </li>
 
                 <!-- [Account] -->
                 <li class="nav-item cc-divider">
@@ -126,6 +133,8 @@
 
     <!-- Main page content -->
     <div class="cc-content">
-        <router-outlet></router-outlet>
+        <section class="container-lg">
+            <router-outlet></router-outlet>
+        </section>
     </div>
 </div>

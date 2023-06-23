@@ -1,111 +1,112 @@
-<section class="container">
-    <!-- Heading -->
-    <h1 i18n="heading">Operations</h1>
+<!-- Heading -->
+<h1>
+    <ng-container i18n="heading">Operations</ng-container>
+    <app-domain-badge></app-domain-badge>
+</h1>
 
-    <!-- Clone -->
-    <div class="row border-bottom py-3 pb-sm-0">
-        <div class="col-sm-9">
-            <div class="fw-bold" i18n>Clone domain</div>
-            <p i18n>You can create a new domain based on the settings of this one. You will be able to change any setting before saving the new domain.</p>
-        </div>
-        <div class="col-sm-3 d-flex align-items-center">
-            <button [disabled]="!domain" [routerLink]="[Paths.manage.domains, domain?.id, 'clone']" class="btn btn-secondary w-100">
-                <fa-icon [icon]="faClone" class="me-1"></fa-icon>
-                <ng-container i18n="action">Clone</ng-container>
-            </button>
-        </div>
+<!-- Clone -->
+<div class="row border-bottom py-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold" i18n>Clone domain</div>
+        <p i18n>You can create a new domain based on the settings of this one. You will be able to change any setting before saving the new domain.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [disabled]="!domain" [routerLink]="[Paths.manage.domains, domain?.id, 'clone']" class="btn btn-secondary w-100">
+            <fa-icon [icon]="faClone" class="me-1"></fa-icon>
+            <ng-container i18n="action">Clone</ng-container>
+        </button>
+    </div>
+</div>
+
+<!-- Export data -->
+<div class="row border-bottom py-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold" i18n>Export</div>
+        <p i18n>Click this button to download a complete copy of the domain's comments and commenters. This data dump can be used later as a backup or for migration to another Comentario instance.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [disable]="!domain" [appSpinner]="downloading.active" (click)="exportData()" class="btn btn-secondary w-100">
+            <fa-icon [icon]="faFileExport" class="me-1"></fa-icon>
+            <ng-container i18n="action">Export data</ng-container>
+        </button>
+    </div>
+</div>
+
+<!-- Import data -->
+<div class="row border-bottom py-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold" i18n>Import</div>
+        <p i18n>Use this option to import data previously exported from Commento, Comentario, or Disqus.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [disabled]="!domain" [routerLink]="[Paths.manage.domains, domain?.id, 'import']" class="btn btn-secondary w-100">
+            <fa-icon [icon]="faFileImport" class="me-1"></fa-icon>
+            <ng-container i18n="action">Import data</ng-container>
+        </button>
+    </div>
+</div>
+
+<!-- (Un)Freeze -->
+<div class="row border-bottom py-3 pb-sm-0">
+    <div class="col-sm-9">
+        <div class="fw-bold" i18n>Freeze domain</div>
+        <p i18n>Freezing your domain will disable new comments and voting temporarily. You may unfreeze the domain later.</p>
+    </div>
+    <div class="col-sm-3 d-flex align-items-center">
+        <button [disable]="!domain" [appSpinner]="freezing.active" [appConfirm]="freezeDlg"
+                [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion" (confirmed)="toggleFrozen()"
+                class="btn btn-secondary w-100">
+            <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
+            {{ freezeAction }}
+        </button>
+    </div>
+</div>
+
+<!-- Danger zone -->
+<section>
+    <!-- Collapse button -->
+    <div class="text-center">
+        <button [class.collapsed]="isDangerZoneCollapsed" [attr.aria-expanded]="!isDangerZoneCollapsed"
+                (click)="collapse.toggle()"
+                type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="dangerZoneContainer">
+            <span class="me-2" i18n>Danger zone</span>
+            <fa-icon [icon]="faAngleDown"></fa-icon>
+        </button>
     </div>
 
-    <!-- Export data -->
-    <div class="row border-bottom py-3 pb-sm-0">
-        <div class="col-sm-9">
-            <div class="fw-bold" i18n>Export</div>
-            <p i18n>Click this button to download a complete copy of the domain's comments and commenters. This data dump can be used later as a backup or for migration to another Comentario instance.</p>
-        </div>
-        <div class="col-sm-3 d-flex align-items-center">
-            <button [disable]="!domain" [appSpinner]="downloading.active" (click)="exportData()" class="btn btn-secondary w-100">
-                <fa-icon [icon]="faFileExport" class="me-1"></fa-icon>
-                <ng-container i18n="action">Export data</ng-container>
-            </button>
-        </div>
-    </div>
-
-    <!-- Import data -->
-    <div class="row border-bottom py-3 pb-sm-0">
-        <div class="col-sm-9">
-            <div class="fw-bold" i18n>Import</div>
-            <p i18n>Use this option to import data previously exported from Commento, Comentario, or Disqus.</p>
-        </div>
-        <div class="col-sm-3 d-flex align-items-center">
-            <button [disabled]="!domain" [routerLink]="[Paths.manage.domains, domain?.id, 'import']" class="btn btn-secondary w-100">
-                <fa-icon [icon]="faFileImport" class="me-1"></fa-icon>
-                <ng-container i18n="action">Import data</ng-container>
-            </button>
-        </div>
-    </div>
-
-    <!-- (Un)Freeze -->
-    <div class="row border-bottom py-3 pb-sm-0">
-        <div class="col-sm-9">
-            <div class="fw-bold" i18n>Freeze domain</div>
-            <p i18n>Freezing your domain will disable new comments and voting temporarily. You may unfreeze the domain later.</p>
-        </div>
-        <div class="col-sm-3 d-flex align-items-center">
-            <button [disable]="!domain" [appSpinner]="freezing.active" [appConfirm]="freezeDlg"
-                    [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion" (confirmed)="toggleFrozen()"
-                    class="btn btn-secondary w-100">
-                <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
-                {{ freezeAction }}
-            </button>
-        </div>
-    </div>
-
-    <!-- Danger zone -->
-    <section>
-        <!-- Collapse button -->
-        <div class="text-center">
-            <button [class.collapsed]="isDangerZoneCollapsed" [attr.aria-expanded]="!isDangerZoneCollapsed"
-                    (click)="collapse.toggle()"
-                    type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="dangerZoneContainer">
-                <span class="me-2" i18n>Danger zone</span>
-                <fa-icon [icon]="faAngleDown"></fa-icon>
-            </button>
-        </div>
-
-        <!-- Danger zone content -->
-        <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="dangerZoneContainer">
-            <!-- Clear comments -->
-            <div class="row border-bottom py-3 pb-sm-0">
-                <div class="col-sm-9">
-                    <div class="fw-bold text-danger" i18n>Clear comments</div>
-                    <p i18n>This will permanently delete all comments without affecting your settings. This may be useful if you want to clear all comments after testing Comentario.</p>
-                </div>
-                <div class="col-sm-3 d-flex align-items-center">
-                    <button [disable]="!domain" [appSpinner]="clearing.active" [appConfirm]="clearCommentsDlg"
-                            confirmAction="Clear comments" (confirmed)="clearComments()" class="btn btn-danger w-100"
-                            i18n-confirmAction>
-                        <fa-icon [icon]="faCalendarXmark" class="me-1"></fa-icon>
-                        <ng-container i18n="action">Clear</ng-container>
-                    </button>
-                </div>
+    <!-- Danger zone content -->
+    <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="dangerZoneContainer">
+        <!-- Clear comments -->
+        <div class="row border-bottom py-3 pb-sm-0">
+            <div class="col-sm-9">
+                <div class="fw-bold text-danger" i18n>Clear comments</div>
+                <p i18n>This will permanently delete all comments without affecting your settings. This may be useful if you want to clear all comments after testing Comentario.</p>
             </div>
-
-            <!-- Delete -->
-            <div class="row border-bottom py-3 pb-sm-0">
-                <div class="col-sm-9">
-                    <div class="fw-bold text-danger" i18n>Delete domain</div>
-                    <p i18n>This will permanently delete all comments and all data associated with your domain.</p>
-                </div>
-                <div class="col-sm-3 d-flex align-items-center">
-                    <button [disable]="!domain" [appSpinner]="deleting.active" [appConfirm]="deleteDlg"
-                            confirmAction="Delete domain" (confirmed)="delete()" class="btn btn-danger w-100" i18n-confirmAction>
-                        <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
-                        <ng-container i18n="action">Delete</ng-container>
-                    </button>
-                </div>
+            <div class="col-sm-3 d-flex align-items-center">
+                <button [disable]="!domain" [appSpinner]="clearing.active" [appConfirm]="clearCommentsDlg"
+                        confirmAction="Clear comments" (confirmed)="clearComments()" class="btn btn-danger w-100"
+                        i18n-confirmAction>
+                    <fa-icon [icon]="faCalendarXmark" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Clear</ng-container>
+                </button>
             </div>
         </div>
-    </section>
+
+        <!-- Delete -->
+        <div class="row border-bottom py-3 pb-sm-0">
+            <div class="col-sm-9">
+                <div class="fw-bold text-danger" i18n>Delete domain</div>
+                <p i18n>This will permanently delete all comments and all data associated with your domain.</p>
+            </div>
+            <div class="col-sm-3 d-flex align-items-center">
+                <button [disable]="!domain" [appSpinner]="deleting.active" [appConfirm]="deleteDlg"
+                        confirmAction="Delete domain" (confirmed)="delete()" class="btn btn-danger w-100" i18n-confirmAction>
+                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Delete</ng-container>
+                </button>
+            </div>
+        </div>
+    </div>
 </section>
 
 <!-- Freeze domain confirmation dialog content template -->

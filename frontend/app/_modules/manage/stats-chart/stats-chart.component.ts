@@ -5,6 +5,9 @@ import { ChartDataset, ChartOptions } from 'chart.js';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 
+// Work around IDE not recognising the symbol
+declare let $localize: any;
+
 @Component({
     selector: 'app-stats-chart',
     templateUrl: './stats-chart.component.html',

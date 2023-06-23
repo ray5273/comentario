@@ -1,17 +1,17 @@
-<section class="container">
-    <!-- Heading -->
-    <h1 *ngIf="isNew"  i18n="heading">Create domain</h1>
-    <h1 *ngIf="!isNew" i18n="heading">Edit domain</h1>
+<!-- Heading -->
+<h1 *ngIf="isNew"  i18n="heading">Create domain</h1>
+<h1 *ngIf="!isNew" i18n="heading">Edit domain</h1>
 
-    <!-- Edit form -->
-    <form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
+<!-- Edit form -->
+<form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
+    <fieldset [disabled]="loading.active || saving.active">
         <!-- Info -->
         <div *ngIf="isNew" class="mb-3">
             <ng-container i18n>Add a domain to enable comments on it.</ng-container>
         </div>
         <!-- Host -->
         <div class="mb-3 row">
-            <label for="host" class="col-sm-3 col-form-label colon" i18n>Host</label>
+            <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
             <div class="col-sm-9">
                 <input formControlName="host" type="text" class="form-control" id="host"
                        [class.is-valid]="isNew && ctlHost.touched && ctlHost.valid"
@@ -29,7 +29,7 @@
         </div>
         <!-- Name -->
         <div class="mb-3 row">
-            <label for="name" class="col-sm-3 col-form-label colon" i18n>Name</label>
+            <label for="name" class="col-sm-3 col-form-label colon fw-bold" i18n>Name</label>
             <div class="col-sm-9">
                 <input formControlName="name" type="text" class="form-control" id="name"
                        [class.is-valid]="ctlName.touched && ctlName.valid"
@@ -41,92 +41,89 @@
 
         <!-- Comment moderation -->
         <div class="mb-3 row">
-            <div class="offset-sm-3 col-sm-9">
-                <!-- Subheading -->
-                <div class="fw-bold mt-3 mb-1" i18n>Require moderator approval on comments</div>
-
-                <!-- By anonymous users -->
+            <div class="col-sm-3 colon fw-bold" i18n>Require moderator approval on comment, if</div>
+            <div class="col-sm-9">
+                <!-- Author is anonymous -->
                 <div class="form-check me-3">
                     <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="modAnonymous">
-                    <label class="form-check-label" for="modAnonymous" i18n>By anonymous users</label>
+                    <label class="form-check-label" for="modAnonymous" i18n>Author is anonymous</label>
                 </div>
-                <!-- By authenticated users -->
+                <!-- Author is authenticated -->
                 <div class="form-check me-3">
                     <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="modAuthenticated">
-                    <label class="form-check-label" for="modAuthenticated" i18n>By authenticated users</label>
+                    <label class="form-check-label" for="modAuthenticated" i18n>Author is authenticated</label>
                 </div>
-                <!-- Containing links -->
+                <!-- Author has less than this number of approved comments -->
+                <div class="form-check me-3">
+                    <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="modNumCommentsOn">
+                    <label class="form-check-label colon" for="modNumCommentsOn" i18n>Author has less than this number of approved comments</label>
+                </div>
+                <!-- Number of approved comments -->
+                <div *ngIf="ctlModNumComments.enabled" class="mb-3">
+                    <input formControlName="modNumComments" type="number" class="form-control" id="modNumComments"
+                           [class.is-valid]="ctlModNumComments.touched && ctlModNumComments.valid"
+                           [class.is-invalid]="ctlModNumComments.touched && ctlModNumComments.invalid"
+                           required min="1" max="999">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback">
+                        <ng-container i18n>Please enter a valid value.</ng-container>
+                    </div>
+                </div>
+                <!-- Author is registered less than this number of days ago -->
+                <div class="form-check me-3">
+                    <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="modUserAgeDaysOn">
+                    <label class="form-check-label colon" for="modUserAgeDaysOn" i18n>Author is registered less than this number of days ago</label>
+                </div>
+                <!-- Number of days for minimum user age -->
+                <div *ngIf="ctlModUserAgeDays.enabled" class="mb-3">
+                    <input formControlName="modUserAgeDays" type="number" class="form-control" id="modUserAgeDays"
+                           [class.is-valid]="ctlModUserAgeDays.touched && ctlModUserAgeDays.valid"
+                           [class.is-invalid]="ctlModUserAgeDays.touched && ctlModUserAgeDays.invalid"
+                           required min="1" max="999">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback">
+                        <ng-container i18n>Please enter a valid value.</ng-container>
+                    </div>
+                </div>
+                <!-- Comment contains link -->
                 <div class="form-check me-3">
                     <input formControlName="modLinks" type="checkbox" class="form-check-input" id="modLinks">
-                    <label class="form-check-label" for="modLinks" i18n>Containing links</label>
+                    <label class="form-check-label" for="modLinks" i18n>Comment contains link</label>
                 </div>
-                <!-- Containing images -->
+                <!-- Comment contains image -->
                 <div class="form-check me-3">
                     <input formControlName="modImages" type="checkbox" class="form-check-input" id="modImages">
-                    <label class="form-check-label" for="modImages" i18n>Containing images</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Comment sorting -->
-        <div class="mb-3 row">
-            <div class="offset-sm-3 col-sm-9">
-                <!-- Subheading -->
-                <div class="fw-bold mt-3 mb-1" i18n>Comment sorting</div>
-
-                <!-- Most upvoted first -->
-                <div class="form-check">
-                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortSD" value="sd">
-                    <label class="form-check-label" for="sortSD" i18n>Most upvoted first</label>
-                </div>
-                <!-- Least upvoted first -->
-                <div class="form-check">
-                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortSA" value="sa">
-                    <label class="form-check-label" for="sortSA" i18n>Least upvoted first</label>
-                </div>
-                <!-- Newest first -->
-                <div class="form-check">
-                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortTD" value="td">
-                    <label class="form-check-label" for="sortTD" i18n>Newest first</label>
-                </div>
-                <!-- Oldest first -->
-                <div class="form-check">
-                    <input formControlName="defaultSort" class="form-check-input" type="radio" id="sortTA" value="ta">
-                    <label class="form-check-label" for="sortTA" i18n>Oldest first</label>
+                    <label class="form-check-label" for="modImages" i18n>Comment contains image</label>
                 </div>
             </div>
         </div>
 
         <!-- Email moderators -->
         <div class="mb-3 row">
-            <div class="offset-sm-3 col-sm-9">
-                <!-- Subheading -->
-                <div class="fw-bold mt-3 mb-1" i18n>Email moderators</div>
+            <div class="col-sm-3 colon fw-bold" i18n>Email moderators</div>
+            <div class="col-sm-9">
+                <div *ngFor="let p of modNotifyPolicies" class="form-check">
+                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" [id]="'modNotifyPolicy-'+p" [value]="p">
+                    <label class="form-check-label" [for]="'modNotifyPolicy-'+p" i18n>{{ p | moderatorNotifyPolicy }}</label>
+                </div>
+            </div>
+        </div>
 
-                <!-- Don't email -->
-                <div class="form-check">
-                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" id="modNotifyPolicyNone" value="none">
-                    <label class="form-check-label" for="modNotifyPolicyNone" i18n>Don't email</label>
-                </div>
-                <!-- Only for comments pending moderation -->
-                <div class="form-check">
-                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" id="modNotifyPolicyPending" value="pending">
-                    <label class="form-check-label" for="modNotifyPolicyPending" i18n>Only for comments pending moderation</label>
-                </div>
-                <!-- For every new comment -->
-                <div class="form-check">
-                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" id="modNotifyPolicyAll" value="all">
-                    <label class="form-check-label" for="modNotifyPolicyAll" i18n>For every new comment</label>
+        <!-- Default comment sort -->
+        <div class="mb-3 row">
+            <div class="col-sm-3 colon fw-bold" i18n>Default comment sort</div>
+            <div class="col-sm-9">
+                <div *ngFor="let s of sorts" class="form-check">
+                    <input formControlName="defaultSort" class="form-check-input" type="radio" [id]="'sort-'+s" [value]="s">
+                    <label class="form-check-label" [for]="'sort-'+s" i18n>{{ s | commentSort }}</label>
                 </div>
             </div>
         </div>
 
         <!-- Authentication -->
         <div class="mb-3 row">
-            <div class="offset-sm-3 col-sm-9">
-                <!-- Subheading -->
-                <div class="fw-bold mt-3 mb-1" i18n>Authentication</div>
-
+            <div class="col-sm-3 colon fw-bold" i18n>Authentication</div>
+            <div class="col-sm-9">
                 <!-- Anonymous comments -->
                 <div class="form-check me-3">
                     <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
@@ -176,5 +173,5 @@
                 <ng-container *ngIf="!isNew" i18n="action">Save</ng-container>
             </button>
         </div>
-    </form>
-</section>
+    </fieldset>
+</form>

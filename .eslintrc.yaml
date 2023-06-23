@@ -107,7 +107,10 @@ overrides:
     extends:
       - 'plugin:@angular-eslint/template/recommended'
       - 'plugin:@angular-eslint/template/accessibility'
-    rules: {}
+    rules:
+      # This rule erroneously reports forms as needing a tabindex. Disable until
+      # https://github.com/angular-eslint/angular-eslint/issues/1429 is resolved
+      '@angular-eslint/template/interactive-supports-focus': off
 
   # Cypress Typescript
   - files: cypress/**/*.ts

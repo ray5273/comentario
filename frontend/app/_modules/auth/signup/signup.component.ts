@@ -18,7 +18,7 @@ export class SignupComponent {
     isComplete = false;
 
     readonly Paths = Paths;
-    readonly signupAllowed = this.cfgSvc.clientConfig.signupAllowed;
+    readonly signupAllowed = this.cfgSvc.config.signupAllowed;
     readonly submitting = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
         email:    ['', [Validators.email]],

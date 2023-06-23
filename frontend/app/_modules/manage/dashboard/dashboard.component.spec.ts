@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
-import { MockComponent, MockService } from 'ng-mocks';
+import { MockComponent, MockProvider } from 'ng-mocks';
 import { DashboardComponent } from './dashboard.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
@@ -16,7 +16,7 @@ describe('DashboardComponent', () => {
             declarations: [DashboardComponent, MockComponent(StatsChartComponent)],
             imports: [ToolsModule],
             providers: [
-                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService, {dashboardTotals: () => of({}) as any})},
+                MockProvider(ApiGeneralService, {dashboardTotals: () => of({}) as any}),
             ],
         })
             .compileComponents();

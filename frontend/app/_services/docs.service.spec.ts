@@ -1,6 +1,6 @@
 import { TestBed } from '@angular/core/testing';
 import { LOCALE_ID } from '@angular/core';
-import { MockService } from 'ng-mocks';
+import { MockProvider } from 'ng-mocks';
 import { DocsService } from './docs.service';
 import { ConfigService } from './config.service';
 
@@ -11,8 +11,8 @@ describe('DocsService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: LOCALE_ID,     useValue: 'it'},
-                {provide: ConfigService, useValue: MockService(ConfigService, {docsBaseUrl: 'https://whatever.org'})},
+                {provide: LOCALE_ID, useValue: 'it'},
+                MockProvider(ConfigService, {docsBaseUrl: 'https://whatever.org'}),
             ],
         });
         service = TestBed.inject(DocsService);

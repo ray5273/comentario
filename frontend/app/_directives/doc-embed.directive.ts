@@ -1,7 +1,8 @@
 import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpContext } from '@angular/common/http';
 import { DocsService } from '../_services/docs.service';
 import { ConfigService } from '../_services/config.service';
+import { HTTP_ERROR_HANDLING } from "../_services/http-interceptor.service";
 
 @Directive({
     // eslint-disable-next-line @angular-eslint/directive-selector
@@ -32,9 +33,10 @@ export class DocEmbedDirective implements OnChanges {
         if (changes.docEmbed && !this.cfgSvc.isUnderTest && this.docEmbed) {
             const e = this.element.nativeElement;
 
-            // Load the document from the documentation website, bypassing the error handler (since it's a less important resource)
+            // Load the document from the documentation website, bypassing the error handler (since it's a less
+            // important resource)
             const url = this.docsSvc.getEmbedPageUrl(this.docEmbed);
-            this.http.get(url, {headers: {'X-Bypass-Err-Handler': 'true'}, responseType: 'text'})
+            this.http.get(url, {responseType: 'text', context: new HttpContext().set(HTTP_ERROR_HANDLING, false)})
                 .subscribe({
                     // Update the inner HTML of the element on success
                     next: t => e.innerHTML = t,

@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-
+import { MockComponent } from 'ng-mocks';
 import { UserManagerComponent } from './user-manager.component';
+import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
 
 describe('UserManagerComponent', () => {
 
@@ -9,7 +10,7 @@ describe('UserManagerComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [UserManagerComponent],
+            declarations: [UserManagerComponent, MockComponent(DomainBadgeComponent)],
         });
         fixture = TestBed.createComponent(UserManagerComponent);
         component = fixture.componentInstance;

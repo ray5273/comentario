@@ -1,9 +1,8 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs';
-import { map } from "rxjs/operators";
+import { Observable, tap } from 'rxjs';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { environment } from '../../environments/environment';
-import { ApiGeneralService, ClientConfig } from '../../generated-api';
+import { ApiGeneralService, ComentarioConfig } from '../../generated-api';
 
 declare global {
     // noinspection JSUnusedGlobalSymbols
@@ -27,7 +26,7 @@ export class ConfigService {
      */
     readonly isUnderTest: boolean = false;
 
-    private _clientConfig?: ClientConfig;
+    private _config?: ComentarioConfig;
 
     constructor(
         private readonly ngbConfig: NgbConfig,
@@ -43,10 +42,10 @@ export class ConfigService {
     }
 
     /**
-     * Client configuration obtained from the API.
+     * Comentario configuration obtained from the server.
      */
-    get clientConfig(): ClientConfig {
-        return this._clientConfig!;
+    get config(): ComentarioConfig {
+        return this._config!;
     }
 
     /**
@@ -60,7 +59,6 @@ export class ConfigService {
      * Initialise the app configuration.
      */
     init(): Observable<unknown> {
-        // Fetch client config
-        return this.api.configClientGet().pipe(map(cc => this._clientConfig = cc));
+        return this.api.comentarioConfig().pipe(tap(cc => this._config = cc));
     }
 }

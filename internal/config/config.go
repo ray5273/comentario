@@ -11,6 +11,7 @@ import (
 	"net/url"
 	"os"
 	"strings"
+	"time"
 )
 
 // KeySecret is a record containing a key and a secret
@@ -26,8 +27,8 @@ func (c *KeySecret) Usable() bool {
 }
 
 var (
-	AppVersion string // Application version set during bootstrapping
-	BuildDate  string // Application build date set during bootstrapping
+	AppVersion string    // Application version set during bootstrapping
+	BuildDate  time.Time // Application build date set during bootstrapping
 )
 
 var (

@@ -1,0 +1,8 @@
+<!-- Heading -->
+<h1>
+    <ng-container i18n="heading">Statistics</ng-container>
+    <app-domain-badge></app-domain-badge>
+</h1>
+
+<!-- Stats chart -->
+<app-stats-chart [domainId]="(domain$ | async)?.id"></app-stats-chart>

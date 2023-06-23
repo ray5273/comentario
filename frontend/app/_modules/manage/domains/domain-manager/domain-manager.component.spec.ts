@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
-import { MockService } from 'ng-mocks';
+import { MockProvider } from 'ng-mocks';
 import { DomainManagerComponent } from './domain-manager.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
-import { of } from 'rxjs';
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 
 describe('DomainManagerComponent', () => {
 
@@ -17,7 +18,8 @@ describe('DomainManagerComponent', () => {
             declarations: [DomainManagerComponent],
             imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
-                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService, {domainList: () => of({domains: []} as any)})},
+                MockProvider(ApiGeneralService, {domainList: () => of({domains: []} as any)}),
+                MockProvider(DomainSelectorService, {domain: of(undefined)}),
             ],
         })
             .compileComponents();

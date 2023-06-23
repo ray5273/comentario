@@ -1,8 +1,10 @@
 import { TestBed } from '@angular/core/testing';
-import { MockService } from 'ng-mocks';
+import { of } from 'rxjs';
+import { MockProvider } from 'ng-mocks';
 import { DomainSelectorService } from './domain-selector.service';
 import { ApiGeneralService } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
+import { AuthService } from '../../../_services/auth.service';
 
 describe('DomainSelectorService', () => {
 
@@ -11,8 +13,11 @@ describe('DomainSelectorService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: ApiGeneralService,   useValue: MockService(ApiGeneralService)},
-                {provide: LocalSettingService, useValue: MockService(LocalSettingService)},
+                // Need to explicitly declare the service as provider because it's scoped to the module
+                DomainSelectorService,
+                MockProvider(AuthService, {principal: of(null)}),
+                MockProvider(ApiGeneralService),
+                MockProvider(LocalSettingService),
             ],
         });
         service = TestBed.inject(DomainSelectorService);

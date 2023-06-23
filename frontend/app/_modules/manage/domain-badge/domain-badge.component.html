@@ -1,0 +1,7 @@
+<!-- A specific domain selected -->
+<span *ngIf="domainSelectorSvc.domain | async as d else all" class="ms-2 badge rounded-end-pill bg-info-subtle">{{ d.name || d.host }}</span>
+
+<!-- No domain selected -->
+<ng-template #all>
+    <span class="ms-2 badge rounded-end-pill bg-success-subtle" i18n>All domains</span>
+</ng-template>

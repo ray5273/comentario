@@ -1,9 +1,19 @@
 import { Injectable } from '@angular/core';
-import { HttpErrorResponse, HttpEvent, HttpHandler, HttpInterceptor, HttpRequest } from '@angular/common/http';
+import {
+    HttpContextToken,
+    HttpErrorResponse,
+    HttpEvent,
+    HttpHandler,
+    HttpInterceptor,
+    HttpRequest
+} from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ToastService } from './toast.service';
 import { AuthService } from './auth.service';
+
+/** HTTP context token that, when set to false, inhibits the standard error handling (error toasts and such). */
+export const HTTP_ERROR_HANDLING = new HttpContextToken<boolean>(() => true);
 
 @Injectable({
     providedIn: 'root',
@@ -16,20 +26,11 @@ export class HttpInterceptorService implements HttpInterceptor {
     ) {}
 
     intercept(req: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>>{
-        // If we see this fake header in the request, it means the error handling logic is implemented on the calling
-        // side, and we need to bypass it here
-        const bypass = req.headers.has('X-Bypass-Err-Handler');
-        if (bypass) {
-            // We also remove it from the request (by creating a clone request) because otherwise CORS would refuse the
-            // request
-            req = req.clone({headers: req.headers.delete('X-Bypass-Err-Handler')});
-        }
-
         // Run the original handler(s)
         return next.handle(req)
             .pipe(catchError((error: HttpErrorResponse) => {
                 // If we're not to bypass the error handling
-                if (!bypass) {
+                if (req.context.get(HTTP_ERROR_HANDLING)) {
                     const errorId = error.error?.id;
                     const details = error.error?.details;
 

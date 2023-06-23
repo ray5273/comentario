@@ -1,5 +1,5 @@
 import { NgModule } from '@angular/core';
-import { CommonModule } from '@angular/common';
+import { CommonModule, NgOptimizedImage } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -14,28 +14,35 @@ import { DomainEditComponent } from './domains/domain-edit/domain-edit.component
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
 import { DomainPropertiesComponent } from './domains/domain-properties/domain-properties.component';
-import { DomainModeratorsComponent } from './domains/domain-moderators/domain-moderators.component';
-import { DomainStatsComponent } from './domain-stats/domain-stats.component';
+import { StatsComponent } from './stats/stats.component';
 import { DomainOperationsComponent } from './domain-operations/domain-operations.component';
 import { StatsChartComponent } from './stats-chart/stats-chart.component';
 import { DomainSelectorService } from './_services/domain-selector.service';
 import { CommentManagerComponent } from './comments/comment-manager/comment-manager.component';
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
+import { ManageGuard } from "./_guards/manage.guard";
+import { ModeratorNotifyPolicyPipe } from './_pipes/moderator-notify-policy.pipe';
+import { CommentSortPipe } from './_pipes/comment-sort.pipe';
+import { PageManagerComponent } from './pages/page-manager/page-manager.component';
+import { DomainBadgeComponent } from './domain-badge/domain-badge.component';
 
 @NgModule({
     declarations: [
+        CommentManagerComponent,
+        CommentSortPipe,
         ControlCenterComponent,
         DashboardComponent,
+        DomainBadgeComponent,
         DomainEditComponent,
-        DomainOperationsComponent,
         DomainImportComponent,
         DomainManagerComponent,
-        DomainModeratorsComponent,
+        DomainOperationsComponent,
         DomainPropertiesComponent,
-        DomainStatsComponent,
+        StatsComponent,
+        ModeratorNotifyPolicyPipe,
+        PageManagerComponent,
         ProfileComponent,
         StatsChartComponent,
-        CommentManagerComponent,
         UserManagerComponent,
     ],
     imports: [
@@ -51,9 +58,11 @@ import { UserManagerComponent } from './users/user-manager/user-manager.componen
         NgChartsModule,
         ToolsModule,
         ManageRoutingModule,
+        NgOptimizedImage,
     ],
     providers: [
         DomainSelectorService,
+        ManageGuard,
     ],
 })
 export class ManageModule {}

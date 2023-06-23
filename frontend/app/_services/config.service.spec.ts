@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { MockService } from 'ng-mocks';
+import { MockProvider } from 'ng-mocks';
 import { ConfigService } from './config.service';
 import { ApiGeneralService } from '../../generated-api';
 
@@ -10,10 +10,10 @@ describe('ConfigService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService)},
+                MockProvider(ApiGeneralService),
             ],
         });
-        (window as any).Cypress = undefined;
+        window.Cypress = undefined;
     });
 
     it('is created', () => {
@@ -27,7 +27,7 @@ describe('ConfigService', () => {
     });
 
     it('sets under-test flag to true with Cypress available', () => {
-        (window as any).Cypress = {};
+        window.Cypress = {} as any;
         service = TestBed.inject(ConfigService);
         expect(service.isUnderTest).toBeTrue();
     });

@@ -133,42 +133,6 @@ func DomainList(_ api_general.DomainListParams, user *data.User) middleware.Resp
 	return api_general.NewDomainListOK().WithPayload(&api_general.DomainListOKBody{Domains: ds})
 }
 
-func DomainModeratorDelete(params api_general.DomainModeratorDeleteParams, user *data.User) middleware.Responder {
-	/* TODO new-db
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserCanEditDomain(principal.GetHexID(), host); r != nil {
-		return r
-	}
-
-	// Delete the moderator from the database
-	if err := svc.TheDomainService.DeleteModerator(host, data.EmailPtrToString(params.Body.Email)); err != nil {
-		return respServiceError(err)
-	}
-	*/
-
-	// Succeeded
-	return api_general.NewDomainModeratorDeleteNoContent()
-}
-
-func DomainModeratorNew(params api_general.DomainModeratorNewParams, user *data.User) middleware.Responder {
-	/* TODO new-db
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserCanEditDomain(principal.GetHexID(), host); r != nil {
-		return r
-	}
-
-	// Register a new domain moderator
-	if _, err := svc.TheDomainService.CreateModerator(host, data.EmailPtrToString(params.Body.Email)); err != nil {
-		return respServiceError(err)
-	}
-	*/
-
-	// Succeeded
-	return api_general.NewDomainModeratorNewNoContent()
-}
-
 func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
 	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
 	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
@@ -181,23 +145,21 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 
 	// Properly validate the domain's host (the Swagger pattern only performs a superficial check)
 	domain := params.Body.Domain
-	if ok, _, _ := util.IsValidHostPort(string(domain.Host)); !ok {
-		logger.Warningf("DomainNew(): '%s' is not a valid host[:port]", domain.Host)
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails(string(domain.Host)))
+	host := strings.ToLower(strings.TrimSpace(string(domain.Host)))
+	if r := Verifier.DomainHostCanBeAdded(host); r != nil {
+		return r
 	}
 
 	// Validate identity providers
-	for _, id := range params.Body.FederatedIdpIds {
-		if _, r := Verifier.FederatedIdProvider(id); r != nil {
-			return r
-		}
+	if r := Verifier.FederatedIdProviders(params.Body.FederatedIdpIds); r != nil {
+		return r
 	}
 
 	// Persist a new domain record in the database
 	d := &data.Domain{
 		ID:               uuid.New(),
-		Name:             domain.Name,
-		Host:             string(domain.Host),
+		Name:             strings.TrimSpace(domain.Name),
+		Host:             host,
 		CreatedTime:      time.Now().UTC(),
 		IsReadonly:       domain.IsReadonly,
 		AuthAnonymous:    domain.AuthAnonymous,
@@ -288,10 +250,8 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	}
 
 	// Validate identity providers
-	for _, id := range params.Body.FederatedIdpIds {
-		if _, r := Verifier.FederatedIdProvider(id); r != nil {
-			return r
-		}
+	if r := Verifier.FederatedIdProviders(params.Body.FederatedIdpIds); r != nil {
+		return r
 	}
 
 	// Update domain properties

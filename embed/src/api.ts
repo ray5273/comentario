@@ -7,21 +7,35 @@ export interface ApiErrorResponse {
     readonly details?: string;
 }
 
-export interface ApiClientConfigResponse {
-    readonly baseUrl:       string;
+export interface ApiComentarioConfigResponse {
+    /** Base Comentario URL. */
+    readonly baseUrl: string;
+    /** Comentario version. */
+    readonly version: string;
+    /** Server build date. */
+    readonly buildDate: string;
+    /** Whether registration of new users (including commenters) is allowed. */
     readonly signupAllowed: boolean;
+    /** Whether non-owner users can add domains (and become owners). */
+    readonly newOwnersAllowed: boolean;
+    /** Configured federated identity providers. */
     readonly federatedIdps: IdentityProvider[];
 }
 
 export interface ApiCommentListResponse {
-    readonly pageInfo:   PageInfo;    // Page info
-    readonly comments:   Comment[];   // Comments on the page
-    readonly commenters: Commenter[]; // Commenters, who authored comments on the page (except those corresponding to deleted users)
+    /** Page info. */
+    readonly pageInfo: PageInfo;
+    /** Comments on the page. */
+    readonly comments: Comment[];
+    /** Commenters, who authored comments on the page (except those corresponding to deleted users). */
+    readonly commenters: Commenter[];
 }
 
 export interface ApiCommentNewResponse {
-    readonly comment:   Comment;   // Added comment
-    readonly commenter: Commenter; // Commenter that corresponds to the current user
+    /** Added comment. */
+    readonly comment: Comment;
+    /** Commenter that corresponds to the current user. */
+    readonly commenter: Commenter;
 }
 
 export interface ApiCommentUpdateResponse {
@@ -33,16 +47,20 @@ export interface ApiCommentVoteResponse {
 }
 
 export interface ApiAuthSignupResponse {
-    readonly isConfirmed: boolean; // Whether the user has been immediately confirmed
+    /** Whether the user has been immediately confirmed. */
+    readonly isConfirmed: boolean;
 }
 
 export interface ApiAuthLoginResponse {
-    readonly sessionToken: string;    // Session token to authenticate subsequent API requests with
-    readonly principal:    Principal; // Authenticated principal
+    /** Session token to authenticate subsequent API requests with. */
+    readonly sessionToken: string;
+    /** Authenticated principal. */
+    readonly principal: Principal;
 }
 
 export interface ApiAuthLoginTokenNewResponse {
-    readonly token: string; // New anonymous token
+    /** New anonymous token. */
+    readonly token: string;
 }
 
 export class ApiService {
@@ -231,10 +249,10 @@ export class ApiService {
     }
 
     /**
-     * Obtain client configuration.
+     * Obtain Comentario configuration.
      */
-    async configClientGet(): Promise<ApiClientConfigResponse> {
-        return this.apiClient.get<ApiClientConfigResponse>('config/client');
+    async comentarioConfig(): Promise<ApiComentarioConfigResponse> {
+        return this.apiClient.get<ApiComentarioConfigResponse>('config');
     }
 
     /**

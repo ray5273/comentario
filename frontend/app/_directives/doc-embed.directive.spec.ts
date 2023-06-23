@@ -2,7 +2,7 @@ import { Component, LOCALE_ID } from '@angular/core';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { HttpClientTestingModule, HttpTestingController } from '@angular/common/http/testing';
-import { MockProvider, MockService } from 'ng-mocks';
+import { MockProvider } from 'ng-mocks';
 import { DocEmbedDirective } from './doc-embed.directive';
 import { DocsService } from '../_services/docs.service';
 import { ConfigService } from '../_services/config.service';
@@ -27,17 +27,14 @@ describe('DocEmbedDirective', () => {
             imports: [HttpClientTestingModule],
             providers: [
                 {provide: LOCALE_ID, useValue: 'zh'},
-                {
-                    provide: DocsService,
-                    useValue: MockService(
-                        DocsService,
-                        {
-                            getEmbedPageUrl: pageName => {
-                                expect(pageName).toBe('test');
-                                return 'https://page.url/';
-                            }
-                        }),
-                },
+                MockProvider(
+                    DocsService,
+                    {
+                        getEmbedPageUrl: pageName => {
+                            expect(pageName).toBe('test');
+                            return 'https://page.url/';
+                        },
+                    }),
                 MockProvider(ConfigService),
             ],
         })

@@ -6,6 +6,7 @@ import {
     faChartLine,
     faChevronRight,
     faComments,
+    faFileLines,
     faQuestionCircle,
     faSignOutAlt,
     faTachometerAlt,
@@ -16,7 +17,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
 import { filter } from 'rxjs/operators';
-import { Principal } from '../../../../generated-api';
+import { Domain, Principal } from '../../../../generated-api';
 import { DomainSelectorService } from '../_services/domain-selector.service';
 
 @UntilDestroy()
@@ -33,8 +34,8 @@ export class ControlCenterComponent implements OnInit {
     /** Logged-in principal. */
     principal?: Principal | null;
 
-    /** Observable for getting the currently selected domain. */
-    readonly domain = this.domainSelectorSvc.domain;
+    /** Currently selected domain. */
+    domain?: Domain;
 
     readonly Paths = Paths;
 
@@ -44,6 +45,7 @@ export class ControlCenterComponent implements OnInit {
     readonly faChevronRight          = faChevronRight;
     readonly faChartLine             = faChartLine;
     readonly faComments              = faComments;
+    readonly faFileLines             = faFileLines;
     readonly faQuestionCircle        = faQuestionCircle;
     readonly faSignOutAlt            = faSignOutAlt;
     readonly faTachometerAlt         = faTachometerAlt;
@@ -63,7 +65,10 @@ export class ControlCenterComponent implements OnInit {
             .subscribe(() => this.expanded = false);
 
         // Monitor principal changes
-        this.authSvc.principal.subscribe(p => this.principal = p);
+        this.authSvc.principal.pipe(untilDestroyed(this)).subscribe(p => this.principal = p);
+
+        // Monitor selected domain changes
+        this.domainSelectorSvc.domain.pipe(untilDestroyed(this)).subscribe(d => this.domain = d);
     }
 
     logout() {

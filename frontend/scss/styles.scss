@@ -228,9 +228,11 @@ dl.detail-table, dl.detail-table > div {
     --bs-nav-pills-link-active-bg: #{$danger};
 }
 
-// Add a drop-shadow to cards
 .card {
+    // Add a drop-shadow to cards
     box-shadow: $btn-box-shadow;
+    // Colorise card title
+    --bs-card-title-color: #{$info};
 }
 
 //----------------------------------------------------------------------------------------------------------------------

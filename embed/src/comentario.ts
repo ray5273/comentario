@@ -371,7 +371,7 @@ export class Comentario {
      */
     private async loadClientConfig(): Promise<void> {
         this.federatedIdps = [];
-        const r = await this.apiService.configClientGet();
+        const r = await this.apiService.comentarioConfig();
         this.federatedIdps = r.federatedIdps;
     }
 

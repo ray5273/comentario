@@ -1,8 +1,8 @@
-<section class="container">
+<ng-container *ngIf="domain else noData">
     <!-- Heading -->
     <h1>
-        <span class="colon" i18n>Domain</span>&ngsp;
-        <span *ngIf="_domain">{{ _domain.name || _domain.host }}</span>
+        <ng-container i18n="heading">Domain</ng-container>
+        <app-domain-badge></app-domain-badge>
     </h1>
 
     <!-- Toolbar -->
@@ -39,7 +39,7 @@
         <!-- Buttons -->
         <div class="col-sm-3 order-sm-last pb-3">
             <!-- Edit settings button -->
-            <button [routerLink]="[Paths.manage.domains, _domain?.id, 'edit']" type="button" class="btn btn-secondary w-100">
+            <button [routerLink]="[Paths.manage.domains, domain.id, 'edit']" type="button" class="btn btn-secondary w-100">
                 <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
                 <ng-container i18n>Edit settings</ng-container>
             </button>
@@ -47,62 +47,79 @@
         <!-- Detail table -->
         <div class="col-sm-9">
 
-            <dl *ngIf="_domain as d" id="domainDetailTable" class="detail-table">
+            <dl id="domainDetailTable" class="detail-table">
                 <!-- Host -->
                 <div>
                     <dt i18n>Host</dt>
-                    <dd>{{ d.host }}</dd>
+                    <dd>{{ domain.host }}</dd>
                 </div>
                 <!-- Name -->
                 <div>
                     <dt i18n>Name</dt>
-                    <dd>{{ d.name }}</dd>
+                    <dd>{{ domain.name }}</dd>
                 </div>
                 <!-- State -->
                 <div>
                     <dt i18n>Read-only</dt>
-                    <dd><app-checkmark [value]="d.isReadonly"></app-checkmark></dd>
+                    <dd><app-checkmark [value]="domain.isReadonly"></app-checkmark></dd>
                 </div>
                 <!-- Require moderator approval on comments -->
-                <div *ngIf="d.modAnonymous || d.modAuthenticated || d.modLinks || d.modImages">
-                    <dt i18n>Require moderator approval on comments</dt>
+                <div *ngIf="hasApprovalPolicy">
+                    <dt i18n>Require moderator approval on comment, if</dt>
                     <dd>
-                        <ul class="list-unstyled mb-0">
-                            <li *ngIf="d.modAnonymous"     i18n>By anonymous users</li>
-                            <li *ngIf="d.modAuthenticated" i18n>By authenticated users</li>
-                            <li *ngIf="d.modLinks"         i18n>Containing links</li>
-                            <li *ngIf="d.modImages"        i18n>Containing images</li>
+                        <ul class="ps-3 mb-0">
+                            <li *ngIf="domain.modAnonymous"        i18n>Author is anonymous</li>
+                            <li *ngIf="domain.modAuthenticated"    i18n>Author is authenticated</li>
+                            <li *ngIf="domain.modNumComments as n" i18n>Author has less than {{ n }} approved comments</li>
+                            <li *ngIf="domain.modUserAgeDays as n" i18n>Author is registered less than {{ n }} days ago</li>
+                            <li *ngIf="domain.modLinks"            i18n>Comment contains link</li>
+                            <li *ngIf="domain.modImages"           i18n>Comment contains image</li>
                         </ul>
                     </dd>
                 </div>
-                <!-- Moderator notification policy -->
+                <!-- Email moderators -->
                 <div>
-                    <dt i18n>Moderator notification policy</dt>
-                    <dd>{{ d.modNotifyPolicy }}</dd>
+                    <dt i18n>Email moderators</dt>
+                    <dd>{{ domain.modNotifyPolicy | moderatorNotifyPolicy }}</dd>
                 </div>
-                <!-- Comment sorting -->
+                <!-- Default comment sort -->
                 <div>
-                    <dt i18n>Comment sorting</dt>
-                    <dd>{{ d.defaultSort }}</dd>
+                    <dt i18n>Default comment sort</dt>
+                    <dd>{{ domain.defaultSort | commentSort }}</dd>
                 </div>
                 <!-- Authentication -->
                 <div>
                     <dt i18n>Authentication</dt>
                     <dd>
-                        <ul class="list-unstyled mb-0">
-                            <li *ngIf="d.authAnonymous" i18n>Anonymous comments</li>
-                            <li *ngIf="d.authLocal" i18n>Local (password-based)</li>
-                            <li *ngIf="d.authSso"><ng-container i18n>Single Sign-On</ng-container>&ngsp;<i i18n>via</i> {{ d.ssoUrl }}</li>
-                            <li *ngFor="let idp of _fedIdps">{{ idp.name }}</li>
+                        <ul class="ps-3 mb-0">
+                            <li *ngIf="domain.authAnonymous" i18n>Anonymous comments</li>
+                            <li *ngIf="domain.authLocal" i18n>Local (password-based)</li>
+                            <li *ngIf="domain.authSso"><ng-container i18n>Single Sign-On</ng-container>&ngsp;<i i18n>via</i> {{ domain.ssoUrl }}</li>
+                            <li *ngFor="let idp of fedIdps">{{ idp.name }}</li>
                         </ul>
                     </dd>
                 </div>
                 <!-- Created -->
                 <div>
                     <dt i18n>Created</dt>
-                    <dd>{{ d.createdTime | date:'short' }}</dd>
+                    <dd>{{ domain.createdTime | date:'short' }}</dd>
+                </div>
+                <!-- Number of comments -->
+                <div>
+                    <dt i18n>Number of comments</dt>
+                    <dd>{{ domain.countComments | number }}</dd>
+                </div>
+                <!-- Number of views -->
+                <div>
+                    <dt i18n>Number of views</dt>
+                    <dd>{{ domain.countViews | number }}</dd>
                 </div>
             </dl>
         </div>
     </div>
-</section>
+</ng-container>
+
+<!-- Placeholder when no data -->
+<ng-template #noData>
+    <div class="text-center" i18n>No data available.</div>
+</ng-template>

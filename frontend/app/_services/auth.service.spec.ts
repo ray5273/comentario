@@ -2,7 +2,7 @@
 
 import { TestBed } from '@angular/core/testing';
 import { of, skip, throwError } from 'rxjs';
-import { MockService } from 'ng-mocks';
+import { MockProvider } from 'ng-mocks';
 import { AuthService } from './auth.service';
 import { ApiGeneralService, Principal } from '../../generated-api';
 
@@ -22,7 +22,7 @@ describe('AuthService', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             providers: [
-                {provide: ApiGeneralService, useValue: MockService(ApiGeneralService)},
+                MockProvider(ApiGeneralService),
             ],
         });
         api = TestBed.inject(ApiGeneralService);

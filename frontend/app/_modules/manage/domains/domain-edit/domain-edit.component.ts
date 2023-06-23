@@ -14,6 +14,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Utils } from '../../../../_utils/utils';
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 
 @Component({
     selector: 'app-domain-edit',
@@ -31,9 +32,11 @@ export class DomainEditComponent implements OnInit {
     domainFedIdpIds?: FederatedIdpId[];
 
     readonly Paths = Paths;
+    readonly sorts = Object.values(CommentSort);
+    readonly modNotifyPolicies = Object.values(DomainModNotifyPolicy);
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
-    readonly fedIdps = this.cfgSvc.clientConfig.federatedIdps;
+    readonly fedIdps = this.cfgSvc.config.federatedIdps;
     readonly form = this.fb.nonNullable.group({
         host:             '',
         name:             '',
@@ -43,6 +46,10 @@ export class DomainEditComponent implements OnInit {
         authSso:          false,
         modAnonymous:     true,
         modAuthenticated: false,
+        modNumCommentsOn: false,
+        modNumComments:   [{value: 3, disabled: true}, [Validators.min(1), Validators.max(999)]],
+        modUserAgeDaysOn: false,
+        modUserAgeDays:   [{value: 7, disabled: true}, [Validators.min(1), Validators.max(999)]],
         modImages:        true,
         modLinks:         true,
         modNotifyPolicy:  DomainModNotifyPolicy.Pending,
@@ -61,7 +68,12 @@ export class DomainEditComponent implements OnInit {
         private readonly api: ApiGeneralService,
         private readonly cfgSvc: ConfigService,
         private readonly toastSvc: ToastService,
-    ) {}
+        private readonly domainSelectorSvc: DomainSelectorService,
+    ) {
+        // Disable numeric controls when the corresponding checkbox is off
+        this.ctlModNumCommentsOn  .valueChanges.subscribe(b => Utils.enableControls(b, this.ctlModNumComments));
+        this.ctlModUserAgeDaysOn.valueChanges.subscribe(b => Utils.enableControls(b, this.ctlModUserAgeDays));
+    }
 
     get ctlAuthSso(): AbstractControl<boolean> {
         return this.form.get('authSso')!;
@@ -69,6 +81,22 @@ export class DomainEditComponent implements OnInit {
 
     get ctlHost(): AbstractControl<string> {
         return this.form.get('host')!;
+    }
+
+    get ctlModNumComments(): AbstractControl<number> {
+        return this.form.get('modNumComments')!;
+    }
+
+    get ctlModNumCommentsOn(): AbstractControl<boolean> {
+        return this.form.get('modNumCommentsOn')!;
+    }
+
+    get ctlModUserAgeDays(): AbstractControl<number> {
+        return this.form.get('modUserAgeDays')!;
+    }
+
+    get ctlModUserAgeDaysOn(): AbstractControl<boolean> {
+        return this.form.get('modUserAgeDaysOn')!;
     }
 
     get ctlName(): AbstractControl<string> {
@@ -99,6 +127,10 @@ export class DomainEditComponent implements OnInit {
                         authSso:          this.domain!.authSso,
                         modAnonymous:     this.domain!.modAnonymous,
                         modAuthenticated: this.domain!.modAuthenticated,
+                        modNumCommentsOn: !!this.domain!.modNumComments,
+                        modNumComments:   this.domain!.modNumComments || 3,
+                        modUserAgeDaysOn: !!this.domain!.modUserAgeDays,
+                        modUserAgeDays:   this.domain!.modUserAgeDays || 7,
                         modImages:        this.domain!.modImages,
                         modLinks:         this.domain!.modLinks,
                         modNotifyPolicy:  this.domain!.modNotifyPolicy,
@@ -135,6 +167,8 @@ export class DomainEditComponent implements OnInit {
                 authSso:          vals.authSso,
                 modAnonymous:     vals.modAnonymous,
                 modAuthenticated: vals.modAuthenticated,
+                modNumComments:   vals.modNumCommentsOn ? vals.modNumComments : 0,
+                modUserAgeDays:   vals.modUserAgeDaysOn ? vals.modUserAgeDays : 0,
                 modImages:        vals.modImages,
                 modLinks:         vals.modLinks,
                 modNotifyPolicy:  vals.modNotifyPolicy,
@@ -149,12 +183,10 @@ export class DomainEditComponent implements OnInit {
                 .subscribe(newDomain => {
                     // Add a success toast
                     this.toastSvc.success('data-saved').keepOnRouteChange();
+                    // Reload the current domain
+                    this.domainSelectorSvc.reload();
                     // Navigate to the edited/created domain
-                    const commands = [Paths.manage.domains, newDomain.id];
-                    if (!this.isNew) {
-                        commands.push('settings');
-                    }
-                    return this.router.navigate(commands);
+                    return this.router.navigate([Paths.manage.domains, newDomain.id]);
                 });
         }
     }

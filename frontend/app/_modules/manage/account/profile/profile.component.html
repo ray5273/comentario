@@ -1,4 +1,4 @@
-<section class="container-lg" *ngIf="principal">
+<ng-container *ngIf="principal">
     <!-- Heading -->
     <h1 i18n="heading">My profile</h1>
 
@@ -80,7 +80,7 @@
             </section>
         </div>
     </section>
-</section>
+</ng-container>
 
 <!-- Delete account confirmation dialog content template -->
 <ng-template #deleteAccountDlg>

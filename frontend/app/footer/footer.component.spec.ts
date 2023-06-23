@@ -1,8 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { MockProviders } from 'ng-mocks';
+import { MockProvider } from 'ng-mocks';
 import { FooterComponent } from './footer.component';
 import { DocsService } from '../_services/docs.service';
+import { ConfigService } from '../_services/config.service';
+import { ComentarioConfig } from '../../generated-api';
 
 describe('FooterComponent', () => {
 
@@ -13,7 +15,10 @@ describe('FooterComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [FooterComponent],
             imports: [RouterTestingModule],
-            providers: [MockProviders(DocsService)],
+            providers: [
+                MockProvider(DocsService),
+                MockProvider(ConfigService, {config: {} as ComentarioConfig}),
+            ],
         })
             .compileComponents();
 

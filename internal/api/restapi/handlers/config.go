@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -9,8 +10,7 @@ import (
 	"sort"
 )
 
-// ConfigClientGet returns client config
-func ConfigClientGet(api_general.ConfigClientGetParams) middleware.Responder {
+func ComentarioConfig(api_general.ComentarioConfigParams) middleware.Responder {
 	// Prepare a slice of IdP IDs
 	var idps []*models.FederatedIdentityProvider
 	for fid, fidp := range data.FederatedIdProviders {
@@ -26,10 +26,12 @@ func ConfigClientGet(api_general.ConfigClientGetParams) middleware.Responder {
 	})
 
 	// Succeeded
-	return api_general.NewConfigClientGetOK().WithPayload(&models.ClientConfig{
+	return api_general.NewComentarioConfigOK().WithPayload(&models.ComentarioConfig{
 		BaseURL:          config.BaseURL.String(),
+		BuildDate:        strfmt.DateTime(config.BuildDate),
 		FederatedIdps:    idps,
 		NewOwnersAllowed: config.CLIFlags.AllowNewOwners,
 		SignupAllowed:    config.CLIFlags.AllowSignups,
+		Version:          config.AppVersion,
 	})
 }
