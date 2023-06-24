@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"compress/gzip"
 	cryptorand "crypto/rand"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"github.com/avct/uasurfer"
@@ -253,6 +254,15 @@ func MarkdownToHTML(markdown string) string {
 	// Render the markdown
 	unsafe := blackfriday.Markdown([]byte(markdown), markdownRenderer, markdownExtensions)
 	return string(markdownPolicy.SanitizeBytes(unsafe))
+}
+
+// MD5ToHex converts the given MD5 binary checksum into its string representation. If checksum is nil, return an empty
+// string
+func MD5ToHex(checksum *[16]byte) string {
+	if checksum == nil {
+		return ""
+	}
+	return hex.EncodeToString((*checksum)[:])
 }
 
 // ParseAbsoluteURL parses and returns the passed string as an absolute URL. If allowHTTP == false, HTTPS URLs are

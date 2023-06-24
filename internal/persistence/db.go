@@ -1,6 +1,8 @@
 package persistence
 
 import (
+	"bufio"
+	"bytes"
 	"crypto/md5"
 	"database/sql"
 	"encoding/hex"
@@ -12,6 +14,7 @@ import (
 	"os"
 	"os/signal"
 	"path"
+	"regexp"
 	"sort"
 	"strings"
 	"sync/atomic"
@@ -90,43 +93,51 @@ func (db *Database) Migrate() error {
 
 	cntOK := 0
 	for _, filename := range available {
-		// Read in the content of the file
-		fullName := path.Join(config.CLIFlags.DBMigrationPath, filename)
-		contents, err := os.ReadFile(fullName)
+		// Check if the migration is already installed, and if yes, collect its MD5 checksum
+		var csExpected *[16]byte
+		if cs, ok := installed[filename]; ok {
+			csExpected = &cs
+		}
+
+		// Install the migration
+		csActual, status, err := db.installMigration(filename, csExpected)
+		var errMsg string
 		if err != nil {
-			logger.Errorf("Failed to read file '%s': %v", fullName, err)
+			errMsg = err.Error()
+		}
+
+		// If something was actually done
+		if status != "" {
+			// Add a log record, logging any error to the console
+			if _, dbErr := db.db.Exec(
+				"insert into cm_migration_log(filename, md5_expected, md5_actual, status, error_text) values($1, $2, $3, $4, $5);",
+				filename, util.MD5ToHex(csExpected), util.MD5ToHex(&csActual), status, errMsg,
+			); dbErr != nil {
+				logger.Errorf("Failed to add migration log record for '%s' (status '%s'): %v", filename, status, dbErr)
+			}
+		}
+
+		// Terminate the processing if the migration failed to install
+		if err != nil {
 			return err
 		}
 
-		// Calculate the checksum
-		csActual := md5.Sum(contents)
-
-		// Verify the migration checksum if it's already installed
-		if csExpected, ok := installed[filename]; ok {
-			if csExpected != csActual {
-				return fmt.Errorf("checksum mismatch for migration '%s': expected %x, actual %x", fullName, csExpected, csActual)
-			}
-			logger.Debugf("Migration '%s' is already installed", filename)
-			continue
-		}
-
-		// Run the content of the file
-		logger.Debugf("Installing migration '%s'", filename)
-		if _, err := db.db.Exec(string(contents)); err != nil {
-			return fmt.Errorf("failed to execute migration '%s': %v", fullName, err)
-		}
-
-		// Register the migration in the database
-		if _, err := db.db.Exec("insert into cm_migrations(filename, md5) values ($1, $2);", filename, hex.EncodeToString(csActual[:])); err != nil {
+		// Migration processed successfully: register it in the database, updating the checksum if necessary
+		if _, err := db.db.Exec(
+			"insert into cm_migrations(filename, md5) values ($1, $2) on conflict (filename) do update set md5=$2;",
+			filename, util.MD5ToHex(&csActual),
+		); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
 		}
 
-		// Succeeded
-		cntOK++
+		// Succeeded. Increment the successful migration counter if anything was changed
+		if status != "" {
+			cntOK++
+		}
 	}
 
 	if cntOK > 0 {
-		logger.Infof("Successfully installed %d new migrations", cntOK)
+		logger.Infof("Successfully installed %d migrations", cntOK)
 	} else {
 		logger.Infof("No new migrations found")
 	}
@@ -293,6 +304,131 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	// Check that Next() didn't error
 	if err := rows.Err(); err != nil {
 		logger.Errorf("getInstalledMigrations: Next() failed: %v", err)
+		return nil, err
+	}
+
+	// Succeeded
+	return m, nil
+}
+
+// installMigration installs a database migration contained in the given file, returning its actual MD5 checksum and the
+// status
+func (db *Database) installMigration(filename string, csExpected *[16]byte) (csActual [16]byte, status string, err error) {
+	status = "failed"
+
+	// Read in the content of the file
+	fullName := path.Join(config.CLIFlags.DBMigrationPath, filename)
+	contents, err := os.ReadFile(fullName)
+	if err != nil {
+		logger.Errorf("Failed to read file '%s': %v", fullName, err)
+		return
+	}
+
+	// Parse migration metadata
+	metadata, err := db.parseMetadata(contents)
+	if err != nil {
+		return
+	}
+
+	// Calculate the checksum
+	csActual = md5.Sum(contents)
+
+	// Verify the migration checksum if it's already installed
+	pendingStatus := "installed"
+	if csExpected != nil {
+		// If the migration is installed and the checksum is intact, proceed to the next migration
+		if *csExpected == csActual {
+			logger.Debugf("Migration '%s' is already installed", filename)
+			status = "" // Empty string means no change was made
+			return
+		}
+
+		// The checksum is different
+		errMsg := fmt.Sprintf("checksum mismatch for migration '%s': expected %x, actual %x", fullName, *csExpected, csActual)
+
+		// Check the metadata setting
+		switch metadata["onChecksumMismatch"] {
+		// Fail is the default
+		case "", "fail":
+			err = errors.New(errMsg)
+			return
+
+		// If it can be ignored: log it and skip the migration
+		case "skip":
+			logger.Warning(errMsg + ". Skipping the migration")
+			status = "skipped"
+			return
+
+		// If we need to rerun: log it and proceed with the installation
+		case "reinstall":
+			pendingStatus = "reinstalled"
+			logger.Warning(errMsg + ". Reinstalling the migration")
+
+		// Any other value is illegal
+		default:
+			logger.Warning(errMsg)
+			status = "" // Empty string means no change was made
+			err = fmt.Errorf(
+				"invalid value for 'onChecksumMismatch' entry in migration '%s' metadata (valid values are 'fail', 'skip', 'reinstall')",
+				fullName)
+			return
+		}
+	}
+
+	// Run the content of the file
+	logger.Debugf("Installing migration '%s'", filename)
+	if _, err = db.db.Exec(string(contents)); err != nil {
+		// #EXIT# is a special marker in the exception, which means script graciously exited
+		if strings.Contains(err.Error(), "#EXIT#") {
+			logger.Debugf("Migration script has successfully exited with: %v", err)
+			err = nil
+		} else {
+			// Any other error
+			err = fmt.Errorf("failed to execute migration '%s': %v", fullName, err)
+			return
+		}
+	}
+
+	// Succeeded
+	status = pendingStatus
+	return
+}
+
+// parseMetadata parses the given content of a migration .sql file and returns its metadata key-value map
+func (db *Database) parseMetadata(b []byte) (map[string]string, error) {
+	reMeta := regexp.MustCompile(`^--\s*@meta\b(.*)$`)
+	reKVal := regexp.MustCompile(`^(\w+)\s*=\s*(.+)$`)
+	m := map[string]string{}
+	scanner := bufio.NewScanner(bytes.NewReader(b))
+	i := 0
+	for scanner.Scan() {
+		i++
+
+		// Stop at the first non-comment line
+		if line := scanner.Text(); len(line) < 2 || line[0] != '-' || line[1] != '-' {
+			break
+
+			// Check for a metadata marker
+		} else if sm := reMeta.FindStringSubmatch(line); len(sm) == 0 {
+			// No valid metadata entry
+			continue
+
+			// Check for a metadata key-value content
+		} else if kv := strings.TrimSpace(sm[1]); kv == "" {
+			return nil, fmt.Errorf("empty @meta key-value at line %d", i)
+
+			// Parse the key-value
+		} else if smkv := reKVal.FindStringSubmatch(kv); len(smkv) == 0 {
+			return nil, fmt.Errorf("invalid @meta key-value at line %d: '%s'", i, kv)
+
+		} else {
+			// Metadata key=value entry found
+			m[smkv[1]] = smkv[2]
+		}
+	}
+
+	// Check for possible errors
+	if err := scanner.Err(); err != nil {
 		return nil, err
 	}
 

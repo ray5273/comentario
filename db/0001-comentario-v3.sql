@@ -2,6 +2,12 @@
 -- A start-over database migration, or, rather, an init script that (re)creates the entire database schema from the
 -- legacy Commento database, if any.
 --======================================================================================================================
+--
+-- This migration is reentrant: it's idempotent in the case of a successful execution, and it may receive future
+-- upgrades that fix certain aspects of the (imperfect) data model conversion.
+--
+-- @meta onChecksumMismatch = reinstall
+--
 
 -- Function that defines whether a migration of the legacy schema is required
 create or replace function legacySchema() returns boolean as
@@ -13,10 +19,11 @@ create or replace function legacySchema() returns boolean as
 do $$
 declare
     migCount integer;
-    newMig boolean;
+    isMigrated boolean;
 begin
-    -- Verify either all the original Commento's migration have been installed, or there's no legacy schema at all
+    -- If there's a legacy schema
     if legacySchema() then
+        -- Verify all the original Commento's migration have been installed
         select count(*) into migCount from migrations;
         if migCount < 30 then
             raise exception
@@ -28,17 +35,38 @@ begin
                 migCount;
         end if;
 
-        -- No new migrations table may exist
-        select exists(select from pg_tables where schemaname='public' and tablename='cm_migrations') into newMig;
-        if newMig then
-            raise exception E'\n\nTable cm_migrations already exists, which probably means legacy schema conversion has previously failed.\n\n';
+    else
+        -- No legacy schema. Check if the migration (= new schema) has already been installed
+        select exists(select from pg_tables where schemaname='public' and tablename='cm_migrations') into isMigrated;
+        if isMigrated then
+            select exists(select from cm_migrations where filename='0001-comentario-v3.sql') into isMigrated;
+            if isMigrated then
+                raise '#EXIT# Legacy schema is already migrated';
+            end if;
         end if;
     end if;
+
+    -- Now, we will proceed with schema installation and, if present, the legacy schema migration
 end $$;
 
 --======================================================================================================================
 -- Initialise the new schema
 --======================================================================================================================
+
+-- Drop any existing tables except for migrations
+
+drop table if exists cm_fed_identity_providers cascade;
+drop table if exists cm_users                  cascade;
+drop table if exists cm_user_sessions          cascade;
+drop table if exists cm_tokens                 cascade;
+drop table if exists cm_auth_sessions          cascade;
+drop table if exists cm_domains                cascade;
+drop table if exists cm_domains_users          cascade;
+drop table if exists cm_domains_idps           cascade;
+drop table if exists cm_domain_pages           cascade;
+drop table if exists cm_domain_page_views      cascade;
+drop table if exists cm_comments               cascade;
+drop table if exists cm_comment_votes          cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Extension to support UUID v4
@@ -52,6 +80,15 @@ create table if not exists cm_migrations (
     filename     varchar(255) primary key,                     -- Unique DB migration file name
     ts_installed timestamp default current_timestamp not null, -- Timestamp when the migration was installed
     md5          char(32)                            not null  -- MD5 checksum of the migration file content
+);
+
+create table if not exists cm_migration_log (
+    filename     varchar(255)                        not null, -- DB migration file name
+    ts_created   timestamp default current_timestamp not null, -- Timestamp when the record was created
+    md5_expected char(32)                            not null, -- Expected MD5 checksum of the migration file content
+    md5_actual   char(32)                            not null, -- Actual MD5 checksum of the migration file content
+    status       varchar(20)                         not null, -- Migration status: 'installed', 'reinstalled', 'failed', 'skipped'
+    error_text   text                                          -- Optional error text is is_ok is false
 );
 
 ------------------------------------------------------------------------------------------------------------------------
@@ -354,10 +391,24 @@ begin
                     'Migrated from Commento, commenterhex=' || c.commenterhex,
                     case when c.provider='commento' then null else c.provider end,
                     case when c.link='undefined' then '' else c.link end
-                from commenters c
+                from (
+                    -- email isn't unique in commenters, so we need to pick one to join upon
+                    select
+                        max(commenterhex) as commenterhex,
+                        email,
+                        max(name) as name,
+                        max(link) as link,
+                        max(photo) as photo,
+                        max(provider) as provider,
+                        max(joindate) as joindate,
+                        max(state) as state,
+                        max(passwordhash) as passwordhash
+                    from commenters
+                    group by email) c
                 join temp_commenterhex_map m on m.commenterhex=c.commenterhex
                 -- Prevent adding commenter for an already registered owner user
-                where not exists(select 1 from cm_users u where u.email=c.email);
+                left join cm_users ue on ue.email=c.email
+                where ue.id is null;
 
         -- Migrate domains
         insert into cm_domains(
@@ -441,6 +492,7 @@ begin
                 join temp_domain_map m on m.domain=p.domain;
 
         -- Migrate comments
+        alter table cm_comments drop constraint fk_comments_parent_id;
         insert into cm_comments(
                 id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created,
                 ts_approved, ts_deleted, user_created, user_approved, user_deleted)
@@ -467,12 +519,20 @@ begin
                 -- user deleted
                 left join temp_commenterhex_map cmd on cmd.commenterhex=c.deleterhex
                 left join cm_users ud on ud.id=cmd.id;
+        -- Move any comments referring to an invalid parent to root
+        update cm_comments c
+            set parent_id=null
+            where not exists(select from cm_comments where id=c.parent_id);
+        -- Re-add the foreign key
+        alter table cm_comments add constraint fk_comments_parent_id foreign key (parent_id) references cm_comments(id) on delete cascade;
 
         -- Migrate comment votes
         insert into cm_comment_votes(comment_id, user_id, negative, ts_voted)
             select cm.id, crm.id, v.direction<0, v.votedate
                 from votes v
                 join temp_commenthex_map cm on cm.commenthex=v.commenthex
+                -- Make sure the comment in question exists
+                join cm_comments c on c.id=cm.id
                 join temp_commenterhex_map crm on crm.commenterhex=v.commenterhex
                 where v.direction=-1 or v.direction=1;
 
