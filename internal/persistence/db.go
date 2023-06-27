@@ -124,7 +124,8 @@ func (db *Database) Migrate() error {
 
 		// Migration processed successfully: register it in the database, updating the checksum if necessary
 		if _, err := db.db.Exec(
-			"insert into cm_migrations(filename, md5) values ($1, $2) on conflict (filename) do update set md5=$2;",
+			"insert into cm_migrations(filename, md5) values ($1, $2) "+
+				"on conflict (filename) do update set md5=$2, ts_installed=current_timestamp;",
 			filename, util.MD5ToHex(&csActual),
 		); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)

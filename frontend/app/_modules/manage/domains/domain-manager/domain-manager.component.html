@@ -1,32 +1,64 @@
 <!-- Heading -->
 <h1 i18n="heading">Domains</h1>
 
-<!-- Domain grid and the New domain button -->
-<div [appSpinner]="domainsLoading.active" spinnerSize="lg" class="row row-cols-1 row-cols-sm-2 row-cols-md-3 g-3">
-    <!-- All domains button -->
-    <div class="col">
-        <a (click)="unselect()" (keydown.enter)="unselect()" [class.fw-bold]="!domain"
-           class="card h-100 py-4 flex-row justify-content-center align-items-center"
-           tabindex="0" role="button">
-            <fa-icon [icon]="faCheckDouble" class="me-1"></fa-icon>
-            <ng-container i18n>All domains</ng-container>
-        </a>
-    </div>
-    <!-- Domains -->
-    <div *ngFor="let d of domains" class="col">
-        <div class="card h-100">
-            <a [routerLink]="d.id" class="card-body text-center" [class.fw-bold]="d.id === domain?.id">
-                <div class="card-title">{{ d.name || d.host }}</div>
-                <div class="card-text">{{ d.host }}</div>
-            </a>
-        </div>
-    </div>
+<!-- Toolbar -->
+<div class="toolbar mb-3">
     <!-- New domain button -->
-    <div class="col">
-        <a [routerLink]="[Paths.manage.domains, 'create']"
-             class="card h-100 py-4 bg-success text-light flex-row justify-content-center align-items-center">
-            <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
-            <ng-container i18n>New domain</ng-container>
+    <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
+        <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
+        <ng-container i18n>New domain</ng-container>
+    </button>
+</div>
+
+<div [appSpinner]="domainsLoading.active" spinnerSize="lg">
+    <!-- Domain list -->
+    <div *ngIf="domains?.length" class="list-group">
+        <!-- All domains button -->
+        <a *ngIf="domains?.length" (click)="unselect()" (keydown.enter)="unselect()" class="list-group-item list-group-item-action" tabindex="0" role="button">
+            <div class="row">
+                <div class="col-auto">
+                    <input [checked]="!domain" class="form-check-input me-1" type="radio" value="" aria-label="All domains" i18n-aria-label>
+                </div>
+                <div class="col">
+                    <fa-icon [icon]="faCheckDouble" class="me-1"></fa-icon>
+                    <ng-container i18n>All domains</ng-container>
+                </div>
+            </div>
         </a>
+
+        <!-- Domains -->
+        <a *ngFor="let d of domains" [routerLink]="d.id" class="list-group-item list-group-item-action">
+            <div class="row">
+                <!-- Radio button -->
+                <div class="col-auto">
+                    <input [checked]="d.id === domain?.id" class="form-check-input me-1" type="radio" value="" [attr.aria-label]="d.name || d.host">
+                </div>
+                <!-- Domain name/host -->
+                <div class="col">
+                    <div class="fw-bold">{{ d.name || d.host }}</div>
+                    <div>{{ d.host }}</div>
+                    <!-- Comment/view counts (up to sm) -->
+                    <div class="d-sm-none small text-muted">
+                        <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
+                        <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
+                    </div>
+                </div>
+                <!-- Comment count (sm+) -->
+                <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                    <div class="lead">{{ d.countComments | number }}</div>
+                    <div class="small" i18n>comments</div>
+                </div>
+                <!-- View count (sm+) -->
+                <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                    <div class="lead">{{ d.countViews | number }}</div>
+                    <div class="small" i18n>views</div>
+                </div>
+            </div>
+        </a>
+    </div>
+
+    <!-- Add a domain placeholder -->
+    <div *ngIf="!domainsLoading.active && !domains?.length" class="py-4 text-center text-muted">
+        <ng-container i18n>You have no connected domains. Begin by adding one using the button above.</ng-container>
     </div>
 </div>

@@ -1,10 +1,10 @@
 import { Component, OnInit } from '@angular/core';
 import { faCheckDouble, faPlus } from '@fortawesome/free-solid-svg-icons';
-import { UntilDestroy, untilDestroyed } from "@ngneat/until-destroy";
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
-import { DomainSelectorService } from "../../_services/domain-selector.service";
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
