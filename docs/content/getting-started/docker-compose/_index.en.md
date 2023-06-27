@@ -46,6 +46,29 @@ postgres:
   database: comentario
   username: postgres
   password: postgres
+
+smtpServer:
+  host:
+  port:
+  username:
+  password:
+
+idp:
+  github:
+    key:    x
+    secret: x
+  gitlab:
+    key:    x
+    secret: x
+  google:
+    key:    x
+    secret: x
+  twitter:
+    key:    x
+    secret: x
+
+akismet:
+  key:
 ```
 
 The two files must reside in the same directory. Then, start the database and the backend using:
