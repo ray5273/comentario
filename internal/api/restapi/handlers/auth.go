@@ -74,11 +74,11 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 }
 
 func AuthDeleteProfile(_ api_general.AuthDeleteProfileParams, user *data.User) middleware.Responder {
-	// Fetch a list of domains
-	if domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false); err != nil {
+	// Fetch a list of domains the user owns
+	if domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false, false, ""); err != nil {
 		return respServiceError(err)
 
-		// Make sure the owner owns no domains
+		// Make sure no domains are owned
 	} else if l := len(domains); l > 0 {
 		return respBadRequest(ErrorOwnerHasDomains.WithDetails(fmt.Sprintf("%d domain(s)", l)))
 	}

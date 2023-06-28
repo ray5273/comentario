@@ -26,6 +26,7 @@ var logger = logging.MustGetLogger("persistence")
 
 // Database is an opaque structure providing database operations
 type Database struct {
+	debug    bool      // Whether debug logging is enabled
 	db       *sql.DB   // Internal SQL database instance
 	doneConn chan bool // Receives a true when the connection process has been finished (successfully or not)
 }
@@ -38,7 +39,7 @@ func InitDB() (*Database, error) {
 	}
 
 	// Create a new database instance
-	db := &Database{doneConn: make(chan bool, 1)}
+	db := &Database{debug: config.CLIFlags.DBDebug, doneConn: make(chan bool, 1)}
 
 	// Try to connect
 	if err := db.connect(); err != nil {
@@ -62,6 +63,9 @@ func (db *Database) Exec(query string, args ...any) error {
 
 // ExecOne executes the provided statement against the database and verifies there's exactly one row affected
 func (db *Database) ExecOne(query string, args ...any) error {
+	if db.debug {
+		logger.Debugf("db.ExecOne(%#v, %#v)", query, args)
+	}
 	if res, err := db.db.Exec(query, args...); err != nil {
 		return err
 	} else if cnt, err := res.RowsAffected(); err != nil {
@@ -76,6 +80,9 @@ func (db *Database) ExecOne(query string, args ...any) error {
 
 // ExecRes executes the provided statement against the database and returns its result
 func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
+	if db.debug {
+		logger.Debugf("db.ExecRes(%#v, %#v)", query, args)
+	}
 	return db.db.Exec(query, args...)
 }
 
@@ -109,7 +116,7 @@ func (db *Database) Migrate() error {
 		// If something was actually done
 		if status != "" {
 			// Add a log record, logging any error to the console
-			if _, dbErr := db.db.Exec(
+			if dbErr := db.Exec(
 				"insert into cm_migration_log(filename, md5_expected, md5_actual, status, error_text) values($1, $2, $3, $4, $5);",
 				filename, util.MD5ToHex(csExpected), util.MD5ToHex(&csActual), status, errMsg,
 			); dbErr != nil {
@@ -123,7 +130,7 @@ func (db *Database) Migrate() error {
 		}
 
 		// Migration processed successfully: register it in the database, updating the checksum if necessary
-		if _, err := db.db.Exec(
+		if err := db.Exec(
 			"insert into cm_migrations(filename, md5) values ($1, $2) "+
 				"on conflict (filename) do update set md5=$2, ts_installed=current_timestamp;",
 			filename, util.MD5ToHex(&csActual),
@@ -147,11 +154,17 @@ func (db *Database) Migrate() error {
 
 // Query executes the provided query against the database
 func (db *Database) Query(query string, args ...any) (*sql.Rows, error) {
+	if db.debug {
+		logger.Debugf("db.Query(%#v, %#v)", query, args)
+	}
 	return db.db.Query(query, args...)
 }
 
 // QueryRow queries a single row from the database
 func (db *Database) QueryRow(query string, args ...any) *sql.Row {
+	if db.debug {
+		logger.Debugf("db.QueryRow(%#v, %#v)", query, args)
+	}
 	return db.db.QueryRow(query, args...)
 }
 
@@ -267,7 +280,7 @@ func (db *Database) getAvailableMigrations() ([]string, error) {
 // getInstalledMigrations returns a map of installed database migrations (filename: md5)
 func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	// If no migrations table is present, it means no migration in installed either (the schema is most likely empty)
-	row := db.db.QueryRow("select exists(select from pg_tables where schemaname='public' and tablename='cm_migrations')")
+	row := db.QueryRow("select exists(select from pg_tables where schemaname='public' and tablename='cm_migrations')")
 	var exists bool
 	if err := row.Scan(&exists); err != nil {
 		return nil, err
@@ -276,7 +289,7 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	}
 
 	// Query the migrations table
-	rows, err := db.db.Query("select filename, md5 from cm_migrations;")
+	rows, err := db.Query("select filename, md5 from cm_migrations;")
 	if err != nil {
 		return nil, fmt.Errorf("getInstalledMigrations: Query() failed: %v", err)
 	}
@@ -378,7 +391,7 @@ func (db *Database) installMigration(filename string, csExpected *[16]byte) (csA
 
 	// Run the content of the file
 	logger.Debugf("Installing migration '%s'", filename)
-	if _, err = db.db.Exec(string(contents)); err != nil {
+	if err = db.Exec(string(contents)); err != nil {
 		// #EXIT# is a special marker in the exception, which means script graciously exited
 		if strings.Contains(err.Error(), "#EXIT#") {
 			logger.Debugf("Migration script has successfully exited with: %v", err)

@@ -508,6 +508,14 @@ parameters:
     format: uuid
     x-isnullable: false
 
+  queryFilter:
+    name: filter
+    in: query
+    required: false
+    description: Optional substring to filter the result by
+    type: string
+    maxLength: 100
+
   queryHost:
     name: host
     in: query
@@ -517,6 +525,15 @@ parameters:
     minLength: 1
     maxLength: 259
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
+
+  queryPageNumber:
+    name: page
+    in: query
+    required: false
+    description: Optional page number to return results for
+    type: integer
+    minimum: 1
+    default: 1
 
   queryToken:
     in: query
@@ -1469,6 +1486,9 @@ paths:
       summary: Get a list of registered domains
       tags:
         - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryFilter"
+        - $ref: "#/parameters/queryPageNumber"
       responses:
         200:
           description: List of domains

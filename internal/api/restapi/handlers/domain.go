@@ -116,9 +116,9 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	return api_general.NewDomainImportOK().WithPayload(&api_general.DomainImportOKBody{NumImported: count})
 }
 
-func DomainList(_ api_general.DomainListParams, user *data.User) middleware.Responder {
+func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
-	domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, true, true)
+	domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, user.IsSuperuser, true, true, swag.StringValue(params.Filter))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -136,7 +136,7 @@ func DomainList(_ api_general.DomainListParams, user *data.User) middleware.Resp
 func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
 	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
 	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
-		if ds, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false); err != nil {
+		if ds, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false, false, ""); err != nil {
 			return respServiceError(err)
 		} else if len(ds) == 0 {
 			return respForbidden(ErrorNewOwnersForbidden)
@@ -183,7 +183,7 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 	return api_general.NewDomainNewOK().WithPayload(d.ToDTO())
 }
 
-func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
+func DomainSsoSecretNew(_ api_general.DomainSsoSecretNewParams, _ *data.User) middleware.Responder {
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)

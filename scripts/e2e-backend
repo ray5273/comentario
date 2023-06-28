@@ -16,6 +16,7 @@ Options:
   -B  skip build
   -D  skip (re)starting database
   -G  skip OpenAPI code generation
+  -d  enable DB debug logging
   -h  show usage info and exit
 EOF
     exit 0
@@ -23,7 +24,8 @@ EOF
 
 # Parse the command line
 declare -i do_build=1 do_db=1 do_gen=1
-args=$(getopt -o BDGh -- "$@")
+comentario_args=
+args=$(getopt -o BDGdh -- "$@")
 [[ $? -ne 0 ]] && usage
 eval set -- $args
 for i; do
@@ -38,6 +40,10 @@ for i; do
             ;;
         -G)
             do_gen=0
+            shift
+            ;;
+        -d)
+            comentario_args="$comentario_args --db-debug"
             shift
             ;;
         -h)
@@ -85,7 +91,7 @@ echo "Using secrets file: $secrets"
 
 # Start the backend
 echo "Starting $build_dir/comentario"
-"$build_dir/comentario" \
+"$build_dir/comentario" $comentario_args \
     -vv \
     --e2e \
     --port=8080 \

@@ -3,6 +3,8 @@ package svc
 import (
 	"database/sql"
 	"fmt"
+	"github.com/doug-martin/goqu/v9"
+	_ "github.com/doug-martin/goqu/v9/dialect/postgres"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -38,10 +40,13 @@ type DomainService interface {
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
-	// ListByDomainUser fetches and returns a list of domains the specified user owns. If includeModerator == true, also
-	// includes domains where the user is a moderator. If includeAll == true, also includes domains where a domain user
-	// record is present for the user.
-	ListByDomainUser(userID *uuid.UUID, includeModerator, includeAll bool) ([]data.Domain, error)
+	// ListByDomainUser fetches and returns a list of domains the specified user has rights to; with all flags set to
+	// false, only returns domains the user owns.
+	//   - If superuser == true, includes all domains
+	//   - If includeModerator == true, also includes domains where the user is a moderator.
+	//   - If includeRegular == true, also includes domains where a domain user record is at all present for the user.
+	//   - filter is an optional substring to filter the result by.
+	ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter string) ([]data.Domain, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
@@ -321,29 +326,45 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	return nil
 }
 
-func (svc *domainService) ListByDomainUser(userID *uuid.UUID, includeModerator, includeAll bool) ([]data.Domain, error) {
-	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v)", userID, includeModerator, includeAll)
+func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter string) ([]data.Domain, error) {
+	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v, %v, %s)", userID, superuser, includeModerator, includeRegular, filter)
 
 	// Prepare a statement
-	var s strings.Builder
-	s.WriteString(
-		"select " +
-			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, " +
-			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, " +
-			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views " +
-			"from cm_domains d " +
-			"join cm_domains_users du on du.domain_id=d.id " +
-			"where du.user_id=$1")
-	if !includeAll {
-		s.WriteString(" and (du.is_owner")
-		if includeModerator {
-			s.WriteString(" or du.is_moderator")
+	q := goqu.Dialect("postgres").
+		From(goqu.T("cm_domains").As("d")).
+		Select(
+			"d.id", "d.name", "d.host", "d.ts_created", "d.is_readonly", "d.auth_anonymous", "d.auth_local",
+			"d.auth_sso", "d.sso_url", "d.sso_secret", "d.mod_anonymous", "d.mod_authenticated", "d.mod_num_comments",
+			"d.mod_user_age_days", "d.mod_links", "d.mod_images", "d.mod_notify_policy", "d.default_sort",
+			"d.count_comments", "d.count_views")
+
+	// Add filter by privileges
+	if !superuser {
+		q = q.Join(goqu.T("cm_domains_users").As("du"), goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")})).
+			Where(goqu.Ex{"du.user_id": userID})
+
+		if !includeRegular {
+			e := goqu.ExOr{"du.is_owner": true}
+			if includeModerator {
+				e["du.is_moderator"] = true
+			}
+			q = q.Where(e)
 		}
-		s.WriteString(");")
+	}
+
+	// Add substring filter
+	if filter != "" {
+		pattern := "%" + strings.ToLower(filter) + "%"
+		q = q.Where(goqu.Or(
+			goqu.L(`lower("d"."name")`).Like(pattern),
+			goqu.L(`lower("d"."host")`).Like(pattern),
+		))
 	}
 
 	// Query domains
-	if rows, err := db.Query(s.String(), userID); err != nil {
+	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+		return nil, err
+	} else if rows, err := db.Query(qSQL, qParams...); err != nil {
 		logger.Errorf("domainService.ListByDomainUser: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
 

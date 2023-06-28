@@ -75,6 +75,7 @@ var (
 		EnableSwaggerUI bool   `long:"enable-swagger-ui" description:"Enable Swagger UI at /api/docs"`
 		StaticPath      string `long:"static-path"       description:"Path to static files"                       default:"./frontend"             env:"STATIC_PATH"`
 		DBMigrationPath string `long:"db-migration-path" description:"Path to DB migration files"                 default:"./db"                   env:"DB_MIGRATION_PATH"`
+		DBDebug         bool   `long:"db-debug"          description:"Enable database debug logging"`
 		TemplatePath    string `long:"template-path"     description:"Path to template files"                     default:"./templates"            env:"TEMPLATE_PATH"`
 		SecretsFile     string `long:"secrets"           description:"Path to YAML file with secrets"             default:"secrets.yaml"           env:"SECRETS_FILE"`
 		AllowSignups    bool   `long:"allow-signups"     description:"Allow new user registration"                                                 env:"ALLOW_SIGNUPS"`

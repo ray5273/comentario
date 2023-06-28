@@ -3,11 +3,25 @@
 
 <!-- Toolbar -->
 <div class="toolbar mb-3">
-    <!-- New domain button -->
-    <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
-        <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
-        <ng-container i18n>New domain</ng-container>
-    </button>
+    <div class="container-fluid">
+        <div class="row g-2 flex-grow-1">
+            <!-- New domain button -->
+            <div class="col">
+               <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
+                    <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
+                    <ng-container i18n>New domain</ng-container>
+                </button>
+            </div>
+            <!-- Filter form -->
+            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+                <!-- Substring filter -->
+                <div class="col-sm-auto">
+                    <input formControlName="filter" id="filterString" class="form-control" type="search"
+                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+                </div>
+            </form>
+        </div>
+    </div>
 </div>
 
 <div [appSpinner]="domainsLoading.active" spinnerSize="lg">
@@ -59,6 +73,9 @@
 
     <!-- Add a domain placeholder -->
     <div *ngIf="!domainsLoading.active && !domains?.length" class="py-4 text-center text-muted">
-        <ng-container i18n>You have no connected domains. Begin by adding one using the button above.</ng-container>
+        <ng-container *ngIf="ctlFilterFilter.value?.length else noDomains" i18n>Nothing found.</ng-container>
+        <ng-template #noDomains>
+            <ng-container i18n>You have no connected domains. Begin by adding one using the button above.</ng-container>
+        </ng-template>
     </div>
 </div>

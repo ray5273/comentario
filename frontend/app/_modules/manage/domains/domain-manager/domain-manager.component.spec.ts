@@ -7,6 +7,7 @@ import { DomainManagerComponent } from './domain-manager.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { ReactiveFormsModule } from '@angular/forms';
 
 describe('DomainManagerComponent', () => {
 
@@ -16,7 +17,7 @@ describe('DomainManagerComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [DomainManagerComponent],
-            imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
+            imports: [RouterTestingModule, ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainList: () => of({domains: []} as any)}),
                 MockProvider(DomainSelectorService, {domain: of(undefined)}),
