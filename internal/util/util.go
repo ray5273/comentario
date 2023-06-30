@@ -59,7 +59,7 @@ var (
 type noOpMailer struct{}
 
 func (m *noOpMailer) Mail(_, recipient, subject, _ string) error {
-	logger.Debugf("NoOpMailer: not sending email to %s (subject: '%s')", recipient, subject)
+	logger.Debugf("NoOpMailer: not sending email to '%s' (subject: '%s')", recipient, subject)
 	return nil
 }
 

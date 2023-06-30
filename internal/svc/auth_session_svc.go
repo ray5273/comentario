@@ -24,7 +24,7 @@ type AuthSessionService interface {
 type authSessionService struct{}
 
 func (svc *authSessionService) Create(sessData, host string, token []byte) (*data.AuthSession, error) {
-	logger.Debugf("authSessionService.Create(%s, %s)", sessData, host)
+	logger.Debugf("authSessionService.Create('%s', '%s')", sessData, host)
 
 	// Create a session
 	as := data.NewAuthSession(sessData, host, token)
@@ -43,7 +43,7 @@ func (svc *authSessionService) Create(sessData, host string, token []byte) (*dat
 }
 
 func (svc *authSessionService) TakeByID(id *uuid.UUID) (*data.AuthSession, error) {
-	logger.Debugf("authSessionService.TakeByID(%v)", id)
+	logger.Debugf("authSessionService.TakeByID(%s)", id)
 
 	// Query and delete the session
 	var as data.AuthSession

@@ -102,7 +102,7 @@ func (svc *commentService) Create(c *data.Comment) error {
 }
 
 func (svc *commentService) DeleteByHost(host models.Host) error {
-	logger.Debugf("commentService.DeleteByHost(%s)", host)
+	logger.Debugf("commentService.DeleteByHost('%s')", host)
 
 	// Delete records from the database
 	if err := db.Exec("delete from comments where domain=$1;", host); err != nil {
@@ -147,7 +147,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 }
 
 func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error) {
-	logger.Debugf("commentService.ListWithCommentersByPage([%s], %#v)", &user.ID, page)
+	logger.Debugf("commentService.ListWithCommentersByPage(%s, %#v)", &user.ID, page)
 
 	// Prepare a query
 	statement :=

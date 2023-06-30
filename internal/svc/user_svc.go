@@ -95,7 +95,7 @@ func (svc *userService) CountUsers(includeSystem, includeLocal, includeFederated
 }
 
 func (svc *userService) Create(u *data.User) error {
-	logger.Debugf("userService.Create(%v)", u)
+	logger.Debugf("userService.Create(%#v)", u)
 
 	// Insert a new record
 	err := db.Exec(
@@ -117,7 +117,7 @@ func (svc *userService) Create(u *data.User) error {
 }
 
 func (svc *userService) CreateUserSession(s *data.UserSession) error {
-	logger.Debugf("userService.CreateUserSession(%v)", s)
+	logger.Debugf("userService.CreateUserSession(%#v)", s)
 
 	// Insert a new record
 	err := db.Exec(
@@ -234,7 +234,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 }
 
 func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.User, error) {
-	logger.Debugf("userService.FindUserByEmail(%s, %v)", email, localOnly)
+	logger.Debugf("userService.FindUserByEmail('%s', %v)", email, localOnly)
 
 	// Prepare the query
 	s := "select " +

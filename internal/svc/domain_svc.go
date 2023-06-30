@@ -82,7 +82,7 @@ type DomainService interface {
 type domainService struct{}
 
 func (svc *domainService) ClearByID(id *uuid.UUID) error {
-	logger.Debugf("domainService.ClearByID(%v)", id)
+	logger.Debugf("domainService.ClearByID(%s)", id)
 
 	if err := db.Exec("delete from cm_domain_pages where domain_id=$1;", id); err != nil {
 		logger.Errorf("domainService.ClearByID: Exec() failed: %v", err)
@@ -181,7 +181,7 @@ TODO new-db
 	}
 */
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
-	logger.Debugf("domainService.DeleteByID(%v)", id)
+	logger.Debugf("domainService.DeleteByID(%s)", id)
 
 	err := db.Exec("delete from cm_domains where id=$1;", id)
 	if err != nil {
@@ -194,7 +194,7 @@ func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 }
 
 func (svc *domainService) FindByHost(host string) (*data.Domain, error) {
-	logger.Debugf("domainService.FindByHost(%s)", host)
+	logger.Debugf("domainService.FindByHost('%s')", host)
 
 	// Query the row
 	row := db.QueryRow(
@@ -238,7 +238,7 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 }
 
 func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error) {
-	logger.Debugf("domainService.FindDomainUserByHost(%s, %s, %v)", host, userID, createIfMissing)
+	logger.Debugf("domainService.FindDomainUserByHost('%s', %s, %v)", host, userID, createIfMissing)
 
 	// Query the row
 	row := db.QueryRow(
@@ -327,7 +327,7 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 }
 
 func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter string) ([]data.Domain, error) {
-	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v, %v, %s)", userID, superuser, includeModerator, includeRegular, filter)
+	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v, %v, '%s')", userID, superuser, includeModerator, includeRegular, filter)
 
 	// Prepare a statement
 	q := goqu.Dialect("postgres").

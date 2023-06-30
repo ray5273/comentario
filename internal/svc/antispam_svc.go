@@ -21,7 +21,7 @@ type AntispamService interface {
 type antispamService struct{}
 
 func (svc *antispamService) CheckForSpam(host models.Host, userIP, userAgent, name, email, url, markdown string) bool {
-	logger.Debugf("antispamService.CheckForSpam(%s, %s, %s, %s, %s, ...)", host, userIP, userAgent, name, email, url)
+	logger.Debugf("antispamService.CheckForSpam('%s', '%s', '%s', '%s', '%s', ...)", host, userIP, userAgent, name, email, url)
 
 	// Ignore if Akismet isn't configured (consider it not spam)
 	if config.SecretsConfig.Akismet.Key == "" {

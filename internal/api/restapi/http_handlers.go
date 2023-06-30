@@ -134,7 +134,7 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 
 // serveFileWithPlaceholders serves out files that contain placeholders, i.e. HTML, CSS, and JS files
 func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.Request) {
-	logger.Debugf("Serving file /%s replacing placeholders", filePath)
+	logger.Debugf("Serving file '/%s' replacing placeholders", filePath)
 
 	// Read in the file
 	filename := path.Join(config.CLIFlags.StaticPath, filePath)

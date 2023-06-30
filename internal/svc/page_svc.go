@@ -71,7 +71,7 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 }
 
 func (svc *pageService) GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
-	logger.Debugf("pageService.GetRegisteringView(%#v, %s, ...)", domain, path)
+	logger.Debugf("pageService.GetRegisteringView(%#v, '%s', ...)", domain, path)
 
 	// Prepare a new UUID
 	id := uuid.New()
@@ -129,7 +129,7 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 }
 
 func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error) {
-	logger.Debugf("pageService.FindByDomainPath(%s, %s)", domainID, path)
+	logger.Debugf("pageService.FindByDomainPath(%s, '%s')", domainID, path)
 
 	// Query a page row
 	var p data.DomainPage
@@ -185,7 +185,7 @@ func (svc *pageService) Update(page *data.DomainPage) error {
 
 // fetchUpdatePageTitle fetches and updates the title of the provided page based on its URL
 func (svc *pageService) fetchUpdatePageTitle(host, path string, pageID *uuid.UUID) error {
-	logger.Debugf("pageService.fetchUpdatePageTitle(%s, %s)", host, path)
+	logger.Debugf("pageService.fetchUpdatePageTitle('%s', '%s')", host, path)
 
 	var title string
 	var err error

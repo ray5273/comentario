@@ -50,20 +50,20 @@ func (svc *mailService) SendCommentNotification(recipientEmail, kind, host, path
 }
 
 func (svc *mailService) Send(replyTo, recipient, subject, htmlMessage string) error {
-	logger.Debugf("mailService.Send(%s, %s, %s, ...)", replyTo, recipient, subject)
+	logger.Debugf("mailService.Send('%s', '%s', '%s', ...)", replyTo, recipient, subject)
 
 	// Send a new mail
 	err := util.AppMailer.Mail(replyTo, recipient, subject, htmlMessage)
 	if err != nil {
 		logger.Warningf("Failed to send email to %s: %v", recipient, err)
 	} else {
-		logger.Debugf("Successfully sent an email to %s", recipient)
+		logger.Debugf("Successfully sent an email to '%s'", recipient)
 	}
 	return err
 }
 
 func (svc *mailService) SendFromTemplate(replyTo, recipient, subject, templateFile string, templateData map[string]any) error {
-	logger.Debugf("mailService.SendFromTemplate(%s, %s, %s, %s, ...)", replyTo, recipient, subject, templateFile)
+	logger.Debugf("mailService.SendFromTemplate('%s', '%s', '%s', '%s', ...)", replyTo, recipient, subject, templateFile)
 
 	// Load and parse the template
 	filename := path.Join(config.CLIFlags.TemplatePath, templateFile)
@@ -72,7 +72,7 @@ func (svc *mailService) SendFromTemplate(replyTo, recipient, subject, templateFi
 		logger.Errorf("Failed to parse HTML template file %s: %v", filename, err)
 		return err
 	}
-	logger.Debugf("Parsed HTML template %s", filename)
+	logger.Debugf("Parsed HTML template '%s'", filename)
 
 	// Execute the template
 	var bufHTML bytes.Buffer
