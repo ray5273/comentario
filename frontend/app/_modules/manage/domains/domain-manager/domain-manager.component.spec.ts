@@ -1,13 +1,16 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
-import { MockProvider } from 'ng-mocks';
+import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainManagerComponent } from './domain-manager.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
-import { ReactiveFormsModule } from '@angular/forms';
+import { ConfigService } from '../../../../_services/config.service';
+import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
+import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
 
 describe('DomainManagerComponent', () => {
 
@@ -16,11 +19,12 @@ describe('DomainManagerComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainManagerComponent],
+            declarations: [DomainManagerComponent, MockComponents(SortSelectorComponent, SortPropertyComponent)],
             imports: [RouterTestingModule, ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainList: () => of({domains: []} as any)}),
                 MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(ConfigService),
             ],
         })
             .compileComponents();

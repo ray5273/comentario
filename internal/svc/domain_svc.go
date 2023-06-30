@@ -42,11 +42,14 @@ type DomainService interface {
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
 	// ListByDomainUser fetches and returns a list of domains the specified user has rights to; with all flags set to
 	// false, only returns domains the user owns.
-	//   - If superuser == true, includes all domains
+	//   - If superuser == true, includes all domains.
 	//   - If includeModerator == true, also includes domains where the user is a moderator.
 	//   - If includeRegular == true, also includes domains where a domain user record is at all present for the user.
 	//   - filter is an optional substring to filter the result by.
-	ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter string) ([]data.Domain, error)
+	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the host.
+	//   - dir is the sort direction.
+	//   - pageIndex is the page index, if negative, no pagination is applied.
+	ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]data.Domain, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
@@ -326,8 +329,8 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	return nil
 }
 
-func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter string) ([]data.Domain, error) {
-	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v, %v, '%s')", userID, superuser, includeModerator, includeRegular, filter)
+func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]data.Domain, error) {
+	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v, %v, '%s', '%s', %s, %d)", userID, superuser, includeModerator, includeRegular, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
 	q := goqu.Dialect("postgres").
@@ -359,6 +362,28 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, include
 			goqu.L(`lower("d"."name")`).Like(pattern),
 			goqu.L(`lower("d"."host")`).Like(pattern),
 		))
+	}
+
+	// Configure sorting
+	sortIdent := "d.host"
+	switch sortBy {
+	case "name":
+		sortIdent = "d.name"
+	case "created":
+		sortIdent = "d.ts_created"
+	case "countComments":
+		sortIdent = "d.count_comments"
+	case "countViews":
+		sortIdent = "d.count_views"
+	}
+	q = q.Order(
+		dir.ToOrderedExpression(sortIdent),
+		goqu.I("d.id").Asc(), // Always add ID for stable ordering
+	)
+
+	// Paginate if required
+	if pageIndex >= 0 {
+		q = q.Limit(util.ResultPageSize).Offset(uint(pageIndex) * util.ResultPageSize)
 	}
 
 	// Query domains

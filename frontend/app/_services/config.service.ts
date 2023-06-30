@@ -61,4 +61,12 @@ export class ConfigService {
     init(): Observable<unknown> {
         return this.api.comentarioConfig().pipe(tap(cc => this._config = cc));
     }
+
+    /**
+     * Returns whether the provided array is shorter than the configured result page size.
+     * @param d The array to check.
+     */
+    canLoadMore(d: any[] | null | undefined): boolean {
+        return (d?.length ?? 0) >= this.config.resultPageSize;
+    }
 }

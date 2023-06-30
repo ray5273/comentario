@@ -64,7 +64,7 @@ func (db *Database) Exec(query string, args ...any) error {
 // ExecOne executes the provided statement against the database and verifies there's exactly one row affected
 func (db *Database) ExecOne(query string, args ...any) error {
 	if db.debug {
-		logger.Debugf("db.ExecOne(%#v, %#v)", query, args)
+		logger.Debugf("db.ExecOne()\n - SQL: %s\n - Args: %#v", query, args)
 	}
 	if res, err := db.db.Exec(query, args...); err != nil {
 		return err
@@ -81,7 +81,7 @@ func (db *Database) ExecOne(query string, args ...any) error {
 // ExecRes executes the provided statement against the database and returns its result
 func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
 	if db.debug {
-		logger.Debugf("db.ExecRes(%#v, %#v)", query, args)
+		logger.Debugf("db.ExecRes()\n - SQL: %s\n - Args: %#v", query, args)
 	}
 	return db.db.Exec(query, args...)
 }
@@ -155,7 +155,7 @@ func (db *Database) Migrate() error {
 // Query executes the provided query against the database
 func (db *Database) Query(query string, args ...any) (*sql.Rows, error) {
 	if db.debug {
-		logger.Debugf("db.Query(%#v, %#v)", query, args)
+		logger.Debugf("db.Query()\n - SQL: %s\n - Args: %#v", query, args)
 	}
 	return db.db.Query(query, args...)
 }
@@ -163,7 +163,7 @@ func (db *Database) Query(query string, args ...any) (*sql.Rows, error) {
 // QueryRow queries a single row from the database
 func (db *Database) QueryRow(query string, args ...any) *sql.Row {
 	if db.debug {
-		logger.Debugf("db.QueryRow(%#v, %#v)", query, args)
+		logger.Debugf("db.QueryRow()\n - SQL: %s\n - Args: %#v", query, args)
 	}
 	return db.db.QueryRow(query, args...)
 }

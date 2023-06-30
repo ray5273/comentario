@@ -16,6 +16,8 @@ const (
 
 	DBMaxAttempts = 10 // Max number of attempts to connect to the database
 
+	ResultPageSize = 25 // Max number of database rows to return
+
 	MaxNumberStatsDays = 30 // Max number of days to get statistics for
 
 	CookieNameUserSession    = "comentario_user_session"  // Cookie name to store the session of the authenticated user

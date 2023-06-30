@@ -101,6 +101,15 @@ func DecompressGzip(rc io.Reader) ([]byte, error) {
 	}
 }
 
+// Default returns the default value if value has its zero value, otherwise the value itself
+func Default[T comparable](value, defaultValue T) T {
+	var zero T
+	if value == zero {
+		return defaultValue
+	}
+	return value
+}
+
 // FormatVersion renders the given uasurfer.Version as a string
 func FormatVersion(v *uasurfer.Version) string {
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)

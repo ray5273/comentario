@@ -52,6 +52,7 @@ definitions:
       - signupAllowed
       - newOwnersAllowed
       - federatedIdps
+      - resultPageSize
     properties:
       baseUrl:
         type: string
@@ -79,6 +80,11 @@ definitions:
         items:
           $ref: "#/definitions/federatedIdentityProvider"
         description: Configured federated identity providers
+      resultPageSize:
+        type: integer
+        format: uint
+        x-isnullable: false
+        description: Max number of database rows returned per page
 
   comment:
     description: Comment residing on a page
@@ -526,12 +532,20 @@ parameters:
     maxLength: 259
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
 
+  querySortDesc:
+    name: sortDesc
+    in: query
+    required: false
+    description: 'Optional sort direction: ascending (false) or descending (true)'
+    type: boolean
+
   queryPageNumber:
     name: page
     in: query
     required: false
     description: Optional page number to return results for
     type: integer
+    format: uint
     minimum: 1
     default: 1
 
@@ -1489,6 +1503,17 @@ paths:
       parameters:
         - $ref: "#/parameters/queryFilter"
         - $ref: "#/parameters/queryPageNumber"
+        - in: query
+          name: sortBy
+          type: string
+          enum:
+            - name
+            - host
+            - created
+            - countComments
+            - countViews
+          description: Property to sort results by
+        - $ref: "#/parameters/querySortDesc"
       responses:
         200:
           description: List of domains

@@ -1,12 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
+import { debounceTime, distinctUntilChanged, merge } from 'rxjs';
 import { faCheckDouble, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
-import { debounceTime, distinctUntilChanged } from 'rxjs';
+import { ConfigService } from '../../../../_services/config.service';
+import { Sort } from '../../_models/sort';
 
 @UntilDestroy()
 @Component({
@@ -17,7 +19,9 @@ export class DomainManagerComponent implements OnInit {
 
     domains?: Domain[];
     domain?: Domain;
+    canLoadMore = true;
 
+    readonly sort = new Sort('host');
     readonly domainsLoading = new ProcessingStatus();
     readonly Paths = Paths;
 
@@ -29,12 +33,18 @@ export class DomainManagerComponent implements OnInit {
     readonly faCheckDouble = faCheckDouble;
     readonly faPlus        = faPlus;
 
+    private loadedPageNum = 0;
     constructor(
         private readonly fb: FormBuilder,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
+        private readonly configSvc: ConfigService,
     ) {
         this.domainSelectorSvc.domain.pipe(untilDestroyed(this)).subscribe(d => this.domain = d);
+    }
+
+    get canAdd(): boolean {
+        return true; // TODO Allow to all for now
     }
 
     get ctlFilterFilter(): AbstractControl<string> {
@@ -43,17 +53,32 @@ export class DomainManagerComponent implements OnInit {
 
     ngOnInit(): void {
         // Load domain list
-        this.reload();
+        this.load(true);
 
-        // Subscribe to filter changes
-        this.ctlFilterFilter.valueChanges.pipe(debounceTime(500), distinctUntilChanged()).subscribe(() => this.reload());
+        // Subscribe to sort/filter changes
+        merge(
+                this.sort.changes,
+                this.ctlFilterFilter.valueChanges.pipe(debounceTime(500), distinctUntilChanged()))
+            .subscribe(() => this.load(true));
     }
 
     unselect() {
         this.domainSelectorSvc.setDomainId(undefined);
     }
 
-    private reload() {
-        this.api.domainList(this.ctlFilterFilter.value).pipe(this.domainsLoading.processing()).subscribe(d => this.domains = d.domains);
+    load(reset: boolean) {
+        // Reset the content/page if needed
+        if (reset) {
+            this.domains = undefined;
+            this.loadedPageNum = 0;
+        }
+
+        // Load the domain list
+        this.api.domainList(this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+            .pipe(this.domainsLoading.processing())
+            .subscribe(d => {
+                this.domains = [...this.domains || [], ...d.domains || []];
+                this.canLoadMore = this.configSvc.canLoadMore(d.domains);
+            });
     }
 }

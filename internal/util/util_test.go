@@ -120,6 +120,72 @@ func TestDecompressGzip(t *testing.T) {
 	}
 }
 
+func TestDefault_String(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        string
+		defaultValue string
+		want         string
+	}{
+		{"empty             ", "", "", ""},
+		{"nonempty          ", "bar", "", "bar"},
+		{"empty + default   ", "", "foo", "foo"},
+		{"nonempty + default", "bar", "foo", "bar"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Default(tt.value, tt.defaultValue); got != tt.want {
+				t.Errorf("Default() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefault_Int(t *testing.T) {
+	tests := []struct {
+		name         string
+		value        int
+		defaultValue int
+		want         int
+	}{
+		{"zero             ", 0, 0, 0},
+		{"nonzero          ", 17, 0, 17},
+		{"zero + default   ", 0, 42, 42},
+		{"nonzero + default", 17, 42, 17},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Default(tt.value, tt.defaultValue); got != tt.want {
+				t.Errorf("Default() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDefault_Ptr(t *testing.T) {
+	type ps = *struct{}
+	val := &struct{}{}
+	def := &struct{}{}
+	tests := []struct {
+		name         string
+		value        ps
+		defaultValue ps
+		want         ps
+	}{
+		{"zero             ", nil, nil, nil},
+		{"nonzero          ", val, nil, val},
+		{"zero + default   ", nil, def, def},
+		{"nonzero + default", val, def, val},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := Default(tt.value, tt.defaultValue); got != tt.want {
+				t.Errorf("Default() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestHTMLDocumentTitle(t *testing.T) {
 	tests := []struct {
 		name    string

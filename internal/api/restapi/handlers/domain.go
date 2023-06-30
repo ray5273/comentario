@@ -118,7 +118,15 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 
 func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
-	domains, err := svc.TheDomainService.ListByDomainUser(&user.ID, user.IsSuperuser, true, true, swag.StringValue(params.Filter))
+	domains, err := svc.TheDomainService.ListByDomainUser(
+		&user.ID,
+		user.IsSuperuser,
+		true,
+		true,
+		swag.StringValue(params.Filter),
+		swag.StringValue(params.SortBy),
+		data.SortDirection(swag.BoolValue(params.SortDesc)),
+		int(swag.Uint64Value(params.Page)-1))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -136,7 +144,7 @@ func DomainList(params api_general.DomainListParams, user *data.User) middleware
 func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
 	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
 	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
-		if ds, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false, false, ""); err != nil {
+		if ds, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false, false, "", "", data.SortAsc, 0); err != nil {
 			return respServiceError(err)
 		} else if len(ds) == 0 {
 			return respForbidden(ErrorNewOwnersForbidden)

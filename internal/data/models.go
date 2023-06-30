@@ -6,6 +6,8 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/avct/uasurfer"
+	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
@@ -19,6 +21,34 @@ import (
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
 var AnonymousUser = &User{Name: "Anonymous"}
 
+// ---------------------------------------------------------------------------------------------------------------------
+
+type SortDirection bool
+
+const (
+	SortAsc  = SortDirection(false)
+	SortDesc = SortDirection(true)
+)
+
+func (sd SortDirection) String() string {
+	if sd == SortDesc {
+		return "desc"
+	}
+	return "asc"
+}
+
+// ToOrderedExpression converts the given direction and a related identifier to goqu's OrderedExpression
+func (sd SortDirection) ToOrderedExpression(ident string) exp.OrderedExpression {
+	i := goqu.I(ident)
+	if sd == SortAsc {
+		return i.Asc()
+	}
+	return i.Desc()
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// FederatedIdentityProvider describes a federated identity provider
 type FederatedIdentityProvider struct {
 	Icon   string                // Provider icon name
 	ID     models.FederatedIdpID // Provider ID

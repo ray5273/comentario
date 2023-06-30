@@ -25,6 +25,8 @@ import { ModeratorNotifyPolicyPipe } from './_pipes/moderator-notify-policy.pipe
 import { CommentSortPipe } from './_pipes/comment-sort.pipe';
 import { PageManagerComponent } from './pages/page-manager/page-manager.component';
 import { DomainBadgeComponent } from './domain-badge/domain-badge.component';
+import { SortSelectorComponent } from './sort-selector/sort-selector.component';
+import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
 
 @NgModule({
     declarations: [
@@ -44,6 +46,8 @@ import { DomainBadgeComponent } from './domain-badge/domain-badge.component';
         ProfileComponent,
         StatsChartComponent,
         UserManagerComponent,
+        SortSelectorComponent,
+        SortPropertyComponent,
     ],
     imports: [
         CommonModule,

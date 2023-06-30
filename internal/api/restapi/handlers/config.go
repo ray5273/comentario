@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
 	"sort"
 )
 
@@ -31,6 +32,7 @@ func ComentarioConfig(api_general.ComentarioConfigParams) middleware.Responder {
 		BuildDate:        strfmt.DateTime(config.BuildDate),
 		FederatedIdps:    idps,
 		NewOwnersAllowed: config.CLIFlags.AllowNewOwners,
+		ResultPageSize:   util.ResultPageSize,
 		SignupAllowed:    config.CLIFlags.AllowSignups,
 		Version:          config.AppVersion,
 	})
