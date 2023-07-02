@@ -21,6 +21,8 @@ var TheDomainService DomainService = &domainService{}
 type DomainService interface {
 	// ClearByID removes all dependent objects (users, pages, comments, votes etc.) for the specified domain by its ID
 	ClearByID(id *uuid.UUID) error
+	// CountOwned returns the number of domains the specified user owns
+	CountOwned(userID *uuid.UUID) (int, error)
 	// Create creates and persists a new domain record
 	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error
 	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
@@ -40,16 +42,14 @@ type DomainService interface {
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
-	// ListByDomainUser fetches and returns a list of domains the specified user has rights to; with all flags set to
-	// false, only returns domains the user owns.
-	//   - If superuser == true, includes all domains.
-	//   - If includeModerator == true, also includes domains where the user is a moderator.
-	//   - If includeRegular == true, also includes domains where a domain user record is at all present for the user.
+	// ListByDomainUser fetches and returns a list of domains the specified user has any rights to, and a list of
+	// corresponding domain users.
+	//   - If superuser == true, includes all domains, including those having no record for the domain user.
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the host.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]data.Domain, error)
+	ListByDomainUser(userID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
@@ -94,6 +94,20 @@ func (svc *domainService) ClearByID(id *uuid.UUID) error {
 
 	// Succeeded
 	return nil
+}
+
+func (svc *domainService) CountOwned(userID *uuid.UUID) (int, error) {
+	logger.Debugf("domainService.CountOwned(%s)", userID)
+
+	// Query the owned domain count
+	var i int
+	if err := db.QueryRow("select count(*) from cm_domain_users where user_id=$1 and is_owner=true;", userID).Scan(&i); err != nil {
+		return 0, translateDBErrors(err)
+	} else {
+		// Succeeded
+		return i, nil
+	}
+
 }
 
 func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error {
@@ -251,9 +265,8 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
 			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
 			// Domain user fields
-			"du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
-			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
-			"coalesce(du.notify_moderator, false), du.ts_created "+
+			"du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, du.notify_moderator, "+
+			"du.ts_created "+
 			"from cm_domains d "+
 			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 "+
 			"where d.host=$2;",
@@ -296,9 +309,8 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
 			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
 			// Domain user fields
-			"du.user_id, coalesce(du.is_owner, false), "+
-			"coalesce(du.is_moderator, false), coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
-			"coalesce(du.notify_moderator, false), du.ts_created "+
+			"du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, du.notify_moderator, "+
+			"du.ts_created "+
 			"from cm_domains d "+
 			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$2 "+
 			"where d.id=$1;",
@@ -329,30 +341,32 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	return nil
 }
 
-func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, includeModerator, includeRegular bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]data.Domain, error) {
-	logger.Debugf("domainService.ListByDomainUser(%s, %v, %v, %v, '%s', '%s', %s, %d)", userID, superuser, includeModerator, includeRegular, filter, sortBy, dir, pageIndex)
+func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error) {
+	logger.Debugf("domainService.ListByDomainUser(%s, %v, '%s', '%s', %s, %d)", userID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
 	q := goqu.Dialect("postgres").
 		From(goqu.T("cm_domains").As("d")).
 		Select(
+			// Domain fields
 			"d.id", "d.name", "d.host", "d.ts_created", "d.is_readonly", "d.auth_anonymous", "d.auth_local",
 			"d.auth_sso", "d.sso_url", "d.sso_secret", "d.mod_anonymous", "d.mod_authenticated", "d.mod_num_comments",
 			"d.mod_user_age_days", "d.mod_links", "d.mod_images", "d.mod_notify_policy", "d.default_sort",
-			"d.count_comments", "d.count_views")
+			"d.count_comments", "d.count_views",
+			// Domain user fields
+			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
+			"du.notify_moderator", "du.ts_created")
 
-	// Add filter by privileges
-	if !superuser {
-		q = q.Join(goqu.T("cm_domains_users").As("du"), goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")})).
-			Where(goqu.Ex{"du.user_id": userID})
+	// Add filter by domain user
+	duTable := goqu.T("cm_domains_users").As("du")
+	duJoinOn := goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")})
+	if superuser {
+		// Super user can see all domains, so a domain user is optional
+		q = q.LeftJoin(duTable, duJoinOn)
 
-		if !includeRegular {
-			e := goqu.ExOr{"du.is_owner": true}
-			if includeModerator {
-				e["du.is_moderator"] = true
-			}
-			q = q.Where(e)
-		}
+	} else {
+		// For regular users, only those domains are visible that the user is registered for
+		q = q.Join(duTable, duJoinOn).Where(goqu.Ex{"du.user_id": userID})
 	}
 
 	// Add substring filter
@@ -387,19 +401,46 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser, include
 	}
 
 	// Query domains
+	var rows *sql.Rows
 	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
-		return nil, err
-	} else if rows, err := db.Query(qSQL, qParams...); err != nil {
+		return nil, nil, err
+	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
 		logger.Errorf("domainService.ListByDomainUser: Query() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, nil, translateDBErrors(err)
 
-	} else if domains, err := svc.fetchDomains(rows); err != nil {
-		return nil, translateDBErrors(err)
-
-	} else {
-		// Succeeded
-		return domains, nil
 	}
+
+	// Fetch the domains and domain users
+	defer rows.Close()
+	var ds []*data.Domain
+	var dus []*data.DomainUser
+	for rows.Next() {
+		if d, du, err := svc.fetchDomainUser(rows); err != nil {
+			return nil, nil, translateDBErrors(err)
+		} else {
+			// Determine which domain fields the user is allowed to see
+			if superuser || (du != nil && du.IsOwner) {
+				ds = append(ds, d)
+			} else {
+				// Non-owner users are only allowed to see the host. Render negative counts as an indication they're
+				// unavailable
+				ds = append(ds, &data.Domain{ID: d.ID, Host: d.Host, CountComments: -1, CountViews: -1})
+			}
+
+			// Accumulate domain users, if there's one
+			if du != nil {
+				dus = append(dus, du)
+			}
+		}
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return ds, dus, nil
 }
 
 func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error) {
@@ -700,36 +741,13 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 	return &d, nil
 }
 
-// fetchDomains fetches and returns a list domain instances from the provided database rows
-func (svc *domainService) fetchDomains(rows *sql.Rows) ([]data.Domain, error) {
-	defer rows.Close()
-
-	// Iterate all rows
-	var res []data.Domain
-	for rows.Next() {
-		if d, err := svc.fetchDomain(rows); err != nil {
-			return nil, err
-		} else {
-			res = append(res, *d)
-		}
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-
-	// Succeeded
-	return res, nil
-}
-
 // fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner
 func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.DomainUser, error) {
 	var d data.Domain
 	var ssoSecret sql.NullString
-	var du data.DomainUser
-	var uid uuid.NullUUID
-	var duCreated sql.NullTime
+	var duID uuid.NullUUID
+	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator sql.NullBool
+	var duCreatedTime sql.NullTime
 	err := sc.Scan(
 		&d.ID,
 		&d.Name,
@@ -751,13 +769,13 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&d.DefaultSort,
 		&d.CountComments,
 		&d.CountViews,
-		&uid,
-		&du.IsOwner,
-		&du.IsModerator,
-		&du.IsCommenter,
-		&du.NotifyReplies,
-		&du.NotifyModerator,
-		&duCreated)
+		&duID,
+		&duIsOwner,
+		&duIsModerator,
+		&duIsCommenter,
+		&duNotifyReplies,
+		&duNotifyModerator,
+		&duCreatedTime)
 	if err != nil {
 		logger.Errorf("domainService.fetchDomainUser: Scan() failed: %v", err)
 		return nil, nil, err
@@ -768,11 +786,17 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 
 	// If there's a DomainUser
 	var pdu *data.DomainUser
-	if uid.Valid {
-		du.DomainID = d.ID
-		du.UserID = uid.UUID
-		du.CreatedTime = duCreated.Time
-		pdu = &du
+	if duID.Valid {
+		pdu = &data.DomainUser{
+			DomainID:        d.ID,
+			UserID:          duID.UUID,
+			IsOwner:         duIsOwner.Bool,
+			IsModerator:     duIsModerator.Bool,
+			IsCommenter:     duIsCommenter.Bool,
+			NotifyReplies:   duNotifyReplies.Bool,
+			NotifyModerator: duNotifyModerator.Bool,
+			CreatedTime:     duCreatedTime.Time,
+		}
 	}
 
 	// Succeeded

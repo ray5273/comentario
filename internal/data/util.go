@@ -29,6 +29,21 @@ func NullUUIDStr(u *uuid.NullUUID) strfmt.UUID {
 	return strfmt.UUID(u.UUID.String())
 }
 
+// SliceToDTOs converts a slice of models into a slice of DTO instances using the ToDTO() method of the former
+func SliceToDTOs[F DTOAware[T], T any](in []F) []T {
+	// Nil pointers will be passed through
+	if in == nil {
+		return nil
+	}
+
+	// Convert the slice
+	out := make([]T, len(in))
+	for i, v := range in {
+		out[i] = v.ToDTO()
+	}
+	return out
+}
+
 // PathToString converts a value of models.Path into a string
 func PathToString(v models.Path) string {
 	return strings.TrimSpace(string(v))

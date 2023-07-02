@@ -77,6 +77,35 @@ func TestNullUUIDStr(t *testing.T) {
 	}
 }
 
+type testX struct {
+	x int
+}
+
+type testY = testX
+
+func (x *testX) ToDTO() *testY {
+	return &testY{x: x.x + 1}
+}
+
+func TestSliceToDTOs(t *testing.T) {
+	tests := []struct {
+		name string
+		in   []*testX
+		want []*testY
+	}{
+		{"nil     ", nil, nil},
+		{"empty   ", []*testX{}, []*testY{}},
+		{"nonempty", []*testX{{52}, {64}, {0}, {-77}}, []*testY{{53}, {65}, {1}, {-76}}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := SliceToDTOs[*testX, *testY](tt.in); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("SliceToDTOs() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestPathToString(t *testing.T) {
 	tests := []struct {
 		name string

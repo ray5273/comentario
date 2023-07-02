@@ -157,28 +157,30 @@ export class DomainEditComponent implements OnInit {
         // Submit the form if it's valid
         if (this.form.valid) {
             const vals = this.form.value;
-            const domain: Domain = {
+            const domain: Partial<Domain> = {
                 // Host cannot be changed once set
                 host:             vals.host || this.domain!.host,
                 name:             vals.name,
                 isReadonly:       vals.isReadonly,
-                authAnonymous:    vals.authAnonymous,
-                authLocal:        vals.authLocal,
-                authSso:          vals.authSso,
-                modAnonymous:     vals.modAnonymous,
-                modAuthenticated: vals.modAuthenticated,
-                modNumComments:   vals.modNumCommentsOn ? vals.modNumComments : 0,
-                modUserAgeDays:   vals.modUserAgeDaysOn ? vals.modUserAgeDays : 0,
-                modImages:        vals.modImages,
-                modLinks:         vals.modLinks,
-                modNotifyPolicy:  vals.modNotifyPolicy,
+                authAnonymous:    !!vals.authAnonymous,
+                authLocal:        !!vals.authLocal,
+                authSso:          !!vals.authSso,
+                modAnonymous:     !!vals.modAnonymous,
+                modAuthenticated: !!vals.modAuthenticated,
+                modNumComments:   vals.modNumCommentsOn ? (vals.modNumComments ?? 0) : 0,
+                modUserAgeDays:   vals.modUserAgeDaysOn ? (vals.modUserAgeDays ?? 0) : 0,
+                modImages:        !!vals.modImages,
+                modLinks:         !!vals.modLinks,
+                modNotifyPolicy:  vals.modNotifyPolicy ?? DomainModNotifyPolicy.Pending,
                 ssoUrl:           vals.ssoUrl ?? '',
-                defaultSort:      vals.defaultSort,
+                defaultSort:      vals.defaultSort ?? CommentSort.Td,
             };
             const federatedIdpIds = this.fedIdps.filter((_, idx) => vals.fedIdps?.[idx]).map(idp => idp.id);
 
             // Run creation/updating with the API
-            (this.isNew ? this.api.domainNew({domain, federatedIdpIds}) : this.api.domainUpdate(this.domain!.id!, {domain, federatedIdpIds}))
+            (this.isNew ?
+                    this.api.domainNew({domain: domain as Domain, federatedIdpIds}) :
+                    this.api.domainUpdate(this.domain!.id!, {domain: domain as Domain, federatedIdpIds}))
                 .pipe(this.saving.processing())
                 .subscribe(newDomain => {
                     // Add a success toast

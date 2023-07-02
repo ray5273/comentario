@@ -208,13 +208,29 @@ definitions:
     description: Registered domain
     type: object
     required:
+      - id
       - host
+      - createdTime
+      - authAnonymous
+      - authLocal
+      - authSso
+      - modAnonymous
+      - modAuthenticated
+      - modNumComments
+      - modUserAgeDays
+      - modLinks
+      - modImages
+      - modNotifyPolicy
+      - defaultSort
+      - countComments
+      - countViews
     properties:
       id:
         type: string
         format: uuid
         readOnly: true
         description: Unique domain ID
+        x-isnullable: false
       name:
         type: string
         maxLength: 255
@@ -222,72 +238,89 @@ definitions:
       host:
         $ref: "#/definitions/host"
         description: Domain host
+        x-isnullable: false
       createdTime:
         type: string
         format: date-time
         readOnly: true
         description: When the domain was created
+        x-isnullable: false
       isReadonly:
         type: boolean
         description: Whether the domain is readonly (no new comments are allowed)
         x-omitempty: false
+        x-isnullable: false
       authAnonymous:
         type: boolean
         description: Whether anonymous comments are allowed
         x-omitempty: false
+        x-isnullable: false
       authLocal:
         type: boolean
         description: Whether local authentication is allowed
         x-omitempty: false
+        x-isnullable: false
       authSso:
         type: boolean
         description: Whether SSO authentication is allowed
         x-omitempty: false
+        x-isnullable: false
       ssoUrl:
         type: string
         description: SSO provider URL
+        x-omitempty: false
       modAnonymous:
         type: boolean
         description: Whether all anonymous comments are to be approved by a moderator
         x-omitempty: false
+        x-isnullable: false
       modAuthenticated:
         type: boolean
         description: Whether all non-anonymous comments are to be approved by a moderator
         x-omitempty: false
+        x-isnullable: false
       modNumComments:
         type: integer
         format: uint
         description: Number of first comments by user on this domain that require a moderator approval
         x-omitempty: false
+        x-isnullable: false
       modUserAgeDays:
         type: integer
         format: uint
         description: Number of first days since user has registered on this domain to require a moderator approval on their comments
         x-omitempty: false
+        x-isnullable: false
       modLinks:
         type: boolean
         description: Whether all comments containing a link are to be approved by a moderator
         x-omitempty: false
+        x-isnullable: false
       modImages:
         type: boolean
         description: Whether all comments containing an image are to be approved by a moderator
         x-omitempty: false
+        x-isnullable: false
       modNotifyPolicy:
         $ref: "#/definitions/domainModNotifyPolicy"
         description: Moderator notification policy for domain
+        x-isnullable: false
       defaultSort:
         $ref: "#/definitions/commentSort"
         description: Default comment sorting for domain
+        x-isnullable: false
       countComments:
         type: integer
         readOnly: true
-        description: Total number of comments
+        description: Total number of comments. -1 means the value is not provided
         x-omitempty: false
+        x-isnullable: false
       countViews:
         type: integer
         readOnly: true
-        description: Total number of views
+        description: Total number of views. -1 means the value is not provided
         x-omitempty: false
+        x-isnullable: false
 
   domainModNotifyPolicy:
     description: Moderator notification policy for domain
@@ -297,6 +330,97 @@ definitions:
       - pending
       - all
     x-isnullable: false
+
+  domainPage:
+    description: Page on a specific domain
+    type: object
+    readOnly: true
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: Unique record ID
+      domainId:
+        type: string
+        format: uuid
+        description: ID of the domain
+      path:
+        $ref: "#/definitions/path"
+        description: Page path
+      title:
+        type: string
+        description: Optional page title
+      isReadonly:
+        type: boolean
+        description: Whether the page is readonly (no new comments are allowed)
+        x-omitempty: false
+      createdTime:
+        type: string
+        format: date-time
+        description: When the record was created
+      countComments:
+        type: integer
+        description: Total number of comments. -1 means the value is not provided
+        x-omitempty: false
+      countViews:
+        type: integer
+        description: Total number of views. -1 means the value is not provided
+        x-omitempty: false
+
+  domainUser:
+    description: Registered user on a domain
+    type: object
+    readOnly: true
+    required:
+      - domainId
+      - userId
+      - isOwner
+      - isModerator
+      - isCommenter
+      - notifyReplies
+      - notifyModerator
+      - createdTime
+    properties:
+      domainId:
+        type: string
+        format: uuid
+        description: ID of the domain
+        x-isnullable: false
+      userId:
+        type: string
+        format: uuid
+        description: ID of the user
+        x-isnullable: false
+      isOwner:
+        type: boolean
+        description: Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
+        x-isnullable: false
+        x-omitempty: false
+      isModerator:
+        type: boolean
+        description: Whether the user is a moderator of the domain (assumes is_commenter)
+        x-isnullable: false
+        x-omitempty: false
+      isCommenter:
+        type: boolean
+        description: Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+        x-isnullable: false
+        x-omitempty: false
+      notifyReplies:
+        type: boolean
+        description: Whether the user is to be notified about replies to their comments
+        x-isnullable: false
+        x-omitempty: false
+      notifyModerator:
+        type: boolean
+        description: Whether the user is to receive moderator notifications (only when is_moderator is true)
+        x-isnullable: false
+        x-omitempty: false
+      createdTime:
+        type: string
+        format: date-time
+        description: When the domain user was created
+        x-isnullable: false
 
   apiError:
     description: Generic API error object
@@ -513,6 +637,14 @@ parameters:
     type: string
     format: uuid
     x-isnullable: false
+
+  queryDomainId:
+    in: query
+    name: domain
+    required: true
+    description: Domain UUID in the query
+    type: string
+    format: uuid
 
   queryFilter:
     name: filter
@@ -1524,6 +1656,12 @@ paths:
                 type: array
                 items:
                   $ref: "#/definitions/domain"
+                description: Domains the current user has (some) rights to
+              domainUsers:
+                type: array
+                items:
+                  $ref: "#/definitions/domainUser"
+                description: Current user's properties on domains (can be linked to a domain using domainId)
 
     post:
       operationId: DomainNew
@@ -1729,6 +1867,42 @@ paths:
           description: Statistical data on comments and views for the domain
           schema:
             $ref: "#/definitions/dailyViewCommentStats"
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Domain pages
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /domain-pages:
+    get:
+      operationId: DomainPageList
+      summary: Get a list of domain pages
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+        - $ref: "#/parameters/queryFilter"
+        - $ref: "#/parameters/queryPageNumber"
+        - in: query
+          name: sortBy
+          type: string
+          enum:
+            - path
+            - title
+            - created
+            - countComments
+            - countViews
+          description: Property to sort results by
+        - $ref: "#/parameters/querySortDesc"
+      responses:
+        200:
+          description: List of domain pages
+          schema:
+            type: object
+            properties:
+              domains:
+                type: array
+                items:
+                  $ref: "#/definitions/domainPage"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

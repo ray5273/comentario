@@ -1,0 +1,8 @@
+<span *ngIf="domainUser" class="badge rounded-pill" [ngClass]="userClass">
+    <ng-container [ngSwitch]="userClass">
+        <ng-container *ngSwitchCase="'user-owner'"     i18n>Owner</ng-container>
+        <ng-container *ngSwitchCase="'user-moderator'" i18n>Moderator</ng-container>
+        <ng-container *ngSwitchCase="'user-commenter'" i18n>Commenter</ng-container>
+        <ng-container *ngSwitchCase="'user-readonly'"  i18n>Read-only</ng-container>
+    </ng-container>
+</span>

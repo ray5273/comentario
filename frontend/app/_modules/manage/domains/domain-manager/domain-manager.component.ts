@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge } from 'rxjs';
 import { faCheckDouble, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, Domain } from '../../../../../generated-api';
+import {ApiGeneralService, Domain, DomainUser} from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
@@ -20,6 +20,9 @@ export class DomainManagerComponent implements OnInit {
     domains?: Domain[];
     domain?: Domain;
     canLoadMore = true;
+
+    /** Map that connects domain IDs to domain users. */
+    readonly domainUsers = new Map<string, DomainUser>();
 
     readonly sort = new Sort('host');
     readonly domainsLoading = new ProcessingStatus();
@@ -70,15 +73,19 @@ export class DomainManagerComponent implements OnInit {
         // Reset the content/page if needed
         if (reset) {
             this.domains = undefined;
+            this.domainUsers.clear();
             this.loadedPageNum = 0;
         }
 
         // Load the domain list
         this.api.domainList(this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
             .pipe(this.domainsLoading.processing())
-            .subscribe(d => {
-                this.domains = [...this.domains || [], ...d.domains || []];
-                this.canLoadMore = this.configSvc.canLoadMore(d.domains);
+            .subscribe(r => {
+                this.domains = [...this.domains || [], ...r.domains || []];
+                this.canLoadMore = this.configSvc.canLoadMore(r.domains);
+
+                // Make a map of domain ID => domain users
+                r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId, du));
             });
     }
 }

@@ -213,6 +213,66 @@ func TestHTMLDocumentTitle(t *testing.T) {
 	}
 }
 
+func TestIf_bool(t *testing.T) {
+	tests := []struct {
+		name    string
+		cond    bool
+		ifTrue  bool
+		ifFalse bool
+		want    bool
+	}{
+		{"false", false, false, true, true},
+		{"true", true, false, true, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := If(tt.cond, tt.ifTrue, tt.ifFalse); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("If() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIf_int(t *testing.T) {
+	tests := []struct {
+		name    string
+		cond    bool
+		ifTrue  int
+		ifFalse int
+		want    int
+	}{
+		{"false", false, 17, 42, 42},
+		{"true", true, 17, 42, 17},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := If(tt.cond, tt.ifTrue, tt.ifFalse); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("If() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIf_string(t *testing.T) {
+	tests := []struct {
+		name    string
+		cond    bool
+		ifTrue  string
+		ifFalse string
+		want    string
+	}{
+		{"false", false, "foo", "bar", "bar"},
+		{"true", true, "foo", "bar", "foo"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := If(tt.cond, tt.ifTrue, tt.ifFalse); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("If() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIndexOfString(t *testing.T) {
 	slice := []string{
 		"",

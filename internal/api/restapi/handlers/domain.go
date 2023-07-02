@@ -118,11 +118,9 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 
 func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {
 	// Fetch domains by the owner
-	domains, err := svc.TheDomainService.ListByDomainUser(
+	ds, dus, err := svc.TheDomainService.ListByDomainUser(
 		&user.ID,
 		user.IsSuperuser,
-		true,
-		true,
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),
@@ -131,22 +129,20 @@ func DomainList(params api_general.DomainListParams, user *data.User) middleware
 		return respServiceError(err)
 	}
 
-	// Convert the models
-	ds := make([]*models.Domain, len(domains))
-	for i, d := range domains {
-		ds[i] = d.ToDTO()
-	}
-
 	// Succeeded
-	return api_general.NewDomainListOK().WithPayload(&api_general.DomainListOKBody{Domains: ds})
+	return api_general.NewDomainListOK().
+		WithPayload(&api_general.DomainListOKBody{
+			DomainUsers: data.SliceToDTOs[*data.DomainUser, *models.DomainUser](dus),
+			Domains:     data.SliceToDTOs[*data.Domain, *models.Domain](ds),
+		})
 }
 
 func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
 	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
 	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
-		if ds, err := svc.TheDomainService.ListByDomainUser(&user.ID, false, false, false, "", "", data.SortAsc, 0); err != nil {
+		if i, err := svc.TheDomainService.CountOwned(&user.ID); err != nil {
 			return respServiceError(err)
-		} else if len(ds) == 0 {
+		} else if i == 0 {
 			return respForbidden(ErrorNewOwnersForbidden)
 		}
 	}

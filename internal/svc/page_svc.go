@@ -26,6 +26,14 @@ type PageService interface {
 	GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
 	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
 	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
+	// ListByDomainUser fetches and returns a list of domain pages the specified user has rights to.
+	//   - domainID is an optional domain ID to filter the pages by. If nil, returns pages for all domains.
+	//   - If superuser == true, includes all domain pages.
+	//   - filter is an optional substring to filter the result by.
+	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
+	//   - dir is the sort direction.
+	//   - pageIndex is the page index, if negative, no pagination is applied.
+	ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error)
 	// Update updates the page by its ID
 	Update(page *data.DomainPage) error
 }
@@ -165,6 +173,19 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 
 	// Succeeded
 	return &p, nil
+}
+
+func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error) {
+	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
+
+	// Prepare a statement
+	// TODO new-db
+	//q := goqu.Dialect("postgres").
+	//	From(goqu.T("cm_domain_pages").As("p")).
+	//	Select("p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments", "p.count_views").
+	//	Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")}))
+
+	return nil, nil
 }
 
 func (svc *pageService) Update(page *data.DomainPage) error {

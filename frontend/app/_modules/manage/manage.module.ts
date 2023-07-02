@@ -27,6 +27,7 @@ import { PageManagerComponent } from './pages/page-manager/page-manager.componen
 import { DomainBadgeComponent } from './domain-badge/domain-badge.component';
 import { SortSelectorComponent } from './sort-selector/sort-selector.component';
 import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
+import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.component';
 
 @NgModule({
     declarations: [
@@ -48,6 +49,7 @@ import { SortPropertyComponent } from './sort-selector/sort-property/sort-proper
         UserManagerComponent,
         SortSelectorComponent,
         SortPropertyComponent,
+        DomainUserBadgeComponent,
     ],
     imports: [
         CommonModule,

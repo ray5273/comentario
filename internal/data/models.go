@@ -21,6 +21,11 @@ import (
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
 var AnonymousUser = &User{Name: "Anonymous"}
 
+// DTOAware is an interface capable of converting a model into an API model
+type DTOAware[T any] interface {
+	ToDTO() T
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 type SortDirection bool
@@ -31,10 +36,7 @@ const (
 )
 
 func (sd SortDirection) String() string {
-	if sd == SortDesc {
-		return "desc"
-	}
-	return "asc"
+	return util.If(sd == SortDesc, "desc", "asc")
 }
 
 // ToOrderedExpression converts the given direction and a related identifier to goqu's OrderedExpression
@@ -474,18 +476,32 @@ type DomainUser struct {
 }
 
 // AgeInDays returns the number of full days passed since the user was created. Can be called against a nil receiver
-func (u *DomainUser) AgeInDays() int {
-	if u == nil {
+func (du *DomainUser) AgeInDays() int {
+	if du == nil {
 		return 0
 	}
-	return int(time.Now().UTC().Sub(u.CreatedTime) / util.OneDay)
+	return int(time.Now().UTC().Sub(du.CreatedTime) / util.OneDay)
 }
 
 // IsReadonly returns whether the domain user is not allowed to comment (is readonly). Can be called against a nil
 // receiver, which is interpreted as no domain user has been created yet for this specific user hence they're NOT
 // readonly
-func (u *DomainUser) IsReadonly() bool {
-	return u != nil && !u.IsOwner && !u.IsModerator && !u.IsCommenter
+func (du *DomainUser) IsReadonly() bool {
+	return du != nil && !du.IsOwner && !du.IsModerator && !du.IsCommenter
+}
+
+// ToDTO converts this model into an API model
+func (du *DomainUser) ToDTO() *models.DomainUser {
+	return &models.DomainUser{
+		CreatedTime:     strfmt.DateTime(du.CreatedTime),
+		DomainID:        strfmt.UUID(du.DomainID.String()),
+		IsCommenter:     du.IsCommenter,
+		IsModerator:     du.IsModerator,
+		IsOwner:         du.IsOwner,
+		NotifyModerator: du.NotifyModerator,
+		NotifyReplies:   du.NotifyReplies,
+		UserID:          strfmt.UUID(du.UserID.String()),
+	}
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -508,6 +524,20 @@ func (p *DomainPage) DisplayTitle(domain *Domain) string {
 		return p.Title
 	}
 	return domain.Host + p.Path
+}
+
+// ToDTO converts this model into an API model
+func (p *DomainPage) ToDTO() *models.DomainPage {
+	return &models.DomainPage{
+		CountComments: p.CountComments,
+		CountViews:    p.CountViews,
+		CreatedTime:   strfmt.DateTime(p.CreatedTime),
+		DomainID:      strfmt.UUID(p.DomainID.String()),
+		ID:            strfmt.UUID(p.ID.String()),
+		IsReadonly:    p.IsReadonly,
+		Path:          models.Path(p.Path),
+		Title:         p.Title,
+	}
 }
 
 // WithIsReadonly sets the IsReadonly value

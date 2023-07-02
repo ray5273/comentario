@@ -62,21 +62,24 @@
                     </div>
                     <!-- Domain name/host -->
                     <div class="col">
-                        <div class="fw-bold">{{ d.host }}</div>
+                        <div>
+                            <span class="fw-bold">{{ d.host }}</span>
+                            <app-domain-user-badge [domainUser]="domainUsers.get(d.id!)" class="ms-2"></app-domain-user-badge>
+                        </div>
                         <div *ngIf="d.name">{{ d.name }}</div>
                         <!-- Comment/view counts (up to sm) -->
-                        <div class="d-sm-none small text-muted">
+                        <div *ngIf="d.countComments >= 0 && d.countViews >= 0" class="d-sm-none small text-muted">
                             <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
                             <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
                         </div>
                     </div>
                     <!-- Comment count (sm+) -->
-                    <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                    <div *ngIf="d.countComments >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
                         <div class="lead">{{ d.countComments | number }}</div>
                         <div class="small" i18n>comments</div>
                     </div>
                     <!-- View count (sm+) -->
-                    <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                    <div *ngIf="d.countViews >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
                         <div class="lead">{{ d.countViews | number }}</div>
                         <div class="small" i18n>views</div>
                     </div>

@@ -165,6 +165,15 @@ func HTMLTitleFromURL(u *url.URL) (string, error) {
 	return HTMLDocumentTitle(resp.Body)
 }
 
+// If returns one of the two given values depending on the boolean condition, filling in for the ternary operator
+// missing in Go
+func If[T any](cond bool, ifTrue, ifFalse T) T {
+	if cond {
+		return ifTrue
+	}
+	return ifFalse
+}
+
 // IndexOfString returns the index of the given string in the slice, or -1 if it wasn't found
 func IndexOfString(s string, slice []string) int {
 	for i, e := range slice {
