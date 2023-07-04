@@ -110,6 +110,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainDailyStatsHandler = api_general.DomainDailyStatsHandlerFunc(handlers.DomainDailyStats)
 	api.APIGeneralDomainReadonlyHandler = api_general.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
 	api.APIGeneralDomainUpdateHandler = api_general.DomainUpdateHandlerFunc(handlers.DomainUpdate)
+	// Domain pages
+	api.APIGeneralDomainPageListHandler = api_general.DomainPageListHandlerFunc(handlers.DomainPageList)
 	// User
 	api.APIGeneralUsersAvatarGetHandler = api_general.UsersAvatarGetHandlerFunc(handlers.UsersAvatarGet)
 

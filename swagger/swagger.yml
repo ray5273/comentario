@@ -335,37 +335,53 @@ definitions:
     description: Page on a specific domain
     type: object
     readOnly: true
+    required:
+      - id
+      - domainId
+      - title
+      - isReadonly
+      - createdTime
+      - countComments
+      - countViews
     properties:
       id:
         type: string
         format: uuid
         description: Unique record ID
+        x-isnullable: false
       domainId:
         type: string
         format: uuid
         description: ID of the domain
+        x-isnullable: false
       path:
         $ref: "#/definitions/path"
         description: Page path
+        x-isnullable: false
       title:
         type: string
         description: Optional page title
+        x-isnullable: false
       isReadonly:
         type: boolean
         description: Whether the page is readonly (no new comments are allowed)
         x-omitempty: false
+        x-isnullable: false
       createdTime:
         type: string
         format: date-time
         description: When the record was created
+        x-isnullable: false
       countComments:
         type: integer
         description: Total number of comments. -1 means the value is not provided
         x-omitempty: false
+        x-isnullable: false
       countViews:
         type: integer
         description: Total number of views. -1 means the value is not provided
         x-omitempty: false
+        x-isnullable: false
 
   domainUser:
     description: Registered user on a domain
@@ -1875,7 +1891,7 @@ paths:
   /domain-pages:
     get:
       operationId: DomainPageList
-      summary: Get a list of domain pages
+      summary: Get a list of pages for a specific domain
       tags:
         - ApiGeneral
       parameters:
@@ -1899,10 +1915,11 @@ paths:
           schema:
             type: object
             properties:
-              domains:
+              pages:
                 type: array
                 items:
                   $ref: "#/definitions/domainPage"
+                description: List of domain pages
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

@@ -1,7 +1,85 @@
 <!-- Heading -->
 <h1>
-    <ng-container i18n="heading">Pages</ng-container>
+    <ng-container i18n="heading">Domain pages</ng-container>
     <app-domain-badge></app-domain-badge>
 </h1>
 
-<!-- TODO -->
+<div [appSpinner]="pagesLoading.active" spinnerSize="lg">
+    <!-- Toolbar -->
+    <div class="mb-3">
+        <div class="row g-2 flex-grow-1">
+            <!-- Placeholder to push other items to the right -->
+            <div class="col"></div>
+
+            <!-- Sort -->
+            <div class="col-auto">
+                <app-sort-selector [sort]="sort">
+                    <app-sort-property by="path"          label="Path"               i18n-label></app-sort-property>
+                    <app-sort-property by="title"         label="Title"              i18n-label></app-sort-property>
+                    <app-sort-property by="created"       label="Created"            i18n-label></app-sort-property>
+                    <app-sort-property by="countComments" label="Number of comments" i18n-label></app-sort-property>
+                    <app-sort-property by="countViews"    label="Number of views"    i18n-label></app-sort-property>
+                </app-sort-selector>
+            </div>
+
+            <!-- Filter form -->
+            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+                <!-- Substring filter -->
+                <div class="col-sm-auto">
+                    <input formControlName="filter" id="filterString" class="form-control" type="search"
+                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <ng-container *ngIf="pages?.length">
+        <!-- Page list -->
+        <div class="list-group">
+            <a *ngFor="let p of pages" [routerLink]="p.id" class="list-group-item list-group-item-action">
+                <div class="row">
+                    <!-- Host/path -->
+                    <div class="col">
+                        <div>
+                            <!-- Domain host (sm+) -->
+                            <span class="text-black-50 d-none d-sm-inline">{{ domain?.host }}</span>
+                            <!-- Page path -->
+                            <span class="fw-bold">{{ p.path }}</span>
+                        </div>
+                        <div *ngIf="p.title">{{ p.title }}</div>
+                        <!-- Comment/view counts (up to sm) -->
+                        <div *ngIf="p.countComments >= 0 && p.countViews >= 0" class="d-sm-none small text-muted">
+                            <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
+                            <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
+                        </div>
+                    </div>
+                    <!-- Comment count (sm+) -->
+                    <div *ngIf="p.countComments >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                        <div class="lead">{{ p.countComments | number }}</div>
+                        <div class="small" i18n>comments</div>
+                    </div>
+                    <!-- View count (sm+) -->
+                    <div *ngIf="p.countViews >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                        <div class="lead">{{ p.countViews | number }}</div>
+                        <div class="small" i18n>views</div>
+                    </div>
+                </div>
+            </a>
+        </div>
+
+        <!-- Item count -->
+        <div class="py-2 text-center small text-muted">
+            <ng-container *ngIf="!canLoadMore" i18n>All</ng-container>&ngsp;<ng-container>{{ pages!.length }}</ng-container>&nbsp;<ng-container i18n>items displayed</ng-container>
+        </div>
+
+        <!-- Load more items button -->
+        <div *ngIf="canLoadMore" class="py-2 text-center">
+            <button type="button" (click)="load(false)" class="btn btn-outline-secondary">
+                <ng-container i18n>Load more</ng-container>
+            </button>
+        </div>
+    </ng-container>
+
+    <!-- Add a page placeholder -->
+    <div *ngIf="!pagesLoading.active && !pages?.length" class="py-4 text-center text-muted" i18n>Nothing found.</div>
+</div>

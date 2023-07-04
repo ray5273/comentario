@@ -1,10 +1,10 @@
-<div ngbDropdown class="d-inline-block">
+<div ngbDropdown class="d-inline-block" placement="bottom-end">
     <!-- Dropdown toggle -->
     <button type="button" class="btn btn-outline-secondary" id="sortByDropdown" ngbDropdownToggle i18n>Sort</button>
 
     <!-- Sort buttons -->
     <div ngbDropdownMenu aria-labelledby="sortByDropdown">
-        <div class="p-3 btn-group text-nowrap" role="group">
+        <div class="p-3 flex-column flex-md-row btn-group text-nowrap" role="group">
             <ng-container *ngFor="let p of items">
                 <button [class.active]="sort && sort.property === p.by"
                         [attr.aria-checked]="sort && sort.property === p.by"

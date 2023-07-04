@@ -117,7 +117,7 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 }
 
 func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {
-	// Fetch domains by the owner
+	// Fetch domains the user has access to
 	ds, dus, err := svc.TheDomainService.ListByDomainUser(
 		&user.ID,
 		user.IsSuperuser,

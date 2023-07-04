@@ -31,10 +31,10 @@ const children: Routes = [
     {path: 'domains/:id/import', component: DomainImportComponent},
 
     // Pages
-    {path: 'pages', component: PageManagerComponent},
+    {path: 'pages', component: PageManagerComponent, canActivate: [ManageGuard.isDomainSelected]},
 
     // Comments
-    {path: 'comments', component: CommentManagerComponent},
+    {path: 'comments', component: CommentManagerComponent, canActivate: [ManageGuard.isDomainSelected]},
 
     // Users
     {path: 'users', component: UserManagerComponent},

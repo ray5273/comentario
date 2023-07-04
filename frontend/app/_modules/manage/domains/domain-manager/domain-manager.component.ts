@@ -17,8 +17,13 @@ import { Sort } from '../../_models/sort';
 })
 export class DomainManagerComponent implements OnInit {
 
+    /** Loaded list of domains. */
     domains?: Domain[];
+
+    /** Domain currently selected in domain selector. */
     domain?: Domain;
+
+    /** Whether there are more results to load. */
     canLoadMore = true;
 
     /** Map that connects domain IDs to domain users. */
@@ -37,6 +42,7 @@ export class DomainManagerComponent implements OnInit {
     readonly faPlus        = faPlus;
 
     private loadedPageNum = 0;
+
     constructor(
         private readonly fb: FormBuilder,
         private readonly api: ApiGeneralService,

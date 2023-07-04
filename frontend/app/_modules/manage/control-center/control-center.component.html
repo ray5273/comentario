@@ -54,16 +54,16 @@
                     </a>
                 </li>
 
-                <!-- Pages -->
-                <li class="nav-item">
+                <!-- Pages: if there's a domain -->
+                <li *ngIf="domain" class="nav-item">
                     <a [routerLink]="Paths.manage.pages" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faFileLines"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Pages</div>
                     </a>
                 </li>
 
-                <!-- Comments -->
-                <li class="nav-item">
+                <!-- Comments: if there's a domain -->
+                <li *ngIf="domain" class="nav-item">
                     <a [routerLink]="Paths.manage.comments" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faComments"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Comments</div>

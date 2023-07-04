@@ -359,14 +359,14 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 
 	// Add filter by domain user
 	duTable := goqu.T("cm_domains_users").As("du")
-	duJoinOn := goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")})
+	duJoinOn := goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})
 	if superuser {
 		// Super user can see all domains, so a domain user is optional
 		q = q.LeftJoin(duTable, duJoinOn)
 
 	} else {
 		// For regular users, only those domains are visible that the user is registered for
-		q = q.Join(duTable, duJoinOn).Where(goqu.Ex{"du.user_id": userID})
+		q = q.Join(duTable, duJoinOn)
 	}
 
 	// Add substring filter
@@ -407,7 +407,6 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
 		logger.Errorf("domainService.ListByDomainUser: Query() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
-
 	}
 
 	// Fetch the domains and domain users

@@ -35,6 +35,7 @@ const (
 	SortDesc = SortDirection(true)
 )
 
+// String converts this SortDirection into a string
 func (sd SortDirection) String() string {
 	return util.If(sd == SortDesc, "desc", "asc")
 }

@@ -1,13 +1,16 @@
 package svc
 
 import (
+	"database/sql"
 	"github.com/avct/uasurfer"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/lib/pq"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"net/url"
+	"strings"
 	"time"
 )
 
@@ -26,8 +29,9 @@ type PageService interface {
 	GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
 	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
 	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
-	// ListByDomainUser fetches and returns a list of domain pages the specified user has rights to.
-	//   - domainID is an optional domain ID to filter the pages by. If nil, returns pages for all domains.
+	// ListByDomainUser fetches and returns a list of domain pages the specified user has rights to in a specific
+	// domain.
+	//   - domainID is the domain ID to filter the pages by. If nil, returns pages for all domains.
 	//   - If superuser == true, includes all domain pages.
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
@@ -179,13 +183,97 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	// TODO new-db
-	//q := goqu.Dialect("postgres").
-	//	From(goqu.T("cm_domain_pages").As("p")).
-	//	Select("p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments", "p.count_views").
-	//	Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")}))
+	q := goqu.Dialect("postgres").
+		From(goqu.T("cm_domain_pages").As("p")).
+		Select(
+			"p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments",
+			"p.count_views").
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
+		Where(goqu.Ex{"d.id": domainID})
 
-	return nil, nil
+	// Add filter by domain user unless it's a superuser
+	if superuser {
+		q = q.SelectAppend(goqu.L("true"))
+	} else {
+		// For regular users, only those pages are visible that the user has a domain record for
+		q = q.
+			SelectAppend("du.is_owner").
+			Join(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")}),
+			).
+			Where(goqu.Ex{"du.user_id": userID})
+	}
+
+	// Add substring filter
+	if filter != "" {
+		pattern := "%" + strings.ToLower(filter) + "%"
+		q = q.Where(goqu.Or(
+			goqu.L(`lower("p"."path")`).Like(pattern),
+			goqu.L(`lower("p"."title")`).Like(pattern),
+		))
+	}
+
+	// Configure sorting
+	sortIdent := "p.path"
+	switch sortBy {
+	case "title":
+		sortIdent = "p.title"
+	case "created":
+		sortIdent = "p.ts_created"
+	case "countComments":
+		sortIdent = "p.count_comments"
+	case "countViews":
+		sortIdent = "p.count_views"
+	}
+	q = q.Order(
+		dir.ToOrderedExpression(sortIdent),
+		goqu.I("p.id").Asc(), // Always add ID for stable ordering
+	)
+
+	// Paginate if required
+	if pageIndex >= 0 {
+		q = q.Limit(util.ResultPageSize).Offset(uint(pageIndex) * util.ResultPageSize)
+	}
+
+	// Query pages
+	var rows *sql.Rows
+	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+		return nil, err
+	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+		logger.Errorf("pageService.ListByDomainUser: Query() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// Fetch the pages
+	defer rows.Close()
+	var ps []*data.DomainPage
+	var isOwner sql.NullBool
+	for rows.Next() {
+		var p data.DomainPage
+		if err := rows.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews, &isOwner); err != nil {
+			logger.Errorf("pageService.ListByDomainUser: Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
+		}
+
+		// Determine which page fields the user is allowed to see
+		if superuser || (isOwner.Valid && isOwner.Bool) {
+			// Superuser or domain owner
+			ps = append(ps, &p)
+		} else {
+			// Non-owner users are only allowed to see the path and the title. Render negative counts as an indication
+			// they're unavailable
+			ps = append(ps, &data.DomainPage{ID: p.ID, Path: p.Path, Title: p.Title, CountComments: -1, CountViews: -1})
+		}
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return ps, nil
 }
 
 func (svc *pageService) Update(page *data.DomainPage) error {

@@ -3,37 +3,35 @@
 
 <div [appSpinner]="domainsLoading.active" spinnerSize="lg">
     <!-- Toolbar -->
-    <div class="toolbar mb-3">
-        <div class="container-fluid">
-            <div class="row g-2 flex-grow-1">
-                <!-- New domain button -->
-                <div class="col">
-                   <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
-                        <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
-                        <ng-container i18n>New domain</ng-container>
-                    </button>
-                </div>
-
-                <!-- Sort -->
-                <div class="col-auto">
-                    <app-sort-selector [sort]="sort">
-                        <app-sort-property by="name"          label="Name"               i18n-label></app-sort-property>
-                        <app-sort-property by="host"          label="Host"               i18n-label></app-sort-property>
-                        <app-sort-property by="created"       label="Created"            i18n-label></app-sort-property>
-                        <app-sort-property by="countComments" label="Number of comments" i18n-label></app-sort-property>
-                        <app-sort-property by="countViews"    label="Number of views"    i18n-label></app-sort-property>
-                    </app-sort-selector>
-                </div>
-
-                <!-- Filter form -->
-                <form [formGroup]="filterForm" class="col-12 col-sm-auto">
-                    <!-- Substring filter -->
-                    <div class="col-sm-auto">
-                        <input formControlName="filter" id="filterString" class="form-control" type="search"
-                               placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
-                    </div>
-                </form>
+    <div class="mb-3">
+        <div class="row g-2 flex-grow-1">
+            <!-- New domain button -->
+            <div class="col">
+                <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
+                    <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
+                    <ng-container i18n>New domain</ng-container>
+                </button>
             </div>
+
+            <!-- Sort -->
+            <div class="col-auto">
+                <app-sort-selector [sort]="sort">
+                    <app-sort-property by="name"          label="Name"               i18n-label></app-sort-property>
+                    <app-sort-property by="host"          label="Host"               i18n-label></app-sort-property>
+                    <app-sort-property by="created"       label="Created"            i18n-label></app-sort-property>
+                    <app-sort-property by="countComments" label="Number of comments" i18n-label></app-sort-property>
+                    <app-sort-property by="countViews"    label="Number of views"    i18n-label></app-sort-property>
+                </app-sort-selector>
+            </div>
+
+            <!-- Filter form -->
+            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+                <!-- Substring filter -->
+                <div class="col-sm-auto">
+                    <input formControlName="filter" id="filterString" class="form-control" type="search"
+                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+                </div>
+            </form>
         </div>
     </div>
 

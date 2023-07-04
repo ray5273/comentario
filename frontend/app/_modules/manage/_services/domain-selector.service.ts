@@ -1,11 +1,11 @@
 import { Injectable } from '@angular/core';
-import { HttpContext } from "@angular/common/http";
-import { BehaviorSubject, combineLatestWith, Observable } from 'rxjs';
+import { HttpContext } from '@angular/common/http';
+import { BehaviorSubject, combineLatestWith, Observable, ReplaySubject } from 'rxjs';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, FederatedIdpId } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
-import { HTTP_ERROR_HANDLING } from "../../../_services/http-interceptor.service";
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
 
 interface DomainSelectorSettings {
     domainId?: string;
@@ -21,10 +21,10 @@ export interface DomainWithIdps {
 export class DomainSelectorService {
 
     /** Observable to get notifications about selected domain changes. */
-    readonly domain: Observable<Domain | undefined> = new BehaviorSubject<Domain | undefined>(undefined);
+    readonly domain: Observable<Domain | undefined> = new ReplaySubject<Domain | undefined>(1);
 
     /** Observable to get notifications about selected domain and IdP changes. */
-    readonly domainWithIdps: Observable<DomainWithIdps | undefined> = new BehaviorSubject<DomainWithIdps | undefined>(undefined);
+    readonly domainWithIdps: Observable<DomainWithIdps | undefined> = new ReplaySubject<DomainWithIdps | undefined>(1);
 
     private lastId?: string;
     private readonly reload$ = new BehaviorSubject<void>(undefined);
@@ -89,8 +89,8 @@ export class DomainSelectorService {
      */
     private setDomain(v: DomainWithIdps | undefined) {
         // Notify the subscribers
-        (this.domain as BehaviorSubject<Domain | undefined>).next(v?.domain);
-        (this.domainWithIdps as BehaviorSubject<DomainWithIdps | undefined>).next(v);
+        (this.domain as ReplaySubject<Domain | undefined>).next(v?.domain);
+        (this.domainWithIdps as ReplaySubject<DomainWithIdps | undefined>).next(v);
 
         // Store the last used domainId
         this.localSettingSvc.storeValue<DomainSelectorSettings>('domainSelector', {domainId: v?.domain?.id});
