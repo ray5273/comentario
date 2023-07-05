@@ -1,4 +1,4 @@
-import { APP_INITIALIZER, NgModule } from '@angular/core';
+import { APP_INITIALIZER, LOCALE_ID, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
@@ -18,6 +18,7 @@ import { ApiModule, Configuration } from '../generated-api';
 import { environment } from '../environments/environment';
 import { ToolsModule } from './_modules/tools/tools.module';
 import { ConfigService } from './_services/config.service';
+import { LANGUAGE, provideLanguage } from '../environments/languages';
 
 @NgModule({
     declarations: [
@@ -44,6 +45,7 @@ import { ConfigService } from './_services/config.service';
     providers: [
         // API configuration
         {provide: Configuration, useFactory: () => new Configuration({basePath: environment.apiBaseUrl})},
+        {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
         // Initialise the config service
         {

@@ -19,8 +19,8 @@ import (
 )
 
 func DomainClear(params api_general.DomainClearParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
-	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
 
 		// Clear all domain's users/pages/comments
@@ -34,8 +34,8 @@ func DomainClear(params api_general.DomainClearParams, user *data.User) middlewa
 
 // DomainDelete deletes an existing domain belonging to the current user
 func DomainDelete(params api_general.DomainDeleteParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
-	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
 
 		// Delete the domain and all dependent objects
@@ -48,8 +48,8 @@ func DomainDelete(params api_general.DomainDeleteParams, user *data.User) middle
 }
 
 func DomainExport(params api_general.DomainExportParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
-	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
 
 		// Export the data
@@ -70,7 +70,7 @@ func DomainExport(params api_general.DomainExportParams, user *data.User) middle
 // DomainGet returns properties of a domain belonging to the current user
 func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's ownership
-	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
+	if d, du, r := domainGetWithUser(params.UUID, user, false); r != nil {
 		return r
 
 		// Prepare a list of federated IdP IDs
@@ -81,6 +81,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 		// Succeeded
 		return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
 			Domain:          d.ToDTO(),
+			DomainUser:      du.ToDTO(),
 			FederatedIdpIds: idps,
 		})
 	}
@@ -89,8 +90,8 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 func DomainImport(params api_general.DomainImportParams, user *data.User) middleware.Responder {
 	defer util.LogError(params.Data.Close, "DomainImport, defer Data.Close()")
 
-	// Find the domain and verify the user's ownership
-	domain, _, r := domainGetDomainAndOwner(params.UUID, user)
+	// Find the domain and verify the user's privileges
+	domain, _, r := domainGetWithUser(params.UUID, user, true)
 	if r != nil {
 		return r
 	}
@@ -208,8 +209,8 @@ func DomainSsoSecretNew(_ api_general.DomainSsoSecretNewParams, _ *data.User) mi
 }
 
 func DomainDailyStats(params api_general.DomainDailyStatsParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
-	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
 
 		// Collect comment/view stats
@@ -227,8 +228,8 @@ func DomainDailyStats(params api_general.DomainDailyStatsParams, user *data.User
 
 // DomainReadonly sets the domain's readonly state
 func DomainReadonly(params api_general.DomainReadonlyParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
-	if d, _, r := domainGetDomainAndOwner(params.UUID, user); r != nil {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
 
 		// Update the domain status
@@ -241,9 +242,9 @@ func DomainReadonly(params api_general.DomainReadonlyParams, user *data.User) mi
 }
 
 func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
+	// Find the domain and verify the user's privileges
 	newDomain := params.Body.Domain
-	domain, _, r := domainGetDomainAndOwner(params.UUID, user)
+	domain, _, r := domainGetWithUser(params.UUID, user, true)
 	if r != nil {
 		return r
 	}
@@ -282,9 +283,9 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	return api_general.NewDomainUpdateOK().WithPayload(domain.ToDTO())
 }
 
-// domainGetDomainAndOwner parses a string UUID and fetches the corresponding domain and its user, verifying they own
-// the domain
-func domainGetDomainAndOwner(domainUUID strfmt.UUID, user *data.User) (*data.Domain, *data.DomainUser, middleware.Responder) {
+// domainGetWithUser parses a string UUID and fetches the corresponding domain and its user, optionally verifying they
+// are allowed to edit the domain
+func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canEdit bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse domain ID
 	if domainID, err := data.DecodeUUID(domainUUID); err != nil {
 		return nil, nil, respBadRequest(ErrorInvalidUUID)
@@ -293,11 +294,23 @@ func domainGetDomainAndOwner(domainUUID strfmt.UUID, user *data.User) (*data.Dom
 	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID); err != nil {
 		return nil, nil, respServiceError(err)
 
-		// Verify the user owns the domain
-	} else if r := Verifier.UserCanEditDomain(user, domainUser); r != nil {
-		return nil, nil, r
-
 	} else {
+		// Verify the user can change the domain, if necessary
+		if canEdit {
+			if r := Verifier.UserCanEditDomain(user, domainUser); r != nil {
+				return nil, nil, r
+			}
+
+			// If no user record is present, the user isn't allowed to view the domain at all (unless it's a superuser)
+		} else if !user.IsSuperuser && domainUser == nil {
+			return nil, nil, respForbidden(ErrorUnauthorized)
+
+			// If the user isn't a superuser or domain owner, they're only allowed to view a limited set of domain
+			// properties
+		} else if !user.IsSuperuser && !domainUser.IsOwner {
+			domain = domain.AsNonOwner()
+		}
+
 		// Succeeded
 		return domain, domainUser, nil
 	}

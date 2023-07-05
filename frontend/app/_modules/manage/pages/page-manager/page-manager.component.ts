@@ -69,7 +69,7 @@ export class PageManagerComponent implements OnInit {
         }
 
         // Load the domain list
-        this.api.domainPageList(this.domain.id, this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+        this.api.domainPageList(this.domain.id!, this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
             .pipe(this.pagesLoading.processing())
             .subscribe(r => {
                 this.pages = [...this.pages || [], ...r.pages || []];

@@ -37,13 +37,13 @@ const children: Routes = [
     {path: 'comments', component: CommentManagerComponent, canActivate: [ManageGuard.isDomainSelected]},
 
     // Users
-    {path: 'users', component: UserManagerComponent},
+    {path: 'users', component: UserManagerComponent, canActivate: [ManageGuard.isSuperOrOwner]},
 
     // Stats
-    {path: 'stats', component: StatsComponent},
+    {path: 'stats', component: StatsComponent, canActivate: [ManageGuard.isSuperOrOwner]},
 
     // Operations
-    {path: 'operations', component: DomainOperationsComponent, canActivate: [ManageGuard.isDomainSelected]},
+    {path: 'operations', component: DomainOperationsComponent, canActivate: [ManageGuard.canManageDomain]},
 
     // Account
     {path: 'account/profile', component: ProfileComponent},

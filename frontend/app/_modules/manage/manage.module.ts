@@ -28,6 +28,7 @@ import { DomainBadgeComponent } from './domain-badge/domain-badge.component';
 import { SortSelectorComponent } from './sort-selector/sort-selector.component';
 import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
 import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.component';
+import { DatetimePipe } from './_pipes/datetime.pipe';
 
 @NgModule({
     declarations: [
@@ -35,21 +36,22 @@ import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.
         CommentSortPipe,
         ControlCenterComponent,
         DashboardComponent,
+        DatetimePipe,
         DomainBadgeComponent,
         DomainEditComponent,
         DomainImportComponent,
         DomainManagerComponent,
         DomainOperationsComponent,
         DomainPropertiesComponent,
-        StatsComponent,
+        DomainUserBadgeComponent,
         ModeratorNotifyPolicyPipe,
         PageManagerComponent,
         ProfileComponent,
-        StatsChartComponent,
-        UserManagerComponent,
-        SortSelectorComponent,
         SortPropertyComponent,
-        DomainUserBadgeComponent,
+        SortSelectorComponent,
+        StatsChartComponent,
+        StatsComponent,
+        UserManagerComponent,
     ],
     imports: [
         CommonModule,

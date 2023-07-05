@@ -21,6 +21,8 @@ import (
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
 var AnonymousUser = &User{Name: "Anonymous"}
 
+const MaxPageTitleLength = 100
+
 // DTOAware is an interface capable of converting a model into an API model
 type DTOAware[T any] interface {
 	ToDTO() T
@@ -399,6 +401,22 @@ type Domain struct {
 	CountViews       int64                 // Total number of views
 }
 
+// AsNonOwner returns a clone of the domain with a limited set of properties, which a non-owner user is allowed to see
+func (d *Domain) AsNonOwner() *Domain {
+	return &Domain{
+		ID:            d.ID,
+		Host:          d.Host,
+		IsReadonly:    d.IsReadonly,
+		AuthAnonymous: d.AuthAnonymous,
+		AuthLocal:     d.AuthLocal,
+		AuthSSO:       d.AuthSSO,
+		SSOURL:        d.SSOURL,
+		DefaultSort:   d.DefaultSort,
+		CountComments: -1, // -1 indicates no count data is available
+		CountViews:    -1, // idem
+	}
+}
+
 // DisplayName returns the domain's display name, if set, otherwise the host
 func (d *Domain) DisplayName() string {
 	if d.Name != "" {
@@ -491,8 +509,11 @@ func (du *DomainUser) IsReadonly() bool {
 	return du != nil && !du.IsOwner && !du.IsModerator && !du.IsCommenter
 }
 
-// ToDTO converts this model into an API model
+// ToDTO converts this model into an API model. Can be called against a nil receiver
 func (du *DomainUser) ToDTO() *models.DomainUser {
+	if du == nil {
+		return nil
+	}
 	return &models.DomainUser{
 		CreatedTime:     strfmt.DateTime(du.CreatedTime),
 		DomainID:        strfmt.UUID(du.DomainID.String()),

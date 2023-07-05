@@ -124,7 +124,7 @@ values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'Test Domain',   'localhost:800
         ('c61500fb-0b7f-4bc2-8696-6149aa9c1097', '',              'target.example.com', '2023-04-03 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
         ('6fcb3173-3a00-4aa5-8113-e39767b469a7', '',              'spirit.example.com', '2023-04-04 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
         ('affa7920-67cc-4f0e-bed5-8c58b1abee5f', '',              'coffee.example.com', '2023-04-05 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
-        ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '',              'factor.example.com', '2023-04-06 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
+        ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '',              'factor.example.com', '2023-04-06 17:56:10.966890', false, true, true, false, '', null, false, false, 3, 5, false, false, 'pending', 'ta', 7, 19238102),
         ('c03b9b58-b2bb-4942-adca-168e7d812d8c', '',              'battle.example.com', '2023-04-07 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
         ('84a766a2-7154-4d7f-8307-20ec9df4fc68', '',              'prison.example.com', '2023-04-08 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
         ('828f1362-37ae-4c8f-83e7-84801f84b6a8', '',              'bridge.example.com', '2023-04-09 17:56:10.966890', false, true, true, false, '', null, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0);
@@ -137,13 +137,19 @@ values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'gitlab'),
 
 insert into cm_domains_users (domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
 values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866edc4867', true, true, true, false, true, '2023-01-17 17:55:47.008851'),
-        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, false, true, false, true, '2023-01-17 17:55:47.008851'),
-        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, false, true, false, true, '2023-01-17 17:55:47.008851'),
-        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true, false, true, '2023-01-18 16:52:04.541982'),
-        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true, false, true, '2023-01-17 17:55:47.008851');
+        ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '2af9ecd2-a32a-4332-8717-396e9af28639', true, true, true, false, true, '2022-02-22 17:55:47.008851'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, true, true, false, true, '2023-01-17 17:55:47.008851'),
+        ('0272e06c-1568-46c6-b973-e2f1dd5bf3cc', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true, false, true, '2023-01-17 18:01:00.001231'),
+        ('6fcb3173-3a00-4aa5-8113-e39767b469a7', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, false, false, true, '2023-01-18 18:01:00.001231'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, true, true, false, true, '2023-01-17 17:55:47.008851'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, true, true, false, true, '2023-01-17 17:55:47.008851'),
+        ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true, false, true, '2023-01-18 16:52:04.541982');
 
 insert into cm_domain_pages (id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
-values  ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', '', false, '2023-06-23 17:21:53.002826', 17, 10);
+values  ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', '', false, '2023-06-23 17:21:53.002826', 17, 10),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0014', 'On the subject of drunken jokes', false, '2017-01-12 22:12:11.123000', 6, 15),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0067', 'Does patience ever pay off?', false, '2017-03-08 07:02:43.123000', 0, 76182),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0215', 'Very boring post about something with such a long title that it will hardly ever be entirely visible', false, '2020-07-11 15:02:43.123000', 0, 2);
 
 insert into cm_comments (id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, ts_approved, ts_deleted, user_created, user_approved, user_deleted)
 values  ('40330ddf-13de-4921-b123-7a32057988cd', 'ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'What''s on the agenda, captain?', '<p>What&#39;s on the agenda, captain?</p>', 0, false, true, false, false, '2023-02-27 18:24:22.057000', '2023-06-23 17:21:53.002826', null, '2af9ecd2-a32a-4332-8717-396e9af28639', '2af9ecd2-a32a-4332-8717-396e9af28639', null),

@@ -4,7 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { switchMap, tap } from "rxjs";
 import { faChevronLeft, faCopy, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Domain, FederatedIdentityProvider } from '../../../../../generated-api';
+import { Domain, DomainUser, FederatedIdentityProvider, Principal } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { Paths } from '../../../../_utils/consts';
 import { DocsService } from '../../../../_services/docs.service';
@@ -18,7 +18,9 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 export class DomainPropertiesComponent implements OnInit {
 
     domain?: Domain;
+    domainUser?: DomainUser;
     fedIdps?: FederatedIdentityProvider[];
+    principal?: Principal;
 
     readonly Paths = Paths;
     readonly snippet =
@@ -44,13 +46,13 @@ export class DomainPropertiesComponent implements OnInit {
      */
     get hasApprovalPolicy(): boolean {
         const d = this.domain;
-        return !!d &&
-            (!!d.modAnonymous ||
-            !!d.modAuthenticated ||
-            !!d.modNumComments ||
-            !!d.modUserAgeDays ||
-            !!d.modImages ||
-            !!d.modLinks);
+        return !!d && !!(
+            d.modAnonymous ||
+            d.modAuthenticated ||
+            d.modNumComments ||
+            d.modUserAgeDays ||
+            d.modImages ||
+            d.modLinks);
     }
 
     ngOnInit(): void {
@@ -59,12 +61,14 @@ export class DomainPropertiesComponent implements OnInit {
             .pipe(
                 tap(pm => this.domainSelectorSvc.setDomainId(pm.get('id') || undefined)),
                 // Subscribe to domain changes to obtain domain and IdP data
-                switchMap(() => this.domainSelectorSvc.domainWithIdps),
+                switchMap(() => this.domainSelectorSvc.domainUserIdps),
                 untilDestroyed(this))
-            .subscribe(df => {
-                this.domain = df?.domain;
+            .subscribe(data => {
+                this.domain = data.domain;
+                this.domainUser = data.domainUser;
                 // Only add those federated identity providers available globally
-                this.fedIdps = this.cfgSvc.config.federatedIdps.filter(idp => df?.federatedIdpIds?.includes(idp.id));
+                this.fedIdps = this.cfgSvc.config.federatedIdps.filter(idp => data.federatedIdpIds?.includes(idp.id));
+                this.principal = data.principal;
             });
     }
 }

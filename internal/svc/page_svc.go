@@ -314,6 +314,11 @@ func (svc *pageService) fetchUpdatePageTitle(host, path string, pageID *uuid.UUI
 		}
 	}
 
+	// Make sure the title doesn't exceed the size of the database field
+	if len(title) > data.MaxPageTitleLength {
+		title = title[:data.MaxPageTitleLength]
+	}
+
 	// Update the page in the database
 	return db.ExecOne("update cm_domain_pages set title=$1 where id=$2", title, pageID)
 }

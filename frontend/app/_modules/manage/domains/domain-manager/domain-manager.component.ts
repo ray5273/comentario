@@ -91,7 +91,7 @@ export class DomainManagerComponent implements OnInit {
                 this.canLoadMore = this.configSvc.canLoadMore(r.domains);
 
                 // Make a map of domain ID => domain users
-                r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId, du));
+                r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId!, du));
             });
     }
 }

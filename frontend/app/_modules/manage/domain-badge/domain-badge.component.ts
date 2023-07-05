@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, HostBinding } from '@angular/core';
 import { DomainSelectorService } from '../_services/domain-selector.service';
 
 /**
@@ -9,6 +9,9 @@ import { DomainSelectorService } from '../_services/domain-selector.service';
     templateUrl: './domain-badge.component.html',
 })
 export class DomainBadgeComponent {
+
+    @HostBinding('class')
+    private readonly class = 'overflow-hidden';
 
     constructor(
         readonly domainSelectorSvc: DomainSelectorService,

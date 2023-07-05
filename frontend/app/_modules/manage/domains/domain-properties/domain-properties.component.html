@@ -1,21 +1,19 @@
 <ng-container *ngIf="domain else noData">
-    <!-- Heading -->
-    <h1>
-        <ng-container i18n="heading">Domain</ng-container>
-        <app-domain-badge></app-domain-badge>
-    </h1>
-
-    <!-- Toolbar -->
-    <div class="toolbar">
-        <!-- Back to selector -->
+    <!-- Header -->
+    <header class="d-grid d-sm-flex gap-2 align-items-center mb-3">
+        <!-- Back to selector button -->
         <a routerLink=".." class="btn btn-secondary">
             <fa-icon [icon]="faChevronLeft" class="me-1"></fa-icon>
             <ng-container i18n>Select another domain</ng-container>
         </a>
-    </div>
+        <!-- Heading -->
+        <h1 class="mb-0" i18n="heading">Domain</h1>
+        <!-- Domain badge -->
+        <app-domain-badge></app-domain-badge>
+    </header>
 
-    <!-- Installation -->
-    <section>
+    <!-- Installation, only for an owner user -->
+    <section *ngIf="domainUser?.isOwner">
         <!-- Heading -->
         <h2 i18n>Installation</h2>
 
@@ -36,8 +34,8 @@
     <!-- Heading -->
     <h2 i18n>Properties</h2>
     <div class="row">
-        <!-- Buttons -->
-        <div class="col-sm-3 order-sm-last pb-3">
+        <!-- Buttons: only for superuser/owner -->
+        <div *ngIf="principal?.isSuperuser || domainUser?.isOwner" class="col-sm-auto order-sm-last pb-3">
             <!-- Edit settings button -->
             <button [routerLink]="[Paths.manage.domains, domain.id, 'edit']" type="button" class="btn btn-secondary w-100">
                 <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
@@ -45,7 +43,7 @@
             </button>
         </div>
         <!-- Detail table -->
-        <div class="col-sm-9">
+        <div class="col-sm">
 
             <dl id="domainDetailTable" class="detail-table">
                 <!-- Host -->
@@ -54,9 +52,9 @@
                     <dd>{{ domain.host }}</dd>
                 </div>
                 <!-- Name -->
-                <div>
+                <div *ngIf="domain.name as v">
                     <dt i18n>Name</dt>
-                    <dd>{{ domain.name }}</dd>
+                    <dd>{{ v }}</dd>
                 </div>
                 <!-- State -->
                 <div>
@@ -78,14 +76,14 @@
                     </dd>
                 </div>
                 <!-- Email moderators -->
-                <div>
+                <div *ngIf="domain.modNotifyPolicy as v">
                     <dt i18n>Email moderators</dt>
-                    <dd>{{ domain.modNotifyPolicy | moderatorNotifyPolicy }}</dd>
+                    <dd>{{ v | moderatorNotifyPolicy }}</dd>
                 </div>
                 <!-- Default comment sort -->
-                <div>
+                <div *ngIf="domain.defaultSort as v">
                     <dt i18n>Default comment sort</dt>
-                    <dd>{{ domain.defaultSort | commentSort }}</dd>
+                    <dd>{{ v | commentSort }}</dd>
                 </div>
                 <!-- Authentication -->
                 <div>
@@ -100,17 +98,17 @@
                     </dd>
                 </div>
                 <!-- Created -->
-                <div>
+                <div *ngIf="domain.createdTime | datetime as v">
                     <dt i18n>Created</dt>
-                    <dd>{{ domain.createdTime | date:'short' }}</dd>
+                    <dd>{{ v }}</dd>
                 </div>
                 <!-- Number of comments -->
-                <div>
+                <div *ngIf="domain.countComments! >= 0">
                     <dt i18n>Number of comments</dt>
                     <dd>{{ domain.countComments | number }}</dd>
                 </div>
                 <!-- Number of views -->
-                <div>
+                <div *ngIf="domain.countViews! >= 0">
                     <dt i18n>Number of views</dt>
                     <dd>{{ domain.countViews | number }}</dd>
                 </div>

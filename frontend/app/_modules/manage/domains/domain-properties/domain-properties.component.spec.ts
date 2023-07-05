@@ -22,7 +22,7 @@ describe('DomainPropertiesComponent', () => {
             providers: [
                 MockProvider(ConfigService, {config: {baseUrl: '/'} as ComentarioConfig}),
                 MockProvider(DocsService),
-                MockProvider(DomainSelectorService, {domainWithIdps: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainUserIdps: of({})}),
             ],
         })
             .compileComponents();

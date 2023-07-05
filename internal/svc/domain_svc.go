@@ -417,14 +417,11 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 		if d, du, err := svc.fetchDomainUser(rows); err != nil {
 			return nil, nil, translateDBErrors(err)
 		} else {
-			// Determine which domain fields the user is allowed to see
-			if superuser || (du != nil && du.IsOwner) {
-				ds = append(ds, d)
-			} else {
-				// Non-owner users are only allowed to see the host. Render negative counts as an indication they're
-				// unavailable
-				ds = append(ds, &data.Domain{ID: d.ID, Host: d.Host, CountComments: -1, CountViews: -1})
+			// If the user isn't a superuser/owner, strip the domain down
+			if !superuser && (du == nil || !du.IsOwner) {
+				d = d.AsNonOwner()
 			}
+			ds = append(ds, d)
 
 			// Accumulate domain users, if there's one
 			if du != nil {

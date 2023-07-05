@@ -29,6 +29,7 @@ var (
 	ErrorSignupsForbidden     = &exmodels.Error{ID: "signups-forbidden", Message: "New signups are forbidden"}
 	ErrorSSOMisconfigured     = &exmodels.Error{ID: "sso-misconfigured", Message: "Domain's SSO configuration is invalid"}
 	ErrorUnauthenticated      = &exmodels.Error{ID: "unauthenticated", Message: "User isn't authenticated"}
+	ErrorUnauthorized         = &exmodels.Error{ID: "unauthorized", Message: "You are not allowed to perform this operation"}
 	ErrorUnknownHost          = &exmodels.Error{ID: "unknown-host", Message: "Unknown host"}
 	ErrorUserBanned           = &exmodels.Error{ID: "user-banned", Message: "User is banned"}
 	ErrorUserReadonly         = &exmodels.Error{ID: "user-readonly", Message: "This user is read-only on this domain"}

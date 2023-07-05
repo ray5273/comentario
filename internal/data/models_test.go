@@ -2,9 +2,61 @@ package data
 
 import (
 	"github.com/google/uuid"
+	"reflect"
 	"testing"
 	"time"
 )
+
+func TestDomain_AsNonOwner(t *testing.T) {
+	tests := []struct {
+		name   string
+		domain *Domain
+		want   *Domain
+	}{
+		{"zero  ", &Domain{}, &Domain{CountComments: -1, CountViews: -1}},
+		{"filled", &Domain{
+			ID:               uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
+			Name:             "Foo",
+			Host:             "Bar",
+			CreatedTime:      time.Now(),
+			IsReadonly:       true,
+			AuthAnonymous:    true,
+			AuthLocal:        true,
+			AuthSSO:          true,
+			SSOURL:           "https://foo.com",
+			SSOSecret:        []byte("secret"),
+			ModAnonymous:     true,
+			ModAuthenticated: true,
+			ModNumComments:   13,
+			ModUserAgeDays:   42,
+			ModLinks:         true,
+			ModImages:        true,
+			ModNotifyPolicy:  DomainModNotifyPolicyPending,
+			DefaultSort:      "ta",
+			CountComments:    394856,
+			CountViews:       1241242345,
+		},
+			&Domain{
+				ID:            uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
+				Host:          "Bar",
+				IsReadonly:    true,
+				AuthAnonymous: true,
+				AuthLocal:     true,
+				AuthSSO:       true,
+				SSOURL:        "https://foo.com",
+				DefaultSort:   "ta",
+				CountComments: -1,
+				CountViews:    -1,
+			}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.domain.AsNonOwner(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("AsNonOwner() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
 
 func TestDomainUser_AgeInDays(t *testing.T) {
 	tests := []struct {

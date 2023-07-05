@@ -17,7 +17,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
 import { filter } from 'rxjs/operators';
-import { Domain, Principal } from '../../../../generated-api';
+import { Domain, DomainUser, Principal } from '../../../../generated-api';
 import { DomainSelectorService } from '../_services/domain-selector.service';
 
 @UntilDestroy()
@@ -32,10 +32,13 @@ export class ControlCenterComponent implements OnInit {
     expanded = false;
 
     /** Logged-in principal. */
-    principal?: Principal | null;
+    principal?: Principal;
 
     /** Currently selected domain. */
     domain?: Domain;
+
+    /** User in the currently selected domain. */
+    domainUser?: DomainUser;
 
     readonly Paths = Paths;
 
@@ -58,17 +61,24 @@ export class ControlCenterComponent implements OnInit {
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
 
+    get canManageDomain(): boolean | undefined {
+        return this.principal?.isSuperuser || this.domainUser?.isOwner;
+    }
+
     ngOnInit(): void {
         // Collapse the sidebar on route change
         this.router.events
             .pipe(untilDestroyed(this), filter(e => e instanceof NavigationStart))
             .subscribe(() => this.expanded = false);
 
-        // Monitor principal changes
-        this.authSvc.principal.pipe(untilDestroyed(this)).subscribe(p => this.principal = p);
-
-        // Monitor selected domain changes
-        this.domainSelectorSvc.domain.pipe(untilDestroyed(this)).subscribe(d => this.domain = d);
+        // Monitor selected domain/user changes
+        this.domainSelectorSvc.domainUserIdps
+            .pipe(untilDestroyed(this))
+            .subscribe(data => {
+                this.domain     = data.domain;
+                this.domainUser = data.domainUser;
+                this.principal  = data.principal;
+            });
     }
 
     logout() {

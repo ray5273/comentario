@@ -19,7 +19,7 @@ describe('ControlCenterComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 MockProvider(AuthService, {principal: of(null)}),
-                MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainUserIdps: of({})}),
             ],
         })
             .compileComponents();
