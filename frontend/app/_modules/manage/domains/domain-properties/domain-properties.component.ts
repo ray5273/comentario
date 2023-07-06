@@ -1,8 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap, tap } from "rxjs";
-import { faChevronLeft, faCopy, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Domain, DomainUser, FederatedIdentityProvider, Principal } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
@@ -29,9 +28,8 @@ export class DomainPropertiesComponent implements OnInit {
     readonly installDocsUrl = this.docsSvc.getPageUrl('getting-started/');
 
     // Icons
-    readonly faChevronLeft = faChevronLeft;
-    readonly faCopy        = faCopy;
-    readonly faEdit        = faEdit;
+    readonly faCopy = faCopy;
+    readonly faEdit = faEdit;
 
     constructor(
         private readonly route: ActivatedRoute,
@@ -39,7 +37,10 @@ export class DomainPropertiesComponent implements OnInit {
         private readonly cfgSvc: ConfigService,
         private readonly docsSvc: DocsService,
         private readonly domainSelectorSvc: DomainSelectorService,
-    ) {}
+    ) {
+        // Monitor the domain ID param in the route
+        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
+    }
 
     /**
      * Whether any specific moderator approval policy is in place.
@@ -56,13 +57,9 @@ export class DomainPropertiesComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Subscribe to route parameter changes to update domain selector
-        this.route.paramMap
-            .pipe(
-                tap(pm => this.domainSelectorSvc.setDomainId(pm.get('id') || undefined)),
-                // Subscribe to domain changes to obtain domain and IdP data
-                switchMap(() => this.domainSelectorSvc.domainUserIdps),
-                untilDestroyed(this))
+        // Subscribe to domain changes to obtain domain and IdP data
+        this.domainSelectorSvc.domainUserIdps
+            .pipe(untilDestroyed(this))
             .subscribe(data => {
                 this.domain = data.domain;
                 this.domainUser = data.domainUser;

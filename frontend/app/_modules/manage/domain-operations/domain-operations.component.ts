@@ -93,6 +93,8 @@ export class DomainOperationsComponent implements OnInit {
         this.api.domainDelete(this.domain!.id!)
             .pipe(this.deleting.processing())
             .subscribe(() => {
+                // Deselect the domain
+                this.domainSelectorSvc.setDomainId(undefined);
                 // Add a toast
                 this.toastSvc.success('domain-deleted').keepOnRouteChange();
                 // Navigate to the domain list page

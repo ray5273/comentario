@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge } from 'rxjs';
 import { faCheckDouble, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import {ApiGeneralService, Domain, DomainUser} from '../../../../../generated-api';
+import { ApiGeneralService, Domain, DomainUser } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
@@ -66,8 +66,8 @@ export class DomainManagerComponent implements OnInit {
 
         // Subscribe to sort/filter changes
         merge(
-                this.sort.changes,
-                this.ctlFilterFilter.valueChanges.pipe(debounceTime(500), distinctUntilChanged()))
+                this.sort.changes.pipe(untilDestroyed(this)),
+                this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .subscribe(() => this.load(true));
     }
 

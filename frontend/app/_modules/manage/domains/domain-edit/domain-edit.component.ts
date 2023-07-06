@@ -2,12 +2,13 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
     ApiGeneralService,
     CommentSort,
     Domain,
     DomainModNotifyPolicy,
-    FederatedIdpId
+    FederatedIdpId,
 } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ConfigService } from '../../../../_services/config.service';
@@ -15,7 +16,9 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Utils } from '../../../../_utils/utils';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { first } from 'rxjs';
 
+@UntilDestroy()
 @Component({
     selector: 'app-domain-edit',
     templateUrl: './domain-edit.component.html',
@@ -70,9 +73,12 @@ export class DomainEditComponent implements OnInit {
         private readonly toastSvc: ToastService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {
+        // Monitor the domain ID param in the route
+        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
+
         // Disable numeric controls when the corresponding checkbox is off
-        this.ctlModNumCommentsOn  .valueChanges.subscribe(b => Utils.enableControls(b, this.ctlModNumComments));
-        this.ctlModUserAgeDaysOn.valueChanges.subscribe(b => Utils.enableControls(b, this.ctlModUserAgeDays));
+        this.ctlModNumCommentsOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.ctlModNumComments));
+        this.ctlModUserAgeDaysOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.ctlModUserAgeDays));
     }
 
     get ctlAuthSso(): AbstractControl<boolean> {
@@ -111,13 +117,12 @@ export class DomainEditComponent implements OnInit {
         this.isNew = this.route.snapshot.data.new;
 
         // Fetch the domain, if any
-        const id = this.route.snapshot.paramMap.get('id');
-        if (id) {
-            this.api.domainGet(id)
-                .pipe(this.loading.processing())
-                .subscribe(r => {
-                    this.domain          = r.domain;
-                    this.domainFedIdpIds = r.federatedIdpIds;
+        this.domainSelectorSvc.domainUserIdps
+            .pipe(this.loading.processing(), first())
+            .subscribe(data => {
+                if (data.domain) {
+                    this.domain          = data.domain;
+                    this.domainFedIdpIds = data.federatedIdpIds;
                     this.form.patchValue({
                         host:             this.domain!.host,
                         name:             this.domain!.name,
@@ -138,8 +143,8 @@ export class DomainEditComponent implements OnInit {
                         defaultSort:      this.domain!.defaultSort,
                         fedIdps:          this.fedIdps.map(idp => !!this.domainFedIdpIds?.includes(idp.id)),
                     });
-                });
-        }
+                }
+            });
 
         // Host can't be changed for an existing domain
         if (!this.isNew) {
@@ -147,7 +152,7 @@ export class DomainEditComponent implements OnInit {
         }
 
         // SSO URL is only relevant when SSO auth is enabled
-        this.ctlAuthSso.valueChanges.subscribe(b => Utils.enableControls(b, this.ctlSsoUrl));
+        this.ctlAuthSso.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.ctlSsoUrl));
     }
 
     submit() {

@@ -26,9 +26,9 @@ const children: Routes = [
     {path: 'domains',            component: DomainManagerComponent},
     {path: 'domains/create',     component: DomainEditComponent, data: {new: true}},
     {path: 'domains/:id',        component: DomainPropertiesComponent},
-    {path: 'domains/:id/edit',   component: DomainEditComponent},
-    {path: 'domains/:id/clone',  component: DomainEditComponent, data: {new: true}},
-    {path: 'domains/:id/import', component: DomainImportComponent},
+    {path: 'domains/:id/edit',   component: DomainEditComponent,   canActivate: [ManageGuard.canManageDomain]},
+    {path: 'domains/:id/clone',  component: DomainEditComponent,   canActivate: [ManageGuard.canManageDomain], data: {new: true}},
+    {path: 'domains/:id/import', component: DomainImportComponent, canActivate: [ManageGuard.canManageDomain]},
 
     // Pages
     {path: 'pages', component: PageManagerComponent, canActivate: [ManageGuard.isDomainSelected]},
@@ -40,7 +40,7 @@ const children: Routes = [
     {path: 'users', component: UserManagerComponent, canActivate: [ManageGuard.isSuperOrOwner]},
 
     // Stats
-    {path: 'stats', component: StatsComponent, canActivate: [ManageGuard.isSuperOrOwner]},
+    {path: 'stats', component: StatsComponent},
 
     // Operations
     {path: 'operations', component: DomainOperationsComponent, canActivate: [ManageGuard.canManageDomain]},

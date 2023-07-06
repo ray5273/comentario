@@ -35,10 +35,10 @@
                     </a>
                 </li>
 
-                <!-- Domain selector: if no domain -->
-                <li *ngIf="!domain" class="nav-item">
+                <!-- Domain selector -->
+                <li class="nav-item">
                     <a [routerLink]="Paths.manage.domains" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
-                        <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                        <fa-icon class="cc-icon" [icon]="faList"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Domains</div>
                     </a>
                 </li>
@@ -47,9 +47,9 @@
                 <li *ngIf="domain" class="nav-item">
                     <a [routerLink]="[Paths.manage.domains, domain.id]" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
+                        <span class="sr-only" i18n>Domain</span>
                         <div class="cc-hide-collapsed overflow-hidden">
-                            <div class="colon" i18n>Domain</div>
-                            <div class="cc-vshrink-collapsed text-truncate">{{ domain.host }}</div>
+                            <div class="text-truncate">{{ domain.host }}</div>
                         </div>
                     </a>
                 </li>
@@ -71,15 +71,15 @@
                 </li>
 
                 <!-- Users: owner only -->
-                <li *ngIf="canManageDomain" class="nav-item">
+                <li *ngIf="isSuperOrOwner" class="nav-item">
                     <a [routerLink]="Paths.manage.users" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faUsers"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Users</div>
                     </a>
                 </li>
 
-                <!-- Stats: manager only -->
-                <li *ngIf="canManageDomain" class="nav-item">
+                <!-- Stats -->
+                <li class="nav-item">
                     <a [routerLink]="Paths.manage.stats" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faChartLine"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Statistics</div>
@@ -87,7 +87,7 @@
                 </li>
 
                 <!-- Operations: if there's a domain, manager only -->
-                <li *ngIf="domain && canManageDomain" class="nav-item">
+                <li *ngIf="domain && isSuperOrOwner" class="nav-item">
                     <a [routerLink]="Paths.manage.operations" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faArrowDownUpAcrossLine"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Operations</div>

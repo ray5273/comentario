@@ -51,8 +51,8 @@ export class PageManagerComponent implements OnInit {
         // Subscribe to sort/filter changes
         merge(
             this.domainSelectorSvc.domain.pipe(untilDestroyed(this), tap(d => this.domain = d)),
-            this.sort.changes,
-            this.ctlFilterFilter.valueChanges.pipe(debounceTime(500), distinctUntilChanged()))
+            this.sort.changes.pipe(untilDestroyed(this)),
+            this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .subscribe(() => this.load(true));
     }
 

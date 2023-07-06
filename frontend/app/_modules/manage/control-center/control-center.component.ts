@@ -7,6 +7,7 @@ import {
     faChevronRight,
     faComments,
     faFileLines,
+    faList,
     faQuestionCircle,
     faSignOutAlt,
     faTachometerAlt,
@@ -49,6 +50,7 @@ export class ControlCenterComponent implements OnInit {
     readonly faChartLine             = faChartLine;
     readonly faComments              = faComments;
     readonly faFileLines             = faFileLines;
+    readonly faList                  = faList;
     readonly faQuestionCircle        = faQuestionCircle;
     readonly faSignOutAlt            = faSignOutAlt;
     readonly faTachometerAlt         = faTachometerAlt;
@@ -61,7 +63,7 @@ export class ControlCenterComponent implements OnInit {
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
 
-    get canManageDomain(): boolean | undefined {
+    get isSuperOrOwner(): boolean | undefined {
         return this.principal?.isSuperuser || this.domainUser?.isOwner;
     }
 

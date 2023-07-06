@@ -1,14 +1,7 @@
 <ng-container *ngIf="domain else noData">
-    <!-- Header -->
-    <header class="d-grid d-sm-flex gap-2 align-items-center mb-3">
-        <!-- Back to selector button -->
-        <a routerLink=".." class="btn btn-secondary">
-            <fa-icon [icon]="faChevronLeft" class="me-1"></fa-icon>
-            <ng-container i18n>Select another domain</ng-container>
-        </a>
-        <!-- Heading -->
-        <h1 class="mb-0" i18n="heading">Domain</h1>
-        <!-- Domain badge -->
+    <!-- Header with the badge -->
+    <header class="d-flex flex-wrap align-items-center mb-3">
+        <h1 class="mb-0 me-2" i18n="heading">Domain</h1>
         <app-domain-badge></app-domain-badge>
     </header>
 

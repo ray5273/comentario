@@ -2,11 +2,14 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService } from '../../../../../generated-api';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { ApiGeneralService, Domain } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Animations } from '../../../../_utils/animations';
 import { Paths } from '../../../../_utils/consts';
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 
+@UntilDestroy()
 @Component({
     selector: 'app-domain-import',
     templateUrl: './domain-import.component.html',
@@ -14,7 +17,7 @@ import { Paths } from '../../../../_utils/consts';
 })
 export class DomainImportComponent implements OnInit {
 
-    id = '';
+    domain?: Domain;
     isComplete = false;
     impCount?: number;
 
@@ -33,14 +36,18 @@ export class DomainImportComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly route: ActivatedRoute,
         private readonly api: ApiGeneralService,
-    ) {}
+        private readonly domainSelectorSvc: DomainSelectorService,
+    ) {
+        // Monitor the domain ID param in the route
+        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
+    }
 
     get file(): AbstractControl<File | undefined> {
         return this.form.get('file')!;
     }
 
     ngOnInit(): void {
-        this.id = this.route.snapshot.paramMap.get('id') || '';
+        this.domainSelectorSvc.domain.pipe(untilDestroyed(this)).subscribe(d => this.domain = d);
     }
 
     submit() {
@@ -48,9 +55,9 @@ export class DomainImportComponent implements OnInit {
         this.form.markAllAsTouched();
 
         // Submit the form if it's valid
-        if (this.form.valid && this.id) {
+        if (this.form.valid && this.domain) {
             const val = this.form.value;
-            this.api.domainImport(this.id, val.source!, val.file)
+            this.api.domainImport(this.domain.id!, val.source!, val.file)
                 .pipe(this.importing.processing())
                 .subscribe(r => {
                     this.impCount = r.numImported;
