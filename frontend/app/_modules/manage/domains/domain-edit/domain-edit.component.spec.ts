@@ -29,7 +29,7 @@ describe('DomainEditComponent', () => {
                 MockProvider(ConfigService, {config}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                 MockProvider(ToastService),
-                MockProvider(DomainSelectorService),
+                MockProvider(DomainSelectorService, {domainUserIdps: of({})}),
             ],
         })
             .compileComponents();

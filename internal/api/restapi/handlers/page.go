@@ -35,3 +35,36 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 			Pages: data.SliceToDTOs[*data.DomainPage, *models.DomainPage](ps),
 		})
 }
+
+func DomainPageGet(params api_general.DomainPageGetParams, user *data.User) middleware.Responder {
+	// Extract domain page ID
+	pageID, err := data.DecodeUUID(params.UUID)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID)
+	}
+
+	// Fetch page
+	p, err := svc.ThePageService.FindByID(pageID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Find the page's domain and user
+	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(&p.DomainID, &user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// If no user record is present, the user isn't allowed to view the page at all (unless it's a superuser): respond
+	// with Not Found as if the page doesn't exist
+	if !user.IsSuperuser && domainUser == nil {
+		return respNotFound(nil)
+
+		// If the user isn't a superuser or domain owner, they're only allowed to view a limited set of page properties
+	} else if !user.IsSuperuser && !domainUser.IsOwner {
+		p = p.AsNonOwner()
+	}
+
+	// Succeeded
+	return api_general.NewDomainPageGetOK().WithPayload(&api_general.DomainPageGetOKBody{Page: p.ToDTO()})
+}

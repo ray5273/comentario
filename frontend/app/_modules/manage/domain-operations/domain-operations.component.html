@@ -111,18 +111,18 @@
 
 <!-- Freeze domain confirmation dialog content template -->
 <ng-template #freezeDlg>
-    <p *ngIf="domain!.isReadonly"  i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
-    <p *ngIf="!domain!.isReadonly" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
+    <p *ngIf="domain?.isReadonly"  i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
+    <p *ngIf="!domain?.isReadonly" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
 </ng-template>
 
 <!-- Clear comments confirmation dialog content template -->
 <ng-template #clearCommentsDlg>
-    <p i18n>Are you absolutely sure you want to remove all comments from the domain <code>{{ domain!.host }}</code>?</p>
+    <p i18n>Are you absolutely sure you want to remove all comments from the domain <code>{{ domain?.host }}</code>?</p>
     <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>
 
 <!-- Delete confirmation dialog content template -->
 <ng-template #deleteDlg>
-    <p i18n>Are you absolutely sure you want to delete the domain <code>{{ domain!.host }}</code>?</p>
+    <p i18n>Are you absolutely sure you want to delete the domain <code>{{ domain?.host }}</code>?</p>
     <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>

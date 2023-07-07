@@ -69,7 +69,7 @@ func DomainExport(params api_general.DomainExportParams, user *data.User) middle
 
 // DomainGet returns properties of a domain belonging to the current user
 func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's ownership
+	// Find the domain and verify the user's privileges
 	if d, du, r := domainGetWithUser(params.UUID, user, false); r != nil {
 		return r
 

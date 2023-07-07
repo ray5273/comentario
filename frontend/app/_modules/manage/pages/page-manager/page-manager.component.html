@@ -37,10 +37,10 @@
         <!-- Page list -->
         <div class="list-group">
             <a *ngFor="let p of pages" [routerLink]="p.id" class="list-group-item list-group-item-action">
-                <div class="row">
+                <div class="row flex-nowrap">
                     <!-- Host/path -->
-                    <div class="col">
-                        <div>
+                    <div class="col overflow-hidden">
+                        <div style="word-break: break-word">
                             <!-- Domain host (sm+) -->
                             <span class="text-black-50 d-none d-sm-inline">{{ domain?.host }}</span>
                             <!-- Page path -->
@@ -52,6 +52,14 @@
                             <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
                             <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
                         </div>
+                    </div>
+                    <!-- Open page in new tab button -->
+                    <div class="col-auto">
+                        <a class="btn btn-sm btn-outline-secondary" [href]="'http://'+domain?.host+p.path"
+                           (click)="$event.stopPropagation()"
+                           target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
+                            <fa-icon [icon]="faUpRightFromSquare"></fa-icon>
+                        </a>
                     </div>
                     <!-- Comment count (sm+) -->
                     <div *ngIf="p.countComments! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">

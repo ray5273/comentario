@@ -147,9 +147,12 @@ values  ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866e
 
 insert into cm_domain_pages (id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
 values  ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', '', false, '2023-06-23 17:21:53.002826', 17, 10),
-        ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0014', 'On the subject of drunken jokes', false, '2017-01-12 22:12:11.123000', 6, 15),
-        ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0067', 'Does patience ever pay off?', false, '2017-03-08 07:02:43.123000', 0, 76182),
-        ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0215', 'Very boring post about something with such a long title that it will hardly ever be entirely visible', false, '2020-07-11 15:02:43.123000', 0, 2);
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/readonly/', 'Readonly page', true, '2023-06-24 11:15:42.683836', 0, 42),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/no-comment.html', 'No comment', false, '2023-07-01 21:51:14.019868', 0, 2),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865', '', false, '2023-07-02 21:51:15.052048', 0, 0),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac48010', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0014', 'On the subject of drunken jokes', false, '2017-01-12 22:12:11.123000', 6, 15),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac48011', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0067', 'Does patience ever pay off?', false, '2017-03-08 07:02:43.123000', 0, 76182),
+        ('0ebb8a1b-12f6-421e-b1bb-75867ac48012', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0215', 'Very boring post about something with such a long title that it will hardly ever be entirely visible', false, '2020-07-11 15:02:43.123000', 0, 2);
 
 insert into cm_comments (id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, ts_approved, ts_deleted, user_created, user_approved, user_deleted)
 values  ('40330ddf-13de-4921-b123-7a32057988cd', 'ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', 'What''s on the agenda, captain?', '<p>What&#39;s on the agenda, captain?</p>', 0, false, true, false, false, '2023-02-27 18:24:22.057000', '2023-06-23 17:21:53.002826', null, '2af9ecd2-a32a-4332-8717-396e9af28639', '2af9ecd2-a32a-4332-8717-396e9af28639', null),

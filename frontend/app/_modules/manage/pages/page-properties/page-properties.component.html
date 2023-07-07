@@ -1,0 +1,75 @@
+<!-- Header -->
+<header class="mb-3">
+    <h1 i18n="heading">Domain page properties</h1>
+</header>
+
+<div [appSpinner]="loading.active" spinnerSize="lg">
+    <ng-container *ngIf="domain && page else noData">
+        <div class="row">
+            <!-- Buttons: only for superuser/owner -->
+            <div *ngIf="isOwner" class="col-sm-auto order-sm-last pb-3">
+                <!-- Update title button -->
+                <button (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
+                    <fa-icon [icon]="faRotate" class="me-1"></fa-icon>
+                    <ng-container i18n>Update title</ng-container>
+                </button>
+            </div>
+
+            <!-- Detail table -->
+            <div class="col-sm">
+                <dl id="pageDetailTable" class="detail-table">
+                    <!-- Domain -->
+                    <div>
+                        <dt i18n>Domain</dt>
+                        <dd><a [routerLink]="[Paths.manage.domains, domain.id]">{{ domain.host }}</a></dd>
+                    </div>
+                    <!-- Path -->
+                    <div>
+                        <dt i18n>Path</dt>
+                        <dd><a href="http://{{ domain.host }}{{ page.path }}" target="_blank"
+                               rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>{{ page.path }}</a></dd>
+                    </div>
+                    <!-- Title -->
+                    <div *ngIf="page.title as v">
+                        <dt i18n>Title</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                    <!-- Read-only -->
+                    <div *ngIf="isOwner">
+                        <dt i18n>Read-only</dt>
+                        <dd><app-checkmark [value]="page.isReadonly"></app-checkmark></dd>
+                    </div>
+                    <!-- Created -->
+                    <div *ngIf="page.createdTime | datetime as v">
+                        <dt i18n>Created</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                    <!-- Number of comments -->
+                    <div *ngIf="page.countComments! >= 0">
+                        <dt i18n>Number of comments</dt>
+                        <dd>{{ page.countComments | number }}</dd>
+                    </div>
+                    <!-- Number of views -->
+                    <div *ngIf="page.countViews! >= 0">
+                        <dt i18n>Number of views</dt>
+                        <dd>{{ page.countViews | number }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <section>
+            <!-- Heading -->
+            <h2 i18n>Comments</h2>
+
+            <!-- Comment list -->
+            <app-comment-list [pageId]="page.id"></app-comment-list>
+        </section>
+    </ng-container>
+
+    <!-- Placeholder when no data -->
+    <ng-template #noData>
+        <div class="text-center" i18n>No data available.</div>
+    </ng-template>
+</div>

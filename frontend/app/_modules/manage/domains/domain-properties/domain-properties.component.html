@@ -1,10 +1,10 @@
-<ng-container *ngIf="domain else noData">
-    <!-- Header with the badge -->
-    <header class="d-flex flex-wrap align-items-center mb-3">
-        <h1 class="mb-0 me-2" i18n="heading">Domain</h1>
-        <app-domain-badge></app-domain-badge>
-    </header>
+<!-- Header with the badge -->
+<header class="d-flex flex-wrap align-items-center mb-3">
+    <h1 class="mb-0 me-2" i18n="heading">Domain</h1>
+    <app-domain-badge></app-domain-badge>
+</header>
 
+<ng-container *ngIf="domain else noData">
     <!-- Installation, only for an owner user -->
     <section *ngIf="domainUser?.isOwner">
         <!-- Heading -->
@@ -49,7 +49,7 @@
                     <dt i18n>Name</dt>
                     <dd>{{ v }}</dd>
                 </div>
-                <!-- State -->
+                <!-- Read-only -->
                 <div>
                     <dt i18n>Read-only</dt>
                     <dd><app-checkmark [value]="domain.isReadonly"></app-checkmark></dd>

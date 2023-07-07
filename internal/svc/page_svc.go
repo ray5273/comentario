@@ -202,7 +202,14 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 				goqu.T("cm_domains_users").As("du"),
 				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")}),
 			).
-			Where(goqu.Ex{"du.user_id": userID})
+			Where(
+				goqu.Ex{"du.user_id": userID},
+				// For non-owner, non-moderator users, only show pages the user commented on
+				goqu.Or(
+					goqu.Ex{"du.is_owner": true},
+					goqu.Ex{"du.is_moderator": true},
+					goqu.L("exists (select from cm_comments where page_id=p.id)"),
+				))
 	}
 
 	// Add substring filter
@@ -257,14 +264,11 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 		}
 
 		// Determine which page fields the user is allowed to see
-		if superuser || (isOwner.Valid && isOwner.Bool) {
-			// Superuser or domain owner
-			ps = append(ps, &p)
-		} else {
-			// Non-owner users are only allowed to see the path and the title. Render negative counts as an indication
-			// they're unavailable
-			ps = append(ps, &data.DomainPage{ID: p.ID, Path: p.Path, Title: p.Title, CountComments: -1, CountViews: -1})
+		if !superuser && (!isOwner.Valid || !isOwner.Bool) {
+			// Non-owner users are only allowed to see a limited subset of fields
+			p = *p.AsNonOwner()
 		}
+		ps = append(ps, &p)
 	}
 
 	// Verify Next() didn't error

@@ -104,6 +104,11 @@ func respInternalError(err *exmodels.Error) middleware.Responder {
 	return api_general.NewGenericInternalServerError().WithPayload(err)
 }
 
+// respNotFound returns a responder that responds with HTTP Not Found
+func respNotFound(err *exmodels.Error) middleware.Responder {
+	return api_general.NewGenericNotFound().WithPayload(err)
+}
+
 // respServiceError translates the provided error, returned by a service, into an appropriate error responder
 func respServiceError(err error) middleware.Responder {
 	switch err {

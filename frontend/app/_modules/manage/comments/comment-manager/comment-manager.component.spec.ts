@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MockComponent } from 'ng-mocks';
+import { MockComponents } from 'ng-mocks';
 import { CommentManagerComponent } from './comment-manager.component';
 import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
+import { CommentListComponent } from '../comment-list/comment-list.component';
 
 describe('CommentManagerComponent', () => {
 
@@ -10,7 +11,7 @@ describe('CommentManagerComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [CommentManagerComponent, MockComponent(DomainBadgeComponent)],
+            declarations: [CommentManagerComponent, MockComponents(DomainBadgeComponent, CommentListComponent)],
         });
         fixture = TestBed.createComponent(CommentManagerComponent);
         component = fixture.componentInstance;

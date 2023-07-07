@@ -1860,6 +1860,25 @@ paths:
                   $ref: "#/definitions/domainPage"
                 description: List of domain pages
 
+  /domain-pages/{uuid}:
+    parameters:
+      - $ref: "#/parameters/pathUuid"
+
+    get:
+      operationId: DomainPageGet
+      summary: Get properties of a domain page
+      tags:
+        - ApiGeneral
+      responses:
+        200:
+          description: Domain page properties
+          schema:
+            type: object
+            properties:
+              page:
+                $ref: "#/definitions/domainPage"
+                description: Domain page properties
+
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints
   # These endpoints are only available during the test cycle and never in production

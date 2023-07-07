@@ -562,6 +562,18 @@ func (p *DomainPage) ToDTO() *models.DomainPage {
 	}
 }
 
+// AsNonOwner returns a clone of the page with a limited set of properties, which a non-owner user is allowed to see
+func (p *DomainPage) AsNonOwner() *DomainPage {
+	return &DomainPage{
+		ID:            p.ID,
+		DomainID:      p.DomainID,
+		Path:          p.Path,
+		Title:         p.Title,
+		CountComments: -1, // -1 indicates no count data is available
+		CountViews:    -1, // idem
+	}
+}
+
 // WithIsReadonly sets the IsReadonly value
 func (p *DomainPage) WithIsReadonly(b bool) *DomainPage {
 	p.IsReadonly = b

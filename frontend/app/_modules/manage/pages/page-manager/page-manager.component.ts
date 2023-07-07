@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Domain, DomainPage } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -30,6 +31,9 @@ export class PageManagerComponent implements OnInit {
     readonly filterForm = this.fb.nonNullable.group({
         filter: '',
     });
+
+    // Icons
+    readonly faUpRightFromSquare = faUpRightFromSquare;
 
     private loadedPageNum = 0;
 

@@ -29,6 +29,8 @@ import { SortSelectorComponent } from './sort-selector/sort-selector.component';
 import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
 import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.component';
 import { DatetimePipe } from './_pipes/datetime.pipe';
+import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
+import { CommentListComponent } from './comments/comment-list/comment-list.component';
 
 @NgModule({
     declarations: [
@@ -52,6 +54,8 @@ import { DatetimePipe } from './_pipes/datetime.pipe';
         StatsChartComponent,
         StatsComponent,
         UserManagerComponent,
+        PagePropertiesComponent,
+        CommentListComponent,
     ],
     imports: [
         CommonModule,
