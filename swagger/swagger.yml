@@ -1880,6 +1880,51 @@ paths:
                 description: Domain page properties
 
   #---------------------------------------------------------------------------------------------------------------------
+  # Comments
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /comments:
+    get:
+      operationId: CommentList
+      summary: Get a list of comments and commenters for the given domain and, if specified, page
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+        - in: query
+          name: pageId
+          required: false
+          description: Optional domain page ID
+          type: string
+          format: uuid
+        - $ref: "#/parameters/queryFilter"
+        - $ref: "#/parameters/queryPageNumber"
+        - in: query
+          name: sortBy
+          type: string
+          enum:
+            - created
+            - score
+          description: Property to sort results by
+        - $ref: "#/parameters/querySortDesc"
+      responses:
+        200:
+          description: Comment and commenter list
+          schema:
+            type: object
+            properties:
+              comments:
+                description: Comments on the page
+                type: array
+                items:
+                  $ref: "#/definitions/comment"
+              commenters:
+                description: Commenters, who authored the comments
+                type: array
+                items:
+                  $ref: "#/definitions/commenter"
+
+  #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints
   # These endpoints are only available during the test cycle and never in production
   #---------------------------------------------------------------------------------------------------------------------

@@ -98,7 +98,15 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	}
 
 	// Fetch comments and commenters
-	comments, commenters, err := svc.TheCommentService.ListWithCommentersByPage(user, page, domainUser != nil && domainUser.IsModerator)
+	comments, commenters, err := svc.TheCommentService.ListWithCommentersByDomainPage(
+		user,
+		&page.DomainID,
+		&page.ID,
+		user.IsSuperuser || domainUser != nil && (domainUser.IsOwner || domainUser.IsModerator),
+		"",
+		"",
+		data.SortAsc,
+		-1)
 	if err != nil {
 		return respServiceError(err)
 	}

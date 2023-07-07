@@ -101,7 +101,7 @@ func (svc *domainService) CountOwned(userID *uuid.UUID) (int, error) {
 
 	// Query the owned domain count
 	var i int
-	if err := db.QueryRow("select count(*) from cm_domain_users where user_id=$1 and is_owner=true;", userID).Scan(&i); err != nil {
+	if err := db.QueryRow("select count(*) from cm_domains_users where user_id=$1 and is_owner=true;", userID).Scan(&i); err != nil {
 		return 0, translateDBErrors(err)
 	} else {
 		// Succeeded

@@ -2,10 +2,13 @@ package svc
 
 import (
 	"database/sql"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 	"time"
 )
 
@@ -27,9 +30,17 @@ type CommentService interface {
 	DeleteByHost(host models.Host) error
 	// FindByID finds and returns a comment with the given ID
 	FindByID(id *uuid.UUID) (*data.Comment, error)
-	// ListWithCommentersByPage returns a list of comments and related commenters for the given page. user is the
-	// current authenticated/anonymous user
-	ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error)
+	// ListWithCommentersByDomainPage returns a list of comments and related commenters for the given domain and,
+	// optionally, page.
+	//   - user is the current authenticated/anonymous user.
+	//   - domainID is the domain ID to filter the result by.
+	//   - pageID is an optional page ID to filter the result by.
+	//   - isModerator indicates whether the current user is a superuser, domain owner, or domain moderator.
+	//   - filter is an optional substring to filter the result by.
+	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
+	//   - dir is the sort direction.
+	//   - pageIndex is the page index, if negative, no pagination is applied.
+	ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
 	// UpdateSticky updates the stickiness flag of a comment with the given ID in the database
@@ -146,62 +157,96 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	return &c, nil
 }
 
-func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.DomainPage, isModerator bool) ([]*models.Comment, []*models.Commenter, error) {
-	logger.Debugf("commentService.ListWithCommentersByPage(%s, %#v)", &user.ID, page)
+func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error) {
+	logger.Debugf("commentService.ListWithCommentersByDomainPage(%s, %s, %s, %v, '%s', '%s', %s, %d)", &user.ID, domainID, pageID, isModerator, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
-	statement :=
-		"select " +
+	q := goqu.Dialect("postgres").
+		From(goqu.T("cm_comments").As("c")).
+		Select(
 			// Comment fields
-			"c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_pending, " +
-			"c.is_deleted, c.ts_created, c.user_created, " +
+			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
+			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created",
 			// Commenter fields
-			"u.id, u.email, u.name, case when u.avatar is null then false else true end, u.website_url, u.is_superuser, " +
-			"du.is_owner, du.is_moderator, du.is_commenter, " +
+			"u.id", "u.email", "u.name", "u.avatar", "u.website_url", "u.is_superuser", "du.is_owner",
+			"du.is_moderator", "du.is_commenter",
 			// Votes fields
-			"v.negative " +
-			// Iterate comments
-			"from cm_comments c " +
-			// Outer-join commenter users
-			"left join cm_users u on u.id=c.user_created " +
-			// Outer-join domain users
-			"left join cm_domains_users du on du.user_id=c.user_created and du.domain_id=$1 " +
-			// Outer-join comment votes
-			"left join cm_comment_votes v on v.comment_id=c.id and v.user_id=$2 " +
-			"where c.page_id=$3 and c.is_deleted=false"
-	params := []any{&page.DomainID, &user.ID, &page.ID}
+			"v.negative").
+		// Join comment pages
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
+		// Outer-join commenter users
+		LeftJoin(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("c.user_created")})).
+		// Outer-join domain users
+		LeftJoin(goqu.T("cm_domains_users").As("du"), goqu.On(goqu.Ex{"du.user_id": goqu.I("c.user_created"), "du.domain_id": goqu.I("p.domain_id")})).
+		// Outer-join comment votes
+		LeftJoin(goqu.T("cm_comment_votes").As("v"), goqu.On(goqu.Ex{"v.comment_id": goqu.I("c.id"), "v.user_id": &user.ID})).
+		// Filter by page domain, also filter out deleted comments
+		Where(goqu.Ex{"p.domain_id": domainID, "c.is_deleted": false})
+
+	// If there's a page ID specified, include only comments for that page (otherwise  comments for all pages of the
+	// domain will be included)
+	if pageID != nil {
+		q = q.Where(goqu.Ex{"c.page_id": pageID})
+	}
 
 	// Anonymous user: only include approved
 	if user.IsAnonymous() {
-		statement += " and c.is_approved"
+		q = q.Where(goqu.Ex{"c.is_approved": true})
 
 	} else if !isModerator {
 		// Authenticated, non-moderator user: show only approved and all own comments
-		statement += " and (c.is_approved or c.user_created=$2)"
+		q = q.Where(goqu.ExOr{"c.is_approved": true}, goqu.Ex{"c.user_created": &user.ID})
 	}
-	statement += ";"
+
+	// Add substring filter
+	if filter != "" {
+		pattern := "%" + strings.ToLower(filter) + "%"
+		q = q.Where(goqu.Or(
+			goqu.L(`lower("c"."markdown")`).Like(pattern),
+			goqu.L(`lower("u"."name")`).Like(pattern),
+			goqu.L(`lower("u"."email")`).Like(pattern),
+		))
+	}
+
+	// Configure sorting
+	sortIdent := "c.ts_created"
+	switch sortBy {
+	case "score":
+		sortIdent = "c.score"
+	}
+	q = q.Order(
+		dir.ToOrderedExpression(sortIdent),
+		goqu.I("p.id").Asc(), // Always add ID for stable ordering
+	)
+
+	// Paginate if required
+	if pageIndex >= 0 {
+		q = q.Limit(util.ResultPageSize).Offset(uint(pageIndex) * util.ResultPageSize)
+	}
 
 	// Fetch the comments
-	rs, err := db.Query(statement, params...)
-	if err != nil {
-		logger.Errorf("commentService.ListWithCommentersByPage: Query() failed: %v", err)
+	var rows *sql.Rows
+	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+		return nil, nil, err
+	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+		logger.Errorf("commentService.ListWithCommentersByDomainPage: Query() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
-	defer rs.Close()
+	defer rows.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
 	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false)}
 
 	// Iterate result rows
 	var comments []*models.Comment
-	for rs.Next() {
+	for rows.Next() {
 		// Fetch the comment and the related commenter
 		c := data.Comment{}
 		var uID uuid.NullUUID
 		var uEmail, uName, uWebsite sql.NullString
 		var uSuper, duIsOwner, duIsModerator, duIsCommenter, negVote sql.NullBool
-		var hasAvatar bool
-		err := rs.Scan(
+		var avatar []byte
+		err := rows.Scan(
 			// Comment
 			&c.ID,
 			&c.ParentID,
@@ -219,7 +264,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			&uID,
 			&uEmail,
 			&uName,
-			&hasAvatar,
+			&avatar,
 			&uWebsite,
 			&uSuper,
 			&duIsOwner,
@@ -228,7 +273,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 			// Vote
 			&negVote)
 		if err != nil {
-			logger.Errorf("commentService.ListWithCommentersByPage: Scan() failed: %v", err)
+			logger.Errorf("commentService.ListWithCommentersByDomainPage: Scan() failed: %v", err)
 			return nil, nil, translateDBErrors(err)
 		}
 
@@ -246,7 +291,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 
 				// Instantiate a new commenter model
 				uc := models.Commenter{
-					HasAvatar:   hasAvatar,
+					HasAvatar:   len(avatar) > 0,
 					ID:          strfmt.UUID(uID.UUID.String()),
 					IsCommenter: isMod || !duIsCommenter.Valid || duIsCommenter.Bool,
 					IsModerator: isMod,
@@ -278,7 +323,7 @@ func (svc *commentService) ListWithCommentersByPage(user *data.User, page *data.
 	}
 
 	// Check that Next() didn't error
-	if err := rs.Err(); err != nil {
+	if err := rows.Err(); err != nil {
 		return nil, nil, err
 	}
 

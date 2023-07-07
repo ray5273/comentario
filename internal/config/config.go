@@ -89,7 +89,7 @@ var (
 
 	BaseURL        *url.URL // The parsed base URL
 	CDNURL         *url.URL // The parsed CDN URL
-	UseHTTPS       bool     // Whether the base URL is a HTTPS one
+	UseHTTPS       bool     // Whether the base URL is an HTTPS one
 	SMTPConfigured bool     // Whether sending emails is properly configured
 )
 

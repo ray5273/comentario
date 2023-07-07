@@ -49,7 +49,7 @@ export class PageManagerComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Load domain list
+        // Load page list
         this.load(true);
 
         // Subscribe to sort/filter changes
