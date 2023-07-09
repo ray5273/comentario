@@ -206,6 +206,7 @@ create table cm_domains (
     name              varchar(255)                not null,        -- Domain display name
     host              varchar(259)                not null unique, -- Domain host
     ts_created        timestamp                   not null,        -- When the record was created
+    is_https          boolean       default false not null,        -- Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
     is_readonly       boolean       default false not null,        -- Whether the domain is readonly (no new comments are allowed)
     auth_anonymous    boolean       default false not null,        -- Whether anonymous comments are allowed
     auth_local        boolean       default false not null,        -- Whether local authentication is allowed

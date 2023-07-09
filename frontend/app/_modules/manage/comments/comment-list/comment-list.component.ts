@@ -119,10 +119,6 @@ export class CommentListComponent implements OnInit {
         // TODO new-db
     }
 
-    commentLink(c: Comment) {
-        // TODO new-db
-    }
-
     approveComment(c: Comment) {
         // TODO new-db
     }

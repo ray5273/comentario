@@ -166,6 +166,7 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		Name:             strings.TrimSpace(domain.Name),
 		Host:             host,
 		CreatedTime:      time.Now().UTC(),
+		IsHTTPS:          domain.IsHTTPS,
 		IsReadonly:       domain.IsReadonly,
 		AuthAnonymous:    domain.AuthAnonymous,
 		AuthLocal:        domain.AuthLocal,

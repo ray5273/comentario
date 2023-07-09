@@ -19,6 +19,7 @@ func TestDomain_AsNonOwner(t *testing.T) {
 			Name:             "Foo",
 			Host:             "Bar",
 			CreatedTime:      time.Now(),
+			IsHTTPS:          true,
 			IsReadonly:       true,
 			AuthAnonymous:    true,
 			AuthLocal:        true,
@@ -39,6 +40,7 @@ func TestDomain_AsNonOwner(t *testing.T) {
 			&Domain{
 				ID:            uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
 				Host:          "Bar",
+				IsHTTPS:       true,
 				IsReadonly:    true,
 				AuthAnonymous: true,
 				AuthLocal:     true,

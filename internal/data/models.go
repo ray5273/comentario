@@ -383,6 +383,7 @@ type Domain struct {
 	Name             string                // Domain display name
 	Host             string                // Domain host
 	CreatedTime      time.Time             // When the domain was created
+	IsHTTPS          bool                  // Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
 	IsReadonly       bool                  // Whether the domain is readonly (no new comments are allowed)
 	AuthAnonymous    bool                  // Whether anonymous comments are allowed
 	AuthLocal        bool                  // Whether local authentication is allowed
@@ -406,6 +407,7 @@ func (d *Domain) AsNonOwner() *Domain {
 	return &Domain{
 		ID:            d.ID,
 		Host:          d.Host,
+		IsHTTPS:       d.IsHTTPS,
 		IsReadonly:    d.IsReadonly,
 		AuthAnonymous: d.AuthAnonymous,
 		AuthLocal:     d.AuthLocal,
@@ -423,6 +425,11 @@ func (d *Domain) DisplayName() string {
 		return d.Name
 	}
 	return d.Host
+}
+
+// RootURL returns the root URL of the domain, without the trailing slash
+func (d *Domain) RootURL() string {
+	return fmt.Sprintf("%s://%s", util.If(d.IsHTTPS, "https", "http"), d.Host)
 }
 
 // SSOSecretStr returns the SSO secret as a nullable hex string
@@ -467,6 +474,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		DefaultSort:      models.CommentSort(d.DefaultSort),
 		Host:             models.Host(d.Host),
 		ID:               strfmt.UUID(d.ID.String()),
+		IsHTTPS:          d.IsHTTPS,
 		IsReadonly:       d.IsReadonly,
 		ModAnonymous:     d.ModAnonymous,
 		ModAuthenticated: d.ModAuthenticated,
@@ -476,6 +484,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		ModNumComments:   uint64(d.ModNumComments),
 		ModUserAgeDays:   uint64(d.ModUserAgeDays),
 		Name:             d.Name,
+		RootURL:          strfmt.URI(d.RootURL()),
 		SsoURL:           d.SSOURL,
 	}
 }
@@ -622,7 +631,7 @@ func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 
 // ToDTO converts this model into an API model
 // NB: leaves the Direction at 0
-func (c *Comment) ToDTO() *models.Comment {
+func (c *Comment) ToDTO(domainURL, pagePath string) *models.Comment {
 	return &models.Comment{
 		CreatedTime: strfmt.DateTime(c.CreatedTime),
 		HTML:        c.HTML,
@@ -635,6 +644,7 @@ func (c *Comment) ToDTO() *models.Comment {
 		PageID:      strfmt.UUID(c.PageID.String()),
 		ParentID:    NullUUIDStr(&c.ParentID),
 		Score:       int64(c.Score),
+		URL:         strfmt.URI(fmt.Sprintf("%s%s#comentario-%s", domainURL, pagePath, c.ID)),
 		UserCreated: NullUUIDStr(&c.UserCreated),
 	}
 }

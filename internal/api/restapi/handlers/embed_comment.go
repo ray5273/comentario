@@ -236,7 +236,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 
 	// Succeeded
 	return api_embed.NewEmbedCommentNewOK().WithPayload(&api_embed.EmbedCommentNewOKBody{
-		Comment:   comment.ToDTO(),
+		Comment:   comment.ToDTO(domain.RootURL(), page.Path),
 		Commenter: user.ToCommenter(domainUser.IsCommenter, domainUser.IsModerator),
 	})
 }
@@ -282,7 +282,7 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Find the comment and related objects
-	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
 	if r != nil {
 		return r
 	}
@@ -302,7 +302,8 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Succeeded
-	return api_embed.NewEmbedCommentUpdateOK().WithPayload(&api_embed.EmbedCommentUpdateOKBody{Comment: comment.ToDTO()})
+	return api_embed.NewEmbedCommentUpdateOK().
+		WithPayload(&api_embed.EmbedCommentUpdateOKBody{Comment: comment.ToDTO(domain.RootURL(), page.Path)})
 }
 
 func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) middleware.Responder {

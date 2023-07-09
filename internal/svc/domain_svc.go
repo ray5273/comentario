@@ -116,13 +116,14 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 	// Insert a new domain record
 	if err := db.Exec(
 		"insert into cm_domains("+
-			"id, name, host, ts_created, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, mod_anonymous, "+
-			"mod_authenticated, mod_num_comments, mod_user_age_days, mod_links, mod_images, mod_notify_policy, "+
-			"default_sort) "+
-			"values($1, $2, $3, $4, false, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
-		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.AuthAnonymous, domain.AuthLocal,
-		domain.AuthSSO, domain.SSOURL, domain.ModAnonymous, domain.ModAuthenticated, domain.ModNumComments,
-		domain.ModUserAgeDays, domain.ModLinks, domain.ModImages, domain.ModNotifyPolicy, domain.DefaultSort,
+			"id, name, host, ts_created, is_https, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, "+
+			"mod_anonymous, mod_authenticated, mod_num_comments, mod_user_age_days, mod_links, mod_images, "+
+			"mod_notify_policy, default_sort) "+
+			"values($1, $2, $3, $4, $5, false, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17);",
+		&domain.ID, domain.Name, domain.Host, domain.CreatedTime, domain.IsHTTPS, domain.AuthAnonymous,
+		domain.AuthLocal, domain.AuthSSO, domain.SSOURL, domain.ModAnonymous, domain.ModAuthenticated,
+		domain.ModNumComments, domain.ModUserAgeDays, domain.ModLinks, domain.ModImages, domain.ModNotifyPolicy,
+		domain.DefaultSort,
 	); err != nil {
 		logger.Errorf("domainService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -216,9 +217,10 @@ func (svc *domainService) FindByHost(host string) (*data.Domain, error) {
 	// Query the row
 	row := db.QueryRow(
 		"select "+
-			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
-			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
+			"d.id, d.name, d.host, d.ts_created, d.is_https, d.is_readonly, d.auth_anonymous, d.auth_local, "+
+			"d.auth_sso, d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, "+
+			"d.mod_user_age_days, d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views "+
 			"from cm_domains d "+
 			"where d.host=$1;",
 		host)
@@ -238,9 +240,10 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	// Query the row
 	row := db.QueryRow(
 		"select "+
-			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
-			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views "+
+			"d.id, d.name, d.host, d.ts_created, d.is_https, d.is_readonly, d.auth_anonymous, d.auth_local, "+
+			"d.auth_sso, d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, "+
+			"d.mod_user_age_days, d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views "+
 			"from cm_domains d "+
 			"where d.id=$1;",
 		id)
@@ -261,9 +264,10 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 	row := db.QueryRow(
 		"select "+
 			// Domain fields
-			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
-			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
+			"d.id, d.name, d.host, d.ts_created, d.is_https, d.is_readonly, d.auth_anonymous, d.auth_local, "+
+			"d.auth_sso, d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, "+
+			"d.mod_user_age_days, d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views, "+
 			// Domain user fields
 			"du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, du.notify_moderator, "+
 			"du.ts_created "+
@@ -305,9 +309,10 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 	row := db.QueryRow(
 		"select "+
 			// Domain fields
-			"d.id, d.name, d.host, d.ts_created, d.is_readonly, d.auth_anonymous, d.auth_local, d.auth_sso, "+
-			"d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, d.mod_user_age_days, "+
-			"d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, d.count_views, "+
+			"d.id, d.name, d.host, d.ts_created, d.is_https, d.is_readonly, d.auth_anonymous, d.auth_local, "+
+			"d.auth_sso, d.sso_url, d.sso_secret, d.mod_anonymous, d.mod_authenticated, d.mod_num_comments, "+
+			"d.mod_user_age_days, d.mod_links, d.mod_images, d.mod_notify_policy, d.default_sort, d.count_comments, "+
+			"d.count_views, "+
 			// Domain user fields
 			"du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, du.notify_moderator, "+
 			"du.ts_created "+
@@ -349,10 +354,10 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 		From(goqu.T("cm_domains").As("d")).
 		Select(
 			// Domain fields
-			"d.id", "d.name", "d.host", "d.ts_created", "d.is_readonly", "d.auth_anonymous", "d.auth_local",
-			"d.auth_sso", "d.sso_url", "d.sso_secret", "d.mod_anonymous", "d.mod_authenticated", "d.mod_num_comments",
-			"d.mod_user_age_days", "d.mod_links", "d.mod_images", "d.mod_notify_policy", "d.default_sort",
-			"d.count_comments", "d.count_views",
+			"d.id", "d.name", "d.host", "d.ts_created", "d.is_https", "d.is_readonly", "d.auth_anonymous",
+			"d.auth_local", "d.auth_sso", "d.sso_url", "d.sso_secret", "d.mod_anonymous", "d.mod_authenticated",
+			"d.mod_num_comments", "d.mod_user_age_days", "d.mod_links", "d.mod_images", "d.mod_notify_policy",
+			"d.default_sort", "d.count_comments", "d.count_views",
 			// Domain user fields
 			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
 			"du.notify_moderator", "du.ts_created")
@@ -361,7 +366,7 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 	duTable := goqu.T("cm_domains_users").As("du")
 	duJoinOn := goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})
 	if superuser {
-		// Super user can see all domains, so a domain user is optional
+		// Superuser can see all domains, so a domain user is optional
 		q = q.LeftJoin(duTable, duJoinOn)
 
 	} else {
@@ -622,13 +627,13 @@ func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdp
 	// Update the domain record
 	if err := db.ExecOne(
 		"update cm_domains "+
-			"set name=$1, auth_anonymous=$2, auth_local=$3, auth_sso=$4, sso_url=$5, mod_anonymous=$6, "+
-			"mod_authenticated=$7, mod_num_comments=$8, mod_user_age_days=$9, mod_links=$10, mod_images=$11, "+
-			"mod_notify_policy=$12, default_sort=$13 "+
-			"where id=$14;",
-		domain.Name, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSSO, domain.SSOURL, domain.ModAnonymous,
-		domain.ModAuthenticated, domain.ModNumComments, domain.ModUserAgeDays, domain.ModLinks, domain.ModImages,
-		domain.ModNotifyPolicy, domain.DefaultSort, &domain.ID,
+			"set name=$1, is_https=$2, auth_anonymous=$3, auth_local=$4, auth_sso=$5, sso_url=$6, mod_anonymous=$7, "+
+			"mod_authenticated=$8, mod_num_comments=$9, mod_user_age_days=$10, mod_links=$11, mod_images=$12, "+
+			"mod_notify_policy=$13, default_sort=$14 "+
+			"where id=$15;",
+		domain.Name, domain.IsHTTPS, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSSO, domain.SSOURL,
+		domain.ModAnonymous, domain.ModAuthenticated, domain.ModNumComments, domain.ModUserAgeDays, domain.ModLinks,
+		domain.ModImages, domain.ModNotifyPolicy, domain.DefaultSort, &domain.ID,
 	); err != nil {
 		logger.Errorf("domainService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -709,6 +714,7 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 		&d.Name,
 		&d.Host,
 		&d.CreatedTime,
+		&d.IsHTTPS,
 		&d.IsReadonly,
 		&d.AuthAnonymous,
 		&d.AuthLocal,
@@ -749,6 +755,7 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&d.Name,
 		&d.Host,
 		&d.CreatedTime,
+		&d.IsHTTPS,
 		&d.IsReadonly,
 		&d.AuthAnonymous,
 		&d.AuthLocal,

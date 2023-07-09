@@ -27,7 +27,9 @@
     <ng-container *ngIf="comments?.length">
         <!-- Comment list -->
         <div class="list-group">
-            <div *ngFor="let c of comments" class="list-group-item">
+            <div *ngFor="let c of comments"
+                 [class.list-group-item-warning]="c.isPending"
+                 [class.list-group-item-danger]="!c.isPending && !c.isApproved" class="list-group-item clearfix">
                 <!-- Comment metadata -->
                 <div class="clearfix list-group-item-header">
                     <!-- Comment creation time -->
@@ -35,32 +37,37 @@
                     <!-- Comment score -->
                     <div [class.text-danger]="c.score! < 0" [class.text-success]="c.score! > 0" class="small float-end fw-bold ps-3">{{ c.score }}</div>
                     <!-- User created -->
-                    <div *ngIf="commenters.get(c.userCreated!) as cr">
+                    <div *ngIf="commenters.get(c.userCreated!) as cr" class="d-inline-block">
                         <fa-icon [icon]="faUser" class="me-2"></fa-icon>
                         <ng-container>{{ cr.name }}</ng-container>
                     </div>
+                    <!-- Pending badge -->
+                    <span *ngIf="c.isPending" class="badge bg-warning ms-2" i18n>Pending</span>
                 </div>
-                <!-- Comment text -->
-                <div [innerHTML]="c.html" class="mt-2"></div>
                 <!-- Action buttons -->
-                <div *ngIf="isModerator || c.userCreated === principal?.id" class="float-end">
-                    <!-- Permalink -->
-                    <a [href]="commentLink(c)" class="btn btn-sm btn-link" title="Permalink">
-                        <fa-icon [icon]="faLink"></fa-icon>
-                    </a>
+                <div *ngIf="isModerator || c.userCreated === principal?.id" class="mt-3 float-end">
                     <!-- Approve -->
-                    <button *ngIf="isModerator" (click)="approveComment(c)" class="btn btn-sm btn-link text-success" type="button" title="Approve" i18n-title>
+                    <button *ngIf="isModerator && c.isPending" (click)="approveComment(c)"
+                            class="btn btn-sm btn-link text-success" type="button" title="Approve" i18n-title>
                         <fa-icon [icon]="faCheck"></fa-icon>
                     </button>
                     <!-- Reject -->
-                    <button *ngIf="isModerator" (click)="rejectComment(c)" class="btn btn-sm btn-link text-warning" type="button" title="Reject" i18n-title>
+                    <button *ngIf="isModerator && c.isPending" (click)="rejectComment(c)"
+                            class="btn btn-sm btn-link text-warning" type="button" title="Reject" i18n-title>
                         <fa-icon [icon]="faXmark"></fa-icon>
                     </button>
                     <!-- Delete -->
-                    <button (click)="deleteComment(c)" class="btn btn-sm btn-link text-danger" type="button" title="Delete" i18n-title>
+                    <button (click)="deleteComment(c)" class="btn btn-sm btn-link text-danger" type="button"
+                            title="Delete" i18n-title>
                         <fa-icon [icon]="faTrashAlt"></fa-icon>
                     </button>
+                    <!-- Permalink -->
+                    <a [href]="c.url" class="btn btn-sm btn-link" title="Permalink" target="_blank" rel="nofollow noopener noreferrer">
+                        <fa-icon [icon]="faLink"></fa-icon>
+                    </a>
                 </div>
+                <!-- Comment text -->
+                <div [innerHTML]="c.html" class="mt-2"></div>
             </div>
         </div>
 

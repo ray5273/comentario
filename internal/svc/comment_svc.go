@@ -2,6 +2,7 @@ package svc
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
@@ -171,9 +172,15 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 			"u.id", "u.email", "u.name", "u.avatar", "u.website_url", "u.is_superuser", "du.is_owner",
 			"du.is_moderator", "du.is_commenter",
 			// Votes fields
-			"v.negative").
+			"v.negative",
+			// Page fields
+			"p.path",
+			// Domain fields
+			"d.host", "d.is_https").
 		// Join comment pages
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
+		// Join domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		// Outer-join commenter users
 		LeftJoin(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("c.user_created")})).
 		// Outer-join domain users
@@ -246,6 +253,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 		var uEmail, uName, uWebsite sql.NullString
 		var uSuper, duIsOwner, duIsModerator, duIsCommenter, negVote sql.NullBool
 		var avatar []byte
+		var pagePath, domainHost string
+		var domainHTTPS bool
 		err := rows.Scan(
 			// Comment
 			&c.ID,
@@ -271,14 +280,18 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 			&duIsModerator,
 			&duIsCommenter,
 			// Vote
-			&negVote)
+			&negVote,
+			// Page
+			&pagePath,
+			// Domain
+			&domainHost, &domainHTTPS)
 		if err != nil {
 			logger.Errorf("commentService.ListWithCommentersByDomainPage: Scan() failed: %v", err)
 			return nil, nil, translateDBErrors(err)
 		}
 
 		// Convert the comment
-		cm := c.ToDTO()
+		cm := c.ToDTO(fmt.Sprintf("%s://%s", util.If(domainHTTPS, "https", "http"), domainHost), pagePath)
 
 		// If the user exists and isn't anonymous
 		if uID.Valid && uID.UUID != data.AnonymousUser.ID {

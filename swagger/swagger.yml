@@ -141,6 +141,10 @@ definitions:
         type: integer
         format: int8
         description: Vote direction for the current user
+      url:
+        type: string
+        format: uri
+        description: Full URL of the comment
 
   commenter:
     description: Stripped-down, read-only version of the user who authored a comment
@@ -228,6 +232,10 @@ definitions:
         format: date-time
         readOnly: true
         description: When the domain was created
+      isHttps:
+        type: boolean
+        description: Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
+        x-omitempty: false
       isReadonly:
         type: boolean
         description: Whether the domain is readonly (no new comments are allowed)
@@ -290,6 +298,11 @@ definitions:
         readOnly: true
         description: Total number of views. -1 means the value is not provided
         x-omitempty: false
+      rootUrl:
+        type: string
+        format: uri
+        description: Root URL of the domain, without trailing slash
+        readOnly: true
 
   domainModNotifyPolicy:
     description: Moderator notification policy for domain
