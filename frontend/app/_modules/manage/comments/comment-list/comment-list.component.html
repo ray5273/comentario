@@ -42,6 +42,25 @@
                 </div>
                 <!-- Comment text -->
                 <div [innerHTML]="c.html" class="mt-2"></div>
+                <!-- Action buttons -->
+                <div *ngIf="isModerator || c.userCreated === principal?.id" class="float-end">
+                    <!-- Permalink -->
+                    <a [href]="commentLink(c)" class="btn btn-sm btn-link" title="Permalink">
+                        <fa-icon [icon]="faLink"></fa-icon>
+                    </a>
+                    <!-- Approve -->
+                    <button *ngIf="isModerator" (click)="approveComment(c)" class="btn btn-sm btn-link text-success" type="button" title="Approve" i18n-title>
+                        <fa-icon [icon]="faCheck"></fa-icon>
+                    </button>
+                    <!-- Reject -->
+                    <button *ngIf="isModerator" (click)="rejectComment(c)" class="btn btn-sm btn-link text-warning" type="button" title="Reject" i18n-title>
+                        <fa-icon [icon]="faXmark"></fa-icon>
+                    </button>
+                    <!-- Delete -->
+                    <button (click)="deleteComment(c)" class="btn btn-sm btn-link text-danger" type="button" title="Delete" i18n-title>
+                        <fa-icon [icon]="faTrashAlt"></fa-icon>
+                    </button>
+                </div>
             </div>
         </div>
 
