@@ -102,7 +102,6 @@ export class Comentario {
      */
     private cssOverride?: string;
     private noFonts = false;
-    private hideDeleted = false;
     private autoInit = true;
     private initialised = false;
 
@@ -279,7 +278,6 @@ export class Comentario {
                     this.rootId = s;
                 }
                 this.noFonts = ws.getAttr('data-no-fonts') === 'true';
-                this.hideDeleted = ws.getAttr('data-hide-deleted') === 'true';
                 break;
             }
         }
@@ -706,7 +704,7 @@ export class Comentario {
         await this.apiService.commentDelete(card.comment.id);
 
         // Update the comment and the card
-        card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '[deleted]', html: '[deleted]'});
+        card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '', html: ''});
     }
 
     /**
@@ -757,7 +755,6 @@ export class Comentario {
             principal:   this.principal,
             commentSort: this.commentSort,
             isReadonly:  this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
-            hideDeleted: this.hideDeleted,
             curTimeMs:   new Date().getTime(),
             onGetAvatar: user => this.createAvatarElement(user),
             onApprove:   card => this.approveComment(card),

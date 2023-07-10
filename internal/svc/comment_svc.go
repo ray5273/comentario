@@ -18,9 +18,6 @@ var TheCommentService CommentService = &commentService{}
 
 // CommentService is a service interface for dealing with comments
 type CommentService interface {
-	// TODO new-db Approve sets the status of a comment with the given hex ID to 'approved'
-	// Approve(commentHex models.HexID) error
-
 	// CountByDomainUser returns number of comments the given domain user has created on the corresponding domain. If
 	// approvedOnly == true, only counts approved comments
 	CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error)
@@ -44,6 +41,8 @@ type CommentService interface {
 	ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
+	// Moderate updates the moderation status of a comment with the given ID in the database
+	Moderate(commentID, userID *uuid.UUID, pending, approved bool) error
 	// UpdateSticky updates the stickiness flag of a comment with the given ID in the database
 	UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	// UpdateText updates the markdown and the HTML of a comment with the given ID in the database
@@ -187,8 +186,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 		LeftJoin(goqu.T("cm_domains_users").As("du"), goqu.On(goqu.Ex{"du.user_id": goqu.I("c.user_created"), "du.domain_id": goqu.I("p.domain_id")})).
 		// Outer-join comment votes
 		LeftJoin(goqu.T("cm_comment_votes").As("v"), goqu.On(goqu.Ex{"v.comment_id": goqu.I("c.id"), "v.user_id": &user.ID})).
-		// Filter by page domain, also filter out deleted comments
-		Where(goqu.Ex{"p.domain_id": domainID, "c.is_deleted": false})
+		// Filter by page domain
+		Where(goqu.Ex{"p.domain_id": domainID})
 
 	// If there's a page ID specified, include only comments for that page (otherwise  comments for all pages of the
 	// domain will be included)
@@ -359,6 +358,22 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 		time.Now().UTC(), userID, commentID)
 	if err != nil {
 		logger.Errorf("commentService.MarkDeleted: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *commentService) Moderate(commentID, userID *uuid.UUID, pending, approved bool) error {
+	logger.Debugf("commentService.Moderate(%s, %s, %v, %v)", commentID, userID, pending, approved)
+
+	// Update the record in the database
+	err := db.ExecOne(
+		"update cm_comments set is_pending=$1, is_approved=$2, ts_approved=$3, user_approved=$4 where id=$5;",
+		pending, approved, time.Now().UTC(), userID, commentID)
+	if err != nil {
+		logger.Errorf("commentService.Moderate: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

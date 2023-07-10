@@ -206,6 +206,7 @@ export class ApiService {
      * @param approve Whether to approve the comment.
      */
     async commentModerate(id: UUID, approve: boolean): Promise<void> {
+        // TODO new-db This endpoint doesn't exist (yet)
         return this.apiClient.post<void>(`embed/comments/${id}/moderate`, this.userSessionToken, {approve});
     }
 

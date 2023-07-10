@@ -37,25 +37,10 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 		return r
 	}
 
-	// Find the comment and related objects
-	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
-	if r != nil {
+	// Delete the comment
+	if r := commentDelete(params.UUID, user); r != nil {
 		return r
 	}
-
-	// Check the user is allowed to update the comment
-	if r := Verifier.UserCanUpdateComment(user, domainUser, comment); r != nil {
-		return r
-	}
-
-	// Mark the comment deleted
-	if err := svc.TheCommentService.MarkDeleted(&comment.ID, &user.ID); err != nil {
-		return respServiceError(err)
-	}
-
-	// Decrement page/domain comment count in the background, ignoring any errors
-	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, -1, 0) }()
-	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0) }()
 
 	// Succeeded
 	return api_embed.NewEmbedCommentDeleteNoContent()
@@ -121,33 +106,6 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		Comments:   comments,
 		PageInfo:   pageInfo,
 	})
-}
-
-func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
-	/* TODO new-db
-	// Fetch the comment
-	comment, err := svc.TheCommentService.FindByHexID(*params.Body.CommentHex)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Verify the user is a domain moderator
-	if r := Verifier.UserIsDomainModerator(principal.GetUser().Email, comment.Host); r != nil {
-		return r
-	}
-
-	// Update the comment's state in the database
-	if err = svc.TheCommentService.Moderate(comment.CommentHex); err != nil {
-		return respServiceError(err)
-	}
-	*/
-	// Succeeded
-	return api_embed.NewEmbedCommentModerateNoContent()
 }
 
 func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) middleware.Responder {
@@ -331,28 +289,5 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 	} else {
 		// Succeeded
 		return api_embed.NewEmbedCommentVoteOK().WithPayload(&api_embed.EmbedCommentVoteOKBody{Score: int64(score)})
-	}
-}
-
-func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
-	// Parse comment ID
-	if commentID, err := data.DecodeUUID(commentUUID); err != nil {
-		return nil, nil, nil, nil, respBadRequest(ErrorInvalidUUID)
-
-		// Find the comment
-	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
-		return nil, nil, nil, nil, respServiceError(err)
-
-		// Find the domain page
-	} else if page, err := svc.ThePageService.FindByID(&comment.PageID); err != nil {
-		return nil, nil, nil, nil, respServiceError(err)
-
-		// Fetch the domain and the user
-	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, userID); err != nil {
-		return nil, nil, nil, nil, respServiceError(err)
-
-	} else {
-		// Succeeded
-		return comment, page, domain, domainUser, nil
 	}
 }

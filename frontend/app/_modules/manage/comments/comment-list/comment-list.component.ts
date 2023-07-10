@@ -45,6 +45,7 @@ export class CommentListComponent implements OnInit {
 
     readonly sort = new Sort('created', true);
     readonly commentsLoading = new ProcessingStatus();
+    readonly commentUpdating = new ProcessingStatus();
 
     readonly filterForm = this.fb.nonNullable.group({
         filter: '',
@@ -116,14 +117,35 @@ export class CommentListComponent implements OnInit {
     }
 
     deleteComment(c: Comment) {
-        // TODO new-db
+        // Delete the comment
+        this.api.commentDelete(c.id!)
+            .pipe(this.commentsLoading.processing())
+            // Remove the comment from the list
+            .subscribe(() => {
+                const i = this.comments?.indexOf(c);
+                if (i && i >= 0) {
+                    this.comments?.splice(i, 1)
+                }
+            });
     }
 
-    approveComment(c: Comment) {
-        // TODO new-db
-    }
+    moderateComment(c: Comment, approved: boolean) {
+        // If the comment is pending moderation, set to approved/rejected
+        let pending = !!c.isPending;
+        if (pending) {
+            pending = false;
 
-    rejectComment(c: Comment) {
-        // TODO new-db
+        // Comment is already approved/rejected. If the state stays the same, make the comment pending again
+        } else if (c.isApproved === approved) {
+            pending = true;
+        }
+
+        // Update the comment
+        this.api.commentModerate(c.id!, {pending, approved})
+            .pipe(this.commentUpdating.processing())
+            .subscribe(() => {
+                c.isPending  = pending;
+                c.isApproved = approved;
+            });
     }
 }

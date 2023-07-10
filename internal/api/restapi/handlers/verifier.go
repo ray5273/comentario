@@ -231,6 +231,11 @@ func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 }
 
 func (v *verifier) UserCanUpdateComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
+	// Superuser can do anything
+	if user.IsSuperuser {
+		return nil
+	}
+
 	// If no domain user provided, it's a fail
 	if domainUser == nil {
 		return respForbidden(ErrorNotModerator)

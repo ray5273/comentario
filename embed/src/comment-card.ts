@@ -36,8 +36,6 @@ export interface CommentRenderingContext {
     readonly commentSort: CommentSort;
     /** Whether comments are readonly on this page. */
     readonly isReadonly: boolean;
-    /** Whether to hide deleted comments. */
-    readonly hideDeleted: boolean;
     /** Current time in milliseconds. */
     readonly curTimeMs: number;
 
@@ -78,12 +76,8 @@ export class CommentTree {
         });
 
         // Render child comments, if any
-        return comments
-            // Filter out deleted comment, if they're to be hidden
-            .filter(c => !ctx.hideDeleted || !c.isDeleted)
-            // Render a comment card
-            // eslint-disable-next-line @typescript-eslint/no-use-before-define
-            .map(c => new CommentCard(c, ctx));
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        return comments.map(c => new CommentCard(c, ctx));
     }
 }
 
@@ -142,16 +136,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // If the comment is deleted
         if (c.isDeleted) {
-            // Remove comment text
-            this.eBody?.inner('[deleted]');
-
-            // Remove children
-            this.children?.remove();
+            // Add the deleted class
+            this.eHeader?.classes('deleted');
+            this.eBody?.classes('deleted');
 
             // Remove all option buttons
             this.eScore?.remove();
             this.btnApprove?.remove();
-            this.btnCollapse?.remove();
             this.btnDelete?.remove();
             this.btnDownvote?.remove();
             this.btnEdit?.remove();
@@ -160,6 +151,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             this.btnUpvote?.remove();
             return;
         }
+        this.setClasses(c.isDeleted, 'deleted');
 
         // Score
         this.eScore
@@ -175,7 +167,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Pending approval
         const pending = this._comment.isPending;
-        this.setClasses(pending, 'dark-card');
+        this.setClasses(pending, 'pending');
         this.eName?.setClasses(pending, 'flagged');
         if (!pending && this.btnApprove) {
             // Remove the Approve button if the comment is approved
@@ -208,7 +200,11 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      * Update the current comment's text.
      */
     private updateText() {
-        this.eBody!.html(this._comment.html || '');
+        if (this._comment.isDeleted) {
+            this.eBody?.inner('(deleted)');
+        } else {
+            this.eBody!.html(this._comment.html || '');
+        }
     }
 
     /**

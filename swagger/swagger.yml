@@ -1475,32 +1475,6 @@ paths:
                 description: The updated comment score
                 x-omitempty: false
 
-  /embed/comments/{uuid}/moderate:
-    # TODO new-db this must probably redirect to the UI
-    post:
-      operationId: EmbedCommentModerate
-      summary: Moderate specified unapproved comment
-      tags:
-        - ApiEmbed
-      security:
-        - userSessionHeader: []
-      parameters:
-        - $ref: "#/parameters/pathUuid"
-        - in: body
-          name: body
-          required: true
-          schema:
-            type: object
-            required:
-              - approve
-            properties:
-              approve:
-                description: Whether to approve the comment
-                type: boolean
-      responses:
-        204:
-          description: Comment has been approved
-
   /embed/page/{uuid}:
     put:
       operationId: EmbedPageUpdate
@@ -1936,6 +1910,45 @@ paths:
                 type: array
                 items:
                   $ref: "#/definitions/commenter"
+
+  /comments/{uuid}:
+    parameters:
+      - $ref: "#/parameters/pathUuid"
+
+    delete:
+      operationId: CommentDelete
+      summary: Delete the specified comment
+      tags:
+        - ApiGeneral
+      responses:
+        204:
+          description: Comment has been deleted
+
+    post:
+      operationId: CommentModerate
+      summary: Moderate the specified comment
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - pending
+              - approved
+            properties:
+              pending:
+                description: Whether the comment is pending moderation
+                type: boolean
+              approved:
+                description: Whether to approve the comment
+                type: boolean
+      responses:
+        204:
+          description: Comment has been updated
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

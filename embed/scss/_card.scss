@@ -128,11 +128,15 @@
             display: none;
         }
     }
-
 }
 
-.comentario-dark-card {
-    background: $red-0;
+.comentario-deleted {
+    opacity: 0.33;
+    filter: grayscale(0.8);
+}
+
+.comentario-pending {
+    background: $yellow-1;
 }
 
 .comentario-avatar {

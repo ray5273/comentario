@@ -114,7 +114,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainPageGetHandler = api_general.DomainPageGetHandlerFunc(handlers.DomainPageGet)
 	api.APIGeneralDomainPageListHandler = api_general.DomainPageListHandlerFunc(handlers.DomainPageList)
 	// Comments
+	api.APIGeneralCommentDeleteHandler = api_general.CommentDeleteHandlerFunc(handlers.CommentDelete)
 	api.APIGeneralCommentListHandler = api_general.CommentListHandlerFunc(handlers.CommentList)
+	api.APIGeneralCommentModerateHandler = api_general.CommentModerateHandlerFunc(handlers.CommentModerate)
 	// User
 	api.APIGeneralUsersAvatarGetHandler = api_general.UsersAvatarGetHandlerFunc(handlers.UsersAvatarGet)
 
@@ -133,7 +135,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIEmbedEmbedCommentCountHandler = api_embed.EmbedCommentCountHandlerFunc(handlers.EmbedCommentCount)
 	api.APIEmbedEmbedCommentDeleteHandler = api_embed.EmbedCommentDeleteHandlerFunc(handlers.EmbedCommentDelete)
 	api.APIEmbedEmbedCommentListHandler = api_embed.EmbedCommentListHandlerFunc(handlers.EmbedCommentList)
-	api.APIEmbedEmbedCommentModerateHandler = api_embed.EmbedCommentModerateHandlerFunc(handlers.EmbedCommentModerate)
 	api.APIEmbedEmbedCommentNewHandler = api_embed.EmbedCommentNewHandlerFunc(handlers.EmbedCommentNew)
 	api.APIEmbedEmbedCommentStickyHandler = api_embed.EmbedCommentStickyHandlerFunc(handlers.EmbedCommentSticky)
 	api.APIEmbedEmbedCommentUpdateHandler = api_embed.EmbedCommentUpdateHandlerFunc(handlers.EmbedCommentUpdate)
