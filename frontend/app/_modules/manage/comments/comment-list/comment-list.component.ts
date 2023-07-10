@@ -2,12 +2,12 @@ import { Component, Input, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, Domain, Comment, Commenter, DomainUser, Principal } from '../../../../../generated-api';
+import { faCheck, faTrashAlt, faUpRightFromSquare, faUser, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { ApiGeneralService, Comment, Commenter, Domain, DomainUser, Principal } from '../../../../../generated-api';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { faCheck, faLink, faTrashAlt, faUser, faXmark } from '@fortawesome/free-solid-svg-icons';
 
 @UntilDestroy()
 @Component({
@@ -52,11 +52,11 @@ export class CommentListComponent implements OnInit {
     });
 
     // Icons
-    readonly faCheck    = faCheck;
-    readonly faLink     = faLink;
-    readonly faTrashAlt = faTrashAlt;
-    readonly faUser     = faUser;
-    readonly faXmark    = faXmark;
+    readonly faCheck             = faCheck;
+    readonly faTrashAlt          = faTrashAlt;
+    readonly faUpRightFromSquare = faUpRightFromSquare;
+    readonly faUser              = faUser;
+    readonly faXmark             = faXmark;
 
     private loadedPageNum = 0;
 

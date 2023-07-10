@@ -235,7 +235,7 @@ dl.detail-table, dl.detail-table > div {
     --bs-card-title-color: #{$info};
 }
 
-// New style for list group item header
+// New styles for list group
 .list-group-item-header {
     // Offset the group item padding to let the background flush up to the border
     margin-top: calc(-1 * var(--bs-list-group-item-padding-y));
@@ -243,6 +243,14 @@ dl.detail-table, dl.detail-table > div {
     margin-right: calc(-1 * var(--bs-list-group-item-padding-x));
     padding: var(--bs-list-group-item-padding-y) var(--bs-list-group-item-padding-x);
     background-color: $gray-100;
+}
+
+.list-group-item-pending {
+    border-left: 4px solid $warning;
+}
+
+.list-group-item-rejected {
+    border-left: 4px solid $danger;
 }
 
 //----------------------------------------------------------------------------------------------------------------------
