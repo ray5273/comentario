@@ -1884,6 +1884,26 @@ paths:
           description: Optional domain page ID
           type: string
           format: uuid
+        - in: query
+          name: approved
+          type: boolean
+          required: false
+          description: Whether to include approved comments
+        - in: query
+          name: pending
+          type: boolean
+          required: false
+          description: Whether to include comments pending moderation
+        - in: query
+          name: rejected
+          type: boolean
+          required: false
+          description: Whether to include rejected comments
+        - in: query
+          name: others
+          type: boolean
+          required: false
+          description: Whether to include comments by others
         - $ref: "#/parameters/queryFilter"
         - $ref: "#/parameters/queryPageNumber"
         - in: query

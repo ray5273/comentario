@@ -1,8 +1,16 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faCheck, faTrashAlt, faUpRightFromSquare, faUser, faXmark } from '@fortawesome/free-solid-svg-icons';
+import {
+    faCheck,
+    faQuestion,
+    faTrashAlt,
+    faUpRightFromSquare,
+    faUser,
+    faUsersRays,
+    faXmark,
+} from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter, Domain, DomainUser, Principal } from '../../../../../generated-api';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
@@ -48,14 +56,20 @@ export class CommentListComponent implements OnInit {
     readonly commentUpdating = new ProcessingStatus();
 
     readonly filterForm = this.fb.nonNullable.group({
-        filter: '',
+        approved: false,
+        pending:  false,
+        rejected: false,
+        others:   false,
+        filter:   '',
     });
 
     // Icons
     readonly faCheck             = faCheck;
+    readonly faQuestion          = faQuestion;
     readonly faTrashAlt          = faTrashAlt;
     readonly faUpRightFromSquare = faUpRightFromSquare;
     readonly faUser              = faUser;
+    readonly faUsersRays         = faUsersRays;
     readonly faXmark             = faXmark;
 
     private loadedPageNum = 0;
@@ -66,10 +80,6 @@ export class CommentListComponent implements OnInit {
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
     ) {}
-
-    get ctlFilterFilter(): AbstractControl<string> {
-        return this.filterForm.get('filter')!;
-    }
 
     ngOnInit(): void {
         // Load comment list
@@ -85,9 +95,16 @@ export class CommentListComponent implements OnInit {
                     this.domainUser = data.domainUser;
                     this.domain     = data.domain;
                     this.isModerator = !!(this.principal?.isSuperuser || this.domainUser?.isOwner || this.domainUser?.isModerator);
+                    // If the user is a moderator, show others' pending comments
+                    if (this.isModerator) {
+                        this.filterForm.patchValue({pending: true, others: true});
+                    } else {
+                        // User is not a moderator: show all their comments
+                        this.filterForm.patchValue({approved: true, pending: true, rejected: true});
+                    }
                 })),
             this.sort.changes.pipe(untilDestroyed(this)),
-            this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+            this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .subscribe(() => this.load(true));
     }
 
@@ -105,7 +122,10 @@ export class CommentListComponent implements OnInit {
         }
 
         // Load the domain list
-        this.api.commentList(this.domain.id!, this.pageId, this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+        const f = this.filterForm.value;
+        this.api.commentList(
+                this.domain.id!, this.pageId, f.approved, f.pending, f.rejected, f.others, f.filter,
+                ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
             .pipe(this.commentsLoading.processing())
             .subscribe(r => {
                 this.comments = [...this.comments || [], ...r.comments || []];

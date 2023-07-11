@@ -34,11 +34,15 @@ type CommentService interface {
 	//   - domainID is the domain ID to filter the result by.
 	//   - pageID is an optional page ID to filter the result by.
 	//   - isModerator indicates whether the current user is a superuser, domain owner, or domain moderator.
+	//   - inclApproved indicates whether to include approved comments.
+	//   - inclPending indicates whether to include comments pending moderation.
+	//   - inclRejected indicates whether to include rejected comments.
+	//   - inclOthers indicates whether to include comments by other users.
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
+	ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator, inclApproved, inclPending, inclRejected, inclOthers bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
 	// Moderate updates the moderation status of a comment with the given ID in the database
@@ -157,8 +161,8 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	return &c, nil
 }
 
-func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error) {
-	logger.Debugf("commentService.ListWithCommentersByDomainPage(%s, %s, %s, %v, '%s', '%s', %s, %d)", &user.ID, domainID, pageID, isModerator, filter, sortBy, dir, pageIndex)
+func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domainID, pageID *uuid.UUID, isModerator, inclApproved, inclPending, inclRejected, inclOthers bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error) {
+	logger.Debugf("commentService.ListWithCommentersByDomainPage(%s, %s, %s, %v, %v, %v, %v, %v, '%s', '%s', %s, %d)", &user.ID, domainID, pageID, isModerator, inclApproved, inclPending, inclRejected, inclOthers, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
 	q := goqu.Dialect("postgres").
@@ -195,13 +199,33 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 		q = q.Where(goqu.Ex{"c.page_id": pageID})
 	}
 
-	// Anonymous user: only include approved
-	if user.IsAnonymous() {
-		q = q.Where(goqu.Ex{"c.is_approved": true})
+	// Add status filter
+	if !inclApproved {
+		q = q.Where(goqu.ExOr{"c.is_pending": true, "c.is_approved": false})
+	}
+	if !inclPending {
+		q = q.Where(goqu.Ex{"c.is_pending": false})
+	}
+	if !inclRejected {
+		q = q.Where(goqu.ExOr{"c.is_pending": true, "c.is_approved": true})
+	}
 
-	} else if !isModerator {
-		// Authenticated, non-moderator user: show only approved and all own comments
-		q = q.Where(goqu.ExOr{"c.is_approved": true}, goqu.Ex{"c.user_created": &user.ID})
+	// Add authorship filter. If anonymous user: only include approved
+	if user.IsAnonymous() {
+		q = q.Where(goqu.Ex{"c.is_pending": false, "c.is_approved": true})
+
+	} else {
+		// Non-anonymous user
+		if !inclOthers {
+			q = q.Where(goqu.Ex{"c.user_created": &user.ID})
+		}
+
+		// Authenticated, non-moderator user: show others' comments only if they are approved
+		if !isModerator {
+			q = q.Where(goqu.Or(
+				goqu.Ex{"c.is_pending": false, "c.is_approved": true},
+				goqu.Ex{"c.user_created": &user.ID}))
+		}
 	}
 
 	// Add substring filter

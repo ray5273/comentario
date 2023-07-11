@@ -81,6 +81,31 @@ func TestDomainUser_AgeInDays(t *testing.T) {
 	}
 }
 
+func TestDomainUser_CanModerate(t *testing.T) {
+	tests := []struct {
+		name string
+		du   *DomainUser
+		want bool
+	}{
+		{"nil                      ", nil, false},
+		{"owner                    ", &DomainUser{IsOwner: true}, true},
+		{"owner/moderator          ", &DomainUser{IsOwner: true, IsModerator: true}, true},
+		{"owner/commenter          ", &DomainUser{IsOwner: true, IsCommenter: true}, true},
+		{"owner/moderator/commenter", &DomainUser{IsOwner: true, IsModerator: true, IsCommenter: true}, true},
+		{"moderator                ", &DomainUser{IsModerator: true}, true},
+		{"moderator/commenter      ", &DomainUser{IsModerator: true, IsCommenter: true}, true},
+		{"commenter                ", &DomainUser{IsCommenter: true}, false},
+		{"readonly                 ", &DomainUser{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.du.CanModerate(); got != tt.want {
+				t.Errorf("CanModerate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDomainUser_IsReadonly(t *testing.T) {
 	tests := []struct {
 		name string

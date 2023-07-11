@@ -1,7 +1,8 @@
 <div [appSpinner]="commentsLoading.active || commentUpdating.active" spinnerSize="lg">
     <!-- Toolbar -->
     <div class="mb-3">
-        <div class="row g-2 flex-grow-1">
+        <!-- Filter form -->
+        <form [formGroup]="filterForm" class="row g-2 flex-grow-1">
             <!-- Placeholder to push other items to the right -->
             <div class="col"></div>
 
@@ -13,15 +14,38 @@
                 </app-sort-selector>
             </div>
 
-            <!-- Filter form -->
-            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
-                <!-- Substring filter -->
-                <div class="col-sm-auto">
-                    <input formControlName="filter" id="filterString" class="form-control" type="search"
-                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+            <!-- Filter buttons -->
+            <div class="col-auto">
+                <div class="btn-group" role="group">
+                    <!-- Show approved -->
+                    <input formControlName="approved" type="checkbox" class="btn-check" id="filterShowApproved" autocomplete="off">
+                    <label for="filterShowApproved" class="btn btn-outline-secondary" title="Show approved" i18n-title>
+                        <fa-icon [icon]="faCheck"></fa-icon>
+                    </label>
+                    <!-- Show pending -->
+                    <input formControlName="pending" type="checkbox" class="btn-check" id="filterShowPending" autocomplete="off">
+                    <label for="filterShowPending" class="btn btn-outline-secondary" title="Show pending" i18n-title>
+                        <fa-icon [icon]="faQuestion"></fa-icon>
+                    </label>
+                    <!-- Show rejected -->
+                    <input formControlName="rejected" type="checkbox" class="btn-check" id="filterShowRejected" autocomplete="off">
+                    <label for="filterShowRejected" class="btn btn-outline-secondary" title="Show rejected" i18n-title>
+                        <fa-icon [icon]="faXmark"></fa-icon>
+                    </label>
+                    <!-- Show others' comments -->
+                    <input formControlName="others" type="checkbox" class="btn-check" id="filterShowOthers" autocomplete="off">
+                    <label for="filterShowOthers" class="btn btn-outline-secondary" title="Show others' comments" i18n-title>
+                        <fa-icon [icon]="faUsersRays"></fa-icon>
+                    </label>
                 </div>
-            </form>
-        </div>
+            </div>
+
+            <!-- Substring filter -->
+            <div class="col-12 col-sm-auto">
+                <input formControlName="filter" id="filterString" class="form-control" type="search"
+                       placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+            </div>
+        </form>
     </div>
 
     <ng-container *ngIf="comments?.length">

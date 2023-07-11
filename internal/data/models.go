@@ -240,7 +240,7 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		IsCommenter:     du != nil && du.IsCommenter,
 		IsConfirmed:     u.Confirmed,
 		IsLocal:         u.FederatedIdP == "",
-		IsModerator:     du != nil && du.IsModerator,
+		IsModerator:     du.CanModerate(),
 		IsOwner:         du != nil && du.IsOwner,
 		IsSuperuser:     u.IsSuperuser,
 		Name:            u.Name,
@@ -509,6 +509,12 @@ func (du *DomainUser) AgeInDays() int {
 		return 0
 	}
 	return int(time.Now().UTC().Sub(du.CreatedTime) / util.OneDay)
+}
+
+// CanModerate returns whether the domain user is an owner or a moderator. Can be called against a nil receiver, in
+// which case returns false
+func (du *DomainUser) CanModerate() bool {
+	return du != nil && (du.IsOwner || du.IsModerator)
 }
 
 // IsReadonly returns whether the domain user is not allowed to comment (is readonly). Can be called against a nil

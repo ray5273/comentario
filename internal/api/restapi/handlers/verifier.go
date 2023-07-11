@@ -121,7 +121,7 @@ func (v *verifier) FederatedIdProviders(ids []models.FederatedIdpID) middleware.
 
 func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error) {
 	// Comments by superusers, owners, and moderators are always pre-approved
-	if user.IsSuperuser || domainUser.IsOwner || domainUser.IsModerator {
+	if user.IsSuperuser || domainUser.CanModerate() {
 		return false, nil
 	}
 
@@ -203,10 +203,10 @@ func (v *verifier) UserCanEditDomain(user *data.User, domainUser *data.DomainUse
 }
 
 func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
-	if !user.IsSuperuser && (domainUser == nil || (!domainUser.IsOwner && !domainUser.IsModerator)) {
-		return respForbidden(ErrorNotModerator)
+	if user.IsSuperuser || domainUser.CanModerate() {
+		return nil
 	}
-	return nil
+	return respForbidden(ErrorNotModerator)
 }
 
 func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
