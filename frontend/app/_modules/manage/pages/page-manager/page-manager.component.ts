@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, merge, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Domain, DomainPage } from '../../../../../generated-api';
@@ -24,6 +25,9 @@ export class PageManagerComponent implements OnInit {
 
     /** Whether there are more results to load. */
     canLoadMore = true;
+
+    /** Observable triggering a data load, while indicating whether a result reset is needed. */
+    readonly load = new Subject<boolean>();
 
     readonly sort = new Sort('path');
     readonly pagesLoading = new ProcessingStatus();
@@ -49,32 +53,31 @@ export class PageManagerComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Load page list
-        this.load(true);
-
-        // Subscribe to sort/filter changes
         merge(
-            this.domainSelectorSvc.domain.pipe(untilDestroyed(this), tap(d => this.domain = d)),
-            this.sort.changes.pipe(untilDestroyed(this)),
-            this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
-            .subscribe(() => this.load(true));
-    }
-
-    load(reset: boolean) {
-        // Reset the content/page if needed
-        if (reset || !this.domain) {
-            this.pages = undefined;
-            this.loadedPageNum = 0;
-
-            // Nothing can be loaded unless a domain is selected
-            if (!this.domain) {
-                return;
-            }
-        }
-
-        // Load the domain list
-        this.api.domainPageList(this.domain.id!, this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
-            .pipe(this.pagesLoading.processing())
+                // Subscribe to domain changes. This will also trigger an initial load
+                this.domainSelectorSvc.domain.pipe(untilDestroyed(this), tap(d => this.domain = d)),
+                // Subscribe to sort changes
+                this.sort.changes.pipe(untilDestroyed(this)),
+                // Subscribe to filter changes
+                this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+            .pipe(
+                // Map any of the above to true (= reset)
+                map(() => true),
+                // Subscribe to load requests
+                mergeWith(this.load),
+                // Reset the content/page if needed
+                tap(reset => {
+                    if (reset) {
+                        this.pages = undefined;
+                        this.loadedPageNum = 0;
+                    }
+                }),
+                // Nothing can be loaded unless a domain is selected
+                filter(() => !!this.domain),
+                // Load the page list
+                switchMap(() =>
+                    this.api.domainPageList(this.domain!.id!, this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                        .pipe(this.pagesLoading.processing())))
             .subscribe(r => {
                 this.pages = [...this.pages || [], ...r.pages || []];
                 this.canLoadMore = this.configSvc.canLoadMore(r.pages);

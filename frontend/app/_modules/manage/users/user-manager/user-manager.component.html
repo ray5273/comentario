@@ -50,7 +50,7 @@
 
         <!-- Load more items button -->
         <div *ngIf="canLoadMore" class="py-2 text-center">
-            <button type="button" (click)="load(false)" class="btn btn-outline-secondary">
+            <button type="button" (click)="load.next(false)" class="btn btn-outline-secondary">
                 <ng-container i18n>Load more</ng-container>
             </button>
         </div>

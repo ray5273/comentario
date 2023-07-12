@@ -1,6 +1,7 @@
 import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, merge, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
     faCheck,
@@ -51,6 +52,9 @@ export class CommentListComponent implements OnInit {
     /** Loaded commenters. */
     readonly commenters = new Map<string, Commenter>();
 
+    /** Observable triggering a data load, while indicating whether a result reset is needed. */
+    readonly load = new Subject<boolean>();
+
     readonly sort = new Sort('created', true);
     readonly commentsLoading = new ProcessingStatus();
     readonly commentUpdating = new ProcessingStatus();
@@ -82,51 +86,52 @@ export class CommentListComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        // Load comment list
-        this.load(true);
-
-        // Subscribe to domain/sort/filter changes
         merge(
-            this.domainSelectorSvc.domainUserIdps.pipe(
-                untilDestroyed(this),
-                // Store the domain and the user
-                tap(data => {
-                    this.principal  = data.principal;
-                    this.domainUser = data.domainUser;
-                    this.domain     = data.domain;
-                    this.isModerator = !!(this.principal?.isSuperuser || this.domainUser?.isOwner || this.domainUser?.isModerator);
-                    // If the user is a moderator, show others' pending comments
-                    if (this.isModerator) {
-                        this.filterForm.patchValue({pending: true, others: true});
-                    } else {
-                        // User is not a moderator: show all their comments
-                        this.filterForm.patchValue({approved: true, pending: true, rejected: true});
+                // Subscribe to domain changes. This will also trigger an initial load
+                this.domainSelectorSvc.domainUserIdps.pipe(
+                    untilDestroyed(this),
+                    // Store the domain and the user
+                    tap(data => {
+                        this.principal  = data.principal;
+                        this.domainUser = data.domainUser;
+                        this.domain     = data.domain;
+                        this.isModerator = !!(this.principal?.isSuperuser || this.domainUser?.isOwner || this.domainUser?.isModerator);
+                        // If the user is a moderator, show others' pending comments
+                        if (this.isModerator) {
+                            this.filterForm.patchValue({pending: true, others: true});
+                        } else {
+                            // User is not a moderator: show all their comments
+                            this.filterForm.patchValue({approved: true, pending: true, rejected: true});
+                        }
+                    })),
+                // Subscribe to sort changes
+                this.sort.changes.pipe(untilDestroyed(this)),
+                // Subscribe to filter changes
+                this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+            .pipe(
+                // Map any of the above to true (= reset)
+                map(() => true),
+                // Subscribe to load requests
+                mergeWith(this.load),
+                // Reset the content/page if needed
+                tap(reset => {
+                    if (reset) {
+                        this.comments = undefined;
+                        this.commenters.clear();
+                        this.loadedPageNum = 0;
                     }
-                })),
-            this.sort.changes.pipe(untilDestroyed(this)),
-            this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
-            .subscribe(() => this.load(true));
-    }
-
-    load(reset: boolean) {
-        // Reset the content if needed
-        if (reset || !this.domain) {
-            this.comments = undefined;
-            this.commenters.clear();
-            this.loadedPageNum = 0;
-
-            // Nothing can be loaded unless a domain is selected
-            if (!this.domain) {
-                return;
-            }
-        }
-
-        // Load the domain list
-        const f = this.filterForm.value;
-        this.api.commentList(
-                this.domain.id!, this.pageId, f.approved, f.pending, f.rejected, f.others, f.filter,
-                ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
-            .pipe(this.commentsLoading.processing())
+                }),
+                // Nothing can be loaded unless a domain is selected
+                filter(() => !!this.domain),
+                // Load the comment list
+                switchMap(() => {
+                    // Load the domain list
+                    const f = this.filterForm.value;
+                    return this.api.commentList(
+                            this.domain!.id!, this.pageId, f.approved, f.pending, f.rejected, f.others, f.filter,
+                            ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                        .pipe(this.commentsLoading.processing());
+                }))
             .subscribe(r => {
                 this.comments = [...this.comments || [], ...r.comments || []];
                 this.canLoadMore = this.configSvc.canLoadMore(r.comments);

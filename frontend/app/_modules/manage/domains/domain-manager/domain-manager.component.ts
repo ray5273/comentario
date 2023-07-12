@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, merge } from 'rxjs';
+import { debounceTime, distinctUntilChanged, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
+import { map } from 'rxjs/operators';
 import { faCheckDouble, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainUser } from '../../../../../generated-api';
@@ -28,6 +29,9 @@ export class DomainManagerComponent implements OnInit {
 
     /** Map that connects domain IDs to domain users. */
     readonly domainUsers = new Map<string, DomainUser>();
+
+    /** Observable triggering a data load, while indicating whether a result reset is needed. */
+    readonly load = new Subject<boolean>();
 
     readonly sort = new Sort('host');
     readonly domainsLoading = new ProcessingStatus();
@@ -61,31 +65,30 @@ export class DomainManagerComponent implements OnInit {
     }
 
     ngOnInit(): void {
-        // Load domain list
-        this.load(true);
-
-        // Subscribe to sort/filter changes
         merge(
+                // Trigger an initial load
+                of(undefined),
+                // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
+                // Subscribe to filter changes
                 this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
-            .subscribe(() => this.load(true));
-    }
-
-    unselect() {
-        this.domainSelectorSvc.setDomainId(undefined);
-    }
-
-    load(reset: boolean) {
-        // Reset the content/page if needed
-        if (reset) {
-            this.domains = undefined;
-            this.domainUsers.clear();
-            this.loadedPageNum = 0;
-        }
-
-        // Load the domain list
-        this.api.domainList(this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
-            .pipe(this.domainsLoading.processing())
+            .pipe(
+                // Map any of the above to true (= reset)
+                map(() => true),
+                // Subscribe to load requests
+                mergeWith(this.load),
+                // Reset the content/page if needed
+                tap(reset => {
+                    if (reset) {
+                        this.domains = undefined;
+                        this.domainUsers.clear();
+                        this.loadedPageNum = 0;
+                    }
+                }),
+                // Load the domain list
+                switchMap(() =>
+                    this.api.domainList(this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                        .pipe(this.domainsLoading.processing())))
             .subscribe(r => {
                 this.domains = [...this.domains || [], ...r.domains || []];
                 this.canLoadMore = this.configSvc.canLoadMore(r.domains);
@@ -93,5 +96,9 @@ export class DomainManagerComponent implements OnInit {
                 // Make a map of domain ID => domain users
                 r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId!, du));
             });
+    }
+
+    unselect() {
+        this.domainSelectorSvc.setDomainId(undefined);
     }
 }
