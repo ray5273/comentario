@@ -559,6 +559,120 @@ definitions:
         description: Whether the user is to receive moderator notifications (only for commenter auth)
         x-omitempty: false
 
+  user:
+    description: User
+    type: object
+    properties:
+      id:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Unique user ID
+      email:
+        type: string
+        format: email
+        description: Unique user email
+      name:
+        type: string
+        description: User's full name
+      password:
+        type: string
+        description: Password (write-only). If empty, the password remains unchanged
+      systemAccount:
+        type: boolean
+        readOnly: true
+        description: Whether the user is a system account (cannot sign in)
+        x-omitempty: false
+        x-isnullable: false
+      isSuperuser:
+        type: boolean
+        description: Whether the user is a "superuser" (instance admin)
+        x-omitempty: false
+        x-isnullable: false
+      confirmed:
+        type: boolean
+        description: Whether the user's email has been confirmed
+        x-omitempty: false
+        x-isnullable: false
+      confirmedTime:
+        type: string
+        format: date-time
+        readOnly: true
+        description: When the user's email has been confirmed
+      createdTime:
+        type: string
+        format: date-time
+        readOnly: true
+        description: When the user was created
+      userCreated:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Reference to the user who created this one. null if the used signed up themselves
+      signupIP:
+        type: string
+        readOnly: true
+        description: IP address the user signed up or was created from
+      signupCountry:
+        type: string
+        readOnly: true
+        description: 2-letter country code matching the SignupIP
+      signupHost:
+        type: string
+        readOnly: true
+        description: Host the user signed up on (only for commenter signup, empty for UI signup)
+      banned:
+        type: boolean
+        readOnly: true
+        description: Whether the user is banned
+        x-omitempty: false
+        x-isnullable: false
+      bannedTime:
+        type: string
+        format: date-time
+        readOnly: true
+        description: When the user was banned
+      userBanned:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Reference to the user who banned this one
+      remarks:
+        type: string
+        description: Optional remarks for the user
+      federatedIdP:
+        $ref: "#/definitions/federatedIdpId"
+        readOnly: true
+        description: Optional ID of the federated identity provider used for authentication. If empty, it's a local user
+      federatedId:
+        type: string
+        readOnly: true
+        description: User ID as reported by the federated identity provider (only when federated_idp is set)
+      hasAvatar:
+        type: boolean
+        readOnly: true
+        description: Optional user's avatar image
+        x-omitempty: false
+        x-isnullable: false
+      websiteURL:
+        type: string
+        description: Optional user's website URL
+      isOwner:
+        type: boolean
+        readOnly: true
+        description: Whether the user is an owner of the domain (only in the context of a domain)
+        x-omitempty: false
+      isModerator:
+        type: boolean
+        readOnly: true
+        description: Whether the user is a moderator on this specific domain (only in the context of a domain)
+        x-omitempty: false
+      isCommenter:
+        type: boolean
+        readOnly: true
+        description: Whether the user is a commenter on this specific domain (false means the user is read-only; only in the context of a domain)
+        x-omitempty: false
+
 parameters:
 
   federatedIdpId:
@@ -608,6 +722,14 @@ parameters:
     name: domain
     required: true
     description: Domain UUID in the query
+    type: string
+    format: uuid
+
+  queryDomainIdOptional:
+    in: query
+    name: domain
+    required: false
+    description: Optional domain UUID in the query
     type: string
     format: uuid
 
@@ -1025,29 +1147,6 @@ paths:
       responses:
         204:
           description: User profile has been updated
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # Users
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /users/{uuid}/avatar:
-    get:
-      operationId: UsersAvatarGet
-      summary: Get an avatar for given user in JPEG format
-      tags:
-        - ApiGeneral
-      security: []
-      produces:
-        - image/jpeg
-      parameters:
-        - $ref: "#/parameters/pathUuid"
-      responses:
-        200:
-          description: User avatar in the JPEG format
-          schema:
-            type: file
-        204:
-          description: User has no avatar
 
   #---------------------------------------------------------------------------------------------------------------------
   # Embed API
@@ -1969,6 +2068,61 @@ paths:
       responses:
         204:
           description: Comment has been updated
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Users
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /users:
+    get:
+      operationId: UserList
+      summary: Get a list of users
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryDomainIdOptional"
+        - $ref: "#/parameters/queryFilter"
+        - $ref: "#/parameters/queryPageNumber"
+        - in: query
+          name: sortBy
+          type: string
+          enum:
+            - email
+            - name
+            - signupCountry
+            - federatedIdP
+          description: Property to sort results by
+        - $ref: "#/parameters/querySortDesc"
+      responses:
+        200:
+          description: User list
+          schema:
+            type: object
+            properties:
+              users:
+                description: User list
+                type: array
+                items:
+                  $ref: "#/definitions/user"
+
+  /users/{uuid}/avatar:
+    get:
+      operationId: UserAvatarGet
+      summary: Get an avatar for given user in JPEG format
+      tags:
+        - ApiGeneral
+      security: []
+      produces:
+        - image/jpeg
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+      responses:
+        200:
+          description: User avatar in the JPEG format
+          schema:
+            type: file
+        204:
+          description: User has no avatar
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

@@ -4,4 +4,58 @@
     <app-domain-badge></app-domain-badge>
 </header>
 
-<!-- TODO -->
+<div [appSpinner]="usersLoading.active" spinnerSize="lg">
+    <!-- Toolbar -->
+    <div class="mb-3">
+        <div class="row g-2 flex-grow-1">
+            <!-- Placeholder to push other items to the right -->
+            <div class="col"></div>
+
+            <!-- Sort -->
+            <div class="col-auto">
+                <app-sort-selector [sort]="sort">
+                    <app-sort-property by="email"         label="Email"          i18n-label></app-sort-property>
+                    <app-sort-property by="name"          label="Name"           i18n-label></app-sort-property>
+                    <app-sort-property by="signupCountry" label="Signup country" i18n-label></app-sort-property>
+                    <app-sort-property by="federatedIdP"  label="Federated IdP"  i18n-label></app-sort-property>
+                </app-sort-selector>
+            </div>
+
+            <!-- Filter form -->
+            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+                <!-- Substring filter -->
+                <div class="col-sm-auto">
+                    <input formControlName="filter" id="filterString" class="form-control" type="search"
+                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <ng-container *ngIf="users?.length">
+        <!-- Page list -->
+        <div class="list-group">
+            <a *ngFor="let u of users" [routerLink]="u.id" class="list-group-item list-group-item-action">
+                <!-- Email -->
+                <div>{{ u.email }}</div>
+                <!-- Name -->
+                <div>{{ u.name }}</div>
+            </a>
+        </div>
+
+        <!-- Item count -->
+        <div class="py-2 text-center small text-muted">
+            <ng-container *ngIf="!canLoadMore" i18n>All</ng-container>&ngsp;<ng-container>{{ users!.length }}</ng-container>&nbsp;<ng-container i18n>items displayed</ng-container>
+        </div>
+
+        <!-- Load more items button -->
+        <div *ngIf="canLoadMore" class="py-2 text-center">
+            <button type="button" (click)="load(false)" class="btn btn-outline-secondary">
+                <ng-container i18n>Load more</ng-container>
+            </button>
+        </div>
+    </ng-container>
+
+    <!-- Nothing found placeholder -->
+    <div *ngIf="!usersLoading.active && !users?.length" class="py-4 text-center text-muted" i18n>Nothing found.</div>
+</div>

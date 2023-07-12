@@ -2,8 +2,10 @@ package svc
 
 import (
 	"database/sql"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -41,6 +43,14 @@ type UserService interface {
 	FindUserByID(id *uuid.UUID) (*data.User, error)
 	// FindUserBySession finds and returns a user and the related session by the given user and session ID
 	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error)
+	// List fetches and returns a list of users the specified user has rights to, optionally in a specific domain.
+	//   - domainID is an optional domain ID to filter the users by. If nil, returns users for all domains the current user owns.
+	//   - superuser indicates whether the current user is a superuser
+	//   - filter is an optional substring to filter the result by.
+	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
+	//   - dir is the sort direction.
+	//   - pageIndex is the page index, if negative, no pagination is applied.
+	List(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.User, error)
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
@@ -300,6 +310,111 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 	} else {
 		return u, us, nil
 	}
+}
+
+func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.User, error) {
+	logger.Debugf("userService.List(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
+
+	// Prepare a statement
+	q := goqu.Dialect("postgres").
+		From(goqu.T("cm_users").As("u")).
+		Select(
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id", "u.avatar",
+			"u.website_url")
+
+	// Add filter by domain, if necessary
+	if domainID == nil {
+		q = q.SelectAppend(goqu.L("null"), goqu.L("null"), goqu.L("null"))
+	} else {
+		q = q.SelectAppend("du.is_owner", "du.is_moderator", "du.is_commenter").
+			Join(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID}))
+	}
+
+	// Add filter by domains owned by the current user unless it's a superuser
+	if !superuser {
+		q = q.Where(goqu.L("exists (select from cm_domains_users where domain_id=$1 and user_id=$2 and is_owner is true)", domainID, userID))
+	}
+
+	// Add substring filter
+	if filter != "" {
+		pattern := "%" + strings.ToLower(filter) + "%"
+		q = q.Where(goqu.Or(
+			goqu.L(`lower("u"."email")`).Like(pattern),
+			goqu.L(`lower("u"."name")`).Like(pattern),
+			goqu.L(`lower("u"."remarks")`).Like(pattern),
+			goqu.L(`lower("u"."website_url")`).Like(pattern),
+		))
+	}
+
+	// Configure sorting
+	sortIdent := "u.email"
+	switch sortBy {
+	case "name":
+		sortIdent = "u.name"
+	case "signupCountry":
+		sortIdent = "u.signup_country"
+	case "federatedIdP":
+		sortIdent = "u.federated_idp"
+	}
+	q = q.Order(
+		dir.ToOrderedExpression(sortIdent),
+		goqu.I("u.id").Asc(), // Always add ID for stable ordering
+	)
+
+	// Paginate if required
+	if pageIndex >= 0 {
+		q = q.Limit(util.ResultPageSize).Offset(uint(pageIndex) * util.ResultPageSize)
+	}
+
+	// Query users
+	var rows *sql.Rows
+	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+		return nil, err
+	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+		logger.Errorf("userService.List: Query() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// Fetch the users
+	defer rows.Close()
+	var us []*models.User
+	var isOwner, isModerator, isCommenter sql.NullBool
+	var fidp sql.NullString
+	for rows.Next() {
+		var u data.User
+		if err := rows.Scan(
+			// User
+			&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.SystemAccount, &u.IsSuperuser, &u.Confirmed, &u.ConfirmedTime,
+			&u.CreatedTime, &u.UserCreated, &u.SignupIP, &u.SignupCountry, &u.SignupHost, &u.Banned, &u.BannedTime,
+			&u.UserBanned, &u.Remarks, &fidp, &u.FederatedID, &u.Avatar, &u.WebsiteURL,
+			// Domain user
+			&isOwner, &isModerator, &isCommenter,
+		); err != nil {
+			logger.Errorf("userService.List: Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
+		}
+		if fidp.Valid {
+			u.FederatedIdP = fidp.String
+		}
+
+		// Determine which page fields the user is allowed to see
+		if !superuser {
+			u = *u.AsNonSuperuser()
+		}
+		us = append(us, u.ToDTO(isOwner, isModerator, isCommenter))
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return us, nil
 }
 
 func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {

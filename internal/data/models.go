@@ -207,6 +207,30 @@ func NewUser(email, name string) *User {
 	}
 }
 
+// AsNonSuperuser returns a clone of the user with a limited set of properties, which a non-superuser is allowed to see
+func (u *User) AsNonSuperuser() *User {
+	return &User{
+		ID:            u.ID,
+		Email:         u.Email,
+		Name:          u.Name,
+		Confirmed:     u.Confirmed,
+		ConfirmedTime: u.ConfirmedTime,
+		CreatedTime:   u.CreatedTime,
+		UserCreated:   u.UserCreated,
+		SignupIP:      u.SignupIP,
+		SignupCountry: u.SignupCountry,
+		SignupHost:    u.SignupHost,
+		Banned:        u.Banned,
+		BannedTime:    u.BannedTime,
+		UserBanned:    u.UserBanned,
+		Remarks:       u.Remarks,
+		FederatedIdP:  u.FederatedIdP,
+		FederatedID:   u.FederatedID,
+		Avatar:        u.Avatar,
+		WebsiteURL:    u.WebsiteURL,
+	}
+}
+
 // IsAnonymous returns whether the user is anonymous
 func (u *User) IsAnonymous() bool {
 	return u.ID == AnonymousUser.ID
@@ -227,6 +251,35 @@ func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 		IsModerator: moderator,
 		Name:        u.Name,
 		WebsiteURL:  strfmt.URI(u.WebsiteURL),
+	}
+}
+
+// ToDTO converts this user into an API model
+func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.User {
+	return &models.User{
+		Banned:        u.Banned,
+		BannedTime:    strfmt.DateTime(u.BannedTime.Time),
+		Confirmed:     u.Confirmed,
+		ConfirmedTime: strfmt.DateTime(u.ConfirmedTime.Time),
+		CreatedTime:   strfmt.DateTime(u.CreatedTime),
+		Email:         strfmt.Email(u.Email),
+		FederatedID:   u.FederatedID,
+		FederatedIDP:  models.FederatedIdpID(u.FederatedIdP),
+		HasAvatar:     len(u.Avatar) > 0,
+		ID:            strfmt.UUID(u.ID.String()),
+		IsCommenter:   NullBoolToPtr(isCommenter),
+		IsModerator:   NullBoolToPtr(isModerator),
+		IsOwner:       NullBoolToPtr(isOwner),
+		IsSuperuser:   u.IsSuperuser,
+		Name:          u.Name,
+		Remarks:       u.Remarks,
+		SignupCountry: u.SignupCountry,
+		SignupHost:    u.SignupHost,
+		SignupIP:      u.SignupIP,
+		SystemAccount: u.SystemAccount,
+		UserBanned:    NullUUIDStr(&u.UserBanned),
+		UserCreated:   NullUUIDStr(&u.UserCreated),
+		WebsiteURL:    u.WebsiteURL,
 	}
 }
 

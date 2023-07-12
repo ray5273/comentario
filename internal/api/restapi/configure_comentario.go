@@ -98,7 +98,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Dashboard
 	api.APIGeneralDashboardTotalsHandler = api_general.DashboardTotalsHandlerFunc(handlers.DashboardTotals)
 	api.APIGeneralDashboardDailyStatsHandler = api_general.DashboardDailyStatsHandlerFunc(handlers.DashboardDailyStats)
-	// Domain
+	// Domains
 	api.APIGeneralDomainClearHandler = api_general.DomainClearHandlerFunc(handlers.DomainClear)
 	api.APIGeneralDomainDeleteHandler = api_general.DomainDeleteHandlerFunc(handlers.DomainDelete)
 	api.APIGeneralDomainExportHandler = api_general.DomainExportHandlerFunc(handlers.DomainExport)
@@ -117,8 +117,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralCommentDeleteHandler = api_general.CommentDeleteHandlerFunc(handlers.CommentDelete)
 	api.APIGeneralCommentListHandler = api_general.CommentListHandlerFunc(handlers.CommentList)
 	api.APIGeneralCommentModerateHandler = api_general.CommentModerateHandlerFunc(handlers.CommentModerate)
-	// User
-	api.APIGeneralUsersAvatarGetHandler = api_general.UsersAvatarGetHandlerFunc(handlers.UsersAvatarGet)
+	// Users
+	api.APIGeneralUserAvatarGetHandler = api_general.UserAvatarGetHandlerFunc(handlers.UserAvatarGet)
+	api.APIGeneralUserListHandler = api_general.UserListHandlerFunc(handlers.UserList)
 
 	//------------------------------------------------------------------------------------------------------------------
 	// Embed API

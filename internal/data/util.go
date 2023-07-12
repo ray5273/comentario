@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -19,6 +20,14 @@ func DecodeUUID(sid strfmt.UUID) (*uuid.UUID, error) {
 // EmailPtrToString converts a value of *strfmt.Email into a string
 func EmailPtrToString(email *strfmt.Email) string {
 	return TrimmedString((*string)(email))
+}
+
+// NullBoolToPtr converts a nullable bool value into *bool
+func NullBoolToPtr(b sql.NullBool) *bool {
+	if !b.Valid {
+		return nil
+	}
+	return &b.Bool
 }
 
 // NullUUIDStr converts a nullable UUID value into strfmt.UUID

@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -53,6 +54,29 @@ func TestEmailPtrToString(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := EmailPtrToString(tt.v); got != tt.want {
 				t.Errorf("EmailPtrToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestNullBoolToPtr(t *testing.T) {
+	bt, bf := true, false
+	tests := []struct {
+		name string
+		b    sql.NullBool
+		want *bool
+	}{
+		{"false, invalid", sql.NullBool{}, nil},
+		{"true, invalid ", sql.NullBool{Bool: true}, nil},
+		{"false, valid", sql.NullBool{Valid: true}, &bf},
+		{"true, valid", sql.NullBool{Bool: true, Valid: true}, &bt},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NullBoolToPtr(tt.b); (got == nil) != (tt.want == nil) {
+				t.Errorf("NullBoolToPtr() is nil = %v, want %v", got == nil, tt.want == nil)
+			} else if got != nil && *got != *tt.want {
+				t.Errorf("NullBoolToPtr() = %v, want %v", *got, *tt.want)
 			}
 		})
 	}
