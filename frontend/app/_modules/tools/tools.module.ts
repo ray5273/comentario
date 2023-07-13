@@ -10,6 +10,7 @@ import { ConfirmDialogComponent } from './confirm-dialog/confirm-dialog.componen
 import { CheckmarkComponent } from './checkmark/checkmark.component';
 import { ServerMessageComponent } from './server-message/server-message.component';
 import { CopyTextDirective } from './_directives/copy-text.directive';
+import { IdentityProviderIconComponent } from './identity-provider-icon/identity-provider-icon.component';
 
 @NgModule({
     declarations: [
@@ -17,6 +18,7 @@ import { CopyTextDirective } from './_directives/copy-text.directive';
         ConfirmDialogComponent,
         ConfirmDirective,
         CopyTextDirective,
+        IdentityProviderIconComponent,
         PasswordInputComponent,
         ServerMessageComponent,
         SpinnerDirective,
@@ -35,6 +37,7 @@ import { CopyTextDirective } from './_directives/copy-text.directive';
         ServerMessageComponent,
         SpinnerDirective,
         CopyTextDirective,
+        IdentityProviderIconComponent,
     ],
 })
 export class ToolsModule {}

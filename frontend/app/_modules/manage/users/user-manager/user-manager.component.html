@@ -36,10 +36,22 @@
         <!-- Page list -->
         <div class="list-group">
             <a *ngFor="let u of users" [routerLink]="u.id" class="list-group-item list-group-item-action">
-                <!-- Email -->
-                <div>{{ u.email }}</div>
-                <!-- Name -->
-                <div>{{ u.name }}</div>
+                <!-- Name and badge -->
+                <div>
+                    <span class="fw-bold">
+                        <!-- System user icon -->
+                        <fa-icon *ngIf="u.systemAccount" [icon]="faLock" class="me-2"></fa-icon>
+                        <!-- Name -->
+                        <ng-container>{{ u.name }}</ng-container>
+                    </span>
+                    <!-- Domain user badge -->
+                    <app-domain-user-badge *ngIf="domain" [domainUser]="u" class="ms-2"></app-domain-user-badge>
+                </div>
+                <!-- Provider icon and email -->
+                <div>
+                    <app-idp-icon *ngIf="u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
+                    <ng-container>{{ u.email }}</ng-container>
+                </div>
             </a>
         </div>
 

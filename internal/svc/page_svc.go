@@ -183,7 +183,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := goqu.Dialect("postgres").
+	q := db.Dialect().
 		From(goqu.T("cm_domain_pages").As("p")).
 		Select(
 			"p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments",
@@ -244,16 +244,14 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	}
 
 	// Query pages
-	var rows *sql.Rows
-	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
-		return nil, err
-	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+	rows, err := db.Select(q)
+	if err != nil {
 		logger.Errorf("pageService.ListByDomainUser: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
+	defer rows.Close()
 
 	// Fetch the pages
-	defer rows.Close()
 	var ps []*data.DomainPage
 	var isOwner sql.NullBool
 	for rows.Next() {

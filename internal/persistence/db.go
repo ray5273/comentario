@@ -8,6 +8,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -53,6 +54,11 @@ func InitDB() (*Database, error) {
 
 	// Succeeded
 	return db, nil
+}
+
+// Dialect returns the goqu dialect to use for this database
+func (db *Database) Dialect() goqu.DialectWrapper {
+	return goqu.Dialect("postgres")
 }
 
 // Exec executes the provided statement against the database
@@ -166,6 +172,15 @@ func (db *Database) QueryRow(query string, args ...any) *sql.Row {
 		logger.Debugf("db.QueryRow()\n - SQL: %s\n - Args: %#v", query, args)
 	}
 	return db.db.QueryRow(query, args...)
+}
+
+// Select executes the provided goqu query against the database
+func (db *Database) Select(q *goqu.SelectDataset) (*sql.Rows, error) {
+	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+		return nil, err
+	} else {
+		return db.Query(qSQL, qParams...)
+	}
 }
 
 // Shutdown ends the database connection and shuts down all dependent services

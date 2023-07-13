@@ -165,7 +165,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 	logger.Debugf("commentService.ListWithCommentersByDomainPage(%s, %s, %s, %v, %v, %v, %v, %v, '%s', '%s', %s, %d)", &user.ID, domainID, pageID, isModerator, inclApproved, inclPending, inclRejected, inclOthers, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
-	q := goqu.Dialect("postgres").
+	q := db.Dialect().
 		From(goqu.T("cm_comments").As("c")).
 		Select(
 			// Comment fields
@@ -255,10 +255,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 	}
 
 	// Fetch the comments
-	var rows *sql.Rows
-	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
-		return nil, nil, err
-	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+	rows, err := db.Select(q)
+	if err != nil {
 		logger.Errorf("commentService.ListWithCommentersByDomainPage: Query() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}

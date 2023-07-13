@@ -213,6 +213,7 @@ func (u *User) AsNonSuperuser() *User {
 		ID:            u.ID,
 		Email:         u.Email,
 		Name:          u.Name,
+		SystemAccount: u.SystemAccount,
 		Confirmed:     u.Confirmed,
 		ConfirmedTime: u.ConfirmedTime,
 		CreatedTime:   u.CreatedTime,

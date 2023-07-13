@@ -350,7 +350,7 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 	logger.Debugf("domainService.ListByDomainUser(%s, %v, '%s', '%s', %s, %d)", userID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := goqu.Dialect("postgres").
+	q := db.Dialect().
 		From(goqu.T("cm_domains").As("d")).
 		Select(
 			// Domain fields
@@ -406,16 +406,14 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 	}
 
 	// Query domains
-	var rows *sql.Rows
-	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
-		return nil, nil, err
-	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+	rows, err := db.Select(q)
+	if err != nil {
 		logger.Errorf("domainService.ListByDomainUser: Query() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
+	defer rows.Close()
 
 	// Fetch the domains and domain users
-	defer rows.Close()
 	var ds []*data.Domain
 	var dus []*data.DomainUser
 	for rows.Next() {

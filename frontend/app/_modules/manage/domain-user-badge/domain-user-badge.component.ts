@@ -13,7 +13,7 @@ export class DomainUserBadgeComponent {
 
     /** Domain user in question. */
     @Input({required: true})
-    domainUser?: DomainUser | null;
+    domainUser?: Partial<DomainUser> | null;
 
     get userClass(): string {
         return this.domainUser?.isOwner ?

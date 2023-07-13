@@ -316,7 +316,7 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 	logger.Debugf("userService.List(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := goqu.Dialect("postgres").
+	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
 		Select(
 			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
@@ -334,9 +334,22 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 				goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID}))
 	}
 
-	// Add filter by domains owned by the current user unless it's a superuser
+	// If the current user isn't a superuser
 	if !superuser {
-		q = q.Where(goqu.L("exists (select from cm_domains_users where domain_id=$1 and user_id=$2 and is_owner is true)", domainID, userID))
+		// Add filter by users registered in domains owned by the current user
+		q = q.Where(goqu.Ex{
+			"u.id": goqu.Any(
+				db.Dialect().
+					From("cm_domains_users").
+					Select("user_id").
+					Where(goqu.Ex{
+						"domain_id": goqu.Any(
+							db.Dialect().
+								From("cm_domains_users").
+								Select("domain_id").
+								Where(goqu.Ex{"user_id": userID, "is_owner": true})),
+					})),
+		})
 	}
 
 	// Add substring filter
@@ -371,16 +384,14 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 	}
 
 	// Query users
-	var rows *sql.Rows
-	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
-		return nil, err
-	} else if rows, err = db.Query(qSQL, qParams...); err != nil {
+	rows, err := db.Select(q)
+	if err != nil {
 		logger.Errorf("userService.List: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
+	defer rows.Close()
 
 	// Fetch the users
-	defer rows.Close()
 	var us []*models.User
 	var isOwner, isModerator, isCommenter sql.NullBool
 	var fidp sql.NullString
