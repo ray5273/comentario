@@ -6,36 +6,48 @@
     <section>
         <form [formGroup]="userForm" (ngSubmit)="submit()">
             <div class="row g-3">
-                <div class="row g-3">
-                    <!-- Email -->
-                    <div class="col-md-6">
-                        <label for="email" class="form-label colon" i18n>Email</label>
-                        <input formControlName="email" type="email" class="form-control" id="email" size="45" readonly>
-                    </div>
+                <!-- Email -->
+                <div class="col-md-6">
+                    <label for="email" class="form-label colon" i18n>Email</label>
+                    <input formControlName="email" type="email" class="form-control" id="email" size="45" readonly>
+                </div>
 
-                    <!-- Name -->
-                    <div class="col-md-6">
-                        <label for="name" class="form-label colon" i18n>Name</label>
-                        <input formControlName="name" type="text" class="form-control" id="name"
-                               [class.is-valid]="name.touched && name.valid"
-                               [class.is-invalid]="name.touched && name.invalid"
-                               required minlength="2" maxlength="63" placeholder="Enter name" i18n-placeholder>
-                        <div class="invalid-feedback" i18n>Please enter your name.</div>
-                    </div>
+                <!-- Name -->
+                <div class="col-md-6">
+                    <label for="name" class="form-label colon" i18n>Name</label>
+                    <input formControlName="name" type="text" class="form-control" id="name"
+                           [class.is-valid]="name.touched && name.valid"
+                           [class.is-invalid]="name.touched && name.invalid"
+                           required minlength="2" maxlength="63" placeholder="Enter name" i18n-placeholder>
+                    <div class="invalid-feedback" i18n>Please enter your name.</div>
+                </div>
 
-                    <!-- Current password -->
-                    <div class="col-md-6">
-                        <label for="curPassword" class="form-label colon" i18n>Current password</label>
-                        <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
-                                            id="curPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
-                    </div>
+                <!-- Current password -->
+                <div class="col-md-6">
+                    <label for="curPassword" class="form-label colon" i18n>Current password</label>
+                    <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
+                                        id="curPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                </div>
 
-                    <!-- New password -->
-                    <div class="col-md-6">
-                        <label for="newPassword" class="form-label colon" i18n>New password</label>
-                        <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
-                                            id="newPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                <!-- New password -->
+                <div class="col-md-6">
+                    <label for="newPassword" class="form-label colon" i18n>New password</label>
+                    <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
+                                        id="newPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                </div>
+
+                <!-- Avatar -->
+                <div class="col-md-6">
+                    <label for="user-avatar" class="form-label colon" i18n>Avatar</label>
+                    <div class="d-flex flex-wrap align-items-center gap-2">
+                        <div class="border rounded p-3">
+                            <app-user-avatar [user]="principal" [avatarOverride]="avatarFile" id="user-avatar"></app-user-avatar>
+                        </div>
+                        <button type="button" class="btn btn-outline-primary" (click)="changeAvatar()" i18n>Change</button>
+                        <button type="button" class="btn btn-outline-danger"  (click)="removeAvatar()" i18n>Remove</button>
                     </div>
+                    <!-- Invisible avatar file input -->
+                    <input #avatarFileInput (change)="avatarSelected()" class="d-none" type="file">
                 </div>
             </div>
 

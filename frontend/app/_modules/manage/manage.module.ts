@@ -31,9 +31,11 @@ import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.
 import { DatetimePipe } from './_pipes/datetime.pipe';
 import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
 import { CommentListComponent } from './comments/comment-list/comment-list.component';
+import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 
 @NgModule({
     declarations: [
+        CommentListComponent,
         CommentManagerComponent,
         CommentSortPipe,
         ControlCenterComponent,
@@ -48,14 +50,14 @@ import { CommentListComponent } from './comments/comment-list/comment-list.compo
         DomainUserBadgeComponent,
         ModeratorNotifyPolicyPipe,
         PageManagerComponent,
+        PagePropertiesComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
         StatsChartComponent,
         StatsComponent,
+        UserAvatarComponent,
         UserManagerComponent,
-        PagePropertiesComponent,
-        CommentListComponent,
     ],
     imports: [
         CommonModule,

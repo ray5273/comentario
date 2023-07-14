@@ -1,10 +1,10 @@
-import { Component, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
+import { Router } from '@angular/router';
 import { faAngleDown, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
-import { Router } from '@angular/router';
 import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 
@@ -17,11 +17,17 @@ export class ProfileComponent implements OnInit {
     @ViewChild('curPassword')
     curPassword?: PasswordInputComponent;
 
+    @ViewChild('avatarFileInput')
+    avatarFileInput?: ElementRef<HTMLInputElement>;
+
     /** Whether the "Danger zone" is collapsed. */
     isDangerZoneCollapsed = true;
 
     /** Currently logged-in principal. */
     principal?: Principal | null;
+
+    /** Selected (but not yet uploaded) avatar image. */
+    avatarFile?: File | null;
 
     /** Processing statuses. */
     readonly saving = new ProcessingStatus();
@@ -106,6 +112,30 @@ export class ProfileComponent implements OnInit {
                     // Add a success toast
                     this.toastSvc.success('data-saved');
                 });
+        }
+    }
+
+    changeAvatar() {
+        this.avatarFileInput?.nativeElement.click();
+    }
+
+    removeAvatar() {
+        this.avatarFile = null;
+        this.avatarFileInput!.nativeElement.value = '';
+    }
+
+    avatarSelected() {
+        // Get the file
+        const files = this.avatarFileInput?.nativeElement.files;
+        const f = files && files.length > 0 ? files[0] : undefined;
+
+        // Verify its format and size
+        if (f && f.type !== 'image/jpeg') {
+            this.toastSvc.error('invalid-avatar-format');
+        } else if (f && f.size > 100*1024) {
+            this.toastSvc.error('invalid-avatar-size');
+        } else {
+            this.avatarFile = f;
         }
     }
 }
