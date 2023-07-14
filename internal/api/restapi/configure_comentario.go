@@ -94,6 +94,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralComentarioConfigHandler = api_general.ComentarioConfigHandlerFunc(handlers.ComentarioConfig)
 	// CurUser
 	api.APIGeneralCurUserGetHandler = api_general.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIGeneralCurUserSetAvatarHandler = api_general.CurUserSetAvatarHandlerFunc(handlers.CurUserSetAvatar)
 	api.APIGeneralCurUserUpdateHandler = api_general.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
 	// Dashboard
 	api.APIGeneralDashboardTotalsHandler = api_general.DashboardTotalsHandlerFunc(handlers.DashboardTotals)

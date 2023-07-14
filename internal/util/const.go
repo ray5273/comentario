@@ -20,6 +20,8 @@ const (
 
 	MaxNumberStatsDays = 30 // Max number of days to get statistics for
 
+	UserAvatarSize = 38 // User avatar size in pixels
+
 	CookieNameUserSession    = "comentario_user_session"  // Cookie name to store the session of the authenticated user
 	UserSessionDuration      = 28 * OneDay                // How long a user session stays valid
 	CookieNameAuthSession    = "_comentario_auth_session" // Cookie name to store the federated authentication session ID

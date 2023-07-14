@@ -1,7 +1,9 @@
 package svc
 
 import (
+	"bytes"
 	"database/sql"
+	"github.com/disintegration/imaging"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
@@ -9,6 +11,10 @@ import (
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
+	"image"
+	"image/color"
+	"image/draw"
+	"io"
 	"strings"
 	"time"
 )
@@ -56,6 +62,9 @@ type UserService interface {
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
 	// Update updates the given user's data in the database
 	Update(user *data.User) error
+	// UpdateAvatar updates the given user's avatar in the database. data can be nil to remove the avatar, or otherwise
+	// point to PNG or JPG data reader
+	UpdateAvatar(userID *uuid.UUID, data io.Reader) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -478,6 +487,49 @@ func (svc *userService) Update(user *data.User) error {
 		user.Email, user.Name, user.PasswordHash, user.WebsiteURL, user.FederatedID, &user.ID,
 	); err != nil {
 		logger.Errorf("userService.Update: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) UpdateAvatar(userID *uuid.UUID, data io.Reader) error {
+	logger.Debugf("userService.UpdateAvatar(%s, %v)", userID, data)
+
+	var avatar []byte
+	if data != nil {
+		// Decode the image
+		img, imgFormat, err := image.Decode(data)
+		if err != nil {
+			return err
+		}
+		logger.Debugf("Decoded avatar: format=%s, dimensions=%s", imgFormat, img.Bounds().Size())
+
+		// If it's a PNG, flatten it against a white background
+		if imgFormat == "png" {
+			logger.Debug("Flattening PNG image")
+
+			// Create a new white Image with the same dimension of PNG image
+			bgImage := image.NewRGBA(img.Bounds())
+			draw.Draw(bgImage, bgImage.Bounds(), &image.Uniform{C: color.White}, image.Point{}, draw.Src)
+
+			// Paste the PNG image over the background
+			draw.Draw(bgImage, bgImage.Bounds(), img, img.Bounds().Min, draw.Over)
+			img = bgImage
+		}
+
+		// Resize the image and encode into a JPEG
+		var buf bytes.Buffer
+		if err = imaging.Encode(&buf, imaging.Resize(img, util.UserAvatarSize, 0, imaging.Lanczos), imaging.JPEG); err != nil {
+			return err
+		}
+		avatar = buf.Bytes()
+	}
+
+	// Update the avatar in the database
+	if err := db.ExecOne("update cm_users set avatar=$1 where id=$2;", avatar, userID); err != nil {
+		logger.Errorf("userService.UpdateAvatar: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

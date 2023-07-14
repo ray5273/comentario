@@ -1,45 +1,52 @@
-import { Component, Input, OnDestroy } from '@angular/core';
+import { Component, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { ApiGeneralService, Principal, User } from '../../../../../generated-api';
+import { Configuration } from '../../../../../generated-api';
 
 @Component({
     selector: 'app-user-avatar',
     templateUrl: './user-avatar.component.html',
     styleUrls: ['./user-avatar.component.scss'],
 })
-export class UserAvatarComponent implements OnDestroy {
+export class UserAvatarComponent implements OnChanges, OnDestroy {
 
-    _user?: Partial<User | Principal>;
+    /** Whether the user has an avatar image. */
+    @Input({required: true})
+    hasAvatar: boolean | null | undefined = false;
+
+    /** ID of the user to display an avatar for. */
+    @Input({required: true})
+    userId?: string;
+
+    /** Name of the user. */
+    @Input({required: true})
+    userName?: string;
+
     _src?: SafeResourceUrl;
-    url?: string;
     urlOverride?: string | null;
 
     constructor(
+        @Inject(Configuration) private readonly API_CONFIG: Configuration,
         private readonly sanitizer: DomSanitizer,
-        private readonly api: ApiGeneralService,
     ) {}
 
     /**
-     * Avatar override, if set, taking precedence over the user's avatar.
-     * @param f File to load the override from. null value removes the avatar, undefined removes the override.
+     * Avatar override. If set, will take precedence over the user's avatar.
+     * @param b File or blob to load the override from. null value removes the avatar, undefined removes the override.
      */
     @Input()
-    set avatarOverride(f: File | null | undefined) {
+    set avatarOverride(b: Blob | null | undefined) {
         // Clean up old resource URL, if any
-        if (this.urlOverride) {
-            URL.revokeObjectURL(this.urlOverride);
-        }
+        this.cleanup();
 
         // Generate a new resource URL
-        this.urlOverride = f === null ? null : f ? URL.createObjectURL(f) : undefined;
+        this.urlOverride = b === null ? null : b ? URL.createObjectURL(b) : undefined;
         this.updateSrc();
     }
 
-    /** User or principal whose avatar is to be displayed. */
-    @Input({required: true})
-    set user(u: Partial<User | Principal> | undefined) {
-        this._user = u;
-        this.reload();
+    ngOnChanges(changes: SimpleChanges): void {
+        if ('hasAvatar' in changes || 'userId' in changes) {
+            this.updateSrc();
+        }
     }
 
     ngOnDestroy(): void {
@@ -50,33 +57,17 @@ export class UserAvatarComponent implements OnDestroy {
      * Release any allocated resources.
      */
     cleanup(): void {
-        if (this.url) {
-            URL.revokeObjectURL(this.url);
-            this.url = undefined;
-        }
         if (this.urlOverride) {
             URL.revokeObjectURL(this.urlOverride);
             this.urlOverride = undefined;
         }
     }
 
-    reload(): void {
-        // Release any resources
-        this.cleanup();
-
-        //  If there's a user, and they have an avatar image, retrieve that
-        if (this.user?.id && this.user.hasAvatar) {
-            this.api.userAvatarGet(this.user.id)
-                .subscribe(b => {
-                    this.url = URL.createObjectURL(b);
-                    this.updateSrc();
-                });
-        }
-    }
-
     private updateSrc() {
         this._src = this.urlOverride ?
             this.sanitizer.bypassSecurityTrustResourceUrl(this.urlOverride) :
-            this.url ? this.sanitizer.bypassSecurityTrustResourceUrl(this.url) : undefined;
+            (this.urlOverride === undefined) && this.hasAvatar && this.userId ?
+                this.sanitizer.bypassSecurityTrustResourceUrl(`${this.API_CONFIG.basePath}/users/${this.userId}/avatar`) :
+                undefined;
     }
 }

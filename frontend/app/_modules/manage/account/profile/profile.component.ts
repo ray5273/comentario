@@ -7,6 +7,7 @@ import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
+import { mergeMap, of } from 'rxjs';
 
 @Component({
     selector: 'app-profile',
@@ -48,6 +49,8 @@ export class ProfileComponent implements OnInit {
     readonly faAngleDown       = faAngleDown;
     readonly faSkullCrossbones = faSkullCrossbones;
     readonly faTrashAlt        = faTrashAlt;
+
+    private avatarChanged = false;
 
     constructor(
         private readonly fb: FormBuilder,
@@ -105,8 +108,16 @@ export class ProfileComponent implements OnInit {
         if (this.userForm.valid) {
             const vals = this.userForm.value;
             this.api.curUserUpdate({name: vals.name!, curPassword: vals.curPassword, newPassword: vals.newPassword})
-                .pipe(this.saving.processing())
+                .pipe(
+                    // Save the user's avatar, if needed
+                    mergeMap(() => this.avatarChanged ? this.api.curUserSetAvatar(this.avatarFile ?? undefined) : of(undefined)),
+                    this.saving.processing())
                 .subscribe(() => {
+                    // Reset avatar status
+                    this.avatarChanged = false;
+                    this.avatarFile = undefined;
+                    this.avatarFileInput!.nativeElement.value = '';
+
                     // Update the logged-in principal
                     this.authSvc.update();
                     // Add a success toast
@@ -122,6 +133,9 @@ export class ProfileComponent implements OnInit {
     removeAvatar() {
         this.avatarFile = null;
         this.avatarFileInput!.nativeElement.value = '';
+        if (this.principal?.hasAvatar) {
+            this.avatarChanged = true;
+        }
     }
 
     avatarSelected() {
@@ -130,12 +144,13 @@ export class ProfileComponent implements OnInit {
         const f = files && files.length > 0 ? files[0] : undefined;
 
         // Verify its format and size
-        if (f && f.type !== 'image/jpeg') {
+        if (f && f.type !== 'image/jpeg' && f.type !== 'image/png') {
             this.toastSvc.error('invalid-avatar-format');
         } else if (f && f.size > 100*1024) {
             this.toastSvc.error('invalid-avatar-size');
         } else {
             this.avatarFile = f;
+            this.avatarChanged = true;
         }
     }
 }

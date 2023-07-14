@@ -24,6 +24,20 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
 }
 
+func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User) middleware.Responder {
+	if params.Data != nil {
+		defer params.Data.Close()
+	}
+
+	// Update the user's avatar
+	if err := svc.TheUserService.UpdateAvatar(&user.ID, params.Data); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded: owner's logged in
+	return api_general.NewCurUserSetAvatarNoContent()
+}
+
 func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) middleware.Responder {
 	// Verify it's a local user
 	if r := Verifier.UserIsLocal(user); r != nil {

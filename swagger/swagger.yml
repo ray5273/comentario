@@ -1148,6 +1148,25 @@ paths:
         204:
           description: User profile has been updated
 
+  /user/avatar:
+    post:
+      operationId: CurUserSetAvatar
+      summary: Upload an avatar for the current user
+      tags:
+        - ApiGeneral
+      consumes:
+        - multipart/form-data
+      parameters:
+        - in: formData
+          name: data
+          type: file
+          required: false
+          maxLength: 102400 # 100 KB
+          description: Avatar image file, if omitted, the current user's avatar will be removed
+      responses:
+        204:
+          description: Avatar has been set
+
   #---------------------------------------------------------------------------------------------------------------------
   # Embed API
   #---------------------------------------------------------------------------------------------------------------------

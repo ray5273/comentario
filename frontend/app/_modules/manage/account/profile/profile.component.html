@@ -41,7 +41,10 @@
                     <label for="user-avatar" class="form-label colon" i18n>Avatar</label>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <div class="border rounded p-3">
-                            <app-user-avatar [user]="principal" [avatarOverride]="avatarFile" id="user-avatar"></app-user-avatar>
+                            <app-user-avatar [hasAvatar]="principal.hasAvatar"
+                                             [userId]="principal.id"
+                                             [userName]="principal.name"
+                                             [avatarOverride]="avatarFile" id="user-avatar"></app-user-avatar>
                         </div>
                         <button type="button" class="btn btn-outline-primary" (click)="changeAvatar()" i18n>Change</button>
                         <button type="button" class="btn btn-outline-danger"  (click)="removeAvatar()" i18n>Remove</button>
