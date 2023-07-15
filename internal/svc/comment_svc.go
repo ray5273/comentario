@@ -172,8 +172,10 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
 			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created",
 			// Commenter fields
-			"u.id", "u.email", "u.name", "u.avatar", "u.website_url", "u.is_superuser", "du.is_owner",
-			"du.is_moderator", "du.is_commenter",
+			"u.id", "u.email", "u.name", "u.website_url", "u.is_superuser", "du.is_owner", "du.is_moderator",
+			"du.is_commenter",
+			// Avatar fields
+			"a.user_id",
 			// Votes fields
 			"v.negative",
 			// Page fields
@@ -188,6 +190,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 		LeftJoin(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("c.user_created")})).
 		// Outer-join domain users
 		LeftJoin(goqu.T("cm_domains_users").As("du"), goqu.On(goqu.Ex{"du.user_id": goqu.I("c.user_created"), "du.domain_id": goqu.I("p.domain_id")})).
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("c.user_created")})).
 		// Outer-join comment votes
 		LeftJoin(goqu.T("cm_comment_votes").As("v"), goqu.On(goqu.Ex{"v.comment_id": goqu.I("c.id"), "v.user_id": &user.ID})).
 		// Filter by page domain
@@ -263,17 +267,16 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 	defer rows.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
-	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false)}
+	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(false, true, false)}
 
 	// Iterate result rows
 	var comments []*models.Comment
 	for rows.Next() {
 		// Fetch the comment and the related commenter
 		c := data.Comment{}
-		var uID uuid.NullUUID
+		var uID, avatarID uuid.NullUUID
 		var uEmail, uName, uWebsite sql.NullString
 		var uSuper, duIsOwner, duIsModerator, duIsCommenter, negVote sql.NullBool
-		var avatar []byte
 		var pagePath, domainHost string
 		var domainHTTPS bool
 		err := rows.Scan(
@@ -294,12 +297,13 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 			&uID,
 			&uEmail,
 			&uName,
-			&avatar,
 			&uWebsite,
 			&uSuper,
 			&duIsOwner,
 			&duIsModerator,
 			&duIsCommenter,
+			// Avatar
+			&avatarID,
 			// Vote
 			&negVote,
 			// Page
@@ -325,7 +329,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 
 				// Instantiate a new commenter model
 				uc := models.Commenter{
-					HasAvatar:   len(avatar) > 0,
+					HasAvatar:   avatarID.Valid,
 					ID:          strfmt.UUID(uID.UUID.String()),
 					IsCommenter: isMod || !duIsCommenter.Valid || duIsCommenter.Bool,
 					IsModerator: isMod,

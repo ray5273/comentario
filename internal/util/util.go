@@ -26,6 +26,8 @@ import (
 
 // Scanner is a database/sql abstraction interface that can be used with both *sql.Row and *sql.Rows
 type Scanner interface {
+	// Err returns the error, if any
+	Err() error
 	// Scan copies columns from the underlying query row(s) to the values pointed to by dest
 	Scan(dest ...any) error
 }
@@ -52,6 +54,27 @@ var (
 	// AppMailer is a Mailer implementation available application-wide. Defaults to a mailer that doesn't do anything
 	AppMailer Mailer = &noOpMailer{}
 )
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// ErrScanner is a Scanner implementation that only holds an error. Exists for the lack of any way to instantiate an
+// sql.Row (with an error)
+type ErrScanner struct {
+	err error
+}
+
+// NewErrScanner returns a new ErrScanner instance
+func NewErrScanner(err error) *ErrScanner {
+	return &ErrScanner{err: err}
+}
+
+func (s *ErrScanner) Err() error {
+	return s.err
+}
+
+func (s *ErrScanner) Scan(...any) error {
+	return s.err
+}
 
 // ----------------------------------------------------------------------------------------------------------------------
 

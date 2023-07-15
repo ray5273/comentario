@@ -105,7 +105,8 @@ func AuthLogin(params api_general.AuthLoginParams) middleware.Responder {
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
+	return NewCookieResponder(
+		api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(svc.TheAvatarService.UserHasAvatar(&user.ID), nil))).
 		WithCookie(
 			util.CookieNameUserSession,
 			us.EncodeIDs(),
@@ -138,7 +139,8 @@ func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *d
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
+	return NewCookieResponder(
+		api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(svc.TheAvatarService.UserHasAvatar(&user.ID), nil))).
 		WithCookie(
 			util.CookieNameUserSession,
 			us.EncodeIDs(),
@@ -250,7 +252,8 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	}
 
 	// Succeeded
-	return api_general.NewAuthSignupOK().WithPayload(user.ToPrincipal(nil))
+	return api_general.NewAuthSignupOK().
+		WithPayload(user.ToPrincipal(svc.TheAvatarService.UserHasAvatar(&user.ID), nil))
 }
 
 // AuthUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header

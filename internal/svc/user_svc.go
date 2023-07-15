@@ -1,9 +1,7 @@
 package svc
 
 import (
-	"bytes"
 	"database/sql"
-	"github.com/disintegration/imaging"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
@@ -11,10 +9,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"image"
-	"image/color"
-	"image/draw"
-	"io"
 	"strings"
 	"time"
 )
@@ -62,9 +56,6 @@ type UserService interface {
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
 	// Update updates the given user's data in the database
 	Update(user *data.User) error
-	// UpdateAvatar updates the given user's avatar in the database. data can be nil to remove the avatar, or otherwise
-	// point to PNG or JPG data reader
-	UpdateAvatar(userID *uuid.UUID, data io.Reader) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -121,11 +112,11 @@ func (svc *userService) Create(u *data.User) error {
 		"insert into cm_users("+
 			"id, email, name, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, "+
 			"user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, "+
-			"federated_idp, federated_id, avatar, website_url) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, nullif($18, ''), $19, $20, $21);",
+			"federated_idp, federated_id, website_url) "+
+			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, nullif($18, ''), $19, $20);",
 		u.ID, u.Email, u.Name, u.PasswordHash, u.SystemAccount, u.IsSuperuser, u.Confirmed, u.ConfirmedTime,
 		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupHost, u.Banned, u.BannedTime,
-		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedID, u.Avatar, u.WebsiteURL)
+		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedID, u.WebsiteURL)
 	if err != nil {
 		logger.Errorf("userService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -194,7 +185,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url, "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url, "+
 			// DomainUser fields
 			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
 			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
@@ -224,7 +215,6 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		&u.Remarks,
 		&u.FederatedIdP,
 		&u.FederatedID,
-		&u.Avatar,
 		&u.WebsiteURL,
 		// DomainUser
 		&duDID,
@@ -259,7 +249,7 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 	s := "select " +
 		"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, " +
 		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, " +
-		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url " +
+		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url " +
 		"from cm_users u " +
 		"where u.email=$1"
 	if localOnly {
@@ -282,7 +272,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 		"select "+
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url "+
 			"from cm_users u "+
 			"where u.id=$1;",
 		id)
@@ -304,7 +294,7 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url, "+
+			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url, "+
 			// User session fields
 			"s.id, s.user_id, s.ts_created, s.ts_expires, s.host, s.proto, s.ip, s.country, s.ua_browser_name, "+
 			"s.ua_browser_version, s.ua_os_name, s.ua_os_version, s.ua_device "+
@@ -328,10 +318,15 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
 		Select(
+			// User fields
 			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
 			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
-			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id", "u.avatar",
-			"u.website_url")
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id",
+			"u.website_url",
+			// Avatar fields
+			"a.user_id").
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
 
 	// Add filter by domain, if necessary
 	if domainID == nil {
@@ -404,13 +399,14 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 	var us []*models.User
 	var isOwner, isModerator, isCommenter sql.NullBool
 	var fidp sql.NullString
+	var avatarID *uuid.NullUUID
 	for rows.Next() {
 		var u data.User
 		if err := rows.Scan(
 			// User
 			&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.SystemAccount, &u.IsSuperuser, &u.Confirmed, &u.ConfirmedTime,
 			&u.CreatedTime, &u.UserCreated, &u.SignupIP, &u.SignupCountry, &u.SignupHost, &u.Banned, &u.BannedTime,
-			&u.UserBanned, &u.Remarks, &fidp, &u.FederatedID, &u.Avatar, &u.WebsiteURL,
+			&u.UserBanned, &u.Remarks, &fidp, &u.FederatedID, &u.WebsiteURL, &avatarID,
 			// Domain user
 			&isOwner, &isModerator, &isCommenter,
 		); err != nil {
@@ -425,7 +421,7 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 		if !superuser {
 			u = *u.AsNonSuperuser()
 		}
-		us = append(us, u.ToDTO(isOwner, isModerator, isCommenter))
+		us = append(us, u.ToDTO(avatarID.Valid, isOwner, isModerator, isCommenter))
 	}
 
 	// Verify Next() didn't error
@@ -444,7 +440,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	s := "select " +
 		"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, " +
 		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, " +
-		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.avatar, u.website_url " +
+		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url " +
 		"from cm_domains_users du " +
 		"join cm_users u on u.id=du.user_id " +
 		"where du.domain_id=$1 and (du.is_owner or du.is_moderator)"
@@ -494,49 +490,6 @@ func (svc *userService) Update(user *data.User) error {
 	return nil
 }
 
-func (svc *userService) UpdateAvatar(userID *uuid.UUID, data io.Reader) error {
-	logger.Debugf("userService.UpdateAvatar(%s, %v)", userID, data)
-
-	var avatar []byte
-	if data != nil {
-		// Decode the image
-		img, imgFormat, err := image.Decode(data)
-		if err != nil {
-			return err
-		}
-		logger.Debugf("Decoded avatar: format=%s, dimensions=%s", imgFormat, img.Bounds().Size())
-
-		// If it's a PNG, flatten it against a white background
-		if imgFormat == "png" {
-			logger.Debug("Flattening PNG image")
-
-			// Create a new white Image with the same dimension of PNG image
-			bgImage := image.NewRGBA(img.Bounds())
-			draw.Draw(bgImage, bgImage.Bounds(), &image.Uniform{C: color.White}, image.Point{}, draw.Src)
-
-			// Paste the PNG image over the background
-			draw.Draw(bgImage, bgImage.Bounds(), img, img.Bounds().Min, draw.Over)
-			img = bgImage
-		}
-
-		// Resize the image and encode into a JPEG
-		var buf bytes.Buffer
-		if err = imaging.Encode(&buf, imaging.Resize(img, util.UserAvatarSize, 0, imaging.Lanczos), imaging.JPEG); err != nil {
-			return err
-		}
-		avatar = buf.Bytes()
-	}
-
-	// Update the avatar in the database
-	if err := db.ExecOne("update cm_users set avatar=$1 where id=$2;", avatar, userID); err != nil {
-		logger.Errorf("userService.UpdateAvatar: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
-}
-
 // fetchUser returns a new user, and, optionally, user session instance from the provided database row
 func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*data.User, *data.UserSession, error) {
 	// Prepare user fields
@@ -561,7 +514,6 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		&u.Remarks,
 		&u.FederatedIdP,
 		&u.FederatedID,
-		&u.Avatar,
 		&u.WebsiteURL,
 	}
 

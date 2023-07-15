@@ -130,7 +130,6 @@ create table cm_users (
     remarks        text          default ''    not null,        -- Optional remarks for the user
     federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty, it's a local user
     federated_id   varchar(255)  default ''    not null,        -- User ID as reported by the federated identity provider (only when federated_idp is set)
-    avatar         bytea,                                       -- Optional user's avatar image
     website_url    varchar(2083) default ''    not null         -- Optional user's website URL
 );
 
@@ -143,6 +142,20 @@ alter table cm_users add constraint fk_users_federated_idp foreign key (federate
 insert into cm_users(id, email, name, password_hash, system_account, confirmed, ts_created)
     -- 'Anonymous' user
     values('00000000-0000-0000-0000-000000000000'::uuid, '', 'Anonymous', '', true, false, current_timestamp);
+
+------------------------------------------------------------------------------------------------------------------------
+-- User avatars
+------------------------------------------------------------------------------------------------------------------------
+create table cm_user_avatars (
+    user_id    uuid primary key,   -- Reference to the user and the primary key
+    ts_updated timestamp not null, -- When the record was last updated
+    avatar_s   bytea     not null, -- Small avatar image (16x16)
+    avatar_m   bytea     not null, -- Medium-sized avatar image (32x32)
+    avatar_l   bytea     not null  -- Large avatar image (128x128)
+);
+
+-- Constraints
+alter table cm_user_avatars add constraint fk_user_avatars_user_id foreign key (user_id) references cm_users(id) on delete cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- User sessions

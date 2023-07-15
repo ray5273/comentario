@@ -43,16 +43,17 @@ func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder 
 	if id, err := uuid.Parse(string(params.UUID)); err != nil {
 		return respBadRequest(ErrorInvalidUUID)
 
-		// Find the user by their ID
-	} else if user, err := svc.TheUserService.FindUserByID(&id); err != nil {
+		// Find the user avatar by their ID
+	} else if ua, err := svc.TheAvatarService.GetByUserID(&id); err != nil {
 		return respServiceError(err)
 
-	} else if len(user.Avatar) == 0 {
+	} else if ua == nil {
 		// No avatar
 		return api_general.NewUserAvatarGetNoContent()
 
 	} else {
 		// Avatar is present
-		return api_general.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(user.Avatar)))
+		// TODO support different sizes
+		return api_general.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(ua.AvatarM)))
 	}
 }

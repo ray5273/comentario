@@ -199,7 +199,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	// Succeeded
 	return api_embed.NewEmbedCommentNewOK().WithPayload(&api_embed.EmbedCommentNewOKBody{
 		Comment:   comment.ToDTO(domain.RootURL(), page.Path),
-		Commenter: user.ToCommenter(domainUser.IsCommenter, domainUser.IsModerator),
+		Commenter: user.ToCommenter(svc.TheAvatarService.UserHasAvatar(&user.ID), domainUser.IsCommenter, domainUser.IsModerator),
 	})
 }
 

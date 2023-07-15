@@ -21,7 +21,7 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	}
 
 	// Succeeded: owner's logged in
-	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
+	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(svc.TheAvatarService.UserHasAvatar(&user.ID), nil))
 }
 
 func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User) middleware.Responder {
@@ -30,7 +30,7 @@ func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User
 	}
 
 	// Update the user's avatar
-	if err := svc.TheUserService.UpdateAvatar(&user.ID, params.Data); err != nil {
+	if err := svc.TheAvatarService.UpdateByUserID(&user.ID, params.Data); err != nil {
 		return respServiceError(err)
 	}
 

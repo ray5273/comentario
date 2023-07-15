@@ -183,6 +183,15 @@ func (db *Database) Select(q *goqu.SelectDataset) (*sql.Rows, error) {
 	}
 }
 
+// SelectRow executes the provided goqu query against the database, returning a single row
+func (db *Database) SelectRow(q *goqu.SelectDataset) util.Scanner {
+	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+		return util.NewErrScanner(err)
+	} else {
+		return db.QueryRow(qSQL, qParams...)
+	}
+}
+
 // Shutdown ends the database connection and shuts down all dependent services
 func (db *Database) Shutdown() error {
 	// If there's a connection, try to disconnect

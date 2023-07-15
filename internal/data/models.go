@@ -193,7 +193,6 @@ type User struct {
 	Remarks       string        // Optional remarks for the user
 	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
 	FederatedID   string        // User ID as reported by the federated identity provider (only when federated_idp is set)
-	Avatar        []byte        // Optional user's avatar image
 	WebsiteURL    string        // Optional user's website URL
 }
 
@@ -227,7 +226,6 @@ func (u *User) AsNonSuperuser() *User {
 		Remarks:       u.Remarks,
 		FederatedIdP:  u.FederatedIdP,
 		FederatedID:   u.FederatedID,
-		Avatar:        u.Avatar,
 		WebsiteURL:    u.WebsiteURL,
 	}
 }
@@ -243,10 +241,10 @@ func (u *User) IsLocal() bool {
 }
 
 // ToCommenter converts this user into a Commenter model
-func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
+func (u *User) ToCommenter(hasAvatar, commenter, moderator bool) *models.Commenter {
 	return &models.Commenter{
 		Email:       strfmt.Email(u.Email),
-		HasAvatar:   len(u.Avatar) > 0,
+		HasAvatar:   hasAvatar,
 		ID:          strfmt.UUID(u.ID.String()),
 		IsCommenter: commenter,
 		IsModerator: moderator,
@@ -256,7 +254,7 @@ func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 }
 
 // ToDTO converts this user into an API model
-func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.User {
+func (u *User) ToDTO(hasAvatar bool, isOwner, isModerator, isCommenter sql.NullBool) *models.User {
 	return &models.User{
 		Banned:        u.Banned,
 		BannedTime:    strfmt.DateTime(u.BannedTime.Time),
@@ -266,7 +264,7 @@ func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.Use
 		Email:         strfmt.Email(u.Email),
 		FederatedID:   u.FederatedID,
 		FederatedIDP:  models.FederatedIdpID(u.FederatedIdP),
-		HasAvatar:     len(u.Avatar) > 0,
+		HasAvatar:     hasAvatar,
 		ID:            strfmt.UUID(u.ID.String()),
 		IsCommenter:   NullBoolToPtr(isCommenter),
 		IsModerator:   NullBoolToPtr(isModerator),
@@ -286,10 +284,10 @@ func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.Use
 
 // ToPrincipal converts this user into a Principal model. du is an optional domain user model, which only applies to
 // commenter authentication; should be nil for UI authentication
-func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
+func (u *User) ToPrincipal(hasAvatar bool, du *DomainUser) *models.Principal {
 	return &models.Principal{
 		Email:           strfmt.Email(u.Email),
-		HasAvatar:       len(u.Avatar) > 0,
+		HasAvatar:       hasAvatar,
 		ID:              strfmt.UUID(u.ID.String()),
 		IsCommenter:     du != nil && du.IsCommenter,
 		IsConfirmed:     u.Confirmed,
@@ -366,6 +364,58 @@ func (u *User) WithSignup(req *http.Request, url string) *User {
 func (u *User) WithWebsiteURL(s string) *User {
 	u.WebsiteURL = s
 	return u
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+type UserAvatarSize byte
+
+const (
+	UserAvatarSizeS = 'S'
+	UserAvatarSizeM = 'M'
+	UserAvatarSizeL = 'L'
+)
+
+// UserAvatarSizes maps user avatar sizes to pixel sizes
+var UserAvatarSizes = map[UserAvatarSize]int{UserAvatarSizeS: 16, UserAvatarSizeM: 32, UserAvatarSizeL: 128}
+
+// UserAvatar represents a set of avatar images for a user
+type UserAvatar struct {
+	UserID      uuid.UUID // Unique user ID
+	UpdatedTime time.Time // When the user was last updated
+	AvatarS     []byte    // Small avatar image (16x16)
+	AvatarM     []byte    // Medium-sized avatar image (32x32)
+	AvatarL     []byte    // Large avatar image (128x128)
+}
+
+// Get returns an avatar image of the given size
+func (ua *UserAvatar) Get(size UserAvatarSize) []byte {
+	switch size {
+	case UserAvatarSizeM:
+		return ua.AvatarM
+
+	case UserAvatarSizeL:
+		return ua.AvatarL
+	}
+
+	// S is the default/fallback
+	return ua.AvatarS
+}
+
+// Set store the given avatar image with the specified size
+func (ua *UserAvatar) Set(size UserAvatarSize, data []byte) {
+	switch size {
+	case UserAvatarSizeM:
+		ua.AvatarM = data
+		return
+
+	case UserAvatarSizeL:
+		ua.AvatarL = data
+		return
+	}
+
+	// S is the default/fallback
+	ua.AvatarS = data
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
