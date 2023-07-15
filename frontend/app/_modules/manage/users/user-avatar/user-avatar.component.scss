@@ -1,12 +1,28 @@
 :host {
-    width: 38px;
-    height: 38px;
+    aspect-ratio: 1 / 1;
     border-radius: 50%;
     display: inline-flex;
     justify-content: center;
     align-items: center;
     background-color: #3b5bdb;
     color: #fff;
-    font-size: 22px;
     overflow: hidden;
+
+    &.S {
+        width: 16px;
+        height: 16px;
+        font-size: 12px;
+    }
+
+    &.M {
+        width: 32px;
+        height: 32px;
+        font-size: 20px;
+    }
+
+    &.L {
+        width: 128px;
+        height: 128px;
+        font-size: 96px;
+    }
 }

@@ -32,15 +32,14 @@ type DomainService interface {
 	FindByHost(host string) (*data.Domain, error)
 	// FindByID fetches and returns a domain by its ID
 	FindByID(id *uuid.UUID) (*data.Domain, error)
-	// FindDomainUserByHost fetches and returns a Domain and DomainUser by domain host and user ID, and whether they
-	// have an avatar. If the domain exists, but there's no record for the user on that domain:
+	// FindDomainUserByHost fetches and returns a Domain and DomainUser by domain host and user ID. If the domain
+	// exists, but there's no record for the user on that domain:
 	//  - if createIfMissing == true, creates a new domain user and returns it
 	//  - if createIfMissing == false, returns nil for DomainUser
-	FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, bool, error)
-	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs, and whether they
-	// have an avatar. If the domain exists, but there's no record for the user on that domain, returns nil for
-	// DomainUser
-	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, bool, error)
+	FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error)
+	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
+	// there's no record for the user on that domain, returns nil for DomainUser
+	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
 	// ListByDomainUser fetches and returns a list of domains the specified user has any rights to, and a list of
@@ -258,7 +257,7 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 	}
 }
 
-func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, bool, error) {
+func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error) {
 	logger.Debugf("domainService.FindDomainUserByHost('%s', %s, %v)", host, userID, createIfMissing)
 
 	// Query the row
@@ -271,22 +270,19 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 			"d.count_views, "+
 			// Domain user fields
 			"du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, du.notify_moderator, "+
-			"du.ts_created, "+
-			// Avatar fields
-			"a.user_id "+
+			"du.ts_created "+
 			"from cm_domains d "+
 			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 "+
-			"left join cm_user_avatars a on a.user_id=$1 "+
 			"where d.host=$2;",
 		userID, host)
 
 	// Fetch the domain and the domain user
-	d, du, hasAvatar, err := svc.fetchDomainUser(row)
+	d, du, err := svc.fetchDomainUser(row)
 	if err != nil {
-		return nil, nil, false, translateDBErrors(err)
+		return nil, nil, translateDBErrors(err)
 	}
 
-	// If no domain user found and we need to create one
+	// If no domain user found, and we need to create one
 	if du == nil && createIfMissing {
 		du = &data.DomainUser{
 			DomainID:        d.ID,
@@ -298,15 +294,15 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 		}
 
 		if err := svc.UserAdd(du); err != nil {
-			return nil, nil, false, err
+			return nil, nil, err
 		}
 	}
 
 	// Succeeded
-	return d, du, hasAvatar, nil
+	return d, du, nil
 }
 
-func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, bool, error) {
+func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
 	logger.Debugf("domainService.FindDomainUserByID(%s, %s)", domainID, userID)
 
 	// Query the row
@@ -319,21 +315,18 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 			"d.count_views, "+
 			// Domain user fields
 			"du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, du.notify_moderator, "+
-			"du.ts_created, "+
-			// Avatar fields
-			"a.user_id "+
+			"du.ts_created "+
 			"from cm_domains d "+
 			"left join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 "+
-			"left join cm_user_avatars a on a.user_id=$1 "+
 			"where d.id=$2;",
 		userID, domainID)
 
 	// Fetch the domain and the domain user
-	if d, du, hasAvatar, err := svc.fetchDomainUser(row); err != nil {
-		return nil, nil, false, translateDBErrors(err)
+	if d, du, err := svc.fetchDomainUser(row); err != nil {
+		return nil, nil, translateDBErrors(err)
 	} else {
 		// Succeeded
-		return d, du, hasAvatar, nil
+		return d, du, nil
 	}
 }
 
@@ -367,9 +360,7 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 			"d.default_sort", "d.count_comments", "d.count_views",
 			// Domain user fields
 			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created",
-			// Avatar fields (dummy)
-			goqu.L("false"))
+			"du.notify_moderator", "du.ts_created")
 
 	// Add filter by domain user
 	duTable := goqu.T("cm_domains_users").As("du")
@@ -426,7 +417,7 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 	var ds []*data.Domain
 	var dus []*data.DomainUser
 	for rows.Next() {
-		if d, du, _, err := svc.fetchDomainUser(rows); err != nil {
+		if d, du, err := svc.fetchDomainUser(rows); err != nil {
 			return nil, nil, translateDBErrors(err)
 		} else {
 			// If the user isn't a superuser/owner, strip the domain down
@@ -750,12 +741,11 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 	return &d, nil
 }
 
-// fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner, and whether they have
-// an avatar
-func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.DomainUser, bool, error) {
+// fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner
+func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.DomainUser, error) {
 	var d data.Domain
 	var ssoSecret sql.NullString
-	var duID, avatarID uuid.NullUUID
+	var duID uuid.NullUUID
 	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator sql.NullBool
 	var duCreatedTime sql.NullTime
 	err := sc.Scan(
@@ -786,14 +776,13 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&duIsCommenter,
 		&duNotifyReplies,
 		&duNotifyModerator,
-		&duCreatedTime,
-		&avatarID)
+		&duCreatedTime)
 	if err != nil {
 		logger.Errorf("domainService.fetchDomainUser: Scan() failed: %v", err)
-		return nil, nil, false, err
+		return nil, nil, err
 	} else if err := d.SetSSOSecretStr(ssoSecret); err != nil {
 		logger.Errorf("domainService.fetchDomainUser: SetSSOSecretStr() failed: %v", err)
-		return nil, nil, false, err
+		return nil, nil, err
 	}
 
 	// If there's a DomainUser
@@ -812,7 +801,7 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 	}
 
 	// Succeeded
-	return &d, pdu, avatarID.Valid, nil
+	return &d, pdu, nil
 }
 
 // fetchStats collects and returns a daily statistics using the provided database rows

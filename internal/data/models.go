@@ -194,6 +194,7 @@ type User struct {
 	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
 	FederatedID   string        // User ID as reported by the federated identity provider (only when federated_idp is set)
 	WebsiteURL    string        // Optional user's website URL
+	HasAvatar     bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB.
 }
 
 // NewUser instantiates a new User
@@ -209,23 +210,24 @@ func NewUser(email, name string) *User {
 // AsNonSuperuser returns a clone of the user with a limited set of properties, which a non-superuser is allowed to see
 func (u *User) AsNonSuperuser() *User {
 	return &User{
-		ID:            u.ID,
-		Email:         u.Email,
-		Name:          u.Name,
-		SystemAccount: u.SystemAccount,
+		Banned:        u.Banned,
+		BannedTime:    u.BannedTime,
 		Confirmed:     u.Confirmed,
 		ConfirmedTime: u.ConfirmedTime,
 		CreatedTime:   u.CreatedTime,
-		UserCreated:   u.UserCreated,
-		SignupIP:      u.SignupIP,
+		Email:         u.Email,
+		FederatedID:   u.FederatedID,
+		FederatedIdP:  u.FederatedIdP,
+		HasAvatar:     u.HasAvatar,
+		ID:            u.ID,
+		Name:          u.Name,
+		Remarks:       u.Remarks,
 		SignupCountry: u.SignupCountry,
 		SignupHost:    u.SignupHost,
-		Banned:        u.Banned,
-		BannedTime:    u.BannedTime,
+		SignupIP:      u.SignupIP,
+		SystemAccount: u.SystemAccount,
 		UserBanned:    u.UserBanned,
-		Remarks:       u.Remarks,
-		FederatedIdP:  u.FederatedIdP,
-		FederatedID:   u.FederatedID,
+		UserCreated:   u.UserCreated,
 		WebsiteURL:    u.WebsiteURL,
 	}
 }
@@ -241,10 +243,10 @@ func (u *User) IsLocal() bool {
 }
 
 // ToCommenter converts this user into a Commenter model
-func (u *User) ToCommenter(hasAvatar, commenter, moderator bool) *models.Commenter {
+func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 	return &models.Commenter{
 		Email:       strfmt.Email(u.Email),
-		HasAvatar:   hasAvatar,
+		HasAvatar:   u.HasAvatar,
 		ID:          strfmt.UUID(u.ID.String()),
 		IsCommenter: commenter,
 		IsModerator: moderator,
@@ -254,7 +256,7 @@ func (u *User) ToCommenter(hasAvatar, commenter, moderator bool) *models.Comment
 }
 
 // ToDTO converts this user into an API model
-func (u *User) ToDTO(hasAvatar bool, isOwner, isModerator, isCommenter sql.NullBool) *models.User {
+func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.User {
 	return &models.User{
 		Banned:        u.Banned,
 		BannedTime:    strfmt.DateTime(u.BannedTime.Time),
@@ -264,7 +266,7 @@ func (u *User) ToDTO(hasAvatar bool, isOwner, isModerator, isCommenter sql.NullB
 		Email:         strfmt.Email(u.Email),
 		FederatedID:   u.FederatedID,
 		FederatedIDP:  models.FederatedIdpID(u.FederatedIdP),
-		HasAvatar:     hasAvatar,
+		HasAvatar:     u.HasAvatar,
 		ID:            strfmt.UUID(u.ID.String()),
 		IsCommenter:   NullBoolToPtr(isCommenter),
 		IsModerator:   NullBoolToPtr(isModerator),
@@ -284,10 +286,10 @@ func (u *User) ToDTO(hasAvatar bool, isOwner, isModerator, isCommenter sql.NullB
 
 // ToPrincipal converts this user into a Principal model. du is an optional domain user model, which only applies to
 // commenter authentication; should be nil for UI authentication
-func (u *User) ToPrincipal(hasAvatar bool, du *DomainUser) *models.Principal {
+func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 	return &models.Principal{
 		Email:           strfmt.Email(u.Email),
-		HasAvatar:       hasAvatar,
+		HasAvatar:       u.HasAvatar,
 		ID:              strfmt.UUID(u.ID.String()),
 		IsCommenter:     du != nil && du.IsCommenter,
 		IsConfirmed:     u.Confirmed,
@@ -375,6 +377,13 @@ const (
 	UserAvatarSizeM = 'M'
 	UserAvatarSizeL = 'L'
 )
+
+func UserAvatarSizeFromStr(s string) UserAvatarSize {
+	if s != "" {
+		return UserAvatarSize(s[0])
+	}
+	return UserAvatarSizeS
+}
 
 // UserAvatarSizes maps user avatar sizes to pixel sizes
 var UserAvatarSizes = map[UserAvatarSize]int{UserAvatarSizeS: 16, UserAvatarSizeM: 32, UserAvatarSizeL: 128}

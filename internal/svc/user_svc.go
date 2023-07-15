@@ -178,7 +178,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	// Query the database
 	var u data.User
 	var du data.DomainUser
-	var duUID, duDID *uuid.NullUUID
+	var duUID, duDID, avatarID uuid.NullUUID
 	var duCreated sql.NullTime
 	if err := db.QueryRow(
 		"select "+
@@ -186,12 +186,15 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
 			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url, "+
+			// Avatar fields
+			"a.user_id, "+
 			// DomainUser fields
 			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
 			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
 			"coalesce(du.notify_moderator, false), du.ts_created "+
 			"from cm_users u "+
 			"left join cm_domains_users du on du.user_id=u.id and du.domain_id=$1 "+
+			"left join cm_user_avatars a on a.user_id=u.id "+
 			"where u.id=$2;",
 		userID, domainID,
 	).Scan(
@@ -216,6 +219,8 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		&u.FederatedIdP,
 		&u.FederatedID,
 		&u.WebsiteURL,
+		// Avatar fields
+		&avatarID,
 		// DomainUser
 		&duDID,
 		&duUID,
@@ -228,6 +233,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	); err != nil {
 		return nil, nil, translateDBErrors(err)
 	}
+	u.HasAvatar = avatarID.Valid
 
 	// If there's a DomainUser available
 	var pdu *data.DomainUser
@@ -246,18 +252,27 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 	logger.Debugf("userService.FindUserByEmail('%s', %v)", email, localOnly)
 
 	// Prepare the query
-	s := "select " +
-		"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, " +
-		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, " +
-		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url " +
-		"from cm_users u " +
-		"where u.email=$1"
+	q := db.Dialect().
+		From(goqu.T("cm_users").As("u")).
+		Select(
+			// User fields
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id",
+			"u.website_url",
+			// Avatar fields
+			"a.user_id").
+		Where(goqu.Ex{"u.email": email}).
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
+
+	// If only local users are in scope
 	if localOnly {
-		s += " and u.federated_idp is null"
+		q = q.Where(goqu.Ex{"u.federated_idp": nil})
 	}
 
 	// Query the database
-	if u, _, err := svc.fetchUserSession(db.QueryRow(s+";", email), false); err != nil {
+	if u, _, err := svc.fetchUserSession(db.SelectRow(q), false); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
@@ -267,18 +282,23 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	logger.Debugf("userService.FindUserByID(%s)", id)
 
-	// Query the database
-	row := db.QueryRow(
-		"select "+
-			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url "+
-			"from cm_users u "+
-			"where u.id=$1;",
-		id)
+	// Prepare the query
+	q := db.Dialect().
+		From(goqu.T("cm_users").As("u")).
+		Select(
+			// User fields
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id",
+			"u.website_url",
+			// Avatar fields
+			"a.user_id").
+		Where(goqu.Ex{"u.id": id}).
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
 
 	// Fetch the user
-	if u, _, err := svc.fetchUserSession(row, false); err != nil {
+	if u, _, err := svc.fetchUserSession(db.SelectRow(q), false); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
 		return u, nil
@@ -288,23 +308,32 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error) {
 	logger.Debugf("userService.FindUserBySession(%s, %s)", userID, sessionID)
 
-	// Query the database
-	row := db.QueryRow(
-		"select "+
+	// Prepare the query
+	now := time.Now().UTC()
+	q := db.Dialect().
+		From(goqu.T("cm_users").As("u")).
+		Select(
 			// User fields
-			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url, "+
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id", "u.website_url",
+			// Avatar fields
+			"a.user_id",
 			// User session fields
-			"s.id, s.user_id, s.ts_created, s.ts_expires, s.host, s.proto, s.ip, s.country, s.ua_browser_name, "+
-			"s.ua_browser_version, s.ua_os_name, s.ua_os_version, s.ua_device "+
-			"from cm_users u "+
-			"join cm_user_sessions s on s.user_id=u.id "+
-			"where u.id=$1 and s.id=$2 and s.ts_created<$3 and s.ts_expires>=$3;",
-		userID, sessionID, time.Now().UTC())
+			"s.id", "s.user_id", "s.ts_created", "s.ts_expires", "s.host", "s.proto", "s.ip", "s.country", "s.ua_browser_name",
+			"s.ua_browser_version", "s.ua_os_name", "s.ua_os_version", "s.ua_device").
+		// Join user sessions
+		Join(goqu.T("cm_user_sessions").As("s"), goqu.On(goqu.Ex{"s.user_id": goqu.I("u.id")})).
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
+		Where(goqu.And(
+			goqu.I("u.id").Eq(userID),
+			goqu.I("s.id").Eq(sessionID),
+			goqu.I("s.ts_created").Lt(now),
+			goqu.I("s.ts_expires").Gte(now)))
 
 	// Fetch the user and their session
-	if u, us, err := svc.fetchUserSession(row, true); err != nil {
+	if u, us, err := svc.fetchUserSession(db.SelectRow(q), true); err != nil {
 		return nil, nil, translateDBErrors(err)
 	} else {
 		return u, us, nil
@@ -399,14 +428,16 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 	var us []*models.User
 	var isOwner, isModerator, isCommenter sql.NullBool
 	var fidp sql.NullString
-	var avatarID *uuid.NullUUID
+	var avatarID uuid.NullUUID
 	for rows.Next() {
 		var u data.User
 		if err := rows.Scan(
 			// User
 			&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.SystemAccount, &u.IsSuperuser, &u.Confirmed, &u.ConfirmedTime,
 			&u.CreatedTime, &u.UserCreated, &u.SignupIP, &u.SignupCountry, &u.SignupHost, &u.Banned, &u.BannedTime,
-			&u.UserBanned, &u.Remarks, &fidp, &u.FederatedID, &u.WebsiteURL, &avatarID,
+			&u.UserBanned, &u.Remarks, &fidp, &u.FederatedID, &u.WebsiteURL,
+			// Avatar fields
+			&avatarID,
 			// Domain user
 			&isOwner, &isModerator, &isCommenter,
 		); err != nil {
@@ -416,12 +447,13 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 		if fidp.Valid {
 			u.FederatedIdP = fidp.String
 		}
+		u.HasAvatar = avatarID.Valid
 
 		// Determine which page fields the user is allowed to see
 		if !superuser {
 			u = *u.AsNonSuperuser()
 		}
-		us = append(us, u.ToDTO(avatarID.Valid, isOwner, isModerator, isCommenter))
+		us = append(us, u.ToDTO(isOwner, isModerator, isCommenter))
 	}
 
 	// Verify Next() didn't error
@@ -436,18 +468,30 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {
 	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
 
-	// Query domain's moderator users
-	s := "select " +
-		"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, " +
-		"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, " +
-		"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url " +
-		"from cm_domains_users du " +
-		"join cm_users u on u.id=du.user_id " +
-		"where du.domain_id=$1 and (du.is_owner or du.is_moderator)"
+	// Prepare a query
+	q := db.Dialect().
+		From(goqu.T("cm_domains_users").As("du")).
+		Select(
+			// User fields
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id",
+			"u.website_url",
+			// Avatar fields
+			"a.user_id").
+		// Join users
+		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
+		Where(goqu.And(
+			goqu.I("du.domain_id").Eq(domainID),
+			goqu.ExOr{"du.is_owner": true, "du.is_moderator": true}))
 	if enabledNotifyOnly {
-		s += " and du.notify_moderator"
+		q = q.Where(goqu.Ex{"du.notify_moderator": true})
 	}
-	rows, err := db.Query(s+";", domainID)
+
+	// Query domain's moderator users
+	rows, err := db.Select(q)
 	if err != nil {
 		logger.Errorf("userService.ListDomainModerators: Query() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -494,6 +538,8 @@ func (svc *userService) Update(user *data.User) error {
 func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*data.User, *data.UserSession, error) {
 	// Prepare user fields
 	u := data.User{}
+	var avatarID uuid.NullUUID
+	var fidp sql.NullString
 	args := []any{
 		&u.ID,
 		&u.Email,
@@ -512,9 +558,10 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		&u.BannedTime,
 		&u.UserBanned,
 		&u.Remarks,
-		&u.FederatedIdP,
+		&fidp,
 		&u.FederatedID,
 		&u.WebsiteURL,
+		&avatarID,
 	}
 
 	// Prepare session fields, if necessary
@@ -547,5 +594,7 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		}
 		return nil, nil, err
 	}
+	u.FederatedIdP = fidp.String
+	u.HasAvatar = avatarID.Valid
 	return &u, us, nil
 }

@@ -37,17 +37,21 @@
                 </div>
 
                 <!-- Avatar -->
-                <div class="col-md-6">
+                <div class="col-12">
                     <label for="user-avatar" class="form-label colon" i18n>Avatar</label>
                     <div class="d-flex flex-wrap align-items-center gap-2">
-                        <div class="border rounded p-3">
+                        <div class="p-2">
                             <app-user-avatar [hasAvatar]="principal.hasAvatar"
                                              [userId]="principal.id"
                                              [userName]="principal.name"
-                                             [avatarOverride]="avatarFile" id="user-avatar"></app-user-avatar>
+                                             [avatarOverride]="avatarFile"
+                                             size="L" id="user-avatar"></app-user-avatar>
                         </div>
-                        <button type="button" class="btn btn-outline-primary" (click)="changeAvatar()" i18n>Change</button>
-                        <button type="button" class="btn btn-outline-danger"  (click)="removeAvatar()" i18n>Remove</button>
+                        <div>
+                            <div class="mb-2" i18n>Avatar image should be a JPEG or a PNG image up to 100 KB in size. A 128×128 pixel image is recommended.</div>
+                            <button type="button" class="btn btn-outline-primary me-2" (click)="changeAvatar()" i18n>Change</button>
+                            <button type="button" class="btn btn-outline-danger"       (click)="removeAvatar()" i18n>Remove</button>
+                        </div>
                     </div>
                     <!-- Invisible avatar file input -->
                     <input #avatarFileInput (change)="avatarSelected()" class="d-none" type="file">

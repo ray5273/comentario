@@ -169,6 +169,12 @@ h2 {
     text-align: center;
 }
 
+.cc-avatar {
+    margin-left:  calc(($sidebar-size-collapsed - 16px) / 2);
+    margin-right: calc(($sidebar-size-collapsed - 16px) / 2);
+    flex: 0 0 16px;
+}
+
 .cc-backdrop {
     position: absolute;
     left: 0;

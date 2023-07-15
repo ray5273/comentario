@@ -2135,6 +2135,16 @@ paths:
         - image/jpeg
       parameters:
         - $ref: "#/parameters/pathUuid"
+        - in: query
+          name: size
+          required: false
+          type: string
+          enum:
+            - S
+            - M
+            - L
+          default: S
+          description: Avatar size
       responses:
         200:
           description: User avatar in the JPEG format

@@ -22,7 +22,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	}
 
 	// Find the domain user, creating one if necessary
-	_, du, hasAvatar, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -30,7 +30,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	// Succeeded
 	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
 		SessionToken: us.EncodeIDs(),
-		Principal:    user.ToPrincipal(hasAvatar, du),
+		Principal:    user.ToPrincipal(du),
 	})
 }
 
@@ -42,7 +42,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 	}
 
 	// Find the domain user, creating one if necessary
-	_, du, hasAvatar, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -50,7 +50,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 	// Succeeded
 	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
 		SessionToken: us.EncodeIDs(),
-		Principal:    user.ToPrincipal(hasAvatar, du),
+		Principal:    user.ToPrincipal(du),
 	})
 }
 
@@ -113,9 +113,9 @@ func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.
 		// Try to fetch the user
 		if user, userSession, err := FetchUserBySessionHeader(s); err == nil && !user.IsAnonymous() && userSession != nil {
 			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
-			if _, domainUser, hasAvatar, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
+			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
 				// Succeeded: user is authenticated
-				return api_embed.NewEmbedAuthCurUserGetOK().WithPayload(user.ToPrincipal(hasAvatar, domainUser))
+				return api_embed.NewEmbedAuthCurUserGetOK().WithPayload(user.ToPrincipal(domainUser))
 			}
 		}
 	}
@@ -140,7 +140,7 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 		return respServiceError(err)
 
 		// Fetch the domain user
-	} else if _, du, _, err = svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
+	} else if _, du, err = svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
 		return respServiceError(err)
 	}
 

@@ -57,6 +57,7 @@ end $$;
 
 drop table if exists cm_fed_identity_providers cascade;
 drop table if exists cm_users                  cascade;
+drop table if exists cm_user_avatars           cascade;
 drop table if exists cm_user_sessions          cascade;
 drop table if exists cm_tokens                 cascade;
 drop table if exists cm_auth_sessions          cascade;

@@ -21,7 +21,7 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	}
 
 	// Succeeded: owner's logged in
-	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(svc.TheAvatarService.UserHasAvatar(&user.ID), nil))
+	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
 }
 
 func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User) middleware.Responder {

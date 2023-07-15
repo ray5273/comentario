@@ -52,8 +52,8 @@ func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder 
 		return api_general.NewUserAvatarGetNoContent()
 
 	} else {
-		// Avatar is present
-		// TODO support different sizes
-		return api_general.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(ua.AvatarM)))
+		// Avatar is present. Fetch the desired size
+		avatar := ua.Get(data.UserAvatarSizeFromStr(swag.StringValue(params.Size)))
+		return api_general.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(avatar)))
 	}
 }

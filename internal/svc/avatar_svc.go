@@ -28,8 +28,6 @@ type AvatarService interface {
 	// UpdateByUserID updates the given user's avatar in the database. r can be nil to remove the avatar, or otherwise
 	// point to PNG or JPG data reader
 	UpdateByUserID(userID *uuid.UUID, r io.Reader) error
-	// UserHasAvatar returns whether the given user has an avatar image
-	UserHasAvatar(userID *uuid.UUID) bool
 }
 
 // avatarService is a blueprint AvatarService implementation
@@ -160,14 +158,4 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader) error {
 
 	// Succeeded
 	return nil
-}
-
-func (svc *avatarService) UserHasAvatar(userID *uuid.UUID) bool {
-	logger.Debugf("avatarService.UserHasAvatar(%s)", userID)
-
-	// Query the database
-	q := db.Dialect().Select("1").From("cm_user_avatars").Where(goqu.Ex{"user_id": userID})
-
-	// On any error, including ErrNoRows (which is a valid case), assume there's no avatar
-	return db.SelectRow(q).Scan() == nil
 }

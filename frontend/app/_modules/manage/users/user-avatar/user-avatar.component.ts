@@ -1,4 +1,4 @@
-import { Component, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, HostBinding, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Configuration } from '../../../../../generated-api';
 
@@ -8,6 +8,11 @@ import { Configuration } from '../../../../../generated-api';
     styleUrls: ['./user-avatar.component.scss'],
 })
 export class UserAvatarComponent implements OnChanges, OnDestroy {
+
+    /** Avatar size. */
+    @Input()
+    @HostBinding('class')
+    size: 'S' | 'M' | 'L' = 'S';
 
     /** Whether the user has an avatar image. */
     @Input({required: true})
@@ -67,7 +72,7 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
         this._src = this.urlOverride ?
             this.sanitizer.bypassSecurityTrustResourceUrl(this.urlOverride) :
             (this.urlOverride === undefined) && this.hasAvatar && this.userId ?
-                this.sanitizer.bypassSecurityTrustResourceUrl(`${this.API_CONFIG.basePath}/users/${this.userId}/avatar`) :
+                this.sanitizer.bypassSecurityTrustResourceUrl(`${this.API_CONFIG.basePath}/users/${this.userId}/avatar?size=${this.size}`) :
                 undefined;
     }
 }

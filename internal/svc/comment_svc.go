@@ -267,7 +267,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 	defer rows.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
-	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(false, true, false)}
+	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false)}
 
 	// Iterate result rows
 	var comments []*models.Comment
