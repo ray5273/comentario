@@ -3,14 +3,6 @@ export class Utils {
     static readonly reUuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/;
 
     /**
-     * Return a number in the range 0..22 based on the given string's content.
-     * @param s String to calculate colour index for.
-     */
-    static colourIndex(s: string) {
-        return [...s].reduce((sum, c) => sum + c.charCodeAt(0), 0) % 23;
-    }
-
-    /**
      * Return whether the passed value represents a valid UUID.
      * @param v Value to check.
      */

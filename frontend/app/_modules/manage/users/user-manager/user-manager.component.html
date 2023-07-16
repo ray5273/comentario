@@ -33,24 +33,30 @@
     </div>
 
     <ng-container *ngIf="users?.length">
-        <!-- Page list -->
+        <!-- User list -->
         <div class="list-group">
-            <a *ngFor="let u of users" [routerLink]="u.id" class="list-group-item list-group-item-action">
-                <!-- Name and badge -->
-                <div>
-                    <span class="fw-bold">
-                        <!-- System user icon -->
-                        <fa-icon *ngIf="u.systemAccount" [icon]="faLock" class="me-2"></fa-icon>
-                        <!-- Name -->
-                        <ng-container>{{ u.name }}</ng-container>
-                    </span>
-                    <!-- Domain user badge -->
-                    <app-domain-user-badge *ngIf="domain" [domainUser]="u" class="ms-2"></app-domain-user-badge>
+            <a *ngFor="let u of users" [routerLink]="u.id" class="list-group-item list-group-item-action d-flex">
+                <!-- Avatar -->
+                <div class="col-auto d-flex align-items-center pe-2">
+                    <app-user-avatar [user]="u" size="M"></app-user-avatar>
                 </div>
-                <!-- Provider icon and email -->
-                <div>
-                    <app-idp-icon *ngIf="u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
-                    <ng-container>{{ u.email }}</ng-container>
+                <div class="col">
+                    <!-- Name and badge -->
+                    <div>
+                        <span class="fw-bold">
+                            <!-- System user icon -->
+                            <fa-icon *ngIf="u.systemAccount" [icon]="faLock" class="me-2"></fa-icon>
+                            <!-- Name -->
+                            <ng-container>{{ u.name }}</ng-container>
+                        </span>
+                        <!-- Domain user badge -->
+                        <app-domain-user-badge *ngIf="domain" [domainUser]="u" class="ms-2"></app-domain-user-badge>
+                    </div>
+                    <!-- Provider icon and email -->
+                    <div>
+                        <app-idp-icon *ngIf="u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
+                        <ng-container>{{ u.email }}</ng-container>
+                    </div>
                 </div>
             </a>
         </div>

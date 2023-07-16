@@ -41,14 +41,11 @@
                     <label for="user-avatar" class="form-label colon" i18n>Avatar</label>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <div class="p-2">
-                            <app-user-avatar [hasAvatar]="principal.hasAvatar"
-                                             [userId]="principal.id"
-                                             [userName]="principal.name"
-                                             [avatarOverride]="avatarFile"
+                            <app-user-avatar [user]="principal" [avatarOverride]="avatarFile"
                                              size="L" id="user-avatar"></app-user-avatar>
                         </div>
                         <div>
-                            <div class="mb-2" i18n>Avatar image should be a JPEG or a PNG image up to 100 KB in size. A 128×128 pixel image is recommended.</div>
+                            <div class="mb-2" i18n>Avatar image should be a JPEG or a PNG image up to 1 MB in size. A 128×128 pixel image is recommended.</div>
                             <button type="button" class="btn btn-outline-primary me-2" (click)="changeAvatar()" i18n>Change</button>
                             <button type="button" class="btn btn-outline-danger"       (click)="removeAvatar()" i18n>Remove</button>
                         </div>

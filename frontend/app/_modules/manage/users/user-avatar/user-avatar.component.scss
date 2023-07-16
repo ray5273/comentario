@@ -4,25 +4,29 @@
     display: inline-flex;
     justify-content: center;
     align-items: center;
-    background-color: #3b5bdb;
-    color: #fff;
     overflow: hidden;
+    color: #fff;
 
-    &.S {
+    &.size-s {
         width: 16px;
         height: 16px;
         font-size: 12px;
     }
 
-    &.M {
+    &.size-m {
         width: 32px;
         height: 32px;
         font-size: 20px;
     }
 
-    &.L {
+    &.size-l {
         width: 128px;
         height: 128px;
         font-size: 96px;
     }
+}
+
+img {
+    width: 100%;
+    height: auto;
 }

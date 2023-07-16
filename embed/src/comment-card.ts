@@ -217,7 +217,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Pick a color for the commenter
         let bgColor = 'deleted';
         if (commenter) {
-            bgColor = commenter.id === ANONYMOUS_ID ? 'anonymous' : Utils.colourIndex(commenter.id).toString();
+            bgColor = commenter.id === ANONYMOUS_ID ? 'anonymous' : commenter.colourIndex.toString();
         }
 
         // Render children

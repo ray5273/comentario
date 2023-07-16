@@ -21,7 +21,11 @@ import (
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
 var AnonymousUser = &User{Name: "Anonymous"}
 
+// MaxPageTitleLength is the maximum length allowed for a page title
 const MaxPageTitleLength = 100
+
+// ColourIndexCount is the number of colours in the palette used to colourise users based on their IDs
+const ColourIndexCount = 60
 
 // DTOAware is an interface capable of converting a model into an API model
 type DTOAware[T any] interface {
@@ -232,6 +236,18 @@ func (u *User) AsNonSuperuser() *User {
 	}
 }
 
+// ColourIndex returns a hash-number based on the user's ID
+func (u *User) ColourIndex() byte {
+	// Sum all the bytes in the ID
+	var n byte
+	for _, b := range u.ID {
+		n += b
+	}
+
+	// Range to 0..23
+	return n % ColourIndexCount
+}
+
 // IsAnonymous returns whether the user is anonymous
 func (u *User) IsAnonymous() bool {
 	return u.ID == AnonymousUser.ID
@@ -245,6 +261,7 @@ func (u *User) IsLocal() bool {
 // ToCommenter converts this user into a Commenter model
 func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
 	return &models.Commenter{
+		ColourIndex: u.ColourIndex(),
 		Email:       strfmt.Email(u.Email),
 		HasAvatar:   u.HasAvatar,
 		ID:          strfmt.UUID(u.ID.String()),
@@ -260,6 +277,7 @@ func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.Use
 	return &models.User{
 		Banned:        u.Banned,
 		BannedTime:    strfmt.DateTime(u.BannedTime.Time),
+		ColourIndex:   u.ColourIndex(),
 		Confirmed:     u.Confirmed,
 		ConfirmedTime: strfmt.DateTime(u.ConfirmedTime.Time),
 		CreatedTime:   strfmt.DateTime(u.CreatedTime),
@@ -288,6 +306,7 @@ func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.Use
 // commenter authentication; should be nil for UI authentication
 func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 	return &models.Principal{
+		ColourIndex:     u.ColourIndex(),
 		Email:           strfmt.Email(u.Email),
 		HasAvatar:       u.HasAvatar,
 		ID:              strfmt.UUID(u.ID.String()),

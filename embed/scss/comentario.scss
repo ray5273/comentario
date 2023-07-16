@@ -1,5 +1,6 @@
 @import "source-sans";
 @import "colours";
+@import "../../frontend/scss/shared";
 
 .comentario-root {
     position: relative;
@@ -83,7 +84,7 @@
         * {font-family: 'Source Sans Pro', sans-serif;}
     }
 
-    @each $i, $c in $colourize-map {
+    @each $i, $c in $colourise-map {
 
         // Generate colouring classes for the left border
         .comentario-border-#{$i} {

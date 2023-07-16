@@ -149,6 +149,7 @@ definitions:
   commenter:
     description: Stripped-down, read-only version of the user who authored a comment
     type: object
+    readOnly: true
     properties:
       id:
         type: string
@@ -176,6 +177,11 @@ definitions:
       isCommenter:
         type: boolean
         description: Whether the user is a commenter on this specific domain (false means the user is read-only)
+        x-omitempty: false
+      colourIndex:
+        type: integer
+        format: uint8
+        description: Colour hash, number based on the user's ID
         x-omitempty: false
 
   commentSort:
@@ -558,6 +564,11 @@ definitions:
         type: boolean
         description: Whether the user is to receive moderator notifications (only for commenter auth)
         x-omitempty: false
+      colourIndex:
+        type: integer
+        format: uint8
+        description: Colour hash, number based on the user's ID
+        x-omitempty: false
 
   user:
     description: User
@@ -671,6 +682,12 @@ definitions:
         type: boolean
         readOnly: true
         description: Whether the user is a commenter on this specific domain (false means the user is read-only; only in the context of a domain)
+        x-omitempty: false
+      colourIndex:
+        type: integer
+        format: uint8
+        readOnly: true
+        description: Colour hash, number based on the user's ID
         x-omitempty: false
 
 parameters:
@@ -1161,7 +1178,7 @@ paths:
           name: data
           type: file
           required: false
-          maxLength: 102400 # 100 KB
+          maxLength: 1048576 # 1 MB
           description: Avatar image file, if omitted, the current user's avatar will be removed
       responses:
         204:

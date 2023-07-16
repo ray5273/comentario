@@ -146,7 +146,7 @@ export class ProfileComponent implements OnInit {
         // Verify its format and size
         if (f && f.type !== 'image/jpeg' && f.type !== 'image/png') {
             this.toastSvc.error('invalid-avatar-format');
-        } else if (f && f.size > 100*1024) {
+        } else if (f && f.size > 1024 * 1024) {
             this.toastSvc.error('invalid-avatar-size');
         } else {
             this.avatarFile = f;

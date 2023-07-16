@@ -1,6 +1,6 @@
 import { Component, HostBinding, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Configuration } from '../../../../../generated-api';
+import { Commenter, Configuration, Principal, User } from '../../../../../generated-api';
 
 @Component({
     selector: 'app-user-avatar',
@@ -11,20 +11,11 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
 
     /** Avatar size. */
     @Input()
-    @HostBinding('class')
     size: 'S' | 'M' | 'L' = 'S';
 
-    /** Whether the user has an avatar image. */
+    /** User whose avatar to display. */
     @Input({required: true})
-    hasAvatar: boolean | null | undefined = false;
-
-    /** ID of the user to display an avatar for. */
-    @Input({required: true})
-    userId?: string;
-
-    /** Name of the user. */
-    @Input({required: true})
-    userName?: string;
+    user?: User | Principal | Commenter;
 
     _src?: SafeResourceUrl;
     urlOverride?: string | null;
@@ -33,6 +24,11 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
         @Inject(Configuration) private readonly API_CONFIG: Configuration,
         private readonly sanitizer: DomSanitizer,
     ) {}
+
+    @HostBinding('class')
+    get classes(): string[] {
+        return [`size-${this.size.toLowerCase()}`, `user-bg-colour-${this.user?.colourIndex || 0}`];
+    }
 
     /**
      * Avatar override. If set, will take precedence over the user's avatar.
@@ -49,7 +45,7 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if ('hasAvatar' in changes || 'userId' in changes) {
+        if ('user' in changes) {
             this.updateSrc();
         }
     }
@@ -71,8 +67,8 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     private updateSrc() {
         this._src = this.urlOverride ?
             this.sanitizer.bypassSecurityTrustResourceUrl(this.urlOverride) :
-            (this.urlOverride === undefined) && this.hasAvatar && this.userId ?
-                this.sanitizer.bypassSecurityTrustResourceUrl(`${this.API_CONFIG.basePath}/users/${this.userId}/avatar?size=${this.size}`) :
+            (this.urlOverride === undefined) && this.user?.hasAvatar && this.user?.id ?
+                this.sanitizer.bypassSecurityTrustResourceUrl(`${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.size}`) :
                 undefined;
     }
 }

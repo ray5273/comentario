@@ -102,8 +102,7 @@
                 <li class="nav-item">
                     <a [routerLink]="Paths.manage.account.profile" routerLinkActive="active" class="cc-link" id="sidebarProfile">
                         <!-- User's avatar -->
-                        <app-user-avatar [hasAvatar]="principal?.hasAvatar" [userId]="principal?.id"
-                                         [userName]="principal?.name" size="S" class="cc-avatar"></app-user-avatar>
+                        <app-user-avatar [user]="principal" size="S" class="cc-avatar"></app-user-avatar>
                         <div class="cc-hide-collapsed">
                             <!-- User's name -->
                             <div class="text-truncate" style="max-width: 200px">{{ principal?.name }}</div>

@@ -820,11 +820,11 @@ export class Comentario {
             case user!.hasAvatar:
                 return Wrap.new('img')
                     .classes('avatar-img')
-                    .attr({src: `${this.apiService.basePath}/users/${user!.id}/avatar`, loading: 'lazy', alt: ''});
+                    .attr({src: `${this.apiService.basePath}/users/${user!.id}/avatar?size=M`, loading: 'lazy', alt: ''});
 
             // The user has no avatar: render a circle containing their initial
             default:
-                return UIToolkit.div('avatar', `bg-${Utils.colourIndex(user!.id)}`).html(user!.name[0].toUpperCase());
+                return UIToolkit.div('avatar', `bg-${user!.colourIndex}`).html(user!.name[0].toUpperCase());
         }
     }
 }

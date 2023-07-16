@@ -1,7 +1,8 @@
 @import url('https://fonts.googleapis.com/css2?family=Volkhov:ital,wght@0,400;0,700;1,400;1,700&display=swap');
 
 // Common vars
-@import "vars";
+@import "./vars";
+@import "./shared";
 
 // Import Bootstrap
 @import "../../node_modules/bootstrap/scss/bootstrap";
@@ -194,6 +195,13 @@ dl.detail-table, dl.detail-table > div {
         height: 100%;
         background-color: rgba(255, 255, 255, 0.8);
         z-index: 999;
+    }
+}
+
+// Generate background colouring classes for avatars
+@each $i, $c in $colourise-map {
+    .user-bg-colour-#{$i} {
+        background-color: #{$c} !important;
     }
 }
 

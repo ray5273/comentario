@@ -14,6 +14,7 @@ export interface User {
     readonly hasAvatar:   boolean; // Whether the user has an avatar image
     readonly isModerator: boolean; // Whether the user is a moderator on this specific domain
     readonly isCommenter: boolean; // Whether the user is a commenter on this specific domain (false means the user is read-only)
+    readonly colourIndex: number;  // Colour hash, number based on the user's ID
 }
 
 /** Authenticated or anonymous user. */
