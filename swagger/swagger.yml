@@ -2141,6 +2141,24 @@ paths:
                 items:
                   $ref: "#/definitions/user"
 
+  /users/{uuid}:
+    parameters:
+    - $ref: "#/parameters/pathUuid"
+
+    get:
+      operationId: UserGet
+      summary: Get properties of a user
+      tags:
+        - ApiGeneral
+      responses:
+        200:
+          description: User properties
+          schema:
+            type: object
+            properties:
+              user:
+                $ref: "#/definitions/user"
+
   /users/{uuid}/avatar:
     get:
       operationId: UserAvatarGet

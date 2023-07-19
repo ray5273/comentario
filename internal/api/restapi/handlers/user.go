@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"bytes"
+	"database/sql"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
@@ -11,13 +12,41 @@ import (
 	"io"
 )
 
+func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
+	// Extract user ID
+	userID, err := data.DecodeUUID(params.UUID)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
+	}
+
+	// Fetch the user
+	u, err := svc.TheUserService.FindUserByID(userID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Fetch user authorisations
+	isOwner, isModerator, _, err := svc.TheUserService.GetMaxUserAuthorisations(&u.ID, &user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded: apply the current user's clearance
+	return api_general.NewUserGetOK().
+		WithPayload(&api_general.UserGetOKBody{
+			User: u.
+				WithClearance(user.IsSuperuser, isOwner, isModerator).
+				ToDTO(sql.NullBool{}, sql.NullBool{}, sql.NullBool{}),
+		})
+}
+
 func UserList(params api_general.UserListParams, user *data.User) middleware.Responder {
 	// Extract domain ID, if any
 	var domainID *uuid.UUID
 	if params.Domain != nil {
 		var err error
 		if domainID, err = data.DecodeUUID(*params.Domain); err != nil {
-			return respBadRequest(ErrorInvalidUUID)
+			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.Domain)))
 		}
 	}
 

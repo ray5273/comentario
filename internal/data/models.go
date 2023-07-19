@@ -211,41 +211,46 @@ func NewUser(email, name string) *User {
 	}
 }
 
-// AsNonSuperuser returns a clone of the user with a limited set of properties, which a non-superuser is allowed to see
-func (u *User) AsNonSuperuser() *User {
-	return &User{
-		Banned:        u.Banned,
-		BannedTime:    u.BannedTime,
-		Confirmed:     u.Confirmed,
-		ConfirmedTime: u.ConfirmedTime,
-		CreatedTime:   u.CreatedTime,
-		Email:         u.Email,
-		FederatedID:   u.FederatedID,
-		FederatedIdP:  u.FederatedIdP,
-		HasAvatar:     u.HasAvatar,
+// WithClearance returns a clone of the user with a limited set of properties, depending on the specified authorisations
+func (u *User) WithClearance(isSuperuser, isOwner, isModerator bool) *User {
+	// Superuser sees everything
+	if isSuperuser {
+		return u
+	}
+
+	// Start with properties matching the Commenter model
+	user := &User{
 		ID:            u.ID,
+		HasAvatar:     u.HasAvatar,
 		Name:          u.Name,
-		Remarks:       u.Remarks,
-		SignupCountry: u.SignupCountry,
-		SignupHost:    u.SignupHost,
-		SignupIP:      u.SignupIP,
 		SystemAccount: u.SystemAccount,
-		UserBanned:    u.UserBanned,
-		UserCreated:   u.UserCreated,
 		WebsiteURL:    u.WebsiteURL,
 	}
+
+	// Owner or moderator
+	if isSuperuser || isOwner || isModerator {
+		user.Banned = u.Banned
+		user.BannedTime = u.BannedTime
+		user.Confirmed = u.Confirmed
+		user.ConfirmedTime = u.ConfirmedTime
+		user.CreatedTime = u.CreatedTime
+		user.Email = u.Email
+		user.FederatedIdP = u.FederatedIdP
+		user.SignupHost = u.SignupHost
+	}
+	return user
 }
 
 // ColourIndex returns a hash-number based on the user's ID
 func (u *User) ColourIndex() byte {
 	// Sum all the bytes in the ID
-	var n byte
+	n := 0
 	for _, b := range u.ID {
-		n += b
+		n += int(b)
 	}
 
 	// Range to 0..23
-	return n % ColourIndexCount
+	return byte(n % ColourIndexCount)
 }
 
 // IsAnonymous returns whether the user is anonymous
@@ -259,17 +264,22 @@ func (u *User) IsLocal() bool {
 }
 
 // ToCommenter converts this user into a Commenter model
-func (u *User) ToCommenter(commenter, moderator bool) *models.Commenter {
-	return &models.Commenter{
+func (u *User) ToCommenter(isCommenter, isModerator, isCurUserModerator bool) *models.Commenter {
+	c := &models.Commenter{
 		ColourIndex: u.ColourIndex(),
-		Email:       strfmt.Email(u.Email),
 		HasAvatar:   u.HasAvatar,
 		ID:          strfmt.UUID(u.ID.String()),
-		IsCommenter: commenter,
-		IsModerator: moderator,
+		IsCommenter: isCommenter,
+		IsModerator: isModerator,
 		Name:        u.Name,
 		WebsiteURL:  strfmt.URI(u.WebsiteURL),
 	}
+
+	// Only include email if the current user is a moderator
+	if isCurUserModerator {
+		c.Email = strfmt.Email(u.Email)
+	}
+	return c
 }
 
 // ToDTO converts this user into an API model

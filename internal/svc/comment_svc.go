@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
-	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -267,7 +266,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 	defer rows.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
-	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false)}
+	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false, isModerator)}
 
 	// Iterate result rows
 	var comments []*models.Comment
@@ -322,28 +321,21 @@ func (svc *commentService) ListWithCommentersByDomainPage(user *data.User, domai
 		if uID.Valid && uID.UUID != data.AnonymousUser.ID {
 			// If the commenter isn't present in the map yet
 			if _, ok := commenterMap[uID.UUID]; !ok {
+				u := data.User{
+					ID:          uID.UUID,
+					Email:       uEmail.String,
+					Name:        uName.String,
+					IsSuperuser: uSuper.Valid && uSuper.Bool,
+					WebsiteURL:  uWebsite.String,
+					HasAvatar:   avatarID.Valid,
+				}
+
 				// Calculate commenter roles
-				isSuper := uSuper.Valid && uSuper.Bool
-				isOwner := isSuper || duIsOwner.Valid && duIsOwner.Bool
+				isOwner := u.IsSuperuser || duIsOwner.Valid && duIsOwner.Bool
 				isMod := isOwner || duIsModerator.Valid && duIsModerator.Bool
 
-				// Instantiate a new commenter model
-				uc := models.Commenter{
-					HasAvatar:   avatarID.Valid,
-					ID:          strfmt.UUID(uID.UUID.String()),
-					IsCommenter: isMod || !duIsCommenter.Valid || duIsCommenter.Bool,
-					IsModerator: isMod,
-					Name:        uName.String,
-					WebsiteURL:  strfmt.URI(uWebsite.String),
-				}
-
-				// Only include the email if the querying user is a moderator
-				if isModerator {
-					uc.Email = strfmt.Email(uEmail.String)
-				}
-
-				// Add the commenter to the map
-				commenterMap[uID.UUID] = &uc
+				// Convert the user into a commenter and add it to the map
+				commenterMap[uID.UUID] = u.ToCommenter(isMod || !duIsCommenter.Valid || duIsCommenter.Bool, isMod, isModerator)
 			}
 		}
 

@@ -43,6 +43,9 @@ type UserService interface {
 	FindUserByID(id *uuid.UUID) (*data.User, error)
 	// FindUserBySession finds and returns a user and the related session by the given user and session ID
 	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error)
+	// GetMaxUserAuthorisations returns the maximum authorisations the user with curUserID has on the user with userID,
+	// across all domain curUserID is registered on
+	GetMaxUserAuthorisations(userID, curUserID *uuid.UUID) (isOwner, isModerator, isCommenter bool, err error)
 	// List fetches and returns a list of users the specified user has rights to, optionally in a specific domain.
 	//   - domainID is an optional domain ID to filter the users by. If nil, returns users for all domains the current user owns.
 	//   - superuser indicates whether the current user is a superuser
@@ -340,6 +343,31 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 	}
 }
 
+func (svc *userService) GetMaxUserAuthorisations(userID, curUserID *uuid.UUID) (isOwner, isModerator, isCommenter bool, err error) {
+	logger.Debugf("userService.GetMaxUserAuthorisations(%s, %s)", userID, curUserID)
+
+	// Prepare a statement
+	q := db.Dialect().
+		From(goqu.T("cm_domains_users").As("du")).
+		// Select maximum values for curUserID...
+		Select(goqu.MAX("du.is_owner"), goqu.MAX("du.is_moderator"), goqu.MAX("du.is_commenter")).
+		// ... of all domains userID is registered on
+		Where(goqu.Ex{
+			"du.user_id":   curUserID,
+			"du.domain_id": goqu.Any(db.Dialect().Select("domain_id").From(goqu.T("cm_domains_users")).Where(goqu.Ex{"user_id": userID})),
+		})
+
+	// Query the database
+	var owner, moderator, commenter sql.NullBool
+	if err = db.SelectRow(q).Scan(&owner, &moderator, &commenter); err != nil {
+		return false, false, false, translateDBErrors(err)
+	}
+	return owner.Valid && owner.Bool,
+		moderator.Valid && moderator.Bool,
+		commenter.Valid && commenter.Bool,
+		nil
+}
+
 func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.User, error) {
 	logger.Debugf("userService.List(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
@@ -449,11 +477,8 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 		}
 		u.HasAvatar = avatarID.Valid
 
-		// Determine which page fields the user is allowed to see
-		if !superuser {
-			u = *u.AsNonSuperuser()
-		}
-		us = append(us, u.ToDTO(isOwner, isModerator, isCommenter))
+		// Limit the visible fields and convert into an API model
+		us = append(us, u.WithClearance(superuser, true, true).ToDTO(isOwner, isModerator, isCommenter))
 	}
 
 	// Verify Next() didn't error
