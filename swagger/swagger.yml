@@ -665,8 +665,9 @@ definitions:
         description: Optional user's avatar image
         x-omitempty: false
         x-isnullable: false
-      websiteURL:
+      websiteUrl:
         type: string
+        format: uri
         description: Optional user's website URL
       isOwner:
         type: boolean
@@ -2190,6 +2191,33 @@ paths:
                 items:
                   $ref: "#/definitions/domain"
                 description: Domains the current user has moderator/owner rights to
+
+    put:
+      operationId: UserUpdate
+      summary: Update properties of a user
+      tags:
+        - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - user
+            properties:
+              user:
+                $ref: "#/definitions/user"
+                description: User properties
+      responses:
+        200:
+          description: User has been updated
+          schema:
+            type: object
+            properties:
+              user:
+                $ref: "#/definitions/user"
+                description: The updated user
 
   /users/{uuid}/avatar:
     get:

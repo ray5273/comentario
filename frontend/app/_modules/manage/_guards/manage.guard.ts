@@ -13,6 +13,7 @@ export class ManageGuard {
 
     static readonly isDomainSelected: CanActivateFn = () => inject(ManageGuard).isDomainSelected();
     static readonly canManageDomain:  CanActivateFn = () => inject(ManageGuard).canManageDomain();
+    static readonly isSuper:          CanActivateFn = () => inject(ManageGuard).isSuper();
     static readonly isSuperOrOwner:   CanActivateFn = () => inject(ManageGuard).isSuperOrOwner();
 
     constructor(
@@ -38,6 +39,16 @@ export class ManageGuard {
                 map(data => data.domain && (data.principal?.isSuperuser || data.domainUser?.isOwner) ?
                     true :
                     this.router.parseUrl(Paths.manage.domains)));
+    }
+
+    /**
+     * Check if the current user is a superuser, and return either true, or the domain manager route.
+     */
+    isSuper(): Observable<boolean | UrlTree> {
+        return this.domainSelectorSvc.domainUserIdps
+            .pipe(
+                first(),
+                map(data => data.principal?.isSuperuser || this.router.parseUrl(Paths.manage.domains)));
     }
 
     /**

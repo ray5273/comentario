@@ -4,26 +4,23 @@ import (
 	"bytes"
 	"database/sql"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/internal/util"
 	"io"
+	"strings"
 )
 
 func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
-	// Extract user ID
-	userID, err := data.DecodeUUID(params.UUID)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
-	}
-
 	// Fetch the user
-	u, err := svc.TheUserService.FindUserByID(userID)
-	if err != nil {
-		return respServiceError(err)
+	u, r := userGet(params.UUID)
+	if r != nil {
+		return r
 	}
 
 	// Fetch user authorisations
@@ -96,4 +93,84 @@ func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder 
 		avatar := ua.Get(data.UserAvatarSizeFromStr(swag.StringValue(params.Size)))
 		return api_general.NewUserAvatarGetOK().WithPayload(io.NopCloser(bytes.NewReader(avatar)))
 	}
+}
+
+func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware.Responder {
+	// Fetch the user
+	u, r := userGet(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Only a superuser can update a user
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Email, name, password can only be updated for a local user (email and name are mandatory)
+	dto := params.Body.User
+	email := data.EmailToString(dto.Email)
+	name := strings.TrimSpace(dto.Name)
+	password := dto.Password
+	if u.IsLocal() {
+		if !util.IsValidEmail(email) {
+			return respBadRequest(ErrorInvalidPropertyValue.WithDetails("email"))
+		}
+		if name == "" {
+			return respBadRequest(ErrorImmutableProperty.WithDetails("name"))
+		}
+		u.WithEmail(email).WithName(name)
+
+		// Update password only if it's provided
+		if password != "" {
+			u.WithPassword(password)
+		}
+
+	} else {
+		// Federated user
+		if email != "" {
+			return respBadRequest(ErrorImmutableProperty.WithDetails("email"))
+		}
+		if name != "" {
+			return respBadRequest(ErrorImmutableProperty.WithDetails("name"))
+		}
+		if password != "" {
+			return respBadRequest(ErrorImmutableProperty.WithDetails("password"))
+		}
+	}
+
+	// Update user properties
+	u.WithConfirmed(dto.Confirmed).
+		WithRemarks(strings.TrimSpace(dto.Remarks)).
+		WithSuperuser(dto.IsSuperuser).
+		WithWebsiteURL(data.URIToString(dto.WebsiteURL))
+
+	// Persist the user
+	if err := svc.TheUserService.Update(u); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewUserUpdateOK().
+		WithPayload(&api_general.UserUpdateOKBody{
+			User: u.ToDTO(sql.NullBool{}, sql.NullBool{}, sql.NullBool{}),
+		})
+}
+
+// userGet parses a string UUID and fetches the corresponding user
+func userGet(id strfmt.UUID) (*data.User, middleware.Responder) {
+	// Extract user ID
+	userID, err := data.DecodeUUID(id)
+	if err != nil {
+		return nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(id)))
+	}
+
+	// Fetch the user
+	user, err := svc.TheUserService.FindUserByID(userID)
+	if err != nil {
+		return nil, respServiceError(err)
+	}
+
+	// Succeeded
+	return user, nil
 }

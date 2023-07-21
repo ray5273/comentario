@@ -4,7 +4,7 @@ import { By } from '@angular/platform-browser';
 import { SpinnerDirective, SpinnerSize } from './spinner.directive';
 
 @Component({
-    template: '<button [appSpinner]="value" [spinnerSize]="size"></button>',
+    template: '<button [appSpinner]="value" [spinnerSize]="size">text</button>',
 })
 class TestComponent {
     value = false;

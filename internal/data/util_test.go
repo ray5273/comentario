@@ -59,6 +59,25 @@ func TestEmailPtrToString(t *testing.T) {
 	}
 }
 
+func TestEmailToString(t *testing.T) {
+	tests := []struct {
+		name string
+		v    strfmt.Email
+		want string
+	}{
+		{"empty     ", "", ""},
+		{"value     ", strfmt.Email("whatever@foo.bar"), "whatever@foo.bar"},
+		{"whitespace", strfmt.Email("  spaces@foo.bar\n "), "spaces@foo.bar"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := EmailToString(tt.v); got != tt.want {
+				t.Errorf("EmailToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNullBoolToPtr(t *testing.T) {
 	bt, bf := true, false
 	tests := []struct {

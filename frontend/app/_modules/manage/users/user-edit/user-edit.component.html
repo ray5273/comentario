@@ -1,0 +1,86 @@
+<!-- Heading -->
+<h1 i18n="heading">Edit user</h1>
+
+<!-- Edit form -->
+<form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
+    <fieldset [disabled]="loading.active || saving.active">
+        <!-- Name -->
+        <div class="mb-3 row">
+            <label for="name" class="col-sm-3 col-form-label colon fw-bold" i18n>Name</label>
+            <div class="col-sm-9">
+                <input formControlName="name" type="text" class="form-control" id="name"
+                       [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
+                       [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid">
+                <div class="invalid-feedback" i18n>Please enter a valid value.</div>
+            </div>
+        </div>
+
+        <!-- Email -->
+        <div class="mb-3 row">
+            <label for="email" class="col-sm-3 col-form-label colon fw-bold" i18n>Email</label>
+            <div class="col-sm-9">
+                <input formControlName="email" type="email" class="form-control" id="email"
+                       [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
+                       [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
+                       placeholder="user@example.com">
+                <div class="invalid-feedback" i18n>Please enter a valid email.</div>
+            </div>
+        </div>
+
+        <!-- Password, only when enabled -->
+        <div *ngIf="form.controls.password.enabled" class="mb-3 row">
+            <label for="password" class="col-sm-3 col-form-label colon fw-bold" i18n>Password</label>
+            <div class="col-sm-9">
+                <app-password-input formControlName="password" [strong]="true" placeholder="(unchanged)" id="password"
+                                    i18n-placeholder></app-password-input>
+            </div>
+        </div>
+
+        <!-- Website URL -->
+        <div class="mb-3 row">
+            <label for="websiteUrl" class="col-sm-3 col-form-label colon fw-bold" i18n>Website URL</label>
+            <div class="col-sm-9">
+                <input formControlName="websiteUrl" type="url" class="form-control" id="websiteUrl"
+                       [class.is-valid]="form.controls.websiteUrl.touched && form.controls.websiteUrl.valid"
+                       [class.is-invalid]="form.controls.websiteUrl.touched && form.controls.websiteUrl.invalid"
+                       placeholder="https://example.com">
+                <div class="invalid-feedback" i18n>Please enter a valid URL.</div>
+            </div>
+        </div>
+
+        <!-- Remarks -->
+        <div class="mb-3 row">
+            <label for="remarks" class="col-sm-3 col-form-label colon fw-bold" i18n>Remarks</label>
+            <div class="col-sm-9">
+                <textarea formControlName="remarks" class="form-control" id="remarks" rows="4"
+                       [class.is-valid]="form.controls.remarks.touched && form.controls.remarks.valid"
+                       [class.is-invalid]="form.controls.remarks.touched && form.controls.remarks.invalid"></textarea>
+                <div class="invalid-feedback" i18n>Please enter a valid value.</div>
+            </div>
+        </div>
+
+        <!-- Checkboxes -->
+        <div class="mb-3 row">
+            <div class="offset-sm-3 col-sm-9">
+                <!-- Email confirmed -->
+                <div class="form-check me-3">
+                    <input formControlName="confirmed" type="checkbox" class="form-check-input" id="confirmed">
+                    <label class="form-check-label" for="confirmed" i18n>Email confirmed</label>
+                </div>
+                <!-- Superuser -->
+                <div class="form-check me-3">
+                    <input formControlName="superuser" type="checkbox" class="form-check-input" id="superuser">
+                    <label class="form-check-label" for="superuser" i18n>Superuser</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-footer">
+            <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
+            <button [appSpinner]="saving.active" type="submit" class="btn btn-primary">
+                <ng-container i18n="action">Save</ng-container>
+            </button>
+        </div>
+    </fieldset>
+</form>

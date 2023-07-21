@@ -170,7 +170,7 @@ export class CommentListComponent implements OnInit, OnChanges {
             .subscribe(() => {
                 const i = this.comments?.indexOf(c);
                 if (i && i >= 0) {
-                    this.comments?.splice(i, 1)
+                    this.comments?.splice(i, 1);
                 }
             });
     }

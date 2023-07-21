@@ -19,4 +19,4 @@ export const provideLanguage = (localeId: string): Language => {
     // Try to find the language that corresponds to the current locale by its code, falling back to the first language
     // (with the highest priority)
     return languages.find(l => l.code === localeId) ?? languages[0];
-}
+};

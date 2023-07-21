@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { first } from 'rxjs';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
@@ -16,7 +17,6 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Utils } from '../../../../_utils/utils';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
-import { first } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -77,40 +77,8 @@ export class DomainEditComponent implements OnInit {
         this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
 
         // Disable numeric controls when the corresponding checkbox is off
-        this.ctlModNumCommentsOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.ctlModNumComments));
-        this.ctlModUserAgeDaysOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.ctlModUserAgeDays));
-    }
-
-    get ctlAuthSso(): AbstractControl<boolean> {
-        return this.form.get('authSso')!;
-    }
-
-    get ctlHost(): AbstractControl<string> {
-        return this.form.get('host')!;
-    }
-
-    get ctlModNumComments(): AbstractControl<number> {
-        return this.form.get('modNumComments')!;
-    }
-
-    get ctlModNumCommentsOn(): AbstractControl<boolean> {
-        return this.form.get('modNumCommentsOn')!;
-    }
-
-    get ctlModUserAgeDays(): AbstractControl<number> {
-        return this.form.get('modUserAgeDays')!;
-    }
-
-    get ctlModUserAgeDaysOn(): AbstractControl<boolean> {
-        return this.form.get('modUserAgeDaysOn')!;
-    }
-
-    get ctlName(): AbstractControl<string> {
-        return this.form.get('name')!;
-    }
-
-    get ctlSsoUrl(): AbstractControl<string> {
-        return this.form.get('ssoUrl')!;
+        this.form.controls.modNumCommentsOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.modNumComments));
+        this.form.controls.modUserAgeDaysOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.modUserAgeDays));
     }
 
     ngOnInit(): void {
@@ -148,11 +116,11 @@ export class DomainEditComponent implements OnInit {
 
         // Host can't be changed for an existing domain
         if (!this.isNew) {
-            this.ctlHost.disable();
+            this.form.controls.host.disable();
         }
 
         // SSO URL is only relevant when SSO auth is enabled
-        this.ctlAuthSso.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.ctlSsoUrl));
+        this.form.controls.authSso.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.ssoUrl));
     }
 
     submit() {

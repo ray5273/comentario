@@ -26,7 +26,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     static readonly Regexes = {
         upper:   /[A-Z]/,
         lower:   /[a-z]/,
-        special: /[-\d!"#$%&'()*+,./:;<=>?@\[\\\]^_`{|}~]/,
+        special: /[-\d!"#$%&'()*+,./:;<=>?@[\\\]^_`{|}~]/,
     };
 
     /** Whether the password is required to be entered. */

@@ -14,8 +14,8 @@
             <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
             <div class="col-sm-9">
                 <input formControlName="host" type="text" class="form-control" id="host"
-                       [class.is-valid]="isNew && ctlHost.touched && ctlHost.valid"
-                       [class.is-invalid]="isNew && ctlHost.touched && ctlHost.invalid"
+                       [class.is-valid]="isNew && form.controls.host.touched && form.controls.host.valid"
+                       [class.is-invalid]="isNew && form.controls.host.touched && form.controls.host.invalid"
                        required minlength="1" maxlength="253" placeholder="example.com">
                 <!-- Invalid feedback -->
                 <div class="invalid-feedback">
@@ -32,8 +32,8 @@
             <label for="name" class="col-sm-3 col-form-label colon fw-bold" i18n>Name</label>
             <div class="col-sm-9">
                 <input formControlName="name" type="text" class="form-control" id="name"
-                       [class.is-valid]="ctlName.touched && ctlName.valid"
-                       [class.is-invalid]="ctlName.touched && ctlName.invalid"
+                       [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
+                       [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
                        maxlength="255" placeholder="My blog" i18n-placeholder>
                 <div class="invalid-feedback" i18n>Value is too long.</div>
             </div>
@@ -59,10 +59,10 @@
                     <label class="form-check-label colon" for="modNumCommentsOn" i18n>Author has less than this number of approved comments</label>
                 </div>
                 <!-- Number of approved comments -->
-                <div *ngIf="ctlModNumComments.enabled" class="mb-3">
+                <div *ngIf="form.controls.modNumComments.enabled" class="mb-3">
                     <input formControlName="modNumComments" type="number" class="form-control" id="modNumComments"
-                           [class.is-valid]="ctlModNumComments.touched && ctlModNumComments.valid"
-                           [class.is-invalid]="ctlModNumComments.touched && ctlModNumComments.invalid"
+                           [class.is-valid]="form.controls.modNumComments.touched && form.controls.modNumComments.valid"
+                           [class.is-invalid]="form.controls.modNumComments.touched && form.controls.modNumComments.invalid"
                            required min="1" max="999">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">
@@ -75,10 +75,10 @@
                     <label class="form-check-label colon" for="modUserAgeDaysOn" i18n>Author is registered less than this number of days ago</label>
                 </div>
                 <!-- Number of days for minimum user age -->
-                <div *ngIf="ctlModUserAgeDays.enabled" class="mb-3">
+                <div *ngIf="form.controls.modUserAgeDays.enabled" class="mb-3">
                     <input formControlName="modUserAgeDays" type="number" class="form-control" id="modUserAgeDays"
-                           [class.is-valid]="ctlModUserAgeDays.touched && ctlModUserAgeDays.valid"
-                           [class.is-invalid]="ctlModUserAgeDays.touched && ctlModUserAgeDays.invalid"
+                           [class.is-valid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.valid"
+                           [class.is-invalid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.invalid"
                            required min="1" max="999">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">
@@ -151,11 +151,11 @@
                 </div>
 
                 <!-- SSO server URL -->
-                <div *ngIf="ctlAuthSso.value" class="mb-3">
+                <div *ngIf="form.controls.authSso.value" class="mb-3">
                     <label for="ssoUrl" class="col-sm-3 col-form-label colon" i18n>SSO server URL</label>
                     <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
-                           [class.is-valid]="ctlSsoUrl.touched && ctlSsoUrl.valid"
-                           [class.is-invalid]="ctlSsoUrl.touched && ctlSsoUrl.invalid"
+                           [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
+                           [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
                            required minlength="1" maxlength="253" placeholder="https://sso.example.com">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">

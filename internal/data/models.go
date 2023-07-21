@@ -310,7 +310,7 @@ func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.Use
 		SystemAccount: u.SystemAccount,
 		UserBanned:    NullUUIDStr(&u.UserBanned),
 		UserCreated:   NullUUIDStr(&u.UserCreated),
-		WebsiteURL:    u.WebsiteURL,
+		WebsiteURL:    strfmt.URI(u.WebsiteURL),
 	}
 }
 
@@ -386,10 +386,22 @@ func (u *User) WithPassword(s string) *User {
 	return u
 }
 
+// WithRemarks sets the Remarks value
+func (u *User) WithRemarks(s string) *User {
+	u.Remarks = s
+	return u
+}
+
 // WithSignup sets the SignupIP and SignupCountry values based on the provided HTTP request and URL
 func (u *User) WithSignup(req *http.Request, url string) *User {
 	u.SignupIP, u.SignupCountry = util.UserIPCountry(req)
 	u.SignupHost = url
+	return u
+}
+
+// WithSuperuser sets the IsSuperuser value
+func (u *User) WithSuperuser(b bool) *User {
+	u.IsSuperuser = b
 	return u
 }
 

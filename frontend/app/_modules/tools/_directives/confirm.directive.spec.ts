@@ -10,10 +10,10 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 
 @Component({
     template: `
-        <button appConfirm="Are you sure dude" (confirmed)="confirmed()"></button>
-        <button [appConfirm]="t" confirmTitle="HI THERE" confirmAction="YES" [confirmIcon]="faKey" (confirmed)="confirmed()"></button>
+        <button appConfirm="Are you sure dude" (confirmed)="confirmed()">1</button>
+        <button [appConfirm]="t" confirmTitle="HI THERE" confirmAction="YES" [confirmIcon]="faKey" (confirmed)="confirmed()">2</button>
         <ng-template #t>I am text</ng-template>
-        <button appConfirm="" (confirmed)="confirmed()"></button>
+        <button appConfirm="" (confirmed)="confirmed()">3</button>
     `,
 })
 class TestComponent {

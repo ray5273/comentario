@@ -33,6 +33,7 @@ import { PagePropertiesComponent } from './pages/page-properties/page-properties
 import { CommentListComponent } from './comments/comment-list/comment-list.component';
 import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
+import { UserEditComponent } from './users/user-edit/user-edit.component';
 
 @NgModule({
     declarations: [
@@ -58,6 +59,7 @@ import { UserPropertiesComponent } from './users/user-properties/user-properties
         StatsChartComponent,
         StatsComponent,
         UserAvatarComponent,
+        UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
     ],

@@ -16,7 +16,7 @@ export class Animations {
         return trigger(`fadeIn-${speed}`, [
             transition(':enter', [style({opacity: 0}), animate(d, style({opacity: 1}))]),
         ]);
-    };
+    }
 
     /**
      * Animation trigger that makes an element appearing in/disappearing from the DOM to correspondingly fade in or out.
@@ -27,7 +27,7 @@ export class Animations {
             transition(':enter', [style({opacity: 0}), animate(d, style({opacity: 1}))]),
             transition(':leave', [animate(d, style({opacity: 0}))]),
         ]);
-    };
+    }
 
     /**
      * Animation trigger that makes an element fade in/out on every state change.
@@ -37,5 +37,5 @@ export class Animations {
         return trigger(`fadeInOnChange-${speed}`, [
             transition('* => *', [style({opacity: 0}), animate(d, style({opacity: 1}))]),
         ]);
-    };
+    }
 }

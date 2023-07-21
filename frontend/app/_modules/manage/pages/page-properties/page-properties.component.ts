@@ -46,7 +46,7 @@ export class PagePropertiesComponent implements OnInit {
     ) {}
 
     /**
-     * Whether the current user is the owner of the domain (or a superuser).
+     * Whether the current user is an owner of the domain (or a superuser).
      */
     get isOwner(): boolean {
         return !!(this.principal?.isSuperuser || this.domainUser?.isOwner);

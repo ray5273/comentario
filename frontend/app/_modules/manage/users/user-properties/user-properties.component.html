@@ -18,10 +18,25 @@
             <!-- Detail table -->
             <div class="col-sm">
                 <dl id="pageDetailTable" class="detail-table">
+                    <!-- ID -->
+                    <div>
+                        <dt i18n>ID</dt>
+                        <dd>{{ user.id }}</dd>
+                    </div>
+                    <!-- Federated user -->
+                    <div *ngIf="user.federatedIdP as v">
+                        <dt i18n>Federated user</dt>
+                        <dd><app-idp-icon [idpId]="v" class="me-1"></app-idp-icon>{{ v }}/{{ user.federatedId || '*' }}</dd>
+                    </div>
                     <!-- Name -->
                     <div>
                         <dt i18n>Name</dt>
                         <dd>{{ user.name }}</dd>
+                    </div>
+                    <!-- Email -->
+                    <div *ngIf="user.email as v">
+                        <dt i18n>Email</dt>
+                        <dd>{{ v }}</dd>
                     </div>
                     <!-- Banned -->
                     <div *ngIf="user.banned">
@@ -31,6 +46,16 @@
                             <span *ngIf="user.bannedTime as v" class="text-muted"> ({{ v | datetime }})</span>
                         </dd>
                     </div>
+                    <!-- Remarks -->
+                    <div *ngIf="user.remarks as v">
+                        <dt i18n>Remarks</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                    <!-- Website URL -->
+                    <div *ngIf="user.websiteUrl as v">
+                        <dt i18n>Website URL</dt>
+                        <dd><a [href]="v" target="_blank" rel="nofollow noopener noreferrer">{{ v }}</a></dd>
+                    </div>
                     <!-- Confirmed -->
                     <div *ngIf="user.confirmed">
                         <dt i18n>Confirmed</dt>
@@ -38,6 +63,11 @@
                             <app-checkmark></app-checkmark>
                             <span *ngIf="user.confirmedTime as v" class="text-muted"> ({{ v | datetime }})</span>
                         </dd>
+                    </div>
+                    <!-- Superuser -->
+                    <div *ngIf="user.isSuperuser">
+                        <dt i18n>Superuser</dt>
+                        <dd><app-checkmark></app-checkmark></dd>
                     </div>
                     <!-- Created -->
                     <div *ngIf="user.createdTime | datetime as v">

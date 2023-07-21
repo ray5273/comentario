@@ -101,6 +101,9 @@ overrides:
         - code: 140
       no-underscore-dangle:
         - 'off'
+      semi:
+        - error
+        - always
 
   # Frontend HTML files
   - files: 'frontend/**/*.html'

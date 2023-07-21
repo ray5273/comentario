@@ -548,8 +548,11 @@ func (svc *userService) Update(user *data.User) error {
 
 	// Update the record
 	if err := db.ExecOne(
-		"update cm_users set email=$1, name=$2, password_hash=$3, website_url=$4, federated_id=$5 where id=$6;",
-		user.Email, user.Name, user.PasswordHash, user.WebsiteURL, user.FederatedID, &user.ID,
+		"update cm_users "+
+			"set email=$1, name=$2, password_hash=$3, is_superuser=$4, confirmed=$5, ts_confirmed=$6, remarks=$7, website_url=$8, federated_id=$9 "+
+			"where id=$10;",
+		user.Email, user.Name, user.PasswordHash, user.IsSuperuser, user.Confirmed, user.ConfirmedTime, user.Remarks,
+		user.WebsiteURL, user.FederatedID, &user.ID,
 	); err != nil {
 		logger.Errorf("userService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)

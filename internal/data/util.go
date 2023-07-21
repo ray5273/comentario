@@ -22,6 +22,11 @@ func EmailPtrToString(email *strfmt.Email) string {
 	return TrimmedString((*string)(email))
 }
 
+// EmailToString converts a value of strfmt.Email into a string
+func EmailToString(email strfmt.Email) string {
+	return strings.TrimSpace(string(email))
+}
+
 // NullBoolToPtr converts a nullable bool value into *bool
 func NullBoolToPtr(b sql.NullBool) *bool {
 	if !b.Valid {

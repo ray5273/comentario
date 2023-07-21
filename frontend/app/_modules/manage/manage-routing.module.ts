@@ -16,6 +16,7 @@ import { ManageGuard } from './_guards/manage.guard';
 import { PageManagerComponent } from './pages/page-manager/page-manager.component';
 import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
+import { UserEditComponent } from './users/user-edit/user-edit.component';
 
 const children: Routes = [
     // Default route
@@ -42,6 +43,7 @@ const children: Routes = [
     // Users
     {path: 'users',              component: UserManagerComponent,      canActivate: [ManageGuard.isSuperOrOwner]},
     {path: 'users/:id',          component: UserPropertiesComponent},
+    {path: 'users/:id/edit',     component: UserEditComponent,         canActivate: [ManageGuard.isSuper]},
 
     // Stats
     {path: 'stats',              component: StatsComponent},
