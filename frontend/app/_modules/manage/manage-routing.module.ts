@@ -12,9 +12,10 @@ import { CommentManagerComponent } from './comments/comment-manager/comment-mana
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
 import { StatsComponent } from './stats/stats.component';
 import { DomainOperationsComponent } from './domain-operations/domain-operations.component';
-import { ManageGuard } from "./_guards/manage.guard";
+import { ManageGuard } from './_guards/manage.guard';
 import { PageManagerComponent } from './pages/page-manager/page-manager.component';
-import {PagePropertiesComponent} from "./pages/page-properties/page-properties.component";
+import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
+import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 
 const children: Routes = [
     // Default route
@@ -40,6 +41,7 @@ const children: Routes = [
 
     // Users
     {path: 'users',              component: UserManagerComponent,      canActivate: [ManageGuard.isSuperOrOwner]},
+    {path: 'users/:id',          component: UserPropertiesComponent},
 
     // Stats
     {path: 'stats',              component: StatsComponent},

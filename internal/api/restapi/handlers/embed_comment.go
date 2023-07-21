@@ -87,6 +87,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		user,
 		&page.DomainID,
 		&page.ID,
+		nil,
 		user.IsSuperuser || domainUser.CanModerate(),
 		true,
 		true,

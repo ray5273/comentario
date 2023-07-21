@@ -211,11 +211,13 @@ func NewUser(email, name string) *User {
 	}
 }
 
-// WithClearance returns a clone of the user with a limited set of properties, depending on the specified authorisations
-func (u *User) WithClearance(isSuperuser, isOwner, isModerator bool) *User {
-	// Superuser sees everything
+// CloneWithClearance returns a clone of the user with a limited set of properties, depending on the specified
+// authorisations
+func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User {
+	// Superuser sees everything: make a perfect clone
 	if isSuperuser {
-		return u
+		c := *u
+		return &c
 	}
 
 	// Start with properties matching the Commenter model
@@ -544,8 +546,16 @@ type Domain struct {
 	CountViews       int64                 // Total number of views
 }
 
-// AsNonOwner returns a clone of the domain with a limited set of properties, which a non-owner user is allowed to see
-func (d *Domain) AsNonOwner() *Domain {
+// CloneWithClearance returns a clone of the domain with a limited set of properties, depending on the specified
+// authorisations
+func (d *Domain) CloneWithClearance(isSuperuser, isOwner bool) *Domain {
+	// Superuser and owner see everything: make a perfect clone
+	if isSuperuser || isOwner {
+		c := *d
+		return &c
+	}
+
+	// Non-owner only sees what's publicly available
 	return &Domain{
 		ID:            d.ID,
 		Host:          d.Host,
@@ -571,7 +581,12 @@ func (d *Domain) DisplayName() string {
 
 // RootURL returns the root URL of the domain, without the trailing slash
 func (d *Domain) RootURL() string {
-	return fmt.Sprintf("%s://%s", util.If(d.IsHTTPS, "https", "http"), d.Host)
+	return fmt.Sprintf("%s://%s", d.Scheme(), d.Host)
+}
+
+// Scheme returns the scheme of the domain, either HTTPS or HTTP
+func (d *Domain) Scheme() string {
+	return util.If(d.IsHTTPS, "https", "http")
 }
 
 // SSOSecretStr returns the SSO secret as a nullable hex string
@@ -719,8 +734,16 @@ func (p *DomainPage) ToDTO() *models.DomainPage {
 	}
 }
 
-// AsNonOwner returns a clone of the page with a limited set of properties, which a non-owner user is allowed to see
-func (p *DomainPage) AsNonOwner() *DomainPage {
+// CloneWithClearance returns a clone of the page with a limited set of properties, depending on the specified
+// authorisations
+func (p *DomainPage) CloneWithClearance(isSuperuser, isOwner bool) *DomainPage {
+	// Superuser and owner see everything: make a perfect clone
+	if isSuperuser || isOwner {
+		c := *p
+		return &c
+	}
+
+	// Non-owner only sees what's publicly available
 	return &DomainPage{
 		ID:            p.ID,
 		DomainID:      p.DomainID,

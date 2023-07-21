@@ -2001,6 +2001,22 @@ paths:
                 $ref: "#/definitions/domainPage"
                 description: Domain page properties
 
+    put:
+      operationId: DomainPageUpdateTitle
+      summary: Update the title of a domain page
+      tags:
+        - ApiGeneral
+      responses:
+        200:
+          description: Domain page title has been fetched and, possibly, updated
+          schema:
+            type: object
+            properties:
+              changed:
+                type: boolean
+                description: Whether the title was changed
+                x-omitempty: false
+
   #---------------------------------------------------------------------------------------------------------------------
   # Comments
   #---------------------------------------------------------------------------------------------------------------------
@@ -2017,6 +2033,12 @@ paths:
           name: pageId
           required: false
           description: Optional domain page ID
+          type: string
+          format: uuid
+        - in: query
+          name: userId
+          required: false
+          description: Optional user ID
           type: string
           format: uuid
         - in: query
@@ -2147,7 +2169,7 @@ paths:
 
     get:
       operationId: UserGet
-      summary: Get properties of a user
+      summary: Get properties of a user, including domain users in domains the current user has moderator/owner rights to
       tags:
         - ApiGeneral
       responses:
@@ -2158,6 +2180,16 @@ paths:
             properties:
               user:
                 $ref: "#/definitions/user"
+              domainUsers:
+                type: array
+                items:
+                  $ref: "#/definitions/domainUser"
+                description: Current user's properties on domains (can be linked to a domain using domainId)
+              domains:
+                type: array
+                items:
+                  $ref: "#/definitions/domain"
+                description: Domains the current user has moderator/owner rights to
 
   /users/{uuid}/avatar:
     get:

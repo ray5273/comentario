@@ -21,6 +21,9 @@ var ThePageService PageService = &pageService{}
 type PageService interface {
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
+	// FetchUpdatePageTitle fetches and updates the title of the provided page based on its URL, returning if there was
+	// any change
+	FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error)
 	// FindByDomainPath finds and returns a page for the specified domain ID and path combination
 	FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error)
 	// FindByID finds and returns a page by its ID
@@ -82,62 +85,45 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	return nil, nil
 }
 
-func (svc *pageService) GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
-	logger.Debugf("pageService.GetRegisteringView(%#v, '%s', ...)", domain, path)
+func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error) {
+	logger.Debugf("pageService.FetchUpdatePageTitle([%s], %v)", &domain.ID, page)
 
-	// Prepare a new UUID
-	id := uuid.New()
+	var title string
+	var err error
 
-	// Query a page row
-	row := db.QueryRow(
-		"insert into cm_domain_pages as p(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
-			"values($1, $2, $3, '', false, $4, 0, 1) "+
-			"on conflict (domain_id, path) do update set count_views=p.count_views+1 "+
-			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
-		&id, &domain.ID, path, time.Now().UTC())
-
-	// Fetch the row
-	var p data.DomainPage
-	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
-		logger.Errorf("pageService.GetRegisteringView: Scan() failed: %v", err)
-		return nil, translateDBErrors(err)
-	}
-
-	// If the page was added, fetch its title in the background
-	if p.ID == id {
-		logger.Debug("pageService.GetRegisteringView: page didn't exist, created a new one with ID=%s", &id)
-		go func() {
-			if err := svc.fetchUpdatePageTitle(domain.Host, p.Path, &p.ID); err != nil {
-				logger.Errorf("pageService.GetRegisteringView: fetchUpdatePageTitle() failed: %v", err)
+	// Try to fetch the title using HTTPS
+	u := &url.URL{Scheme: domain.Scheme(), Host: domain.Host, Path: page.Path}
+	if title, err = util.HTMLTitleFromURL(u); err != nil {
+		// If failed, retry using HTTP
+		if err != nil {
+			u.Scheme = "http"
+			if title, err = util.HTMLTitleFromURL(u); err != nil {
+				// If still failed, just use the URL as the title
+				if err != nil {
+					title = u.String()
+				}
 			}
-		}()
-	}
-
-	// Also register visit details in the background
-	go func() {
-		if err := svc.insertPageView(&p, req); err != nil {
-			logger.Errorf("pageService.GetRegisteringView: insertPageView() failed: %v", err)
 		}
-	}()
+	}
 
-	// Succeeded
-	return &p, nil
-}
+	// Make sure the title doesn't exceed the size of the database field
+	if len(title) > data.MaxPageTitleLength {
+		title = title[:data.MaxPageTitleLength]
+	}
 
-func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error {
-	logger.Debugf("pageService.IncrementCounts(%s, %d, %d)", pageID, incComments, incViews)
+	// Check if there's a change needed
+	if page.Title == title {
+		return false, nil
+	}
 
-	// Update the page record
-	if err := db.ExecOne(
-		"update cm_domain_pages set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
-		incComments, incViews, pageID,
-	); err != nil {
-		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+	// Update the page in the database
+	if err := db.ExecOne("update cm_domain_pages set title=$1 where id=$2", title, &page.ID); err != nil {
+		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecOne() failed: %v", err)
+		return false, err
 	}
 
 	// Succeeded
-	return nil
+	return true, nil
 }
 
 func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error) {
@@ -179,6 +165,60 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 	return &p, nil
 }
 
+func (svc *pageService) GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
+	logger.Debugf("pageService.GetRegisteringView(%#v, '%s', ...)", domain, path)
+
+	// Prepare a new UUID
+	id := uuid.New()
+
+	// Query a page row
+	row := db.QueryRow(
+		"insert into cm_domain_pages as p(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
+			"values($1, $2, $3, '', false, $4, 0, 1) "+
+			"on conflict (domain_id, path) do update set count_views=p.count_views+1 "+
+			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
+		&id, &domain.ID, path, time.Now().UTC())
+
+	// Fetch the row
+	var p data.DomainPage
+	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
+		logger.Errorf("pageService.GetRegisteringView: Scan() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// If the page was added, fetch its title in the background
+	if p.ID == id {
+		logger.Debug("pageService.GetRegisteringView: page didn't exist, created a new one with ID=%s", &id)
+		go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
+	}
+
+	// Also register visit details in the background
+	go func() {
+		if err := svc.insertPageView(&p, req); err != nil {
+			logger.Errorf("pageService.GetRegisteringView: insertPageView() failed: %v", err)
+		}
+	}()
+
+	// Succeeded
+	return &p, nil
+}
+
+func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error {
+	logger.Debugf("pageService.IncrementCounts(%s, %d, %d)", pageID, incComments, incViews)
+
+	// Update the page record
+	if err := db.ExecOne(
+		"update cm_domain_pages set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
+		incComments, incViews, pageID,
+	); err != nil {
+		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
 func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error) {
 	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
@@ -193,7 +233,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 
 	// Add filter by domain user unless it's a superuser
 	if superuser {
-		q = q.SelectAppend(goqu.L("true"))
+		q = q.SelectAppend(goqu.L("null"))
 	} else {
 		// For regular users, only those pages are visible that the user has a domain record for
 		q = q.
@@ -261,12 +301,8 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 			return nil, translateDBErrors(err)
 		}
 
-		// Determine which page fields the user is allowed to see
-		if !superuser && (!isOwner.Valid || !isOwner.Bool) {
-			// Non-owner users are only allowed to see a limited subset of fields
-			p = *p.AsNonOwner()
-		}
-		ps = append(ps, &p)
+		// Accumulate pages, applying the current user's authorisations
+		ps = append(ps, p.CloneWithClearance(superuser, isOwner.Valid && isOwner.Bool))
 	}
 
 	// Verify Next() didn't error
@@ -292,37 +328,6 @@ func (svc *pageService) Update(page *data.DomainPage) error {
 
 	// Succeeded
 	return nil
-}
-
-// fetchUpdatePageTitle fetches and updates the title of the provided page based on its URL
-func (svc *pageService) fetchUpdatePageTitle(host, path string, pageID *uuid.UUID) error {
-	logger.Debugf("pageService.fetchUpdatePageTitle('%s', '%s')", host, path)
-
-	var title string
-	var err error
-
-	// Try to fetch the title using HTTPS
-	u := &url.URL{Scheme: "https", Host: host, Path: path}
-	if title, err = util.HTMLTitleFromURL(u); err != nil {
-		// If failed, retry using HTTP
-		if err != nil {
-			u.Scheme = "http"
-			if title, err = util.HTMLTitleFromURL(u); err != nil {
-				// If still failed, just use the URL as the title
-				if err != nil {
-					title = u.String()
-				}
-			}
-		}
-	}
-
-	// Make sure the title doesn't exceed the size of the database field
-	if len(title) > data.MaxPageTitleLength {
-		title = title[:data.MaxPageTitleLength]
-	}
-
-	// Update the page in the database
-	return db.ExecOne("update cm_domain_pages set title=$1 where id=$2", title, pageID)
 }
 
 // insertPageView registers a new page visit in the database

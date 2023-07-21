@@ -123,59 +123,6 @@ func TestUser_ColourIndex(t *testing.T) {
 	}
 }
 
-func TestDomain_AsNonOwner(t *testing.T) {
-	tests := []struct {
-		name   string
-		domain *Domain
-		want   *Domain
-	}{
-		{"zero  ", &Domain{}, &Domain{CountComments: -1, CountViews: -1}},
-		{"filled", &Domain{
-			ID:               uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
-			Name:             "Foo",
-			Host:             "Bar",
-			CreatedTime:      time.Now(),
-			IsHTTPS:          true,
-			IsReadonly:       true,
-			AuthAnonymous:    true,
-			AuthLocal:        true,
-			AuthSSO:          true,
-			SSOURL:           "https://foo.com",
-			SSOSecret:        []byte("secret"),
-			ModAnonymous:     true,
-			ModAuthenticated: true,
-			ModNumComments:   13,
-			ModUserAgeDays:   42,
-			ModLinks:         true,
-			ModImages:        true,
-			ModNotifyPolicy:  DomainModNotifyPolicyPending,
-			DefaultSort:      "ta",
-			CountComments:    394856,
-			CountViews:       1241242345,
-		},
-			&Domain{
-				ID:            uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
-				Host:          "Bar",
-				IsHTTPS:       true,
-				IsReadonly:    true,
-				AuthAnonymous: true,
-				AuthLocal:     true,
-				AuthSSO:       true,
-				SSOURL:        "https://foo.com",
-				DefaultSort:   "ta",
-				CountComments: -1,
-				CountViews:    -1,
-			}},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.domain.AsNonOwner(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("AsNonOwner() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestDomainUser_AgeInDays(t *testing.T) {
 	tests := []struct {
 		name string
@@ -217,6 +164,68 @@ func TestDomainUser_CanModerate(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.du.CanModerate(); got != tt.want {
 				t.Errorf("CanModerate() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDomain_CloneWithClearance(t *testing.T) {
+	d := Domain{
+		ID:               uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
+		Name:             "Foo",
+		Host:             "Bar",
+		CreatedTime:      time.Now(),
+		IsHTTPS:          true,
+		IsReadonly:       true,
+		AuthAnonymous:    true,
+		AuthLocal:        true,
+		AuthSSO:          true,
+		SSOURL:           "https://foo.com",
+		SSOSecret:        []byte("secret"),
+		ModAnonymous:     true,
+		ModAuthenticated: true,
+		ModNumComments:   13,
+		ModUserAgeDays:   42,
+		ModLinks:         true,
+		ModImages:        true,
+		ModNotifyPolicy:  DomainModNotifyPolicyPending,
+		DefaultSort:      "ta",
+		CountComments:    394856,
+		CountViews:       1241242345,
+	}
+	tests := []struct {
+		name   string
+		super  bool
+		owner  bool
+		domain *Domain
+		want   *Domain
+	}{
+		{"regular user, zero", false, false, &Domain{}, &Domain{CountComments: -1, CountViews: -1}},
+		{"superuser, zero", true, false, &Domain{}, &Domain{}},
+		{"owner, zero", false, true, &Domain{}, &Domain{}},
+		{"super & owner, zero", true, true, &Domain{}, &Domain{}},
+		{"regular user, filled", false, false, &d,
+			&Domain{
+				ID:            uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
+				Host:          "Bar",
+				IsHTTPS:       true,
+				IsReadonly:    true,
+				AuthAnonymous: true,
+				AuthLocal:     true,
+				AuthSSO:       true,
+				SSOURL:        "https://foo.com",
+				DefaultSort:   "ta",
+				CountComments: -1,
+				CountViews:    -1,
+			}},
+		{"superuser, filled", true, false, &d, &d},
+		{"owner, filled", false, true, &d, &d},
+		{"super & owner, filled", true, true, &d, &d},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.domain.CloneWithClearance(tt.super, tt.owner); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("CloneWithClearance() = %v, want %v", got, tt.want)
 			}
 		})
 	}

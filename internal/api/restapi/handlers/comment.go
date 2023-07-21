@@ -35,6 +35,14 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 		}
 	}
 
+	// Extract user ID
+	var userID *uuid.UUID
+	if params.UserID != nil {
+		if userID, err = data.DecodeUUID(*params.UserID); err != nil {
+			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.UserID)))
+		}
+	}
+
 	// Find the domain user, if any
 	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID)
 	if err != nil {
@@ -46,6 +54,7 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 		user,
 		domainID,
 		pageID,
+		userID,
 		user.IsSuperuser || domainUser.CanModerate(),
 		swag.BoolValue(params.Approved),
 		swag.BoolValue(params.Pending),

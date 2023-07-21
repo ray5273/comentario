@@ -6,6 +6,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -31,12 +32,22 @@ func UserGet(params api_general.UserGetParams, user *data.User) middleware.Respo
 		return respServiceError(err)
 	}
 
-	// Succeeded: apply the current user's clearance
+	// Fetch domains the current user has access to, and the corresponding domain users in relation to the user in
+	// question
+	ds, dus, err := svc.TheDomainService.ListByDomainUser(&u.ID, &user.ID, user.IsSuperuser, true, "", "", data.SortAsc, -1)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
 	return api_general.NewUserGetOK().
 		WithPayload(&api_general.UserGetOKBody{
 			User: u.
-				WithClearance(user.IsSuperuser, isOwner, isModerator).
+				// Apply the current user's clearance
+				CloneWithClearance(user.IsSuperuser, isOwner, isModerator).
 				ToDTO(sql.NullBool{}, sql.NullBool{}, sql.NullBool{}),
+			DomainUsers: data.SliceToDTOs[*data.DomainUser, *models.DomainUser](dus),
+			Domains:     data.SliceToDTOs[*data.Domain, *models.Domain](ds),
 		})
 }
 

@@ -42,14 +42,17 @@ type DomainService interface {
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
-	// ListByDomainUser fetches and returns a list of domains the specified user has any rights to, and a list of
-	// corresponding domain users.
-	//   - If superuser == true, includes all domains, including those having no record for the domain user.
+	// ListByDomainUser fetches and returns a list of domains the current user has any rights to, and a list of domain
+	// users in relation to the specified user.
+	//   - userID is the user to return domain users for.
+	//   - curUserID is the current user: only those domain this user is registered for are returned, unless superuser == true.
+	//   - If superuser == true, includes all domains, effectively ignoring curUserID.
+	//   - If withDomainUserOnly == true, returns only domains a domain user record for userID exists for
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the host.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListByDomainUser(userID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error)
+	ListByDomainUser(userID, curUserID *uuid.UUID, superuser, withDomainUserOnly bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
@@ -346,8 +349,8 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	return nil
 }
 
-func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error) {
-	logger.Debugf("domainService.ListByDomainUser(%s, %v, '%s', '%s', %s, %d)", userID, superuser, filter, sortBy, dir, pageIndex)
+func (svc *domainService) ListByDomainUser(userID, curUserID *uuid.UUID, superuser, withDomainUserOnly bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error) {
+	logger.Debugf("domainService.ListByDomainUser(%s, %s, %v, %v, '%s', '%s', %s, %d)", userID, curUserID, superuser, withDomainUserOnly, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
 	q := db.Dialect().
@@ -358,20 +361,31 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 			"d.auth_local", "d.auth_sso", "d.sso_url", "d.sso_secret", "d.mod_anonymous", "d.mod_authenticated",
 			"d.mod_num_comments", "d.mod_user_age_days", "d.mod_links", "d.mod_images", "d.mod_notify_policy",
 			"d.default_sort", "d.count_comments", "d.count_views",
-			// Domain user fields
+			// Domain user fields for userID
 			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created")
+			"du.notify_moderator", "du.ts_created",
+			// Domain user fields for curUserID
+			"duc.is_owner")
 
-	// Add filter by domain user
+	// Join domain users for userID. Use an inner join if only domains with a domain user are requested
 	duTable := goqu.T("cm_domains_users").As("du")
 	duJoinOn := goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})
+	if withDomainUserOnly {
+		q = q.Join(duTable, duJoinOn)
+	} else {
+		q = q.LeftJoin(duTable, duJoinOn)
+	}
+
+	// Add filter by domain user for the current user
+	ducTable := goqu.T("cm_domains_users").As("duc")
+	ducJoinOn := goqu.On(goqu.Ex{"duc.domain_id": goqu.I("d.id"), "duc.user_id": curUserID})
 	if superuser {
 		// Superuser can see all domains, so a domain user is optional
-		q = q.LeftJoin(duTable, duJoinOn)
+		q = q.LeftJoin(ducTable, ducJoinOn)
 
 	} else {
-		// For regular users, only those domains are visible that the user is registered for
-		q = q.Join(duTable, duJoinOn)
+		// For regular users, only show domains that the current user is registered for
+		q = q.Join(ducTable, ducJoinOn)
 	}
 
 	// Add substring filter
@@ -416,15 +430,14 @@ func (svc *domainService) ListByDomainUser(userID *uuid.UUID, superuser bool, fi
 	// Fetch the domains and domain users
 	var ds []*data.Domain
 	var dus []*data.DomainUser
+	var curUserIsOwner sql.NullBool
 	for rows.Next() {
-		if d, du, err := svc.fetchDomainUser(rows); err != nil {
+		// Fetch the domain, the domain user, and whether the current user is an owner of the domain
+		if d, du, err := svc.fetchDomainUser(rows, &curUserIsOwner); err != nil {
 			return nil, nil, translateDBErrors(err)
 		} else {
-			// If the user isn't a superuser/owner, strip the domain down
-			if !superuser && (du == nil || !du.IsOwner) {
-				d = d.AsNonOwner()
-			}
-			ds = append(ds, d)
+			// Accumulate domains, applying the current user's authorisations
+			ds = append(ds, d.CloneWithClearance(superuser, curUserIsOwner.Valid && curUserIsOwner.Bool))
 
 			// Accumulate domain users, if there's one
 			if du != nil {
@@ -742,13 +755,15 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 }
 
 // fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner
-func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.DomainUser, error) {
+func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*data.Domain, *data.DomainUser, error) {
 	var d data.Domain
 	var ssoSecret sql.NullString
 	var duID uuid.NullUUID
 	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator sql.NullBool
 	var duCreatedTime sql.NullTime
-	err := sc.Scan(
+
+	// Prepare result columns
+	cols := []any{
 		&d.ID,
 		&d.Name,
 		&d.Host,
@@ -776,8 +791,14 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner) (*data.Domain, *data.
 		&duIsCommenter,
 		&duNotifyReplies,
 		&duNotifyModerator,
-		&duCreatedTime)
-	if err != nil {
+		&duCreatedTime,
+	}
+
+	// Add extra columns, if any
+	cols = append(cols, extraCols...)
+
+	// Fetch the data
+	if err := sc.Scan(cols...); err != nil {
 		logger.Errorf("domainService.fetchDomainUser: Scan() failed: %v", err)
 		return nil, nil, err
 	} else if err := d.SetSSOSecretStr(ssoSecret); err != nil {

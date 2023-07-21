@@ -32,11 +32,13 @@
                     <label for="filterShowRejected" class="btn btn-outline-secondary" title="Show rejected" i18n-title>
                         <fa-icon [icon]="faXmark"></fa-icon>
                     </label>
-                    <!-- Show others' comments -->
-                    <input formControlName="others" type="checkbox" class="btn-check" id="filterShowOthers" autocomplete="off">
-                    <label for="filterShowOthers" class="btn btn-outline-secondary" title="Show others' comments" i18n-title>
-                        <fa-icon [icon]="faUsersRays"></fa-icon>
-                    </label>
+                    <!-- Show others' comments (only if no user is explicitly provided) -->
+                    <ng-container *ngIf="!userId">
+                        <input formControlName="others" type="checkbox" class="btn-check" id="filterShowOthers" autocomplete="off">
+                        <label for="filterShowOthers" class="btn btn-outline-secondary" title="Show others' comments" i18n-title>
+                            <fa-icon [icon]="faUsersRays"></fa-icon>
+                        </label>
+                    </ng-container>
                 </div>
             </div>
 

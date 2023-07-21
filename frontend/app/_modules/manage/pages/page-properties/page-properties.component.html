@@ -9,7 +9,7 @@
             <!-- Buttons: only for superuser/owner -->
             <div *ngIf="isOwner" class="col-sm-auto order-sm-last pb-3">
                 <!-- Update title button -->
-                <button (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
+                <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
                     <fa-icon [icon]="faRotate" class="me-1"></fa-icon>
                     <ng-container i18n>Update title</ng-container>
                 </button>

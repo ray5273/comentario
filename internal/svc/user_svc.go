@@ -350,7 +350,7 @@ func (svc *userService) GetMaxUserAuthorisations(userID, curUserID *uuid.UUID) (
 	q := db.Dialect().
 		From(goqu.T("cm_domains_users").As("du")).
 		// Select maximum values for curUserID...
-		Select(goqu.MAX("du.is_owner"), goqu.MAX("du.is_moderator"), goqu.MAX("du.is_commenter")).
+		Select(goqu.L(`bool_or("du"."is_owner")`), goqu.L(`bool_or("du"."is_moderator")`), goqu.L(`bool_or("du"."is_commenter")`)).
 		// ... of all domains userID is registered on
 		Where(goqu.Ex{
 			"du.user_id":   curUserID,
@@ -478,7 +478,7 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 		u.HasAvatar = avatarID.Valid
 
 		// Limit the visible fields and convert into an API model
-		us = append(us, u.WithClearance(superuser, true, true).ToDTO(isOwner, isModerator, isCommenter))
+		us = append(us, u.CloneWithClearance(superuser, true, true).ToDTO(isOwner, isModerator, isCommenter))
 	}
 
 	// Verify Next() didn't error

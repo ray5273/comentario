@@ -118,10 +118,12 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 }
 
 func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {
-	// Fetch domains the user has access to
+	// Fetch domains the current user has access to
 	ds, dus, err := svc.TheDomainService.ListByDomainUser(
+		&user.ID, // Fetch domain users for the current user themselves
 		&user.ID,
 		user.IsSuperuser,
+		false,
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),
@@ -305,12 +307,10 @@ func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canEdit bool) (*
 			// If no user record is present, the user isn't allowed to view the domain at all (unless it's a superuser)
 		} else if !user.IsSuperuser && domainUser == nil {
 			return nil, nil, respForbidden(ErrorUnauthorized)
-
-			// If the user isn't a superuser or domain owner, they're only allowed to view a limited set of domain
-			// properties
-		} else if !user.IsSuperuser && !domainUser.IsOwner {
-			domain = domain.AsNonOwner()
 		}
+
+		// Apply the user's authorisations
+		domain = domain.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner)
 
 		// Succeeded
 		return domain, domainUser, nil

@@ -1,0 +1,79 @@
+<!-- Header -->
+<header class="mb-3">
+    <h1 i18n="heading">User properties</h1>
+</header>
+
+<div [appSpinner]="loading.active" spinnerSize="lg">
+    <ng-container *ngIf="user else noData">
+        <div class="row">
+            <!-- Buttons: only for superuser -->
+            <div *ngIf="principal?.isSuperuser" class="col-sm-auto order-sm-last pb-3">
+                <!-- Edit user button -->
+                <a routerLink="edit" type="button" class="btn btn-secondary w-100">
+                    <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
+                    <ng-container i18n>Edit user</ng-container>
+                </a>
+            </div>
+
+            <!-- Detail table -->
+            <div class="col-sm">
+                <dl id="pageDetailTable" class="detail-table">
+                    <!-- Name -->
+                    <div>
+                        <dt i18n>Name</dt>
+                        <dd>{{ user.name }}</dd>
+                    </div>
+                    <!-- Banned -->
+                    <div *ngIf="user.banned">
+                        <dt i18n>Banned</dt>
+                        <dd>
+                            <app-checkmark></app-checkmark>
+                            <span *ngIf="user.bannedTime as v" class="text-muted"> ({{ v | datetime }})</span>
+                        </dd>
+                    </div>
+                    <!-- Confirmed -->
+                    <div *ngIf="user.confirmed">
+                        <dt i18n>Confirmed</dt>
+                        <dd>
+                            <app-checkmark></app-checkmark>
+                            <span *ngIf="user.confirmedTime as v" class="text-muted"> ({{ v | datetime }})</span>
+                        </dd>
+                    </div>
+                    <!-- Created -->
+                    <div *ngIf="user.createdTime | datetime as v">
+                        <dt i18n>Created</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Domain roles -->
+        <section>
+            <!-- Heading -->
+            <h2 i18n>Domain roles</h2>
+
+            <!-- Domain/role list -->
+            <ul *ngIf="domainUsers else noData">
+                <li *ngFor="let du of domainUsers">
+                    <a *ngIf="domains.get(du.domainId!) as d" [routerLink]="[Paths.manage.domains, d.id]">{{ d.host }}</a>
+                    <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
+                </li>
+            </ul>
+        </section>
+
+        <!-- Comments, only if there's a domain -->
+        <section *ngIf="domain">
+            <!-- Heading -->
+            <h2 i18n>Comments</h2>
+
+            <!-- Comment list -->
+            <app-comment-list [userId]="user.id"></app-comment-list>
+        </section>
+    </ng-container>
+
+    <!-- Placeholder when no data -->
+    <ng-template #noData>
+        <div class="text-center" i18n>No data available.</div>
+    </ng-template>
+</div>

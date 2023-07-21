@@ -32,6 +32,7 @@ import { DatetimePipe } from './_pipes/datetime.pipe';
 import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
 import { CommentListComponent } from './comments/comment-list/comment-list.component';
 import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
+import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 
 @NgModule({
     declarations: [
@@ -58,6 +59,7 @@ import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
         StatsComponent,
         UserAvatarComponent,
         UserManagerComponent,
+        UserPropertiesComponent,
     ],
     imports: [
         CommonModule,

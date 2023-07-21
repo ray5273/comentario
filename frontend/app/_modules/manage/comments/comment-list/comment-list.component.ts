@@ -1,4 +1,4 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
@@ -17,19 +17,26 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
+import { Utils } from '../../../../_utils/utils';
 
 @UntilDestroy()
 @Component({
     selector: 'app-comment-list',
     templateUrl: './comment-list.component.html',
 })
-export class CommentListComponent implements OnInit {
+export class CommentListComponent implements OnInit, OnChanges {
 
     /**
      * Optional page ID to load comments for. If not provided, all comments for the current domain will be loaded.
      */
     @Input()
     pageId?: string;
+
+    /**
+     * Optional user ID to load comments for. If not provided, comments by all users will be loaded.
+     */
+    @Input()
+    userId?: string;
 
     /** Logged-in principal. */
     principal?: Principal;
@@ -128,8 +135,10 @@ export class CommentListComponent implements OnInit {
                     // Load the domain list
                     const f = this.filterForm.value;
                     return this.api.commentList(
-                            this.domain!.id!, this.pageId, f.approved, f.pending, f.rejected, f.others, f.filter,
-                            ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                            this.domain!.id!, this.pageId, this.userId, f.approved, f.pending, f.rejected,
+                            // Don't apply the "Others" filter when a user is explicitly specified
+                            f.others || !!this.userId,
+                            f.filter, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
                         .pipe(this.commentsLoading.processing());
                 }))
             .subscribe(r => {
@@ -139,6 +148,18 @@ export class CommentListComponent implements OnInit {
                 // Make a map of user ID => commenter
                 r.commenters?.forEach(cr => this.commenters.set(cr.id!, cr));
             });
+    }
+
+    ngOnChanges(changes: SimpleChanges): void {
+        // Disable the "Others" filter if the user is explicitly provided
+        if (changes.userId) {
+            Utils.enableControls(!this.userId, this.filterForm.controls.others);
+        }
+
+        // Reload on page or user change
+        if (changes.pageId || changes.userId) {
+            this.load.next(true);
+        }
     }
 
     deleteComment(c: Comment) {
