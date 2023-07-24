@@ -291,7 +291,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canEdit bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse domain ID
 	if domainID, err := data.DecodeUUID(domainUUID); err != nil {
-		return nil, nil, respBadRequest(ErrorInvalidUUID)
+		return nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(domainUUID)))
 
 		// Find the domain and domain user
 	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID); err != nil {

@@ -23,7 +23,7 @@ describe('PageManagerComponent', () => {
             imports: [RouterTestingModule, ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
-                MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainUserIdps: of({})}),
                 MockProvider(ConfigService),
             ],
         });

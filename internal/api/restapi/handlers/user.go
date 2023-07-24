@@ -2,11 +2,9 @@ package handlers
 
 import (
 	"bytes"
-	"database/sql"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -16,72 +14,13 @@ import (
 	"strings"
 )
 
-func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
-	// Fetch the user
-	u, r := userGet(params.UUID)
-	if r != nil {
-		return r
-	}
-
-	// Fetch user authorisations
-	isOwner, isModerator, _, err := svc.TheUserService.GetMaxUserAuthorisations(&u.ID, &user.ID)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Fetch domains the current user has access to, and the corresponding domain users in relation to the user in
-	// question
-	ds, dus, err := svc.TheDomainService.ListByDomainUser(&u.ID, &user.ID, user.IsSuperuser, true, "", "", data.SortAsc, -1)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Succeeded
-	return api_general.NewUserGetOK().
-		WithPayload(&api_general.UserGetOKBody{
-			User: u.
-				// Apply the current user's clearance
-				CloneWithClearance(user.IsSuperuser, isOwner, isModerator).
-				ToDTO(sql.NullBool{}, sql.NullBool{}, sql.NullBool{}),
-			DomainUsers: data.SliceToDTOs[*data.DomainUser, *models.DomainUser](dus),
-			Domains:     data.SliceToDTOs[*data.Domain, *models.Domain](ds),
-		})
-}
-
-func UserList(params api_general.UserListParams, user *data.User) middleware.Responder {
-	// Extract domain ID, if any
-	var domainID *uuid.UUID
-	if params.Domain != nil {
-		var err error
-		if domainID, err = data.DecodeUUID(*params.Domain); err != nil {
-			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.Domain)))
-		}
-	}
-
-	// Fetch pages the user has access to
-	us, err := svc.TheUserService.List(
-		&user.ID,
-		domainID,
-		user.IsSuperuser,
-		swag.StringValue(params.Filter),
-		swag.StringValue(params.SortBy),
-		data.SortDirection(swag.BoolValue(params.SortDesc)),
-		int(swag.Uint64Value(params.Page)-1))
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Succeeded
-	return api_general.NewUserListOK().WithPayload(&api_general.UserListOKBody{Users: us})
-}
-
 func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder {
 	// Parse the UUID
-	if id, err := uuid.Parse(string(params.UUID)); err != nil {
-		return respBadRequest(ErrorInvalidUUID)
+	if id, err := data.DecodeUUID(params.UUID); err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
 
 		// Find the user avatar by their ID
-	} else if ua, err := svc.TheAvatarService.GetByUserID(&id); err != nil {
+	} else if ua, err := svc.TheAvatarService.GetByUserID(id); err != nil {
 		return respServiceError(err)
 
 	} else if ua == nil {
@@ -95,15 +34,64 @@ func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder 
 	}
 }
 
-func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware.Responder {
+func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
 	// Fetch the user
 	u, r := userGet(params.UUID)
 	if r != nil {
 		return r
 	}
 
-	// Only a superuser can update a user
+	// Fetch domains the current user has access to, and the corresponding domain users in relation to the user in
+	// question
+	ds, dus, err := svc.TheDomainService.ListByDomainUser(&u.ID, &user.ID, user.IsSuperuser, true, "", "", data.SortAsc, -1)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewUserGetOK().
+		WithPayload(&api_general.UserGetOKBody{
+			User:        u.ToDTO(),
+			DomainUsers: data.SliceToDTOs[*data.DomainUser, *models.DomainUser](dus),
+			Domains:     data.SliceToDTOs[*data.Domain, *models.Domain](ds),
+		})
+}
+
+func UserList(params api_general.UserListParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
 	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Fetch pages the user has access to
+	us, err := svc.TheUserService.List(
+		swag.StringValue(params.Filter),
+		swag.StringValue(params.SortBy),
+		data.SortDirection(swag.BoolValue(params.SortDesc)),
+		int(swag.Uint64Value(params.Page)-1))
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewUserListOK().
+		WithPayload(&api_general.UserListOKBody{Users: data.SliceToDTOs[*data.User, *models.User](us)})
+}
+
+func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Fetch the user
+	u, r := userGet(params.UUID)
+	if r != nil {
 		return r
 	}
 
@@ -151,10 +139,7 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 	}
 
 	// Succeeded
-	return api_general.NewUserUpdateOK().
-		WithPayload(&api_general.UserUpdateOKBody{
-			User: u.ToDTO(sql.NullBool{}, sql.NullBool{}, sql.NullBool{}),
-		})
+	return api_general.NewUserUpdateOK().WithPayload(&api_general.UserUpdateOKBody{User: u.ToDTO()})
 }
 
 // userGet parses a string UUID and fetches the corresponding user

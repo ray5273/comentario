@@ -140,10 +140,12 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	// Parse the parent ID
 	var parentID uuid.NullUUID
 	if params.Body.ParentID != "" {
-		if parentID.UUID, err = uuid.Parse(string(params.Body.ParentID)); err != nil {
-			return respBadRequest(ErrorInvalidUUID)
+		if pid, err := data.DecodeUUID(params.Body.ParentID); err != nil {
+			return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Body.ParentID)))
+		} else {
+			parentID.UUID = *pid
+			parentID.Valid = true
 		}
-		parentID.Valid = true
 	}
 
 	// Verify the domain, the page, and the user aren't readonly
@@ -277,7 +279,7 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 
 	// Parse comment ID
 	if commentID, err := data.DecodeUUID(params.UUID); err != nil {
-		return respBadRequest(ErrorInvalidUUID)
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
 
 		// Find the comment
 	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {

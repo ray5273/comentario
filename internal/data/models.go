@@ -285,7 +285,7 @@ func (u *User) ToCommenter(isCommenter, isModerator, isCurUserModerator bool) *m
 }
 
 // ToDTO converts this user into an API model
-func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.User {
+func (u *User) ToDTO() *models.User {
 	return &models.User{
 		Banned:        u.Banned,
 		BannedTime:    strfmt.DateTime(u.BannedTime.Time),
@@ -298,9 +298,6 @@ func (u *User) ToDTO(isOwner, isModerator, isCommenter sql.NullBool) *models.Use
 		FederatedIDP:  models.FederatedIdpID(u.FederatedIdP),
 		HasAvatar:     u.HasAvatar,
 		ID:            strfmt.UUID(u.ID.String()),
-		IsCommenter:   NullBoolToPtr(isCommenter),
-		IsModerator:   NullBoolToPtr(isModerator),
-		IsOwner:       NullBoolToPtr(isOwner),
 		IsSuperuser:   u.IsSuperuser,
 		Name:          u.Name,
 		Remarks:       u.Remarks,

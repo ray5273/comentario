@@ -16,7 +16,7 @@ func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) mi
 
 	// Parse page ID
 	if pageID, err := data.DecodeUUID(params.UUID); err != nil {
-		return respBadRequest(ErrorInvalidUUID)
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
 
 		// Find the page
 	} else if page, err := svc.ThePageService.FindByID(pageID); err != nil {

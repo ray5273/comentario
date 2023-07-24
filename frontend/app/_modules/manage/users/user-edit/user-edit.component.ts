@@ -79,7 +79,7 @@ export class UserEditComponent {
                 confirmed:   vals.confirmed,
                 isSuperuser: vals.superuser,
             };
-            this.api.userUpdate(this.user!.id!, {user: dto})
+            this.api.userUpdate(this.user.id!, {user: dto})
                 .pipe(this.saving.processing())
                 .subscribe(r => {
                     // Add a success toast

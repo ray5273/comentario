@@ -3,7 +3,7 @@ import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faLock } from '@fortawesome/free-solid-svg-icons';
+import { faBan, faLock } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, User } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -32,6 +32,7 @@ export class UserManagerComponent implements OnInit {
     });
 
     // Icons
+    readonly faBan  = faBan;
     readonly faLock = faLock;
 
     private loadedPageNum = 0;
@@ -66,7 +67,6 @@ export class UserManagerComponent implements OnInit {
                 // Load the domain list
                 switchMap(() =>
                     this.api.userList(
-                        undefined,
                         this.ctlFilterFilter.value,
                         ++this.loadedPageNum,
                         this.sort.property as any,

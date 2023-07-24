@@ -29,7 +29,7 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 	// Extract domain ID
 	domainID, err := data.DecodeUUID(params.Domain)
 	if err != nil {
-		return respBadRequest(ErrorInvalidUUID)
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
 	}
 
 	// Fetch pages the user has access to

@@ -669,21 +669,6 @@ definitions:
         type: string
         format: uri
         description: Optional user's website URL
-      isOwner:
-        type: boolean
-        readOnly: true
-        description: Whether the user is an owner of the domain (only in the context of a domain)
-        x-omitempty: false
-      isModerator:
-        type: boolean
-        readOnly: true
-        description: Whether the user is a moderator on this specific domain (only in the context of a domain)
-        x-omitempty: false
-      isCommenter:
-        type: boolean
-        readOnly: true
-        description: Whether the user is a commenter on this specific domain (false means the user is read-only; only in the context of a domain)
-        x-omitempty: false
       colourIndex:
         type: integer
         format: uint8
@@ -740,14 +725,6 @@ parameters:
     name: domain
     required: true
     description: Domain UUID in the query
-    type: string
-    format: uuid
-
-  queryDomainIdOptional:
-    in: query
-    name: domain
-    required: false
-    description: Optional domain UUID in the query
     type: string
     format: uuid
 
@@ -2139,7 +2116,6 @@ paths:
       tags:
         - ApiGeneral
       parameters:
-        - $ref: "#/parameters/queryDomainIdOptional"
         - $ref: "#/parameters/queryFilter"
         - $ref: "#/parameters/queryPageNumber"
         - in: query

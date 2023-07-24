@@ -4,6 +4,9 @@
     <app-domain-badge></app-domain-badge>
 </header>
 
+<!-- Info for regular users -->
+<p *ngIf="isRegularUser" i18n>Below you see all pages of {{ domain?.host }} you ever left a comment on.</p>
+
 <div [appSpinner]="pagesLoading.active" spinnerSize="lg">
     <!-- Toolbar -->
     <div class="mb-3">

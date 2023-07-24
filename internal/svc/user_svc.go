@@ -5,7 +5,6 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -43,17 +42,12 @@ type UserService interface {
 	FindUserByID(id *uuid.UUID) (*data.User, error)
 	// FindUserBySession finds and returns a user and the related session by the given user and session ID
 	FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error)
-	// GetMaxUserAuthorisations returns the maximum authorisations the user with curUserID has on the user with userID,
-	// across all domain curUserID is registered on
-	GetMaxUserAuthorisations(userID, curUserID *uuid.UUID) (isOwner, isModerator, isCommenter bool, err error)
-	// List fetches and returns a list of users the specified user has rights to, optionally in a specific domain.
-	//   - domainID is an optional domain ID to filter the users by. If nil, returns users for all domains the current user owns.
-	//   - superuser indicates whether the current user is a superuser
+	// List fetches and returns a list of users.
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	List(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.User, error)
+	List(filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, error)
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
@@ -343,33 +337,8 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 	}
 }
 
-func (svc *userService) GetMaxUserAuthorisations(userID, curUserID *uuid.UUID) (isOwner, isModerator, isCommenter bool, err error) {
-	logger.Debugf("userService.GetMaxUserAuthorisations(%s, %s)", userID, curUserID)
-
-	// Prepare a statement
-	q := db.Dialect().
-		From(goqu.T("cm_domains_users").As("du")).
-		// Select maximum values for curUserID...
-		Select(goqu.L(`bool_or("du"."is_owner")`), goqu.L(`bool_or("du"."is_moderator")`), goqu.L(`bool_or("du"."is_commenter")`)).
-		// ... of all domains userID is registered on
-		Where(goqu.Ex{
-			"du.user_id":   curUserID,
-			"du.domain_id": goqu.Any(db.Dialect().Select("domain_id").From(goqu.T("cm_domains_users")).Where(goqu.Ex{"user_id": userID})),
-		})
-
-	// Query the database
-	var owner, moderator, commenter sql.NullBool
-	if err = db.SelectRow(q).Scan(&owner, &moderator, &commenter); err != nil {
-		return false, false, false, translateDBErrors(err)
-	}
-	return owner.Valid && owner.Bool,
-		moderator.Valid && moderator.Bool,
-		commenter.Valid && commenter.Bool,
-		nil
-}
-
-func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.User, error) {
-	logger.Debugf("userService.List(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
+func (svc *userService) List(filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, error) {
+	logger.Debugf("userService.List('%s', '%s', %s, %d)", filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
 	q := db.Dialect().
@@ -384,34 +353,6 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 			"a.user_id").
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
-
-	// Add filter by domain, if necessary
-	if domainID == nil {
-		q = q.SelectAppend(goqu.L("null"), goqu.L("null"), goqu.L("null"))
-	} else {
-		q = q.SelectAppend("du.is_owner", "du.is_moderator", "du.is_commenter").
-			Join(
-				goqu.T("cm_domains_users").As("du"),
-				goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID}))
-	}
-
-	// If the current user isn't a superuser
-	if !superuser {
-		// Add filter by users registered in domains owned by the current user
-		q = q.Where(goqu.Ex{
-			"u.id": goqu.Any(
-				db.Dialect().
-					From("cm_domains_users").
-					Select("user_id").
-					Where(goqu.Ex{
-						"domain_id": goqu.Any(
-							db.Dialect().
-								From("cm_domains_users").
-								Select("domain_id").
-								Where(goqu.Ex{"user_id": userID, "is_owner": true})),
-					})),
-		})
-	}
 
 	// Add substring filter
 	if filter != "" {
@@ -453,32 +394,14 @@ func (svc *userService) List(userID, domainID *uuid.UUID, superuser bool, filter
 	defer rows.Close()
 
 	// Fetch the users
-	var us []*models.User
-	var isOwner, isModerator, isCommenter sql.NullBool
-	var fidp sql.NullString
-	var avatarID uuid.NullUUID
+	var us []*data.User
 	for rows.Next() {
-		var u data.User
-		if err := rows.Scan(
-			// User
-			&u.ID, &u.Email, &u.Name, &u.PasswordHash, &u.SystemAccount, &u.IsSuperuser, &u.Confirmed, &u.ConfirmedTime,
-			&u.CreatedTime, &u.UserCreated, &u.SignupIP, &u.SignupCountry, &u.SignupHost, &u.Banned, &u.BannedTime,
-			&u.UserBanned, &u.Remarks, &fidp, &u.FederatedID, &u.WebsiteURL,
-			// Avatar fields
-			&avatarID,
-			// Domain user
-			&isOwner, &isModerator, &isCommenter,
-		); err != nil {
+		if u, _, err := svc.fetchUserSession(rows, false); err != nil {
 			logger.Errorf("userService.List: Scan() failed: %v", err)
 			return nil, translateDBErrors(err)
+		} else {
+			us = append(us, u)
 		}
-		if fidp.Valid {
-			u.FederatedIdP = fidp.String
-		}
-		u.HasAvatar = avatarID.Valid
-
-		// Limit the visible fields and convert into an API model
-		us = append(us, u.CloneWithClearance(superuser, true, true).ToDTO(isOwner, isModerator, isCommenter))
 	}
 
 	// Verify Next() didn't error
@@ -622,7 +545,9 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		}
 		return nil, nil, err
 	}
-	u.FederatedIdP = fidp.String
+	if fidp.Valid {
+		u.FederatedIdP = fidp.String
+	}
 	u.HasAvatar = avatarID.Valid
 	return &u, us, nil
 }
