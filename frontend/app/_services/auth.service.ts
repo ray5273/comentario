@@ -26,10 +26,8 @@ export class AuthService {
             // Mix-in any additional principals from other methods or fetch it from the server, if none provided
             this._update$.pipe(switchMap(p => p === undefined ? this.safeFetchPrincipal() : of(p))),
         )
-        .pipe(
             // Cache the last result
-            shareReplay(1),
-        );
+        .pipe(shareReplay(1));
     }
 
     /**

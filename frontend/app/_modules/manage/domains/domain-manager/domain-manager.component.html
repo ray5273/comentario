@@ -38,25 +38,11 @@
     <ng-container *ngIf="domains?.length">
         <!-- Domain list -->
         <div class="list-group">
-            <!-- All domains button -->
-            <a (click)="unselect()" (keydown.enter)="unselect()" class="list-group-item list-group-item-action" tabindex="0" role="button">
-                <div class="row">
-                    <div class="col-auto">
-                        <input [checked]="!domain" class="form-check-input me-1" type="radio" value="" aria-label="All domains" i18n-aria-label>
-                    </div>
-                    <div class="col">
-                        <fa-icon [icon]="faCheckDouble" class="me-1"></fa-icon>
-                        <ng-container i18n>All domains</ng-container>
-                    </div>
-                </div>
-            </a>
-
-            <!-- Domains -->
-            <a *ngFor="let d of domains" [routerLink]="d.id" class="list-group-item list-group-item-action">
+            <a *ngFor="let d of domains" [routerLink]="d.id" [class.list-group-item-info]="d.id === domain?.id" class="list-group-item list-group-item-action">
                 <div class="row">
                     <!-- Radio button -->
-                    <div class="col-auto">
-                        <input [checked]="d.id === domain?.id" class="form-check-input me-1" type="radio" value="" [attr.aria-label]="d.host">
+                    <div class="col-1 text-center">
+                        <fa-icon *ngIf="d.id === domain?.id" [icon]="faCheck" size="3x"></fa-icon>
                     </div>
                     <!-- Domain name/host -->
                     <div class="col">

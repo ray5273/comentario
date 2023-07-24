@@ -1,7 +1,6 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
-import { switchMap } from 'rxjs';
+import { Router } from '@angular/router';
 import { ApiGeneralService, User } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
@@ -11,7 +10,7 @@ import { Paths } from '../../../../_utils/consts';
     selector: 'app-user-edit',
     templateUrl: './user-edit.component.html',
 })
-export class UserEditComponent implements OnInit {
+export class UserEditComponent {
 
     /** User being edited. */
     user?: User;
@@ -31,16 +30,16 @@ export class UserEditComponent implements OnInit {
 
     constructor(
         private readonly fb: FormBuilder,
-        private readonly route: ActivatedRoute,
         private readonly router: Router,
         private readonly api: ApiGeneralService,
         private readonly toastSvc: ToastService,
     ) {}
 
-    ngOnInit(): void {
+    @Input()
+    set id(id: string) {
         // Fetch the user
-        this.route.paramMap
-            .pipe(switchMap(pm => this.api.userGet(pm.get('id')!).pipe(this.loading.processing())))
+        this.api.userGet(id)
+            .pipe(this.loading.processing())
             .subscribe(r => {
                 this.user = r.user;
 
@@ -69,7 +68,7 @@ export class UserEditComponent implements OnInit {
         this.form.markAllAsTouched();
 
         // Submit the form if it's valid
-        if (this.form.valid) {
+        if (this.user && this.form.valid) {
             const vals = this.form.value;
             const dto: User = {
                 name:        vals.name,

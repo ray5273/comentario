@@ -34,6 +34,7 @@ import { CommentListComponent } from './comments/comment-list/comment-list.compo
 import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
+import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
 
 @NgModule({
     declarations: [
@@ -62,6 +63,7 @@ import { UserEditComponent } from './users/user-edit/user-edit.component';
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
+        CurrentUserBadgeComponent,
     ],
     imports: [
         CommonModule,

@@ -1,13 +1,11 @@
 <!-- Header -->
-<header class="mb-3">
-    <h1 i18n="heading">User properties</h1>
-</header>
+<h1 i18n="heading">User properties</h1>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
     <ng-container *ngIf="user else noData">
         <div class="row">
-            <!-- Buttons: only for superuser -->
-            <div *ngIf="principal?.isSuperuser" class="col-sm-auto order-sm-last pb-3">
+            <!-- Buttons -->
+            <div class="col-sm-auto order-sm-last pb-3">
                 <!-- Edit user button -->
                 <a routerLink="edit" type="button" class="btn btn-secondary w-100">
                     <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
@@ -21,7 +19,10 @@
                     <!-- ID -->
                     <div>
                         <dt i18n>ID</dt>
-                        <dd>{{ user.id }}</dd>
+                        <dd>
+                            <ng-container>{{ user.id }}</ng-container>
+                            <app-current-user-badge [userId]="user.id" class="ms-2"></app-current-user-badge>
+                        </dd>
                     </div>
                     <!-- Federated user -->
                     <div *ngIf="user.federatedIdP as v">
@@ -56,6 +57,11 @@
                         <dt i18n>Website URL</dt>
                         <dd><a [href]="v" target="_blank" rel="nofollow noopener noreferrer">{{ v }}</a></dd>
                     </div>
+                    <!-- System account -->
+                    <div *ngIf="user.systemAccount">
+                        <dt i18n>System account</dt>
+                        <dd><app-checkmark></app-checkmark></dd>
+                    </div>
                     <!-- Confirmed -->
                     <div *ngIf="user.confirmed">
                         <dt i18n>Confirmed</dt>
@@ -84,21 +90,18 @@
             <h2 i18n>Domain roles</h2>
 
             <!-- Domain/role list -->
-            <ul *ngIf="domainUsers else noData">
-                <li *ngFor="let du of domainUsers">
-                    <a *ngIf="domains.get(du.domainId!) as d" [routerLink]="[Paths.manage.domains, d.id]">{{ d.host }}</a>
-                    <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
-                </li>
-            </ul>
-        </section>
-
-        <!-- Comments, only if there's a domain -->
-        <section *ngIf="domain">
-            <!-- Heading -->
-            <h2 i18n>Comments</h2>
-
-            <!-- Comment list -->
-            <app-comment-list [userId]="user.id"></app-comment-list>
+            <div *ngIf="domainUsers else noData" class="list-group">
+                <ng-container *ngFor="let du of domainUsers">
+                    <a *ngIf="domains.get(du.domainId!) as d" [routerLink]="[Paths.manage.domains, d.id]" class="list-group-item list-group-item-action">
+                        <!-- Domain name/host -->
+                        <div>
+                            <span class="fw-bold">{{ d.host }}</span>
+                            <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
+                        </div>
+                        <div *ngIf="d.name">{{ d.name }}</div>
+                    </a>
+                </ng-container>
+            </div>
         </section>
     </ng-container>
 

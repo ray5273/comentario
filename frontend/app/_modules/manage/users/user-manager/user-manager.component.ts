@@ -4,10 +4,9 @@ import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMa
 import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faLock } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Domain, User } from '../../../../../generated-api';
+import { ApiGeneralService, User } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 
 @UntilDestroy()
@@ -16,9 +15,6 @@ import { ConfigService } from '../../../../_services/config.service';
     templateUrl: './user-manager.component.html',
 })
 export class UserManagerComponent implements OnInit {
-
-    /** Domain currently selected in domain selector. */
-    domain?: Domain;
 
     /** Loaded list of users. */
     users?: User[];
@@ -43,7 +39,6 @@ export class UserManagerComponent implements OnInit {
     constructor(
         private readonly fb: FormBuilder,
         private readonly api: ApiGeneralService,
-        private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
     ) {}
 
@@ -52,12 +47,9 @@ export class UserManagerComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        // Subscribe to sort/filter changes
         merge(
-                // Subscribe to domain changes. This will also trigger an initial load
-                this.domainSelectorSvc.domain.pipe(untilDestroyed(this), tap(d => this.domain = d)),
-                // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
-                // Subscribe to filter changes
                 this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
                 // Map any of the above to true (= reset)
@@ -74,7 +66,7 @@ export class UserManagerComponent implements OnInit {
                 // Load the domain list
                 switchMap(() =>
                     this.api.userList(
-                        this.domain?.id,
+                        undefined,
                         this.ctlFilterFilter.value,
                         ++this.loadedPageNum,
                         this.sort.property as any,
@@ -84,5 +76,8 @@ export class UserManagerComponent implements OnInit {
                 this.users = [...this.users || [], ...r.users || []];
                 this.canLoadMore = this.configSvc.canLoadMore(r.users);
             });
+
+        // Trigger an initial load
+        this.load.next(true);
     }
 }

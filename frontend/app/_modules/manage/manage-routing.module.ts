@@ -40,16 +40,16 @@ const children: Routes = [
     // Comments
     {path: 'comments',           component: CommentManagerComponent,   canActivate: [ManageGuard.isDomainSelected]},
 
-    // Users
-    {path: 'users',              component: UserManagerComponent,      canActivate: [ManageGuard.isSuperOrOwner]},
-    {path: 'users/:id',          component: UserPropertiesComponent},
-    {path: 'users/:id/edit',     component: UserEditComponent,         canActivate: [ManageGuard.isSuper]},
-
     // Stats
-    {path: 'stats',              component: StatsComponent},
+    {path: 'stats',              component: StatsComponent,            canActivate: [ManageGuard.isDomainSelected]},
 
     // Operations
     {path: 'operations',         component: DomainOperationsComponent, canActivate: [ManageGuard.canManageDomain]},
+
+    // Users
+    {path: 'users',              component: UserManagerComponent,      canActivate: [ManageGuard.isSuper]},
+    {path: 'users/:id',          component: UserPropertiesComponent,   canActivate: [ManageGuard.isSuper]},
+    {path: 'users/:id/edit',     component: UserEditComponent,         canActivate: [ManageGuard.isSuper]},
 
     // Account
     {path: 'account/profile',    component: ProfileComponent},

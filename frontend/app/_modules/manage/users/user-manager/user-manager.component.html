@@ -1,8 +1,5 @@
-<!-- Header with the badge -->
-<header class="d-flex flex-wrap align-items-center mb-3">
-    <h1 class="mb-0 me-2" i18n="heading">Users</h1>
-    <app-domain-badge></app-domain-badge>
-</header>
+<!-- Heading -->
+<h1 i18n="heading">Users</h1>
 
 <div [appSpinner]="usersLoading.active" spinnerSize="lg">
     <!-- Toolbar -->
@@ -49,8 +46,10 @@
                             <!-- Name -->
                             <ng-container>{{ u.name }}</ng-container>
                         </span>
-                        <!-- Domain user badge -->
-                        <app-domain-user-badge *ngIf="domain" [domainUser]="u" class="ms-2"></app-domain-user-badge>
+                        <!-- Super user badge -->
+                        <span *ngIf="u.isSuperuser" class="badge rounded-pill bg-danger mx-2" i18n>Super</span>
+                        <!-- Current user badge -->
+                        <app-current-user-badge [userId]="u.id"></app-current-user-badge>
                     </div>
                     <!-- Provider icon and email -->
                     <div>

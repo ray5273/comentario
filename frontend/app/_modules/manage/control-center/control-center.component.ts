@@ -12,7 +12,7 @@ import {
     faSignOutAlt,
     faTachometerAlt,
     faUser,
-    faUsers,
+    faUsers, faUsersRectangle,
 } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
@@ -56,12 +56,17 @@ export class ControlCenterComponent implements OnInit {
     readonly faTachometerAlt         = faTachometerAlt;
     readonly faUser                  = faUser;
     readonly faUsers                 = faUsers;
+    readonly faUsersRectangle        = faUsersRectangle;
 
     constructor(
         private readonly router: Router,
         private readonly authSvc: AuthService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
+
+    get isSuper(): boolean | undefined {
+        return this.principal?.isSuperuser;
+    }
 
     get isSuperOrOwner(): boolean | undefined {
         return this.principal?.isSuperuser || this.domainUser?.isOwner;

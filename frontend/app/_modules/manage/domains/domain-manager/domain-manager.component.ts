@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { faCheckDouble, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainUser } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -42,8 +42,8 @@ export class DomainManagerComponent implements OnInit {
     });
 
     // Icons
-    readonly faCheckDouble = faCheckDouble;
-    readonly faPlus        = faPlus;
+    readonly faCheck = faCheck;
+    readonly faPlus = faPlus;
 
     private loadedPageNum = 0;
 
@@ -96,9 +96,5 @@ export class DomainManagerComponent implements OnInit {
                 // Make a map of domain ID => domain users
                 r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId!, du));
             });
-    }
-
-    unselect() {
-        this.domainSelectorSvc.setDomainId(undefined);
     }
 }
