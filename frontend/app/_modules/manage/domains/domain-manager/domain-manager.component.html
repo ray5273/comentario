@@ -40,9 +40,9 @@
         <div class="list-group">
             <a *ngFor="let d of domains" [routerLink]="d.id" [class.list-group-item-info]="d.id === domain?.id" class="list-group-item list-group-item-action">
                 <div class="row">
-                    <!-- Radio button -->
-                    <div class="col-1 text-center">
-                        <fa-icon *ngIf="d.id === domain?.id" [icon]="faCheck" size="3x"></fa-icon>
+                    <!-- Checkmark for the selected domain -->
+                    <div class="d-none d-sm-flex col-1 justify-content-center align-items-center">
+                        <fa-icon *ngIf="d.id === domain?.id" [icon]="faCheck" size="2x"></fa-icon>
                     </div>
                     <!-- Domain name/host -->
                     <div class="col">

@@ -4,7 +4,7 @@
     <app-domain-badge></app-domain-badge>
 </header>
 
-<ng-container *ngIf="domain else noData">
+<ng-container *ngIf="domain">
     <!-- Installation, only for an owner user -->
     <section *ngIf="domainUser?.isOwner">
         <!-- Heading -->
@@ -111,6 +111,4 @@
 </ng-container>
 
 <!-- Placeholder when no data -->
-<ng-template #noData>
-    <div class="text-center" i18n>No data available.</div>
-</ng-template>
+<app-no-data *ngIf="!domain"></app-no-data>

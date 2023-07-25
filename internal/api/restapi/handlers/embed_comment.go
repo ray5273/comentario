@@ -85,11 +85,9 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	// Fetch comments and commenters
 	comments, commenters, err := svc.TheCommentService.ListWithCommentersByDomainPage(
 		user,
-		&page.DomainID,
+		domainUser,
 		&page.ID,
 		nil,
-		user.IsSuperuser || domainUser.CanModerate(),
-		true,
 		true,
 		true,
 		true,
@@ -201,8 +199,10 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 
 	// Succeeded
 	return api_embed.NewEmbedCommentNewOK().WithPayload(&api_embed.EmbedCommentNewOKBody{
-		Comment:   comment.ToDTO(domain.RootURL(), page.Path),
-		Commenter: user.ToCommenter(domainUser.IsCommenter, domainUser.IsModerator, domainUser.IsModerator),
+		Comment: comment.ToDTO(domain.RootURL(), page.Path),
+		Commenter: user.
+			CloneWithClearance(user.IsSuperuser, domainUser.IsOwner, domainUser.IsModerator).
+			ToCommenter(domainUser.IsCommenter, domainUser.IsModerator),
 	})
 }
 

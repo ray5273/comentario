@@ -17,6 +17,7 @@ import { PageManagerComponent } from './pages/page-manager/page-manager.componen
 import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
+import { DomainUserManagerComponent } from './domain-users/domain-user-manager/domain-user-manager.component';
 
 const children: Routes = [
     // Default route
@@ -29,27 +30,30 @@ const children: Routes = [
     {path: 'domains',            component: DomainManagerComponent},
     {path: 'domains/create',     component: DomainEditComponent, data: {new: true}},
     {path: 'domains/:id',        component: DomainPropertiesComponent},
-    {path: 'domains/:id/edit',   component: DomainEditComponent,       canActivate: [ManageGuard.canManageDomain]},
-    {path: 'domains/:id/clone',  component: DomainEditComponent,       canActivate: [ManageGuard.canManageDomain], data: {new: true}},
-    {path: 'domains/:id/import', component: DomainImportComponent,     canActivate: [ManageGuard.canManageDomain]},
+    {path: 'domains/:id/edit',   component: DomainEditComponent,        canActivate: [ManageGuard.canManageDomain]},
+    {path: 'domains/:id/clone',  component: DomainEditComponent,        canActivate: [ManageGuard.canManageDomain], data: {new: true}},
+    {path: 'domains/:id/import', component: DomainImportComponent,      canActivate: [ManageGuard.canManageDomain]},
 
     // Pages
-    {path: 'pages',              component: PageManagerComponent,      canActivate: [ManageGuard.isDomainSelected]},
-    {path: 'pages/:id',          component: PagePropertiesComponent,   canActivate: [ManageGuard.isDomainSelected]},
+    {path: 'pages',              component: PageManagerComponent,       canActivate: [ManageGuard.isDomainSelected]},
+    {path: 'pages/:id',          component: PagePropertiesComponent,    canActivate: [ManageGuard.isDomainSelected]},
 
     // Comments
-    {path: 'comments',           component: CommentManagerComponent,   canActivate: [ManageGuard.isDomainSelected]},
+    {path: 'comments',           component: CommentManagerComponent,    canActivate: [ManageGuard.isDomainSelected]},
+
+    // Domain users
+    {path: 'domainUsers',        component: DomainUserManagerComponent, canActivate: [ManageGuard.canManageDomain]},
 
     // Stats
-    {path: 'stats',              component: StatsComponent,            canActivate: [ManageGuard.isDomainSelected]},
+    {path: 'stats',              component: StatsComponent,             canActivate: [ManageGuard.canManageDomain]},
 
     // Operations
-    {path: 'operations',         component: DomainOperationsComponent, canActivate: [ManageGuard.canManageDomain]},
+    {path: 'operations',         component: DomainOperationsComponent,  canActivate: [ManageGuard.canManageDomain]},
 
     // Users
-    {path: 'users',              component: UserManagerComponent,      canActivate: [ManageGuard.isSuper]},
-    {path: 'users/:id',          component: UserPropertiesComponent,   canActivate: [ManageGuard.isSuper]},
-    {path: 'users/:id/edit',     component: UserEditComponent,         canActivate: [ManageGuard.isSuper]},
+    {path: 'users',              component: UserManagerComponent,       canActivate: [ManageGuard.isSuper]},
+    {path: 'users/:id',          component: UserPropertiesComponent,    canActivate: [ManageGuard.isSuper]},
+    {path: 'users/:id/edit',     component: UserEditComponent,          canActivate: [ManageGuard.isSuper]},
 
     // Account
     {path: 'account/profile',    component: ProfileComponent},

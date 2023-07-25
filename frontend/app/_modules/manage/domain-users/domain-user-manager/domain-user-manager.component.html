@@ -1,0 +1,9 @@
+<!-- Header with the badge -->
+<header class="d-flex flex-wrap align-items-center mb-3">
+    <h1 class="mb-0 me-2" i18n="heading">Domain</h1>
+    <app-domain-badge></app-domain-badge>
+</header>
+
+
+<!-- Placeholder when no data -->
+<app-no-data *ngIf="!domain"></app-no-data>

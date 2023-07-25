@@ -9,7 +9,6 @@ import {
     faTrashAlt,
     faUpRightFromSquare,
     faUser,
-    faUsersRays,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter, Domain, DomainUser, Principal } from '../../../../../generated-api';
@@ -68,9 +67,8 @@ export class CommentListComponent implements OnInit, OnChanges {
 
     readonly filterForm = this.fb.nonNullable.group({
         approved: false,
-        pending:  false,
+        pending:  true,
         rejected: false,
-        others:   false,
         filter:   '',
     });
 
@@ -80,7 +78,6 @@ export class CommentListComponent implements OnInit, OnChanges {
     readonly faTrashAlt          = faTrashAlt;
     readonly faUpRightFromSquare = faUpRightFromSquare;
     readonly faUser              = faUser;
-    readonly faUsersRays         = faUsersRays;
     readonly faXmark             = faXmark;
 
     private loadedPageNum = 0;
@@ -103,13 +100,12 @@ export class CommentListComponent implements OnInit, OnChanges {
                         this.domainUser = data.domainUser;
                         this.domain     = data.domain;
                         this.isModerator = !!(this.principal?.isSuperuser || this.domainUser?.isOwner || this.domainUser?.isModerator);
-                        // If the user is a moderator, show others' pending comments
-                        if (this.isModerator) {
-                            this.filterForm.patchValue({pending: true, others: true});
-                        } else {
-                            // User is not a moderator: show all their comments
-                            this.filterForm.patchValue({approved: true, pending: true, rejected: true});
-                        }
+                        // If the user is not a moderator, disable the status filter
+                        Utils.enableControls(
+                            this.isModerator,
+                            this.filterForm.controls.approved,
+                            this.filterForm.controls.pending,
+                            this.filterForm.controls.rejected);
                     })),
                 // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
@@ -135,10 +131,18 @@ export class CommentListComponent implements OnInit, OnChanges {
                     // Load the domain list
                     const f = this.filterForm.value;
                     return this.api.commentList(
-                            this.domain!.id!, this.pageId, this.userId, f.approved, f.pending, f.rejected,
-                            // Don't apply the "Others" filter when a user is explicitly specified
-                            f.others || !!this.userId,
-                            f.filter, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                            this.domain!.id!,
+                            this.pageId,
+                            // If no user explicitly provided and the current user isn't a moderator, limit the comment
+                            // list to their comments only
+                            this.userId || (this.isModerator ? undefined : this.principal?.id),
+                            !this.isModerator || f.approved,
+                            !this.isModerator || f.pending,
+                            !this.isModerator || f.rejected,
+                            f.filter,
+                            ++this.loadedPageNum,
+                            this.sort.property as any,
+                            this.sort.descending)
                         .pipe(this.commentsLoading.processing());
                 }))
             .subscribe(r => {
@@ -151,11 +155,6 @@ export class CommentListComponent implements OnInit, OnChanges {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        // Disable the "Others" filter if the user is explicitly provided
-        if (changes.userId) {
-            Utils.enableControls(!this.userId, this.filterForm.controls.others);
-        }
-
         // Reload on page or user change
         if (changes.pageId || changes.userId) {
             this.load.next(true);

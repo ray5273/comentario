@@ -4,7 +4,7 @@
 </header>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="domain && page else noData">
+    <ng-container *ngIf="domain && page">
         <div class="row">
             <!-- Buttons: only for superuser/owner -->
             <div *ngIf="isOwner" class="col-sm-auto order-sm-last pb-3">
@@ -69,7 +69,5 @@
     </ng-container>
 
     <!-- Placeholder when no data -->
-    <ng-template #noData>
-        <div class="text-center" i18n>No data available.</div>
-    </ng-template>
+    <app-no-data *ngIf="!domain || !page"></app-no-data>
 </div>

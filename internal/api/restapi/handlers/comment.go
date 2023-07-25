@@ -52,14 +52,12 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	// Fetch comments the user has access to
 	cs, crs, err := svc.TheCommentService.ListWithCommentersByDomainPage(
 		user,
-		domainID,
+		domainUser,
 		pageID,
 		userID,
-		user.IsSuperuser || domainUser.CanModerate(),
 		swag.BoolValue(params.Approved),
 		swag.BoolValue(params.Pending),
 		swag.BoolValue(params.Rejected),
-		swag.BoolValue(params.Others),
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),

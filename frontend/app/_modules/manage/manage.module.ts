@@ -35,6 +35,8 @@ import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
 import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
+import { DomainUserManagerComponent } from './domain-users/domain-user-manager/domain-user-manager.component';
+import { NoDataComponent } from './no-data/no-data.component';
 
 @NgModule({
     declarations: [
@@ -64,6 +66,8 @@ import { CurrentUserBadgeComponent } from './current-user-badge/current-user-bad
         UserManagerComponent,
         UserPropertiesComponent,
         CurrentUserBadgeComponent,
+        DomainUserManagerComponent,
+        NoDataComponent,
     ],
     imports: [
         CommonModule,

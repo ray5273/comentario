@@ -1,5 +1,5 @@
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="countDays else none">
+    <ng-container *ngIf="countDays">
         <!-- Info text -->
         <p class="text-center" i18n>Here you can see statistics for the last {{ countDays }} days.</p>
 
@@ -31,7 +31,5 @@
     </ng-container>
 
     <!-- Placeholder when no data -->
-    <ng-template #none>
-        <div class="w-100 py-5 d-flex justify-content-center align-items-center" i18n>No data available.</div>
-    </ng-template>
+    <app-no-data *ngIf="!countDays"></app-no-data>
 </div>

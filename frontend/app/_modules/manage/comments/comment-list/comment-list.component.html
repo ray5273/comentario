@@ -14,8 +14,8 @@
                 </app-sort-selector>
             </div>
 
-            <!-- Filter buttons -->
-            <div class="col-auto">
+            <!-- Status filter buttons: only for a moderator -->
+            <div *ngIf="isModerator" class="col-auto">
                 <div class="btn-group" role="group">
                     <!-- Show approved -->
                     <input formControlName="approved" type="checkbox" class="btn-check" id="filterShowApproved" autocomplete="off">
@@ -32,13 +32,6 @@
                     <label for="filterShowRejected" class="btn btn-outline-secondary" title="Show rejected" i18n-title>
                         <fa-icon [icon]="faXmark"></fa-icon>
                     </label>
-                    <!-- Show others' comments (only if no user is explicitly provided) -->
-                    <ng-container *ngIf="!userId">
-                        <input formControlName="others" type="checkbox" class="btn-check" id="filterShowOthers" autocomplete="off">
-                        <label for="filterShowOthers" class="btn btn-outline-secondary" title="Show others' comments" i18n-title>
-                            <fa-icon [icon]="faUsersRays"></fa-icon>
-                        </label>
-                    </ng-container>
                 </div>
             </div>
 

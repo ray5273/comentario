@@ -2010,13 +2010,13 @@ paths:
         - in: query
           name: pageId
           required: false
-          description: Optional domain page ID
+          description: Optional domain page ID to filter comments by
           type: string
           format: uuid
         - in: query
           name: userId
           required: false
-          description: Optional user ID
+          description: Optional user ID to filter comments by
           type: string
           format: uuid
         - in: query
@@ -2034,11 +2034,6 @@ paths:
           type: boolean
           required: false
           description: Whether to include rejected comments
-        - in: query
-          name: others
-          type: boolean
-          required: false
-          description: Whether to include comments by others
         - $ref: "#/parameters/queryFilter"
         - $ref: "#/parameters/queryPageNumber"
         - in: query

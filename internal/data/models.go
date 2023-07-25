@@ -230,15 +230,19 @@ func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User 
 	}
 
 	// Owner or moderator
-	if isSuperuser || isOwner || isModerator {
+	if isOwner || isModerator {
 		user.Banned = u.Banned
 		user.BannedTime = u.BannedTime
 		user.Confirmed = u.Confirmed
 		user.ConfirmedTime = u.ConfirmedTime
 		user.CreatedTime = u.CreatedTime
-		user.Email = u.Email
 		user.FederatedIdP = u.FederatedIdP
 		user.SignupHost = u.SignupHost
+
+		// Owner
+		if isOwner {
+			user.Email = u.Email
+		}
 	}
 	return user
 }
@@ -266,9 +270,10 @@ func (u *User) IsLocal() bool {
 }
 
 // ToCommenter converts this user into a Commenter model
-func (u *User) ToCommenter(isCommenter, isModerator, isCurUserModerator bool) *models.Commenter {
-	c := &models.Commenter{
+func (u *User) ToCommenter(isCommenter, isModerator bool) *models.Commenter {
+	return &models.Commenter{
 		ColourIndex: u.ColourIndex(),
+		Email:       strfmt.Email(u.Email),
 		HasAvatar:   u.HasAvatar,
 		ID:          strfmt.UUID(u.ID.String()),
 		IsCommenter: isCommenter,
@@ -276,12 +281,6 @@ func (u *User) ToCommenter(isCommenter, isModerator, isCurUserModerator bool) *m
 		Name:        u.Name,
 		WebsiteURL:  strfmt.URI(u.WebsiteURL),
 	}
-
-	// Only include email if the current user is a moderator
-	if isCurUserModerator {
-		c.Email = strfmt.Email(u.Email)
-	}
-	return c
 }
 
 // ToDTO converts this user into an API model

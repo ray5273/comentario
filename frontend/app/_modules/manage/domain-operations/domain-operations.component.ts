@@ -28,7 +28,9 @@ declare let $localize: any;
 })
 export class DomainOperationsComponent implements OnInit {
 
+    /** Domain being displayed. */
     domain?: Domain;
+
     isDangerZoneCollapsed = true;
 
     readonly downloading = new ProcessingStatus();

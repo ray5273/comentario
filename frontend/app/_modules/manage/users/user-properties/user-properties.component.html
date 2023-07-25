@@ -2,7 +2,7 @@
 <h1 i18n="heading">User properties</h1>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="user else noData">
+    <ng-container *ngIf="user">
         <div class="row">
             <!-- Buttons -->
             <div class="col-sm-auto order-sm-last pb-3">
@@ -90,7 +90,7 @@
             <h2 i18n>Domain roles</h2>
 
             <!-- Domain/role list -->
-            <div *ngIf="domainUsers else noData" class="list-group">
+            <div *ngIf="domainUsers" class="list-group">
                 <ng-container *ngFor="let du of domainUsers">
                     <a *ngIf="domains.get(du.domainId!) as d" [routerLink]="[Paths.manage.domains, d.id]" class="list-group-item list-group-item-action">
                         <!-- Domain name/host -->
@@ -102,11 +102,12 @@
                     </a>
                 </ng-container>
             </div>
+
+            <!-- Placeholder when no data -->
+            <app-no-data *ngIf="!domainUsers"></app-no-data>
         </section>
     </ng-container>
 
     <!-- Placeholder when no data -->
-    <ng-template #noData>
-        <div class="text-center" i18n>No data available.</div>
-    </ng-template>
+    <app-no-data *ngIf="!user"></app-no-data>
 </div>

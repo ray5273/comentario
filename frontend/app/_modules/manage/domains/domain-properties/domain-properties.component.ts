@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute } from '@angular/router';
 import { faCopy, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Domain, DomainUser, FederatedIdentityProvider, Principal } from '../../../../../generated-api';
@@ -16,9 +16,16 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 })
 export class DomainPropertiesComponent implements OnInit {
 
+    /** Domain to display properties for. */
     domain?: Domain;
+
+    /** Domain user corresponding to the current user. */
     domainUser?: DomainUser;
+
+    /** List of federated identity providers configured in the domain. */
     fedIdps?: FederatedIdentityProvider[];
+
+    /** Currently logged-in principal. */
     principal?: Principal;
 
     readonly Paths = Paths;
@@ -33,7 +40,6 @@ export class DomainPropertiesComponent implements OnInit {
 
     constructor(
         private readonly route: ActivatedRoute,
-        private readonly router: Router,
         private readonly cfgSvc: ConfigService,
         private readonly docsSvc: DocsService,
         private readonly domainSelectorSvc: DomainSelectorService,
