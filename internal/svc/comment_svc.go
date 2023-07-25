@@ -31,18 +31,23 @@ type CommentService interface {
 	// ListWithCommentersByDomainPage returns a list of comments and related commenters for the given domain and,
 	// optionally, page.
 	//   - curUser is the current authenticated/anonymous user.
-	//   - curDomainUser is the current domain user.
+	//   - curUserIsOwner indicates whether the current user is an owner of the domain.
+	//   - curUserIsModerator indicates whether the current user is a domain moderator.
+	//   - domainID is the mandatory domain ID.
 	//   - pageID is an optional page ID to filter the result by.
 	//   - userID is an optional user ID to filter the result by.
 	//   - isModerator indicates whether the current user is a superuser, domain owner, or domain moderator.
 	//   - inclApproved indicates whether to include approved comments.
 	//   - inclPending indicates whether to include comments pending moderation.
 	//   - inclRejected indicates whether to include rejected comments.
+	//   - inclDeleted indicates whether to include deleted comments.
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
+	ListWithCommentersByDomainPage(curUser *data.User, curUserIsOwner, curUserIsModerator bool,
+		domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted bool,
+		filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
 	// Moderate updates the moderation status of a comment with the given ID in the database
@@ -146,8 +151,14 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	return &c, nil
 }
 
-func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error) {
-	logger.Debugf("commentService.ListWithCommentersByDomainPage(%s, %#v, %s, %s, %v, %v, %v, '%s', '%s', %s, %d)", &curUser.ID, curDomainUser, pageID, userID, inclApproved, inclPending, inclRejected, filter, sortBy, dir, pageIndex)
+func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curUserIsOwner, curUserIsModerator bool,
+	domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted bool,
+	filter, sortBy string, dir data.SortDirection, pageIndex int,
+) ([]*models.Comment, []*models.Commenter, error) {
+	logger.Debugf(
+		"commentService.ListWithCommentersByDomainPage(%s, %v, %v, %s, %s, %s, %v, %v, %v, %v, '%s', '%s', %s, %d)",
+		&curUser.ID, curUserIsOwner, curUserIsModerator, domainID, pageID, userID, inclApproved, inclPending,
+		inclRejected, inclDeleted, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
 	q := db.Dialect().
@@ -180,7 +191,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		// Outer-join comment votes
 		LeftJoin(goqu.T("cm_comment_votes").As("v"), goqu.On(goqu.Ex{"v.comment_id": goqu.I("c.id"), "v.user_id": &curUser.ID})).
 		// Filter by page domain
-		Where(goqu.Ex{"p.domain_id": curDomainUser.DomainID})
+		Where(goqu.Ex{"p.domain_id": domainID})
 
 	// If there's a page ID specified, include only comments for that page (otherwise  comments for all pages of the
 	// domain will be included)
@@ -203,12 +214,15 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	if !inclRejected {
 		q = q.Where(goqu.ExOr{"c.is_pending": true, "c.is_approved": true})
 	}
+	if !inclDeleted {
+		q = q.Where(goqu.Ex{"c.is_deleted": false})
+	}
 
 	// Add authorship filter. If anonymous user: only include approved
 	if curUser.IsAnonymous() {
 		q = q.Where(goqu.Ex{"c.is_pending": false, "c.is_approved": true})
 
-	} else if !curUser.IsSuperuser && !curDomainUser.CanModerate() {
+	} else if !curUser.IsSuperuser && !curUserIsOwner && !curUserIsModerator {
 		// Authenticated, non-moderator user: show others' comments only if they are approved
 		q = q.Where(goqu.Or(
 			goqu.Ex{"c.is_pending": false, "c.is_approved": true},
@@ -223,7 +237,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			goqu.L(`lower("u"."name")`).Like(pattern),
 		}
 		// Email is only searchable by superusers and owners
-		if curUser.IsSuperuser || curDomainUser.IsOwner {
+		if curUser.IsSuperuser || curUserIsModerator {
 			e = append(e, goqu.L(`lower("u"."email")`).Like(pattern))
 		}
 		q = q.Where(goqu.Or(e...))
@@ -325,7 +339,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 
 				// Convert the user into a commenter and add it to the map
 				commenterMap[uID.UUID] = u.
-					CloneWithClearance(curUser.IsSuperuser, curDomainUser.IsOwner, curDomainUser.IsModerator).
+					CloneWithClearance(curUser.IsSuperuser, curUserIsOwner, curUserIsModerator).
 					ToCommenter(uIsModerator || !duIsCommenter.Valid || duIsCommenter.Bool, uIsModerator)
 			}
 		}

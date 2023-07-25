@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MockProvider } from 'ng-mocks';
+import { MockComponents, MockProvider } from 'ng-mocks';
 import { StatsChartComponent } from './stats-chart.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
+import { NoDataComponent } from '../no-data/no-data.component';
 
 describe('StatsChartComponent', () => {
 
@@ -11,7 +12,7 @@ describe('StatsChartComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [StatsChartComponent],
+            declarations: [StatsChartComponent, MockComponents(NoDataComponent)],
             providers: [
                 MockProvider(ApiGeneralService),
             ],

@@ -3,11 +3,11 @@ import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { faCopy, faEdit } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { Domain, DomainUser, FederatedIdentityProvider, Principal } from '../../../../../generated-api';
+import { FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { Paths } from '../../../../_utils/consts';
 import { DocsService } from '../../../../_services/docs.service';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -16,17 +16,11 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 })
 export class DomainPropertiesComponent implements OnInit {
 
-    /** Domain to display properties for. */
-    domain?: Domain;
-
-    /** Domain user corresponding to the current user. */
-    domainUser?: DomainUser;
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
 
     /** List of federated identity providers configured in the domain. */
     fedIdps?: FederatedIdentityProvider[];
-
-    /** Currently logged-in principal. */
-    principal?: Principal;
 
     readonly Paths = Paths;
     readonly snippet =
@@ -52,7 +46,7 @@ export class DomainPropertiesComponent implements OnInit {
      * Whether any specific moderator approval policy is in place.
      */
     get hasApprovalPolicy(): boolean {
-        const d = this.domain;
+        const d = this.domainMeta?.domain;
         return !!d && !!(
             d.modAnonymous ||
             d.modAuthenticated ||
@@ -64,14 +58,12 @@ export class DomainPropertiesComponent implements OnInit {
 
     ngOnInit(): void {
         // Subscribe to domain changes to obtain domain and IdP data
-        this.domainSelectorSvc.domainUserIdps
+        this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
-            .subscribe(data => {
-                this.domain = data.domain;
-                this.domainUser = data.domainUser;
+            .subscribe(meta => {
+                this.domainMeta = meta;
                 // Only add those federated identity providers available globally
-                this.fedIdps = this.cfgSvc.config.federatedIdps.filter(idp => data.federatedIdpIds?.includes(idp.id));
-                this.principal = data.principal;
+                this.fedIdps = this.cfgSvc.config.federatedIdps.filter(idp => meta.federatedIdpIds?.includes(idp.id));
             });
     }
 }

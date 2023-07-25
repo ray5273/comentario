@@ -51,14 +51,14 @@
             <!-- Domain items: if there's a domain -->
             <!--------------------------------------------------------------------------------------------------------->
 
-            <ul *ngIf="domain" class="nav">
+            <ul *ngIf="domainMeta?.domain as d" class="nav">
                 <!-- Domain properties -->
                 <li class="nav-item">
-                    <a [routerLink]="[Paths.manage.domains, domain.id]" routerLinkActive="active" class="cc-link">
+                    <a [routerLink]="[Paths.manage.domains, d.id]" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
                         <span class="sr-only" i18n>Domain</span>
                         <div class="cc-hide-collapsed overflow-hidden">
-                            <div class="text-truncate">{{ domain.host }}</div>
+                            <div class="text-truncate">{{ d.host }}</div>
                         </div>
                     </a>
                 </li>
@@ -80,7 +80,7 @@
                 </li>
 
                 <!-- Owner items -->
-                <ng-container *ngIf="isSuperOrOwner">
+                <ng-container *ngIf="canManageDomain">
                     <!-- Domain users: owner only -->
                     <li class="nav-item">
                         <a [routerLink]="Paths.manage.domainUsers" routerLinkActive="active" class="cc-link">
@@ -117,7 +117,7 @@
                 </li>
 
                 <!-- Users -->
-                <li *ngIf="isSuperOrOwner" class="nav-item">
+                <li *ngIf="canManageDomain" class="nav-item">
                     <a [routerLink]="Paths.manage.users" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faUsers"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Users</div>
@@ -138,10 +138,10 @@
                 <li class="nav-item">
                     <a [routerLink]="Paths.manage.account.profile" routerLinkActive="active" class="cc-link" id="sidebarProfile">
                         <!-- User's avatar -->
-                        <app-user-avatar [user]="principal" size="S" class="cc-avatar"></app-user-avatar>
+                        <app-user-avatar [user]="domainMeta?.principal" size="S" class="cc-avatar"></app-user-avatar>
                         <div class="cc-hide-collapsed">
                             <!-- User's name -->
-                            <div class="text-truncate" style="max-width: 200px">{{ principal?.name }}</div>
+                            <div class="text-truncate" style="max-width: 200px">{{ domainMeta?.principal?.name }}</div>
                         </div>
                     </a>
                 </li>

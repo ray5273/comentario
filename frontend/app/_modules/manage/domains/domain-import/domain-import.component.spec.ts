@@ -7,7 +7,7 @@ import { MockProvider } from 'ng-mocks';
 import { DomainImportComponent } from './domain-import.component';
 import { ToolsModule } from '../../../tools/tools.module';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 
 describe('DomainImportComponent', () => {
 
@@ -20,7 +20,7 @@ describe('DomainImportComponent', () => {
             imports: [RouterTestingModule, ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         })
             .compileComponents();

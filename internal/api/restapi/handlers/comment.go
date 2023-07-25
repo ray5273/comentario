@@ -52,12 +52,15 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	// Fetch comments the user has access to
 	cs, crs, err := svc.TheCommentService.ListWithCommentersByDomainPage(
 		user,
-		domainUser,
+		domainUser != nil && domainUser.IsOwner,
+		domainUser != nil && domainUser.IsModerator,
+		domainID,
 		pageID,
 		userID,
 		swag.BoolValue(params.Approved),
 		swag.BoolValue(params.Pending),
 		swag.BoolValue(params.Rejected),
+		swag.BoolValue(params.Deleted),
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),
@@ -117,7 +120,8 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 	return nil
 }
 
-// commentGetCommentPageDomainUser finds and returns a Comment, DomainPage, Domain, and DomainUser by a sring comment ID
+// commentGetCommentPageDomainUser finds and returns a Comment, DomainPage, Domain, and DomainUser by a string comment
+// ID
 func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse comment ID
 	if commentID, err := data.DecodeUUID(commentUUID); err != nil {

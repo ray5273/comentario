@@ -1,13 +1,13 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Domain, DomainPage, DomainUser } from '../../../../../generated-api';
+import { faLightbulb, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { ApiGeneralService, DomainPage } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 
 @UntilDestroy()
@@ -17,14 +17,8 @@ import { ConfigService } from '../../../../_services/config.service';
 })
 export class PageManagerComponent implements OnInit {
 
-    /** Domain currently selected in domain selector. */
-    domain?: Domain;
-
-    /** Domain user corresponding to the current user. */
-    domainUser?: DomainUser;
-
-    /** Whether the current user is a regular one on the domain (not superuser, owner, or moderator). */
-    isRegularUser?: boolean;
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
 
     /** Loaded list of domain pages. */
     pages?: DomainPage[];
@@ -43,6 +37,7 @@ export class PageManagerComponent implements OnInit {
     });
 
     // Icons
+    readonly faLightbulb         = faLightbulb;
     readonly faUpRightFromSquare = faUpRightFromSquare;
 
     private loadedPageNum = 0;
@@ -54,27 +49,17 @@ export class PageManagerComponent implements OnInit {
         private readonly configSvc: ConfigService,
     ) {}
 
-    get ctlFilterFilter(): AbstractControl<string> {
-        return this.filterForm.get('filter')!;
-    }
-
     ngOnInit(): void {
         merge(
                 // Subscribe to domain changes. This will also trigger an initial load
-                this.domainSelectorSvc.domainUserIdps
+                this.domainSelectorSvc.domainMeta
                     .pipe(
                         untilDestroyed(this),
-                        tap(d => {
-                            this.domain     = d.domain;
-                            this.domainUser = d.domainUser;
-                            this.isRegularUser =
-                                d.principal && !d.principal.isSuperuser &&
-                                d.domainUser && !d.domainUser.isOwner && !d.domainUser.isModerator;
-                        })),
+                        tap(meta => this.domainMeta = meta)),
                 // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
                 // Subscribe to filter changes
-                this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+                this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
                 // Map any of the above to true (= reset)
                 map(() => true),
@@ -88,10 +73,15 @@ export class PageManagerComponent implements OnInit {
                     }
                 }),
                 // Nothing can be loaded unless a domain is selected
-                filter(() => !!this.domain),
+                filter(() => !!this.domainMeta?.domain),
                 // Load the page list
                 switchMap(() =>
-                    this.api.domainPageList(this.domain!.id!, this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                    this.api.domainPageList(
+                            this.domainMeta!.domain!.id!,
+                            this.filterForm.controls.filter.value,
+                            ++this.loadedPageNum,
+                            this.sort.property as any,
+                            this.sort.descending)
                         .pipe(this.pagesLoading.processing())))
             .subscribe(r => {
                 this.pages = [...this.pages || [], ...r.pages || []];

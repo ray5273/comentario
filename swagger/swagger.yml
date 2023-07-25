@@ -2034,6 +2034,11 @@ paths:
           type: boolean
           required: false
           description: Whether to include rejected comments
+        - in: query
+          name: deleted
+          type: boolean
+          required: false
+          description: Whether to include deleted comments
         - $ref: "#/parameters/queryFilter"
         - $ref: "#/parameters/queryPageNumber"
         - in: query

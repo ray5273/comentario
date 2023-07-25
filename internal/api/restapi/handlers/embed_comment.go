@@ -85,12 +85,15 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	// Fetch comments and commenters
 	comments, commenters, err := svc.TheCommentService.ListWithCommentersByDomainPage(
 		user,
-		domainUser,
+		domainUser != nil && domainUser.IsOwner,
+		domainUser != nil && domainUser.IsModerator,
+		&domain.ID,
 		&page.ID,
 		nil,
 		true,
 		true,
 		true,
+		true, // We need to always include deleted, otherwise all child comments of a deleted comment will disappear
 		"",
 		"",
 		data.SortAsc,

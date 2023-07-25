@@ -6,7 +6,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { CommentListComponent } from './comment-list.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
 import { ToolsModule } from '../../../tools/tools.module';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
@@ -23,7 +23,7 @@ describe('CommentListComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ConfigService),
-                MockProvider(DomainSelectorService, {domainUserIdps: of({})}),
+                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         });
         fixture = TestBed.createComponent(CommentListComponent);

@@ -5,4 +5,4 @@
 </header>
 
 <!-- Stats chart -->
-<app-stats-chart [domainId]="(domain$ | async)?.id"></app-stats-chart>
+<app-stats-chart [domainId]="(domainMeta$ | async)?.domain?.id"></app-stats-chart>

@@ -15,7 +15,7 @@
             </div>
 
             <!-- Status filter buttons: only for a moderator -->
-            <div *ngIf="isModerator" class="col-auto">
+            <div *ngIf="domainMeta?.canModerateDomain" class="col-auto">
                 <div class="btn-group" role="group">
                     <!-- Show approved -->
                     <input formControlName="approved" type="checkbox" class="btn-check" id="filterShowApproved" autocomplete="off">
@@ -31,6 +31,11 @@
                     <input formControlName="rejected" type="checkbox" class="btn-check" id="filterShowRejected" autocomplete="off">
                     <label for="filterShowRejected" class="btn btn-outline-secondary" title="Show rejected" i18n-title>
                         <fa-icon [icon]="faXmark"></fa-icon>
+                    </label>
+                    <!-- Show deleted -->
+                    <input formControlName="deleted" type="checkbox" class="btn-check" id="filterShowDeleted" autocomplete="off">
+                    <label for="filterShowDeleted" class="btn btn-outline-secondary" title="Show deleted" i18n-title>
+                        <fa-icon [icon]="faTrashAlt"></fa-icon>
                     </label>
                 </div>
             </div>
@@ -48,7 +53,9 @@
         <div class="list-group">
             <div *ngFor="let c of comments"
                  [class.list-group-item-pending]="c.isPending"
-                 [class.list-group-item-rejected]="!c.isPending && !c.isApproved" class="list-group-item clearfix">
+                 [class.list-group-item-rejected]="!c.isPending && !c.isApproved"
+                 [class.list-group-item-deleted]="c.isDeleted"
+                 class="list-group-item clearfix">
                 <!-- Comment metadata -->
                 <div class="list-group-item-header row align-items-center">
                     <!-- User created -->
@@ -73,24 +80,26 @@
                 </div>
                 <div class="row align-items-start my-3">
                     <!-- Comment text -->
-                    <div [innerHTML]="c.html" class="col"></div>
-                    <!-- Action buttons -->
-                    <div *ngIf="isModerator || c.userCreated === principal?.id" class="col-12 col-sm-auto btn-group btn-group-sm" role="group">
+                    <div *ngIf="!c.isDeleted else deleted" [innerHTML]="c.html" class="col"></div>
+                    <ng-template #deleted><div class="col" i18n>(deleted)</div></ng-template>
+
+                    <!-- Action buttons: non-deleted, moderators or own comments only -->
+                    <div *ngIf="!c.isDeleted && (domainMeta?.canModerateDomain || c.userCreated === domainMeta?.principal?.id)"
+                         class="col-12 col-sm-auto btn-group btn-group-sm" role="group">
                         <!-- Approve -->
-                        <button *ngIf="isModerator && !c.isDeleted" [class.active]="!c.isPending && c.isApproved"
+                        <button *ngIf="domainMeta?.canModerateDomain" [class.active]="!c.isPending && c.isApproved"
                                 (click)="moderateComment(c, true)"
                                 class="btn btn-light text-success flex-grow-0" type="button" title="Approve" i18n-title>
                             <fa-icon [icon]="faCheck"></fa-icon>
                         </button>
                         <!-- Reject -->
-                        <button *ngIf="isModerator && !c.isDeleted" [class.active]="!c.isPending && !c.isApproved"
+                        <button *ngIf="domainMeta?.canModerateDomain" [class.active]="!c.isPending && !c.isApproved"
                                 (click)="moderateComment(c, false)"
                                 class="btn btn-light text-warning flex-grow-0" type="button" title="Reject" i18n-title>
                             <fa-icon [icon]="faXmark"></fa-icon>
                         </button>
                         <!-- Delete -->
                         <button appConfirm="Are you sure you want to delete this comment?" (confirmed)="deleteComment(c)"
-                                [class.active]="c.isDeleted" [disabled]="c.isDeleted"
                                 class="btn btn-light text-danger flex-grow-0" type="button"
                                 title="Delete" i18n-appConfirm i18n-title>
                             <fa-icon [icon]="faTrashAlt"></fa-icon>

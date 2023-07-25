@@ -4,10 +4,10 @@
 </header>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="domain && page">
+    <ng-container *ngIf="domainMeta?.domain && page">
         <div class="row">
             <!-- Buttons: only for superuser/owner -->
-            <div *ngIf="isOwner" class="col-sm-auto order-sm-last pb-3">
+            <div *ngIf="domainMeta!.canManageDomain" class="col-sm-auto order-sm-last pb-3">
                 <!-- Update title button -->
                 <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
                     <fa-icon [icon]="faRotate" class="me-1"></fa-icon>
@@ -21,12 +21,12 @@
                     <!-- Domain -->
                     <div>
                         <dt i18n>Domain</dt>
-                        <dd><a [routerLink]="[Paths.manage.domains, domain.id]">{{ domain.host }}</a></dd>
+                        <dd><a [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id]">{{ domainMeta!.domain!.host }}</a></dd>
                     </div>
                     <!-- Path -->
                     <div>
                         <dt i18n>Path</dt>
-                        <dd><a href="{{ domain.rootUrl }}{{ page.path }}" target="_blank"
+                        <dd><a href="{{ domainMeta!.domain!.rootUrl }}{{ page.path }}" target="_blank"
                                rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>{{ page.path }}</a></dd>
                     </div>
                     <!-- Title -->
@@ -35,7 +35,7 @@
                         <dd>{{ v }}</dd>
                     </div>
                     <!-- Read-only -->
-                    <div *ngIf="isOwner">
+                    <div>
                         <dt i18n>Read-only</dt>
                         <dd><app-checkmark [value]="page.isReadonly"></app-checkmark></dd>
                     </div>
@@ -69,5 +69,5 @@
     </ng-container>
 
     <!-- Placeholder when no data -->
-    <app-no-data *ngIf="!domain || !page"></app-no-data>
+    <app-no-data *ngIf="!domainMeta?.domain || !page"></app-no-data>
 </div>

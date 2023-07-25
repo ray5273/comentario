@@ -4,12 +4,12 @@ import { CanActivateFn, UrlTree } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { ManageGuard } from './manage.guard';
-import { DomainSelectorService } from '../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 import { Domain } from '../../../../generated-api';
 
 describe('ManageGuard', () => {
 
-    let domainEmitter: Subject<Domain | undefined>;
+    let domainEmitter: Subject<DomainMeta>;
 
     const isDomainSelected: CanActivateFn = (...args) =>
         TestBed.runInInjectionContext(() => ManageGuard.isDomainSelected(...args));
@@ -17,13 +17,13 @@ describe('ManageGuard', () => {
     const runIsDomainSelected = () => isDomainSelected(undefined as any, undefined as any) as Observable<any>;
 
     beforeEach(() => {
-        domainEmitter = new Subject<Domain | undefined>();
+        domainEmitter = new Subject<DomainMeta>();
         TestBed.configureTestingModule({
             imports: [RouterTestingModule],
             providers: [
                 // Need to explicitly declare as provider because it's scoped to the module
                 ManageGuard,
-                MockProvider(DomainSelectorService, {domain: domainEmitter}),
+                MockProvider(DomainSelectorService, {domainMeta: domainEmitter}),
             ],
         });
     });
@@ -37,7 +37,7 @@ describe('ManageGuard', () => {
             expect(v).toBeTrue();
             done();
         });
-        domainEmitter.next({} as Domain);
+        domainEmitter.next(new DomainMeta({} as Domain));
     });
 
     it('resolves to domains route when no domain', done => {
@@ -46,6 +46,6 @@ describe('ManageGuard', () => {
             expect(v.toString()).toBe('/manage/domains');
             done();
         });
-        domainEmitter.next(undefined);
+        domainEmitter.next(new DomainMeta());
     });
 });

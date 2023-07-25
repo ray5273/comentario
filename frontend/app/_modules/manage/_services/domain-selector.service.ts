@@ -12,23 +12,56 @@ interface DomainSelectorSettings {
     domainId?: string;
 }
 
+/** Kind of the current user in relation to a domain. */
+export type DomainUserKind = 'superuser' | 'owner' | 'moderator' | 'commenter' | 'readonly';
+
 // An object that combines domain, user, and IdP data
-export interface DomainUserIdps {
-    domain?:          Domain;
-    domainUser?:      DomainUser;
-    federatedIdpIds?: FederatedIdpId[];
-    principal?:       Principal;
+export class DomainMeta {
+
+    /** Kind of the current user in relation to the domain. */
+    readonly userKind?: DomainUserKind;
+
+    /** Whether the current user is allowed to manage the domain, i.e. it's a superuser or a domain owner. */
+    readonly canManageDomain: boolean;
+
+    /** Whether the current user is allowed to moderate the domain, i.e. it's a superuser, domain owner, or domain moderator. */
+    readonly canModerateDomain: boolean;
+
+    constructor(
+        /** Selected domain. */
+        readonly domain?: Domain,
+        /** Domain user corresponding to the currently authenticated principal. */
+        readonly domainUser?: DomainUser,
+        /** List of federated IdP IDs enabled for the domain. */
+        readonly federatedIdpIds?: FederatedIdpId[],
+        /** Authenticated principal, if any. */
+        readonly principal?: Principal,
+    ) {
+        // Calculate additional properties
+        if (domainUser && principal) {
+            if (principal.isSuperuser) {
+                this.userKind = 'superuser';
+            } else if (domainUser.isOwner) {
+                this.userKind = 'owner';
+            } else if (domainUser.isModerator) {
+                this.userKind = 'moderator';
+            } else if (domainUser.isCommenter) {
+                this.userKind = 'commenter';
+            } else {
+                this.userKind = 'readonly';
+            }
+        }
+        this.canManageDomain = !!(domain && (principal?.isSuperuser || domainUser?.isOwner));
+        this.canModerateDomain = this.canManageDomain || !!(domain && domainUser?.isModerator);
+    }
 }
 
 @UntilDestroy()
 @Injectable()
 export class DomainSelectorService {
 
-    /** Observable to get notifications about selected domain changes. */
-    readonly domain: Observable<Domain | undefined> = new ReplaySubject<Domain | undefined>(1);
-
-    /** Observable to get notifications about selected domain, user, IdP, and principal changes. */
-    readonly domainUserIdps: Observable<DomainUserIdps> = new ReplaySubject<DomainUserIdps>(1);
+    /** Observable to get notifications about selected domain and current user changes. */
+    readonly domainMeta: Observable<DomainMeta> = new ReplaySubject<DomainMeta>(1);
 
     private lastId?: string;
     private lastPrincipal?: Principal;
@@ -103,7 +136,7 @@ export class DomainSelectorService {
         // Load domain and IdPs from the backend. Silently ignore possible errors during domain fetching
         this.api.domainGet(id, undefined, undefined, {context: new HttpContext().set(HTTP_ERROR_HANDLING, errorHandling)})
             .subscribe({
-                next:  r => this.setDomain(r as DomainUserIdps),
+                next:  r => this.setDomain(r),
                 error: () => this.setDomain(undefined),
             });
     }
@@ -114,14 +147,8 @@ export class DomainSelectorService {
      */
     private setDomain(v: { domain?: Domain; domainUser?: DomainUser; federatedIdpIds?: Array<FederatedIdpId> } | undefined) {
         // Notify the subscribers
-        (this.domain as ReplaySubject<Domain | undefined>).next(v?.domain);
-        (this.domainUserIdps as ReplaySubject<DomainUserIdps>)
-            .next({
-                domain:          v?.domain,
-                domainUser:      v?.domainUser,
-                federatedIdpIds: v?.federatedIdpIds,
-                principal:       this.principal,
-            });
+        (this.domainMeta as ReplaySubject<DomainMeta>)
+            .next(new DomainMeta(v?.domain, v?.domainUser, v?.federatedIdpIds, this.principal));
 
         // Store the last used domainId
         this.localSettingSvc.storeValue<DomainSelectorSettings>('domainSelector', {domainId: v?.domain?.id});

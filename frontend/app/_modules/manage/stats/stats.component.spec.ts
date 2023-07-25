@@ -3,7 +3,7 @@ import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { StatsComponent } from './stats.component';
 import { StatsChartComponent } from '../stats-chart/stats-chart.component';
-import { DomainSelectorService } from '../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
 
 describe('StatsComponent', () => {
@@ -15,7 +15,7 @@ describe('StatsComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [StatsComponent, MockComponents(StatsChartComponent, DomainBadgeComponent)],
             providers: [
-                MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         })
             .compileComponents();

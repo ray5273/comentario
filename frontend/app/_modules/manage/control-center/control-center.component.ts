@@ -11,15 +11,14 @@ import {
     faQuestionCircle,
     faSignOutAlt,
     faTachometerAlt,
-    faUser,
-    faUsers, faUsersRectangle,
+    faUsers,
+    faUsersRectangle,
 } from '@fortawesome/free-solid-svg-icons';
+import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
-import { filter } from 'rxjs/operators';
-import { Domain, DomainUser, Principal } from '../../../../generated-api';
-import { DomainSelectorService } from '../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -32,14 +31,8 @@ export class ControlCenterComponent implements OnInit {
     /** Whether the sidebar is open by the user (only applies to small screens). */
     expanded = false;
 
-    /** Logged-in principal. */
-    principal?: Principal;
-
-    /** Currently selected domain. */
-    domain?: Domain;
-
-    /** User in the currently selected domain. */
-    domainUser?: DomainUser;
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
 
     readonly Paths = Paths;
 
@@ -54,7 +47,6 @@ export class ControlCenterComponent implements OnInit {
     readonly faQuestionCircle        = faQuestionCircle;
     readonly faSignOutAlt            = faSignOutAlt;
     readonly faTachometerAlt         = faTachometerAlt;
-    readonly faUser                  = faUser;
     readonly faUsers                 = faUsers;
     readonly faUsersRectangle        = faUsersRectangle;
 
@@ -65,11 +57,11 @@ export class ControlCenterComponent implements OnInit {
     ) {}
 
     get isSuper(): boolean | undefined {
-        return this.principal?.isSuperuser;
+        return this.domainMeta?.principal?.isSuperuser;
     }
 
-    get isSuperOrOwner(): boolean | undefined {
-        return this.principal?.isSuperuser || this.domainUser?.isOwner;
+    get canManageDomain(): boolean | undefined {
+        return this.domainMeta?.canManageDomain;
     }
 
     ngOnInit(): void {
@@ -79,13 +71,9 @@ export class ControlCenterComponent implements OnInit {
             .subscribe(() => this.expanded = false);
 
         // Monitor selected domain/user changes
-        this.domainSelectorSvc.domainUserIdps
+        this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
-            .subscribe(data => {
-                this.domain     = data.domain;
-                this.domainUser = data.domainUser;
-                this.principal  = data.principal;
-            });
+            .subscribe(meta => this.domainMeta = meta);
     }
 
     logout() {

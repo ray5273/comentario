@@ -7,7 +7,7 @@ import { DomainSelectorService } from '../_services/domain-selector.service';
 })
 export class StatsComponent {
 
-    readonly domain$ = this.domainSelectorSvc.domain;
+    readonly domainMeta$ = this.domainSelectorSvc.domainMeta;
 
     constructor(
         private readonly domainSelectorSvc: DomainSelectorService,

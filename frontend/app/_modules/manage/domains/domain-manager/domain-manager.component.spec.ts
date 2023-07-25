@@ -7,7 +7,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainManagerComponent } from './domain-manager.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
@@ -23,7 +23,7 @@ describe('DomainManagerComponent', () => {
             imports: [RouterTestingModule, ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainList: () => of({domains: []} as any)}),
-                MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
                 MockProvider(ConfigService),
             ],
         })

@@ -43,7 +43,7 @@ export class DomainManagerComponent implements OnInit {
 
     // Icons
     readonly faCheck = faCheck;
-    readonly faPlus = faPlus;
+    readonly faPlus  = faPlus;
 
     private loadedPageNum = 0;
 
@@ -53,7 +53,9 @@ export class DomainManagerComponent implements OnInit {
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
     ) {
-        this.domainSelectorSvc.domain.pipe(untilDestroyed(this)).subscribe(d => this.domain = d);
+        this.domainSelectorSvc.domainMeta
+            .pipe(untilDestroyed(this))
+            .subscribe(meta => this.domain = meta.domain);
     }
 
     get canAdd(): boolean {

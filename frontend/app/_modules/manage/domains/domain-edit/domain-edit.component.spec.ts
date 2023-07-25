@@ -8,7 +8,7 @@ import { ApiGeneralService, ComentarioConfig } from '../../../../../generated-ap
 import { ConfigService } from '../../../../_services/config.service';
 import { ToolsModule } from '../../../tools/tools.module';
 import { ToastService } from '../../../../_services/toast.service';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from '../../_pipes/comment-sort.pipe';
 
@@ -29,7 +29,7 @@ describe('DomainEditComponent', () => {
                 MockProvider(ConfigService, {config}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                 MockProvider(ToastService),
-                MockProvider(DomainSelectorService, {domainUserIdps: of({})}),
+                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         })
             .compileComponents();

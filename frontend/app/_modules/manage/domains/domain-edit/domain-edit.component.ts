@@ -4,19 +4,13 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { first } from 'rxjs';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import {
-    ApiGeneralService,
-    CommentSort,
-    Domain,
-    DomainModNotifyPolicy,
-    FederatedIdpId,
-} from '../../../../../generated-api';
+import { ApiGeneralService, CommentSort, Domain, DomainModNotifyPolicy } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ConfigService } from '../../../../_services/config.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Utils } from '../../../../_utils/utils';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 
 @UntilDestroy()
 @Component({
@@ -28,11 +22,8 @@ export class DomainEditComponent implements OnInit {
     /** Whether the page is about creating a new instance (rather than editing an existing one). */
     isNew = true;
 
-    /** Domain being edited. */
-    domain?: Domain;
-
-    /** IDs of federated identity providers enabled for the domain being edited. */
-    domainFedIdpIds?: FederatedIdpId[];
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
 
     readonly Paths = Paths;
     readonly sorts = Object.values(CommentSort);
@@ -85,31 +76,31 @@ export class DomainEditComponent implements OnInit {
         this.isNew = this.route.snapshot.data.new;
 
         // Fetch the domain, if any
-        this.domainSelectorSvc.domainUserIdps
+        this.domainSelectorSvc.domainMeta
             .pipe(this.loading.processing(), first())
-            .subscribe(data => {
-                if (data.domain) {
-                    this.domain          = data.domain;
-                    this.domainFedIdpIds = data.federatedIdpIds;
+            .subscribe(meta => {
+                const d = this.domainMeta?.domain;
+                if (d) {
+                    this.domainMeta = meta;
                     this.form.patchValue({
-                        host:             this.domain!.host,
-                        name:             this.domain!.name,
-                        isReadonly:       this.domain!.isReadonly,
-                        authAnonymous:    this.domain!.authAnonymous,
-                        authLocal:        this.domain!.authLocal,
-                        authSso:          this.domain!.authSso,
-                        modAnonymous:     this.domain!.modAnonymous,
-                        modAuthenticated: this.domain!.modAuthenticated,
-                        modNumCommentsOn: !!this.domain!.modNumComments,
-                        modNumComments:   this.domain!.modNumComments || 3,
-                        modUserAgeDaysOn: !!this.domain!.modUserAgeDays,
-                        modUserAgeDays:   this.domain!.modUserAgeDays || 7,
-                        modImages:        this.domain!.modImages,
-                        modLinks:         this.domain!.modLinks,
-                        modNotifyPolicy:  this.domain!.modNotifyPolicy,
-                        ssoUrl:           this.domain!.ssoUrl,
-                        defaultSort:      this.domain!.defaultSort,
-                        fedIdps:          this.fedIdps.map(idp => !!this.domainFedIdpIds?.includes(idp.id)),
+                        host:             d.host,
+                        name:             d.name,
+                        isReadonly:       d.isReadonly,
+                        authAnonymous:    d.authAnonymous,
+                        authLocal:        d.authLocal,
+                        authSso:          d.authSso,
+                        modAnonymous:     d.modAnonymous,
+                        modAuthenticated: d.modAuthenticated,
+                        modNumCommentsOn: !!d.modNumComments,
+                        modNumComments:   d.modNumComments || 3,
+                        modUserAgeDaysOn: !!d.modUserAgeDays,
+                        modUserAgeDays:   d.modUserAgeDays || 7,
+                        modImages:        d.modImages,
+                        modLinks:         d.modLinks,
+                        modNotifyPolicy:  d.modNotifyPolicy,
+                        ssoUrl:           d.ssoUrl,
+                        defaultSort:      d.defaultSort,
+                        fedIdps:          this.fedIdps.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
                     });
                 }
             });
@@ -130,9 +121,9 @@ export class DomainEditComponent implements OnInit {
         // Submit the form if it's valid
         if (this.form.valid) {
             const vals = this.form.value;
-            const domain: Partial<Domain> = {
+            const domain: Domain = {
                 // Host cannot be changed once set
-                host:             vals.host || this.domain!.host,
+                host:             vals.host || this.domainMeta!.domain!.host,
                 name:             vals.name,
                 isReadonly:       vals.isReadonly,
                 authAnonymous:    !!vals.authAnonymous,
@@ -152,8 +143,8 @@ export class DomainEditComponent implements OnInit {
 
             // Run creation/updating with the API
             (this.isNew ?
-                    this.api.domainNew({domain: domain as Domain, federatedIdpIds}) :
-                    this.api.domainUpdate(this.domain!.id!, {domain: domain as Domain, federatedIdpIds}))
+                    this.api.domainNew({domain, federatedIdpIds}) :
+                    this.api.domainUpdate(this.domainMeta!.domain!.id!, {domain, federatedIdpIds}))
                 .pipe(this.saving.processing())
                 .subscribe(newDomain => {
                     // Add a success toast

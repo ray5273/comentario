@@ -11,8 +11,8 @@ import {
     faUser,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Comment, Commenter, Domain, DomainUser, Principal } from '../../../../../generated-api';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { ApiGeneralService, Comment, Commenter } from '../../../../../generated-api';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -37,20 +37,11 @@ export class CommentListComponent implements OnInit, OnChanges {
     @Input()
     userId?: string;
 
-    /** Logged-in principal. */
-    principal?: Principal;
-
-    /** Currently selected domain. */
-    domain?: Domain;
-
-    /** User in the currently selected domain. */
-    domainUser?: DomainUser;
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
 
     /** Loaded list of comments. */
     comments?: Comment[];
-
-    /** Whether the current user is a moderator, an owner of the domain, or a superuser. */
-    isModerator = false;
 
     /** Whether there are more results to load. */
     canLoadMore = true;
@@ -69,6 +60,7 @@ export class CommentListComponent implements OnInit, OnChanges {
         approved: false,
         pending:  true,
         rejected: false,
+        deleted:  false,
         filter:   '',
     });
 
@@ -92,20 +84,18 @@ export class CommentListComponent implements OnInit, OnChanges {
     ngOnInit(): void {
         merge(
                 // Subscribe to domain changes. This will also trigger an initial load
-                this.domainSelectorSvc.domainUserIdps.pipe(
+                this.domainSelectorSvc.domainMeta.pipe(
                     untilDestroyed(this),
                     // Store the domain and the user
-                    tap(data => {
-                        this.principal  = data.principal;
-                        this.domainUser = data.domainUser;
-                        this.domain     = data.domain;
-                        this.isModerator = !!(this.principal?.isSuperuser || this.domainUser?.isOwner || this.domainUser?.isModerator);
+                    tap(meta => {
+                        this.domainMeta = meta;
                         // If the user is not a moderator, disable the status filter
                         Utils.enableControls(
-                            this.isModerator,
+                            this.domainMeta?.canModerateDomain,
                             this.filterForm.controls.approved,
                             this.filterForm.controls.pending,
-                            this.filterForm.controls.rejected);
+                            this.filterForm.controls.rejected,
+                            this.filterForm.controls.deleted);
                     })),
                 // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
@@ -125,20 +115,22 @@ export class CommentListComponent implements OnInit, OnChanges {
                     }
                 }),
                 // Nothing can be loaded unless a domain is selected
-                filter(() => !!this.domain),
+                filter(() => !!this.domainMeta?.domain),
                 // Load the comment list
                 switchMap(() => {
                     // Load the domain list
                     const f = this.filterForm.value;
+                    const isMod = !!this.domainMeta?.canModerateDomain;
                     return this.api.commentList(
-                            this.domain!.id!,
+                            this.domainMeta!.domain!.id!,
                             this.pageId,
                             // If no user explicitly provided and the current user isn't a moderator, limit the comment
                             // list to their comments only
-                            this.userId || (this.isModerator ? undefined : this.principal?.id),
-                            !this.isModerator || f.approved,
-                            !this.isModerator || f.pending,
-                            !this.isModerator || f.rejected,
+                            this.userId || (isMod ? undefined : this.domainMeta?.principal?.id),
+                            !isMod || f.approved,
+                            !isMod || f.pending,
+                            !isMod || f.rejected,
+                            !isMod || f.deleted,
                             f.filter,
                             ++this.loadedPageNum,
                             this.sort.property as any,

@@ -4,9 +4,9 @@
     <app-domain-badge></app-domain-badge>
 </header>
 
-<ng-container *ngIf="domain">
+<ng-container *ngIf="domainMeta?.domain as domain">
     <!-- Installation, only for an owner user -->
-    <section *ngIf="domainUser?.isOwner">
+    <section *ngIf="domainMeta!.domainUser?.isOwner">
         <!-- Heading -->
         <h2 i18n>Installation</h2>
 
@@ -28,7 +28,7 @@
     <h2 i18n>Properties</h2>
     <div class="row">
         <!-- Buttons: only for superuser/owner -->
-        <div *ngIf="principal?.isSuperuser || domainUser?.isOwner" class="col-sm-auto order-sm-last pb-3">
+        <div *ngIf="domainMeta!.canManageDomain" class="col-sm-auto order-sm-last pb-3">
             <!-- Edit settings button -->
             <button [routerLink]="[Paths.manage.domains, domain.id, 'edit']" type="button" class="btn btn-secondary w-100">
                 <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
@@ -111,4 +111,4 @@
 </ng-container>
 
 <!-- Placeholder when no data -->
-<app-no-data *ngIf="!domain"></app-no-data>
+<app-no-data *ngIf="!domainMeta?.domain"></app-no-data>

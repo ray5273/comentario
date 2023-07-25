@@ -9,7 +9,7 @@ import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
 import { ToolsModule } from '../../tools/tools.module';
 import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
-import { DomainSelectorService } from '../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 
 describe('DomainOperationsComponent', () => {
 
@@ -23,7 +23,7 @@ describe('DomainOperationsComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),
-                MockProvider(DomainSelectorService, {domain: of(undefined)}),
+                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         })
             .compileComponents();

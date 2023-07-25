@@ -64,9 +64,9 @@ export class DomainOperationsComponent implements OnInit {
 
     ngOnInit(): void {
         // Subscribe to domain changes
-        this.domainSelectorSvc.domain
+        this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
-            .subscribe(d => this.domain = d);
+            .subscribe(meta => this.domain = meta.domain);
     }
 
     exportData() {

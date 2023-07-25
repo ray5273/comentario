@@ -4,8 +4,8 @@ import { BehaviorSubject, combineLatestWith, switchMap, tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Domain, DomainPage, DomainUser, Principal } from '../../../../../generated-api';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { ApiGeneralService, DomainPage } from '../../../../../generated-api';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { Paths } from '../../../../_utils/consts';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
@@ -20,14 +20,8 @@ export class PagePropertiesComponent implements OnInit {
     /** The current domain page. */
     page?: DomainPage;
 
-    /** Logged-in principal. */
-    principal?: Principal;
-
-    /** Currently selected domain. */
-    domain?: Domain;
-
-    /** User in the currently selected domain. */
-    domainUser?: DomainUser;
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
 
     readonly Paths = Paths;
     readonly loading = new ProcessingStatus();
@@ -45,13 +39,6 @@ export class PagePropertiesComponent implements OnInit {
         private readonly toastSvc: ToastService,
     ) {}
 
-    /**
-     * Whether the current user is an owner of the domain (or a superuser).
-     */
-    get isOwner(): boolean {
-        return !!(this.principal?.isSuperuser || this.domainUser?.isOwner);
-    }
-
     ngOnInit(): void {
         this.route.paramMap
             .pipe(
@@ -67,13 +54,9 @@ export class PagePropertiesComponent implements OnInit {
             });
 
         // Subscribe to domain changes
-        this.domainSelectorSvc.domainUserIdps
+        this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
-            .subscribe(data => {
-                this.domain     = data.domain;
-                this.domainUser = data.domainUser;
-                this.principal  = data.principal;
-            });
+            .subscribe(meta => this.domainMeta = meta);
     }
 
     updateTitle() {
