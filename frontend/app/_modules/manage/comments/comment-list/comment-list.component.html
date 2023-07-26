@@ -1,3 +1,12 @@
+<!-- Info block -->
+<div *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind" class="w-100 ps-2 mb-3">
+    <fa-icon [icon]="faLightbulb" class="me-1 text-info"></fa-icon>
+    <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all comments on the domain, just like domain owners and moderators.</ng-container>
+    <ng-container *ngSwitchCase="'owner'"     i18n>As a domain owner, you see all comments on the domain, just like moderators do. Regular users only see their own comments.</ng-container>
+    <ng-container *ngSwitchCase="'moderator'" i18n>As a domain moderator, you see all comments on the domain. Regular users only see their own comments.</ng-container>
+    <ng-container *ngSwitchDefault            i18n>Below you see all your comments on the domain.</ng-container>
+</div>
+
 <div [appSpinner]="commentsLoading.active || commentUpdating.active" spinnerSize="lg">
     <!-- Toolbar -->
     <div class="mb-3">

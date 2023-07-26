@@ -4,7 +4,7 @@ import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMa
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
-    faCheck,
+    faCheck, faLightbulb,
     faQuestion,
     faTrashAlt,
     faUpRightFromSquare,
@@ -185,4 +185,6 @@ export class CommentListComponent implements OnInit, OnChanges {
                 c.isApproved = approved;
             });
     }
+
+    protected readonly faLightbulb = faLightbulb;
 }

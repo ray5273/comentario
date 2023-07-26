@@ -38,14 +38,14 @@ export class DomainMeta {
         readonly principal?: Principal,
     ) {
         // Calculate additional properties
-        if (domainUser && principal) {
+        if (principal) {
             if (principal.isSuperuser) {
                 this.userKind = 'superuser';
-            } else if (domainUser.isOwner) {
+            } else if (domainUser?.isOwner) {
                 this.userKind = 'owner';
-            } else if (domainUser.isModerator) {
+            } else if (domainUser?.isModerator) {
                 this.userKind = 'moderator';
-            } else if (domainUser.isCommenter) {
+            } else if (domainUser?.isCommenter) {
                 this.userKind = 'commenter';
             } else {
                 this.userKind = 'readonly';

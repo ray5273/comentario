@@ -2,12 +2,12 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
-import { faCheck, faPlus } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faLightbulb, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainUser } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 
@@ -18,11 +18,11 @@ import { Sort } from '../../_models/sort';
 })
 export class DomainManagerComponent implements OnInit {
 
+    /** Domain/user metadata. */
+    domainMeta?: DomainMeta;
+
     /** Loaded list of domains. */
     domains?: Domain[];
-
-    /** Domain currently selected in domain selector. */
-    domain?: Domain;
 
     /** Whether there are more results to load. */
     canLoadMore = true;
@@ -55,7 +55,7 @@ export class DomainManagerComponent implements OnInit {
     ) {
         this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
-            .subscribe(meta => this.domain = meta.domain);
+            .subscribe(meta => this.domainMeta = meta);
     }
 
     get canAdd(): boolean {
@@ -99,4 +99,6 @@ export class DomainManagerComponent implements OnInit {
                 r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId!, du));
             });
     }
+
+    protected readonly faLightbulb = faLightbulb;
 }

@@ -1,5 +1,12 @@
 <!-- Heading -->
-<h1 i18n="heading">Domains</h1>
+<h1 class="mb-0" i18n="heading">Domains</h1>
+
+<!-- Info block -->
+<div *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind" class="ps-2 mb-3">
+    <fa-icon [icon]="faLightbulb" class="me-1 text-info"></fa-icon>
+    <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all domains registered in the system. Other users only see domains they registered on.</ng-container>
+    <ng-container *ngSwitchDefault            i18n>Below you see all domains you registered on, and your role in each of them.</ng-container>
+</div>
 
 <div [appSpinner]="domainsLoading.active" spinnerSize="lg">
     <!-- Toolbar -->
@@ -38,11 +45,11 @@
     <ng-container *ngIf="domains?.length">
         <!-- Domain list -->
         <div class="list-group">
-            <a *ngFor="let d of domains" [routerLink]="d.id" [class.list-group-item-info]="d.id === domain?.id" class="list-group-item list-group-item-action">
+            <a *ngFor="let d of domains" [routerLink]="d.id" [class.list-group-item-info]="d.id === domainMeta?.domain?.id" class="list-group-item list-group-item-action">
                 <div class="row">
                     <!-- Checkmark for the selected domain -->
                     <div class="d-none d-sm-flex col-1 justify-content-center align-items-center">
-                        <fa-icon *ngIf="d.id === domain?.id" [icon]="faCheck" size="2x"></fa-icon>
+                        <fa-icon *ngIf="d.id === domainMeta?.domain?.id" [icon]="faCheck" size="2x"></fa-icon>
                     </div>
                     <!-- Domain name/host -->
                     <div class="col">
