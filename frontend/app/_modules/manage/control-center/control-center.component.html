@@ -81,7 +81,7 @@
 
                 <!-- Owner items -->
                 <ng-container *ngIf="canManageDomain">
-                    <!-- Domain users: owner only -->
+                    <!-- Domain users -->
                     <li class="nav-item">
                         <a [routerLink]="Paths.manage.domainUsers" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faUsersRectangle"></fa-icon>
@@ -97,7 +97,7 @@
                         </a>
                     </li>
 
-                    <!-- Operations: owner only -->
+                    <!-- Operations -->
                     <li class="nav-item">
                         <a [routerLink]="Paths.manage.operations" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faArrowDownUpAcrossLine"></fa-icon>

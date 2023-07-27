@@ -195,7 +195,7 @@ func DomainSsoSecretNew(_ api_general.DomainSsoSecretNewParams, _ *data.User) mi
 	/* TODO new-db
 	// Verify the user owns the domain
 	host := models.Host(params.Host)
-	if r := Verifier.UserCanEditDomain(principal.GetHexID(), host); r != nil {
+	if r := Verifier.UserCanManageDomain(principal.GetHexID(), host); r != nil {
 		return r
 	}
 
@@ -287,8 +287,8 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 }
 
 // domainGetWithUser parses a string UUID and fetches the corresponding domain and its user, optionally verifying they
-// are allowed to edit the domain
-func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canEdit bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
+// are allowed to manage the domain
+func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canManage bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse domain ID
 	if domainID, err := data.DecodeUUID(domainUUID); err != nil {
 		return nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(domainUUID)))
@@ -299,8 +299,8 @@ func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canEdit bool) (*
 
 	} else {
 		// Verify the user can change the domain, if necessary
-		if canEdit {
-			if r := Verifier.UserCanEditDomain(user, domainUser); r != nil {
+		if canManage {
+			if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
 				return nil, nil, r
 			}
 

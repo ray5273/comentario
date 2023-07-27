@@ -48,6 +48,14 @@ type UserService interface {
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	List(filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, error)
+	// ListByDomain fetches and returns a list of domain users for the domain with the given ID, and the corresponding
+	// users. Minimum access level: domain owner
+	//   - superuser indicates whether the current user is a superuser
+	//   - filter is an optional substring to filter the result by.
+	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the host.
+	//   - dir is the sort direction.
+	//   - pageIndex is the page index, if negative, no pagination is applied.
+	ListByDomain(domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, []*data.DomainUser, error)
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
@@ -173,76 +181,28 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	logger.Debugf("userService.FindDomainUserByID(%s, %s)", userID, domainID)
 
 	// Query the database
-	var u data.User
-	var du data.DomainUser
-	var duUID, duDID, avatarID uuid.NullUUID
-	var duCreated sql.NullTime
-	if err := db.QueryRow(
+	row := db.QueryRow(
 		"select "+
 			// User fields
 			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
 			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, coalesce(u.federated_idp, ''), u.federated_id, u.website_url, "+
+			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.website_url, "+
 			// Avatar fields
 			"a.user_id, "+
 			// DomainUser fields
-			"du.domain_id, du.user_id, coalesce(du.is_owner, false), coalesce(du.is_moderator, false), "+
-			"coalesce(du.is_commenter, false), coalesce(du.notify_replies, false), "+
-			"coalesce(du.notify_moderator, false), du.ts_created "+
+			"du.domain_id, du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, "+
+			"du.notify_moderator, du.ts_created "+
 			"from cm_users u "+
 			"left join cm_domains_users du on du.user_id=u.id and du.domain_id=$1 "+
 			"left join cm_user_avatars a on a.user_id=u.id "+
 			"where u.id=$2;",
-		userID, domainID,
-	).Scan(
-		// User
-		&u.ID,
-		&u.Email,
-		&u.Name,
-		&u.PasswordHash,
-		&u.SystemAccount,
-		&u.IsSuperuser,
-		&u.Confirmed,
-		&u.ConfirmedTime,
-		&u.CreatedTime,
-		&u.UserCreated,
-		&u.SignupIP,
-		&u.SignupCountry,
-		&u.SignupHost,
-		&u.Banned,
-		&u.BannedTime,
-		&u.UserBanned,
-		&u.Remarks,
-		&u.FederatedIdP,
-		&u.FederatedID,
-		&u.WebsiteURL,
-		// Avatar fields
-		&avatarID,
-		// DomainUser
-		&duDID,
-		&duUID,
-		&du.IsOwner,
-		&du.IsModerator,
-		&du.IsCommenter,
-		&du.NotifyReplies,
-		&du.NotifyModerator,
-		&duCreated,
-	); err != nil {
-		return nil, nil, translateDBErrors(err)
+		userID, domainID)
+	if u, du, err := svc.fetchUserDomainUser(row); err != nil {
+		return nil, nil, err
+	} else {
+		// Succeeded
+		return u, du, nil
 	}
-	u.HasAvatar = avatarID.Valid
-
-	// If there's a DomainUser available
-	var pdu *data.DomainUser
-	if duDID.Valid && duUID.Valid {
-		du.DomainID = duDID.UUID
-		du.UserID = duUID.UUID
-		du.CreatedTime = duCreated.Time
-		pdu = &du
-	}
-
-	// Succeeded
-	return &u, pdu, nil
 }
 
 func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.User, error) {
@@ -413,6 +373,97 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	return us, nil
 }
 
+func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, []*data.DomainUser, error) {
+	logger.Debugf("userService.ListByDomain(%s, %v, '%s', '%s', %s, %d)", domainID, superuser, filter, sortBy, dir, pageIndex)
+
+	// Prepare a query
+	q := db.Dialect().
+		From(goqu.T("cm_domains_users").As("du")).
+		Select(
+			// User fields
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id",
+			"u.website_url",
+			// Avatar fields
+			"a.user_id",
+			// DomainUser fields
+			"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
+			"du.notify_moderator", "du.ts_created").
+		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("du.user_id")})).
+		Where(goqu.Ex{"du.domain_id": domainID})
+
+	// Add substring filter
+	if filter != "" {
+		pattern := "%" + strings.ToLower(filter) + "%"
+		q = q.Where(goqu.Or(
+			goqu.L(`lower("u"."email")`).Like(pattern),
+			goqu.L(`lower("u"."name")`).Like(pattern),
+			goqu.L(`lower("u"."remarks")`).Like(pattern),
+		))
+	}
+
+	// Configure sorting
+	sortIdent := "u.email"
+	switch sortBy {
+	case "name":
+		sortIdent = "u.name"
+	case "created":
+		sortIdent = "du.ts_created"
+	}
+	q = q.Order(
+		dir.ToOrderedExpression(sortIdent),
+		goqu.I("du.user_id").Asc(), // Always add ID for stable ordering
+	)
+
+	// Paginate if required
+	if pageIndex >= 0 {
+		q = q.Limit(util.ResultPageSize).Offset(uint(pageIndex) * util.ResultPageSize)
+	}
+
+	// Query domains
+	rows, err := db.Select(q)
+	if err != nil {
+		logger.Errorf("userService.ListByDomainUser: Query() failed: %v", err)
+		return nil, nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Fetch the users
+	var dus []*data.DomainUser
+	um := map[uuid.UUID]*data.User{}
+	for rows.Next() {
+		// Fetch the user and the domain user
+		u, du, err := svc.fetchUserDomainUser(rows)
+		if err != nil {
+			return nil, nil, err
+		}
+
+		// Accumulate domain users
+		dus = append(dus, du)
+
+		// Add the user to the map, if it doesn't already exist, with proper clearance
+		if _, ok := um[u.ID]; !ok {
+			um[u.ID] = u.CloneWithClearance(superuser, true, true)
+		}
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, nil, translateDBErrors(err)
+	}
+
+	// Convert the user map into a slice
+	us := make([]*data.User, 0, len(um))
+	for _, u := range um {
+		us = append(us, u)
+	}
+
+	// Succeeded
+	return us, dus, nil
+}
+
 func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {
 	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
 
@@ -485,7 +536,76 @@ func (svc *userService) Update(user *data.User) error {
 	return nil
 }
 
-// fetchUser returns a new user, and, optionally, user session instance from the provided database row
+// fetchUserDomainUser returns a new user, and domain user instance from the provided database row
+func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.DomainUser, error) {
+	var u data.User
+	var fidp sql.NullString
+	var duUID, duDID, avatarID uuid.NullUUID
+	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator sql.NullBool
+	var duCreated sql.NullTime
+	if err := s.Scan(
+		// User
+		&u.ID,
+		&u.Email,
+		&u.Name,
+		&u.PasswordHash,
+		&u.SystemAccount,
+		&u.IsSuperuser,
+		&u.Confirmed,
+		&u.ConfirmedTime,
+		&u.CreatedTime,
+		&u.UserCreated,
+		&u.SignupIP,
+		&u.SignupCountry,
+		&u.SignupHost,
+		&u.Banned,
+		&u.BannedTime,
+		&u.UserBanned,
+		&u.Remarks,
+		&fidp,
+		&u.FederatedID,
+		&u.WebsiteURL,
+		// Avatar fields
+		&avatarID,
+		// DomainUser
+		&duDID,
+		&duUID,
+		&duIsOwner,
+		&duIsModerator,
+		&duIsCommenter,
+		&duNotifyReplies,
+		&duNotifyModerator,
+		&duCreated,
+	); err != nil {
+		logger.Errorf("userService.fetchUserDomainUser: Scan() failed: %v", err)
+		return nil, nil, translateDBErrors(err)
+	}
+	if fidp.Valid {
+		u.FederatedID = fidp.String
+	}
+	u.HasAvatar = avatarID.Valid
+
+	// If there's a DomainUser available
+	var pdu *data.DomainUser
+	if duDID.Valid && duUID.Valid {
+		pdu = &data.DomainUser{
+			DomainID:        duDID.UUID,
+			UserID:          duUID.UUID,
+			IsOwner:         duIsOwner.Bool,
+			IsModerator:     duIsModerator.Bool,
+			IsCommenter:     duIsCommenter.Bool,
+			NotifyReplies:   duNotifyReplies.Bool,
+			NotifyModerator: duNotifyModerator.Bool,
+			CreatedTime:     duCreated.Time,
+		}
+	}
+
+	// Succeeded
+	return &u, pdu, nil
+
+}
+
+// fetchUserSession returns a new user, and, optionally, user session instance from the provided database row
 func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*data.User, *data.UserSession, error) {
 	// Prepare user fields
 	u := data.User{}

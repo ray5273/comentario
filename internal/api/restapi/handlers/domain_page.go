@@ -60,7 +60,7 @@ func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user 
 	}
 
 	// Make sure the user is allowed to update page
-	if r := Verifier.UserCanEditDomain(user, domainUser); r != nil {
+	if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
 		return r
 	}
 

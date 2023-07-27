@@ -2106,6 +2106,46 @@ paths:
           description: Comment has been updated
 
   #---------------------------------------------------------------------------------------------------------------------
+  # Domain users
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /domain-users:
+    get:
+      operationId: DomainUserList
+      summary: Get a list of domain users for a specific domain
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+        - $ref: "#/parameters/queryFilter"
+        - $ref: "#/parameters/queryPageNumber"
+        - in: query
+          name: sortBy
+          type: string
+          enum:
+            - email
+            - name
+            - created
+          description: Property to sort results by
+        - $ref: "#/parameters/querySortDesc"
+      responses:
+        200:
+          description: List of domain users
+          schema:
+            type: object
+            properties:
+              domainUsers:
+                type: array
+                items:
+                  $ref: "#/definitions/domainUser"
+                description: List of domain users
+              users:
+                type: array
+                items:
+                  $ref: "#/definitions/user"
+                description: List of users corresponding to domainUsers (can be matched by userId)
+
+  #---------------------------------------------------------------------------------------------------------------------
   # Users
   #---------------------------------------------------------------------------------------------------------------------
 

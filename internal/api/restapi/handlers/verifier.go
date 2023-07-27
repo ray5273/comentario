@@ -30,9 +30,9 @@ type VerifierService interface {
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
-	// UserCanEditDomain verifies the given user is a superuser or the domain user is a domain owner. domainUser can be
-	// nil
-	UserCanEditDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
+	// UserCanManageDomain verifies the given user is a superuser or the domain user is a domain owner. domainUser can
+	// be nil
+	UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
 	// UserCanModerateDomain verifies the given user is a superuser or the domain user is a domain moderator. domainUser
 	// can be nil
 	UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
@@ -197,7 +197,7 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 	return nil, nil
 }
 
-func (v *verifier) UserCanEditDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
+func (v *verifier) UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
 	if !user.IsSuperuser && (domainUser == nil || !domainUser.IsOwner) {
 		return respForbidden(ErrorNotDomainOwner)
 	}
