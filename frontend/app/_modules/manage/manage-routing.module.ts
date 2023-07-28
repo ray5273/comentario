@@ -20,6 +20,7 @@ import { UserEditComponent } from './users/user-edit/user-edit.component';
 import { DomainUserManagerComponent } from './domain-users/domain-user-manager/domain-user-manager.component';
 import { DomainUserPropertiesComponent } from './domain-users/domain-user-properties/domain-user-properties.component';
 import { DomainUserEditComponent } from './domain-users/domain-user-edit/domain-user-edit.component';
+import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
 
 const children: Routes = [
     // Default route
@@ -35,6 +36,7 @@ const children: Routes = [
     {path: 'domains/:id/edit',     component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain]},
     {path: 'domains/:id/clone',    component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain], data: {new: true}},
     {path: 'domains/:id/import',   component: DomainImportComponent,         canActivate: [ManageGuard.canManageDomain]},
+    {path: 'domains/:id/sso',      component: DomainSsoSecretComponent,      canActivate: [ManageGuard.canManageDomain]},
 
     // Pages
     {path: 'pages',                component: PageManagerComponent,          canActivate: [ManageGuard.isDomainSelected]},

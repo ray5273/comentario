@@ -40,6 +40,8 @@ type DomainService interface {
 	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	// GenerateSSOSecret (re)generates a new SSO secret token for the given domain and saves that in domain properties
+	GenerateSSOSecret(domainID *uuid.UUID) (string, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
 	IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error
 	// ListByDomainUser fetches and returns a list of domains the current user has any rights to, and a list of domain
@@ -71,11 +73,6 @@ type DomainService interface {
 	UserModify(du *data.DomainUser) error
 	// UserRemove unlinks the specified user from the given domain
 	UserRemove(userID, domainID *uuid.UUID) error
-
-	/* TODO new-db
-	// CreateSSOSecret generates a new SSO secret token for the given domain and saves that in the domain properties
-	CreateSSOSecret(host models.Host) (models.HexID, error)
-	*/
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -151,29 +148,6 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 	return nil
 }
 
-/*
-TODO new-db
-
-	func (svc *domainService) CreateSSOSecret(host models.Host) (models.HexID, error) {
-		logger.Debugf("domainService.CreateSSOSecret(%s)", host)
-
-		// Generate a new token
-		token, err := data.RandomHexID()
-		if err != nil {
-			logger.Errorf("userService.CreateSSOSecret: RandomHexID() failed: %v", err)
-			return "", err
-		}
-
-		// Update the domain record
-		if err = db.Exec("update domains set ssosecret=$1 where domain=$2;", token, host); err != nil {
-			logger.Errorf("domainService.CreateSSOSecret: Exec() failed: %v", err)
-			return "", translateDBErrors(err)
-		}
-
-		// Succeeded
-		return token, nil
-	}
-*/
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.DeleteByID(%s)", id)
 
@@ -304,6 +278,27 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 		// Succeeded
 		return d, du, nil
 	}
+}
+
+func (svc *domainService) GenerateSSOSecret(domainID *uuid.UUID) (string, error) {
+	logger.Debugf("domainService.GenerateSSOSecret(%s)", domainID)
+
+	// Generate a new secret
+	d := &data.Domain{ID: *domainID}
+	if err := d.SSOSecretNew(); err != nil {
+		logger.Errorf("userService.GenerateSSOSecret: domain.SSOSecretNew() failed: %v", err)
+		return "", err
+	}
+
+	// Update the domain record
+	ss := d.SSOSecretStr()
+	if err := db.Exec("update cm_domains set sso_secret=$1 where id=$2;", ss, &d.ID); err != nil {
+		logger.Errorf("domainService.GenerateSSOSecret: Exec() failed: %v", err)
+		return "", translateDBErrors(err)
+	}
+
+	// Succeeded
+	return ss.String, nil
 }
 
 func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incViews int) error {

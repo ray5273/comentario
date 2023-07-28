@@ -79,9 +79,9 @@ export class DomainEditComponent implements OnInit {
         this.domainSelectorSvc.domainMeta
             .pipe(this.loading.processing(), first())
             .subscribe(meta => {
+                this.domainMeta = meta;
                 const d = this.domainMeta?.domain;
                 if (d) {
-                    this.domainMeta = meta;
                     this.form.patchValue({
                         host:             d.host,
                         name:             d.name,

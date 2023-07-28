@@ -30,10 +30,16 @@
         <!-- Buttons: only for superuser/owner -->
         <div *ngIf="domainMeta!.canManageDomain" class="col-sm-auto order-sm-last pb-3">
             <!-- Edit settings button -->
-            <button [routerLink]="[Paths.manage.domains, domain.id, 'edit']" type="button" class="btn btn-secondary w-100">
+            <a [routerLink]="[Paths.manage.domains, domain.id, 'edit']" class="btn btn-secondary w-100">
                 <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
                 <ng-container i18n>Edit settings</ng-container>
-            </button>
+            </a>
+            <!-- SSO secret button -->
+            <a [routerLink]="[Paths.manage.domains, domain.id, 'sso']" [class.disabled]="!domain.authSso"
+               class="btn btn-outline-secondary w-100 mt-2">
+                <fa-icon [icon]="faTicket" class="me-1"></fa-icon>
+                <ng-container i18n>SSO secret</ng-container>
+            </a>
         </div>
         <!-- Detail table -->
         <div class="col-sm">

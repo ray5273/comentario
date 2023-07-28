@@ -262,6 +262,12 @@ definitions:
         type: string
         description: SSO provider URL
         x-omitempty: false
+      ssoSecretConfigured:
+        type: boolean
+        readOnly: true
+        description: Whether SSO secret is configured for this domain
+        x-omitempty: false
+        x-isnullable: false
       modAnonymous:
         type: boolean
         description: Whether all anonymous comments are to be approved by a moderator

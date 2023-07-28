@@ -597,12 +597,14 @@ func (d *Domain) Scheme() string {
 	return util.If(d.IsHTTPS, "https", "http")
 }
 
-// SSOSecretStr returns the SSO secret as a nullable hex string
-func (d *Domain) SSOSecretStr() sql.NullString {
-	if len(d.SSOSecret) == 0 {
-		return sql.NullString{}
+// SSOSecretNew generates a new SSO secret for the domain
+func (d *Domain) SSOSecretNew() error {
+	ss, err := util.RandomBytes(32)
+	if err != nil {
+		return err
 	}
-	return sql.NullString{Valid: true, String: hex.EncodeToString(d.SSOSecret)}
+	d.SSOSecret = ss
+	return nil
 }
 
 // SetSSOSecretStr sets the SSO secret from the given nullable hex string
@@ -627,30 +629,39 @@ func (d *Domain) SetSSOSecretStr(s sql.NullString) error {
 	}
 }
 
+// SSOSecretStr returns the SSO secret as a nullable hex string
+func (d *Domain) SSOSecretStr() sql.NullString {
+	if len(d.SSOSecret) != 32 {
+		return sql.NullString{}
+	}
+	return sql.NullString{Valid: true, String: hex.EncodeToString(d.SSOSecret)}
+}
+
 // ToDTO converts this model into an API model
 func (d *Domain) ToDTO() *models.Domain {
 	return &models.Domain{
-		AuthAnonymous:    d.AuthAnonymous,
-		AuthLocal:        d.AuthLocal,
-		AuthSso:          d.AuthSSO,
-		CountComments:    d.CountComments,
-		CountViews:       d.CountViews,
-		CreatedTime:      strfmt.DateTime(d.CreatedTime),
-		DefaultSort:      models.CommentSort(d.DefaultSort),
-		Host:             models.Host(d.Host),
-		ID:               strfmt.UUID(d.ID.String()),
-		IsHTTPS:          d.IsHTTPS,
-		IsReadonly:       d.IsReadonly,
-		ModAnonymous:     d.ModAnonymous,
-		ModAuthenticated: d.ModAuthenticated,
-		ModImages:        d.ModImages,
-		ModLinks:         d.ModLinks,
-		ModNotifyPolicy:  models.DomainModNotifyPolicy(d.ModNotifyPolicy),
-		ModNumComments:   uint64(d.ModNumComments),
-		ModUserAgeDays:   uint64(d.ModUserAgeDays),
-		Name:             d.Name,
-		RootURL:          strfmt.URI(d.RootURL()),
-		SsoURL:           d.SSOURL,
+		AuthAnonymous:       d.AuthAnonymous,
+		AuthLocal:           d.AuthLocal,
+		AuthSso:             d.AuthSSO,
+		CountComments:       d.CountComments,
+		CountViews:          d.CountViews,
+		CreatedTime:         strfmt.DateTime(d.CreatedTime),
+		DefaultSort:         models.CommentSort(d.DefaultSort),
+		Host:                models.Host(d.Host),
+		ID:                  strfmt.UUID(d.ID.String()),
+		IsHTTPS:             d.IsHTTPS,
+		IsReadonly:          d.IsReadonly,
+		ModAnonymous:        d.ModAnonymous,
+		ModAuthenticated:    d.ModAuthenticated,
+		ModImages:           d.ModImages,
+		ModLinks:            d.ModLinks,
+		ModNotifyPolicy:     models.DomainModNotifyPolicy(d.ModNotifyPolicy),
+		ModNumComments:      uint64(d.ModNumComments),
+		ModUserAgeDays:      uint64(d.ModUserAgeDays),
+		Name:                d.Name,
+		RootURL:             strfmt.URI(d.RootURL()),
+		SsoSecretConfigured: len(d.SSOSecret) == 32,
+		SsoURL:              d.SSOURL,
 	}
 }
 

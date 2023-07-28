@@ -191,24 +191,19 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 	return api_general.NewDomainNewOK().WithPayload(d.ToDTO())
 }
 
-func DomainSsoSecretNew(_ api_general.DomainSsoSecretNewParams, _ *data.User) middleware.Responder {
-	/* TODO new-db
-	// Verify the user owns the domain
-	host := models.Host(params.Host)
-	if r := Verifier.UserCanManageDomain(principal.GetHexID(), host); r != nil {
+func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
-	}
 
-	// Generate a new SSO secret for the domain
-	token, err := svc.TheDomainService.CreateSSOSecret(models.Host(params.Host))
-	if err != nil {
+		// Generate a new SSO secret for the domain
+	} else if ss, err := svc.TheDomainService.GenerateSSOSecret(&d.ID); err != nil {
 		return respServiceError(err)
-	}
-	*/
-	token := ""
 
-	// Succeeded
-	return api_general.NewDomainSsoSecretNewOK().WithPayload(&api_general.DomainSsoSecretNewOKBody{SsoSecret: token})
+	} else {
+		// Succeeded
+		return api_general.NewDomainSsoSecretNewOK().WithPayload(&api_general.DomainSsoSecretNewOKBody{SsoSecret: ss})
+	}
 }
 
 func DomainDailyStats(params api_general.DomainDailyStatsParams, user *data.User) middleware.Responder {

@@ -40,6 +40,7 @@ import { NoDataComponent } from './no-data/no-data.component';
 import { DomainUserPropertiesComponent } from './domain-users/domain-user-properties/domain-user-properties.component';
 import { UserDetailsComponent } from './users/user-details/user-details.component';
 import { DomainUserEditComponent } from './domain-users/domain-user-edit/domain-user-edit.component';
+import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
 
 @NgModule({
     declarations: [
@@ -74,6 +75,7 @@ import { DomainUserEditComponent } from './domain-users/domain-user-edit/domain-
         DomainUserPropertiesComponent,
         UserDetailsComponent,
         DomainUserEditComponent,
+        DomainSsoSecretComponent,
     ],
     imports: [
         CommonModule,

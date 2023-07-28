@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { faCopy, faEdit } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
@@ -29,8 +29,9 @@ export class DomainPropertiesComponent implements OnInit {
     readonly installDocsUrl = this.docsSvc.getPageUrl('getting-started/');
 
     // Icons
-    readonly faCopy = faCopy;
-    readonly faEdit = faEdit;
+    readonly faCopy   = faCopy;
+    readonly faEdit   = faEdit;
+    readonly faTicket = faTicket;
 
     constructor(
         private readonly route: ActivatedRoute,
