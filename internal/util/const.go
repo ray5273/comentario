@@ -28,13 +28,12 @@ const (
 	HeaderUserSession        = "X-User-Session"           // Name of the header that contains the session of the authenticated user
 	UserConfirmEmailDuration = 3 * OneDay                 // How long the token in the confirmation email stays valid
 	UserPwdResetDuration     = 12 * time.Hour             // How long the token in the password-reset email stays valid
+	PageViewRetentionPeriod  = 45 * OneDay                // How long a page view stats record is retained
 )
 
 var (
 	WrongAuthDelayMin = 100 * time.Millisecond // Minimal delay to exercise on a wrong email, password etc.
 	WrongAuthDelayMax = 4 * time.Second        // Maximal delay to exercise on a wrong email, password etc.
-
-	// FederatedIdProviders maps all known federated identity providers from our IDs to goth IDs
 
 	// UILanguageTags stores tags of supported frontend languages
 	UILanguageTags = []language.Tag{

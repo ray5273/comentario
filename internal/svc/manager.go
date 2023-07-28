@@ -16,6 +16,8 @@ type ServiceManager interface {
 	E2eRecreateDBSchema(seedSQL string) error
 	// Initialise performs necessary initialisation of the services
 	Initialise()
+	// Run starts background services
+	Run()
 	// Shutdown performs necessary teardown of the services
 	Shutdown()
 }
@@ -68,13 +70,15 @@ func (m *manager) Initialise() {
 		logger.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Start the cleanup service
-	if err = TheCleanupService.Init(); err != nil {
-		logger.Fatalf("Failed to initialise cleanup service: %v", err)
-	}
-
 	// Start the version service
 	TheVersionCheckService.Init()
+}
+
+func (m *manager) Run() {
+	// Start the cleanup service
+	if err := TheCleanupService.Init(); err != nil {
+		logger.Fatalf("Failed to initialise cleanup service: %v", err)
+	}
 }
 
 func (m *manager) Shutdown() {

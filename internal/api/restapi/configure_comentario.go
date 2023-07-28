@@ -186,7 +186,7 @@ func configureServer(_ *http.Server, scheme, _ string) {
 		return
 	}
 
-	// Initialise the services
+	// Initialise the service manager
 	svc.TheServiceManager.Initialise()
 
 	// Init the e2e handler, if in the e2e testing mode
@@ -195,6 +195,9 @@ func configureServer(_ *http.Server, scheme, _ string) {
 			logger.Fatalf("e2e handler init failed: %v", err)
 		}
 	}
+
+	// Start background services
+	svc.TheServiceManager.Run()
 }
 
 // configureE2eMode configures the app to run in the end-2-end testing mode

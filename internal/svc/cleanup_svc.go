@@ -1,6 +1,9 @@
 package svc
 
-import "time"
+import (
+	"gitlab.com/comentario/comentario/internal/util"
+	"time"
+)
 
 var TheCleanupService CleanupService = &cleanupService{}
 
@@ -10,61 +13,71 @@ type CleanupService interface {
 
 type cleanupService struct{}
 
-func (s *cleanupService) Init() error {
+func (svc *cleanupService) Init() error {
 	logger.Debugf("cleanupService: initialising")
-	if err := s.domainExportCleanupBegin(); err != nil {
-		return err
-	}
-	if err := s.ssoTokenCleanupBegin(); err != nil {
-		return err
-	}
-	if err := s.viewsCleanupBegin(); err != nil {
-		return err
-	}
+	go svc.cleanupExpiredAuthSessions()
+	go svc.cleanupExpiredTokens()
+	go svc.cleanupExpiredUserSessions()
+	go svc.cleanupStalePageViews()
 	return nil
 }
 
-func (s *cleanupService) domainExportCleanupBegin() error {
-	logger.Debugf("cleanupService: initialising domain export cleanup")
-	go func() {
-		for {
-			if err := db.Exec("delete from exports where creationdate<$1;", time.Now().UTC().AddDate(0, 0, -7)); err != nil {
-				logger.Errorf("cleanupService: error cleaning up domain export rows: %v", err)
-				return
-			}
-			time.Sleep(2 * time.Hour)
-		}
-	}()
-
-	return nil
+// cleanupExpiredAuthSessions removes all expired auth sessions from the database
+func (svc *cleanupService) cleanupExpiredAuthSessions() {
+	logger.Debug("cleanupService.cleanupExpiredAuthSessions()")
+	for svc.runLogSleep(
+		time.Hour,
+		"expired auth sessions",
+		"delete from cm_auth_sessions where ts_expires<$1;",
+		time.Now().UTC(),
+	) == nil {
+	}
 }
 
-func (s *cleanupService) ssoTokenCleanupBegin() error {
-	logger.Debugf("cleanupService: initialising SSO token cleanup")
-	go func() {
-		for {
-			if err := db.Exec("delete from ssotokens where creationdate<$1;", time.Now().UTC().Add(time.Duration(-10)*time.Minute)); err != nil {
-				logger.Errorf("cleanupService: error cleaning up SSO tokens: %v", err)
-				return
-			}
-			time.Sleep(10 * time.Minute)
-		}
-	}()
-
-	return nil
+// cleanupExpiredTokens removes all expired tokens from the database
+func (svc *cleanupService) cleanupExpiredTokens() {
+	logger.Debug("cleanupService.cleanupExpiredTokens()")
+	for svc.runLogSleep(
+		time.Hour,
+		"expired tokens",
+		"delete from cm_tokens where ts_expires<$1;",
+		time.Now().UTC(),
+	) == nil {
+	}
 }
 
-func (s *cleanupService) viewsCleanupBegin() error {
-	logger.Debugf("cleanupService: initialising view stats cleanup")
-	go func() {
-		for {
-			if err := db.Exec("delete from views where viewdate<$1;", time.Now().UTC().AddDate(0, 0, -45)); err != nil {
-				logger.Errorf("cleanupService: error cleaning up view stats: %v", err)
-				return
-			}
-			time.Sleep(24 * time.Hour)
-		}
-	}()
+// cleanupExpiredUserSessions removes all expired user sessions from the database
+func (svc *cleanupService) cleanupExpiredUserSessions() {
+	logger.Debug("cleanupService.cleanupExpiredUserSessions()")
+	for svc.runLogSleep(
+		util.OneDay,
+		"expired user sessions",
+		"delete from cm_user_sessions where ts_expires<$1;",
+		time.Now().UTC(),
+	) == nil {
+	}
+}
 
+// cleanupStalePageViews removes stale page view stats from the database
+func (svc *cleanupService) cleanupStalePageViews() {
+	logger.Debug("cleanupService.cleanupStalePageViews()")
+	for svc.runLogSleep(
+		util.OneDay,
+		"stale page views",
+		"delete from cm_domain_page_views where ts_created<$1;",
+		time.Now().UTC().Add(-util.PageViewRetentionPeriod),
+	) == nil {
+	}
+}
+
+// runLogSleep runs the provided cleanup query, logs the outcome, then sleeps for the given duration
+func (svc *cleanupService) runLogSleep(interval time.Duration, entity, query string, args ...any) error {
+	if res, err := db.ExecRes(query, args...); err != nil {
+		logger.Errorf("cleanupService.runLogSleep: Exec() failed for %s: %v", entity, err)
+		return err
+	} else if i, err := res.RowsAffected(); err == nil && i > 0 {
+		logger.Debugf("cleanupService: deleted %d %s", i, entity)
+	}
+	time.Sleep(interval)
 	return nil
 }
