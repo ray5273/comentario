@@ -75,10 +75,6 @@ type DomainService interface {
 	/* TODO new-db
 	// CreateSSOSecret generates a new SSO secret token for the given domain and saves that in the domain properties
 	CreateSSOSecret(host models.Host) (models.HexID, error)
-	// CreateSSOToken generates, persists, and returns a new SSO token for the given domain and commenter token
-	CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error)
-	// TakeSSOToken queries and removes the provided token from the database, returning its host and commenter token
-	TakeSSOToken(token models.HexID) (models.Host, models.HexID, error)
 	*/
 }
 
@@ -171,29 +167,6 @@ TODO new-db
 		// Update the domain record
 		if err = db.Exec("update domains set ssosecret=$1 where domain=$2;", token, host); err != nil {
 			logger.Errorf("domainService.CreateSSOSecret: Exec() failed: %v", err)
-			return "", translateDBErrors(err)
-		}
-
-		// Succeeded
-		return token, nil
-	}
-
-	func (svc *domainService) CreateSSOToken(host models.Host, commenterToken models.HexID) (models.HexID, error) {
-		logger.Debugf("domainService.CreateSSOToken(%s, %s)", host, commenterToken)
-
-		// Generate a new token
-		token, err := data.RandomHexID()
-		if err != nil {
-			logger.Errorf("userService.CreateSSOToken: RandomHexID() failed: %v", err)
-			return "", err
-		}
-
-		// Insert a new token record
-		err = db.Exec(
-			"insert into ssotokens(token, domain, commentertoken, creationdate) values($1, $2, $3, $4);",
-			token, host, commenterToken, time.Now().UTC())
-		if err != nil {
-			logger.Errorf("domainService.CreateSSOToken: Exec() failed: %v", err)
 			return "", translateDBErrors(err)
 		}
 
@@ -613,24 +586,6 @@ func (svc *domainService) StatsTotalsForUser(userID *uuid.UUID) (countDomains, c
 	// Succeeded
 	return
 }
-
-/* TODO new-db DEPRECATED
-func (svc *domainService) TakeSSOToken(token models.HexID) (models.Host, models.HexID, error) {
-	logger.Debugf("domainService.TakeSSOToken(%s)", token)
-
-	// Fetch and delete the token
-	row := db.QueryRow("delete from ssotokens where token=$1 returning domain, commentertoken;", token)
-	var host models.Host
-	var commenterToken models.HexID
-	if err := row.Scan(&host, &commenterToken); err != nil {
-		logger.Errorf("domainService.TakeSSOToken: Scan() failed: %v", err)
-		return "", "", translateDBErrors(err)
-	}
-
-	// Succeeded
-	return host, commenterToken, nil
-}
-*/
 
 func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID) error {
 	logger.Debugf("domainService.Update(%#v, %v)", domain, idps)

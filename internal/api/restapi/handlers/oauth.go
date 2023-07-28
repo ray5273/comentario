@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -204,7 +205,11 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		}
 	}
 
-	// TODO new-db fetch and update the avatar
+	// If there's an avatar URL, fetch and update the avatar, in the background (ignore any errors)
+	if fedUser.AvatarURL != "" {
+		//goland:noinspection GoUnhandledErrorResult
+		go svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL)
+	}
 
 	// Update the token by binding it to the authenticated user
 	token.Owner = user.ID
@@ -221,7 +226,12 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	// SSO authentication is a special case
 	var provider goth.Provider
 	var r middleware.Responder
+	host := swag.StringValue(params.Host)
 	if params.Provider == "sso" {
+		// Verify there's a host specified
+		if host == "" {
+			return respBadRequest(ErrorInvalidPropertyValue.WithDetails("host"))
+		}
 
 		// Otherwise it's a goth provider: find it
 	} else if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider)); r != nil {
@@ -243,7 +253,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	var authURL, sessionData string
 	if provider == nil {
 		// Find the domain the user is authenticating on
-		domain, err := svc.TheDomainService.FindByHost(params.Host)
+		domain, err := svc.TheDomainService.FindByHost(host)
 		if err != nil {
 			return oauthFailure(err)
 		}
@@ -301,7 +311,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	}
 
 	// Store the session in the cookie/DB
-	authSession, err := svc.TheAuthSessionService.Create(sessionData, params.Host, token.Value)
+	authSession, err := svc.TheAuthSessionService.Create(sessionData, host, token.Value)
 	if err != nil {
 		return respServiceError(err)
 	}

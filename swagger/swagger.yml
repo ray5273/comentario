@@ -736,11 +736,11 @@ parameters:
     type: string
     maxLength: 100
 
-  queryHost:
+  queryOptionalHost:
     name: host
     in: query
-    required: true
-    description: Domain host query parameter
+    required: false
+    description: Optional host query parameter
     type: string
     minLength: 1
     maxLength: 259
@@ -1066,7 +1066,7 @@ paths:
         - text/html # For an error response only, otherwise a redirect is issued
       parameters:
         - $ref: "#/parameters/federatedIdpId"
-        - $ref: "#/parameters/queryHost"
+        - $ref: "#/parameters/queryOptionalHost"
         - $ref: "#/parameters/queryToken"
       responses:
         307:

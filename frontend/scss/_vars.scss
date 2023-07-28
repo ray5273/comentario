@@ -34,6 +34,12 @@ $theme-colors: (
     // Custom colours
     "cta":       $cta,
 );
+$social-colors: (
+    "github":   #000000,
+    "gitlab":   #fc6d26,
+    "google":   #4285f4,
+    "twitter":  #1da1f2,
+);
 
 // Standard color overrides
 $input-placeholder-color:       #bcbcbc; // Make it a bit lighter

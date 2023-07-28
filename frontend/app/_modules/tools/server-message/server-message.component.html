@@ -49,6 +49,8 @@
     <ng-container *ngSwitchCase="'no-superuser'"          i18n>You must be a superuser to perform this operation.</ng-container>
     <ng-container *ngSwitchCase="'not-domain-owner'"      i18n>You have to be a domain owner in order to do that.</ng-container>
     <ng-container *ngSwitchCase="'not-moderator'"         i18n>You have to be a moderator in order to do that.</ng-container>
+    <ng-container *ngSwitchCase="'oauth-popup-failed'"    i18n>Failed to open OAuth login popup. Please check your browser settings.</ng-container>
+    <ng-container *ngSwitchCase="'oauth-login-failed'"    i18n>OAuth login was unsuccessful.</ng-container>
     <ng-container *ngSwitchCase="'owner-has-domains'"     i18n>Account cannot be deleted: all domains linked to it must be deleted first.</ng-container>
     <ng-container *ngSwitchCase="'page-readonly'"         i18n>No comment can be added: comment thread on this page is read-only.</ng-container>
     <ng-container *ngSwitchCase="'self-vote'"             i18n>You cannot vote for your own comment.</ng-container>

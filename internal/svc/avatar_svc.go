@@ -11,6 +11,7 @@ import (
 	"image/color"
 	"image/draw"
 	"io"
+	"net/http"
 	"time"
 )
 
@@ -21,6 +22,8 @@ var TheAvatarService AvatarService = &avatarService{}
 type AvatarService interface {
 	// Decode turns data read from a buffer into an image
 	Decode(r io.Reader) (image.Image, error)
+	// DownloadAndUpdateByUserID downloads an avatar from the specified URL and updates the given user
+	DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string) error
 	// GetByUserID finds and returns an avatar for the given user
 	GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error)
 	// UpdateAvatar updates the images of the provided UserAvatar instance
@@ -58,6 +61,24 @@ func (svc *avatarService) Decode(r io.Reader) (image.Image, error) {
 
 	// Succeeded
 	return img, nil
+}
+
+func (svc *avatarService) DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string) error {
+	logger.Debugf("avatarService.DownloadAndUpdateByUserID(%s, '%s')", userID, avatarURL)
+
+	// Download the image
+	resp, err := http.Get(avatarURL)
+	if err != nil {
+		return err
+	}
+	//goland:noinspection GoUnhandledErrorResult
+	defer resp.Body.Close()
+
+	// Limit the size of the response to 1 MiB to prevent DoS attacks that exhaust memory
+	lr := &io.LimitedReader{R: resp.Body, N: 1024 * 1024}
+
+	// Update the avatar
+	return svc.UpdateByUserID(userID, lr)
 }
 
 func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error) {

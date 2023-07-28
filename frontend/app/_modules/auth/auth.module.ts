@@ -8,6 +8,7 @@ import { ToolsModule } from '../tools/tools.module';
 import { SignupComponent } from './signup/signup.component';
 import { ForgotPasswordComponent } from './forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './reset-password/reset-password.component';
+import { FederatedLoginComponent } from './federated-login/federated-login.component';
 
 @NgModule({
     declarations: [
@@ -15,6 +16,7 @@ import { ResetPasswordComponent } from './reset-password/reset-password.componen
         SignupComponent,
         ForgotPasswordComponent,
         ResetPasswordComponent,
+        FederatedLoginComponent,
     ],
     imports: [
         CommonModule,

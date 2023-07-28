@@ -122,6 +122,16 @@ dl.detail-table, dl.detail-table > div {
     max-width: 500px !important;
 }
 
+// Social buttons
+@each $color, $value in $social-colors {
+    .btn-#{$color} {
+        @include button-variant($value, $value, #ffffff);
+    }
+    .btn-outline-#{$color} {
+        @include button-outline-variant($value);
+    }
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 // Animations
 //----------------------------------------------------------------------------------------------------------------------

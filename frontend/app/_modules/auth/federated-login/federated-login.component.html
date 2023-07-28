@@ -1,0 +1,8 @@
+<div *ngIf="federatedIdps?.length" [appSpinner]="loggingIn" spinnerSize="lg" class="d-grid gap-2 mb-3">
+    <div class="form-label" i18n>Or login using:</div>
+
+    <button *ngFor="let provider of federatedIdps" (click)="loginWith(provider.id)" class="btn btn-{{ provider.id }}">
+        <app-idp-icon [idpId]="provider.id" class="float-start pe-2 border-end me-2"></app-idp-icon>
+        <ng-container>{{ provider.name }}</ng-container>
+    </button>
+</div>

@@ -513,6 +513,9 @@ export class Comentario {
                 this.parentIdMap[parentId] = [r.comment];
             }
 
+            // Add the commenter to the commenter map
+            this.commenters[r.commenter.id] = r.commenter;
+
             // Remove the editor
             this.cancelCommentEdits();
 

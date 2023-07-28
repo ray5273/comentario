@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { MockComponent, MockDirective, MockProviders } from 'ng-mocks';
+import { MockComponents, MockDirective, MockProviders } from 'ng-mocks';
 import { AuthService } from '../../../_services/auth.service';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 import { LoginComponent } from './login.component';
+import { FederatedLoginComponent } from '../federated-login/federated-login.component';
 
 describe('LoginComponent', () => {
     let component: LoginComponent;
@@ -13,7 +14,10 @@ describe('LoginComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [LoginComponent, MockComponent(PasswordInputComponent), MockDirective(SpinnerDirective)],
+            declarations: [
+                LoginComponent,
+                MockComponents(PasswordInputComponent, FederatedLoginComponent),
+                MockDirective(SpinnerDirective)],
             imports: [RouterTestingModule, ReactiveFormsModule],
             providers: [MockProviders(AuthService)],
         })
