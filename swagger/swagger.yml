@@ -2145,6 +2145,62 @@ paths:
                   $ref: "#/definitions/user"
                 description: List of users corresponding to domainUsers (can be matched by userId)
 
+  /domain-users/{uuid}:
+    parameters:
+      - $ref: "#/parameters/pathUuid"
+
+    get:
+      operationId: DomainUserGet
+      summary: Get properties of the specified domain user
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+      responses:
+        200:
+          description: Domain user properties
+          schema:
+            type: object
+            properties:
+              domainUser:
+                $ref: "#/definitions/domainUser"
+                description: Domain user properties
+              user:
+                $ref: "#/definitions/user"
+                description: Properties of the user corresponding to domainUser
+
+
+    put:
+      operationId: DomainUserUpdate
+      summary: Update properties of the specified domain user
+      tags:
+        - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - domainId
+            properties:
+              domainId:
+                type: string
+                format: uuid
+                description: Domain ID
+              isOwner:
+                type: boolean
+                description: Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
+              isModerator:
+                type: boolean
+                description: Whether the user is a moderator of the domain (assumes is_commenter)
+              isCommenter:
+                type: boolean
+                description: Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+      responses:
+        204:
+          description: Domain user properties have been updated
+
   #---------------------------------------------------------------------------------------------------------------------
   # Users
   #---------------------------------------------------------------------------------------------------------------------

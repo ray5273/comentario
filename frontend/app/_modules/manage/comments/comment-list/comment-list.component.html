@@ -68,20 +68,23 @@
                 <!-- Comment metadata -->
                 <div class="list-group-item-header row align-items-center">
                     <!-- User created -->
-                    <div *ngIf="commenters.get(c.userCreated!) as cr" class="col">
-                        <fa-icon [icon]="faUser" class="me-2"></fa-icon>
-                        <ng-container>{{ cr.name }}</ng-container>
+                    <div *ngIf="commenters.get(c.userCreated!) as cr" class="col-12 col-sm ps-0 d-flex align-items-center">
+                        <!-- Avatar -->
+                        <app-user-avatar [user]="cr" size="S"></app-user-avatar>
+                        <!-- User link (superuser/owner) or name -->
+                        <a *ngIf="domainMeta?.canManageDomain else userNameText" [routerLink]="[Paths.manage.domainUsers, cr.id]" class="ms-2 fw-bold text-truncate">{{ cr.name }}</a>
+                        <ng-template #userNameText><div class="ms-2 fw-bold text-truncate">{{ cr.name }}</div></ng-template>
                         <!-- Pending badge -->
-                        <span *ngIf="c.isPending" class="badge bg-warning ms-2" i18n>Pending</span>
+                        <div *ngIf="c.isPending" class="badge bg-warning ms-2" i18n>Pending</div>
                         <!-- Rejected badge -->
-                        <span *ngIf="!c.isPending && !c.isApproved" class="badge bg-danger ms-2" i18n>Rejected</span>
+                        <div *ngIf="!c.isPending && !c.isApproved" class="badge bg-danger ms-2" i18n>Rejected</div>
                     </div>
-                    <!-- Comment score -->
-                    <div [class.text-danger]="c.score! < 0" [class.text-success]="c.score! > 0" title="Score"
-                         class="col-auto fw-bold" i18n-title>{{ c.score }}</div>
-                    <!-- Comment creation time and permalink -->
-                    <div class="col-auto small text-muted">
-                        <a [href]="c.url" title="Permalink" target="_blank" rel="noopener noreferrer" i18n-title>
+                    <div class="col-12 col-sm-auto pe-0 text-end">
+                        <!-- Comment score -->
+                        <span [class.text-danger]="c.score! < 0" [class.text-success]="c.score! > 0" title="Score"
+                             class="fw-bold small text-muted" i18n-title>{{ c.score }}</span>
+                        <!-- Comment creation time and permalink -->
+                        <a [href]="c.url" class="ms-3" title="Permalink" target="_blank" rel="noopener noreferrer" i18n-title>
                             <ng-container>{{ c.createdTime | datetime }}</ng-container>
                             <fa-icon [icon]="faUpRightFromSquare" class="ms-1"></fa-icon>
                         </a>

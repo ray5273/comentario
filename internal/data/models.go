@@ -211,8 +211,8 @@ func NewUser(email, name string) *User {
 	}
 }
 
-// CloneWithClearance returns a clone of the user with a limited set of properties, depending on the specified
-// authorisations
+// CloneWithClearance returns a clone of the user with (possibly) a limited set of properties, depending on the
+// specified authorisations
 func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User {
 	// Superuser sees everything: make a perfect clone
 	if isSuperuser {

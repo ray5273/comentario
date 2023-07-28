@@ -288,7 +288,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 
 // domainGetWithUser parses a string UUID and fetches the corresponding domain and its user, optionally verifying they
 // are allowed to manage the domain
-func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canManage bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
+func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, checkCanManage bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse domain ID
 	if domainID, err := data.DecodeUUID(domainUUID); err != nil {
 		return nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(domainUUID)))
@@ -298,8 +298,8 @@ func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, canManage bool) 
 		return nil, nil, respServiceError(err)
 
 	} else {
-		// Verify the user can change the domain, if necessary
-		if canManage {
+		// Verify the user can manage the domain, if necessary
+		if checkCanManage {
 			if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
 				return nil, nil, r
 			}

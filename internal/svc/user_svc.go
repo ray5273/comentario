@@ -181,23 +181,25 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	logger.Debugf("userService.FindDomainUserByID(%s, %s)", userID, domainID)
 
 	// Query the database
-	row := db.QueryRow(
-		"select "+
+	q := db.Dialect().
+		From(goqu.T("cm_users").As("u")).
+		Select(
 			// User fields
-			"u.id, u.email, u.name, u.password_hash, u.system_account, u.is_superuser, u.confirmed, u.ts_confirmed, "+
-			"u.ts_created, u.user_created, u.signup_ip, u.signup_country, u.signup_host, u.banned, u.ts_banned, "+
-			"u.user_banned, u.remarks, u.federated_idp, u.federated_id, u.website_url, "+
+			"u.id", "u.email", "u.name", "u.password_hash", "u.system_account", "u.is_superuser", "u.confirmed",
+			"u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country", "u.signup_host",
+			"u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_id",
+			"u.website_url",
 			// Avatar fields
-			"a.user_id, "+
+			"a.user_id",
 			// DomainUser fields
-			"du.domain_id, du.user_id, du.is_owner, du.is_moderator, du.is_commenter, du.notify_replies, "+
-			"du.notify_moderator, du.ts_created "+
-			"from cm_users u "+
-			"left join cm_domains_users du on du.user_id=u.id and du.domain_id=$1 "+
-			"left join cm_user_avatars a on a.user_id=u.id "+
-			"where u.id=$2;",
-		userID, domainID)
-	if u, du, err := svc.fetchUserDomainUser(row); err != nil {
+			"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
+			"du.notify_moderator", "du.ts_created").
+		LeftJoin(
+			goqu.T("cm_domains_users").As("du"),
+			goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID})).
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
+		Where(goqu.Ex{"u.id": userID})
+	if u, du, err := svc.fetchUserDomainUser(db.SelectRow(q)); err != nil {
 		return nil, nil, err
 	} else {
 		// Succeeded

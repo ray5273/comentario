@@ -1,6 +1,5 @@
-import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
-import { BehaviorSubject, combineLatestWith, switchMap, tap } from 'rxjs';
+import { Component, Input, OnInit } from '@angular/core';
+import { tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faRotate } from '@fortawesome/free-solid-svg-icons';
@@ -30,29 +29,22 @@ export class PagePropertiesComponent implements OnInit {
     // Icons
     readonly faRotate = faRotate;
 
-    private readonly reload$ = new BehaviorSubject<void>(undefined);
+    /** Current page ID. */
+    private _id?: string;
 
     constructor(
-        private readonly route: ActivatedRoute,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly toastSvc: ToastService,
     ) {}
 
+    @Input()
+    set id(id: string) {
+        this._id = id;
+        this.reload();
+    }
+
     ngOnInit(): void {
-        this.route.paramMap
-            .pipe(
-                // Update whenever reload signal is emitted
-                combineLatestWith(this.reload$),
-                // Fetch page details
-                switchMap(([pm]) => this.api.domainPageGet(pm.get('id')!).pipe(this.loading.processing())))
-            .subscribe(r => {
-                this.page = r.page;
-
-                // Make sure the correct domain is selected
-                this.domainSelectorSvc.setDomainId(this.page?.domainId);
-            });
-
         // Subscribe to domain changes
         this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
@@ -67,6 +59,24 @@ export class PagePropertiesComponent implements OnInit {
                 tap(d => this.toastSvc.success(d.changed ? 'data-updated' : 'no-change')),
                 // Reload on changes
                 filter(d => d.changed!))
-            .subscribe(() => this.reload$.next());
+            .subscribe(() => this.reload());
+    }
+
+    private reload() {
+        // Make sure there's a page ID
+        if (!this._id) {
+            this.page = undefined;
+            return;
+        }
+
+        // Fetch the page
+        this.api.domainPageGet(this._id)
+            .pipe(this.loading.processing())
+            .subscribe(r => {
+                this.page = r.page;
+
+                // Make sure the correct domain is selected
+                this.domainSelectorSvc.setDomainId(this.page?.domainId);
+            });
     }
 }

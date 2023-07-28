@@ -37,6 +37,9 @@ import { UserEditComponent } from './users/user-edit/user-edit.component';
 import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
 import { DomainUserManagerComponent } from './domain-users/domain-user-manager/domain-user-manager.component';
 import { NoDataComponent } from './no-data/no-data.component';
+import { DomainUserPropertiesComponent } from './domain-users/domain-user-properties/domain-user-properties.component';
+import { UserDetailsComponent } from './users/user-details/user-details.component';
+import { DomainUserEditComponent } from './domain-users/domain-user-edit/domain-user-edit.component';
 
 @NgModule({
     declarations: [
@@ -68,6 +71,9 @@ import { NoDataComponent } from './no-data/no-data.component';
         CurrentUserBadgeComponent,
         DomainUserManagerComponent,
         NoDataComponent,
+        DomainUserPropertiesComponent,
+        UserDetailsComponent,
+        DomainUserEditComponent,
     ],
     imports: [
         CommonModule,

@@ -4,7 +4,7 @@
 <!-- Import isn't performed yet -->
 <div *ngIf="!isComplete">
     <!-- Info -->
-    <p i18n>Use this page to import a data dump that you previously exported from Commento, Comentario, or Disqus.</p>
+    <p i18n>Use this option to import data previously exported from Comentario, Commento, or Disqus.</p>
     <div class="alert alert-warning" role="alert">
         <h5 class="alert-heading text-start">
             <fa-icon [icon]="faExclamationTriangle" class="text-warning me-1"></fa-icon>
@@ -25,7 +25,7 @@
                     <input formControlName="source" class="form-check-input" type="radio" id="sourceCommento" value="commento">
                     <label class="form-check-label" for="sourceCommento">Commento/Comentario</label>
                     <div class="form-text">
-                        <ng-container i18n>If you've previously exported data from Commento or Comentario, you can restore it using this option.</ng-container>
+                        <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
                     </div>
                 </div>
                 <!-- Disqus -->

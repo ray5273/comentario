@@ -4,11 +4,11 @@ import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMa
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
-    faCheck, faLightbulb,
+    faCheck,
+    faLightbulb,
     faQuestion,
     faTrashAlt,
     faUpRightFromSquare,
-    faUser,
     faXmark,
 } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter } from '../../../../../generated-api';
@@ -17,6 +17,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Utils } from '../../../../_utils/utils';
+import { Paths } from '../../../../_utils/consts';
 
 @UntilDestroy()
 @Component({
@@ -69,7 +70,6 @@ export class CommentListComponent implements OnInit, OnChanges {
     readonly faQuestion          = faQuestion;
     readonly faTrashAlt          = faTrashAlt;
     readonly faUpRightFromSquare = faUpRightFromSquare;
-    readonly faUser              = faUser;
     readonly faXmark             = faXmark;
 
     private loadedPageNum = 0;
@@ -187,4 +187,5 @@ export class CommentListComponent implements OnInit, OnChanges {
     }
 
     protected readonly faLightbulb = faLightbulb;
+    protected readonly Paths = Paths;
 }
