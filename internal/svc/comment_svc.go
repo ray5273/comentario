@@ -28,6 +28,8 @@ type CommentService interface {
 	DeleteByHost(host models.Host) error
 	// FindByID finds and returns a comment with the given ID
 	FindByID(id *uuid.UUID) (*data.Comment, error)
+	// ListByDomain returns a list of comments for the given domain
+	ListByDomain(domainID *uuid.UUID) ([]*models.Comment, error)
 	// ListWithCommentersByDomainPage returns a list of comments and related commenters for the given domain and,
 	// optionally, page.
 	//   - curUser is the current authenticated/anonymous user.
@@ -149,6 +151,82 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 
 	// Succeeded
 	return &c, nil
+}
+
+func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment, error) {
+	logger.Debugf("commentService.ListByDomain(%s)", domainID)
+
+	// Prepare a query
+	q := db.Dialect().
+		From(goqu.T("cm_comments").As("c")).
+		Select(
+			// Comment fields
+			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
+			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created",
+			// Page fields
+			"p.path",
+			// Domain fields
+			"d.host", "d.is_https").
+		// Join comment pages
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
+		// Join domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
+		// Filter by page domain
+		Where(goqu.Ex{"p.domain_id": domainID})
+
+	// Fetch the comments
+	rows, err := db.Select(q)
+	if err != nil {
+		logger.Errorf("commentService.ListByDomain: Query() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Iterate result rows
+	var comments []*models.Comment
+	for rows.Next() {
+		// Fetch the comment
+		c := data.Comment{}
+		var pagePath, domainHost string
+		var domainHTTPS bool
+		err := rows.Scan(
+			// Comment
+			&c.ID,
+			&c.ParentID,
+			&c.PageID,
+			&c.Markdown,
+			&c.HTML,
+			&c.Score,
+			&c.IsSticky,
+			&c.IsApproved,
+			&c.IsPending,
+			&c.IsDeleted,
+			&c.CreatedTime,
+			&c.UserCreated,
+			// Page
+			&pagePath,
+			// Domain
+			&domainHost,
+			&domainHTTPS)
+		if err != nil {
+			logger.Errorf("commentService.ListByDomain: Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
+		}
+
+		// Convert the comment
+		cm := c.ToDTO(fmt.Sprintf("%s://%s", util.If(domainHTTPS, "https", "http"), domainHost), pagePath)
+
+		// Append the comment to the list
+		comments = append(comments, cm)
+	}
+
+	// Check that Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Succeeded
+	return comments, nil
 }
 
 func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curUserIsOwner, curUserIsModerator bool,

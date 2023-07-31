@@ -30,7 +30,7 @@ func DomainUserList(params api_general.DomainUserListParams, user *data.User) mi
 	}
 
 	// Fetch domain users and corresponding users
-	us, dus, err := svc.TheUserService.ListByDomain(
+	um, dus, err := svc.TheUserService.ListByDomain(
 		&domain.ID,
 		user.IsSuperuser,
 		swag.StringValue(params.Filter),
@@ -41,11 +41,17 @@ func DomainUserList(params api_general.DomainUserListParams, user *data.User) mi
 		return respServiceError(err)
 	}
 
+	// Convert user map into a DTO slice
+	us := make([]*models.User, 0, len(um))
+	for _, u := range um {
+		us = append(us, u.ToDTO())
+	}
+
 	// Succeeded
 	return api_general.NewDomainUserListOK().
 		WithPayload(&api_general.DomainUserListOKBody{
 			DomainUsers: data.SliceToDTOs[*data.DomainUser, *models.DomainUser](dus),
-			Users:       data.SliceToDTOs[*data.User, *models.User](us),
+			Users:       us,
 		})
 }
 

@@ -32,6 +32,8 @@ type PageService interface {
 	GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
 	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
 	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
+	// ListByDomain fetches and returns a list of all pages in the specified domain.
+	ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, error)
 	// ListByDomainUser fetches and returns a list of domain pages the specified user has rights to in a specific
 	// domain.
 	//   - domainID is the domain ID to filter the pages by. If nil, returns pages for all domains.
@@ -217,6 +219,45 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 
 	// Succeeded
 	return nil
+}
+
+func (svc *pageService) ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, error) {
+	logger.Debugf("pageService.ListByDomain(%s)", domainID)
+
+	// Prepare a statement
+	q := db.Dialect().
+		From(goqu.T("cm_domain_pages").As("p")).
+		Select(
+			"p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments",
+			"p.count_views").
+		Where(goqu.Ex{"p.domain_id": domainID})
+
+	// Query pages
+	rows, err := db.Select(q)
+	if err != nil {
+		logger.Errorf("pageService.ListByDomain: Query() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Fetch the pages
+	var ps []*data.DomainPage
+	for rows.Next() {
+		var p data.DomainPage
+		if err := rows.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
+			logger.Errorf("pageService.ListByDomain: Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
+		}
+		ps = append(ps, &p)
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return ps, nil
 }
 
 func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error) {

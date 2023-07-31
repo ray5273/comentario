@@ -49,13 +49,13 @@ type UserService interface {
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	List(filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, error)
 	// ListByDomain fetches and returns a list of domain users for the domain with the given ID, and the corresponding
-	// users. Minimum access level: domain owner
+	// users as a UUID-indexed map. Minimum access level: domain owner
 	//   - superuser indicates whether the current user is a superuser
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the host.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListByDomain(domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, []*data.DomainUser, error)
+	ListByDomain(domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) (map[uuid.UUID]*data.User, []*data.DomainUser, error)
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error)
@@ -375,7 +375,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	return us, nil
 }
 
-func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.User, []*data.DomainUser, error) {
+func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) (map[uuid.UUID]*data.User, []*data.DomainUser, error) {
 	logger.Debugf("userService.ListByDomain(%s, %v, '%s', '%s', %s, %d)", domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
@@ -456,14 +456,8 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 		return nil, nil, translateDBErrors(err)
 	}
 
-	// Convert the user map into a slice
-	us := make([]*data.User, 0, len(um))
-	for _, u := range um {
-		us = append(us, u)
-	}
-
 	// Succeeded
-	return us, dus, nil
+	return um, dus, nil
 }
 
 func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]data.User, error) {

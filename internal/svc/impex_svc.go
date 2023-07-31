@@ -1,10 +1,12 @@
 package svc
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
 	"io"
 	"time"
 )
@@ -33,6 +35,13 @@ type commentoExportV1 struct {
 	Version    int                `json:"version"`
 	Comments   []models.Comment   `json:"comments"`
 	Commenters []models.Commenter `json:"commenters"`
+}
+
+type comentarioExportV3 struct {
+	Version    int                  `json:"version"`
+	Pages      []*models.DomainPage `json:"pages"`
+	Comments   []*models.Comment    `json:"comments"`
+	Commenters []*models.Commenter  `json:"commenters"`
 }
 
 type disqusThread struct {
@@ -80,21 +89,36 @@ type disqusXML struct {
 func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 	logger.Debugf("importExportService.Export(%s)", domainID)
 
-	gzippedData := []byte{}
-	/* TODO new-db
+	// Create an export data object
+	exp := comentarioExportV3{Version: 3}
 
-		// Create an export data object
-	exp := commentoExportV1{Version: 1}
+	// Fetch pages
+	if ps, err := ThePageService.ListByDomain(domainID); err != nil {
+		return nil, err
+	} else {
+		exp.Pages = data.SliceToDTOs[*data.DomainPage, *models.DomainPage](ps)
+	}
 
 	// Fetch comments
-	var err error
-	if exp.Comments, err = TheCommentService.ListByHost(host); err != nil {
+	if cs, err := TheCommentService.ListByDomain(domainID); err != nil {
 		return nil, err
+	} else {
+		exp.Comments = cs
 	}
 
 	// Fetch commenters
-	if exp.Commenters, err = TheUserService.ListCommentersByHost(host); err != nil {
+	if um, dus, err := TheUserService.ListByDomain(domainID, false, "", "", data.SortAsc, -1); err != nil {
 		return nil, err
+	} else {
+		cs := make([]*models.Commenter, 0, len(dus))
+		for _, du := range dus {
+			// Find the related user instance
+			if u, ok := um[du.UserID]; ok {
+				// Convert the User/DomainUser combo into a commenter
+				cs = append(cs, u.ToCommenter(du.IsCommenter, du.IsModerator))
+			}
+		}
+		exp.Commenters = cs
 	}
 
 	// Convert the data into JSON
@@ -110,7 +134,7 @@ func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 		logger.Errorf("importExportService.Export: CompressGzip() failed: %v", err)
 		return nil, err
 	}
-	*/
+
 	// Succeeded
 	return gzippedData, nil
 }
