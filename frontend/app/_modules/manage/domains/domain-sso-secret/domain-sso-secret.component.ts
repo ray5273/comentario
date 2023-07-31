@@ -1,5 +1,4 @@
 import { Component, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faCopy, faExclamationTriangle, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
@@ -24,17 +23,14 @@ export class DomainSsoSecretComponent implements OnInit {
     readonly generating = new ProcessingStatus();
 
     // Icons
-    readonly faCopy   = faCopy;
-    readonly faRotate = faRotate;
+    readonly faCopy                = faCopy;
+    readonly faExclamationTriangle = faExclamationTriangle;
+    readonly faRotate              = faRotate;
 
     constructor(
-        private readonly route: ActivatedRoute,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
-    ) {
-        // Monitor the domain ID param in the route
-        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
-    }
+    ) {}
 
     ngOnInit(): void {
         // Subscribe to domain changes
@@ -51,6 +47,4 @@ export class DomainSsoSecretComponent implements OnInit {
                 this.domainSelectorSvc.reload();
             });
     }
-
-    protected readonly faExclamationTriangle = faExclamationTriangle;
 }

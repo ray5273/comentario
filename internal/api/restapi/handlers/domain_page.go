@@ -52,6 +52,30 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 		})
 }
 
+func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User) middleware.Responder {
+	// Fetch the page and the domain user
+	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	if r != nil {
+		return r
+	}
+
+	// Make sure the user is allowed to moderate page
+	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+		return r
+	}
+
+	// Update the page properties, if necessary
+	ro := swag.BoolValue(params.Body.IsReadonly)
+	if page.IsReadonly != ro {
+		if err := svc.ThePageService.UpdateReadonly(page.WithIsReadonly(ro)); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// Succeeded
+	return api_general.NewDomainPageUpdateNoContent()
+}
+
 func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user *data.User) middleware.Responder {
 	// Fetch the page and the domain user
 	page, domain, domainUser, r := domainPageGetDomainUser(params.UUID, user)
@@ -77,15 +101,15 @@ func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user 
 
 // domainPageGetDomainUser parses a string UUID and fetches the corresponding page, domain, and domain user, verifying
 // the domain user exists
-func domainPageGetDomainUser(id strfmt.UUID, user *data.User) (*data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
+func domainPageGetDomainUser(pageID strfmt.UUID, user *data.User) (*data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
 	// Extract domain page ID
-	pageID, err := data.DecodeUUID(id)
+	pageUUID, err := data.DecodeUUID(pageID)
 	if err != nil {
-		return nil, nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(id)))
+		return nil, nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(pageID)))
 	}
 
 	// Fetch page
-	page, err := svc.ThePageService.FindByID(pageID)
+	page, err := svc.ThePageService.FindByID(pageUUID)
 	if err != nil {
 		return nil, nil, nil, respServiceError(err)
 	}

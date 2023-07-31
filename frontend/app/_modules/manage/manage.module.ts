@@ -14,68 +14,70 @@ import { DomainEditComponent } from './domains/domain-edit/domain-edit.component
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
 import { DomainPropertiesComponent } from './domains/domain-properties/domain-properties.component';
-import { StatsComponent } from './stats/stats.component';
-import { DomainOperationsComponent } from './domain-operations/domain-operations.component';
+import { DomainStatsComponent } from './domains/domain-stats/domain-stats.component';
+import { DomainOperationsComponent } from './domains/domain-operations/domain-operations.component';
 import { StatsChartComponent } from './stats-chart/stats-chart.component';
 import { DomainSelectorService } from './_services/domain-selector.service';
-import { CommentManagerComponent } from './comments/comment-manager/comment-manager.component';
+import { DomainCommentManagerComponent } from './domains/domain-comments/domain-comment-manager/domain-comment-manager.component';
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
 import { ManageGuard } from "./_guards/manage.guard";
 import { ModeratorNotifyPolicyPipe } from './_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from './_pipes/comment-sort.pipe';
-import { PageManagerComponent } from './pages/page-manager/page-manager.component';
-import { DomainBadgeComponent } from './domain-badge/domain-badge.component';
+import { DomainPageManagerComponent } from './domains/domain-pages/domain-page-manager/domain-page-manager.component';
+import { DomainBadgeComponent } from './domains/domain-badge/domain-badge.component';
 import { SortSelectorComponent } from './sort-selector/sort-selector.component';
 import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
 import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.component';
 import { DatetimePipe } from './_pipes/datetime.pipe';
-import { PagePropertiesComponent } from './pages/page-properties/page-properties.component';
-import { CommentListComponent } from './comments/comment-list/comment-list.component';
+import { DomainPagePropertiesComponent } from './domains/domain-pages/domain-page-properties/domain-page-properties.component';
+import { DomainCommentListComponent } from './domains/domain-comments/comment-list/domain-comment-list.component';
 import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
 import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
-import { DomainUserManagerComponent } from './domain-users/domain-user-manager/domain-user-manager.component';
+import { DomainUserManagerComponent } from './domains/domain-users/domain-user-manager/domain-user-manager.component';
 import { NoDataComponent } from './no-data/no-data.component';
-import { DomainUserPropertiesComponent } from './domain-users/domain-user-properties/domain-user-properties.component';
+import { DomainUserPropertiesComponent } from './domains/domain-users/domain-user-properties/domain-user-properties.component';
 import { UserDetailsComponent } from './users/user-details/user-details.component';
-import { DomainUserEditComponent } from './domain-users/domain-user-edit/domain-user-edit.component';
+import { DomainUserEditComponent } from './domains/domain-users/domain-user-edit/domain-user-edit.component';
 import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
+import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 
 @NgModule({
     declarations: [
-        CommentListComponent,
-        CommentManagerComponent,
         CommentSortPipe,
         ControlCenterComponent,
+        CurrentUserBadgeComponent,
         DashboardComponent,
         DatetimePipe,
         DomainBadgeComponent,
+        DomainCommentListComponent,
+        DomainCommentManagerComponent,
+        DomainDetailComponent,
         DomainEditComponent,
         DomainImportComponent,
         DomainManagerComponent,
         DomainOperationsComponent,
+        DomainPageManagerComponent,
+        DomainPagePropertiesComponent,
         DomainPropertiesComponent,
+        DomainSsoSecretComponent,
         DomainUserBadgeComponent,
+        DomainUserEditComponent,
+        DomainUserManagerComponent,
+        DomainUserPropertiesComponent,
         ModeratorNotifyPolicyPipe,
-        PageManagerComponent,
-        PagePropertiesComponent,
+        NoDataComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
         StatsChartComponent,
-        StatsComponent,
+        DomainStatsComponent,
         UserAvatarComponent,
+        UserDetailsComponent,
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
-        CurrentUserBadgeComponent,
-        DomainUserManagerComponent,
-        NoDataComponent,
-        DomainUserPropertiesComponent,
-        UserDetailsComponent,
-        DomainUserEditComponent,
-        DomainSsoSecretComponent,
     ],
     imports: [
         CommonModule,

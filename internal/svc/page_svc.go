@@ -41,8 +41,8 @@ type PageService interface {
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error)
-	// Update updates the page by its ID
-	Update(page *data.DomainPage) error
+	// UpdateReadonly updates the page's readonly status by its ID
+	UpdateReadonly(page *data.DomainPage) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -314,15 +314,12 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	return ps, nil
 }
 
-func (svc *pageService) Update(page *data.DomainPage) error {
-	logger.Debugf("pageService.Update(%#v)", page)
+func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
+	logger.Debugf("pageService.UpdateReadonly(%#v)", page)
 
 	// Update the page record
-	if err := db.ExecOne(
-		"update cm_domain_pages set title=$1,is_readonly=$2 where id=$3",
-		page.Title, page.IsReadonly, &page.ID,
-	); err != nil {
-		logger.Errorf("pageService.Update: ExecOne() failed: %v", err)
+	if err := db.ExecOne("update cm_domain_pages set is_readonly=$1 where id=$2", page.IsReadonly, &page.ID); err != nil {
+		logger.Errorf("pageService.UpdateReadonly: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

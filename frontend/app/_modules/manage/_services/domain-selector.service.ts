@@ -1,6 +1,5 @@
 import { Injectable } from '@angular/core';
 import { HttpContext } from '@angular/common/http';
-import { ActivatedRoute } from '@angular/router';
 import { BehaviorSubject, combineLatestWith, Observable, ReplaySubject, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainUser, FederatedIdpId, Principal } from '../../../../generated-api';
@@ -90,20 +89,6 @@ export class DomainSelectorService {
             // If the user is not logged in, reset any selection. Ignore any occurring errors as this is an induced
             // change
             .subscribe(([p]) => this.setDomainId(p ? this.lastId : undefined, true, false));
-    }
-
-    /**
-     * Subscribe to the given route parameter (specifying the domain ID) and automatically update the selected domain.
-     * This method is meant to enforce consistent behaviour when hitting a route that includes domain ID, such that the
-     * selected domain always matches the route.
-     * @param component Component whose lifecycle defines the existence of the subscription. Must have the @UntilDestroy decorator applied.
-     * @param route Route providing parameter.
-     * @param name Name of the parameter containing domain ID.
-     */
-    monitorRouteParam(component: any, route: ActivatedRoute, name: string) {
-        route.paramMap
-            .pipe(untilDestroyed(component))
-            .subscribe(pm => this.setDomainId(pm.get(name) || undefined));
     }
 
     /**

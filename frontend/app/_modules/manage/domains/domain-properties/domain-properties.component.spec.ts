@@ -7,7 +7,7 @@ import { DomainPropertiesComponent } from './domain-properties.component';
 import { ConfigService } from '../../../../_services/config.service';
 import { DocsService } from '../../../../_services/docs.service';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
-import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
 import { ComentarioConfig } from '../../../../../generated-api';
 import { NoDataComponent } from '../../no-data/no-data.component';
 

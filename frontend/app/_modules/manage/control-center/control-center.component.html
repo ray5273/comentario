@@ -54,7 +54,7 @@
             <ul *ngIf="domainMeta?.domain as d" class="nav">
                 <!-- Domain properties -->
                 <li class="nav-item">
-                    <a [routerLink]="[Paths.manage.domains, d.id]" routerLinkActive="active" class="cc-link">
+                    <a [routerLink]="[Paths.manage.domains, d.id]" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faAt"></fa-icon>
                         <span class="sr-only" i18n>Domain</span>
                         <div class="cc-hide-collapsed overflow-hidden">
@@ -65,7 +65,7 @@
 
                 <!-- Pages: if there's a domain -->
                 <li class="nav-item">
-                    <a [routerLink]="Paths.manage.pages" routerLinkActive="active" class="cc-link">
+                    <a [routerLink]="[Paths.manage.domains, d.id, 'pages']" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faFileLines"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Pages</div>
                     </a>
@@ -73,7 +73,7 @@
 
                 <!-- Comments: if there's a domain -->
                 <li class="nav-item">
-                    <a [routerLink]="Paths.manage.comments" routerLinkActive="active" class="cc-link">
+                    <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faComments"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Comments</div>
                     </a>
@@ -83,7 +83,7 @@
                 <ng-container *ngIf="canManageDomain">
                     <!-- Domain users -->
                     <li class="nav-item">
-                        <a [routerLink]="Paths.manage.domainUsers" routerLinkActive="active" class="cc-link">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'users']" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faUsersRectangle"></fa-icon>
                             <div class="cc-hide-collapsed" i18n>Domain users</div>
                         </a>
@@ -91,7 +91,7 @@
 
                     <!-- Stats -->
                     <li class="nav-item">
-                        <a [routerLink]="Paths.manage.stats" routerLinkActive="active" class="cc-link">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'stats']" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faChartLine"></fa-icon>
                             <div class="cc-hide-collapsed" i18n>Statistics</div>
                         </a>
@@ -99,7 +99,7 @@
 
                     <!-- Operations -->
                     <li class="nav-item">
-                        <a [routerLink]="Paths.manage.operations" routerLinkActive="active" class="cc-link">
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'operations']" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faArrowDownUpAcrossLine"></fa-icon>
                             <div class="cc-hide-collapsed" i18n>Operations</div>
                         </a>

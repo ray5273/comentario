@@ -1986,10 +1986,34 @@ paths:
                 description: Domain page properties
 
     put:
-      operationId: DomainPageUpdateTitle
-      summary: Update the title of a domain page
+      operationId: DomainPageUpdate
+      summary: Update properties of specified domain page
       tags:
         - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - isReadonly
+            properties:
+              isReadonly:
+                type: boolean
+                description: Whether the page must be readonly
+      responses:
+        204:
+          description: Domain page properties have been updated
+
+  /domain-pages/{uuid}/title:
+    post:
+      operationId: DomainPageUpdateTitle
+      summary: Update the title of a domain page by inspecting the corresponding URL
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathUuid"
       responses:
         200:
           description: Domain page title has been fetched and, possibly, updated

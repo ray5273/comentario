@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
 import { faCopy, faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FederatedIdentityProvider } from '../../../../../generated-api';
@@ -34,14 +33,10 @@ export class DomainPropertiesComponent implements OnInit {
     readonly faTicket = faTicket;
 
     constructor(
-        private readonly route: ActivatedRoute,
         private readonly cfgSvc: ConfigService,
         private readonly docsSvc: DocsService,
         private readonly domainSelectorSvc: DomainSelectorService,
-    ) {
-        // Monitor the domain ID param in the route
-        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
-    }
+    ) {}
 
     /**
      * Whether any specific moderator approval policy is in place.

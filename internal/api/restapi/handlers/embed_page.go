@@ -14,25 +14,23 @@ func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) mi
 		return r
 	}
 
-	// Parse page ID
-	if pageID, err := data.DecodeUUID(params.UUID); err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
-
-		// Find the page
-	} else if page, err := svc.ThePageService.FindByID(pageID); err != nil {
-		return respServiceError(err)
-
-		// Fetch the domain user
-	} else if _, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
-		return respServiceError(err)
-
-		// Verify the user is a domain moderator
-	} else if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+	// Fetch the page and the domain user
+	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	if r != nil {
 		return r
+	}
 
-		// Update the page
-	} else if err := svc.ThePageService.Update(page.WithIsReadonly(swag.BoolValue(params.Body.IsReadonly))); err != nil {
-		return respServiceError(err)
+	// Make sure the user is allowed to moderate page
+	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+		return r
+	}
+
+	// Update the page properties, if necessary
+	ro := swag.BoolValue(params.Body.IsReadonly)
+	if page.IsReadonly != ro {
+		if err := svc.ThePageService.UpdateReadonly(page.WithIsReadonly(ro)); err != nil {
+			return respServiceError(err)
+		}
 	}
 
 	// Succeeded

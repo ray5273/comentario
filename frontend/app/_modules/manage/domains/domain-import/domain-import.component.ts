@@ -1,6 +1,5 @@
 import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute } from '@angular/router';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain } from '../../../../../generated-api';
@@ -34,13 +33,9 @@ export class DomainImportComponent implements OnInit {
 
     constructor(
         private readonly fb: FormBuilder,
-        private readonly route: ActivatedRoute,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
-    ) {
-        // Monitor the domain ID param in the route
-        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
-    }
+    ) {}
 
     get file(): AbstractControl<File | undefined> {
         return this.form.get('file')!;

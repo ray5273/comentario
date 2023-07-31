@@ -731,6 +731,27 @@ type DomainPage struct {
 	CountViews    int64     // Total number of views
 }
 
+// CloneWithClearance returns a clone of the page with a limited set of properties, depending on the specified
+// authorisations
+func (p *DomainPage) CloneWithClearance(isSuperuser, isOwner bool) *DomainPage {
+	// Superuser and owner see everything: make a perfect clone
+	if isSuperuser || isOwner {
+		c := *p
+		return &c
+	}
+
+	// Non-owner only sees what's publicly available
+	return &DomainPage{
+		ID:            p.ID,
+		DomainID:      p.DomainID,
+		IsReadonly:    p.IsReadonly,
+		Path:          p.Path,
+		Title:         p.Title,
+		CountComments: -1, // -1 indicates no count data is available
+		CountViews:    -1, // idem
+	}
+}
+
 // DisplayTitle returns a display title of the page: either its title if it's set, otherwise the domain's host and path
 func (p *DomainPage) DisplayTitle(domain *Domain) string {
 	if p.Title != "" {
@@ -750,26 +771,6 @@ func (p *DomainPage) ToDTO() *models.DomainPage {
 		IsReadonly:    p.IsReadonly,
 		Path:          models.Path(p.Path),
 		Title:         p.Title,
-	}
-}
-
-// CloneWithClearance returns a clone of the page with a limited set of properties, depending on the specified
-// authorisations
-func (p *DomainPage) CloneWithClearance(isSuperuser, isOwner bool) *DomainPage {
-	// Superuser and owner see everything: make a perfect clone
-	if isSuperuser || isOwner {
-		c := *p
-		return &c
-	}
-
-	// Non-owner only sees what's publicly available
-	return &DomainPage{
-		ID:            p.ID,
-		DomainID:      p.DomainID,
-		Path:          p.Path,
-		Title:         p.Title,
-		CountComments: -1, // -1 indicates no count data is available
-		CountViews:    -1, // idem
 	}
 }
 

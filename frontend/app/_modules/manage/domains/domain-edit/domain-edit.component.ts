@@ -64,9 +64,6 @@ export class DomainEditComponent implements OnInit {
         private readonly toastSvc: ToastService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {
-        // Monitor the domain ID param in the route
-        this.domainSelectorSvc.monitorRouteParam(this, this.route, 'id');
-
         // Disable numeric controls when the corresponding checkbox is off
         this.form.controls.modNumCommentsOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.modNumComments));
         this.form.controls.modUserAgeDaysOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.modUserAgeDays));

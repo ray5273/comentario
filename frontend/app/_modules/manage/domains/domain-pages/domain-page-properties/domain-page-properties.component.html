@@ -1,0 +1,93 @@
+<!-- Header -->
+<header class="mb-3">
+    <h1 i18n="heading">Domain page properties</h1>
+</header>
+
+<div [appSpinner]="loading.active" spinnerSize="lg">
+    <ng-container *ngIf="domainMeta?.domain && page">
+        <div class="row">
+            <!-- Buttons: only for owner+ -->
+            <div *ngIf="domainMeta!.canManageDomain" class="col-sm-auto order-sm-last pb-3">
+                <!-- Update title button -->
+                <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
+                    <fa-icon [icon]="faRotate" class="me-1"></fa-icon>
+                    <ng-container i18n>Update title</ng-container>
+                </button>
+            </div>
+
+            <!-- Detail table -->
+            <div class="col-sm">
+                <dl id="pageDetailTable" class="detail-table">
+                    <!-- Domain -->
+                    <div>
+                        <dt i18n>Domain</dt>
+                        <dd><a [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id]">{{ domainMeta!.domain!.host }}</a></dd>
+                    </div>
+                    <!-- Path -->
+                    <div>
+                        <dt i18n>Path</dt>
+                        <dd>
+                            <a href="{{ domainMeta!.domain!.rootUrl }}{{ page.path }}" target="_blank"
+                               rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
+                                <ng-container>{{ page.path }}</ng-container>
+                                <fa-icon [icon]="faUpRightFromSquare" class="ms-2"></fa-icon>
+                            </a>
+                        </dd>
+                    </div>
+                    <!-- Title -->
+                    <div *ngIf="page.title as v">
+                        <dt i18n>Title</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                    <!-- Read-only -->
+                    <div>
+                        <dt i18n>Read-only</dt>
+                        <dd>
+                            <!-- Switch: moderator+ -->
+                            <div *ngIf="domainMeta!.canModerateDomain else readonlyNonModerator"
+                                 [appSpinner]="updatingReadonly.active" class="d-flex ps-1">
+                                <div class="form-check form-switch">
+                                    <input [ngModel]="page.isReadonly" (ngModelChange)="toggleReadonly()"
+                                           class="form-check-input" type="checkbox" role="switch" id="pageReadonlySwitch">
+                                    <label class="form-check-label" for="pageReadonlySwitch" i18n>Read-only</label>
+                                </div>
+                            </div>
+                            <!-- Checkmark: regular users -->
+                            <ng-template #readonlyNonModerator>
+                                <app-checkmark [value]="page.isReadonly"></app-checkmark>
+                            </ng-template>
+                            <div class="form-text" i18n>When a page is read-only, users cannot add comments to it.</div>
+                        </dd>
+                    </div>
+                    <!-- Created -->
+                    <div *ngIf="page.createdTime | datetime as v">
+                        <dt i18n>Created</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                    <!-- Number of comments -->
+                    <div *ngIf="page.countComments! >= 0">
+                        <dt i18n>Number of comments</dt>
+                        <dd>{{ page.countComments | number }}</dd>
+                    </div>
+                    <!-- Number of views -->
+                    <div *ngIf="page.countViews! >= 0">
+                        <dt i18n>Number of views</dt>
+                        <dd>{{ page.countViews | number }}</dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Comments -->
+        <section>
+            <!-- Heading -->
+            <h2 i18n>Comments</h2>
+
+            <!-- Comment list -->
+            <app-domain-comment-list [pageId]="page.id"></app-domain-comment-list>
+        </section>
+    </ng-container>
+
+    <!-- Placeholder when no data -->
+    <app-no-data *ngIf="!domainMeta?.domain || !page"></app-no-data>
+</div>

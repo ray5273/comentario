@@ -6,7 +6,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainSsoSecretComponent } from './domain-sso-secret.component';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
 import { ToolsModule } from '../../../tools/tools.module';
 
 describe('DomainSsoSecretComponent', () => {
