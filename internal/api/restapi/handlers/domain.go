@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -108,13 +109,12 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 		respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
 	}
 
-	// Check the result
-	if err != nil {
-		return respServiceError(err)
-	}
-
 	// Succeeded
-	return api_general.NewDomainImportOK().WithPayload(&api_general.DomainImportOKBody{NumImported: count})
+	return api_general.NewDomainImportOK().
+		WithPayload(&api_general.DomainImportOKBody{
+			Error:       exmodels.ErrorFrom(err),
+			NumImported: count,
+		})
 }
 
 func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {

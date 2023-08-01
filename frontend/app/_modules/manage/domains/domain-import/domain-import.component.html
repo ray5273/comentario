@@ -71,8 +71,25 @@
 
 <!-- Import complete -->
 <div *ngIf="isComplete" @fadeInOut-slow class="text-center" id="import-complete">
-    <p><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></p>
-    <p class="lead fw-bold" i18n>Import complete</p>
+    <!-- Import finished with warnings -->
+    <ng-container *ngIf="impError">
+        <p><fa-icon [icon]="faExclamationTriangle" size="3x" class="text-warning"></fa-icon></p>
+        <p class="lead fw-bold" i18n>Import finished with a warning:</p>
+        <!-- Warning message -->
+        <div class="border rounded p-3 mb-3">
+            <code>{{ impError.message }}</code>
+        </div>
+    </ng-container>
+
+    <!-- Import finished successfully -->
+    <ng-container *ngIf="!impError">
+        <p><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></p>
+        <p class="lead fw-bold" i18n>Import finished successfully.</p>
+    </ng-container>
+
+    <!-- Number of imported comments -->
     <p i18n>{{ impCount || 0 | number }} comments have been imported.</p>
+
+    <!-- Go to domain button -->
     <p><a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-primary" i18n>Domain properties</a></p>
 </div>

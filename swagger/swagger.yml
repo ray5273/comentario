@@ -1891,6 +1891,9 @@ paths:
           schema:
             type: object
             properties:
+              error:
+                $ref: "#/definitions/apiError"
+                description: Error message if there was one during the import
               numImported:
                 type: integer
                 format: uint

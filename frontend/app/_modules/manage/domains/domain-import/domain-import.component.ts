@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, Domain } from '../../../../../generated-api';
+import { ApiError, ApiGeneralService, Domain } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Animations } from '../../../../_utils/animations';
 import { Paths } from '../../../../_utils/consts';
@@ -16,9 +16,17 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 })
 export class DomainImportComponent implements OnInit {
 
+    /** Target domain. */
     domain?: Domain;
+
+    /** Whether the import is complete. */
     isComplete = false;
+
+    /** Number of imported comments. */
     impCount?: number;
+
+    /** Error instance, if there was one during the import. */
+    impError?: ApiError;
 
     readonly Paths = Paths;
     readonly importing = new ProcessingStatus();
@@ -58,6 +66,7 @@ export class DomainImportComponent implements OnInit {
                 .pipe(this.importing.processing())
                 .subscribe(r => {
                     this.impCount = r.numImported;
+                    this.impError = r.error;
                     this.isComplete = true;
 
                     // Reload the domain to update its metrics
