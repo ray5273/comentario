@@ -69,9 +69,6 @@ func (m *manager) Initialise() {
 	if db, err = persistence.InitDB(); err != nil {
 		logger.Fatalf("Failed to connect to database: %v", err)
 	}
-
-	// Start the version service
-	TheVersionCheckService.Init()
 }
 
 func (m *manager) Run() {
