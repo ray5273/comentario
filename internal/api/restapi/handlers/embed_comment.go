@@ -57,7 +57,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	}
 
 	// Fetch the page, registering a new pageview
-	page, err := svc.ThePageService.GetRegisteringView(domain, data.PathToString(params.Body.Path), params.HTTPRequest)
+	page, err := svc.ThePageService.UpsertByDomainPath(domain, data.PathToString(params.Body.Path), params.HTTPRequest)
 	if err != nil {
 		return respServiceError(err)
 	}

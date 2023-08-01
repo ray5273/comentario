@@ -74,5 +74,5 @@
     <p><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></p>
     <p class="lead fw-bold" i18n>Import complete</p>
     <p i18n>{{ impCount || 0 | number }} comments have been imported.</p>
-    <p><a [routerLink]="Paths.manage.dashboard" class="btn btn-primary" i18n>Dashboard</a></p>
+    <p><a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-primary" i18n>Domain properties</a></p>
 </div>

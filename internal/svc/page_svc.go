@@ -28,8 +28,6 @@ type PageService interface {
 	FindByDomainPath(domainID *uuid.UUID, path string) (*data.DomainPage, error)
 	// FindByID finds and returns a page by its ID
 	FindByID(id *uuid.UUID) (*data.DomainPage, error)
-	// GetRegisteringView queries a page, registering a new pageview, inserting a new page database record if necessary
-	GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
 	// IncrementCounts increments (or decrements if the value is negative) the page's comment/view counts
 	IncrementCounts(pageID *uuid.UUID, incComments, incViews int) error
 	// ListByDomain fetches and returns a list of all pages in the specified domain.
@@ -45,6 +43,9 @@ type PageService interface {
 	ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error)
 	// UpdateReadonly updates the page's readonly status by its ID
 	UpdateReadonly(page *data.DomainPage) error
+	// UpsertByDomainPath queries a page, inserting a new page database record if necessary, optionally registering a
+	// new pageview (if req is not nil)
+	UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -162,44 +163,6 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 		logger.Errorf("pageService.FindByID: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-
-	// Succeeded
-	return &p, nil
-}
-
-func (svc *pageService) GetRegisteringView(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
-	logger.Debugf("pageService.GetRegisteringView(%#v, '%s', ...)", domain, path)
-
-	// Prepare a new UUID
-	id := uuid.New()
-
-	// Query a page row
-	row := db.QueryRow(
-		"insert into cm_domain_pages as p(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
-			"values($1, $2, $3, '', false, $4, 0, 1) "+
-			"on conflict (domain_id, path) do update set count_views=p.count_views+1 "+
-			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
-		&id, &domain.ID, path, time.Now().UTC())
-
-	// Fetch the row
-	var p data.DomainPage
-	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
-		logger.Errorf("pageService.GetRegisteringView: Scan() failed: %v", err)
-		return nil, translateDBErrors(err)
-	}
-
-	// If the page was added, fetch its title in the background
-	if p.ID == id {
-		logger.Debug("pageService.GetRegisteringView: page didn't exist, created a new one with ID=%s", &id)
-		go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
-	}
-
-	// Also register visit details in the background
-	go func() {
-		if err := svc.insertPageView(&p, req); err != nil {
-			logger.Errorf("pageService.GetRegisteringView: insertPageView() failed: %v", err)
-		}
-	}()
 
 	// Succeeded
 	return &p, nil
@@ -368,8 +331,46 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 	return nil
 }
 
+func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
+	logger.Debugf("pageService.UpsertByDomainPath(%#v, '%s', ...)", domain, path)
+
+	// Prepare a new UUID
+	id := uuid.New()
+
+	// Query a page row
+	increment := util.If(req != nil, 1, 0)
+	row := db.QueryRow(
+		"insert into cm_domain_pages as p(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
+			"values($1, $2, $3, '', false, $4, 0, $5) "+
+			"on conflict (domain_id, path) do update set count_views=p.count_views+$5 "+
+			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
+		&id, &domain.ID, path, time.Now().UTC(), increment)
+
+	// Fetch the row
+	var p data.DomainPage
+	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
+		logger.Errorf("pageService.UpsertByDomainPath: Scan() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// If the page was added, fetch its title in the background
+	if p.ID == id {
+		logger.Debug("pageService.UpsertByDomainPath: page didn't exist, created a new one with ID=%s", &id)
+		go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
+	}
+
+	// Also register visit details in the background, if required
+	if req != nil {
+		go svc.insertPageView(p, req)
+	}
+
+	// Succeeded
+	return &p, nil
+}
+
 // insertPageView registers a new page visit in the database
-func (svc *pageService) insertPageView(page *data.DomainPage, req *http.Request) error {
+// NB: page isn't a pointer to isolate it from the calling code
+func (svc *pageService) insertPageView(page data.DomainPage, req *http.Request) {
 	logger.Debugf("pageService.insertPageView(%#v, ...)", page)
 
 	// Extract the remote IP and country
@@ -378,10 +379,15 @@ func (svc *pageService) insertPageView(page *data.DomainPage, req *http.Request)
 	// Parse the User Agent header
 	ua := uasurfer.Parse(util.UserAgent(req))
 
-	return db.Exec(
-		"insert into cm_domain_page_views(page_id, ts_created, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device) "+
+	// Register the visit
+	err := db.Exec(
+		"insert into cm_domain_page_views("+
+			"page_id, ts_created, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
 		&page.ID, time.Now().UTC(), req.Proto, ip, country, ua.Browser.Name.StringTrimPrefix(),
 		util.FormatVersion(&ua.Browser.Version), ua.OS.Name.StringTrimPrefix(), util.FormatVersion(&ua.OS.Version),
 		ua.DeviceType.StringTrimPrefix())
+	if err != nil {
+		logger.Errorf("pageService.insertPageView: Exec() failed: %v", err)
+	}
 }

@@ -59,6 +59,9 @@ export class DomainImportComponent implements OnInit {
                 .subscribe(r => {
                     this.impCount = r.numImported;
                     this.isComplete = true;
+
+                    // Reload the domain to update its metrics
+                    this.domainSelectorSvc.reload();
                 });
         }
     }

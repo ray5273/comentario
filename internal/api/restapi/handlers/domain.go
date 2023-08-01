@@ -103,7 +103,7 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	case "commento":
 		count, err = svc.TheImportExportService.ImportCommento(domain, params.Data)
 	case "disqus":
-		count, err = svc.TheImportExportService.ImportDisqus(domain, params.Data)
+		count, err = svc.TheImportExportService.ImportDisqus(user, domain, params.Data)
 	default:
 		respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
 	}
