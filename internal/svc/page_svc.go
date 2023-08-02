@@ -44,8 +44,8 @@ type PageService interface {
 	// UpdateReadonly updates the page's readonly status by its ID
 	UpdateReadonly(page *data.DomainPage) error
 	// UpsertByDomainPath queries a page, inserting a new page database record if necessary, optionally registering a
-	// new pageview (if req is not nil)
-	UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error)
+	// new pageview (if req is not nil), returning whether the page was added
+	UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, bool, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -331,7 +331,7 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 	return nil
 }
 
-func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, error) {
+func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, bool, error) {
 	logger.Debugf("pageService.UpsertByDomainPath(%#v, '%s', ...)", domain, path)
 
 	// Prepare a new UUID
@@ -350,11 +350,12 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req
 	var p data.DomainPage
 	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
 		logger.Errorf("pageService.UpsertByDomainPath: Scan() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, false, translateDBErrors(err)
 	}
 
 	// If the page was added, fetch its title in the background
-	if p.ID == id {
+	added := p.ID == id
+	if added {
 		logger.Debug("pageService.UpsertByDomainPath: page didn't exist, created a new one with ID=%s", &id)
 		go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
 	}
@@ -365,7 +366,7 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req
 	}
 
 	// Succeeded
-	return &p, nil
+	return &p, added, nil
 }
 
 // insertPageView registers a new page visit in the database

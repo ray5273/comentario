@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiError, ApiGeneralService, Domain } from '../../../../../generated-api';
+import { ApiGeneralService, Domain, ImportResult } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Animations } from '../../../../_utils/animations';
 import { Paths } from '../../../../_utils/consts';
@@ -19,19 +19,13 @@ export class DomainImportComponent implements OnInit {
     /** Target domain. */
     domain?: Domain;
 
-    /** Whether the import is complete. */
-    isComplete = false;
-
-    /** Number of imported comments. */
-    impCount?: number;
-
-    /** Error instance, if there was one during the import. */
-    impError?: ApiError;
+    /** Import result. */
+    result?: ImportResult;
 
     readonly Paths = Paths;
     readonly importing = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
-        source: ['commento' as 'commento' | 'disqus', [Validators.required]],
+        source: ['comentario' as 'comentario' | 'disqus', [Validators.required]],
         file:   [undefined as any, [Validators.required]],
     });
 
@@ -65,9 +59,7 @@ export class DomainImportComponent implements OnInit {
             this.api.domainImport(this.domain.id!, val.source!, val.file)
                 .pipe(this.importing.processing())
                 .subscribe(r => {
-                    this.impCount = r.numImported;
-                    this.impError = r.error;
-                    this.isComplete = true;
+                    this.result = r;
 
                     // Reload the domain to update its metrics
                     this.domainSelectorSvc.reload();

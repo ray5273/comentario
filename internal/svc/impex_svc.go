@@ -12,8 +12,50 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
 	"regexp"
+	"strings"
 	"time"
 )
+
+// ImportResult is the result of a comment import
+type ImportResult struct {
+	UsersTotal         int   // Total number of users
+	UsersAdded         int   // Number of added users
+	DomainUsersAdded   int   // Number of added domain users
+	PagesTotal         int   // Total number of domain pages
+	PagesAdded         int   // Number of added domain pages
+	CommentsTotal      int   // Total number of comments processed
+	CommentsImported   int   // Number of imported comments
+	CommentsSkipped    int   // Number of skipped comments
+	CommentsNonDeleted int   // Number of non-deleted imported comments
+	Error              error // Any error occurred during the import
+}
+
+// ToDTO converts the result to an API model
+func (ir *ImportResult) ToDTO() *models.ImportResult {
+	dto := &models.ImportResult{
+		CommentsImported:   uint64(ir.CommentsImported),
+		CommentsNonDeleted: uint64(ir.CommentsNonDeleted),
+		CommentsSkipped:    uint64(ir.CommentsSkipped),
+		CommentsTotal:      uint64(ir.CommentsTotal),
+		DomainUsersAdded:   uint64(ir.DomainUsersAdded),
+		PagesAdded:         uint64(ir.PagesAdded),
+		PagesTotal:         uint64(ir.PagesTotal),
+		UsersAdded:         uint64(ir.UsersAdded),
+		UsersTotal:         uint64(ir.UsersTotal),
+	}
+	if ir.Error != nil {
+		dto.Error = ir.Error.Error()
+	}
+	return dto
+}
+
+// WithError sets the error in the result and returns the result
+func (ir *ImportResult) WithError(err error) *ImportResult {
+	ir.Error = err
+	return ir
+}
+
+//----------------------------------------------------------------------------------------------------------------------
 
 // TheImportExportService is a global ImportExportService implementation
 var TheImportExportService ImportExportService = &importExportService{}
@@ -22,24 +64,65 @@ var TheImportExportService ImportExportService = &importExportService{}
 type ImportExportService interface {
 	// Export exports the data for the specified domain, returning gzip-compressed binary data
 	Export(domainID *uuid.UUID) ([]byte, error)
-	// ImportCommento performs data import in the "commento" format from the provided data buffer. Returns the number of
-	// imported comments
-	ImportCommento(domain *data.Domain, reader io.Reader) (uint64, error)
-	// ImportDisqus performs data import from Disqus from the provided data buffer. Returns the number of imported
+	// Import performs data import in the native Comentario (or legacy Commento v1/Comentario v2) format from the
+	// provided data reader. Returns the number of imported comments: total and non-deleted
+	Import(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
+	// ImportDisqus performs data import from Disqus from the provided data reader. Returns the number of imported
 	// comments
-	ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) (uint64, error)
+	ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// importExportService is a blueprint ImportExportService implementation
-type importExportService struct{}
-
-type commentoExportV1 struct {
-	Version    int                `json:"version"`
-	Comments   []models.Comment   `json:"comments"`
-	Commenters []models.Commenter `json:"commenters"`
+// comentarioExportMeta is the export metadata header
+type comentarioExportMeta struct {
+	Version int `json:"version"`
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// V1 export format
+//----------------------------------------------------------------------------------------------------------------------
+
+type HexIDV1 string
+
+type comentarioExportV1 struct {
+	Version    int           `json:"version"`
+	Comments   []CommentV1   `json:"comments"`
+	Commenters []CommenterV1 `json:"commenters"`
+}
+
+type CommentV1 struct {
+	CommentHex   HexIDV1   `json:"commentHex"`
+	CommenterHex HexIDV1   `json:"commenterHex"`
+	CreationDate time.Time `json:"creationDate"`
+	Deleted      bool      `json:"deleted"`
+	Direction    int       `json:"direction"`
+	Host         string    `json:"host"`
+	HTML         string    `json:"html"`
+	Markdown     string    `json:"markdown"`
+	ParentHex    HexIDV1   `json:"parentHex"`
+	Path         string    `json:"path"`
+	URL          string    `json:"url"`
+	Score        int       `json:"score"`
+	State        string    `json:"state"`
+}
+
+type CommenterV1 struct {
+	AvatarURL    string    `json:"avatarUrl"`
+	CommenterHex HexIDV1   `json:"commenterHex"`
+	Email        string    `json:"email"`
+	IsModerator  bool      `json:"isModerator"`
+	JoinDate     time.Time `json:"joinDate"`
+	Name         string    `json:"name"`
+	Provider     string    `json:"provider"`
+	WebsiteURL   string    `json:"websiteUrl"`
+}
+
+const AnonymousCommenterHexIDV1 = HexIDV1("0000000000000000000000000000000000000000000000000000000000000000")
+
+//----------------------------------------------------------------------------------------------------------------------
+// V3 export format
+//----------------------------------------------------------------------------------------------------------------------
 
 type comentarioExportV3 struct {
 	Version    int                  `json:"version"`
@@ -47,6 +130,10 @@ type comentarioExportV3 struct {
 	Comments   []*models.Comment    `json:"comments"`
 	Commenters []*models.Commenter  `json:"commenters"`
 }
+
+//----------------------------------------------------------------------------------------------------------------------
+// Disqus export format
+//----------------------------------------------------------------------------------------------------------------------
 
 type disqusThread struct {
 	XMLName xml.Name `xml:"thread"`
@@ -88,6 +175,18 @@ type disqusXML struct {
 	XMLName xml.Name       `xml:"disqus"`
 	Threads []disqusThread `xml:"thread"`
 	Posts   []disqusPost   `xml:"post"`
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+// V1 export format
+//----------------------------------------------------------------------------------------------------------------------
+
+// importExportService is a blueprint ImportExportService implementation
+type importExportService struct{}
+
+// importError returns an ImportResult containing only the specified error
+func importError(err error) *ImportResult {
+	return &ImportResult{Error: err}
 }
 
 func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
@@ -143,113 +242,47 @@ func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 	return gzippedData, nil
 }
 
-func (svc *importExportService) ImportCommento(domain *data.Domain, reader io.Reader) (uint64, error) {
-	logger.Debugf("importExportService.ImportCommento(%#v, ...)", domain)
+func (svc *importExportService) Import(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
+	logger.Debugf("importExportService.Import(%#v, %#v, ...)", curUser, domain)
 
-	count := uint64(0)
-	/* TODO new-db
 	// Fetch and decompress the export tarball
-	d, err := util.DecompressGzip(reader)
+	buf, err := util.DecompressGzip(reader)
 	if err != nil {
-		logger.Errorf("importExportService.ImportCommento: DecompressGzip() failed: %v", err)
-		return 0, err
+		logger.Errorf("importExportService.Import: DecompressGzip() failed: %v", err)
+		return importError(err)
 	}
 
-	// Unmarshal the data
-	var exp commentoExportV1
-	if err := json.Unmarshal(d, &exp); err != nil {
-		logger.Errorf("importExportService.ImportCommento: json.Unmarshal() failed: %v", err)
-		return 0, err
+	// Unmarshal the metadata to determine the format version
+	var exp comentarioExportMeta
+	if err := json.Unmarshal(buf, &exp); err != nil {
+		logger.Errorf("importExportService.Import: json.Unmarshal() failed: %v", err)
+		return importError(err)
 	}
+	logger.Debugf("Comentario export version: %d", exp.Version)
 
-	// Verify the export format version
-	if exp.Version != 1 {
-		logger.Errorf("importExportService.ImportCommento: invalid export version (got %d, want 1)", exp.Version)
-		return 0, fmt.Errorf("invalid export version (%d)", exp.Version)
+	switch exp.Version {
+	case 1:
+		return svc.importV1(curUser, domain, buf)
+
+	case 3:
+		return svc.importV3(curUser, domain, buf)
+
+	default:
+		// Unrecognised version
+		err := fmt.Errorf("invalid Comentario export version (%d)", exp.Version)
+		logger.Errorf("importExportService.Import: %v", err)
+		return importError(err)
 	}
-
-	// Check if imported commentedHex or email exists, creating a map of commenterHex (old hex, new hex)
-	commenterHex := map[models.HexID]models.HexID{data.AnonymousCommenter.HexID: data.AnonymousCommenter.HexID}
-	for _, commenter := range exp.Commenters {
-		// Try to find an existing commenter with the same email
-		if c, err := TheUserService.FindCommenterByIdPEmail("", string(commenter.Email), false); err == nil {
-			// Commenter already exists. Add its hex ID to the map and proceed to the next record
-			commenterHex[commenter.CommenterHex] = c.HexID
-			continue
-
-		} else if err != ErrNotFound {
-			// Any other error than "not found"
-			return 0, err
-		}
-
-		// Generate a random password string
-		randomPassword, err := data.RandomHexID()
-		if err != nil {
-			logger.Errorf("importExportService.ImportCommento: RandomHexID() failed: %v", err)
-			return 0, err
-		}
-
-		// Persist a new commenter instance
-		if c, err := TheUserService.CreateCommenter(string(commenter.Email), commenter.Name, string(commenter.WebsiteURL), string(commenter.AvatarURL), "", string(randomPassword)); err != nil {
-			return 0, err
-		} else {
-			// Save the new commenter's hex ID in the map
-			commenterHex[commenter.CommenterHex] = c.HexID
-		}
-	}
-
-	// Create a map of (parent hex, comments)
-	comments := map[models.ParentHexID][]models.Comment{}
-	for _, comment := range exp.Comments {
-		comments[comment.ParentHex] = append(comments[comment.ParentHex], comment)
-	}
-
-	// Import comments, creating a map of comment hex (old hex, new hex)
-	commentHex := map[models.ParentHexID]models.ParentHexID{data.RootParentHexID: data.RootParentHexID}
-	keys := []models.ParentHexID{data.RootParentHexID}
-	for i := 0; i < len(keys); i++ {
-		for _, comment := range comments[keys[i]] {
-			// Find the comment's author
-			cHex, ok := commenterHex[comment.CommenterHex]
-			if !ok {
-				logger.Errorf("importExportService.ImportCommento: failed to find mapped commenter (hex=%v)", comment.CommenterHex)
-				return count, fmt.Errorf("failed to find mapped commenter (hex=%v)", comment.CommenterHex)
-			}
-
-			// Find the parent comment
-			parentHex, ok := commentHex[comment.ParentHex]
-			if !ok {
-				logger.Errorf("importExportService.ImportCommento: failed to find parent comment (hex=%v)", comment.ParentHex)
-				return count, fmt.Errorf("failed to find parent comment (hex=%v)", comment.ParentHex)
-			}
-
-			// Add a new comment record
-			newComment, err := TheCommentService.Create(cHex, host, comment.Path, comment.Markdown, parentHex, comment.State, comment.CreationDate)
-			if err != nil {
-				return count, err
-			}
-
-			// Store the comment's hex ID in the map
-			commentHex[models.ParentHexID(comment.CommentHex)] = models.ParentHexID(newComment.CommentHex)
-			keys = append(keys, models.ParentHexID(comment.CommentHex))
-
-			// Import record counter
-			count++
-		}
-	}
-	*/
-	// Succeeded
-	return count, nil
 }
 
-func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) (uint64, error) {
+func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
 	logger.Debugf("importExportService.ImportDisqus(%#v, %#v, ...)", curUser, domain)
 
 	// Fetch and decompress the export tarball
 	d, err := util.DecompressGzip(reader)
 	if err != nil {
 		logger.Errorf("importExportService.ImportDisqus: DecompressGzip() failed: %v", err)
-		return 0, err
+		return importError(err)
 	}
 
 	// Unmarshal the XML data
@@ -257,7 +290,7 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 	err = xml.Unmarshal(d, &exp)
 	if err != nil {
 		logger.Errorf("importExportService.ImportDisqus: xml.Unmarshal() failed: %v", err)
-		return 0, err
+		return importError(err)
 	}
 
 	// Map Disqus thread IDs to threads
@@ -266,10 +299,14 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		threads[thread.Id] = thread
 	}
 
+	result := &ImportResult{}
+
 	// Map Disqus emails to user IDs (if not available, create a new one with an empty password that can be reset later)
 	userIDMap := map[string]uuid.UUID{}
 	for _, post := range exp.Posts {
+		result.CommentsTotal++
 		if post.IsDeleted || post.IsSpam {
+			result.CommentsSkipped++
 			continue
 		}
 
@@ -280,31 +317,70 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		}
 
 		// Try to find an existing user with this email
+		var user *data.User
 		if u, err := TheUserService.FindUserByEmail(email, false); err == nil {
-			// User already exists. Add its ID to the map and proceed to the next record
-			userIDMap[email] = u.ID
-			continue
+			// User already exists
+			user = u
+
+			// Check if domain user exists, too
+			if _, _, err := TheDomainService.FindDomainUserByID(&domain.ID, &u.ID); err == nil {
+				// Save the user's ID in the map
+				userIDMap[email] = user.ID
+
+				// Proceed to the next record
+				continue
+
+			} else if err != ErrNotFound {
+				// Any other error than "not found"
+				return result.WithError(err)
+			}
+
 		} else if err != ErrNotFound {
 			// Any other error than "not found"
-			return 0, err
+			return result.WithError(err)
 		}
 
-		// Persist a new user instance
-		user := data.NewUser(email, post.Author.Name)
-		user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
-		user.WithRemarks("Imported from Disqus")
-		if err := TheUserService.Create(user); err != nil {
-			return 0, err
-		} else {
-			// Save the new user's ID in the map
-			userIDMap[email] = user.ID
+		// Persist a new user instance, if not already exists
+		if user == nil {
+			user = data.NewUser(email, post.Author.Name)
+			user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
+			user.WithRemarks("Imported from Disqus")
+			if err := TheUserService.Create(user); err != nil {
+				return result.WithError(err)
+			}
+			result.UsersAdded++
 		}
+
+		// Save the new user's ID in the map
+		userIDMap[email] = user.ID
+
+		// Add a domain user as well
+		du := &data.DomainUser{
+			DomainID:        domain.ID,
+			UserID:          user.ID,
+			IsCommenter:     true,
+			NotifyReplies:   true,
+			NotifyModerator: true,
+			CreatedTime:     post.CreationDate,
+		}
+		if err := TheDomainService.UserAdd(du); err != nil {
+			return result.WithError(err)
+		}
+		result.DomainUsersAdded++
+	}
+
+	// Total number of users involved
+	result.UsersTotal = len(userIDMap)
+
+	// Prepare a map of Disqus Post ID -> Comment ID (randomly generated)
+	postToCommentIDMap := make(map[string]uuid.UUID, len(exp.Posts))
+	for _, post := range exp.Posts {
+		postToCommentIDMap[post.Id] = uuid.New()
 	}
 
 	// Instantiate a HTML-to-Markdown converter
 	hmConv := md.NewConverter("", true, nil)
 	reHTMLTags := regexp.MustCompile(`<[^>]+>`)
-	commentIDMap := map[string]uuid.UUID{}
 	commentParentIDMap := map[uuid.UUID][]*data.Comment{} // Groups comment lists by their parent ID
 	pageIDMap := map[string]uuid.UUID{}
 
@@ -313,6 +389,14 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		// Skip over deleted and spam posts
 		if post.IsDeleted || post.IsSpam {
 			continue
+		}
+
+		// Find the comment ID (it must exist at this point)
+		commentID, ok := postToCommentIDMap[post.Id]
+		if !ok {
+			err := fmt.Errorf("failed to map disqus post ID (%s) to comment ID", post.Id)
+			logger.Errorf("importExportService.ImportDisqus: %v", err)
+			return result.WithError(err)
 		}
 
 		// Find the user ID by their email
@@ -326,24 +410,31 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		// Extract the path from thread URL
 		var pageID uuid.UUID
 		if u, err := util.ParseAbsoluteURL(threads[post.ThreadId.Id].URL, true); err != nil {
-			return 0, err
+			return result.WithError(err)
 
 			// Find the page for that path
 		} else if id, ok := pageIDMap[u.Path]; ok {
 			pageID = id
 
-			// Find or insert a page with this path
-		} else if page, err := ThePageService.UpsertByDomainPath(domain, u.Path, nil); err != nil {
-			return 0, err
+			// Page doesn't exist. Find or insert a page with this path
+		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, u.Path, nil); err != nil {
+			return result.WithError(err)
 
 		} else {
 			pageID = page.ID
+			pageIDMap[u.Path] = pageID
+
+			// If the page was added, increment the page count
+			if added {
+				result.PagesAdded++
+			}
 		}
 
-		// Find the parent comment ID
+		// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID. It will
+		// also be the fallback, should parent ID not exist in the map
 		parentCommentID := uuid.NullUUID{}
-		pzID := uuid.UUID{} // For indexing purposes only, root ID will be represented by a zero UUID
-		if id, ok := commentIDMap[post.ParentId.Id]; ok {
+		pzID := uuid.UUID{}
+		if id, ok := postToCommentIDMap[post.ParentId.Id]; ok {
 			parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
 			pzID = id
 		}
@@ -358,7 +449,7 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		// Create a new comment instance
 		// TODO restrict the list of tags to just the basics: <a>, <b>, <i>, <code>. Especially remove <img> (convert it to <a>)
 		c := &data.Comment{
-			ID:           uuid.New(),
+			ID:           commentID,
 			ParentID:     parentCommentID,
 			PageID:       pageID,
 			Markdown:     markdown,
@@ -376,18 +467,18 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		} else {
 			commentParentIDMap[pzID] = []*data.Comment{c}
 		}
-
-		// Add the comment's ID to the map
-		commentIDMap[post.Id] = c.ID
 	}
+
+	// Total number of pages involved
+	result.PagesTotal = len(pageIDMap)
 
 	// Recurse the comment tree (map) to insert them in the right order (parents-to-children), starting with the root
 	// (= zero UUID)
 	countsPerPage := map[uuid.UUID]int{}
-	count, err := svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
-	_ = TheDomainService.IncrementCounts(&domain.ID, count, 0)
+	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
 
 	// Increase comment counts on all pages
 	for pageID, pc := range countsPerPage {
@@ -397,26 +488,225 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 	}
 
 	// Done
-	return uint64(count), err
+	return result
+}
+
+func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
+	// Unmarshal the data
+	var exp comentarioExportV1
+	if err := json.Unmarshal(buf, &exp); err != nil {
+		logger.Errorf("importExportService.importV1: json.Unmarshal() failed: %v", err)
+		return importError(err)
+	}
+
+	result := &ImportResult{}
+
+	// Create a map of commenterHex -> user ID
+	commenterIDMap := map[HexIDV1]uuid.UUID{
+		AnonymousCommenterHexIDV1: data.AnonymousUser.ID,
+		"anonymous":               data.AnonymousUser.ID, // A special ugly case for the "anonymous" commenter in Commento
+	}
+	for _, commenter := range exp.Commenters {
+		result.UsersTotal++
+
+		// Try to find an existing user with the same email
+		var user *data.User
+		if u, err := TheUserService.FindUserByEmail(commenter.Email, false); err == nil {
+			// User already exists
+			user = u
+
+			// Check if domain user exists, too
+			if _, _, err := TheDomainService.FindDomainUserByID(&domain.ID, &u.ID); err == nil {
+				// Add the commenter's hex-to-ID mapping
+				commenterIDMap[commenter.CommenterHex] = user.ID
+
+				// Proceed to the next record
+				continue
+
+			} else if err != ErrNotFound {
+				// Any other error than "not found"
+				return result.WithError(err)
+			}
+
+		} else if err != ErrNotFound {
+			// Any other error than "not found"
+			return result.WithError(err)
+		}
+
+		// Persist a new user instance, if it doesn't exist
+		if user == nil {
+			user = data.NewUser(commenter.Email, commenter.Name)
+			user.CreatedTime = commenter.JoinDate
+			user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
+			user.
+				WithWebsiteURL(commenter.WebsiteURL).
+				WithRemarks("Imported from Commento/Comentario")
+			if err := TheUserService.Create(user); err != nil {
+				return result.WithError(err)
+			}
+			result.UsersAdded++
+		}
+
+		// Add the commenter's hex-to-ID mapping
+		commenterIDMap[commenter.CommenterHex] = user.ID
+
+		// Add a domain user as well
+		du := &data.DomainUser{
+			DomainID:        domain.ID,
+			UserID:          user.ID,
+			IsModerator:     commenter.IsModerator,
+			IsCommenter:     true,
+			NotifyReplies:   true,
+			NotifyModerator: true,
+			CreatedTime:     commenter.JoinDate,
+		}
+		if err := TheDomainService.UserAdd(du); err != nil {
+			return result.WithError(err)
+		}
+		result.DomainUsersAdded++
+	}
+
+	// Prepare a map of comment HexID -> Comment ID (randomly generated)
+	commentHexToIDMap := make(map[HexIDV1]uuid.UUID, len(exp.Comments))
+	for _, c := range exp.Comments {
+		commentHexToIDMap[c.CommentHex] = uuid.New()
+	}
+
+	commentParentIDMap := map[uuid.UUID][]*data.Comment{} // Groups comment lists by their parent ID
+	pageIDMap := map[string]uuid.UUID{}
+
+	// Iterate over all comments
+	for _, comment := range exp.Comments {
+		result.CommentsTotal++
+
+		// Find the comment ID (it must exist at this point)
+		commentID, ok := commentHexToIDMap[comment.CommentHex]
+		if !ok {
+			err := fmt.Errorf("failed to map comment Hex (%s) to comment ID", comment.CommentHex)
+			logger.Errorf("importExportService.importV1: %v", err)
+			return result.WithError(err)
+		}
+
+		// Find the comment's author
+		uid, ok := commenterIDMap[comment.CommenterHex]
+		if !ok {
+			err := fmt.Errorf("failed to find mapped commenter (hex=%v)", comment.CommenterHex)
+			logger.Errorf("importExportService.importV1: %v", err)
+			return result.WithError(err)
+		}
+
+		// There seems to be a little confusion about the format: Commento filed the path under "url", whereas
+		// Comentario used "path"
+		pagePath := comment.Path
+		if pagePath == "" {
+			pagePath = comment.URL
+		}
+		pagePath = "/" + strings.TrimPrefix(pagePath, "/")
+
+		// Find the page for the comment based on path
+		var pageID uuid.UUID
+		if id, ok := pageIDMap[pagePath]; ok {
+			pageID = id
+
+			// Page doesn't exist. Find or insert a page with this path
+		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, pagePath, nil); err != nil {
+			return result.WithError(err)
+
+		} else {
+			pageID = page.ID
+			pageIDMap[pagePath] = pageID
+			result.PagesTotal++
+
+			// If the page was added, increment the page count
+			if added {
+				result.PagesAdded++
+			}
+		}
+
+		// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID. It will
+		// also be the fallback, should parent ID not exist in the map
+		parentCommentID := uuid.NullUUID{}
+		pzID := uuid.UUID{}
+		if id, ok := commentHexToIDMap[comment.ParentHex]; ok {
+			parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
+			pzID = id
+		}
+
+		// Create a new comment instance
+		del := comment.Deleted || comment.Markdown == "" || comment.Markdown == "[deleted]"
+		c := &data.Comment{
+			ID:           commentID,
+			ParentID:     parentCommentID,
+			PageID:       pageID,
+			Markdown:     util.If(del, "", comment.Markdown),
+			Score:        comment.Score,
+			IsApproved:   comment.State == "approved",
+			IsPending:    comment.State == "unapproved",
+			IsDeleted:    del,
+			CreatedTime:  comment.CreationDate,
+			ApprovedTime: sql.NullTime{Time: comment.CreationDate, Valid: true},
+			UserCreated:  uuid.NullUUID{UUID: uid, Valid: true},
+			UserApproved: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+		}
+
+		// Render Markdown into HTML (the latter doesn't get exported)
+		if !del {
+			c.HTML = util.MarkdownToHTML(comment.Markdown)
+		}
+
+		// File it under the appropriate parent ID
+		if l, ok := commentParentIDMap[pzID]; ok {
+			commentParentIDMap[pzID] = append(l, c)
+		} else {
+			commentParentIDMap[pzID] = []*data.Comment{c}
+		}
+	}
+
+	// Recurse the comment tree (map) to insert them in the right order (parents-to-children), starting with the root
+	// (= zero UUID)
+	countsPerPage := map[uuid.UUID]int{}
+	result.CommentsTotal, result.CommentsNonDeleted, result.Error = svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+
+	// Increase comment count on the domain, ignoring errors
+	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+
+	// Increase comment counts on all pages
+	for pageID, pc := range countsPerPage {
+		if pc > 0 {
+			_ = ThePageService.IncrementCounts(&pageID, pc, 0)
+		}
+	}
+
+	// Succeeded
+	return result
+}
+
+func (svc *importExportService) importV3(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
+	// TODO
+	return &ImportResult{}
 }
 
 // insertCommentsForParent inserts those comments from the map that have the specified parent ID, returning the number
-// of successfully inserted comments
-func (svc *importExportService) insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID][]*data.Comment, countsPerPage map[uuid.UUID]int) (count int, err error) {
+// of successfully inserted and non-deleted comments
+func (svc *importExportService) insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID][]*data.Comment, countsPerPage map[uuid.UUID]int) (countImported, countNonDeleted int, err error) {
 	for _, c := range commentParentMap[parentID] {
 		// Insert the comment
 		if err = TheCommentService.Create(c); err != nil {
 			return
 		}
-		count++
-		countsPerPage[c.PageID] = countsPerPage[c.PageID] + 1
+		countImported++
+		if !c.IsDeleted {
+			countNonDeleted++
+			countsPerPage[c.PageID] = countsPerPage[c.PageID] + 1
+		}
 
 		// Insert any children of the comment
-		var cc int
-		if cc, err = svc.insertCommentsForParent(c.ID, commentParentMap, countsPerPage); err != nil {
+		var cci, ccnd int
+		if cci, ccnd, err = svc.insertCommentsForParent(c.ID, commentParentMap, countsPerPage); err != nil {
 			return
 		}
-		count += cc
+		countImported += cci
+		countNonDeleted += ccnd
 	}
 	return
 }

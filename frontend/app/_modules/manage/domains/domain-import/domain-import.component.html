@@ -2,7 +2,7 @@
 <h1 i18n="heading">Import data</h1>
 
 <!-- Import isn't performed yet -->
-<div *ngIf="!isComplete">
+<div *ngIf="!result">
     <!-- Info -->
     <p i18n>Use this option to import data previously exported from Comentario, Commento, or Disqus.</p>
     <div class="alert alert-warning" role="alert">
@@ -22,8 +22,8 @@
             <div class="col-sm-9">
                 <!-- Commento/Comentario -->
                 <div class="form-check mb-3">
-                    <input formControlName="source" class="form-check-input" type="radio" id="sourceCommento" value="commento">
-                    <label class="form-check-label" for="sourceCommento">Commento/Comentario</label>
+                    <input formControlName="source" class="form-check-input" type="radio" id="sourceComentario" value="comentario">
+                    <label class="form-check-label" for="sourceComentario">Commento/Comentario</label>
                     <div class="form-text">
                         <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
                     </div>
@@ -70,25 +70,42 @@
 </div>
 
 <!-- Import complete -->
-<div *ngIf="isComplete" @fadeInOut-slow class="text-center" id="import-complete">
+<div *ngIf="result" @fadeInOut-slow id="import-complete">
     <!-- Import finished with warnings -->
-    <ng-container *ngIf="impError">
-        <p><fa-icon [icon]="faExclamationTriangle" size="3x" class="text-warning"></fa-icon></p>
-        <p class="lead fw-bold" i18n>Import finished with a warning:</p>
-        <!-- Warning message -->
-        <div class="border rounded p-3 mb-3">
-            <code>{{ impError.message }}</code>
+    <div *ngIf="result.error as err" class="alert alert-warning d-flex align-items-start mb-4" role="alert">
+        <!-- Icon -->
+        <div><fa-icon [icon]="faExclamationTriangle" size="3x" class="text-warning"></fa-icon></div>
+        <!-- Text -->
+        <div class="ms-3">
+            <p class="lead fw-bold" i18n>Import finished with a warning:</p>
+            <!-- Warning message -->
+            <div class="border rounded p-3 mb-3">
+                <code>{{ err }}</code>
+            </div>
         </div>
-    </ng-container>
+    </div>
 
-    <!-- Import finished successfully -->
-    <ng-container *ngIf="!impError">
-        <p><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></p>
-        <p class="lead fw-bold" i18n>Import finished successfully.</p>
-    </ng-container>
+    <!-- Import finished without warnings -->
+    <div *ngIf="!result.error" class="alert alert-success d-flex align-items-start mb-4" role="alert">
+        <!-- Icon -->
+        <div><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></div>
+        <!-- Text -->
+        <div class="ms-3 lead fw-bold" i18n>Import finished successfully.</div>
+    </div>
 
-    <!-- Number of imported comments -->
-    <p i18n>{{ impCount || 0 | number }} comments have been imported.</p>
+    <!-- Result counts -->
+    <div class="fw-bold" i18n>Import results:</div>
+    <ul>
+        <li><ng-container i18n>Total users</ng-container>:          {{ result.usersTotal         || 0 | number }}</li>
+        <li><ng-container i18n>Added users</ng-container>:          {{ result.usersAdded         || 0 | number }}</li>
+        <li><ng-container i18n>Added domain users</ng-container>:   {{ result.domainUsersAdded   || 0 | number }}</li>
+        <li><ng-container i18n>Total domain pages</ng-container>:   {{ result.pagesTotal         || 0 | number }}</li>
+        <li><ng-container i18n>Added domain pages</ng-container>:   {{ result.pagesAdded         || 0 | number }}</li>
+        <li><ng-container i18n>Total comments</ng-container>:       {{ result.commentsTotal      || 0 | number }}</li>
+        <li><ng-container i18n>Imported comments</ng-container>:    {{ result.commentsImported   || 0 | number }}</li>
+        <li><ng-container i18n>Skipped comments</ng-container>:     {{ result.commentsSkipped    || 0 | number }}</li>
+        <li><ng-container i18n>Non-deleted comments</ng-container>: {{ result.commentsNonDeleted || 0 | number }}</li>
+    </ul>
 
     <!-- Go to domain button -->
     <p><a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-primary" i18n>Domain properties</a></p>

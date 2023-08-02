@@ -457,6 +457,60 @@ definitions:
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
 
+  importResult:
+    description: Comment import result
+    type: object
+    readOnly: true
+    properties:
+      usersTotal:
+        type: integer
+        format: uint
+        description: Total number of users
+        x-omitempty: false
+      usersAdded:
+        type: integer
+        format: uint
+        description: Number of added users
+        x-omitempty: false
+      domainUsersAdded:
+        type: integer
+        format: uint
+        description: Number of added domain users
+        x-omitempty: false
+      pagesTotal:
+        type: integer
+        format: uint
+        description: Total number of domain pages
+        x-omitempty: false
+      pagesAdded:
+        type: integer
+        format: uint
+        description: Number of added domain pages
+        x-omitempty: false
+      commentsTotal:
+        type: integer
+        format: uint
+        description: Total number of comments processed
+        x-omitempty: false
+      commentsImported:
+        type: integer
+        format: uint
+        description: Number of imported comments
+        x-omitempty: false
+      commentsSkipped:
+        type: integer
+        format: uint
+        description: Number of skipped comments
+        x-omitempty: false
+      commentsNonDeleted:
+        type: integer
+        format: uint
+        description: Number of non-deleted imported comments
+        x-omitempty: false
+      error:
+        type: string
+        description: Any error message occurred during the import
+
   pageInfo:
     description: Information about a page displaying comments
     type: object
@@ -704,7 +758,7 @@ parameters:
     description: Source of the data to import into a domain
     type: string
     enum:
-      - commento
+      - comentario
       - disqus
 
   pathHost:
@@ -1889,16 +1943,7 @@ paths:
         200:
           description: Import completed successfully
           schema:
-            type: object
-            properties:
-              error:
-                $ref: "#/definitions/apiError"
-                description: Error message if there was one during the import
-              numImported:
-                type: integer
-                format: uint
-                description: Number of imported comments
-                x-omitempty: false
+            $ref: "#/definitions/importResult"
 
   /domains/{uuid}/sso/new:
     post:

@@ -7,7 +7,6 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -98,23 +97,20 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	}
 
 	// Perform import
-	var count uint64
-	var err error
+	var res *svc.ImportResult
 	switch params.Source {
-	case "commento":
-		count, err = svc.TheImportExportService.ImportCommento(domain, params.Data)
+	case "comentario":
+		res = svc.TheImportExportService.Import(user, domain, params.Data)
+
 	case "disqus":
-		count, err = svc.TheImportExportService.ImportDisqus(user, domain, params.Data)
+		res = svc.TheImportExportService.ImportDisqus(user, domain, params.Data)
+
 	default:
-		respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
 	}
 
 	// Succeeded
-	return api_general.NewDomainImportOK().
-		WithPayload(&api_general.DomainImportOKBody{
-			Error:       exmodels.ErrorFrom(err),
-			NumImported: count,
-		})
+	return api_general.NewDomainImportOK().WithPayload(res.ToDTO())
 }
 
 func DomainList(params api_general.DomainListParams, user *data.User) middleware.Responder {
