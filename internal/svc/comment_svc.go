@@ -2,7 +2,6 @@ package svc
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
@@ -28,13 +27,13 @@ type CommentService interface {
 	DeleteByHost(host models.Host) error
 	// FindByID finds and returns a comment with the given ID
 	FindByID(id *uuid.UUID) (*data.Comment, error)
-	// ListByDomain returns a list of comments for the given domain
+	// ListByDomain returns a list of comments for the given domain. No comment property filtering is applied, so
+	// minimum access privileges are domain moderator
 	ListByDomain(domainID *uuid.UUID) ([]*models.Comment, error)
 	// ListWithCommentersByDomainPage returns a list of comments and related commenters for the given domain and,
 	// optionally, page.
 	//   - curUser is the current authenticated/anonymous user.
-	//   - curUserIsOwner indicates whether the current user is an owner of the domain.
-	//   - curUserIsModerator indicates whether the current user is a domain moderator.
+	//   - curDomainUser is the current domain user (can be nil).
 	//   - domainID is the mandatory domain ID.
 	//   - pageID is an optional page ID to filter the result by.
 	//   - userID is an optional user ID to filter the result by.
@@ -47,7 +46,7 @@ type CommentService interface {
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListWithCommentersByDomainPage(curUser *data.User, curUserIsOwner, curUserIsModerator bool,
+	ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser,
 		domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted bool,
 		filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
@@ -214,7 +213,7 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 		}
 
 		// Convert the comment
-		cm := c.ToDTO(fmt.Sprintf("%s://%s", util.If(domainHTTPS, "https", "http"), domainHost), pagePath)
+		cm := c.ToDTO(domainHTTPS, domainHost, pagePath)
 
 		// Append the comment to the list
 		comments = append(comments, cm)
@@ -229,13 +228,13 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 	return comments, nil
 }
 
-func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curUserIsOwner, curUserIsModerator bool,
+func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser,
 	domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted bool,
 	filter, sortBy string, dir data.SortDirection, pageIndex int,
 ) ([]*models.Comment, []*models.Commenter, error) {
 	logger.Debugf(
-		"commentService.ListWithCommentersByDomainPage(%s, %v, %v, %s, %s, %s, %v, %v, %v, %v, '%s', '%s', %s, %d)",
-		&curUser.ID, curUserIsOwner, curUserIsModerator, domainID, pageID, userID, inclApproved, inclPending,
+		"commentService.ListWithCommentersByDomainPage(%s, %#v, %s, %s, %s, %v, %v, %v, %v, '%s', '%s', %s, %d)",
+		&curUser.ID, curDomainUser, domainID, pageID, userID, inclApproved, inclPending,
 		inclRejected, inclDeleted, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
@@ -300,7 +299,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	if curUser.IsAnonymous() {
 		q = q.Where(goqu.Ex{"c.is_pending": false, "c.is_approved": true})
 
-	} else if !curUser.IsSuperuser && !curUserIsOwner && !curUserIsModerator {
+	} else if !curUser.IsSuperuser && !curDomainUser.CanModerate() {
 		// Authenticated, non-moderator user: show others' comments only if they are approved
 		q = q.Where(goqu.Or(
 			goqu.Ex{"c.is_pending": false, "c.is_approved": true},
@@ -315,7 +314,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			goqu.L(`lower("u"."name")`).Like(pattern),
 		}
 		// Email is only searchable by superusers and owners
-		if curUser.IsSuperuser || curUserIsModerator {
+		if curUser.IsSuperuser || curDomainUser.CanModerate() {
 			e = append(e, goqu.L(`lower("u"."email")`).Like(pattern))
 		}
 		q = q.Where(goqu.Or(e...))
@@ -395,8 +394,10 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			return nil, nil, translateDBErrors(err)
 		}
 
-		// Convert the comment
-		cm := c.ToDTO(fmt.Sprintf("%s://%s", util.If(domainHTTPS, "https", "http"), domainHost), pagePath)
+		// Convert the comment, applying the required access privileges
+		cm := c.
+			CloneWithClearance(curUser, curDomainUser).
+			ToDTO(domainHTTPS, domainHost, pagePath)
 
 		// If the user exists and isn't anonymous
 		if uID.Valid && uID.UUID != data.AnonymousUser.ID {
@@ -417,7 +418,10 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 
 				// Convert the user into a commenter and add it to the map
 				commenterMap[uID.UUID] = u.
-					CloneWithClearance(curUser.IsSuperuser, curUserIsOwner, curUserIsModerator).
+					CloneWithClearance(
+						curUser.IsSuperuser,
+						curDomainUser != nil && curDomainUser.IsOwner,
+						curDomainUser != nil && curDomainUser.IsModerator).
 					ToCommenter(uIsModerator || !duIsCommenter.Valid || duIsCommenter.Bool, uIsModerator)
 			}
 		}

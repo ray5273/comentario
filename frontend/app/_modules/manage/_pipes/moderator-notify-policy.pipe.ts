@@ -1,9 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { DomainModNotifyPolicy } from "../../../../generated-api";
 
-// Work around IDE not recognising the symbol
-declare let $localize: any;
-
 @Pipe({
     name: 'moderatorNotifyPolicy'
 })

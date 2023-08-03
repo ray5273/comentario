@@ -1,0 +1,113 @@
+<!-- Header -->
+<header class="mb-3">
+    <h1 i18n="heading">Comment properties</h1>
+</header>
+
+<div [appSpinner]="loading.active" spinnerSize="lg">
+    <ng-container *ngIf="domainMeta?.domain && comment">
+        <div class="row">
+            <!-- Buttons: only for moderator+ and if comment isn't deleted -->
+            <div *ngIf="!comment.isDeleted && domainMeta!.canModerateDomain" class="col-sm-auto order-sm-last pb-3">
+                <!-- Approve -->
+                <button [appSpinner]="updating.active" [class.active]="!comment.isPending && comment.isApproved"
+                        (click)="moderate(true)"
+                        type="button" class="btn btn-outline-success w-100 mb-2">
+                    <fa-icon [icon]="faCheck" class="me-1"></fa-icon>
+                    <ng-container i18n>Approve</ng-container>
+                </button>
+                <!-- Reject -->
+                <button [appSpinner]="updating.active" [class.active]="!comment.isPending && !comment.isApproved"
+                        (click)="moderate(false)"
+                        type="button" class="btn btn-outline-warning w-100 mb-2">
+                    <fa-icon [icon]="faXmark" class="me-1"></fa-icon>
+                    <ng-container i18n>Reject</ng-container>
+                </button>
+                <!-- Delete -->
+                <button appConfirm="Are you sure you want to delete this comment?" [appSpinner]="deleting.active"
+                        (confirmed)="delete()" type="button" class="btn btn-outline-danger w-100" i18n-appConfirm>
+                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+                    <ng-container i18n>Delete</ng-container>
+                </button>
+            </div>
+
+            <div class="col-sm">
+                <!-- Detail table -->
+                <dl id="commentDetailTable" class="detail-table">
+                    <!-- Permalink -->
+                    <div>
+                        <dt i18n>Permalink</dt>
+                        <dd>
+                            <a [href]="comment.url" target="_blank" rel="nofollow noopener noreferrer"
+                               title="Open in new tab" i18n-title>
+                                <ng-container>{{ comment.url }}</ng-container>
+                                <fa-icon [icon]="faUpRightFromSquare" class="ms-2"></fa-icon>
+                            </a>
+                        </dd>
+                    </div>
+                    <!-- Parent comment -->
+                    <div *ngIf="comment.parentId">
+                        <dt i18n>Parent comment</dt>
+                        <dd><a [routerLink]="['..', comment.parentId]">{{ comment.parentId }}</a></dd>
+                    </div>
+                    <!-- Domain page -->
+                    <div *ngIf="page">
+                        <dt i18n>Domain page</dt>
+                        <dd><a [routerLink]="[Paths.manage.domains, page.domainId, 'pages', page.id]">{{ page.path }}</a></dd>
+                    </div>
+                    <!-- Status -->
+                    <div>
+                        <dt i18n>Status</dt>
+                        <dd><app-comment-status-badge [comment]="comment"></app-comment-status-badge></dd>
+                    </div>
+                    <!-- Score -->
+                    <div>
+                        <dt i18n>Score</dt>
+                        <dd>
+                            <strong [class.text-danger]="comment.score! < 0"
+                                    [class.text-success]="comment.score! > 0">{{ comment.score }}</strong>
+                        </dd>
+                    </div>
+                    <!-- Sticky -->
+                    <div>
+                        <dt i18n>Sticky</dt>
+                        <dd><app-checkmark [value]="comment.isSticky"></app-checkmark></dd>
+                    </div>
+                    <!-- Created -->
+                    <div *ngIf="comment.createdTime | datetime as v">
+                        <dt i18n>Created</dt>
+                        <dd>{{ v }}</dd>
+                    </div>
+                    <!-- Created by -->
+                    <div *ngIf="commenter && page">
+                        <dt i18n>Created by</dt>
+                        <dd>
+                            <!-- Domain user link if the currentuser is an owner+ -->
+                            <a *ngIf="domainMeta!.canManageDomain else commenterName"
+                               [routerLink]="[Paths.manage.domains, page.domainId, 'users', commenter.id]">
+                                <app-user-avatar [user]="commenter" size="S" class="me-1"></app-user-avatar>
+                                <ng-container>{{ commenter.name }}</ng-container>
+                                <ng-container *ngIf="commenter.email as e"> ({{ e }})</ng-container>
+                            </a>
+                            <!-- Commenter name otherwise -->
+                            <ng-template #commenterName>
+                                <app-user-avatar [user]="commenter" size="S" class="me-1"></app-user-avatar>
+                                <ng-container>{{ commenter.name }}</ng-container>
+                            </ng-template>
+                        </dd>
+                    </div>
+                </dl>
+            </div>
+        </div>
+
+        <!-- Comment text -->
+        <section *ngIf="comment.html as h">
+            <h3 i18n>Comment text</h3>
+            <div class="card">
+                <div class="card-body comment-text" [innerHTML]="h"></div>
+            </div>
+        </section>
+    </ng-container>
+
+    <!-- Placeholder when no data -->
+    <app-no-data *ngIf="!domainMeta?.domain || !comment"></app-no-data>
+</div>

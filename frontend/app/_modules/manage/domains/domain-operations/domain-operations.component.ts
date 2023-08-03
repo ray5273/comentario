@@ -18,9 +18,6 @@ import { ToastService } from '../../../../_services/toast.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
 
-// Work around IDE not recognising the symbol
-declare let $localize: any;
-
 @UntilDestroy()
 @Component({
     selector: 'app-domain-operations',

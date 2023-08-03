@@ -122,6 +122,11 @@ dl.detail-table, dl.detail-table > div {
     max-width: 500px !important;
 }
 
+// Remove the default margin from the bottom after the comment text
+.comment-text p:last-child {
+    margin-bottom: 0 !important;
+}
+
 // Social buttons
 @each $color, $value in $social-colors {
     .btn-#{$color} {
@@ -264,15 +269,15 @@ dl.detail-table, dl.detail-table > div {
 }
 
 .list-group-item-pending {
-    border-left: 4px solid $warning;
+    border-left: 4px solid $secondary;
 }
 
 .list-group-item-rejected {
-    border-left: 4px solid $danger;
+    border-left: 4px solid $warning;
 }
 
 .list-group-item-deleted {
-    border-left: 4px solid $gray-400;
+    border-left: 4px solid $danger;
     color: $gray-400;
 }
 

@@ -9,6 +9,9 @@
         "lib": [
             "ES2022",
             "dom"
+        ],
+        "types": [
+            "@angular/localize"
         ]
     },
     "angularCompilerOptions": {

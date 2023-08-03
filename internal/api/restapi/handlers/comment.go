@@ -5,6 +5,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -18,6 +19,37 @@ func CommentDelete(params api_general.CommentDeleteParams, user *data.User) midd
 
 	// Succeeded
 	return api_general.NewCommentDeleteNoContent()
+}
+
+func CommentGet(params api_general.CommentGetParams, user *data.User) middleware.Responder {
+	// Find the comment and related objects
+	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
+		return r
+	}
+
+	// Find the comment author, if any
+	var cr *models.Commenter
+	if comment.UserCreated.Valid {
+		if u, du, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
+			return respServiceError(err)
+		} else {
+			cr = u.
+				CloneWithClearance(
+					user.IsSuperuser,
+					domainUser != nil && domainUser.IsOwner,
+					domainUser != nil && domainUser.IsModerator).
+				ToCommenter(du != nil && du.IsCommenter, du != nil && du.IsModerator)
+		}
+	}
+
+	// Succeeded
+	return api_general.NewCommentGetOK().
+		WithPayload(&api_general.CommentGetOKBody{
+			Comment:   comment.CloneWithClearance(user, domainUser).ToDTO(domain.IsHTTPS, domain.Host, page.Path),
+			Commenter: cr,
+			Page:      page.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner).ToDTO(),
+		})
 }
 
 func CommentList(params api_general.CommentListParams, user *data.User) middleware.Responder {
@@ -52,8 +84,7 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	// Fetch comments the user has access to
 	cs, crs, err := svc.TheCommentService.ListWithCommentersByDomainPage(
 		user,
-		domainUser != nil && domainUser.IsOwner,
-		domainUser != nil && domainUser.IsModerator,
+		domainUser,
 		domainID,
 		pageID,
 		userID,

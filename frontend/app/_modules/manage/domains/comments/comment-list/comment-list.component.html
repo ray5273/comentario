@@ -60,11 +60,12 @@
     <ng-container *ngIf="comments?.length">
         <!-- Comment list -->
         <div class="list-group">
-            <div *ngFor="let c of comments"
-                 [class.list-group-item-pending]="c.isPending"
-                 [class.list-group-item-rejected]="!c.isPending && !c.isApproved"
-                 [class.list-group-item-deleted]="c.isDeleted"
-                 class="list-group-item clearfix">
+            <a *ngFor="let c of comments"
+               [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'comments', c.id]"
+               [class.list-group-item-pending]="c.isPending"
+               [class.list-group-item-rejected]="!c.isPending && !c.isApproved"
+               [class.list-group-item-deleted]="c.isDeleted"
+               class="list-group-item list-group-item-action clearfix">
                 <!-- Comment metadata -->
                 <div class="list-group-item-header row align-items-center">
                     <!-- User created -->
@@ -74,15 +75,15 @@
                         <!-- User link (superuser/owner) or name -->
                         <a *ngIf="domainMeta?.canManageDomain else userNameText" [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'users', cr.id]" class="ms-2 fw-bold text-truncate">{{ cr.name }}</a>
                         <ng-template #userNameText><div class="ms-2 fw-bold text-truncate">{{ cr.name }}</div></ng-template>
-                        <!-- Pending badge -->
-                        <div *ngIf="c.isPending" class="badge bg-warning ms-2" i18n>Pending</div>
-                        <!-- Rejected badge -->
-                        <div *ngIf="!c.isPending && !c.isApproved" class="badge bg-danger ms-2" i18n>Rejected</div>
+                        <!-- Status badge -->
+                        <app-comment-status-badge [comment]="c" [subtle]="true" class="ms-2"></app-comment-status-badge>
                     </div>
                     <div class="col-12 col-sm-auto pe-0 text-end">
                         <!-- Comment score -->
-                        <span [class.text-danger]="c.score! < 0" [class.text-success]="c.score! > 0" title="Score"
-                             class="fw-bold small text-muted" i18n-title>{{ c.score }}</span>
+                        <span [class.text-muted]="!c.score"
+                              [class.text-danger]="c.score! < 0"
+                              [class.text-success]="c.score! > 0"
+                              title="Score" class="fw-bold small" i18n-title>{{ c.score }}</span>
                         <!-- Comment creation time and permalink -->
                         <a [href]="c.url" class="ms-3" title="Permalink" target="_blank" rel="noopener noreferrer" i18n-title>
                             <ng-container>{{ c.createdTime | datetime }}</ng-container>
@@ -92,7 +93,7 @@
                 </div>
                 <div class="row align-items-start my-3">
                     <!-- Comment text -->
-                    <div *ngIf="!c.isDeleted else deleted" [innerHTML]="c.html" class="col"></div>
+                    <div *ngIf="!c.isDeleted else deleted" [innerHTML]="c.html" class="col comment-text"></div>
                     <ng-template #deleted><div class="col" i18n>(deleted)</div></ng-template>
 
                     <!-- Action buttons: non-deleted, moderators or own comments only -->
@@ -100,13 +101,13 @@
                          class="col-12 col-sm-auto btn-group btn-group-sm" role="group">
                         <!-- Approve -->
                         <button *ngIf="domainMeta?.canModerateDomain" [class.active]="!c.isPending && c.isApproved"
-                                (click)="moderateComment(c, true)"
+                                (click)="moderateComment($event, c, true)"
                                 class="btn btn-light text-success flex-grow-0" type="button" title="Approve" i18n-title>
                             <fa-icon [icon]="faCheck"></fa-icon>
                         </button>
                         <!-- Reject -->
                         <button *ngIf="domainMeta?.canModerateDomain" [class.active]="!c.isPending && !c.isApproved"
-                                (click)="moderateComment(c, false)"
+                                (click)="moderateComment($event, c, false)"
                                 class="btn btn-light text-warning flex-grow-0" type="button" title="Reject" i18n-title>
                             <fa-icon [icon]="faXmark"></fa-icon>
                         </button>
@@ -118,7 +119,7 @@
                         </button>
                     </div>
                 </div>
-            </div>
+            </a>
         </div>
 
         <!-- Item count -->

@@ -118,6 +118,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainPageUpdateTitleHandler = api_general.DomainPageUpdateTitleHandlerFunc(handlers.DomainPageUpdateTitle)
 	// Comments
 	api.APIGeneralCommentDeleteHandler = api_general.CommentDeleteHandlerFunc(handlers.CommentDelete)
+	api.APIGeneralCommentGetHandler = api_general.CommentGetHandlerFunc(handlers.CommentGet)
 	api.APIGeneralCommentListHandler = api_general.CommentListHandlerFunc(handlers.CommentList)
 	api.APIGeneralCommentModerateHandler = api_general.CommentModerateHandlerFunc(handlers.CommentModerate)
 	// Domain users

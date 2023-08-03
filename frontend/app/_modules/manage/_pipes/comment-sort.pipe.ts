@@ -1,9 +1,6 @@
 import { Pipe, PipeTransform } from '@angular/core';
 import { CommentSort } from '../../../../generated-api';
 
-// Work around IDE not recognising the symbol
-declare let $localize: any;
-
 @Pipe({
     name: 'commentSort',
 })

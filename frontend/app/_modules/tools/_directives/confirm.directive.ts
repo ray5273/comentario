@@ -51,6 +51,7 @@ export class ConfirmDirective {
     private clicked(event: Event) {
         // Do not propagate further
         event.stopPropagation();
+        event.preventDefault();
 
         // If there's no content to be shown, issue a confirmation event right away
         if (!this.appConfirm) {

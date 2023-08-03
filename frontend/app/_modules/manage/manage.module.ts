@@ -18,7 +18,7 @@ import { DomainStatsComponent } from './domains/domain-stats/domain-stats.compon
 import { DomainOperationsComponent } from './domains/domain-operations/domain-operations.component';
 import { StatsChartComponent } from './stats-chart/stats-chart.component';
 import { DomainSelectorService } from './_services/domain-selector.service';
-import { DomainCommentManagerComponent } from './domains/domain-comments/domain-comment-manager/domain-comment-manager.component';
+import { CommentManagerComponent } from './domains/comments/comment-manager/comment-manager.component';
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
 import { ManageGuard } from "./_guards/manage.guard";
 import { ModeratorNotifyPolicyPipe } from './_pipes/moderator-notify-policy.pipe';
@@ -30,7 +30,7 @@ import { SortPropertyComponent } from './sort-selector/sort-property/sort-proper
 import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.component';
 import { DatetimePipe } from './_pipes/datetime.pipe';
 import { DomainPagePropertiesComponent } from './domains/domain-pages/domain-page-properties/domain-page-properties.component';
-import { DomainCommentListComponent } from './domains/domain-comments/comment-list/domain-comment-list.component';
+import { CommentListComponent } from './domains/comments/comment-list/comment-list.component';
 import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
@@ -42,6 +42,8 @@ import { UserDetailsComponent } from './users/user-details/user-details.componen
 import { DomainUserEditComponent } from './domains/domain-users/domain-user-edit/domain-user-edit.component';
 import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
+import { CommentPropertiesComponent } from './domains/comments/comment-properties/comment-properties.component';
+import { CommentStatusBadgeComponent } from './domains/comments/comment-status-badge/comment-status-badge.component';
 
 @NgModule({
     declarations: [
@@ -51,8 +53,8 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
         DashboardComponent,
         DatetimePipe,
         DomainBadgeComponent,
-        DomainCommentListComponent,
-        DomainCommentManagerComponent,
+        CommentListComponent,
+        CommentManagerComponent,
         DomainDetailComponent,
         DomainEditComponent,
         DomainImportComponent,
@@ -78,6 +80,8 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
+        CommentPropertiesComponent,
+        CommentStatusBadgeComponent,
     ],
     imports: [
         CommonModule,

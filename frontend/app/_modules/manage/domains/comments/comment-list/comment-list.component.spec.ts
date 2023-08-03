@@ -3,7 +3,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
-import { DomainCommentListComponent } from './domain-comment-list.component';
+import { CommentListComponent } from './comment-list.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { ConfigService } from '../../../../../_services/config.service';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
@@ -11,14 +11,14 @@ import { SortSelectorComponent } from '../../../sort-selector/sort-selector.comp
 import { ToolsModule } from '../../../../tools/tools.module';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 
-describe('DomainCommentListComponent', () => {
+describe('CommentListComponent', () => {
 
-    let component: DomainCommentListComponent;
-    let fixture: ComponentFixture<DomainCommentListComponent>;
+    let component: CommentListComponent;
+    let fixture: ComponentFixture<CommentListComponent>;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [DomainCommentListComponent, MockComponents(SortSelectorComponent, SortPropertyComponent)],
+            declarations: [CommentListComponent, MockComponents(SortSelectorComponent, SortPropertyComponent)],
             imports: [ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
@@ -26,7 +26,7 @@ describe('DomainCommentListComponent', () => {
                 MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         });
-        fixture = TestBed.createComponent(DomainCommentListComponent);
+        fixture = TestBed.createComponent(CommentListComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

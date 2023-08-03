@@ -21,10 +21,10 @@ import { Paths } from '../../../../../_utils/consts';
 
 @UntilDestroy()
 @Component({
-    selector: 'app-domain-comment-list',
-    templateUrl: './domain-comment-list.component.html',
+    selector: 'app-comment-list',
+    templateUrl: './comment-list.component.html',
 })
-export class DomainCommentListComponent implements OnInit, OnChanges {
+export class CommentListComponent implements OnInit, OnChanges {
 
     /**
      * Optional page ID to load comments for. If not provided, all comments for the current domain will be loaded.
@@ -53,20 +53,23 @@ export class DomainCommentListComponent implements OnInit, OnChanges {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
+    readonly Paths = Paths;
+
     readonly sort = new Sort('created', true);
     readonly commentsLoading = new ProcessingStatus();
     readonly commentUpdating = new ProcessingStatus();
 
     readonly filterForm = this.fb.nonNullable.group({
-        approved: false,
+        approved: true,
         pending:  true,
-        rejected: false,
+        rejected: true,
         deleted:  false,
         filter:   '',
     });
 
     // Icons
     readonly faCheck             = faCheck;
+    readonly faLightbulb = faLightbulb;
     readonly faQuestion          = faQuestion;
     readonly faTrashAlt          = faTrashAlt;
     readonly faUpRightFromSquare = faUpRightFromSquare;
@@ -156,7 +159,7 @@ export class DomainCommentListComponent implements OnInit, OnChanges {
     deleteComment(c: Comment) {
         // Delete the comment
         this.api.commentDelete(c.id!)
-            .pipe(this.commentsLoading.processing())
+            .pipe(this.commentUpdating.processing())
             // Remove the comment from the list
             .subscribe(() => {
                 const i = this.comments?.indexOf(c);
@@ -166,7 +169,11 @@ export class DomainCommentListComponent implements OnInit, OnChanges {
             });
     }
 
-    moderateComment(c: Comment, approved: boolean) {
+    moderateComment(e: Event, c: Comment, approved: boolean) {
+        // Do not propagate the click to prevent navigating into comment properties
+        e.stopPropagation();
+        e.preventDefault();
+
         // If the comment is pending moderation, set to approved/rejected
         let pending = !!c.isPending;
         if (pending) {
@@ -185,7 +192,4 @@ export class DomainCommentListComponent implements OnInit, OnChanges {
                 c.isApproved = approved;
             });
     }
-
-    protected readonly faLightbulb = faLightbulb;
-    protected readonly Paths = Paths;
 }

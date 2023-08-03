@@ -802,6 +802,30 @@ type Comment struct {
 	UserDeleted  uuid.NullUUID // Reference to the user who deleted the comment
 }
 
+// CloneWithClearance returns a clone of the comment with a limited set of properties, depending on the specified
+// authorisations
+func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Comment {
+	// Superuser, domain owner/moderator, and the comment author see everything: make a perfect clone
+	if user.IsSuperuser || domainUser.IsOwner || domainUser.IsModerator || c.UserCreated.UUID == user.ID {
+		cc := *c
+		return &cc
+	}
+
+	// Other users don't see the source Markdown and status/audit fields
+	return &Comment{
+		ID:          c.ID,
+		ParentID:    c.ParentID,
+		PageID:      c.PageID,
+		HTML:        c.HTML,
+		Score:       c.Score,
+		IsSticky:    c.IsSticky,
+		IsApproved:  c.IsApproved,
+		IsDeleted:   c.IsDeleted,
+		CreatedTime: c.CreatedTime,
+		UserCreated: c.UserCreated,
+	}
+}
+
 // IsAnonymous returns whether the comment is authored by an anonymous or nonexistent (deleted) commenter
 func (c *Comment) IsAnonymous() bool {
 	return !c.UserCreated.Valid || c.UserCreated.UUID == AnonymousUser.ID
@@ -820,9 +844,13 @@ func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 	c.ApprovedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 }
 
-// ToDTO converts this model into an API model
+// ToDTO converts this model into an API model:
+//   - https is true for "https", false for "http"
+//   - host is the domain host
+//   - path is the page path
+//
 // NB: leaves the Direction at 0
-func (c *Comment) ToDTO(domainURL, pagePath string) *models.Comment {
+func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 	return &models.Comment{
 		CreatedTime: strfmt.DateTime(c.CreatedTime),
 		HTML:        c.HTML,
@@ -835,7 +863,7 @@ func (c *Comment) ToDTO(domainURL, pagePath string) *models.Comment {
 		PageID:      strfmt.UUID(c.PageID.String()),
 		ParentID:    NullUUIDStr(&c.ParentID),
 		Score:       int64(c.Score),
-		URL:         strfmt.URI(fmt.Sprintf("%s%s#comentario-%s", domainURL, pagePath, c.ID)),
+		URL:         strfmt.URI(fmt.Sprintf("%s://%s%s#comentario-%s", util.If(https, "https", "http"), host, path, c.ID)),
 		UserCreated: NullUUIDStr(&c.UserCreated),
 	}
 }

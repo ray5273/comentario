@@ -1,9 +1,6 @@
 import { Directive, ElementRef, HostListener, Input, Optional, Renderer2 } from '@angular/core';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 
-// Work around IDE not recognising the symbol
-declare let $localize: any;
-
 @Directive({
     selector: '[appCopyText]',
 })

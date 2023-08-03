@@ -8,7 +8,7 @@ import { DomainEditComponent } from './domains/domain-edit/domain-edit.component
 import { ProfileComponent } from './account/profile/profile.component';
 import { DomainImportComponent } from './domains/domain-import/domain-import.component';
 import { DomainPropertiesComponent } from './domains/domain-properties/domain-properties.component';
-import { DomainCommentManagerComponent } from './domains/domain-comments/domain-comment-manager/domain-comment-manager.component';
+import { CommentManagerComponent } from './domains/comments/comment-manager/comment-manager.component';
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
 import { DomainStatsComponent } from './domains/domain-stats/domain-stats.component';
 import { DomainOperationsComponent } from './domains/domain-operations/domain-operations.component';
@@ -22,6 +22,7 @@ import { DomainUserPropertiesComponent } from './domains/domain-users/domain-use
 import { DomainUserEditComponent } from './domains/domain-users/domain-user-edit/domain-user-edit.component';
 import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
+import { CommentPropertiesComponent } from './domains/comments/comment-properties/comment-properties.component';
 
 const children: Routes = [
     // Default route
@@ -48,7 +49,8 @@ const children: Routes = [
             {path: 'pages/:id',      component: DomainPagePropertiesComponent, canActivate: [ManageGuard.isDomainSelected]},
 
             // Comments
-            {path: 'comments',       component: DomainCommentManagerComponent, canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'comments',       component: CommentManagerComponent,       canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'comments/:id',   component: CommentPropertiesComponent,    canActivate: [ManageGuard.isDomainSelected]},
 
             // Domain users
             {path: 'users',          component: DomainUserManagerComponent,    canActivate: [ManageGuard.canManageDomain]},

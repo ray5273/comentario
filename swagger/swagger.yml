@@ -2148,6 +2148,27 @@ paths:
     parameters:
       - $ref: "#/parameters/pathUuid"
 
+    get:
+      operationId: CommentGet
+      summary: Get the properties of the specified comment
+      tags:
+        - ApiGeneral
+      responses:
+        200:
+          description: Comment
+          schema:
+            type: object
+            properties:
+              comment:
+                $ref: "#/definitions/comment"
+                description: Comment properties
+              commenter:
+                $ref: "#/definitions/commenter"
+                description: Commenter who authored the comment (optional, may not exist anymore)
+              page:
+                $ref: "#/definitions/domainPage"
+                description: Domain page the comment is on
+
     delete:
       operationId: CommentDelete
       summary: Delete the specified comment
