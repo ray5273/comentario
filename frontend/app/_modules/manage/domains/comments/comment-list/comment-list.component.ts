@@ -192,4 +192,24 @@ export class CommentListComponent implements OnInit, OnChanges {
                 c.isApproved = approved;
             });
     }
+
+    filterAll() {
+        this.filterForm.setValue({
+            approved: true,
+            pending:  true,
+            rejected: true,
+            deleted:  true,
+            filter:   '',
+        });
+    }
+
+    filterPending() {
+        this.filterForm.setValue({
+            approved: false,
+            pending:  true,
+            rejected: false,
+            deleted:  false,
+            filter:   '',
+        });
+    }
 }
