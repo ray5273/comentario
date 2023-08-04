@@ -94,19 +94,52 @@
     </div>
 
     <!-- Result counts -->
-    <div class="fw-bold" i18n>Import results:</div>
-    <ul>
-        <li><ng-container i18n>Total users</ng-container>:          {{ result.usersTotal         || 0 | number }}</li>
-        <li><ng-container i18n>Added users</ng-container>:          {{ result.usersAdded         || 0 | number }}</li>
-        <li><ng-container i18n>Added domain users</ng-container>:   {{ result.domainUsersAdded   || 0 | number }}</li>
-        <li><ng-container i18n>Total domain pages</ng-container>:   {{ result.pagesTotal         || 0 | number }}</li>
-        <li><ng-container i18n>Added domain pages</ng-container>:   {{ result.pagesAdded         || 0 | number }}</li>
-        <li><ng-container i18n>Total comments</ng-container>:       {{ result.commentsTotal      || 0 | number }}</li>
-        <li><ng-container i18n>Imported comments</ng-container>:    {{ result.commentsImported   || 0 | number }}</li>
-        <li><ng-container i18n>Skipped comments</ng-container>:     {{ result.commentsSkipped    || 0 | number }}</li>
-        <li><ng-container i18n>Non-deleted comments</ng-container>: {{ result.commentsNonDeleted || 0 | number }}</li>
-    </ul>
+    <h2 i18n>Import results</h2>
+    <table class="table table-narrow">
+    <tbody>
+        <tr>
+            <th scope="row" i18n>Total users</th>
+            <td class="text-end">{{ result.usersTotal || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Added users</th>
+            <td class="text-end">{{ result.usersAdded || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Added domain users</th>
+            <td class="text-end">{{ result.domainUsersAdded || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Total domain pages</th>
+            <td class="text-end">{{ result.pagesTotal || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Added domain pages</th>
+            <td class="text-end">{{ result.pagesAdded || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Total comments</th>
+            <td class="text-end">{{ result.commentsTotal || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Imported comments</th>
+            <td class="text-end">{{ result.commentsImported || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Skipped comments</th>
+            <td class="text-end">{{ result.commentsSkipped || 0 | number }}</td>
+        </tr>
+        <tr>
+            <th scope="row" i18n>Non-deleted comments</th>
+            <td class="text-end">{{ result.commentsNonDeleted || 0 | number }}</td>
+        </tr>
+    </tbody>
+    </table>
 
-    <!-- Go to domain button -->
-    <p><a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-primary" i18n>Domain properties</a></p>
+    <!-- Buttons -->
+    <div class="my-3">
+        <a [routerLink]="[Paths.manage.domains, domain!.id, 'comments']" class="btn btn-outline-primary"      i18n>Comments</a>
+        <a [routerLink]="[Paths.manage.domains, domain!.id, 'pages']"    class="btn btn-outline-primary ms-2" i18n>Pages</a>
+        <a [routerLink]="[Paths.manage.domains, domain!.id]"             class="btn btn-outline-primary ms-2" i18n>Domain properties</a>
+    </div>
 </div>

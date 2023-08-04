@@ -665,7 +665,7 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 	// Recurse the comment tree (map) to insert them in the right order (parents-to-children), starting with the root
 	// (= zero UUID)
 	countsPerPage := map[uuid.UUID]int{}
-	result.CommentsTotal, result.CommentsNonDeleted, result.Error = svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
 	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
