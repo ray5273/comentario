@@ -40,6 +40,9 @@ var (
 		language.English, // The first language is used as fallback
 	}
 
+	// UIDefaultLangID is the ID of the default interface language
+	UIDefaultLangID = UILanguageTags[0].String()
+
 	// UILangMatcher is a matcher instance for UI languages
 	UILangMatcher = language.NewMatcher(UILanguageTags)
 

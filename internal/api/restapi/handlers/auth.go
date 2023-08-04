@@ -66,7 +66,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 	loc := user.SignupHost
 	if loc == "" {
 		// Redirect to the UI login page otherwise
-		loc = config.URLFor("login", map[string]string{"confirmed": "true"})
+		loc = config.URLForUI(user.LangID, "auth/login", map[string]string{"confirmed": "true"})
 	}
 
 	// Redirect the user's browser
@@ -199,13 +199,7 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 		return respServiceError(err)
 
 		// Send out an email
-	} else if err := svc.TheMailService.SendFromTemplate(
-		"",
-		user.Email,
-		"Reset your password",
-		"reset-password.gohtml",
-		map[string]any{"URL": config.URLForUI("en", "", map[string]string{"passwordResetToken": token.String()})},
-	); err != nil {
+	} else if err := svc.TheMailService.SendPasswordReset(user, token); err != nil {
 		return respServiceError(err)
 	}
 

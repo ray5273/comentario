@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { HttpContext } from '@angular/common/http';
-import { BehaviorSubject, combineLatestWith, Observable, ReplaySubject, tap } from 'rxjs';
+import { BehaviorSubject, combineLatestWith, Observable, of, ReplaySubject, Subject, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainUser, FederatedIdpId, Principal } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
@@ -103,11 +103,12 @@ export class DomainSelectorService {
      * @param id UUID of the domain to activate, or undefined to remove selection.
      * @param force Whether to force-update the domain even if ID didn't change.
      * @param errorHandling Whether to engage standard HTTP error handling.
+     * @return An Observable that completes when the domain is updated, specifying whether the selection was successful.
      */
-    setDomainId(id: string | undefined, force = false, errorHandling = true) {
+    setDomainId(id: string | undefined, force = false, errorHandling = true): Observable<boolean> {
         // Don't bother if the ID/principal aren't changing, unless force is true
         if (!force && this.lastId === id && this.lastPrincipal === this.principal) {
-            return;
+            return of(true);
         }
         this.lastId = id;
         this.lastPrincipal = this.principal;
@@ -115,15 +116,21 @@ export class DomainSelectorService {
         // Remove any selection if there's no ID
         if (!id) {
             this.setDomain(undefined);
-            return;
+            return of(true);
         }
 
         // Load domain and IdPs from the backend. Silently ignore possible errors during domain fetching
+        const result = new Subject<boolean>();
         this.api.domainGet(id, undefined, undefined, {context: new HttpContext().set(HTTP_ERROR_HANDLING, errorHandling)})
-            .subscribe({
+            .pipe(tap({
                 next:  r => this.setDomain(r),
                 error: () => this.setDomain(undefined),
+            }))
+            .subscribe({
+                next:  () => result.next(true),
+                error: () => result.next(false),
             });
+        return result;
     }
 
 

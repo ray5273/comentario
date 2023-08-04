@@ -2,20 +2,72 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 )
 
-// sendCommentModNotifications sends a comment notification to all domain moderators
-func sendCommentModNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment, user *data.User) error {
-	// Determine notification kind
-	kind := ""
-	if !comment.IsApproved {
-		kind = "moderation"
+func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Responder {
+	// Parse user ID
+	uID, err := data.DecodeUUID(params.User)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.User)))
 	}
 
+	// Parse domain ID
+	dID, err := data.DecodeUUID(params.Domain)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
+	}
+
+	// Parse secret token
+	secret, err := data.DecodeUUID(params.Secret)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Secret)))
+	}
+
+	// Find the domain user
+	user, domainUser, err := svc.TheUserService.FindDomainUserByID(uID, dID)
+	if err != nil {
+		return respServiceError(err)
+
+		// Make sure the domain user exists
+	} else if domainUser == nil {
+		return respNotFound(nil)
+
+		// Make sure the secret checks out
+	} else if *secret != user.SecretToken {
+		respUnauthorized(ErrorBadToken)
+	}
+
+	// Update the domain user properties
+	var changed bool
+	if params.Kind == "moderator" {
+		// Moderator notifications
+		changed = domainUser.NotifyModerator
+		domainUser.NotifyModerator = false
+	} else {
+		// Reply notifications
+		changed = domainUser.NotifyReplies
+		domainUser.NotifyReplies = false
+	}
+
+	// Persist the changes, if any
+	if changed {
+		if err := svc.TheDomainService.UserModify(domainUser); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// Succeeded: redirect to the homepage
+	return api_general.NewMailUnsubscribeTemporaryRedirect().
+		WithLocation(config.URLForUI(user.LangID, "", map[string]string{"unsubscribed": "true"}))
+}
+
+// sendCommentModNotifications sends a comment notification to all domain moderators
+func sendCommentModNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenter *data.User) error {
 	// Fetch domain moderators to be notified
 	mods, err := svc.TheUserService.ListDomainModerators(&domain.ID, true)
 	if err != nil {
@@ -23,22 +75,11 @@ func sendCommentModNotifications(domain *data.Domain, page *data.DomainPage, com
 	}
 
 	// Iterate the moderator users
-	for _, m := range mods {
+	for _, mod := range mods {
 		// Do not email the commenting moderator their own comment
-		if m.ID == user.ID {
-			continue
+		if mod.ID != commenter.ID {
+			_ = svc.TheMailService.SendCommentNotification(svc.MailNotificationKindModerator, mod, true, domain, page, comment, commenter.Name)
 		}
-
-		// Send a notification (ignore errors)
-		_ = svc.TheMailService.SendCommentNotification(
-			m.Email,
-			kind,
-			domain.Host,
-			page.Path,
-			user.Name,
-			page.DisplayTitle(domain),
-			comment.HTML,
-			&comment.ID)
 	}
 
 	// Succeeded
@@ -46,13 +87,13 @@ func sendCommentModNotifications(domain *data.Domain, page *data.DomainPage, com
 }
 
 // sendCommentReplyNotifications sends a comment reply notification
-func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment, user *data.User) error {
+func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenter *data.User) error {
 	// Fetch the parent comment
 	if parentComment, err := svc.TheCommentService.FindByID(&comment.ParentID.UUID); err != nil {
 		return err
 
 		// No reply notifications for anonymous users and self replies
-	} else if parentComment.IsAnonymous() || parentComment.UserCreated.UUID == user.ID {
+	} else if parentComment.IsAnonymous() || parentComment.UserCreated.UUID == commenter.ID {
 		return nil
 
 		// Find the parent commenter user and the corresponding domain user
@@ -65,19 +106,15 @@ func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, c
 
 		// Send a reply notification
 	} else {
-		_ = svc.TheMailService.SendCommentNotification(
-			parentUser.Email,
-			"reply",
-			domain.Host,
-			page.Path,
-			user.Name,
-			page.DisplayTitle(domain),
-			comment.HTML,
-			&comment.ID)
+		return svc.TheMailService.SendCommentNotification(
+			svc.MailNotificationKindReply,
+			parentUser,
+			parentUser.IsSuperuser || parentDomainUser.CanModerate(),
+			domain,
+			page,
+			comment,
+			commenter.Name)
 	}
-
-	// Succeeded
-	return nil
 }
 
 // sendConfirmationEmail sends an email containing a confirmation link to the given user
@@ -99,13 +136,7 @@ func sendConfirmationEmail(user *data.User) middleware.Responder {
 	}
 
 	// Send a confirmation email
-	err = svc.TheMailService.SendFromTemplate(
-		"",
-		user.Email,
-		"Please confirm your email address",
-		"confirm-hex.gohtml",
-		map[string]any{"URL": config.URLForAPI("owner/confirm-hex", map[string]string{"confirmHex": token.String()})})
-	if err != nil {
+	if err = svc.TheMailService.SendConfirmEmail(user, token); err != nil {
 		return respServiceError(err)
 	}
 

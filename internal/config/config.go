@@ -70,7 +70,7 @@ var (
 		Verbose         []bool `short:"v" long:"verbose" description:"Verbose logging"`
 		BaseURL         string `long:"base-url"          description:"Server's own base URL"                      default:"http://localhost:8080/" env:"BASE_URL"`
 		CDNURL          string `long:"cdn-url"           description:"Static file CDN URL (defaults to base URL)" default:""                       env:"CDN_URL"`
-		EmailFrom       string `long:"email-from"        description:"'From' address in sent emails"              default:"noreply@localhost"      env:"EMAIL_FROM"`
+		EmailFrom       string `long:"email-from"        description:"'From' address in sent emails, defaults to SMTP username"                    env:"EMAIL_FROM"`
 		DBIdleConns     int    `long:"db-idle-conns"     description:"Max. # of idle DB connections"              default:"50"                     env:"DB_MAX_IDLE_CONNS"`
 		EnableSwaggerUI bool   `long:"enable-swagger-ui" description:"Enable Swagger UI at /api/docs"`
 		StaticPath      string `long:"static-path"       description:"Path to static files"                       default:"./frontend"             env:"STATIC_PATH"`
@@ -124,13 +124,14 @@ func CLIParsed() error {
 
 	// If SMTP credentials are available, use a corresponding mailer
 	if SecretsConfig.SMTPServer.Host != "" && SecretsConfig.SMTPServer.User != "" && SecretsConfig.SMTPServer.Pass != "" {
-		util.AppMailer = util.NewSMTPMailer(
+		util.TheMailer = util.NewSMTPMailer(
 			SecretsConfig.SMTPServer.Host,
 			SecretsConfig.SMTPServer.Port,
 			SecretsConfig.SMTPServer.User,
 			SecretsConfig.SMTPServer.Pass,
-			CLIFlags.EmailFrom)
+			util.If(CLIFlags.EmailFrom == "", SecretsConfig.SMTPServer.User, CLIFlags.EmailFrom))
 		SMTPConfigured = true
+		logger.Infof("SMTP configured with server %s:%d", SecretsConfig.SMTPServer.Host, SecretsConfig.SMTPServer.Port)
 	}
 
 	// Succeeded
@@ -223,7 +224,7 @@ func URLForAPI(path string, queryParams map[string]string) string {
 func URLForUI(lang, subPath string, queryParams map[string]string) string {
 	// Make sure the language is correct
 	if !util.IsUILang(lang) {
-		lang = "en"
+		lang = util.UIDefaultLangID
 	}
 	return URLFor(fmt.Sprintf("%s/%s", lang, subPath), queryParams)
 }

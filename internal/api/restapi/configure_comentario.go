@@ -92,6 +92,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralAuthOauthInitHandler = api_general.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
 	// Config
 	api.APIGeneralComentarioConfigHandler = api_general.ComentarioConfigHandlerFunc(handlers.ComentarioConfig)
+	// Mail
+	api.APIGeneralMailUnsubscribeHandler = api_general.MailUnsubscribeHandlerFunc(handlers.MailUnsubscribe)
 	// CurUser
 	api.APIGeneralCurUserGetHandler = api_general.CurUserGetHandlerFunc(handlers.CurUserGet)
 	api.APIGeneralCurUserSetAvatarHandler = api_general.CurUserSetAvatarHandlerFunc(handlers.CurUserSetAvatar)

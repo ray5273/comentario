@@ -109,9 +109,13 @@ func respNotFound(err *exmodels.Error) middleware.Responder {
 	return api_general.NewGenericNotFound().WithPayload(err)
 }
 
-// respServiceError translates the provided error, returned by a service, into an appropriate error responder
+// respServiceError translates the provided error, returned by a service, into an appropriate error responder. The idea
+// behind this translation is to provide the user with some meaningful information about the failure, while keeping
+// any sensitive data (which is otherwise supposed to land in the logs) out of the response
 func respServiceError(err error) middleware.Responder {
 	switch err {
+	case svc.ErrEmailSend:
+		return api_general.NewGenericBadGateway().WithPayload(ErrorEmailSendFailure)
 	case svc.ErrNotFound:
 		return api_general.NewGenericNotFound()
 	}

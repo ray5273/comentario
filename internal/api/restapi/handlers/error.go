@@ -7,6 +7,7 @@ var (
 	ErrorDomainReadonly       = &exmodels.Error{ID: "domain-readonly", Message: "This domain is read-only"}
 	ErrorEmailAlreadyExists   = &exmodels.Error{ID: "email-already-exists", Message: "This email address is already registered"}
 	ErrorEmailNotConfirmed    = &exmodels.Error{ID: "email-not-confirmed", Message: "User's email address is not confirmed yet"}
+	ErrorEmailSendFailure     = &exmodels.Error{ID: "email-send-failure", Message: "Failed to send email"}
 	ErrorHostAlreadyExists    = &exmodels.Error{ID: "host-already-exists", Message: "This host is already registered"}
 	ErrorIdPUnconfigured      = &exmodels.Error{ID: "idp-unconfigured", Message: "Identity provider isn't configured"}
 	ErrorIdPUnknown           = &exmodels.Error{ID: "idp-unknown", Message: "Unknown identity provider"}

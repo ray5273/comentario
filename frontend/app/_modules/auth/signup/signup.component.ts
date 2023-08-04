@@ -7,6 +7,7 @@ import { Paths } from '../../../_utils/consts';
 import { ConfigService } from '../../../_services/config.service';
 import { Animations } from '../../../_utils/animations';
 import { ApiGeneralService } from "../../../../generated-api";
+import { ToastService } from '../../../_services/toast.service';
 
 @Component({
     selector: 'app-signup',
@@ -35,6 +36,7 @@ export class SignupComponent {
         private readonly router: Router,
         private readonly cfgSvc: ConfigService,
         private readonly api: ApiGeneralService,
+        private readonly toastSvc: ToastService,
     ) {}
 
     get email(): AbstractControl<string> {
@@ -51,6 +53,10 @@ export class SignupComponent {
 
         // Submit the form if it's valid
         if (this.form.valid) {
+            // Remove any toasts
+            this.toastSvc.clear();
+
+            // Submit the form
             const vals = this.form.value as Required<typeof this.form.value>;
             this.api.authSignup({email: vals.email, password: vals.password, name: vals.name})
                 .pipe(this.submitting.processing())

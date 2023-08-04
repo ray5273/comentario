@@ -92,6 +92,8 @@ create table if not exists cm_migration_log (
     error_text   text                                          -- Optional error text is is_ok is false
 );
 
+-- TODO new-db Configuration table
+
 ------------------------------------------------------------------------------------------------------------------------
 -- Known federated identity providers
 ------------------------------------------------------------------------------------------------------------------------
@@ -115,6 +117,7 @@ create table cm_users (
     id             uuid primary key,                            -- Unique record ID
     email          varchar(254)                not null unique, -- Unique user email
     name           varchar(63)                 not null,        -- User's full name
+    lang_id        varchar(5)    default 'en'  not null,        -- User's interface language ID
     password_hash  varchar(100)                not null,        -- Password hash
     system_account boolean       default false not null,        -- Whether the user is a system account (cannot sign in)
     is_superuser   boolean       default false not null,        -- Whether the user is a "super user" (instance admin)
@@ -131,7 +134,8 @@ create table cm_users (
     remarks        text          default ''    not null,        -- Optional remarks for the user
     federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty, it's a local user
     federated_id   varchar(255)  default ''    not null,        -- User ID as reported by the federated identity provider (only when federated_idp is set)
-    website_url    varchar(2083) default ''    not null         -- Optional user's website URL
+    website_url    varchar(2083) default ''    not null,        -- Optional user's website URL
+    secret_token   uuid                        not null         -- User's secret token, for example, for unsubscribing from notifications
 );
 
 -- Constraints
@@ -140,9 +144,11 @@ alter table cm_users add constraint fk_users_user_banned   foreign key (user_ban
 alter table cm_users add constraint fk_users_federated_idp foreign key (federated_idp) references cm_fed_identity_providers(id) on delete restrict;
 
 -- Data
-insert into cm_users(id, email, name, password_hash, system_account, confirmed, ts_created)
+insert into cm_users(id, email, name, password_hash, system_account, confirmed, ts_created, secret_token)
     -- 'Anonymous' user
-    values('00000000-0000-0000-0000-000000000000'::uuid, '', 'Anonymous', '', true, false, current_timestamp);
+    values('00000000-0000-0000-0000-000000000000'::uuid, '', 'Anonymous', '', true, false, current_timestamp, gen_random_uuid());
+
+-- TODO new-db User attributes
 
 ------------------------------------------------------------------------------------------------------------------------
 -- User avatars
@@ -394,18 +400,21 @@ begin
         insert into temp_commenthex_map(commenthex, id) select commenthex, gen_random_uuid() from comments;
 
         -- Migrate owners
-        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks)
-            select m.id, o.email, o.name, o.passwordhash, o.confirmedemail='true', o.joindate, o.joindate, 'Migrated from Commento, ownerhex=' || o.ownerhex
+        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, secret_token)
+            select
+                    m.id, o.email, o.name, o.passwordhash, o.confirmedemail='true', o.joindate, o.joindate,
+                    'Migrated from Commento, ownerhex=' || o.ownerhex, gen_random_uuid()
                 from owners o
                 join temp_ownerhex_map m on m.ownerhex=o.ownerhex;
 
         -- Migrate commenters
-        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, federated_idp, website_url)
+        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, federated_idp, website_url, secret_token)
             select
                     m.id, c.email, c.name, c.passwordhash, true, c.joindate, c.joindate,
                     'Migrated from Commento, commenterhex=' || c.commenterhex,
                     case when c.provider='commento' then null else c.provider end,
-                    case when c.link='undefined' then '' else c.link end
+                    case when c.link='undefined' then '' else c.link end,
+                    gen_random_uuid()
                 from (
                     -- email isn't unique in commenters, so we need to pick one to join upon
                     select

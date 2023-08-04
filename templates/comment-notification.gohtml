@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta name="viewport" content="user-scalable=no,initial-scale=1">
+    <title>Comentario: New comment on {{ .PageTitle }}</title>
+</head>
+<body style="font-size: 14px; background: white; font-family: sans-serif; padding: 0; margin: 0;">
+    <div style="max-width: 600px; margin-top: 16px;">
+        <!-- Heading with logo -->
+        <div style="text-align: center; margin-top: 12px; padding: 8px; border-bottom: 1px solid #eee;">
+            <img src="cid:logo.png" alt="Comentario" style="border: 0; max-width: 100%; width: 500px; height: auto;">
+        </div>
+
+        <!-- Body -->
+        <div style="padding: 16px;">
+            <p style="margin: 12px 0; font-size: 20px; font-weight: bold; border-bottom: 1px solid #eeeeee;">
+                {{ if eq .Kind "reply" }}Unread reply{{ else if .IsPending }}Pending moderation{{ else }}New comment{{ end }}
+            </p>
+
+            <!-- Moderation actions bar -->
+            <div style="float: right; font-size:12px; font-weight: bold;">
+                {{ if .CanModerate }}
+                    {{ if .IsPending }}
+                        <a href="{{ .ApproveURL }}" style="padding-right:5px; text-decoration: none; text-transform: uppercase; color: #198754;">Approve</a>
+                        <a href="{{ .RejectURL  }}" style="padding-right:5px; text-decoration: none; text-transform: uppercase; color: #ffc107;">Reject</a>
+                    {{ end }}
+                    <a href="{{ .DeleteURL      }}" style="padding-right:5px; text-decoration: none; text-transform: uppercase; color: #dc3545;">Delete</a>
+                {{ end }}
+                <a href="{{ .CommentURL         }}" style="padding-right:5px; text-decoration: none; text-transform: uppercase; color: #495057;">Context</a>
+            </div>
+
+            <!-- Header -->
+            <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px;">
+                <span style="font-size: 14px; font-weight: bold; color: #1e2127;">{{ .CommenterName }}</span>
+                on
+                <a href="{{ .PageURL }}" class="page" style="margin-bottom: 10px; text-decoration: none; color: #4950d8;">"{{ .PageTitle }}"</a>
+            </div>
+
+            <!-- Comment text -->
+            <div style="line-height: 20px; padding: 10px;">{{ .HTML }}</div>
+        </div>
+
+        <!-- Footer -->
+        <div class="footer" style="margin: 16px 0;">
+            <p style="padding: 12px 0; color: #868e96; font-size: 13px; text-align: left; border-top: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee;">
+                {{ if eq .Kind "reply" }}
+                    You've received this email because you opted in to receive email notifications for comment replies.
+                {{ else if .IsPending }}
+                    You've received this email because the domain owner chose to notify moderators of comments pending moderation by email.
+                {{ else }}
+                    You've received this email because the domain owner chose to notify moderators for all new comments by email.
+                {{ end }}
+                To unsubscribe, <a href="{{ .UnsubscribeURL }}" style="color: #868e96; font-weight: bold; text-decoration: none;">click here</a>.
+            </p>
+            <p style="padding-top: 6px;">
+                <a href="https://comentario.app/" style="float: right; font-weight: bold; color: #868e96; font-size: 13px; text-decoration: none;">Powered by Comentario</a>
+            </p>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,15 +1,16 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../_services/auth.service';
 import { Paths } from '../../../_utils/consts';
 import { ProcessingStatus } from '../../../_utils/processing-status';
+import { ToastService } from '../../../_services/toast.service';
 
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
 })
-export class LoginComponent {
+export class LoginComponent implements OnInit {
 
     submitting = new ProcessingStatus();
 
@@ -21,12 +22,21 @@ export class LoginComponent {
 
     constructor(
         private readonly fb: FormBuilder,
+        private readonly route: ActivatedRoute,
         private readonly router: Router,
         private readonly authSvc: AuthService,
+        private readonly toastSvc: ToastService,
     ) {}
 
     get email(): AbstractControl<string> {
         return this.form.get('email')!;
+    }
+
+    ngOnInit(): void {
+        // If there's the 'confirmed' parameter in the URL, display a toast
+        if (this.route.snapshot.queryParamMap.has('confirmed')) {
+            this.toastSvc.success('email-confirmed');
+        }
     }
 
     submit(): void {
@@ -35,6 +45,10 @@ export class LoginComponent {
 
         // Submit the form if it's valid
         if (this.form.valid) {
+            // Remove any toasts
+            this.toastSvc.clear();
+
+            // Submit the form
             const vals = this.form.value;
             this.authSvc.login(vals.email!, vals.password!)
                 .pipe(this.submitting.processing())

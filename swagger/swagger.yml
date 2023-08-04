@@ -41,6 +41,22 @@ security:
 
 definitions:
 
+  apiError:
+    description: Generic API error object
+    type: object
+    readOnly: true
+    properties:
+      id:
+        type: string
+      message:
+        type: string
+      details:
+        type: string
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: "Error"
+
   comentarioConfig:
     description: Server configuration
     type: object
@@ -67,6 +83,10 @@ definitions:
         format: date-time
         x-isnullable: false
         description: Server build date
+      defaultLangId:
+        type: string
+        x-isnullable: false
+        description: Default interface language ID
       signupAllowed:
         type: boolean
         x-isnullable: false
@@ -85,6 +105,11 @@ definitions:
         format: uint
         x-isnullable: false
         description: Max number of database rows returned per page
+      uiLanguages:
+        type: array
+        items:
+          $ref: "#/definitions/uiLanguage"
+        description: Available UI languages
 
   comment:
     description: Comment residing on a page
@@ -399,22 +424,6 @@ definitions:
         format: date-time
         description: When the domain user was created
 
-  apiError:
-    description: Generic API error object
-    type: object
-    readOnly: true
-    properties:
-      id:
-        type: string
-      message:
-        type: string
-      details:
-        type: string
-    x-go-type:
-      import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
-      type: "Error"
-
   federatedIdentityProvider:
     description: Federated identity provider info
     type: object
@@ -584,6 +593,9 @@ definitions:
       name:
         type: string
         description: Full name of the user
+      langId:
+        type: string
+        description: User's interface language ID
       websiteUrl:
         type: string
         format: uri
@@ -630,6 +642,21 @@ definitions:
         description: Colour hash, number based on the user's ID
         x-omitempty: false
 
+  uiLanguage:
+    description: UI language
+    type: object
+    readOnly: true
+    properties:
+      id:
+        type: string
+        description: Language ID, such as 'en' or 'zh_CN'
+      nameEnglish:
+        type: string
+        description: Language name in English
+      nameNative:
+        type: string
+        description: Language name in the language self
+
   user:
     description: User
     type: object
@@ -646,6 +673,9 @@ definitions:
       name:
         type: string
         description: User's full name
+      langId:
+        type: string
+        description: User's interface language ID
       password:
         type: string
         description: Password (write-only). If empty, the password remains unchanged
@@ -823,16 +853,6 @@ parameters:
     minimum: 1
     default: 1
 
-  queryToken:
-    in: query
-    name: token
-    required: true
-    description: ID consisting of 64 hex digits, in the query parameter
-    type: string
-    minLength: 64
-    maxLength: 64
-    pattern: '[0-9a-f]{64}'
-
   queryStatsDays:
     in: query
     name: days
@@ -843,6 +863,32 @@ parameters:
     maximum: 30
     default: 30
     description: Number of days to get statistics for
+
+  queryToken:
+    in: query
+    name: token
+    required: true
+    description: ID consisting of 64 hex digits, in the query parameter
+    type: string
+    minLength: 64
+    maxLength: 64
+    pattern: '[0-9a-f]{64}'
+
+  queryUserId:
+    in: query
+    name: user
+    required: true
+    description: User UUID in the query
+    type: string
+    format: uuid
+
+  queryUserSecret:
+    in: query
+    name: secret
+    required: true
+    description: User's secret token in the query
+    type: string
+    format: uuid
 
 responses:
   # 400
@@ -881,6 +927,12 @@ responses:
     schema:
       $ref: "#/definitions/apiError"
 
+  # 502
+  BasGateway:
+    description: Data relay or dependent service failure
+    schema:
+      $ref: "#/definitions/apiError"
+
   # 307
   OAuthRedirect:
     description: Redirecting to a federated identity provider
@@ -914,6 +966,8 @@ paths:
           $ref: "#/responses/UnprocessableEntity"
         500:
           $ref: "#/responses/InternalError"
+        502:
+          $ref: "#/responses/BasGateway"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Generic stuff
@@ -931,6 +985,36 @@ paths:
           description: Comentario configuration
           schema:
             $ref: "#/definitions/comentarioConfig"
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Mail
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /mail/unsubscribe:
+    get:
+      operationId: MailUnsubscribe
+      summary: Unsubscribe a user from email notifications
+      tags:
+        - ApiGeneral
+      security: []
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+        - $ref: "#/parameters/queryUserId"
+        - $ref: "#/parameters/queryUserSecret"
+        - in: query
+          name: kind
+          required: true
+          description: Kind of notifications to unsubscribe the user from
+          type: string
+          enum:
+            - reply
+            - moderator
+      responses:
+        307:
+          description: The user has been unsubscribed from notifications, redirecting to the UI
+          headers:
+            Location:
+              type: string
 
   #---------------------------------------------------------------------------------------------------------------------
   # Auth

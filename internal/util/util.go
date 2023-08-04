@@ -35,11 +35,12 @@ type Scanner interface {
 // Mailer allows sending emails
 type Mailer interface {
 	// Mail sends an email to the specified recipient.
-	// replyTo:     email address/name of the sender (optional).
-	// recipient:   email address/name of the recipient.
-	// subject:     email subject.
-	// htmlMessage: email text in the HTML format.
-	Mail(replyTo, recipient, subject, htmlMessage string) error
+	//  - replyTo:     email address/name of the sender (optional).
+	//  - recipient:   email address/name of the recipient.
+	//  - subject:     email subject.
+	//  - htmlMessage: email text in the HTML format.
+	//  - embedFiles:  files to be embedded in the email
+	Mail(replyTo, recipient, subject, htmlMessage string, embedFiles ...string) error
 }
 
 // logger represents a package-wide logger instance
@@ -51,8 +52,8 @@ var (
 	reEmailAddress   = regexp.MustCompile(`^[^<>()[\]\\.,;:\s@"%]+(\.[^<>()[\]\\.,;:\s@"%]+)*@`) // Only the part up to the '@'
 	rePortInHostname = regexp.MustCompile(`:\d+$`)
 
-	// AppMailer is a Mailer implementation available application-wide. Defaults to a mailer that doesn't do anything
-	AppMailer Mailer = &noOpMailer{}
+	// TheMailer is a Mailer implementation available application-wide. Defaults to a mailer that doesn't do anything
+	TheMailer Mailer = &noOpMailer{}
 )
 
 // ----------------------------------------------------------------------------------------------------------------------
@@ -81,7 +82,7 @@ func (s *ErrScanner) Scan(...any) error {
 // noOpMailer is a Mailer implementation that doesn't send any emails
 type noOpMailer struct{}
 
-func (m *noOpMailer) Mail(_, recipient, subject, _ string) error {
+func (m *noOpMailer) Mail(_, recipient, subject, _ string, _ ...string) error {
 	logger.Debugf("NoOpMailer: not sending email to '%s' (subject: '%s')", recipient, subject)
 	return nil
 }

@@ -14,7 +14,8 @@ RUN test -x /comentario/comentario && \
     test -d /comentario/frontend/en/fonts && \
     test -d /comentario/frontend/en/images && \
     test -s /comentario/frontend/en/index.html && \
-    test -d /comentario/templates
+    test -d /comentario/templates && \
+    test -d /comentario/templates/images
 
 WORKDIR /comentario/
 ENTRYPOINT ["/comentario/comentario"]

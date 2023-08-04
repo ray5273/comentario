@@ -181,6 +181,7 @@ type User struct {
 	ID            uuid.UUID     // Unique user ID
 	Email         string        // Unique user email
 	Name          string        // User's full name
+	LangID        string        // User's interface language ID
 	PasswordHash  string        // Password hash
 	SystemAccount bool          // Whether the user is a system account (cannot sign in)
 	IsSuperuser   bool          // Whether the user is a "superuser" (instance admin)
@@ -198,7 +199,8 @@ type User struct {
 	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
 	FederatedID   string        // User ID as reported by the federated identity provider (only when federated_idp is set)
 	WebsiteURL    string        // Optional user's website URL
-	HasAvatar     bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB.
+	SecretToken   uuid.UUID     // User's secret token, for example, for unsubscribing from notifications
+	HasAvatar     bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB
 }
 
 // NewUser instantiates a new User
@@ -207,7 +209,9 @@ func NewUser(email, name string) *User {
 		ID:          uuid.New(),
 		Email:       email,
 		Name:        name,
+		LangID:      util.UIDefaultLangID,
 		CreatedTime: time.Now().UTC(),
+		SecretToken: uuid.New(),
 	}
 }
 
@@ -237,6 +241,7 @@ func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User 
 		user.ConfirmedTime = u.ConfirmedTime
 		user.CreatedTime = u.CreatedTime
 		user.FederatedIdP = u.FederatedIdP
+		user.LangID = u.LangID
 		user.SignupHost = u.SignupHost
 
 		// Owner
@@ -298,6 +303,7 @@ func (u *User) ToDTO() *models.User {
 		HasAvatar:     u.HasAvatar,
 		ID:            strfmt.UUID(u.ID.String()),
 		IsSuperuser:   u.IsSuperuser,
+		LangID:        u.LangID,
 		Name:          u.Name,
 		Remarks:       u.Remarks,
 		SignupCountry: u.SignupCountry,
@@ -324,6 +330,7 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		IsModerator:     du.CanModerate(),
 		IsOwner:         du != nil && du.IsOwner,
 		IsSuperuser:     u.IsSuperuser,
+		LangID:          u.LangID,
 		Name:            u.Name,
 		NotifyModerator: du != nil && du.NotifyModerator,
 		NotifyReplies:   du != nil && du.NotifyReplies,
@@ -806,7 +813,7 @@ type Comment struct {
 // authorisations
 func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Comment {
 	// Superuser, domain owner/moderator, and the comment author see everything: make a perfect clone
-	if user.IsSuperuser || domainUser.IsOwner || domainUser.IsModerator || c.UserCreated.UUID == user.ID {
+	if user.IsSuperuser || domainUser != nil && (domainUser.IsOwner || domainUser.IsModerator) || c.UserCreated.UUID == user.ID {
 		cc := *c
 		return &cc
 	}
@@ -863,7 +870,12 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 		PageID:      strfmt.UUID(c.PageID.String()),
 		ParentID:    NullUUIDStr(&c.ParentID),
 		Score:       int64(c.Score),
-		URL:         strfmt.URI(fmt.Sprintf("%s://%s%s#comentario-%s", util.If(https, "https", "http"), host, path, c.ID)),
+		URL:         strfmt.URI(c.URL(https, host, path)),
 		UserCreated: NullUUIDStr(&c.UserCreated),
 	}
+}
+
+// URL returns the absolute URL of the comment
+func (c *Comment) URL(https bool, host, path string) string {
+	return fmt.Sprintf("%s://%s%s#comentario-%s", util.If(https, "https", "http"), host, path, c.ID)
 }

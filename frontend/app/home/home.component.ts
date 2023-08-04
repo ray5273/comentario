@@ -6,6 +6,7 @@ import { AuthService } from '../_services/auth.service';
 import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { Principal } from '../../generated-api';
+import { ToastService } from '../_services/toast.service';
 
 @UntilDestroy()
 @Component({
@@ -26,6 +27,7 @@ export class HomeComponent implements OnInit {
     /** Handlers to execute when a specific parameter is present */
     private readonly paramHandlers: {[name: string]: (...args: any[]) => any} = {
         passwordResetToken: token => this.router.navigate([Paths.auth.resetPassword], {state: {token}}),
+        unsubscribed:       () => this.toastSvc.success('unsubscribed-ok'),
     };
 
     private paramsProcessed = false;
@@ -36,6 +38,7 @@ export class HomeComponent implements OnInit {
         private readonly router: Router,
         private readonly docsSvc: DocsService,
         private readonly authSvc: AuthService,
+        private readonly toastSvc: ToastService,
     ) {}
 
     ngOnInit(): void {

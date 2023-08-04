@@ -1,12 +1,15 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { BehaviorSubject, combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { ActivatedRoute } from '@angular/router';
+import { BehaviorSubject, combineLatestWith, EMPTY, from, ReplaySubject, switchMap } from 'rxjs';
+import { catchError, filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { faCheck, faTrashAlt, faUpRightFromSquare, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter, DomainPage } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
+import { ConfirmDialogComponent } from '../../../../tools/confirm-dialog/confirm-dialog.component';
 
 @UntilDestroy()
 @Component({
@@ -27,6 +30,9 @@ export class CommentPropertiesComponent implements OnInit {
     /** Domain/user metadata. */
     domainMeta?: DomainMeta;
 
+    /** Optional action extracted from query param. */
+    action?: string;
+
     readonly Paths = Paths;
 
     readonly loading  = new ProcessingStatus();
@@ -43,6 +49,8 @@ export class CommentPropertiesComponent implements OnInit {
     private readonly id$     = new ReplaySubject<string>();
 
     constructor(
+        private readonly route: ActivatedRoute,
+        private readonly modal: NgbModal,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
@@ -53,6 +61,9 @@ export class CommentPropertiesComponent implements OnInit {
     }
 
     ngOnInit(): void {
+        // Check of there's an action passed in
+        this.action = this.route.snapshot.queryParamMap.get('action') ?? undefined;
+
         // Subscribe to domain changes
         this.domainSelectorSvc.domainMeta
             .pipe(
@@ -70,12 +81,28 @@ export class CommentPropertiesComponent implements OnInit {
                 this.comment   = r.comment;
                 this.commenter = r.commenter;
                 this.page      = r.page;
+
+                // If there's a comment and an action, apply it
+                if (this.comment && this.action) {
+                    this.runAction();
+                }
             });
     }
 
     delete() {
-        this.api.commentDelete(this.comment!.id!)
-            .pipe(this.deleting.processing())
+        // Show a confirmation dialog
+        const mr = this.modal.open(ConfirmDialogComponent);
+        const dlg = (mr.componentInstance as ConfirmDialogComponent);
+        dlg.content     = $localize`Are you sure you want to delete this comment?`;
+        dlg.actionLabel = $localize`Delete`;
+
+        // Run the dialog
+        from(mr.result)
+            .pipe(
+                // Ignore when canceled
+                catchError(() => EMPTY),
+                // Run deletion when confirmed
+                switchMap(() => this.api.commentDelete(this.comment!.id!).pipe(this.deleting.processing())))
             .subscribe(() => this.reload$.next());
     }
 
@@ -98,5 +125,31 @@ export class CommentPropertiesComponent implements OnInit {
         this.api.commentModerate(this.comment.id!, {pending, approved})
             .pipe(this.updating.processing())
             .subscribe(() => this.reload$.next());
+    }
+
+    private runAction() {
+        switch (this.action) {
+            case 'approve':
+                if (this.comment?.isPending) {
+                    this.moderate(true);
+                }
+                break;
+
+            case 'reject':
+                if (this.comment?.isPending) {
+                    this.moderate(false);
+                }
+                break;
+
+            case 'delete':
+                if (!this.comment?.isDeleted) {
+                    this.delete();
+                }
+                break;
+        }
+
+
+        // Remove the action to prevent re-doing it
+        this.action = undefined;
     }
 }

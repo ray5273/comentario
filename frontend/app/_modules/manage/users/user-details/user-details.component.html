@@ -22,6 +22,11 @@
         <dt i18n>Email</dt>
         <dd>{{ v }}</dd>
     </div>
+    <!-- Language -->
+    <div *ngIf="user.langId as v">
+        <dt i18n>Language</dt>
+        <dd>{{ v }}</dd>
+    </div>
     <!-- Banned -->
     <div *ngIf="user.banned">
         <dt i18n>Banned</dt>

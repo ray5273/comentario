@@ -18,7 +18,7 @@ type smtpMailer struct {
 	dialer    *gomail.Dialer
 }
 
-func (m *smtpMailer) Mail(replyTo, recipient, subject, htmlMessage string) error {
+func (m *smtpMailer) Mail(replyTo, recipient, subject, htmlMessage string, embedFiles ...string) error {
 	// Compose an email
 	msg := gomail.NewMessage()
 	msg.SetHeader("From", m.emailFrom)
@@ -27,6 +27,11 @@ func (m *smtpMailer) Mail(replyTo, recipient, subject, htmlMessage string) error
 	msg.SetBody("text/html", htmlMessage)
 	if replyTo != "" {
 		msg.SetHeader("Reply-To", replyTo)
+	}
+
+	// Embed files
+	for _, file := range embedFiles {
+		msg.Embed(file)
 	}
 
 	// Send it out

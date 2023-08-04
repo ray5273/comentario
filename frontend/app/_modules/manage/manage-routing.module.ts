@@ -64,6 +64,7 @@ const children: Routes = [
             {path: 'operations',     component: DomainOperationsComponent,     canActivate: [ManageGuard.canManageDomain]},
 
         ],
+        canActivate: [ManageGuard.selectDomain],
     },
 
     // Users

@@ -21,6 +21,16 @@
                         <dt i18n>Role</dt>
                         <dd><app-domain-user-badge [domainUser]="domainUser"></app-domain-user-badge></dd>
                     </div>
+                    <!-- Reply notifications -->
+                    <div>
+                        <dt i18n>Reply notifications</dt>
+                        <dd><app-checkmark [value]="domainUser.notifyReplies"></app-checkmark></dd>
+                    </div>
+                    <!-- Moderator notifications -->
+                    <div>
+                        <dt i18n>Moderator notifications</dt>
+                        <dd><app-checkmark [value]="domainUser.notifyModerator"></app-checkmark></dd>
+                    </div>
                     <!-- Created -->
                     <div *ngIf="domainUser.createdTime | datetime as v">
                         <dt i18n>Created</dt>

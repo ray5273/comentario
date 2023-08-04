@@ -23,8 +23,8 @@
                     <ng-container i18n>Reject</ng-container>
                 </button>
                 <!-- Delete -->
-                <button appConfirm="Are you sure you want to delete this comment?" [appSpinner]="deleting.active"
-                        (confirmed)="delete()" type="button" class="btn btn-outline-danger w-100" i18n-appConfirm>
+                <button [appSpinner]="deleting.active" (click)="delete()"
+                        type="button" class="btn btn-outline-danger w-100">
                     <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
                     <ng-container i18n>Delete</ng-container>
                 </button>
