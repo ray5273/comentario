@@ -383,8 +383,10 @@ begin
         create temporary table temp_ownerhex_map(ownerhex varchar(64) primary key, id uuid not null unique, email varchar(254) not null unique);
         insert into temp_ownerhex_map(ownerhex, id, email) select ownerhex, gen_random_uuid(), email from owners;
 
-        -- Create a commenterhex mapping table
-        create temporary table temp_commenterhex_map(commenterhex varchar(64) primary key, id uuid not null unique);
+        -- Create a commenterhex mapping table. The ID column won't be unique, because multiple commenters can have the
+        -- same email (commenters.email isn't unique in Commento), thus mapping to the same owner and, subsequently, to
+        -- the same user ID
+        create temporary table temp_commenterhex_map(commenterhex varchar(64) primary key, id uuid not null);
         insert into temp_commenterhex_map(commenterhex, id)
             -- Map to the existing owner user, if there is one with the same email, otherwise to a new random UUID
             select cr.commenterhex, coalesce(m.id, gen_random_uuid())
