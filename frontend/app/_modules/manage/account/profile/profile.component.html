@@ -5,11 +5,11 @@
     <!-- Profile form -->
     <section>
         <form [formGroup]="userForm" (ngSubmit)="submit()">
-            <div class="row g-3">
+            <fieldset [disabled]="saving.active" class="row g-3">
                 <!-- Email -->
                 <div class="col-md-6">
                     <label for="email" class="form-label colon" i18n>Email</label>
-                    <input formControlName="email" type="email" class="form-control" id="email" size="45" readonly
+                    <input formControlName="email" type="email" class="form-control" id="email" size="45"
                            autocomplete="email">
                 </div>
 
@@ -17,21 +17,21 @@
                 <div class="col-md-6">
                     <label for="name" class="form-label colon" i18n>Name</label>
                     <input formControlName="name" type="text" class="form-control" id="name"
-                           [class.is-valid]="name.touched && name.valid"
-                           [class.is-invalid]="name.touched && name.invalid"
+                           [class.is-valid]="userForm.controls.name.touched && userForm.controls.name.valid"
+                           [class.is-invalid]="userForm.controls.name.touched && userForm.controls.name.invalid"
                            required minlength="2" maxlength="63" placeholder="Enter name" i18n-placeholder>
                     <div class="invalid-feedback" i18n>Please enter your name.</div>
                 </div>
 
                 <!-- Current password -->
-                <div class="col-md-6">
+                <div *ngIf="userForm.controls.curPassword.enabled" class="col-md-6">
                     <label for="curPassword" class="form-label colon" i18n>Current password</label>
                     <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
                                         id="curPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
                 </div>
 
                 <!-- New password -->
-                <div class="col-md-6">
+                <div *ngIf="userForm.controls.newPassword.enabled" class="col-md-6">
                     <label for="newPassword" class="form-label colon" i18n>New password</label>
                     <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
                                         id="newPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
@@ -54,11 +54,11 @@
                     <!-- Invisible avatar file input -->
                     <input #avatarFileInput (change)="avatarSelected()" class="d-none" type="file">
                 </div>
-            </div>
+            </fieldset>
 
             <!-- Save button -->
             <div class="form-footer">
-                <button [appSpinner]="saving.active" type="submit" class="btn btn-primary" i18n="action">Save</button>
+                <button [appSpinner]="saving.active" [disable]="!userForm.dirty && !avatarChanged" type="submit" class="btn btn-primary" i18n="action">Save</button>
             </div>
         </form>
     </section>
@@ -87,7 +87,7 @@
                         confirmTitle="Are you absolutely sure you want to delete your account?"
                         confirmAction="Delete my account"
                         [confirmIcon]="faSkullCrossbones"
-                        [confirmActionEnabled]="agreed.value"
+                        [confirmActionEnabled]="deleteConfirmationForm.controls.agreed.value"
                         [appSpinner]="deleting.active" type="button" class="btn btn-danger"
                         (confirmed)="deleteAccount()"
                         i18n-confirmTitle i18n-confirmAction>

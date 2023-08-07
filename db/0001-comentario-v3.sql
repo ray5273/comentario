@@ -156,6 +156,7 @@ insert into cm_users(id, email, name, password_hash, system_account, confirmed, 
 create table cm_user_avatars (
     user_id    uuid primary key,   -- Reference to the user and the primary key
     ts_updated timestamp not null, -- When the record was last updated
+    is_custom  boolean   not null, -- Whether the user has customised their avatar, meaning it shouldn't be re-fetched from the IdP
     avatar_s   bytea     not null, -- Small avatar image (16x16)
     avatar_m   bytea     not null, -- Medium-sized avatar image (32x32)
     avatar_l   bytea     not null  -- Large avatar image (128x128)

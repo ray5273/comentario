@@ -438,6 +438,7 @@ var UserAvatarSizes = map[UserAvatarSize]int{UserAvatarSizeS: 16, UserAvatarSize
 type UserAvatar struct {
 	UserID      uuid.UUID // Unique user ID
 	UpdatedTime time.Time // When the user was last updated
+	IsCustom    bool      // Whether the user has customised their avatar, meaning it shouldn't be re-fetched from the IdP
 	AvatarS     []byte    // Small avatar image (16x16)
 	AvatarM     []byte    // Medium-sized avatar image (32x32)
 	AvatarL     []byte    // Large avatar image (128x128)

@@ -205,10 +205,11 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		}
 	}
 
-	// If there's an avatar URL, fetch and update the avatar, in the background (ignore any errors)
+	// If there's an avatar URL and the avatar isn't customised, fetch and update the avatar, in the background (ignore
+	// any errors)
 	if fedUser.AvatarURL != "" {
 		//goland:noinspection GoUnhandledErrorResult
-		go svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL)
+		go svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL, false)
 	}
 
 	// Update the token by binding it to the authenticated user

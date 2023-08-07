@@ -26,11 +26,12 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 
 func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User) middleware.Responder {
 	if params.Data != nil {
+		//goland:noinspection GoUnhandledErrorResult
 		defer params.Data.Close()
 	}
 
-	// Update the user's avatar
-	if err := svc.TheAvatarService.UpdateByUserID(&user.ID, params.Data); err != nil {
+	// Update the user's avatar, marking it as customised
+	if err := svc.TheAvatarService.UpdateByUserID(&user.ID, params.Data, true); err != nil {
 		return respServiceError(err)
 	}
 

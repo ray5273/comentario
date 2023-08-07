@@ -1,14 +1,16 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { AbstractControl, FormBuilder } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
+import { concat, EMPTY, Observable } from 'rxjs';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faAngleDown, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
-import { mergeMap, of } from 'rxjs';
 
+@UntilDestroy()
 @Component({
     selector: 'app-profile',
     templateUrl: './profile.component.html'
@@ -20,6 +22,9 @@ export class ProfileComponent implements OnInit {
 
     @ViewChild('avatarFileInput')
     avatarFileInput?: ElementRef<HTMLInputElement>;
+
+    /** Whether the avatar has been changed by the user. */
+    avatarChanged = false;
 
     /** Whether the "Danger zone" is collapsed. */
     isDangerZoneCollapsed = true;
@@ -35,7 +40,7 @@ export class ProfileComponent implements OnInit {
     readonly deleting = new ProcessingStatus();
 
     readonly userForm = this.fb.nonNullable.group({
-        email:       '',
+        email:       {value: '', disabled: true},
         name:        '',
         curPassword: '',
         newPassword: '',
@@ -50,8 +55,6 @@ export class ProfileComponent implements OnInit {
     readonly faSkullCrossbones = faSkullCrossbones;
     readonly faTrashAlt        = faTrashAlt;
 
-    private avatarChanged = false;
-
     constructor(
         private readonly fb: FormBuilder,
         private readonly router: Router,
@@ -60,21 +63,7 @@ export class ProfileComponent implements OnInit {
         private readonly api: ApiGeneralService,
     ) {}
 
-    get name(): AbstractControl<string> {
-        return this.userForm.get('name')!;
-    }
-
-    get agreed(): AbstractControl<boolean> {
-        return this.deleteConfirmationForm.get('agreed')!;
-    }
-
     ngOnInit(): void {
-        // Old password is required if there's a new one
-        this.userForm.get('newPassword')?.valueChanges.subscribe(s => {
-            this.curPassword!.required = !!s;
-            this.userForm.get('curPassword')?.updateValueAndValidity();
-        });
-
         // Monitor principal changes
         this.authSvc.principal.subscribe(p => {
             this.principal = p;
@@ -82,6 +71,20 @@ export class ProfileComponent implements OnInit {
             // Update the form
             if (p) {
                 this.userForm.patchValue({email: p.email, name: p.name});
+
+                // Local user: the old password is required if there's a new one
+                if (p.isLocal) {
+                    this.userForm.controls.newPassword.valueChanges
+                        .pipe(untilDestroyed(this))
+                        .subscribe(s => {
+                            this.curPassword!.required = !!s;
+                            this.userForm.controls.curPassword.updateValueAndValidity();
+                        });
+
+                } else {
+                    // Disable all profile controls for a federated user
+                    Object.values(this.userForm.controls).forEach(c => c.disable());
+                }
             }
         });
     }
@@ -101,18 +104,25 @@ export class ProfileComponent implements OnInit {
     }
 
     submit() {
-        // Mark all controls touched to display validation results
-        this.userForm.markAllAsTouched();
+        // If it's a local user
+        if (this.principal?.isLocal) {
+            // Mark all controls touched to display validation results
+            this.userForm.markAllAsTouched();
 
-        // Submit the form if it's valid
-        if (this.userForm.valid) {
-            const vals = this.userForm.value;
-            this.api.curUserUpdate({name: vals.name!, curPassword: vals.curPassword, newPassword: vals.newPassword})
-                .pipe(
-                    // Save the user's avatar, if needed
-                    mergeMap(() => this.avatarChanged ? this.api.curUserSetAvatar(this.avatarFile ?? undefined) : of(undefined)),
-                    this.saving.processing())
-                .subscribe(() => {
+            // Submit the form if it's valid
+            if (!this.userForm.valid) {
+                return;
+            }
+        }
+
+        // Update profile/avatar
+        concat(this.saveProfile(), this.saveAvatar())
+            .pipe(this.saving.processing())
+            .subscribe({
+                complete: () => {
+                    // Reset form status
+                    this.userForm.markAsPristine();
+
                     // Reset avatar status
                     this.avatarChanged = false;
                     this.avatarFile = undefined;
@@ -120,10 +130,11 @@ export class ProfileComponent implements OnInit {
 
                     // Update the logged-in principal
                     this.authSvc.update();
+
                     // Add a success toast
                     this.toastSvc.success('data-saved');
-                });
-        }
+                },
+            });
     }
 
     changeAvatar() {
@@ -152,5 +163,21 @@ export class ProfileComponent implements OnInit {
             this.avatarFile = f;
             this.avatarChanged = true;
         }
+    }
+
+    private saveAvatar(): Observable<void> {
+        // Only save the avatar if it's changed
+        return this.avatarChanged ? this.api.curUserSetAvatar(this.avatarFile ?? undefined) : EMPTY;
+    }
+
+    private saveProfile(): Observable<void> {
+        // Not applicable if the user isn't a locally authenticated one
+        if (!this.principal!.isLocal) {
+            return EMPTY;
+        }
+
+        // Update the user's profile
+        const vals = this.userForm.value;
+        return this.api.curUserUpdate({name: vals.name!, curPassword: vals.curPassword, newPassword: vals.newPassword});
     }
 }
