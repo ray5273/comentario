@@ -100,6 +100,7 @@ func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) er
 		"reset-password.gohtml",
 		map[string]any{
 			"ResetURL": config.URLForUI(user.LangID, "", map[string]string{"passwordResetToken": token.String()}),
+			"Name":     user.Name,
 		})
 }
 
