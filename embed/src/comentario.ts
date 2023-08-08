@@ -25,37 +25,33 @@ import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
 import { Utils } from './utils';
 
-export class Comentario {
+export class Comentario extends HTMLElement {
 
-    /** Origin URL, which gets replaced by the backend on serving the file. */
+    /** Origin URL, injected by the backend on serving the file. */
     private readonly origin = '[[[.Origin]]]';
-    /** CDN URL, which gets replaced by the backend on serving the file. */
+    /** CDN URL, injected by the backend on serving the file. */
     private readonly cdn = '[[[.CdnPrefix]]]';
-    /** App version, which gets replaced by the backend on serving the file. */
+    /** App version, injected by the backend on serving the file. */
     private readonly version = '[[[.Version]]]';
+
+    /** The shadow root, the root element for all other elements. */
+    private readonly shadow = this.attachShadow({mode: 'open'});
+
+    /** The root element of Comentario embed. */
+    private readonly root = Wrap.init(this.shadow).new('div').appendTo(this.shadow);
 
     /** Service handling API requests. */
     private readonly apiService = new ApiService(
         `${this.origin}/api`,
-        this.doc,
+        this.ownerDocument,
         () => this.setMessage(),
         err => this.setMessage(ErrorMessage.of(err)));
-
-    /** Default ID of the container element Comentario will be embedded into. */
-    private rootId = 'comentario';
-
-    /** The root element of Comentario embed. */
-    private root?: Wrap<any>;
 
     /** Message panel (only shown when needed). */
     private messagePanel?: Wrap<HTMLDivElement>;
 
     /** User profile toolbar. */
     private profileBar?: ProfileBar;
-
-    /** Moderator tools panel. */
-    private modTools?: Wrap<HTMLDivElement>;
-    private modToolsLockBtn?: Wrap<HTMLButtonElement>;
 
     /** Main area panel. */
     private mainArea?: Wrap<HTMLDivElement>;
@@ -81,9 +77,6 @@ export class Comentario {
     /** Federated identity providers configured on the backend. */
     private federatedIdps: IdentityProvider[] = [];
 
-    /** Path of the page for loading comments. Defaults to the actual path on the host. */
-    private pagePath = parent.location.pathname;
-
     /** Current host. */
     private host = parent.location.host;
 
@@ -96,19 +89,35 @@ export class Comentario {
     /** Currently applied comment sort. */
     private commentSort: CommentSort = 'sd';
 
+    /** Path of the page for loading comments. Defaults to the actual path on the host. */
+    private readonly pagePath = this.getAttribute('page-id') || parent.location.pathname;
+
     /**
      * Optional CSS stylesheet URL that gets loaded after the default one. Setting to 'false' disables loading any CSS
      * altogether.
      */
-    private cssOverride?: string;
-    private noFonts = false;
-    private autoInit = true;
-    private initialised = false;
+    private readonly cssOverride = this.getAttribute('css-override');
 
-    constructor(
-        private readonly doc: Document,
-    ) {
-        this.whenDocReady().then(() => this.init());
+    /** Whether fonts should be applied to the entire Comentario container. */
+    private readonly noFonts = this.getAttribute('no-fonts') === 'true';
+
+    /** Whether to automatically initialise the Comentario engine on the current page. */
+    private readonly autoInit = this.getAttribute('auto-init') !== 'false';
+
+    constructor() {
+        super();
+        this.init();
+    }
+
+    /**
+     * Initialise the Comentario engine on the current page.
+     */
+    private async init(): Promise<void> {
+        // If automatic initialisation is activated (default), run Comentario
+        if (this.autoInit) {
+            await this.main();
+        }
+        console.info(`Initialised Comentario ${this.version}`);
     }
 
     /**
@@ -116,12 +125,6 @@ export class Comentario {
      * @return Promise that resolves as soon as Comentario setup is complete
      */
     async main(): Promise<void> {
-        // Make sure there's a root element present, and save it
-        this.root = Wrap.byId(this.rootId, true);
-        if (!this.root.ok) {
-            return this.reject(`No root element with id='${this.rootId}' found. Check your configuration and HTML.`);
-        }
-
         // If CSS isn't disabled altogether
         if (this.cssOverride !== 'false') {
             try {
@@ -186,48 +189,6 @@ export class Comentario {
     }
 
     /**
-     * Returns a promise that gets resolved as soon as the document reaches at least its 'interactive' state.
-     */
-    private whenDocReady(): Promise<void> {
-        return new Promise(resolved => {
-            const checkState = () => {
-                switch (this.doc.readyState) {
-                    // The document is still loading. The div we need to fill might not have been parsed yet, so let's
-                    // wait and retry when the readyState changes
-                    case 'loading':
-                        this.doc.addEventListener('readystatechange', () => checkState());
-                        break;
-
-                    case 'interactive': // The document has been parsed and DOM objects are now accessible.
-                    case 'complete': // The page has fully loaded (including JS, CSS, and images)
-                        resolved();
-                }
-            };
-            checkState();
-        });
-    }
-
-    /**
-     * Initialise the Comentario engine on the current page.
-     */
-    private async init(): Promise<void> {
-        // Only perform initialisation once
-        if (this.initialised) {
-            return this.reject('Already initialised, ignoring the repeated init call');
-        }
-        this.initialised = true;
-
-        // Parse any custom data-* tags on the Comentario script element
-        this.dataTagsLoad();
-
-        // If automatic initialisation is activated (default), run Comentario
-        if (this.autoInit) {
-            await this.main();
-        }
-        console.info(`Initialised Comentario ${this.version}`);
-    }
-
-    /**
      * Load the stylesheet with the provided URL into the DOM
      * @param url Stylesheet URL.
      */
@@ -237,12 +198,11 @@ export class Comentario {
             Promise.resolve() :
             new Promise((resolve, reject) => {
                 this.loadedCss[url] = true;
-                new Wrap(this.doc.getElementsByTagName('head')[0])
-                    .append(
-                        Wrap.new('link')
-                            .attr({href: url, rel: 'stylesheet', type: 'text/css'})
-                            .on('load', () => resolve())
-                            .on('error', (_, e) => reject(e)));
+                const l = Wrap.new('link')
+                    .attr({href: url, rel: 'stylesheet', type: 'text/css'})
+                    .on('load', () => resolve())
+                    .on('error', (_, e) => reject(e));
+                this.shadow.append(l.element);
             });
     }
 
@@ -261,29 +221,6 @@ export class Comentario {
     }
 
     /**
-     * Read page settings from the data-* tags on the comentario script node.
-     */
-    private dataTagsLoad() {
-        for (const script of this.doc.getElementsByTagName('script')) {
-            if (script.src.match(/\/comentario\.js$/)) {
-                const ws = new Wrap(script);
-                let s = ws.getAttr('data-page-id');
-                if (s) {
-                    this.pagePath = s;
-                }
-                this.cssOverride = ws.getAttr('data-css-override');
-                this.autoInit = ws.getAttr('data-auto-init') !== 'false';
-                s = ws.getAttr('data-id-root');
-                if (s) {
-                    this.rootId = s;
-                }
-                this.noFonts = ws.getAttr('data-no-fonts') === 'true';
-                break;
-            }
-        }
-    }
-
-    /**
      * Scroll to the comment whose ID is provided in the current window's fragment (if any).
      */
     private scrollToCommentHash() {
@@ -295,7 +232,7 @@ export class Comentario {
 
         } else if (h?.startsWith('#comentario')) {
             // If we're requested to scroll to the comments in general
-            this.root!.scrollTo();
+            this.root.scrollTo();
         }
     }
 
@@ -342,7 +279,7 @@ export class Comentario {
         const err = message.severity === 'error';
 
         // Create a message panel
-        this.root!.prepend(
+        this.root.prepend(
             this.messagePanel = UIToolkit.div('message-box')
                 .classes(err && 'error')
                 // Message text
@@ -397,19 +334,17 @@ export class Comentario {
     private setupMainArea() {
         // Clean up everything from the main area
         this.mainArea!.html('');
-        this.modTools = undefined;
-        this.modToolsLockBtn = undefined;
         this.commentsArea = undefined;
 
         // Add a moderator toolbar, in necessary
         if (this.principal?.isModerator) {
             this.mainArea!.append(
-                this.modTools = UIToolkit.div('mod-tools')
+                UIToolkit.div('mod-tools')
                     .append(
                         // Title
                         Wrap.new('span').classes('mod-tools-title').inner('Moderator tools'),
                         // Lock/Unlock button
-                        this.modToolsLockBtn = UIToolkit.button(
+                        UIToolkit.button(
                             this.pageInfo?.isPageReadonly ? 'Unlock thread' : 'Lock thread',
                             () => this.pageReadonlyToggle())));
         }
@@ -453,7 +388,7 @@ export class Comentario {
         // Create a new editor
         this.editor = new CommentEditor(
             parentCard?.children || this.addCommentHost!,
-            this.root!,
+            this.root,
             false,
             '',
             !!this.principal,
@@ -473,7 +408,7 @@ export class Comentario {
         // Create a new editor
         this.editor = new CommentEditor(
             card,
-            this.root!,
+            this.root,
             true,
             card.comment.markdown!,
             true,
@@ -752,7 +687,7 @@ export class Comentario {
     private makeCommentRenderingContext(): CommentRenderingContext {
         return {
             apiUrl:      this.apiService.basePath,
-            root:        this.root!,
+            root:        this.root,
             parentMap:   this.parentIdMap!,
             commenters:  this.commenters,
             principal:   this.principal,

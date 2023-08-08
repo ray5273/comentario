@@ -1,3 +1,3 @@
 import { Comentario } from './comentario';
 
-new Comentario(document);
+customElements.define('comentario-comments', Comentario);
