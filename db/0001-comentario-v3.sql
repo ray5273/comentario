@@ -132,8 +132,9 @@ create table cm_users (
     ts_banned      timestamp,                                   -- When the user was banned
     user_banned    uuid,                                        -- Reference to the user who banned this one
     remarks        text          default ''    not null,        -- Optional remarks for the user
-    federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty, it's a local user
-    federated_id   varchar(255)  default ''    not null,        -- User ID as reported by the federated identity provider (only when federated_idp is set)
+    federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty and federated_sso is false, it's a local user
+    federated_sso  boolean       default false not null,        -- Whether the user is authenticated via SSO
+    federated_id   varchar(255)  default ''    not null,        -- User ID as reported by the federated identity provider (only when federated_idp/federated_sso is set)
     website_url    varchar(2083) default ''    not null,        -- Optional user's website URL
     secret_token   uuid                        not null         -- User's secret token, for example, for unsubscribing from notifications
 );
@@ -411,11 +412,18 @@ begin
                 join temp_ownerhex_map m on m.ownerhex=o.ownerhex;
 
         -- Migrate commenters
-        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, federated_idp, website_url, secret_token)
+        insert into cm_users(
+                id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, federated_idp,
+                federated_sso, website_url, secret_token)
             select
                     m.id, c.email, c.name, c.passwordhash, true, c.joindate, c.joindate,
                     'Migrated from Commento, commenterhex=' || c.commenterhex,
-                    case when c.provider='commento' then null else c.provider end,
+                    case
+                        when c.provider='commento' then null
+                        when c.provider like 'sso:%' then null
+                        else c.provider
+                    end,
+                    c.provider like 'sso:%',
                     case when c.link='undefined' then '' else c.link end,
                     gen_random_uuid()
                 from (

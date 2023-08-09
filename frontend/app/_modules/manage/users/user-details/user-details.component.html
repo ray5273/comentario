@@ -10,7 +10,11 @@
     <!-- Federated user -->
     <div *ngIf="user.federatedIdP as v">
         <dt i18n>Federated user</dt>
-        <dd><app-idp-icon [idpId]="v" class="me-1"></app-idp-icon>{{ v }}/{{ user.federatedId || '*' }}</dd>
+        <dd>
+            <ng-container *ngIf="!user.federatedSso"><app-idp-icon [idpId]="v" class="me-1"></app-idp-icon>{{ v }}</ng-container>
+            <span *ngIf="user.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
+            <ng-container>/{{ user.federatedId || '*' }}</ng-container>
+        </dd>
     </div>
     <!-- Name -->
     <div>

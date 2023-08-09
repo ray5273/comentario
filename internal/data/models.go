@@ -196,8 +196,9 @@ type User struct {
 	BannedTime    sql.NullTime  // When the user was banned
 	UserBanned    uuid.NullUUID // Reference to the user who banned this one
 	Remarks       string        // Optional remarks for the user
-	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty, it's a local user
-	FederatedID   string        // User ID as reported by the federated identity provider (only when federated_idp is set)
+	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
+	FederatedSSO  bool          // Whether the user is authenticated via SSO
+	FederatedID   string        // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
 	WebsiteURL    string        // Optional user's website URL
 	SecretToken   uuid.UUID     // User's secret token, for example, for unsubscribing from notifications
 	HasAvatar     bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB
@@ -241,6 +242,7 @@ func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User 
 		user.ConfirmedTime = u.ConfirmedTime
 		user.CreatedTime = u.CreatedTime
 		user.FederatedIdP = u.FederatedIdP
+		user.FederatedSSO = u.FederatedSSO
 		user.LangID = u.LangID
 		user.SignupHost = u.SignupHost
 
@@ -271,7 +273,7 @@ func (u *User) IsAnonymous() bool {
 
 // IsLocal returns whether the user is local (as opposed to a federated one)
 func (u *User) IsLocal() bool {
-	return u.FederatedIdP == ""
+	return u.FederatedIdP == "" && !u.FederatedSSO
 }
 
 // ToCommenter converts this user into a Commenter model
@@ -300,6 +302,7 @@ func (u *User) ToDTO() *models.User {
 		Email:         strfmt.Email(u.Email),
 		FederatedID:   u.FederatedID,
 		FederatedIDP:  models.FederatedIdpID(u.FederatedIdP),
+		FederatedSso:  u.FederatedSSO,
 		HasAvatar:     u.HasAvatar,
 		ID:            strfmt.UUID(u.ID.String()),
 		IsSuperuser:   u.IsSuperuser,
@@ -326,7 +329,7 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		ID:              strfmt.UUID(u.ID.String()),
 		IsCommenter:     du != nil && du.IsCommenter,
 		IsConfirmed:     u.Confirmed,
-		IsLocal:         u.FederatedIdP == "",
+		IsLocal:         u.IsLocal(),
 		IsModerator:     du.CanModerate(),
 		IsOwner:         du != nil && du.IsOwner,
 		IsSuperuser:     u.IsSuperuser,
@@ -363,7 +366,8 @@ func (u *User) WithEmail(s string) *User {
 // WithFederated sets the federated IdP values
 func (u *User) WithFederated(id, idpID string) *User {
 	u.FederatedID = id
-	u.FederatedIdP = idpID
+	u.FederatedSSO = idpID == "sso"
+	u.FederatedIdP = util.If(u.FederatedSSO, "", idpID)
 	return u
 }
 

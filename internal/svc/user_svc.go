@@ -91,10 +91,10 @@ func (svc *userService) CountUsers(includeSystem, includeLocal, includeFederated
 		filters = append(filters, "system_account=false")
 	}
 	if !includeLocal {
-		filters = append(filters, "federated_idp is not null")
+		filters = append(filters, "(federated_idp is not null or federated_sso is true)")
 	}
 	if !includeFederated {
-		filters = append(filters, "federated_idp is null")
+		filters = append(filters, "federated_idp is null and federated_sso is false")
 	}
 	if len(filters) > 0 {
 		s += " where " + strings.Join(filters, " and ")
@@ -117,12 +117,12 @@ func (svc *userService) Create(u *data.User) error {
 		"insert into cm_users("+
 			"id, email, name, lang_id, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, "+
 			"user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, "+
-			"federated_idp, federated_id, website_url, secret_token) "+
+			"federated_idp, federated_sso, federated_id, website_url, secret_token) "+
 			"values("+
-			"$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, nullif($19, ''), $20, $21, $22);",
+			"$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, nullif($19, ''), $20, $21, $22, $23);",
 		u.ID, u.Email, u.Name, u.LangID, u.PasswordHash, u.SystemAccount, u.IsSuperuser, u.Confirmed, u.ConfirmedTime,
 		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupHost, u.Banned, u.BannedTime,
-		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedID, u.WebsiteURL, u.SecretToken)
+		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedSSO, u.FederatedID, u.WebsiteURL, u.SecretToken)
 	if err != nil {
 		logger.Errorf("userService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -189,7 +189,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id",
 			// DomainUser fields
@@ -219,7 +219,7 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id").
 		Where(goqu.Ex{"u.email": email}).
@@ -228,7 +228,7 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 
 	// If only local users are in scope
 	if localOnly {
-		q = q.Where(goqu.Ex{"u.federated_idp": nil})
+		q = q.Where(goqu.Ex{"u.federated_idp": nil, "u.federated_sso": false})
 	}
 
 	// Query the database
@@ -250,7 +250,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id").
 		Where(goqu.Ex{"u.id": id}).
@@ -277,7 +277,7 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id",
 			// User session fields
@@ -312,7 +312,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id").
 		// Outer-join user avatars
@@ -388,7 +388,7 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id",
 			// DomainUser fields
@@ -473,7 +473,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
 			// Avatar fields
 			"a.user_id").
 		// Join users
@@ -562,6 +562,7 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 		&u.UserBanned,
 		&u.Remarks,
 		&fidp,
+		&u.FederatedSSO,
 		&u.FederatedID,
 		&u.WebsiteURL,
 		&u.SecretToken,
@@ -631,6 +632,7 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		&u.UserBanned,
 		&u.Remarks,
 		&fidp,
+		&u.FederatedSSO,
 		&u.FederatedID,
 		&u.WebsiteURL,
 		&u.SecretToken,

@@ -34,11 +34,11 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	// SSO authentication is a special case
 	var provider goth.Provider
 	var r middleware.Responder
-	if params.Provider == "sso" {
-
+	if params.Provider != "sso" {
 		// Otherwise it's a goth provider: find it
-	} else if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider)); r != nil {
-		return r
+		if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider)); r != nil {
+			return r
+		}
 	}
 
 	// Obtain the auth session ID from the cookie
@@ -187,8 +187,12 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return oauthFailure(ErrorLoginLocally.Error())
 
 		// Existing account is a federated one. Make sure the user isn't changing their IdP
-	} else if user.FederatedIdP != params.Provider {
+	} else if provider != nil && user.FederatedIdP != params.Provider {
 		return oauthFailure(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).Error())
+
+		// If user is authenticating via SSO, it must stay that way
+	} else if provider == nil && !user.FederatedSSO {
+		return oauthFailure(ErrorLoginUsingSSO.Error())
 
 		// Verify they're allowed to log in
 	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
