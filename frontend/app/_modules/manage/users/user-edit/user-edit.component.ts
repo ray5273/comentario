@@ -55,7 +55,7 @@ export class UserEditComponent {
                 });
 
                 // If the user is a federated one, disable irrelevant controls
-                if (this.user!.federatedIdP) {
+                if (this.user!.federatedIdP || this.user!.federatedSso) {
                     this.form.controls.name    .disable();
                     this.form.controls.email   .disable();
                     this.form.controls.password.disable();

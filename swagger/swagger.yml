@@ -606,7 +606,7 @@ definitions:
         x-omitempty: false
       isLocal:
         type: boolean
-        description: Whether the user is authenticated locally (as opposed to via a federated identity provider)
+        description: Whether the user is authenticated locally (as opposed to via a federated/SSO identity provider)
         x-omitempty: false
       isConfirmed:
         type: boolean
@@ -745,10 +745,16 @@ definitions:
         $ref: "#/definitions/federatedIdpId"
         readOnly: true
         description: Optional ID of the federated identity provider used for authentication. If empty, it's a local user
+      federatedSso:
+        type: boolean
+        readOnly: true
+        description: Whether the user is authenticated via SSO
+        x-omitempty: false
+        x-isnullable: false
       federatedId:
         type: string
         readOnly: true
-        description: User ID as reported by the federated identity provider (only when federated_idp is set)
+        description: User ID as reported by the federated identity provider (only when federatedIdP/federatedSso is set)
       hasAvatar:
         type: boolean
         readOnly: true

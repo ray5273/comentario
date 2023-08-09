@@ -228,7 +228,12 @@ func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 		return respUnauthorized(ErrorEmailAlreadyExists)
 	}
 
-	// Existing account is a federated one
+	// Existing account is a federated one. If the user logs in via SSO
+	if user.FederatedSSO {
+		return respUnauthorized(ErrorLoginUsingSSO)
+	}
+
+	// User logs in using a federated IdP
 	return respUnauthorized(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP))
 }
 

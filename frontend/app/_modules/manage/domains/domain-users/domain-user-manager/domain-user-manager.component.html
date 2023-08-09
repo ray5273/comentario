@@ -67,7 +67,8 @@
                         </div>
                         <!-- Provider icon and email -->
                         <div>
-                            <app-idp-icon *ngIf="u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
+                            <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
+                            <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
                             <ng-container>{{ u.email }}</ng-container>
                         </div>
                     </div>
