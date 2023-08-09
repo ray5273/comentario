@@ -48,8 +48,9 @@ var (
 
 	// UIStaticPaths stores a map of known UI static paths to a flag that says whether the file contains replacements
 	UIStaticPaths = map[string]bool{
-		"favicon.ico":    false,
-		"comentario.js":  true,
-		"comentario.css": true,
+		"favicon.ico":          false,
+		"comentario.js":        true,
+		"comentario.css":       true,
+		"comentario-fonts.css": true,
 	}
 )

@@ -106,18 +106,10 @@ export class Comentario extends HTMLElement {
 
     constructor() {
         super();
-        this.init();
-    }
-
-    /**
-     * Initialise the Comentario engine on the current page.
-     */
-    private async init(): Promise<void> {
         // If automatic initialisation is activated (default), run Comentario
         if (this.autoInit) {
-            await this.main();
+            this.main();
         }
-        console.info(`Initialised Comentario ${this.version}`);
     }
 
     /**
@@ -127,6 +119,12 @@ export class Comentario extends HTMLElement {
     async main(): Promise<void> {
         // If CSS isn't disabled altogether
         if (this.cssOverride !== 'false') {
+            // Inject the fonts unless turned off
+            if (!this.noFonts) {
+                this.injectFonts();
+            }
+
+            // Load the CSS
             try {
                 // Begin by loading the stylesheet
                 await this.cssLoad(`${this.cdn}/comentario.css`);
@@ -178,6 +176,7 @@ export class Comentario extends HTMLElement {
 
         // Scroll to the requested comment, if any
         this.scrollToCommentHash();
+        console.info(`Initialised Comentario ${this.version}`);
     }
 
     /**
@@ -204,6 +203,19 @@ export class Comentario extends HTMLElement {
                     .on('error', (_, e) => reject(e));
                 this.shadow.append(l.element);
             });
+    }
+
+    /**
+     * Inject Comentario fonts into the document head. Font styles must be injected into the "outer" DOM because they
+     * don't seem to work under the shadow root.
+     */
+    private injectFonts(): void {
+        // Check if there's already a link injected
+        const href = `${this.cdn}/comentario-fonts.css`;
+        if (!this.ownerDocument.querySelector(`link[href="${href}"]`)) {
+            new Wrap(this.ownerDocument.head)
+                .append(Wrap.new('link').attr({href, rel: 'stylesheet', type: 'text/css'}));
+        }
     }
 
     /**
