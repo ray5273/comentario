@@ -564,12 +564,18 @@ begin
 
         -- Migrate comment votes
         insert into cm_comment_votes(comment_id, user_id, negative, ts_voted)
-            select cm.id, crm.id, v.direction<0, v.votedate
+            select cm.id, u.id, v.direction<0, v.votedate
                 from votes v
+                -- Join old comments
+                join comments oc on oc.commenthex=v.commenthex
+                -- Join new comments
                 join temp_commenthex_map cm on cm.commenthex=v.commenthex
-                -- Make sure the comment in question exists
                 join cm_comments c on c.id=cm.id
-                join temp_commenterhex_map crm on crm.commenterhex=v.commenterhex
+                -- Join old commenters
+                join commenters ocr on ocr.commenterhex=oc.commenterhex
+                -- Join with the user not via commenterhex-mapping, but rather by email, to preserve votes from
+                -- commenterhex'es not mapped to a user
+                join cm_users u on u.email=ocr.email
                 where v.direction=-1 or v.direction=1;
 
         -- NB: domain page views cannot be migrated because the "views" table lacks path (views are on the domain level only)
