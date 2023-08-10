@@ -24,7 +24,7 @@ export class DomainPropertiesComponent implements OnInit {
     readonly Paths = Paths;
     readonly snippet =
         `<script defer src="${Location.joinWithSlash(this.cfgSvc.config.baseUrl, 'comentario.js')}"></script>\n` +
-        `<div id="comentario"></div>`;
+        `<comentario-comments></comentario-comments>`;
     readonly installDocsUrl = this.docsSvc.getPageUrl('getting-started/');
 
     // Icons
