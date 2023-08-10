@@ -5,37 +5,25 @@ export class Wrap<T extends HTMLElement> {
 
     static readonly idPrefix = 'comentario-';
 
-    private static root: DocumentFragment;
-
     constructor(
         private el?: T,
     ) {}
-
-    /**
-     * Initialise the Wrap class by assigning the root element.
-     * @param root The root element.
-     */
-    static init(root: DocumentFragment): typeof Wrap {
-        Wrap.root = root;
-        return this;
-    }
 
     /**
      * Instantiate a new element with the given tag name, and return a new Wrap object for it.
      * @param tagName Name of the tag to create an element with.
      */
     static new<K extends keyof HTMLElementTagNameMap>(tagName: K): Wrap<HTMLElementTagNameMap[K]> {
-        return new Wrap(this.root.ownerDocument.createElement(tagName));
+        return new Wrap(document.createElement(tagName));
     }
 
     /**
      * Find an existing element with the given ID (optionally prepending it with idPrefix). Whether the element actually
      * exists, can be derived from the ok property.
      * @param id ID of the element to find (excluding the prefix).
-     * @param noPrefix Whether skip prepending the ID with idPrefix.
      */
-    static byId<K extends keyof HTMLElementTagNameMap>(id: string, noPrefix?: boolean): Wrap<HTMLElementTagNameMap[K]> {
-        return new Wrap(this.root.getElementById(noPrefix ? id : this.idPrefix + id) as HTMLElementTagNameMap[K]);
+    static byId<K extends keyof HTMLElementTagNameMap>(id: string): Wrap<HTMLElementTagNameMap[K]> {
+        return new Wrap(document.getElementById(this.idPrefix + id) as HTMLElementTagNameMap[K]);
     }
 
     /**
@@ -159,16 +147,11 @@ export class Wrap<T extends HTMLElement> {
 
     /**
      * Append the underlying element as the last child to the specified parent.
-     * @param parent Wrapper of the new parent for the element or a shadow root.
+     * @param parent Wrapper of the new parent for the element.
      */
-    appendTo(parent: Wrap<any> | ShadowRoot): Wrap<T> {
-        if (this.el) {
-            if (parent instanceof ShadowRoot) {
-                parent.appendChild(this.el);
-
-            } else if (parent.el) {
-                parent.el.appendChild(this.el);
-            }
+    appendTo(parent: Wrap<any>): Wrap<T> {
+        if (this.el && parent.el) {
+            parent.el.appendChild(this.el);
         }
         return this;
     }

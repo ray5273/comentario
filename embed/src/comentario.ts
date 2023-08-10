@@ -34,18 +34,15 @@ export class Comentario extends HTMLElement {
     /** App version, injected by the backend on serving the file. */
     private readonly version = '[[[.Version]]]';
 
-    /** The shadow root, the root element for all other elements. */
-    private readonly shadow = this.attachShadow({mode: 'open'});
-
-    /** The root element of Comentario embed. */
-    private readonly root = Wrap.init(this.shadow).new('div').appendTo(this.shadow);
-
     /** Service handling API requests. */
     private readonly apiService = new ApiService(
         `${this.origin}/api`,
         this.ownerDocument,
         () => this.setMessage(),
         err => this.setMessage(ErrorMessage.of(err)));
+
+    /** The root element of Comentario embed. */
+    private readonly root = Wrap.new('div').appendTo(new Wrap(this));
 
     /** Message panel (only shown when needed). */
     private messagePanel?: Wrap<HTMLDivElement>;
@@ -119,12 +116,6 @@ export class Comentario extends HTMLElement {
     async main(): Promise<void> {
         // If CSS isn't disabled altogether
         if (this.cssOverride !== 'false') {
-            // Inject the fonts unless turned off
-            if (!this.noFonts) {
-                this.injectFonts();
-            }
-
-            // Load the CSS
             try {
                 // Begin by loading the stylesheet
                 await this.cssLoad(`${this.cdn}/comentario.css`);
@@ -197,25 +188,12 @@ export class Comentario extends HTMLElement {
             Promise.resolve() :
             new Promise((resolve, reject) => {
                 this.loadedCss[url] = true;
-                const l = Wrap.new('link')
+                Wrap.new('link')
                     .attr({href: url, rel: 'stylesheet', type: 'text/css'})
                     .on('load', () => resolve())
-                    .on('error', (_, e) => reject(e));
-                this.shadow.append(l.element);
+                    .on('error', (_, e) => reject(e))
+                    .appendTo(new Wrap(this.ownerDocument.head));
             });
-    }
-
-    /**
-     * Inject Comentario fonts into the document head. Font styles must be injected into the "outer" DOM because they
-     * don't seem to work under the shadow root.
-     */
-    private injectFonts(): void {
-        // Check if there's already a link injected
-        const href = `${this.cdn}/comentario-fonts.css`;
-        if (!this.ownerDocument.querySelector(`link[href="${href}"]`)) {
-            new Wrap(this.ownerDocument.head)
-                .append(Wrap.new('link').attr({href, rel: 'stylesheet', type: 'text/css'}));
-        }
     }
 
     /**

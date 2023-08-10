@@ -10,7 +10,6 @@ COPY build /comentario/
 RUN test -x /comentario/comentario && \
     test -d /comentario/db && \
     test -s /comentario/frontend/comentario.css && \
-    test -s /comentario/frontend/comentario-fonts.css && \
     test -s /comentario/frontend/comentario.js && \
     test -d /comentario/frontend/en/fonts && \
     test -d /comentario/frontend/en/images && \

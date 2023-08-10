@@ -1,3 +1,4 @@
+@import "source-sans";
 @import "colours";
 @import "../../frontend/scss/shared";
 
@@ -78,10 +79,9 @@
         }
     }
 
+
     &.comentario-root-font {
-        * {
-            font-family: 'Source Sans Pro', sans-serif;
-        }
+        * {font-family: 'Source Sans Pro', sans-serif;}
     }
 
     @each $i, $c in $colourise-map {
