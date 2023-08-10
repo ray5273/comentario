@@ -500,15 +500,16 @@ begin
         -- Migrate domain commenters
         insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
             select
-                    dm.id, u.id, false, false, true, coalesce(e.sendreplynotifications, false),
-                    coalesce(e.sendmoderatornotifications, false), u.ts_created
+                    dm.id, u.id, false, false, true, coalesce(bool_or(e.sendreplynotifications), false),
+                    coalesce(bool_or(e.sendmoderatornotifications), false), min(u.ts_created)
                 from (select distinct commenterhex, domain from comments) c
                 join temp_commenterhex_map cm on cm.commenterhex=c.commenterhex
                 join cm_users u on u.id=cm.id
                 join temp_domain_map dm on dm.domain=c.domain
                 left join emails e on e.email=u.email
                 -- Exclude already migrated owners/moderators
-                where not exists(select 1 from cm_domains_users xdu where xdu.domain_id=dm.id and xdu.user_id=u.id);
+                where not exists(select 1 from cm_domains_users xdu where xdu.domain_id=dm.id and xdu.user_id=u.id)
+                group by dm.id, u.id;
 
         -- Migrate domain IdPs
         insert into cm_domains_idps(domain_id, fed_idp_id)
