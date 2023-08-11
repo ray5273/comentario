@@ -327,7 +327,7 @@ export class Comentario extends HTMLElement {
         this.commentsArea = undefined;
 
         // Add a moderator toolbar, in necessary
-        if (this.principal?.isModerator) {
+        if (this.principal && (this.principal.isSuperuser || this.principal.isOwner || this.principal.isModerator)) {
             this.mainArea!.append(
                 UIToolkit.div('mod-tools')
                     .append(

@@ -292,7 +292,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             return null;
         }
         const options = UIToolkit.div('options');
-        const isModerator = ctx.principal?.isModerator;
+        const isModerator = ctx.principal && (ctx.principal.isSuperuser || ctx.principal.isOwner || ctx.principal.isModerator);
 
         // Left- and right-hand side of the options bar
         const left = UIToolkit.div('options-sub').appendTo(options);
@@ -317,7 +317,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Sticky toggle button (top-level comments only). The sticky status can only be changed after a full tree
         // reload
         const isSticky = this._comment.isSticky;
-        if (!this._comment.parentId && (isSticky || ctx.principal?.isModerator)) {
+        if (!this._comment.parentId && (isSticky || isModerator)) {
             this.btnSticky = this.getOptionButton('sticky', null, () => ctx.onSticky(this))
                 .setClasses(isSticky, 'text-warning')
                 .attr({

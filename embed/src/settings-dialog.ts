@@ -41,12 +41,13 @@ export class SettingsDialog extends Dialog {
     }
 
     override renderContent(): Wrap<any> {
+        const isModerator = this.principal && (this.principal.isSuperuser || this.principal.isOwner || this.principal.isModerator);
         return UIToolkit.form(() => this.dismiss(true), () => this.dismiss())
             .append(
                 // Checkboxes
                 UIToolkit.div('checkbox-group').append(
                     // Moderator notifications checkbox (only if the current commenter is a moderator)
-                    this.principal.isModerator && UIToolkit.div('checkbox-container')
+                    isModerator && UIToolkit.div('checkbox-container')
                         .append(
                             this._cbNotifyModerator = Wrap.new('input')
                                 .id('cb-notify-moderator')
