@@ -63,8 +63,8 @@ type DomainService interface {
 	// StatsDaily collects and returns daily comment and views statistics for the given domain and number of days. If
 	// domainID is nil, statistics is collected for all domains owned by the user
 	StatsDaily(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error)
-	// StatsTotalsForUser collects and returns total figures for all domains of the specified owner
-	StatsTotalsForUser(userID *uuid.UUID) (countDomains, countPages, countComments, countCommenters uint64, err error)
+	// StatsTotalsForUser collects and returns total figures for all domains accessible to the specified user
+	StatsTotalsForUser(curUser *data.User) (countDomains, countPages, countComments, countCommenters uint64, err error)
 	// Update updates an existing domain record in the database
 	Update(domain *data.Domain, idps []models.FederatedIdpID) error
 	// UserAdd links the specified user to the given domain
@@ -549,32 +549,47 @@ func (svc *domainService) StatsDaily(userID, domainID *uuid.UUID, numDays int) (
 	return
 }
 
-func (svc *domainService) StatsTotalsForUser(userID *uuid.UUID) (countDomains, countPages, countComments, countCommenters uint64, err error) {
-	logger.Debugf("domainService.StatsTotalsForUser(%s)", userID)
+func (svc *domainService) StatsTotalsForUser(curUser *data.User) (countDomains, countPages, countComments, countCommenters uint64, err error) {
+	logger.Debugf("domainService.StatsTotalsForUser(%s)", &curUser.ID)
 
 	// Query domain and page counts
-	rdp := db.QueryRow(
-		"select count(distinct d.id), count(p.id) "+
-			"from cm_domains d "+
-			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and du.is_owner=true "+
-			"left join cm_domain_pages p on p.domain_id=d.id",
-		userID)
-	if err = rdp.Scan(&countDomains, &countPages); err != nil {
-		// Any other database error
-		logger.Errorf("domainService.StatsTotalsForUser: QueryRow() for domains/pages failed: %v", err)
+	qDP := db.Dialect().
+		From(goqu.T("cm_domains").As("d")).
+		Select(goqu.COUNT(goqu.I("d.id").Distinct()), goqu.COUNT(goqu.I("p.id"))).
+		LeftJoin(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.domain_id": goqu.I("d.id")}))
+
+	// If the user isn't a superuser, filter by the domains they own
+	if !curUser.IsSuperuser {
+		qDP = qDP.
+			Join(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": &curUser.ID, "du.is_owner": true}))
+	}
+
+	// Run the query
+	if err = db.SelectRow(qDP).Scan(&countDomains, &countPages); err != nil {
+		logger.Errorf("domainService.StatsTotalsForUser: SelectRow() for domains/pages failed: %v", err)
 		return 0, 0, 0, 0, translateDBErrors(err)
 	}
 
 	// Query comment and commenter counts
-	rcc := db.QueryRow(
-		"select count(c.id), count(distinct c.user_created) "+
-			"from cm_comments c "+
-			"join cm_domain_pages p on p.id=c.page_id "+
-			"join cm_domains_users du on du.domain_id=p.domain_id and du.user_id=$1 and du.is_owner=true",
-		userID)
-	if err = rcc.Scan(&countComments, &countCommenters); err != nil {
+	qCC := db.Dialect().
+		From(goqu.T("cm_comments").As("c")).
+		Select(goqu.COUNT(goqu.I("c.id")), goqu.COUNT(goqu.I("c.user_created").Distinct())).
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")}))
+
+	// If the user isn't a superuser, filter by the domains they own
+	if !curUser.IsSuperuser {
+		qCC = qCC.
+			Join(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("p.domain_id"), "du.user_id": &curUser.ID, "du.is_owner": true}))
+	}
+
+	// Run the query
+	if err = db.SelectRow(qCC).Scan(&countComments, &countCommenters); err != nil {
 		// Any other database error
-		logger.Errorf("domainService.StatsTotalsForUser: QueryRow() for comments/commenters failed: %v", err)
+		logger.Errorf("domainService.StatsTotalsForUser: SelectRow() for comments/commenters failed: %v", err)
 		return 0, 0, 0, 0, translateDBErrors(err)
 	}
 

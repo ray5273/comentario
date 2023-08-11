@@ -13,7 +13,7 @@ func DashboardTotals(_ api_general.DashboardTotalsParams, user *data.User) middl
 	// Query the data
 	d := &api_general.DashboardTotalsOKBody{}
 	var err error
-	d.CountDomains, d.CountPages, d.CountComments, d.CountCommenters, err = svc.TheDomainService.StatsTotalsForUser(&user.ID)
+	d.CountDomains, d.CountPages, d.CountComments, d.CountCommenters, err = svc.TheDomainService.StatsTotalsForUser(user)
 	if err != nil {
 		return respServiceError(err)
 	}
