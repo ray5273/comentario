@@ -106,7 +106,7 @@ export class CommentPropertiesComponent implements OnInit {
             .subscribe(() => this.reload$.next());
     }
 
-    moderate(approved: boolean) {
+    moderate(approve: boolean) {
         if (!this.comment) {
             return;
         }
@@ -117,12 +117,12 @@ export class CommentPropertiesComponent implements OnInit {
             pending = false;
 
         // Comment is already approved/rejected. If the state stays the same, make the comment pending again
-        } else if (this.comment.isApproved === approved) {
+        } else if (this.comment.isApproved === approve) {
             pending = true;
         }
 
         // Update the comment
-        this.api.commentModerate(this.comment.id!, {pending, approved})
+        this.api.commentModerate(this.comment.id!, {pending, approve})
             .pipe(this.updating.processing())
             .subscribe(() => this.reload$.next());
     }

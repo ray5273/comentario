@@ -91,8 +91,8 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		nil,
 		true,
 		true,
-		true,
-		true, // We need to always include deleted, otherwise all child comments of a deleted comment will disappear
+		false, // Don't include rejected: no one's interested in spam
+		true,  // We need to always include deleted, otherwise all child comments of a deleted comment will disappear
 		"",
 		"",
 		data.SortAsc,
@@ -111,6 +111,32 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		Comments:   comments,
 		PageInfo:   pageInfo,
 	})
+}
+
+func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *data.User) middleware.Responder {
+	// Verify the user is authenticated
+	if r := Verifier.UserIsAuthenticated(user); r != nil {
+		return r
+	}
+
+	// Find the comment and related objects
+	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
+		return r
+	}
+
+	// Verify the user is a domain moderator
+	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+		return r
+	}
+
+	// Update the comment's state in the database
+	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, false, swag.BoolValue(params.Body.Approve)); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_embed.NewEmbedCommentModerateNoContent()
 }
 
 func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) middleware.Responder {

@@ -325,30 +325,30 @@ create index idx_domain_page_views_ts_created on cm_domain_page_views(ts_created
 ------------------------------------------------------------------------------------------------------------------------
 
 create table cm_comments (
-    id            uuid primary key,               -- Unique record ID
-    parent_id     uuid,                           -- Parent record ID, null if it's a root comment on the page
-    page_id       uuid                  not null, -- Reference to the page
-    markdown      text                  not null, -- Comment text in markdown
-    html          text                  not null, -- Rendered comment text in HTML
-    score         integer default 0     not null, -- Comment score
-    is_sticky     boolean default false not null, -- Whether the comment is sticky (attached to the top of page)
-    is_approved   boolean default false not null, -- Whether the comment is approved and can be seen by everyone
-    is_pending    boolean default false not null, -- Whether the comment is pending approval
-    is_deleted    boolean default false not null, -- Whether the comment is marked as deleted
-    ts_created    timestamp             not null, -- When the comment was created
-    ts_approved   timestamp,                      -- When the comment was approved
-    ts_deleted    timestamp,                      -- When the comment was marked as deleted
-    user_created  uuid,                           -- Reference to the user who created the comment
-    user_approved uuid,                           -- Reference to the user who approved the comment
-    user_deleted  uuid                            -- Reference to the user who deleted the comment
+    id             uuid primary key,               -- Unique record ID
+    parent_id      uuid,                           -- Parent record ID, null if it's a root comment on the page
+    page_id        uuid                  not null, -- Reference to the page
+    markdown       text                  not null, -- Comment text in markdown
+    html           text                  not null, -- Rendered comment text in HTML
+    score          integer default 0     not null, -- Comment score
+    is_sticky      boolean default false not null, -- Whether the comment is sticky (attached to the top of page)
+    is_approved    boolean default false not null, -- Whether the comment is approved and can be seen by everyone
+    is_pending     boolean default false not null, -- Whether the comment is pending approval
+    is_deleted     boolean default false not null, -- Whether the comment is marked as deleted
+    ts_created     timestamp             not null, -- When the comment was created
+    ts_moderated   timestamp,                      -- When a moderation action has last been applied to the comment
+    ts_deleted     timestamp,                      -- When the comment was marked as deleted
+    user_created   uuid,                           -- Reference to the user who created the comment
+    user_moderated uuid,                           -- Reference to the user who last moderated the comment
+    user_deleted   uuid                            -- Reference to the user who deleted the comment
 );
 
 -- Constraints
-alter table cm_comments add constraint fk_comments_parent_id     foreign key (parent_id)     references cm_comments(id)     on delete cascade;
-alter table cm_comments add constraint fk_comments_page_id       foreign key (page_id)       references cm_domain_pages(id) on delete cascade;
-alter table cm_comments add constraint fk_comments_user_created  foreign key (user_created)  references cm_users(id)        on delete set null;
-alter table cm_comments add constraint fk_comments_user_approved foreign key (user_approved) references cm_users(id)        on delete set null;
-alter table cm_comments add constraint fk_comments_user_deleted  foreign key (user_deleted)  references cm_users(id)        on delete set null;
+alter table cm_comments add constraint fk_comments_parent_id      foreign key (parent_id)      references cm_comments(id)     on delete cascade;
+alter table cm_comments add constraint fk_comments_page_id        foreign key (page_id)        references cm_domain_pages(id) on delete cascade;
+alter table cm_comments add constraint fk_comments_user_created   foreign key (user_created)   references cm_users(id)        on delete set null;
+alter table cm_comments add constraint fk_comments_user_moderated foreign key (user_moderated) references cm_users(id)        on delete set null;
+alter table cm_comments add constraint fk_comments_user_deleted   foreign key (user_deleted)   references cm_users(id)        on delete set null;
 
 -- Indices
 create index idx_comments_page_id    on cm_comments(page_id);
@@ -531,13 +531,16 @@ begin
         alter table cm_comments drop constraint fk_comments_parent_id;
         insert into cm_comments(
                 id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created,
-                ts_approved, ts_deleted, user_created, user_approved, user_deleted)
+                ts_moderated, ts_deleted, user_created, user_moderated, user_deleted)
             select
                     cm.id, pcm.id, p.id, c.markdown, c.html, c.score,
                     c.parenthex='root' and op.stickycommenthex=c.commenthex,
                     c.state='approved', c.state='flagged', c.deleted,
                     c.creationdate, case when c.state='approved' then current_timestamp end, c.deletiondate, uc.id,
-                    case when c.state='approved' then uc.id end, ud.id
+                    case
+                        when c.state='approved' then uc.id
+                        when c.state='flagged'  then uc.id
+                    end, ud.id
                 from comments c
                 -- commenthex map
                 join temp_commenthex_map cm on cm.commenthex=c.commenthex

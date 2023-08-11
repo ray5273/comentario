@@ -69,7 +69,7 @@ export class CommentListComponent implements OnInit, OnChanges {
 
     // Icons
     readonly faCheck             = faCheck;
-    readonly faLightbulb = faLightbulb;
+    readonly faLightbulb         = faLightbulb;
     readonly faQuestion          = faQuestion;
     readonly faTrashAlt          = faTrashAlt;
     readonly faUpRightFromSquare = faUpRightFromSquare;
@@ -169,7 +169,7 @@ export class CommentListComponent implements OnInit, OnChanges {
             });
     }
 
-    moderateComment(e: Event, c: Comment, approved: boolean) {
+    moderateComment(e: Event, c: Comment, approve: boolean) {
         // Do not propagate the click to prevent navigating into comment properties
         e.stopPropagation();
         e.preventDefault();
@@ -180,16 +180,16 @@ export class CommentListComponent implements OnInit, OnChanges {
             pending = false;
 
         // Comment is already approved/rejected. If the state stays the same, make the comment pending again
-        } else if (c.isApproved === approved) {
+        } else if (c.isApproved === approve) {
             pending = true;
         }
 
         // Update the comment
-        this.api.commentModerate(c.id!, {pending, approved})
+        this.api.commentModerate(c.id!, {pending, approve})
             .pipe(this.commentUpdating.processing())
             .subscribe(() => {
                 c.isPending  = pending;
-                c.isApproved = approved;
+                c.isApproved = approve;
             });
     }
 

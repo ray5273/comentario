@@ -14,8 +14,9 @@ import { UIToolkit } from './ui-toolkit';
 import { Utils } from './utils';
 import { ConfirmDialog } from './confirm-dialog';
 
-export type CommentCardGetAvatarHandler = (user: User | undefined) => Wrap<any>;
 export type CommentCardEventHandler = (c: CommentCard) => void;
+export type CommentCardGetAvatarHandler = (user: User | undefined) => Wrap<any>;
+export type CommentCardModerateEventHandler = (c: CommentCard, approve: boolean) => void;
 export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1) => void;
 
 /**
@@ -41,7 +42,7 @@ export interface CommentRenderingContext {
 
     // Events
     readonly onGetAvatar: CommentCardGetAvatarHandler;
-    readonly onApprove:   CommentCardEventHandler;
+    readonly onModerate:  CommentCardModerateEventHandler;
     readonly onDelete:    CommentCardEventHandler;
     readonly onEdit:      CommentCardEventHandler;
     readonly onReply:     CommentCardEventHandler;
@@ -89,12 +90,16 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     /** Child cards container. Also used to host a reply editor. */
     children?: Wrap<HTMLDivElement>;
 
-    private eName?: Wrap<HTMLDivElement | HTMLAnchorElement>;
+    private eNameWrap?: Wrap<HTMLDivElement>;
     private eScore?: Wrap<HTMLDivElement>;
+    private eCardSelf?: Wrap<HTMLDivElement>;
     private eHeader?: Wrap<HTMLDivElement>;
     private eBody?: Wrap<HTMLDivElement>;
+    private eModeratorBadge?: Wrap<HTMLSpanElement>;
+    private ePendingBadge?: Wrap<HTMLSpanElement>;
     private eModNotice?: Wrap<HTMLDivElement>;
     private btnApprove?: Wrap<HTMLButtonElement>;
+    private btnReject?: Wrap<HTMLButtonElement>;
     private btnCollapse?: Wrap<HTMLButtonElement>;
     private btnDelete?: Wrap<HTMLButtonElement>;
     private btnDownvote?: Wrap<HTMLButtonElement>;
@@ -137,12 +142,12 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // If the comment is deleted
         if (c.isDeleted) {
             // Add the deleted class
-            this.eHeader?.classes('deleted');
-            this.eBody?.classes('deleted');
+            this.eCardSelf?.classes('deleted');
 
             // Remove all option buttons
             this.eScore?.remove();
             this.btnApprove?.remove();
+            this.btnReject?.remove();
             this.btnDelete?.remove();
             this.btnDownvote?.remove();
             this.btnEdit?.remove();
@@ -167,20 +172,30 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Pending approval
         const pending = this._comment.isPending;
-        this.setClasses(pending, 'pending');
-        this.eName?.setClasses(pending, 'flagged');
-        if (!pending && this.btnApprove) {
-            // Remove the Approve button if the comment is approved
-            this.btnApprove.remove();
+        this.eCardSelf?.setClasses(pending, 'pending');
+        if (!pending) {
+            // If the comment is rejected
+            this.eCardSelf?.setClasses(!this._comment.isApproved, 'rejected');
+
+            // Remove the Pending badge and Approve/Reject buttons if the comment isn't pending
+            this.ePendingBadge?.remove();
+            this.ePendingBadge = undefined;
+            this.btnApprove?.remove();
             this.btnApprove = undefined;
+            this.btnReject?.remove();
+            this.btnReject = undefined;
+
+        // Add a Pending badge otherwise
+        } else if (!this.ePendingBadge) {
+            this.eNameWrap?.append(this.ePendingBadge = UIToolkit.badge('Pending', 'badge-pending'));
         }
 
         // Moderation notice
         let mn: string | undefined;
         if (c.isPending) {
-            mn = 'Your comment is awaiting moderator approval.';
+            mn = 'This comment is awaiting moderator approval.';
         } else if (!c.isApproved) {
-            mn = 'Your comment was flagged as spam.';
+            mn = 'This comment was flagged as spam.';
         }
         if (mn) {
             // If there's something to display, make sure the notice element exists and appended to the header
@@ -189,9 +204,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             }
             this.eModNotice.inner(mn);
 
-        // No moderation notice
-        } else if (this.eModNotice) {
-            this.eModNotice.remove();
+        } else {
+            // No moderation notice
+            this.eModNotice?.remove();
             this.eModNotice = undefined;
         }
     }
@@ -218,6 +233,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         let bgColor = 'deleted';
         if (commenter) {
             bgColor = commenter.id === ANONYMOUS_ID ? 'anonymous' : commenter.colourIndex.toString();
+            if (commenter.isModerator) {
+                this.eModeratorBadge = UIToolkit.badge('Moderator', 'badge-moderator');
+            }
         }
 
         // Render children
@@ -230,32 +248,39 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         this.id(`card-${id}`) // ID for scrolling to
             .classes('card', `border-${bgColor}`)
             .append(
-                // Card header
-                this.eHeader = UIToolkit.div('card-header')
+                // Card self
+                this.eCardSelf = UIToolkit.div('card-self')
                     .append(
-                        // Avatar
-                        ctx.onGetAvatar(commenter),
-                        // Name and subtitle
-                        UIToolkit.div('name-container')
+                        // Card header
+                        this.eHeader = UIToolkit.div('card-header')
                             .append(
-                                // Name
-                                this.eName = Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
-                                    .inner(commenter?.name ?? '[Deleted User]')
-                                    .classes('name', commenter?.isModerator && 'moderator')
-                                    .attr({
-                                        href: commenter?.websiteUrl,
-                                        rel:  commenter?.websiteUrl && 'nofollow noopener noreferrer',
-                                    }),
-                                // Subtitle
-                                UIToolkit.div('subtitle')
-                                    // Time ago
-                                    .inner(Utils.timeAgo(ctx.curTimeMs, ms))
-                                    .attr({title: this._comment.createdTime}))),
-                // Card body
-                this.eBody = UIToolkit.div('card-body'),
-                // Options toolbar
-                this.commentOptionsBar(ctx),
-                // Children (if any)
+                                // Avatar
+                                ctx.onGetAvatar(commenter),
+                                // Name and subtitle
+                                UIToolkit.div('name-container')
+                                    .append(
+                                        this.eNameWrap = UIToolkit.div('name-wrap')
+                                            .append(
+                                                // Name
+                                                Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
+                                                    .inner(commenter?.name ?? '[Deleted User]')
+                                                    .classes('name')
+                                                    .attr({
+                                                        href: commenter?.websiteUrl,
+                                                        rel:  commenter?.websiteUrl && 'nofollow noopener noreferrer',
+                                                    }),
+                                                // Moderator badge
+                                                this.eModeratorBadge),
+                                        // Subtitle
+                                        UIToolkit.div('subtitle')
+                                            // Time ago
+                                            .inner(Utils.timeAgo(ctx.curTimeMs, ms))
+                                            .attr({title: this._comment.createdTime}))),
+                        // Card body
+                        this.eBody = UIToolkit.div('card-body'),
+                        // Options toolbar
+                        this.commentOptionsBar(ctx)),
+                // Card's children (if any)
                 this.children);
     }
 
@@ -283,9 +308,10 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             this.btnReply = this.getOptionButton('reply', null, () => ctx.onReply(this)).appendTo(left);
         }
 
-        // Approve button
-        if (isModerator && this._comment.isApproved) {
-            this.btnApprove = this.getOptionButton('approve', 'text-success', () => ctx.onApprove(this)).appendTo(right);
+        // Approve/reject buttons
+        if (isModerator && this._comment.isPending) {
+            this.btnApprove = this.getOptionButton('approve', 'text-success', () => ctx.onModerate(this, true)).appendTo(right);
+            this.btnReject  = this.getOptionButton('reject',  'text-warning', () => ctx.onModerate(this, false)).appendTo(right);
         }
 
         // Sticky toggle button (top-level comments only). The sticky status can only be changed after a full tree
@@ -342,7 +368,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      * @param cls Optional additional class.
      * @param onClick Button's click handler.
      */
-    private getOptionButton(icon: 'approve' | 'collapse' | 'delete' | 'downvote' | 'edit' | 'reply' | 'sticky' | 'upvote', cls?: string | null, onClick?: (btn: Wrap<HTMLButtonElement>) => void): Wrap<any> {
+    private getOptionButton(icon: 'approve' | 'collapse' | 'delete' | 'downvote' | 'edit' | 'reject' | 'reply' | 'sticky' | 'upvote', cls?: string | null, onClick?: (btn: Wrap<HTMLButtonElement>) => void): Wrap<any> {
         let title: string;
         let svg: string;
         switch (icon) {
@@ -365,6 +391,10 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             case 'edit':
                 title = 'Edit';
                 svg = UIToolkit.svg(512, 512, '<path fill="currentColor" d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/>');
+                break;
+            case 'reject':
+                title = 'Reject';
+                svg = UIToolkit.svg(384, 512, '<path fill="currentColor" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>');
                 break;
             case 'reply':
                 title = 'Reply';

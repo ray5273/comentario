@@ -94,10 +94,10 @@ func (svc *commentService) Create(c *data.Comment) error {
 	if err := db.Exec(
 		"insert into cm_comments("+
 			"id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, "+
-			"ts_approved, ts_deleted, user_created, user_approved, user_deleted) "+
+			"ts_moderated, ts_deleted, user_created, user_moderated, user_deleted) "+
 			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
 		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsSticky, c.IsApproved, c.IsPending, c.IsDeleted,
-		c.CreatedTime, c.ApprovedTime, c.DeletedTime, &c.UserCreated, &c.UserApproved, &c.UserDeleted,
+		c.CreatedTime, c.ModeratedTime, c.DeletedTime, &c.UserCreated, &c.UserModerated, &c.UserDeleted,
 	); err != nil {
 		logger.Errorf("commentService.Create: Exec() failed: %v", err)
 		return translateDBErrors(err)
@@ -475,7 +475,7 @@ func (svc *commentService) Moderate(commentID, userID *uuid.UUID, pending, appro
 
 	// Update the record in the database
 	err := db.ExecOne(
-		"update cm_comments set is_pending=$1, is_approved=$2, ts_approved=$3, user_approved=$4 where id=$5;",
+		"update cm_comments set is_pending=$1, is_approved=$2, ts_moderated=$3, user_moderated=$4 where id=$5;",
 		pending, approved, time.Now().UTC(), userID, commentID)
 	if err != nil {
 		logger.Errorf("commentService.Moderate: Exec() failed: %v", err)

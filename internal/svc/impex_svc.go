@@ -449,16 +449,16 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		// Create a new comment instance
 		// TODO restrict the list of tags to just the basics: <a>, <b>, <i>, <code>. Especially remove <img> (convert it to <a>)
 		c := &data.Comment{
-			ID:           commentID,
-			ParentID:     parentCommentID,
-			PageID:       pageID,
-			Markdown:     markdown,
-			HTML:         post.Message,
-			IsApproved:   true,
-			CreatedTime:  post.CreationDate,
-			ApprovedTime: sql.NullTime{Time: post.CreationDate, Valid: true},
-			UserCreated:  uuid.NullUUID{UUID: uid, Valid: true},
-			UserApproved: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+			ID:            commentID,
+			ParentID:      parentCommentID,
+			PageID:        pageID,
+			Markdown:      markdown,
+			HTML:          post.Message,
+			IsApproved:    true,
+			CreatedTime:   post.CreationDate,
+			ModeratedTime: sql.NullTime{Time: post.CreationDate, Valid: true},
+			UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
+			UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
 		}
 
 		// File it under the appropriate parent ID
@@ -635,18 +635,18 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 		// Create a new comment instance
 		del := comment.Deleted || comment.Markdown == "" || comment.Markdown == "[deleted]"
 		c := &data.Comment{
-			ID:           commentID,
-			ParentID:     parentCommentID,
-			PageID:       pageID,
-			Markdown:     util.If(del, "", comment.Markdown),
-			Score:        comment.Score,
-			IsApproved:   comment.State == "approved",
-			IsPending:    comment.State == "unapproved",
-			IsDeleted:    del,
-			CreatedTime:  comment.CreationDate,
-			ApprovedTime: sql.NullTime{Time: comment.CreationDate, Valid: true},
-			UserCreated:  uuid.NullUUID{UUID: uid, Valid: true},
-			UserApproved: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+			ID:            commentID,
+			ParentID:      parentCommentID,
+			PageID:        pageID,
+			Markdown:      util.If(del, "", comment.Markdown),
+			Score:         comment.Score,
+			IsApproved:    comment.State == "approved",
+			IsPending:     comment.State == "unapproved",
+			IsDeleted:     del,
+			CreatedTime:   comment.CreationDate,
+			ModeratedTime: sql.NullTime{Time: comment.CreationDate, Valid: true},
+			UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
+			UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
 		}
 
 		// Render Markdown into HTML (the latter doesn't get exported)

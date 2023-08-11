@@ -158,10 +158,18 @@ definitions:
         type: string
         format: date-time
         description: When the comment was created
+      moderatedTime:
+        type: string
+        format: date-time
+        description: When a moderation action has last been applied to the comment
       userCreated:
         type: string
         format: uuid
         description: ID of the user who created the comment
+      userModerated:
+        type: string
+        format: uuid
+        description: ID of the user who last moderated the comment
       direction:
         type: integer
         format: int8
@@ -1676,6 +1684,31 @@ paths:
                   Updated comment. NB: Vote direction in the returned comment is always 0
                 $ref: "#/definitions/comment"
 
+  /embed/comments/{uuid}/moderate:
+    post:
+      operationId: EmbedCommentModerate
+      summary: Approve or reject the specified comment
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - approve
+            properties:
+              approve:
+                description: Whether to approve the comment
+                type: boolean
+      responses:
+        204:
+          description: Comment has been updated
+
   /embed/comments/{uuid}/sticky:
     post:
       operationId: EmbedCommentSticky
@@ -2282,12 +2315,12 @@ paths:
             type: object
             required:
               - pending
-              - approved
+              - approve
             properties:
               pending:
                 description: Whether the comment is pending moderation
                 type: boolean
-              approved:
+              approve:
                 description: Whether to approve the comment
                 type: boolean
       responses:

@@ -796,35 +796,35 @@ func (p *DomainPage) WithIsReadonly(b bool) *DomainPage {
 
 // Comment represents a comment
 type Comment struct {
-	ID           uuid.UUID     // Unique record ID
-	ParentID     uuid.NullUUID // Parent record ID, null if it's a root comment on the page
-	PageID       uuid.UUID     // Reference to the page
-	Markdown     string        // Comment text in markdown
-	HTML         string        // Rendered comment text in HTML
-	Score        int           // Comment score
-	IsSticky     bool          // Whether the comment is sticky (attached to the top of page)
-	IsApproved   bool          // Whether the comment is approved and can be seen by everyone
-	IsPending    bool          // Whether the comment is pending approval
-	IsDeleted    bool          // Whether the comment is marked as deleted
-	CreatedTime  time.Time     // When the comment was created
-	ApprovedTime sql.NullTime  // When the comment was approved
-	DeletedTime  sql.NullTime  // When the comment was marked as deleted
-	UserCreated  uuid.NullUUID // Reference to the user who created the comment
-	UserApproved uuid.NullUUID // Reference to the user who approved the comment
-	UserDeleted  uuid.NullUUID // Reference to the user who deleted the comment
+	ID            uuid.UUID     // Unique record ID
+	ParentID      uuid.NullUUID // Parent record ID, null if it's a root comment on the page
+	PageID        uuid.UUID     // Reference to the page
+	Markdown      string        // Comment text in markdown
+	HTML          string        // Rendered comment text in HTML
+	Score         int           // Comment score
+	IsSticky      bool          // Whether the comment is sticky (attached to the top of page)
+	IsApproved    bool          // Whether the comment is approved and can be seen by everyone
+	IsPending     bool          // Whether the comment is pending approval
+	IsDeleted     bool          // Whether the comment is marked as deleted
+	CreatedTime   time.Time     // When the comment was created
+	ModeratedTime sql.NullTime  // When a moderation action has last been applied to the comment
+	DeletedTime   sql.NullTime  // When the comment was marked as deleted
+	UserCreated   uuid.NullUUID // Reference to the user who created the comment
+	UserModerated uuid.NullUUID // Reference to the user who last moderated the comment
+	UserDeleted   uuid.NullUUID // Reference to the user who deleted the comment
 }
 
 // CloneWithClearance returns a clone of the comment with a limited set of properties, depending on the specified
 // authorisations
 func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Comment {
-	// Superuser, domain owner/moderator, and the comment author see everything: make a perfect clone
-	if user.IsSuperuser || domainUser != nil && (domainUser.IsOwner || domainUser.IsModerator) || c.UserCreated.UUID == user.ID {
+	// Superuser and domain owner/moderator see everything: make a perfect clone
+	if user.IsSuperuser || domainUser.CanModerate() {
 		cc := *c
 		return &cc
 	}
 
 	// Other users don't see the source Markdown and status/audit fields
-	return &Comment{
+	cc := &Comment{
 		ID:          c.ID,
 		ParentID:    c.ParentID,
 		PageID:      c.PageID,
@@ -836,6 +836,13 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		CreatedTime: c.CreatedTime,
 		UserCreated: c.UserCreated,
 	}
+
+	// Comment author can see a bit more, but no audit fields
+	if c.UserCreated.UUID == user.ID {
+		cc.Markdown = c.Markdown
+		cc.IsPending = c.IsPending
+	}
+	return cc
 }
 
 // IsAnonymous returns whether the comment is authored by an anonymous or nonexistent (deleted) commenter
@@ -852,8 +859,8 @@ func (c *Comment) IsRoot() bool {
 func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 	c.IsApproved = true
 	c.IsPending = false
-	c.UserApproved = uuid.NullUUID{UUID: *userID, Valid: true}
-	c.ApprovedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+	c.UserModerated = uuid.NullUUID{UUID: *userID, Valid: true}
+	c.ModeratedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 }
 
 // ToDTO converts this model into an API model:
@@ -864,19 +871,21 @@ func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 // NB: leaves the Direction at 0
 func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 	return &models.Comment{
-		CreatedTime: strfmt.DateTime(c.CreatedTime),
-		HTML:        c.HTML,
-		ID:          strfmt.UUID(c.ID.String()),
-		IsApproved:  c.IsApproved,
-		IsDeleted:   c.IsDeleted,
-		IsPending:   c.IsPending,
-		IsSticky:    c.IsSticky,
-		Markdown:    c.Markdown,
-		PageID:      strfmt.UUID(c.PageID.String()),
-		ParentID:    NullUUIDStr(&c.ParentID),
-		Score:       int64(c.Score),
-		URL:         strfmt.URI(c.URL(https, host, path)),
-		UserCreated: NullUUIDStr(&c.UserCreated),
+		CreatedTime:   strfmt.DateTime(c.CreatedTime),
+		HTML:          c.HTML,
+		ID:            strfmt.UUID(c.ID.String()),
+		IsApproved:    c.IsApproved,
+		IsDeleted:     c.IsDeleted,
+		IsPending:     c.IsPending,
+		IsSticky:      c.IsSticky,
+		Markdown:      c.Markdown,
+		ModeratedTime: strfmt.DateTime(c.ModeratedTime.Time),
+		PageID:        strfmt.UUID(c.PageID.String()),
+		ParentID:      NullUUIDStr(&c.ParentID),
+		Score:         int64(c.Score),
+		URL:           strfmt.URI(c.URL(https, host, path)),
+		UserCreated:   NullUUIDStr(&c.UserCreated),
+		UserModerated: NullUUIDStr(&c.UserModerated),
 	}
 }
 

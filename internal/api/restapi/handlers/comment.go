@@ -117,7 +117,7 @@ func CommentModerate(params api_general.CommentModerateParams, user *data.User) 
 	}
 
 	// Update the comment's state in the database
-	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, swag.BoolValue(params.Body.Pending), swag.BoolValue(params.Body.Approved)); err != nil {
+	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, swag.BoolValue(params.Body.Pending), swag.BoolValue(params.Body.Approve)); err != nil {
 		return respServiceError(err)
 	}
 

@@ -614,14 +614,16 @@ export class Comentario extends HTMLElement {
     }
 
     /**
-     * Approve the comment of the given card.
+     * Approve or reject the comment of the given card.
+     * @param card Comment card.
+     * @param approve Whether to approve (true) or reject (false) the comment.
      */
-    private async approveComment(card: CommentCard): Promise<void> {
-        // Submit the approval to the backend
-        await this.apiService.commentModerate(card.comment.id, true);
+    private async moderateComment(card: CommentCard, approve: boolean): Promise<void> {
+        // Submit the moderation to the backend
+        await this.apiService.commentModerate(card.comment.id, approve);
 
         // Update the comment and the card
-        card.comment = this.replaceCommentById(card.comment, {isApproved: true});
+        card.comment = this.replaceCommentById(card.comment, {isPending: false, isApproved: approve});
     }
 
     /**
@@ -685,7 +687,7 @@ export class Comentario extends HTMLElement {
             isReadonly:  this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
             curTimeMs:   new Date().getTime(),
             onGetAvatar: user => this.createAvatarElement(user),
-            onApprove:   card => this.approveComment(card),
+            onModerate:  (card, approve) => this.moderateComment(card, approve),
             onDelete:    card => this.deleteComment(card),
             onEdit:      card => this.editComment(card),
             onReply:     card => this.addComment(card),

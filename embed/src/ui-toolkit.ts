@@ -14,6 +14,15 @@ export class UIToolkit {
     }
 
     /**
+     * Create and return a new badge element.
+     * @param text Badge text
+     * @param classes Classes to add to the div.
+     */
+    static badge(text: string, ...classes: string[]): Wrap<HTMLDivElement> {
+        return UIToolkit.div('badge').classes(...classes).inner(text);
+    }
+
+    /**
      * Create and return a dialog close button.
      * @param onClick Button's click handler.
      */
