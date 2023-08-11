@@ -93,7 +93,8 @@
                               [class.text-success]="c.score! > 0"
                               title="Score" class="fw-bold small" i18n-title>{{ c.score }}</span>
                         <!-- Comment creation time and permalink -->
-                        <a [href]="c.url" class="ms-3" title="Permalink" target="_blank" rel="noopener noreferrer" i18n-title>
+                        <a [href]="c.url" (click)="$event.stopPropagation()"
+                           class="ms-3" title="Permalink" target="_blank" rel="noopener noreferrer" i18n-title>
                             <ng-container>{{ c.createdTime | datetime }}</ng-container>
                             <fa-icon [icon]="faUpRightFromSquare" class="ms-1"></fa-icon>
                         </a>
