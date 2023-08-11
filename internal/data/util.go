@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"strings"
+	"time"
 )
 
 // DecodeUUID converts a strfmt.UUID into a binary UUID
@@ -35,12 +36,25 @@ func NullBoolToPtr(b sql.NullBool) *bool {
 	return &b.Bool
 }
 
+// NullDateTime converts a nullable Time value into strfmt.DateTime
+func NullDateTime(t sql.NullTime) strfmt.DateTime {
+	if !t.Valid {
+		return strfmt.DateTime{}
+	}
+	return strfmt.DateTime(t.Time)
+}
+
 // NullUUIDStr converts a nullable UUID value into strfmt.UUID
 func NullUUIDStr(u *uuid.NullUUID) strfmt.UUID {
 	if !u.Valid {
 		return ""
 	}
 	return strfmt.UUID(u.UUID.String())
+}
+
+// PathToString converts a value of models.Path into a string
+func PathToString(v models.Path) string {
+	return strings.TrimSpace(string(v))
 }
 
 // SliceToDTOs converts a slice of models into a slice of DTO instances using the ToDTO() method of the former
@@ -58,9 +72,13 @@ func SliceToDTOs[F DTOAware[T], T any](in []F) []T {
 	return out
 }
 
-// PathToString converts a value of models.Path into a string
-func PathToString(v models.Path) string {
-	return strings.TrimSpace(string(v))
+// ToNullDateTime converts an strfmt.DateTime into a nullable Time value
+func ToNullDateTime(dt strfmt.DateTime) (t sql.NullTime) {
+	if !dt.IsZero() {
+		t.Time = time.Time(dt)
+		t.Valid = true
+	}
+	return
 }
 
 // TrimmedString converts a *string value into a string, trimming all leading and trailing whitespace

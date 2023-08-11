@@ -6,6 +6,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	md "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -662,8 +663,8 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 		}
 	}
 
-	// Recurse the comment tree (map) to insert them in the right order (parents-to-children), starting with the root
-	// (= zero UUID)
+	// Recurse the comment tree (map) to insert the comments in the right order (parents-to-children), starting with the
+	// root (= zero UUID)
 	countsPerPage := map[uuid.UUID]int{}
 	result.CommentsImported, result.CommentsNonDeleted, result.Error = svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
 
@@ -682,8 +683,197 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 }
 
 func (svc *importExportService) importV3(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
-	// TODO
-	return &ImportResult{}
+	// Unmarshal the data
+	var exp comentarioExportV3
+	if err := json.Unmarshal(buf, &exp); err != nil {
+		logger.Errorf("importExportService.importV3: json.Unmarshal() failed: %v", err)
+		return importError(err)
+	}
+
+	result := &ImportResult{}
+
+	// Create a map of user IDs
+	commenterIDMap := map[strfmt.UUID]uuid.UUID{
+		strfmt.UUID(data.AnonymousUser.ID.String()): data.AnonymousUser.ID,
+	}
+	for _, commenter := range exp.Commenters {
+		result.UsersTotal++
+
+		// Try to find an existing user with the same email
+		var user *data.User
+		if u, err := TheUserService.FindUserByEmail(string(commenter.Email), false); err == nil {
+			// User already exists
+			user = u
+
+			// Check if domain user exists, too
+			if _, _, err := TheDomainService.FindDomainUserByID(&domain.ID, &u.ID); err == nil {
+				// Add an ID mapping
+				commenterIDMap[commenter.ID] = user.ID
+
+				// Proceed to the next record
+				continue
+
+			} else if err != ErrNotFound {
+				// Any other error than "not found"
+				return result.WithError(err)
+			}
+
+		} else if err != ErrNotFound {
+			// Any other error than "not found"
+			return result.WithError(err)
+		}
+
+		// Persist a new user instance, if it doesn't exist
+		if user == nil {
+			user = data.NewUser(string(commenter.Email), commenter.Name)
+			user.CreatedTime = time.Time(commenter.CreatedTime)
+			user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
+			user.
+				WithFederated("", string(commenter.FederatedIDP)).
+				WithWebsiteURL(string(commenter.WebsiteURL)).
+				WithRemarks("Imported from Comentario V3")
+			if err := TheUserService.Create(user); err != nil {
+				return result.WithError(err)
+			}
+			result.UsersAdded++
+		}
+
+		// Add the an ID mapping
+		commenterIDMap[commenter.ID] = user.ID
+
+		// Add a domain user as well
+		du := &data.DomainUser{
+			DomainID:        domain.ID,
+			UserID:          user.ID,
+			IsModerator:     commenter.IsModerator,
+			IsCommenter:     true,
+			NotifyReplies:   true,
+			NotifyModerator: true,
+			CreatedTime:     time.Time(commenter.CreatedTime),
+		}
+		if err := TheDomainService.UserAdd(du); err != nil {
+			return result.WithError(err)
+		}
+		result.DomainUsersAdded++
+	}
+
+	// Create a map of page IDs
+	pageIDMap := make(map[strfmt.UUID]uuid.UUID, len(exp.Pages))
+	for _, page := range exp.Pages {
+		result.PagesTotal++
+
+		// Find the page for the comment based on path
+		p, added, err := ThePageService.UpsertByDomainPath(domain, string(page.Path), nil)
+		if err != nil {
+			return result.WithError(err)
+
+		}
+
+		// Store the ID mapping
+		pageIDMap[page.ID] = p.ID
+
+		// If the page was added, increment the page count
+		if added {
+			result.PagesAdded++
+		}
+	}
+
+	// Prepare a map of comment IDs (randomly generated)
+	commentIDMap := make(map[strfmt.UUID]uuid.UUID, len(exp.Comments))
+	for _, c := range exp.Comments {
+		commentIDMap[c.ID] = uuid.New()
+	}
+
+	// Create a map that groups comment lists by their parent ID
+	commentParentIDMap := map[uuid.UUID][]*data.Comment{}
+
+	// Iterate over all comments
+	for _, comment := range exp.Comments {
+		result.CommentsTotal++
+
+		// Find the comment ID (it must exist at this point)
+		commentID, ok := commentIDMap[comment.ID]
+		if !ok {
+			err := fmt.Errorf("failed to map comment with ID=%s", comment.ID)
+			logger.Errorf("importExportService.importV3: %v", err)
+			return result.WithError(err)
+		}
+
+		// Find the comment's author
+		uid, ok := commenterIDMap[comment.UserCreated]
+		if !ok {
+			err := fmt.Errorf("failed to map commenter with ID=%s", comment.UserCreated)
+			logger.Errorf("importExportService.importV3: %v", err)
+			return result.WithError(err)
+		}
+
+		// Find the comment's page ID
+		pageID, ok := pageIDMap[comment.PageID]
+		if !ok {
+			err := fmt.Errorf("failed to map page with ID=%s", comment.PageID)
+			logger.Errorf("importExportService.importV3: %v", err)
+			return result.WithError(err)
+		}
+
+		// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID. It will
+		// also be the fallback, should parent ID not exist in the map
+		parentCommentID := uuid.NullUUID{}
+		pzID := uuid.UUID{}
+		if id, ok := commentIDMap[comment.ParentID]; ok {
+			parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
+			pzID = id
+		}
+
+		// Try to map users who moderated/deleted the comment
+		var umID, udID uuid.NullUUID
+		umID.UUID, umID.Valid = commenterIDMap[comment.UserModerated]
+		udID.UUID, udID.Valid = commenterIDMap[comment.UserDeleted]
+
+		// Create a new comment instance
+		c := &data.Comment{
+			ID:            commentID,
+			ParentID:      parentCommentID,
+			PageID:        pageID,
+			Markdown:      util.If(comment.IsDeleted, "", comment.Markdown),
+			HTML:          comment.HTML,
+			Score:         int(comment.Score),
+			IsSticky:      comment.IsSticky,
+			IsApproved:    comment.IsApproved,
+			IsPending:     comment.IsPending,
+			IsDeleted:     comment.IsDeleted,
+			CreatedTime:   time.Time(comment.CreatedTime),
+			ModeratedTime: data.ToNullDateTime(comment.ModeratedTime),
+			DeletedTime:   data.ToNullDateTime(comment.DeletedTime),
+			UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
+			UserModerated: umID,
+			UserDeleted:   udID,
+		}
+
+		// File it under the appropriate parent ID
+		if l, ok := commentParentIDMap[pzID]; ok {
+			commentParentIDMap[pzID] = append(l, c)
+		} else {
+			commentParentIDMap[pzID] = []*data.Comment{c}
+		}
+	}
+
+	// Recurse the comment tree (map) to insert the comments in the right order (parents-to-children), starting with the
+	// root (= zero UUID)
+	countsPerPage := map[uuid.UUID]int{}
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = svc.insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+
+	// Increase comment count on the domain, ignoring errors
+	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+
+	// Increase comment counts on all pages
+	for pageID, pc := range countsPerPage {
+		if pc > 0 {
+			_ = ThePageService.IncrementCounts(&pageID, pc, 0)
+		}
+	}
+
+	// Succeeded
+	return result
 }
 
 // insertCommentsForParent inserts those comments from the map that have the specified parent ID, returning the number

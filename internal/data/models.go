@@ -225,7 +225,7 @@ func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User 
 		return &c
 	}
 
-	// Start with properties matching the Commenter model
+	// Start with properties publicly available
 	user := &User{
 		ID:            u.ID,
 		HasAvatar:     u.HasAvatar,
@@ -279,14 +279,17 @@ func (u *User) IsLocal() bool {
 // ToCommenter converts this user into a Commenter model
 func (u *User) ToCommenter(isCommenter, isModerator bool) *models.Commenter {
 	return &models.Commenter{
-		ColourIndex: u.ColourIndex(),
-		Email:       strfmt.Email(u.Email),
-		HasAvatar:   u.HasAvatar,
-		ID:          strfmt.UUID(u.ID.String()),
-		IsCommenter: isCommenter,
-		IsModerator: isModerator,
-		Name:        u.Name,
-		WebsiteURL:  strfmt.URI(u.WebsiteURL),
+		ColourIndex:  u.ColourIndex(),
+		CreatedTime:  strfmt.DateTime(u.CreatedTime),
+		Email:        strfmt.Email(u.Email),
+		FederatedIDP: models.FederatedIdpID(u.FederatedIdP),
+		FederatedSso: u.FederatedSSO,
+		HasAvatar:    u.HasAvatar,
+		ID:           strfmt.UUID(u.ID.String()),
+		IsCommenter:  isCommenter,
+		IsModerator:  isModerator,
+		Name:         u.Name,
+		WebsiteURL:   strfmt.URI(u.WebsiteURL),
 	}
 }
 
@@ -294,10 +297,10 @@ func (u *User) ToCommenter(isCommenter, isModerator bool) *models.Commenter {
 func (u *User) ToDTO() *models.User {
 	return &models.User{
 		Banned:        u.Banned,
-		BannedTime:    strfmt.DateTime(u.BannedTime.Time),
+		BannedTime:    NullDateTime(u.BannedTime),
 		ColourIndex:   u.ColourIndex(),
 		Confirmed:     u.Confirmed,
-		ConfirmedTime: strfmt.DateTime(u.ConfirmedTime.Time),
+		ConfirmedTime: NullDateTime(u.ConfirmedTime),
 		CreatedTime:   strfmt.DateTime(u.CreatedTime),
 		Email:         strfmt.Email(u.Email),
 		FederatedID:   u.FederatedID,
@@ -872,6 +875,7 @@ func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 	return &models.Comment{
 		CreatedTime:   strfmt.DateTime(c.CreatedTime),
+		DeletedTime:   NullDateTime(c.DeletedTime),
 		HTML:          c.HTML,
 		ID:            strfmt.UUID(c.ID.String()),
 		IsApproved:    c.IsApproved,
@@ -879,12 +883,13 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 		IsPending:     c.IsPending,
 		IsSticky:      c.IsSticky,
 		Markdown:      c.Markdown,
-		ModeratedTime: strfmt.DateTime(c.ModeratedTime.Time),
+		ModeratedTime: NullDateTime(c.ModeratedTime),
 		PageID:        strfmt.UUID(c.PageID.String()),
 		ParentID:      NullUUIDStr(&c.ParentID),
 		Score:         int64(c.Score),
 		URL:           strfmt.URI(c.URL(https, host, path)),
 		UserCreated:   NullUUIDStr(&c.UserCreated),
+		UserDeleted:   NullUUIDStr(&c.UserDeleted),
 		UserModerated: NullUUIDStr(&c.UserModerated),
 	}
 }

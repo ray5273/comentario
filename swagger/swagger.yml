@@ -162,6 +162,10 @@ definitions:
         type: string
         format: date-time
         description: When a moderation action has last been applied to the comment
+      deletedTime:
+        type: string
+        format: date-time
+        description: When the comment was deleted
       userCreated:
         type: string
         format: uuid
@@ -170,6 +174,10 @@ definitions:
         type: string
         format: uuid
         description: ID of the user who last moderated the comment
+      userDeleted:
+        type: string
+        format: uuid
+        description: ID of the user who deleted the comment
       direction:
         type: integer
         format: int8
@@ -216,6 +224,16 @@ definitions:
         format: uint8
         description: Colour hash, number based on the user's ID
         x-omitempty: false
+      createdTime:
+        type: string
+        format: date-time
+        description: When the commenter user was created (visible to domain moderator+ only)
+      federatedIdP:
+        $ref: "#/definitions/federatedIdpId"
+        description: Optional ID of the federated identity provider used for authentication. If empty, it's a local user (visible to domain moderator+ only)
+      federatedSso:
+        type: boolean
+        description: Whether the user is authenticated via SSO (visible to domain moderator+ only)
 
   commentSort:
     description: Comment sorting. 1st letter defines the property, 2nd letter the direction
