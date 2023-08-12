@@ -60,11 +60,6 @@ type DomainService interface {
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
 	// SetReadonly sets the readonly status for the given domain
 	SetReadonly(domainID *uuid.UUID, readonly bool) error
-	// StatsDaily collects and returns daily comment and views statistics for the given domain and number of days. If
-	// domainID is nil, statistics is collected for all domains owned by the user
-	StatsDaily(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error)
-	// StatsTotalsForUser collects and returns total figures for all domains accessible to the specified user
-	StatsTotalsForUser(curUser *data.User) (countDomains, countPages, countComments, countCommenters uint64, err error)
 	// Update updates an existing domain record in the database
 	Update(domain *data.Domain, idps []models.FederatedIdpID) error
 	// UserAdd links the specified user to the given domain
@@ -474,129 +469,6 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	return nil
 }
 
-func (svc *domainService) StatsDaily(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error) {
-	logger.Debugf("domainService.StatsDaily(%s, %s, %d)", userID, domainID, numDays)
-
-	// Correct the number of days if needed
-	if numDays > util.MaxNumberStatsDays {
-		numDays = util.MaxNumberStatsDays
-	}
-
-	// Prepare params
-	start := time.Now().UTC().Truncate(util.OneDay).AddDate(0, 0, -numDays+1)
-	params := []any{userID, start}
-
-	// Prepare a filter
-	domainFilter := ""
-	if domainID != nil {
-		domainFilter = "and d.id=$3 "
-		params = append(params, domainID)
-	}
-
-	// Query comment data from the database, grouped by day
-	var cRows *sql.Rows
-	cRows, err = db.Query(
-		"select count(*), date_trunc('day', c.ts_created) "+
-			"from cm_comments c "+
-			"join cm_domain_pages p on p.id=c.page_id "+
-			// Filter by domain
-			"join cm_domains d on d.id=p.domain_id "+domainFilter+
-			// Filter by owner user
-			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and is_owner=true "+
-			// Select only last N days
-			"where c.ts_created>=$2 "+
-			"group by date_trunc('day', c.ts_created) "+
-			"order by date_trunc('day', c.ts_created);",
-		params...)
-	if err != nil {
-		logger.Errorf("domainService.StatsDaily: Query() failed for comments: %v", err)
-		return nil, nil, translateDBErrors(err)
-	}
-	defer cRows.Close()
-
-	// Collect the data
-	if comments, err = svc.fetchStats(cRows, start, numDays); err != nil {
-		return nil, nil, translateDBErrors(err)
-	}
-
-	// Query view data from the database, grouped by day
-	var vRows *sql.Rows
-	vRows, err = db.Query(
-		"select count(*), date_trunc('day', v.ts_created) "+
-			"from cm_domain_page_views v "+
-			"join cm_domain_pages p on p.id=v.page_id "+
-			// Filter by domain
-			"join cm_domains d on d.id=p.domain_id "+domainFilter+
-			// Filter by owner user
-			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and is_owner=true "+
-			// Select only last N days
-			"where v.ts_created>=$2 "+
-			"group by date_trunc('day', v.ts_created) "+
-			"order by date_trunc('day', v.ts_created);",
-		params...)
-	if err != nil {
-		logger.Errorf("domainService.StatsDaily: Query() failed for views: %v", err)
-		return nil, nil, translateDBErrors(err)
-	}
-	defer vRows.Close()
-
-	// Collect the data
-	if views, err = svc.fetchStats(vRows, start, numDays); err != nil {
-		return nil, nil, translateDBErrors(err)
-	}
-
-	// Succeeded
-	return
-}
-
-func (svc *domainService) StatsTotalsForUser(curUser *data.User) (countDomains, countPages, countComments, countCommenters uint64, err error) {
-	logger.Debugf("domainService.StatsTotalsForUser(%s)", &curUser.ID)
-
-	// Query domain and page counts
-	qDP := db.Dialect().
-		From(goqu.T("cm_domains").As("d")).
-		Select(goqu.COUNT(goqu.I("d.id").Distinct()), goqu.COUNT(goqu.I("p.id"))).
-		LeftJoin(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.domain_id": goqu.I("d.id")}))
-
-	// If the user isn't a superuser, filter by the domains they own
-	if !curUser.IsSuperuser {
-		qDP = qDP.
-			Join(
-				goqu.T("cm_domains_users").As("du"),
-				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": &curUser.ID, "du.is_owner": true}))
-	}
-
-	// Run the query
-	if err = db.SelectRow(qDP).Scan(&countDomains, &countPages); err != nil {
-		logger.Errorf("domainService.StatsTotalsForUser: SelectRow() for domains/pages failed: %v", err)
-		return 0, 0, 0, 0, translateDBErrors(err)
-	}
-
-	// Query comment and commenter counts
-	qCC := db.Dialect().
-		From(goqu.T("cm_comments").As("c")).
-		Select(goqu.COUNT(goqu.I("c.id")), goqu.COUNT(goqu.I("c.user_created").Distinct())).
-		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")}))
-
-	// If the user isn't a superuser, filter by the domains they own
-	if !curUser.IsSuperuser {
-		qCC = qCC.
-			Join(
-				goqu.T("cm_domains_users").As("du"),
-				goqu.On(goqu.Ex{"du.domain_id": goqu.I("p.domain_id"), "du.user_id": &curUser.ID, "du.is_owner": true}))
-	}
-
-	// Run the query
-	if err = db.SelectRow(qCC).Scan(&countComments, &countCommenters); err != nil {
-		// Any other database error
-		logger.Errorf("domainService.StatsTotalsForUser: SelectRow() for comments/commenters failed: %v", err)
-		return 0, 0, 0, 0, translateDBErrors(err)
-	}
-
-	// Succeeded
-	return
-}
-
 func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID) error {
 	logger.Debugf("domainService.Update(%#v, %v)", domain, idps)
 
@@ -788,46 +660,6 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*d
 
 	// Succeeded
 	return &d, pdu, nil
-}
-
-// fetchStats collects and returns a daily statistics using the provided database rows
-func (svc *domainService) fetchStats(rs *sql.Rows, start time.Time, num int) ([]uint64, error) {
-	// Iterate data rows
-	var res []uint64
-	for rs.Next() {
-		// Fetch a count and a time
-		var i uint64
-		var t time.Time
-		if err := rs.Scan(&i, &t); err != nil {
-			logger.Errorf("domainService.fetchStats: rs.Scan() failed: %v", err)
-			return nil, err
-		}
-
-		// UTC-ise the time, just in case it's in a different timezone
-		t = t.UTC()
-
-		// Fill any gap in the day sequence with zeroes
-		for start.Before(t) {
-			res = append(res, 0)
-			start = start.AddDate(0, 0, 1)
-		}
-
-		// Append a "real" data row
-		res = append(res, i)
-	}
-
-	// Check that Next() didn't error
-	if err := rs.Err(); err != nil {
-		return nil, err
-	}
-
-	// Add missing rows up to the requested number (fill any gap at the end)
-	for len(res) < num {
-		res = append(res, 0)
-	}
-
-	// Succeeded
-	return res, nil
 }
 
 // saveIdPs saves domain's identity provider links

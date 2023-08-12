@@ -247,24 +247,6 @@ definitions:
       - sd # By score, descending
     x-isnullable: false
 
-  dailyViewCommentStats:
-    description: Daily statistical data on views and comments
-    type: object
-    readOnly: true
-    properties:
-      viewCounts:
-        type: array
-        items:
-          type: integer
-          format: uint
-        description: Numbers of views, one value per day
-      commentCounts:
-        type: array
-        items:
-          type: integer
-          format: uint
-        description: Numbers of comments, one value per day
-
   domain:
     description: Registered domain
     type: object
@@ -667,6 +649,108 @@ definitions:
         format: uint8
         description: Colour hash, number based on the user's ID
         x-omitempty: false
+
+  statsDailyViewsComments:
+    description: Daily statistical data on views and comments
+    type: object
+    readOnly: true
+    properties:
+      viewCounts:
+        type: array
+        items:
+          type: integer
+          format: uint
+        description: Numbers of views, one value per day
+      commentCounts:
+        type: array
+        items:
+          type: integer
+          format: uint
+        description: Numbers of comments, one value per day
+
+  statsTotals:
+    description: Total statistical figures for Comentario dashboard
+    type: object
+    readOnly: true
+    required:
+      - countUsersTotal
+      - countUsersBanned
+      - countUsersNonBanned
+      - countDomainsOwned
+      - countDomainsModerated
+      - countDomainsCommenter
+      - countDomainsReadonly
+      - countPagesModerated
+      - countDomainUsers
+      - countComments
+      - countCommenters
+    properties:
+      countUsersTotal:
+        type: integer
+        format: int64
+        description: Total number of users the current user can manage (superuser only)
+        x-omitempty: false
+        x-isnullable: false
+      countUsersBanned:
+        type: integer
+        format: int64
+        description: Number of banned users the current user can manage (superuser only)
+        x-omitempty: false
+        x-isnullable: false
+      countUsersNonBanned:
+        type: integer
+        format: int64
+        description: Number of non-banned users the current user can manage (superuser only)
+        x-omitempty: false
+        x-isnullable: false
+      countDomainsOwned:
+        type: integer
+        format: int64
+        description: Number of domains the current user owns
+        x-omitempty: false
+        x-isnullable: false
+      countDomainsModerated:
+        type: integer
+        format: int64
+        description: Number of domains the current user is a moderator on
+        x-omitempty: false
+        x-isnullable: false
+      countDomainsCommenter:
+        type: integer
+        format: int64
+        description: Number of domains the current user is a commenter on
+        x-omitempty: false
+        x-isnullable: false
+      countDomainsReadonly:
+        type: integer
+        format: int64
+        description: Number of domains the current user has the readonly status on
+        x-omitempty: false
+        x-isnullable: false
+      countPagesModerated:
+        type: integer
+        format: int64
+        description: Number of pages the current user can moderate
+        x-omitempty: false
+        x-isnullable: false
+      countDomainUsers:
+        type: integer
+        format: int64
+        description: Number of domain users the current user can manage
+        x-omitempty: false
+        x-isnullable: false
+      countComments:
+        type: integer
+        format: int64
+        description: Number of comments the current user can moderate
+        x-omitempty: false
+        x-isnullable: false
+      countCommenters:
+        type: integer
+        format: int64
+        description: Number of authors of comment the current user can moderate
+        x-omitempty: false
+        x-isnullable: false
 
   uiLanguage:
     description: UI language
@@ -1829,37 +1913,7 @@ paths:
         200:
           description: Dashboard data
           schema:
-            type: object
-            required:
-              - countDomains
-              - countPages
-              - countComments
-              - countCommenters
-            properties:
-              countDomains:
-                description: Total number of domains belonging to the user
-                type: integer
-                format: uint
-                x-omitempty: false
-                x-isnullable: false
-              countPages:
-                description: Total number of pages with comments on the user's domains
-                type: integer
-                format: uint
-                x-omitempty: false
-                x-isnullable: false
-              countComments:
-                description: Total number of comments on the user's domains
-                type: integer
-                format: uint
-                x-omitempty: false
-                x-isnullable: false
-              countCommenters:
-                description: Total number of commenters, who left comments on the user's domains
-                type: integer
-                format: uint
-                x-omitempty: false
-                x-isnullable: false
+            $ref: "#/definitions/statsTotals"
 
   /dashboard/stats/daily:
     get:
@@ -1873,7 +1927,7 @@ paths:
         200:
           description: Statistical data on comments and views for the current user
           schema:
-            $ref: "#/definitions/dailyViewCommentStats"
+            $ref: "#/definitions/statsDailyViewsComments"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domains
@@ -2116,7 +2170,7 @@ paths:
         200:
           description: Statistical data on comments and views for the domain
           schema:
-            $ref: "#/definitions/dailyViewCommentStats"
+            $ref: "#/definitions/statsDailyViewsComments"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domain pages

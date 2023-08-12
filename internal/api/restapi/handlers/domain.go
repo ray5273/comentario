@@ -208,12 +208,12 @@ func DomainDailyStats(params api_general.DomainDailyStatsParams, user *data.User
 		return r
 
 		// Collect comment/view stats
-	} else if comments, views, err := svc.TheDomainService.StatsDaily(&user.ID, &d.ID, int(swag.Uint64Value(params.Days))); err != nil {
+	} else if comments, views, err := svc.TheStatsService.GetDailyStats(&user.ID, &d.ID, int(swag.Uint64Value(params.Days))); err != nil {
 		return respServiceError(err)
 
 	} else {
 		// Succeeded
-		return api_general.NewDashboardDailyStatsOK().WithPayload(&models.DailyViewCommentStats{
+		return api_general.NewDashboardDailyStatsOK().WithPayload(&models.StatsDailyViewsComments{
 			CommentCounts: comments,
 			ViewCounts:    views,
 		})

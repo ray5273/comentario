@@ -11,26 +11,24 @@ import (
 
 func DashboardTotals(_ api_general.DashboardTotalsParams, user *data.User) middleware.Responder {
 	// Query the data
-	d := &api_general.DashboardTotalsOKBody{}
-	var err error
-	d.CountDomains, d.CountPages, d.CountComments, d.CountCommenters, err = svc.TheDomainService.StatsTotalsForUser(user)
+	totals, err := svc.TheStatsService.GetTotals(user)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_general.NewDashboardTotalsOK().WithPayload(d)
+	return api_general.NewDashboardTotalsOK().WithPayload(totals.ToDTO())
 }
 
 func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *data.User) middleware.Responder {
 	// Collect comment/view stats
-	comments, views, err := svc.TheDomainService.StatsDaily(&user.ID, nil, int(swag.Uint64Value(params.Days)))
+	comments, views, err := svc.TheStatsService.GetDailyStats(&user.ID, nil, int(swag.Uint64Value(params.Days)))
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_general.NewDashboardDailyStatsOK().WithPayload(&models.DailyViewCommentStats{
+	return api_general.NewDashboardDailyStatsOK().WithPayload(&models.StatsDailyViewsComments{
 		CommentCounts: comments,
 		ViewCounts:    views,
 	})

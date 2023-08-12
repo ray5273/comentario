@@ -44,17 +44,20 @@ import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { CommentPropertiesComponent } from './domains/comments/comment-properties/comment-properties.component';
 import { CommentStatusBadgeComponent } from './domains/comments/comment-status-badge/comment-status-badge.component';
+import { MetricCardComponent } from './dashboard/metric-card/metric-card.component';
 
 @NgModule({
     declarations: [
+        CommentListComponent,
+        CommentManagerComponent,
+        CommentPropertiesComponent,
         CommentSortPipe,
+        CommentStatusBadgeComponent,
         ControlCenterComponent,
         CurrentUserBadgeComponent,
         DashboardComponent,
         DatetimePipe,
         DomainBadgeComponent,
-        CommentListComponent,
-        CommentManagerComponent,
         DomainDetailComponent,
         DomainEditComponent,
         DomainImportComponent,
@@ -64,24 +67,23 @@ import { CommentStatusBadgeComponent } from './domains/comments/comment-status-b
         DomainPagePropertiesComponent,
         DomainPropertiesComponent,
         DomainSsoSecretComponent,
+        DomainStatsComponent,
         DomainUserBadgeComponent,
         DomainUserEditComponent,
         DomainUserManagerComponent,
         DomainUserPropertiesComponent,
+        MetricCardComponent,
         ModeratorNotifyPolicyPipe,
         NoDataComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
         StatsChartComponent,
-        DomainStatsComponent,
         UserAvatarComponent,
         UserDetailsComponent,
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
-        CommentPropertiesComponent,
-        CommentStatusBadgeComponent,
     ],
     imports: [
         CommonModule,
