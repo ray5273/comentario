@@ -230,9 +230,15 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	} else if cnt == 0 {
 		user.WithConfirmed(true).IsSuperuser = true
 
-	} else {
 		// If SMTP isn't configured, mark the user confirmed right away
-		user.WithConfirmed(!config.SMTPConfigured)
+	} else if !config.SMTPConfigured {
+		user.WithConfirmed(true)
+
+		// If confirmation is switched off in the config, mark the user confirmed, too
+	} else if ci, err := svc.TheConfigService.Get(data.ConfigKeyAuthSignupConfirmUser); err != nil {
+		respServiceError(err)
+	} else if !ci.AsBool() {
+		user.WithConfirmed(true)
 	}
 
 	// Save the new user

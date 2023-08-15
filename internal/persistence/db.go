@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -82,6 +83,24 @@ func (db *Database) ExecOne(query string, args ...any) error {
 		return fmt.Errorf("statement affected %d rows, want 1", cnt)
 	}
 	return nil
+}
+
+// Execute executes the provided goqu executor against the database
+func (db *Database) Execute(e exp.SQLExpression) error {
+	if eSQL, eParams, err := e.ToSQL(); err != nil {
+		return err
+	} else {
+		return db.Exec(eSQL, eParams...)
+	}
+}
+
+// ExecuteOne executes the provided goqu executor against the database and verifies there's exactly one row affected
+func (db *Database) ExecuteOne(e exp.SQLExpression) error {
+	if eSQL, eParams, err := e.ToSQL(); err != nil {
+		return err
+	} else {
+		return db.ExecOne(eSQL, eParams...)
+	}
 }
 
 // ExecRes executes the provided statement against the database and returns its result

@@ -92,8 +92,6 @@ create table if not exists cm_migration_log (
     error_text   text                                          -- Optional error text is is_ok is false
 );
 
--- TODO new-db Configuration table
-
 ------------------------------------------------------------------------------------------------------------------------
 -- Known federated identity providers
 ------------------------------------------------------------------------------------------------------------------------
@@ -150,6 +148,19 @@ insert into cm_users(id, email, name, password_hash, system_account, confirmed, 
     values('00000000-0000-0000-0000-000000000000'::uuid, '', 'Anonymous', '', true, false, current_timestamp, gen_random_uuid());
 
 -- TODO new-db User attributes
+
+------------------------------------------------------------------------------------------------------------------------
+-- Instance configuration
+------------------------------------------------------------------------------------------------------------------------
+create table cm_configuration (
+    key          varchar(255) primary key,                        -- Unique configuration item key
+    value        varchar(255) default ''                not null, -- Item value
+    ts_updated   timestamp    default current_timestamp not null, -- Timestamp when the item was last updated in the database
+    user_updated uuid                                             -- Reference to the user who last updated the item in the database
+);
+
+-- Constraints
+alter table cm_configuration add constraint fk_configuration_user_updated foreign key (user_updated) references cm_users (id) on delete set null;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- User avatars

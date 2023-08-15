@@ -89,9 +89,18 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
 		WithPassword(swag.StringValue(params.Body.Password)).
 		WithSignup(params.HTTPRequest, data.URIPtrToString(params.Body.URL)).
-		WithWebsiteURL(string(params.Body.WebsiteURL)).
-		// If SMTP isn't configured, mark the user as confirmed right away
-		WithConfirmed(!config.SMTPConfigured)
+		WithWebsiteURL(string(params.Body.WebsiteURL))
+
+	// If SMTP isn't configured, mark the user as confirmed right away
+	if !config.SMTPConfigured {
+		user.WithConfirmed(true)
+
+		// If confirmation is switched off in the config, mark the user confirmed, too
+	} else if ci, err := svc.TheConfigService.Get(data.ConfigKeyAuthSignupConfirmCommenter); err != nil {
+		respServiceError(err)
+	} else if !ci.AsBool() {
+		user.WithConfirmed(true)
+	}
 
 	// Save the new user
 	if err := svc.TheUserService.Create(user); err != nil {

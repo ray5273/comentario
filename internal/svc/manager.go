@@ -51,6 +51,11 @@ func (m *manager) E2eRecreateDBSchema(seedSQL string) error {
 		return err
 	}
 
+	// Reload the configuration
+	if err := TheConfigService.Load(); err != nil {
+		return err
+	}
+
 	// Succeeded
 	return nil
 }
@@ -69,6 +74,11 @@ func (m *manager) Initialise() {
 	if db, err = persistence.InitDB(); err != nil {
 		logger.Fatalf("Failed to connect to database: %v", err)
 	}
+
+	// Initialise the config service
+	if err := TheConfigService.Load(); err != nil {
+		logger.Fatalf("Failed to load configuration: %v", err)
+	}
 }
 
 func (m *manager) Run() {
@@ -84,6 +94,11 @@ func (m *manager) Shutdown() {
 	// Make sure the services are initialised
 	if !m.inited {
 		return
+	}
+
+	// Persist the configuration
+	if err := TheConfigService.Save(); err != nil {
+		logger.Errorf("Failed to save configuration: %v", err)
 	}
 
 	// Teardown the database

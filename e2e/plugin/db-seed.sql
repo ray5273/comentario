@@ -11,18 +11,13 @@ delete from cm_user_sessions;
 delete from cm_auth_sessions;
 delete from cm_tokens;
 delete from cm_users;
-delete from cm_fed_identity_providers;
 
 -- Insert seed test data
-insert into cm_fed_identity_providers (id, name, icon)
-values  ('gitlab',  'GitLab',  'gitlab'),
-        ('github',  'GitHub',  'github'),
-        ('google',  'Google',  'google'),
-        ('twitter', 'Twitter', 'twitter');
+insert into cm_configuration(key, value, ts_updated)
+values  ('auth.signup.confirm.commenter', 'false', '2023-01-17 17:55:47.008851');
 
 insert into cm_users (id, email, name, lang_id, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, federated_idp, federated_sso, federated_id, website_url, secret_token)
-values  ('00000000-0000-0000-0000-000000000000', '',                         'Anonymous',      'en', '',                                                             true,  false, false, null,                        '2023-06-23 17:21:53.002826', null, '', '', '',              false, null,                        null,                                   '', null,      false, '',         '',                        'dbeccf83-1017-4d32-bf71-3c3cb41bfadc'),
-        ('00000000-0000-0000-0000-000000000001', 'root@comentario.app',      'Root',           'en', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, true,  true, '2023-06-23 17:21:53.002826', '2023-06-23 17:21:53.002826', null, '12.13.14.15', 'kz', '', false, null,                        null,                                   '', null,      false, '',         'https://comentario.app/', '2e91b652-1574-4e59-9cae-f9f8fe80e3a8'),
+values  ('00000000-0000-0000-0000-000000000001', 'root@comentario.app',      'Root',           'en', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, true,  true, '2023-06-23 17:21:53.002826', '2023-06-23 17:21:53.002826', null, '12.13.14.15', 'kz', '', false, null,                        null,                                   '', null,      false, '',         'https://comentario.app/', '2e91b652-1574-4e59-9cae-f9f8fe80e3a8'),
         ('5787eece-7aa3-44d7-bbba-51866edc4867', 'ace@comentario.app',       'Captain Ace',    'en', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '',              false, null,                        null,                                   '', null,      false, '',         '',                        '8d9573bd-ea91-4999-ab1d-f0c2920722f6'),
         ('2af9ecd2-a32a-4332-8717-396e9af28639', 'king@comentario.app',      'Engineer King',  'en', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '',              false, null,                        null,                                   '', null,      false, '',         '',                        '8f376760-a797-4436-bc8e-50beca9b3369'),
         ('98732142-bc83-48e0-be92-f6dbd6976702', 'queen@comentario.app',     'Cook Queen',     'en', '$2a$10$NRp62h1E765Rh.VqMfvz2OS9EG92v/BReep4NJbVa7PEKYTWAAJPu', false, false, true, '2023-01-17 17:55:47.008851', '2023-01-17 17:55:47.008851', null, '', '', '',              false, null,                        null,                                   '', null,      false, '',         '',                        '4ccd2e1d-e969-48cb-8fe4-5f0458590223'),
