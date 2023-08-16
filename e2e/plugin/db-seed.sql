@@ -1,18 +1,3 @@
--- Clean up all existing data (except migrations)
-delete from cm_comment_votes;
-delete from cm_comments;
-delete from cm_domain_page_views;
-delete from cm_domain_pages;
-delete from cm_domains_idps;
-delete from cm_domains_users;
-delete from cm_domains;
-delete from cm_user_avatars;
-delete from cm_user_sessions;
-delete from cm_auth_sessions;
-delete from cm_tokens;
-delete from cm_users;
-
--- Insert seed test data
 insert into cm_configuration(key, value, ts_updated)
 values  ('auth.signup.confirm.commenter', 'false', '2023-01-17 17:55:47.008851');
 
