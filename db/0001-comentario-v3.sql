@@ -55,8 +55,10 @@ end $$;
 
 -- Drop any existing tables except for migrations
 
+drop table if exists cm_configuration          cascade;
 drop table if exists cm_fed_identity_providers cascade;
 drop table if exists cm_users                  cascade;
+drop table if exists cm_user_attrs             cascade;
 drop table if exists cm_user_avatars           cascade;
 drop table if exists cm_user_sessions          cascade;
 drop table if exists cm_tokens                 cascade;
@@ -147,8 +149,6 @@ insert into cm_users(id, email, name, password_hash, system_account, confirmed, 
     -- 'Anonymous' user
     values('00000000-0000-0000-0000-000000000000'::uuid, '', 'Anonymous', '', true, false, current_timestamp, gen_random_uuid());
 
--- TODO new-db User attributes
-
 ------------------------------------------------------------------------------------------------------------------------
 -- Instance configuration
 ------------------------------------------------------------------------------------------------------------------------
@@ -161,6 +161,20 @@ create table cm_configuration (
 
 -- Constraints
 alter table cm_configuration add constraint fk_configuration_user_updated foreign key (user_updated) references cm_users (id) on delete set null;
+
+------------------------------------------------------------------------------------------------------------------------
+-- User attributes
+------------------------------------------------------------------------------------------------------------------------
+create table cm_user_attrs (
+    user_id    uuid,                                         -- Reference to the user and the primary key
+    key        varchar(255),                                 -- Attribute key
+    value      varchar(255)                        not null, -- Attribute value
+    ts_updated timestamp default current_timestamp not null  -- When the record was last updated
+);
+
+-- Constraints
+alter table cm_user_attrs add primary key (user_id, key);
+alter table cm_user_attrs add constraint fk_user_attrs_user_id foreign key (user_id) references cm_users(id) on delete cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- User avatars
@@ -415,20 +429,17 @@ begin
         insert into temp_commenthex_map(commenthex, id) select commenthex, gen_random_uuid() from comments;
 
         -- Migrate owners
-        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, secret_token)
-            select
-                    m.id, o.email, o.name, o.passwordhash, o.confirmedemail='true', o.joindate, o.joindate,
-                    'Migrated from Commento, ownerhex=' || o.ownerhex, gen_random_uuid()
+        insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, secret_token)
+            select m.id, o.email, o.name, o.passwordhash, o.confirmedemail='true', o.joindate, o.joindate, gen_random_uuid()
                 from owners o
                 join temp_ownerhex_map m on m.ownerhex=o.ownerhex;
 
         -- Migrate commenters
         insert into cm_users(
-                id, email, name, password_hash, confirmed, ts_confirmed, ts_created, remarks, federated_idp,
-                federated_sso, website_url, secret_token)
+                id, email, name, password_hash, confirmed, ts_confirmed, ts_created, federated_idp, federated_sso,
+                website_url, secret_token)
             select
                     m.id, c.email, c.name, c.passwordhash, true, c.joindate, c.joindate,
-                    'Migrated from Commento, commenterhex=' || c.commenterhex,
                     case
                         when c.provider='commento' then null
                         when c.provider like 'sso:%' then null
@@ -455,6 +466,17 @@ begin
                 -- Prevent adding commenter for an already registered owner user
                 left join cm_users ue on ue.email=c.email
                 where ue.id is null;
+
+        -- Fill in import attributes
+        insert into cm_user_attrs(user_id, key, value)
+            select u.id, 'commento.ownerhex', m.ownerhex
+            from cm_users u
+            join temp_ownerhex_map m on m.id=u.id;
+        insert into cm_user_attrs(user_id, key, value)
+            select u.id, 'commento.commenterhex', m.commenterhex
+            from cm_users u
+            join temp_commenterhex_map m on m.id=u.id
+            on conflict (user_id, key) do nothing;
 
         -- Migrate domains
         insert into cm_domains(
