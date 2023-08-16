@@ -15,6 +15,7 @@ Usage: $0 [options] [[--] backend_args]
 Options:
   -B  skip build
   -D  skip (re)starting database
+  -E  run Comentario NOT in end-2-end testing mode
   -G  skip OpenAPI code generation
   -d  enable DB debug logging
   -h  show usage info and exit
@@ -23,9 +24,9 @@ EOF
 }
 
 # Parse the command line
-declare -i do_build=1 do_db=1 do_gen=1
+declare -i do_build=1 do_db=1 do_e2e=1 do_gen=1
 comentario_args=
-args=$(getopt -o BDGdh -- "$@")
+args=$(getopt -o BDEGdh -- "$@")
 [[ $? -ne 0 ]] && usage
 eval set -- $args
 for i; do
@@ -36,6 +37,10 @@ for i; do
             ;;
         -D)
             do_db=0
+            shift
+            ;;
+        -E)
+            do_e2e=0
             shift
             ;;
         -G)
@@ -90,10 +95,10 @@ secrets="$root_dir/k8s/~secrets.yaml"
 echo "Using secrets file: $secrets"
 
 # Start the backend
+((do_e2e)) && comentario_args="$comentario_args --e2e"
 echo "Starting $build_dir/comentario"
 "$build_dir/comentario" $comentario_args \
     -vv \
-    --e2e \
     --port=8080 \
     --static-path="$build_dir/frontend" \
     --db-migration-path="$build_dir/db" \
