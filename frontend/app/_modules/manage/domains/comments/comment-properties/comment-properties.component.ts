@@ -10,6 +10,7 @@ import { DomainMeta, DomainSelectorService } from '../../../_services/domain-sel
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
 import { ConfirmDialogComponent } from '../../../../tools/confirm-dialog/confirm-dialog.component';
+import { CommentService } from '../../../_services/comment.service';
 
 @UntilDestroy()
 @Component({
@@ -53,6 +54,7 @@ export class CommentPropertiesComponent implements OnInit {
         private readonly modal: NgbModal,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
+        private readonly commentService: CommentService,
     ) {}
 
     @Input()
@@ -103,7 +105,10 @@ export class CommentPropertiesComponent implements OnInit {
                 catchError(() => EMPTY),
                 // Run deletion when confirmed
                 switchMap(() => this.api.commentDelete(this.comment!.id!).pipe(this.deleting.processing())))
-            .subscribe(() => this.reload$.next());
+            .subscribe(() => {
+                this.reload$.next();
+                this.commentService.refresh();
+            });
     }
 
     moderate(approve: boolean) {
@@ -124,7 +129,10 @@ export class CommentPropertiesComponent implements OnInit {
         // Update the comment
         this.api.commentModerate(this.comment.id!, {pending, approve})
             .pipe(this.updating.processing())
-            .subscribe(() => this.reload$.next());
+            .subscribe(() => {
+                this.reload$.next();
+                this.commentService.refresh();
+            });
     }
 
     private runAction() {

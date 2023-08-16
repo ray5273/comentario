@@ -73,8 +73,12 @@
 
                 <!-- Comments: if there's a domain -->
                 <li class="nav-item">
-                    <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link">
+                    <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link position-relative">
                         <fa-icon class="cc-icon" [icon]="faComments"></fa-icon>
+                        <!-- Number of comments pending moderation -->
+                        <span *ngIf="pendingCommentCount$ | async as cnt"
+                              class="badge rounded-pill bg-danger cc-floater"
+                              title="Comments pending moderation" i18n-title>{{ cnt }}</span>
                         <div class="cc-hide-collapsed" i18n>Comments</div>
                     </a>
                 </li>

@@ -19,6 +19,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
 import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
+import { CommentService } from '../_services/comment.service';
 
 @UntilDestroy()
 @Component({
@@ -35,6 +36,8 @@ export class ControlCenterComponent implements OnInit {
     domainMeta?: DomainMeta;
 
     readonly Paths = Paths;
+
+    readonly pendingCommentCount$ = this.commentService.countPending;
 
     // Icons
     readonly faArrowDownUpAcrossLine = faArrowDownUpAcrossLine;
@@ -54,6 +57,7 @@ export class ControlCenterComponent implements OnInit {
         private readonly router: Router,
         private readonly authSvc: AuthService,
         private readonly domainSelectorSvc: DomainSelectorService,
+        private readonly commentService: CommentService,
     ) {}
 
     get isSuper(): boolean | undefined {

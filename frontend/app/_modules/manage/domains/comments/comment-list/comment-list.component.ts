@@ -18,6 +18,7 @@ import { Sort } from '../../../_models/sort';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Utils } from '../../../../../_utils/utils';
 import { Paths } from '../../../../../_utils/consts';
+import { CommentService } from '../../../_services/comment.service';
 
 @UntilDestroy()
 @Component({
@@ -82,6 +83,7 @@ export class CommentListComponent implements OnInit, OnChanges {
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
+        private readonly commentService: CommentService,
     ) {}
 
     ngOnInit(): void {
@@ -166,6 +168,9 @@ export class CommentListComponent implements OnInit, OnChanges {
                 if (i && i >= 0) {
                     this.comments?.splice(i, 1);
                 }
+
+                // Poke the comment service
+                this.commentService.refresh();
             });
     }
 
@@ -190,6 +195,9 @@ export class CommentListComponent implements OnInit, OnChanges {
             .subscribe(() => {
                 c.isPending  = pending;
                 c.isApproved = approve;
+
+                // Poke the comment service
+                this.commentService.refresh();
             });
     }
 

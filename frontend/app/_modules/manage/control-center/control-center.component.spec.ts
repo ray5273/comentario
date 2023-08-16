@@ -8,6 +8,7 @@ import { ControlCenterComponent } from './control-center.component';
 import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
 import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 import { UserAvatarComponent } from '../users/user-avatar/user-avatar.component';
+import { CommentService } from '../_services/comment.service';
 
 describe('ControlCenterComponent', () => {
 
@@ -21,6 +22,7 @@ describe('ControlCenterComponent', () => {
             providers: [
                 MockProvider(AuthService, {principal: of(null)}),
                 MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(CommentService, {countPending: of(0)}),
             ],
         })
             .compileComponents();

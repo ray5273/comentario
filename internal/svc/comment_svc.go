@@ -17,6 +17,20 @@ var TheCommentService CommentService = &commentService{}
 
 // CommentService is a service interface for dealing with comments
 type CommentService interface {
+	// Count returns number of comments for the given domain and, optionally, page.
+	//   - curUser is the current authenticated/anonymous user.
+	//   - curDomainUser is the current domain user (can be nil).
+	//   - domainID is the mandatory domain ID.
+	//   - pageID is an optional page ID to filter the result by.
+	//   - userID is an optional user ID to filter the result by.
+	//   - isModerator indicates whether the current user is a superuser, domain owner, or domain moderator.
+	//   - inclApproved indicates whether to include approved comments.
+	//   - inclPending indicates whether to include comments pending moderation.
+	//   - inclRejected indicates whether to include rejected comments.
+	//   - inclDeleted indicates whether to include deleted comments.
+	Count(
+		curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,
+		inclApproved, inclPending, inclRejected, inclDeleted bool) (int64, error)
 	// CountByDomainUser returns number of comments the given domain user has created on the corresponding domain. If
 	// approvedOnly == true, only counts approved comments
 	CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error)
@@ -46,9 +60,10 @@ type CommentService interface {
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser,
-		domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted bool,
-		filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*models.Comment, []*models.Commenter, error)
+	ListWithCommentersByDomainPage(
+		curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,
+		inclApproved, inclPending, inclRejected, inclDeleted bool, filter, sortBy string, dir data.SortDirection,
+		pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
 	// Moderate updates the moderation status of a comment with the given ID in the database
@@ -65,6 +80,66 @@ type CommentService interface {
 
 // commentService is a blueprint CommentService implementation
 type commentService struct{}
+
+func (svc *commentService) Count(
+	curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,
+	inclApproved, inclPending, inclRejected, inclDeleted bool) (int64, error) {
+	logger.Debugf(
+		"commentService.Count(%s, %#v, %s, %s, %s, %v, %v, %v, %v)",
+		&curUser.ID, curDomainUser, domainID, pageID, userID, inclApproved, inclPending, inclRejected, inclDeleted)
+
+	// Prepare a query
+	q := db.Dialect().
+		From(goqu.T("cm_comments").As("c")).
+		Select(goqu.COUNT("*")).
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
+		Where(goqu.Ex{"p.domain_id": domainID})
+
+	// If there's a page ID specified, include only comments for that page (otherwise  comments for all pages of the
+	// domain will be included)
+	if pageID != nil {
+		q = q.Where(goqu.Ex{"c.page_id": pageID})
+	}
+
+	// If there's a user ID specified, include only comments by that user
+	if userID != nil {
+		q = q.Where(goqu.Ex{"c.user_created": userID})
+	}
+
+	// Add status filter
+	if !inclApproved {
+		q = q.Where(goqu.ExOr{"c.is_pending": true, "c.is_approved": false})
+	}
+	if !inclPending {
+		q = q.Where(goqu.Ex{"c.is_pending": false})
+	}
+	if !inclRejected {
+		q = q.Where(goqu.ExOr{"c.is_pending": true, "c.is_approved": true})
+	}
+	if !inclDeleted {
+		q = q.Where(goqu.Ex{"c.is_deleted": false})
+	}
+
+	// Add authorship filter. If anonymous user: only include approved
+	if curUser.IsAnonymous() {
+		q = q.Where(goqu.Ex{"c.is_pending": false, "c.is_approved": true})
+
+	} else if !curUser.IsSuperuser && !curDomainUser.CanModerate() {
+		// Authenticated, non-moderator user: show others' comments only if they are approved
+		q = q.Where(goqu.Or(
+			goqu.Ex{"c.is_pending": false, "c.is_approved": true},
+			goqu.Ex{"c.user_created": &curUser.ID}))
+	}
+
+	var cnt int64
+	if err := db.SelectRow(q).Scan(&cnt); err != nil {
+		logger.Errorf("commentService.Count: SelectRow() failed: %v", err)
+		return 0, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return cnt, nil
+}
 
 func (svc *commentService) CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error) {
 	logger.Debugf("commentService.CountByDomainUser(%s, %s, %v)", domainID, userID, approvedOnly)

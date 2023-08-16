@@ -45,6 +45,7 @@ import { DomainDetailComponent } from './domains/domain-detail/domain-detail.com
 import { CommentPropertiesComponent } from './domains/comments/comment-properties/comment-properties.component';
 import { CommentStatusBadgeComponent } from './domains/comments/comment-status-badge/comment-status-badge.component';
 import { MetricCardComponent } from './dashboard/metric-card/metric-card.component';
+import { CommentService } from './_services/comment.service';
 
 @NgModule({
     declarations: [
@@ -101,6 +102,7 @@ import { MetricCardComponent } from './dashboard/metric-card/metric-card.compone
         NgOptimizedImage,
     ],
     providers: [
+        CommentService,
         DomainSelectorService,
         ManageGuard,
     ],

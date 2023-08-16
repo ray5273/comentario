@@ -2339,6 +2339,53 @@ paths:
                 items:
                   $ref: "#/definitions/commenter"
 
+  /comments/count:
+    get:
+      operationId: CommentCount
+      summary: Get the number of comments
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+        - in: query
+          name: pageId
+          required: false
+          description: Optional domain page ID to filter comments by
+          type: string
+          format: uuid
+        - in: query
+          name: userId
+          required: false
+          description: Optional user ID to filter comments by
+          type: string
+          format: uuid
+        - in: query
+          name: approved
+          type: boolean
+          required: false
+          description: Whether to include approved comments
+        - in: query
+          name: pending
+          type: boolean
+          required: false
+          description: Whether to include comments pending moderation
+        - in: query
+          name: rejected
+          type: boolean
+          required: false
+          description: Whether to include rejected comments
+        - in: query
+          name: deleted
+          type: boolean
+          required: false
+          description: Whether to include deleted comments
+      responses:
+        200:
+          description: Number of comments matching the criteria
+          schema:
+            type: integer
+            x-omitempty: false
+
   /comments/{uuid}:
     parameters:
       - $ref: "#/parameters/pathUuid"

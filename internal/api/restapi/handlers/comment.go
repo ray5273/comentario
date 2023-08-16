@@ -11,6 +11,54 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 )
 
+func CommentCount(params api_general.CommentCountParams, user *data.User) middleware.Responder {
+	// Extract domain ID
+	domainID, err := data.DecodeUUID(params.Domain)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
+	}
+
+	// Extract page ID
+	var pageID *uuid.UUID
+	if params.PageID != nil {
+		if pageID, err = data.DecodeUUID(*params.PageID); err != nil {
+			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.PageID)))
+		}
+	}
+
+	// Extract user ID
+	var userID *uuid.UUID
+	if params.UserID != nil {
+		if userID, err = data.DecodeUUID(*params.UserID); err != nil {
+			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.UserID)))
+		}
+	}
+
+	// Find the domain user, if any
+	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Fetch comments the user has access to
+	cnt, err := svc.TheCommentService.Count(
+		user,
+		domainUser,
+		domainID,
+		pageID,
+		userID,
+		swag.BoolValue(params.Approved),
+		swag.BoolValue(params.Pending),
+		swag.BoolValue(params.Rejected),
+		swag.BoolValue(params.Deleted))
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewCommentCountOK().WithPayload(cnt)
+}
+
 func CommentDelete(params api_general.CommentDeleteParams, user *data.User) middleware.Responder {
 	// Delete the comment
 	if r := commentDelete(params.UUID, user); r != nil {
