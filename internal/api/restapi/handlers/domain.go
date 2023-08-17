@@ -9,7 +9,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -30,6 +29,16 @@ func DomainClear(params api_general.DomainClearParams, user *data.User) middlewa
 
 	// Succeeded
 	return api_general.NewDomainClearNoContent()
+}
+
+func DomainCount(params api_general.DomainCountParams, user *data.User) middleware.Responder {
+	// Query domain count
+	if cnt, err := svc.TheDomainService.CountForUser(&user.ID, swag.BoolValue(params.Owner), swag.BoolValue(params.Moderator)); err != nil {
+		return respServiceError(err)
+	} else {
+		// Succeeded
+		return api_general.NewDomainCountOK().WithPayload(int64(cnt))
+	}
 }
 
 // DomainDelete deletes an existing domain belonging to the current user
@@ -137,13 +146,9 @@ func DomainList(params api_general.DomainListParams, user *data.User) middleware
 }
 
 func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.Responder {
-	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
-	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
-		if i, err := svc.TheDomainService.CountOwned(&user.ID); err != nil {
-			return respServiceError(err)
-		} else if i == 0 {
-			return respForbidden(ErrorNewOwnersForbidden)
-		}
+	// Check if the user is allowed to add a domain
+	if r := Verifier.UserCanAddDomain(user); r != nil {
+		return r
 	}
 
 	// Properly validate the domain's host (the Swagger pattern only performs a superficial check)

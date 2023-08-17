@@ -448,7 +448,6 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		}
 
 		// Create a new comment instance
-		// TODO restrict the list of tags to just the basics: <a>, <b>, <i>, <code>. Especially remove <img> (convert it to <a>)
 		c := &data.Comment{
 			ID:            commentID,
 			ParentID:      parentCommentID,

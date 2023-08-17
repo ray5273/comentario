@@ -10,8 +10,8 @@
                 <div class="mb-3">
                     <label for="email" class="form-label colon" i18n>Your email</label>
                     <input formControlName="email" type="email" class="form-control" id="email" size="45"
-                           [class.is-valid]="email.touched && email.valid"
-                           [class.is-invalid]="email.touched && email.invalid"
+                           [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
+                           [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
                            required minlength="6" maxlength="255" placeholder="user@example.com" autocomplete="email">
                     <div class="invalid-feedback" i18n>Please enter a valid email.</div>
                 </div>

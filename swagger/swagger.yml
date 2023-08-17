@@ -1999,6 +1999,29 @@ paths:
             $ref: "#/definitions/domain"
             description: The added domain
 
+  /domains/count:
+    get:
+      operationId: DomainCount
+      summary: Get number of domains available to the current user
+      tags:
+        - ApiGeneral
+      parameters:
+        - in: query
+          name: owner
+          type: boolean
+          description: >
+            Only include domains where the current user is an owner. Ignored if moderator is true because every owner is
+            also a moderator
+        - in: query
+          name: moderator
+          type: boolean
+          description: Only include domains where the current user is a moderator
+      responses:
+        200:
+          description: Number of domains
+          schema:
+            type: integer
+
   /domains/{uuid}:
     parameters:
       - $ref: "#/parameters/pathUuid"

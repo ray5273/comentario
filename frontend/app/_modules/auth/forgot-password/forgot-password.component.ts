@@ -1,5 +1,5 @@
 import { Component } from '@angular/core';
-import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ToastService } from '../../../_services/toast.service';
@@ -23,17 +23,13 @@ export class ForgotPasswordComponent {
         private readonly api: ApiGeneralService,
     ) {}
 
-    get email(): AbstractControl<string> {
-        return this.form.get('email')!;
-    }
-
     submit(): void {
         // Mark all controls touched to display validation results
         this.form.markAllAsTouched();
 
         // Submit the form if it's valid
         if (this.form.valid) {
-            this.api.authPwdResetSendEmail({email: this.email.value})
+            this.api.authPwdResetSendEmail({email: this.form.controls.email.value})
                 .pipe(this.submitting.processing())
                 .subscribe(() => {
                     // Add a success toast

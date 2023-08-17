@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from '../../../_services/auth.service';
 import { Paths } from '../../../_utils/consts';
@@ -27,10 +27,6 @@ export class LoginComponent implements OnInit {
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
     ) {}
-
-    get email(): AbstractControl<string> {
-        return this.form.get('email')!;
-    }
 
     ngOnInit(): void {
         // If there's the 'confirmed' parameter in the URL, display a toast

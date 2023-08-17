@@ -1,12 +1,12 @@
 import { Component } from '@angular/core';
-import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { faBan, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { Paths } from '../../../_utils/consts';
 import { ConfigService } from '../../../_services/config.service';
 import { Animations } from '../../../_utils/animations';
-import { ApiGeneralService } from "../../../../generated-api";
+import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
 
 @Component({
@@ -38,14 +38,6 @@ export class SignupComponent {
         private readonly api: ApiGeneralService,
         private readonly toastSvc: ToastService,
     ) {}
-
-    get email(): AbstractControl<string> {
-        return this.form.get('email')!;
-    }
-
-    get name(): AbstractControl<string> {
-        return this.form.get('name')!;
-    }
 
     submit(): void {
         // Mark all controls touched to display validation results

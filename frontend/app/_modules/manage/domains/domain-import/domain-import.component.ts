@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, ImportResult } from '../../../../../generated-api';
@@ -39,10 +39,6 @@ export class DomainImportComponent implements OnInit {
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
 
-    get file(): AbstractControl<File | undefined> {
-        return this.form.get('file')!;
-    }
-
     ngOnInit(): void {
         this.domainSelectorSvc.domainMeta
             .pipe(untilDestroyed(this))
@@ -68,6 +64,6 @@ export class DomainImportComponent implements OnInit {
     }
 
     onFileSelected(event: Event) {
-        this.file.setValue((event.target as HTMLInputElement).files?.[0]);
+        this.form.controls.file.setValue((event.target as HTMLInputElement).files?.[0]);
     }
 }

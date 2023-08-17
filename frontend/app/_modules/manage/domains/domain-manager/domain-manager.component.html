@@ -9,12 +9,12 @@
 </div>
 
 <div [appSpinner]="domainsLoading.active" spinnerSize="lg">
-    <!-- Toolbar -->
-    <div class="mb-3">
+    <!-- Toolbar. Hide when no domains are available and none can be added -->
+    <div *ngIf="canAdd || domains?.length || filterActive" class="mb-3">
         <div class="row g-2 flex-grow-1">
             <!-- New domain button -->
             <div class="col">
-                <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
+                <button *ngIf="canAdd" type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
                     <fa-icon [icon]="faPlus" class="me-1"></fa-icon>
                     <ng-container i18n>New domain</ng-container>
                 </button>
@@ -93,11 +93,10 @@
 
     <!-- Add a domain placeholder -->
     <div *ngIf="!domainsLoading.active && !domains?.length" class="py-4 text-center text-muted">
-        <ng-container *ngIf="ctlFilterFilter.value?.length else noDomains" i18n>Nothing found.</ng-container>
+        <ng-container *ngIf="filterActive else noDomains" i18n>Nothing found.</ng-container>
         <ng-template #noDomains>
-            <ng-container i18n>You have no connected domains.</ng-container>
-            &ngsp;
-            <ng-container *ngIf="canAdd" i18n>Begin by adding one using the button above.</ng-container>
+            <p i18n>You have no connected domains.</p>
+            <p *ngIf="canAdd" i18n>Begin by adding one using the button above.</p>
         </ng-template>
     </div>
 </div>

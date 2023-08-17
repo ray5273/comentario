@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { faCheck, faLightbulb, faPlus } from '@fortawesome/free-solid-svg-icons';
@@ -26,6 +26,9 @@ export class DomainManagerComponent implements OnInit {
 
     /** Whether there are more results to load. */
     canLoadMore = true;
+
+    /** Whether the user is allowed to add a domain. */
+    canAdd = false;
 
     /** Map that connects domain IDs to domain users. */
     readonly domainUsers = new Map<string, DomainUser>();
@@ -54,16 +57,22 @@ export class DomainManagerComponent implements OnInit {
         private readonly configSvc: ConfigService,
     ) {
         this.domainSelectorSvc.domainMeta
-            .pipe(untilDestroyed(this))
-            .subscribe(meta => this.domainMeta = meta);
+            .pipe(
+                untilDestroyed(this),
+                tap(meta => this.domainMeta = meta),
+                // Find out whether the user is allowed to add a domain: if the user isn't a superuser and no new owners
+                // are allowed, the user must already own at least one domain
+                switchMap(() => this.configSvc.config.newOwnersAllowed || this.domainMeta?.principal?.isSuperuser ?
+                    of(true) :
+                    this.api.domainCount(true, false).pipe(map(count => count > 0))))
+            .subscribe(canAdd => this.canAdd = canAdd);
     }
 
-    get canAdd(): boolean {
-        return true; // TODO Allow to all for now
-    }
-
-    get ctlFilterFilter(): AbstractControl<string> {
-        return this.filterForm.get('filter')!;
+    /**
+     * Whether a filter is currently active.
+     */
+    get filterActive(): boolean {
+        return this.filterForm.controls.filter.value.length > 0;
     }
 
     ngOnInit(): void {
@@ -73,7 +82,7 @@ export class DomainManagerComponent implements OnInit {
                 // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
                 // Subscribe to filter changes
-                this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+                this.filterForm.controls.filter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
                 // Map any of the above to true (= reset)
                 map(() => true),
@@ -89,7 +98,11 @@ export class DomainManagerComponent implements OnInit {
                 }),
                 // Load the domain list
                 switchMap(() =>
-                    this.api.domainList(this.ctlFilterFilter.value, ++this.loadedPageNum, this.sort.property as any, this.sort.descending)
+                    this.api.domainList(
+                            this.filterForm.controls.filter.value,
+                            ++this.loadedPageNum,
+                            this.sort.property as any,
+                            this.sort.descending)
                         .pipe(this.domainsLoading.processing())))
             .subscribe(r => {
                 this.domains = [...this.domains || [], ...r.domains || []];

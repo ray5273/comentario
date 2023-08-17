@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -44,15 +44,12 @@ export class UserManagerComponent implements OnInit {
         private readonly configSvc: ConfigService,
     ) {}
 
-    get ctlFilterFilter(): AbstractControl<string> {
-        return this.filterForm.get('filter')!;
-    }
-
     ngOnInit(): void {
         // Subscribe to sort/filter changes
         merge(
                 this.sort.changes.pipe(untilDestroyed(this)),
-                this.ctlFilterFilter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+                this.filterForm.controls.filter.valueChanges
+                    .pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
                 // Map any of the above to true (= reset)
                 map(() => true),
@@ -68,7 +65,7 @@ export class UserManagerComponent implements OnInit {
                 // Load the domain list
                 switchMap(() =>
                     this.api.userList(
-                        this.ctlFilterFilter.value,
+                        this.filterForm.controls.filter.value,
                         ++this.loadedPageNum,
                         this.sort.property as any,
                         this.sort.descending)

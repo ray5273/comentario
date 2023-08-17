@@ -27,8 +27,8 @@
                     <div class="mb-3">
                         <label for="email" class="form-label colon" i18n>Your email</label>
                         <input formControlName="email" type="email" class="form-control" id="email" size="45"
-                               [class.is-valid]="email.touched && email.valid"
-                               [class.is-invalid]="email.touched && email.invalid"
+                               [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
+                               [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
                                required minlength="6" maxlength="255" autocomplete="email" placeholder="user@example.com">
                         <div class="invalid-feedback" i18n>Please enter a valid email.</div>
                     </div>
@@ -42,8 +42,8 @@
                     <div class="mb-3">
                         <label for="name" class="form-label colon" i18n>Your name</label>
                         <input formControlName="name" type="text" class="form-control" id="name" size="45"
-                               [class.is-valid]="name.touched && name.valid"
-                               [class.is-invalid]="name.touched && name.invalid"
+                               [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
+                               [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
                                required minlength="2" maxlength="63" placeholder="Enter name" autocomplete="name"
                                i18n-placeholder>
                         <div class="invalid-feedback" i18n>Please enter your name.</div>

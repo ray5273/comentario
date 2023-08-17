@@ -49,8 +49,8 @@
             <label for="fileSelect" class="col-sm-3 col-form-label colon" i18n>Data file</label>
             <div class="col-sm-9">
                 <input (change)="onFileSelected($event)"
-                       [class.is-valid]="file.touched && file.valid"
-                       [class.is-invalid]="file.touched && file.invalid"
+                       [class.is-valid]="form.controls.file.touched && form.controls.file.valid"
+                       [class.is-invalid]="form.controls.file.touched && form.controls.file.invalid"
                        id="fileSelect" type="file" class="form-control">
                 <!-- Invalid feedback -->
                 <div class="invalid-feedback">

@@ -21,8 +21,10 @@ var TheDomainService DomainService = &domainService{}
 type DomainService interface {
 	// ClearByID removes all dependent objects (users, pages, comments, votes etc.) for the specified domain by its ID
 	ClearByID(id *uuid.UUID) error
-	// CountOwned returns the number of domains the specified user owns
-	CountOwned(userID *uuid.UUID) (int, error)
+	// CountForUser returns the number of domains the specified user has access to, with specific roles
+	//  - owner indicates whether to only include domains owned by the user (ignored if moderator == true)
+	//  - moderator indicates whether to only include domains where the user is a moderator
+	CountForUser(userID *uuid.UUID, owner, moderator bool) (int, error)
 	// Create creates and persists a new domain record
 	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error
 	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
@@ -87,18 +89,29 @@ func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	return nil
 }
 
-func (svc *domainService) CountOwned(userID *uuid.UUID) (int, error) {
-	logger.Debugf("domainService.CountOwned(%s)", userID)
+func (svc *domainService) CountForUser(userID *uuid.UUID, owner, moderator bool) (int, error) {
+	logger.Debugf("domainService.CountForUser(%s)", userID)
 
-	// Query the owned domain count
-	var i int
-	if err := db.QueryRow("select count(*) from cm_domains_users where user_id=$1 and is_owner=true;", userID).Scan(&i); err != nil {
-		return 0, translateDBErrors(err)
-	} else {
-		// Succeeded
-		return i, nil
+	// Prepare a query
+	q := db.Dialect().
+		From("cm_domains_users").
+		Select(goqu.COUNT("*")).
+		Where(goqu.Ex{"user_id": userID})
+	if moderator {
+		q = q.Where(goqu.ExOr{"is_owner": true, "is_moderator": true})
+	} else if owner {
+		q = q.Where(goqu.Ex{"is_owner": true})
 	}
 
+	// Query the domain count
+	var i int
+	if err := db.SelectRow(q).Scan(&i); err != nil {
+		logger.Errorf("domainService.CountForUser: SelectRow() failed: %v", err)
+		return 0, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return i, nil
 }
 
 func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error {

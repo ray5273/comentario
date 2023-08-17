@@ -5,6 +5,7 @@ import (
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -27,6 +28,8 @@ type VerifierService interface {
 	FederatedIdProviders(ids []models.FederatedIdpID) middleware.Responder
 	// NeedsModeration returns whether the given comment needs to be moderated
 	NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error)
+	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
+	UserCanAddDomain(user *data.User) middleware.Responder
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
@@ -142,9 +145,9 @@ func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, u
 			// If there's a number of comments specified for the domain
 		} else if domain.ModNumComments > 0 {
 			// Verify the user has the required number of approved comments
-			if i, err := svc.TheCommentService.CountByDomainUser(&domain.ID, &user.ID, true); err != nil {
+			if i, err := svc.TheCommentService.Count(user, domainUser, &domain.ID, nil, &user.ID, true, false, false, false); err != nil {
 				return false, err
-			} else if i < domain.ModNumComments {
+			} else if i < int64(domain.ModNumComments) {
 				return true, nil
 			}
 		}
@@ -176,6 +179,18 @@ func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, u
 	//	) {
 	//	state = models.CommentStateFlagged
 	return false, nil
+}
+
+func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
+	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
+	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
+		if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
+			return respServiceError(err)
+		} else if i == 0 {
+			return respForbidden(ErrorNewOwnersForbidden)
+		}
+	}
+	return nil
 }
 
 func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder) {

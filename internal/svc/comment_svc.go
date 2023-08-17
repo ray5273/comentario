@@ -23,7 +23,6 @@ type CommentService interface {
 	//   - domainID is the mandatory domain ID.
 	//   - pageID is an optional page ID to filter the result by.
 	//   - userID is an optional user ID to filter the result by.
-	//   - isModerator indicates whether the current user is a superuser, domain owner, or domain moderator.
 	//   - inclApproved indicates whether to include approved comments.
 	//   - inclPending indicates whether to include comments pending moderation.
 	//   - inclRejected indicates whether to include rejected comments.
@@ -31,9 +30,6 @@ type CommentService interface {
 	Count(
 		curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,
 		inclApproved, inclPending, inclRejected, inclDeleted bool) (int64, error)
-	// CountByDomainUser returns number of comments the given domain user has created on the corresponding domain. If
-	// approvedOnly == true, only counts approved comments
-	CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error)
 	// Create creates, persists, and returns a new comment
 	Create(comment *data.Comment) error
 	// DeleteByHost deletes all comments for the specified domain
@@ -51,7 +47,6 @@ type CommentService interface {
 	//   - domainID is the mandatory domain ID.
 	//   - pageID is an optional page ID to filter the result by.
 	//   - userID is an optional user ID to filter the result by.
-	//   - isModerator indicates whether the current user is a superuser, domain owner, or domain moderator.
 	//   - inclApproved indicates whether to include approved comments.
 	//   - inclPending indicates whether to include comments pending moderation.
 	//   - inclRejected indicates whether to include rejected comments.
@@ -141,27 +136,6 @@ func (svc *commentService) Count(
 	return cnt, nil
 }
 
-func (svc *commentService) CountByDomainUser(domainID, userID *uuid.UUID, approvedOnly bool) (int, error) {
-	logger.Debugf("commentService.CountByDomainUser(%s, %s, %v)", domainID, userID, approvedOnly)
-
-	// Prepare a statement
-	s := "select count(*) from cm_comments c " +
-		"join cm_domain_pages p on p.id=c.page_id " +
-		"where p.domain_id=$1 and c.user_created=$2"
-	if approvedOnly {
-		s += " and c.is_approved=true"
-	}
-
-	// Query the database
-	var i int
-	if err := db.QueryRow(s+";", domainID, userID).Scan(&i); err != nil {
-		logger.Errorf("commentService.CountByDomainUser: QueryRow() failed: %v", err)
-		return 0, translateDBErrors(err)
-	}
-
-	// Succeeded
-	return i, nil
-}
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 

@@ -75,7 +75,8 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 
 func AuthDeleteProfile(_ api_general.AuthDeleteProfileParams, user *data.User) middleware.Responder {
 	// Fetch the number of domains the user owns
-	if i, err := svc.TheDomainService.CountOwned(&user.ID); err != nil {
+	// TODO nah not good enough
+	if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
 		return respServiceError(err)
 
 		// Make sure no domains are owned

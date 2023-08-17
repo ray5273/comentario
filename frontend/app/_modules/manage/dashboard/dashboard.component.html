@@ -17,7 +17,7 @@
             <app-metric-card *ngIf="totals.countDomainsModerated as c" [value]="c"
                              label="Domains" sublabel="you moderate"
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"></app-metric-card>
-            <app-metric-card *ngIf="totals.countDomainsCommenter as c" [value]="c"
+            <app-metric-card [value]="totals.countDomainsCommenter"
                              label="Domains" sublabel="you're commenter on"
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"></app-metric-card>
             <app-metric-card *ngIf="totals.countDomainsReadonly as c" [value]="c"

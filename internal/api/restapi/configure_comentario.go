@@ -103,6 +103,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDashboardDailyStatsHandler = api_general.DashboardDailyStatsHandlerFunc(handlers.DashboardDailyStats)
 	// Domains
 	api.APIGeneralDomainClearHandler = api_general.DomainClearHandlerFunc(handlers.DomainClear)
+	api.APIGeneralDomainCountHandler = api_general.DomainCountHandlerFunc(handlers.DomainCount)
 	api.APIGeneralDomainDeleteHandler = api_general.DomainDeleteHandlerFunc(handlers.DomainDelete)
 	api.APIGeneralDomainExportHandler = api_general.DomainExportHandlerFunc(handlers.DomainExport)
 	api.APIGeneralDomainGetHandler = api_general.DomainGetHandlerFunc(handlers.DomainGet)
