@@ -140,7 +140,7 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 	filename := path.Join(config.CLIFlags.StaticPath, filePath)
 	b, err := os.ReadFile(filename)
 
-	// If file doesn't exists, respond with 404 Not Found
+	// If file doesn't exist, respond with 404 Not Found
 	if os.IsNotExist(err) {
 		logger.Warningf("File doesn't exist: %s", filename)
 		errors.ServeError(w, r, errors.NotFound(""))

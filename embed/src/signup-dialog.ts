@@ -17,7 +17,7 @@ export class SignupDialog extends Dialog {
     /**
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
-     * @param pos Positioning options..
+     * @param pos Positioning options.
      */
     static run(parent: Wrap<any>, pos: DialogPositioning): Promise<SignupDialog> {
         const dlg = new SignupDialog(parent, pos);

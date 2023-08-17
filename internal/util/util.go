@@ -180,7 +180,7 @@ func HTMLTitleFromURL(u *url.URL) (string, error) {
 	}
 	defer LogError(resp.Body.Close, "HTMLTitleFromURL, resp.Body.Close()")
 
-	// Verify we're dealing with a HTML document
+	// Verify we're dealing with an HTML document
 	if !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
 		return "", nil
 	}
@@ -234,7 +234,7 @@ func IsValidHostname(s string) bool {
 // IsValidHostPort returns whether the passed string is a valid 'host' or 'host:port' spec, and its host and port values
 func IsValidHostPort(s string) (bool, string, string) {
 	// If there's a ':' in the string, we consider it the 'host:port' format (we ignore IPv6 colon-separated addresses
-	// for now). Otherwise the entire string is considered a hostname
+	// for now). Otherwise, the entire string is considered a hostname
 	host := s
 	port := ""
 	if i := strings.Index(s, ":"); i >= 0 {

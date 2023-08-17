@@ -379,7 +379,7 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 		postToCommentIDMap[post.Id] = uuid.New()
 	}
 
-	// Instantiate a HTML-to-Markdown converter
+	// Instantiate an HTML-to-Markdown converter
 	hmConv := md.NewConverter("", true, nil)
 	reHTMLTags := regexp.MustCompile(`<[^>]+>`)
 	commentParentIDMap := map[uuid.UUID][]*data.Comment{} // Groups comment lists by their parent ID
@@ -738,7 +738,7 @@ func (svc *importExportService) importV3(curUser *data.User, domain *data.Domain
 			result.UsersAdded++
 		}
 
-		// Add the an ID mapping
+		// Add an ID mapping
 		commenterIDMap[commenter.ID] = user.ID
 
 		// Add a domain user as well

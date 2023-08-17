@@ -85,7 +85,7 @@ export class ToastService {
     }
 
     /**
-     * Add an success toast.
+     * Add a success toast.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
      * @param message Optional toast message.
@@ -96,7 +96,7 @@ export class ToastService {
     }
 
     /**
-     * Add an warning toast.
+     * Add a warning toast.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
      * @param message Optional toast message.

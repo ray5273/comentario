@@ -18,8 +18,8 @@ export class Wrap<T extends HTMLElement> {
     }
 
     /**
-     * Find an existing element with the given ID (optionally prepending it with idPrefix). Whether the element actually
-     * exists, can be derived from the ok property.
+     * Find an existing element with the given ID, prepending it with idPrefix. Whether the element actually exists, can
+     * be derived from the ok property.
      * @param id ID of the element to find (excluding the prefix).
      */
     static byId<K extends keyof HTMLElementTagNameMap>(id: string): Wrap<HTMLElementTagNameMap[K]> {
