@@ -5,6 +5,13 @@ export type UUID = string;
 
 export type StringBooleanMap = { [k: string]: boolean };
 
+/** UI language. **/
+export interface UILanguage {
+    readonly id:          string; // Language ID, such as 'en' or 'zh_CN'
+    readonly nameEnglish: string; // Language name in English
+    readonly nameNative:  string; // Language name in the language self
+}
+
 /** User abstraction. **/
 export interface User {
     readonly id:          UUID;    // Unique user ID

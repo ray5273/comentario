@@ -1,4 +1,4 @@
-import { Comment, Commenter, IdentityProvider, PageInfo, Principal, UUID } from './models';
+import { Comment, Commenter, IdentityProvider, PageInfo, Principal, UILanguage, UUID } from './models';
 import { HttpClient } from './http-client';
 
 export interface ApiErrorResponse {
@@ -19,16 +19,18 @@ export interface ApiComentarioConfigResponse {
     /** Whether non-owner users can add domains (and become owners). */
     readonly newOwnersAllowed: boolean;
     /** Configured federated identity providers. */
-    readonly federatedIdps: IdentityProvider[];
+    readonly federatedIdps?: IdentityProvider[];
+    /** Available UI languages. */
+    readonly uiLanguages?: UILanguage[];
 }
 
 export interface ApiCommentListResponse {
     /** Page info. */
     readonly pageInfo: PageInfo;
     /** Comments on the page. */
-    readonly comments: Comment[];
+    readonly comments?: Comment[];
     /** Commenters, who authored comments on the page (except those corresponding to deleted users). */
-    readonly commenters: Commenter[];
+    readonly commenters?: Commenter[];
 }
 
 export interface ApiCommentNewResponse {

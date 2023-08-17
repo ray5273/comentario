@@ -297,7 +297,7 @@ export class Comentario extends HTMLElement {
     private async loadClientConfig(): Promise<void> {
         this.federatedIdps = [];
         const r = await this.apiService.comentarioConfig();
-        this.federatedIdps = r.federatedIdps;
+        this.federatedIdps = r.federatedIdps ?? [];
     }
 
     /**
