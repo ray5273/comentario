@@ -49,7 +49,7 @@ export class DomainEditComponent implements OnInit {
         modNotifyPolicy:  DomainModNotifyPolicy.Pending,
         ssoUrl:           ['', [Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
         defaultSort:      CommentSort.Td,
-        fedIdps:          this.fb.array(Array(this.fedIdps.length).fill(true) as boolean[]), // Enable all by default
+        fedIdps:          this.fb.array(Array(this.fedIdps?.length).fill(true) as boolean[]), // Enable all by default
     });
 
     // Icons
@@ -97,7 +97,7 @@ export class DomainEditComponent implements OnInit {
                         modNotifyPolicy:  d.modNotifyPolicy,
                         ssoUrl:           d.ssoUrl,
                         defaultSort:      d.defaultSort,
-                        fedIdps:          this.fedIdps.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
+                        fedIdps:          this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
                     });
                 }
             });
@@ -136,7 +136,7 @@ export class DomainEditComponent implements OnInit {
                 ssoUrl:           vals.ssoUrl ?? '',
                 defaultSort:      vals.defaultSort ?? CommentSort.Td,
             };
-            const federatedIdpIds = this.fedIdps.filter((_, idx) => vals.fedIdps?.[idx]).map(idp => idp.id);
+            const federatedIdpIds = this.fedIdps?.filter((_, idx) => vals.fedIdps?.[idx]).map(idp => idp.id);
 
             // Run creation/updating with the API
             (this.isNew ?

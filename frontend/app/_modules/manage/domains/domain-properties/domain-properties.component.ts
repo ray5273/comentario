@@ -59,7 +59,7 @@ export class DomainPropertiesComponent implements OnInit {
             .subscribe(meta => {
                 this.domainMeta = meta;
                 // Only add those federated identity providers available globally
-                this.fedIdps = this.cfgSvc.config.federatedIdps.filter(idp => meta.federatedIdpIds?.includes(idp.id));
+                this.fedIdps = this.cfgSvc.config.federatedIdps?.filter(idp => meta.federatedIdpIds?.includes(idp.id));
             });
     }
 }

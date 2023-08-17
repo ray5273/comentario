@@ -65,9 +65,9 @@ definitions:
       - baseUrl
       - version
       - buildDate
+      - defaultLangId
       - signupAllowed
       - newOwnersAllowed
-      - federatedIdps
       - resultPageSize
     properties:
       baseUrl:
