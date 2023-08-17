@@ -104,13 +104,13 @@ build:
         --template-path=build/templates
         --secrets=k8s/secrets.yaml
         --allow-signups
-        --allow-new-owners      
+        --allow-new-owners
         &> ./tmp/logs/comentario-server.log &
     - sleep 2
 
     # Test the server is up and running
     - curl -vs http://localhost:8080/
-    - curl -vs http://localhost:8080/login
+    - curl -vs http://localhost:8080/en/
 
     # Run the e2e tests
     - npx cypress install
