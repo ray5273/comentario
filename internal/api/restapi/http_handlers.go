@@ -45,7 +45,7 @@ func (w *notFoundBypassWriter) Write(p []byte) (int, error) {
 func corsHandler(next http.Handler) http.Handler {
 	return handlers.CORS(
 		handlers.AllowedHeaders([]string{"Authorization", "Content-Type", "X-Requested-With", util.HeaderUserSession}),
-		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE"}),
+		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 	)(next)
 }
 
