@@ -13,6 +13,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
+	"strings"
 )
 
 var (
@@ -74,14 +75,48 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 }
 
 func AuthDeleteProfile(_ api_general.AuthDeleteProfileParams, user *data.User) middleware.Responder {
-	// Fetch the number of domains the user owns
-	// TODO nah not good enough
-	if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
-		return respServiceError(err)
+	// If the current user is a superuser, make sure there are others
+	if user.IsSuperuser {
+		if cnt, err := svc.TheUserService.CountUsers(true, false, false, true, true); err != nil {
+			return respServiceError(err)
+		} else if cnt <= 1 {
+			return respBadRequest(ErrorDeletingLastSuperuser)
+		}
+	}
 
-		// Make sure no domains are owned
-	} else if i > 0 {
-		return respBadRequest(ErrorOwnerHasDomains.WithDetails(fmt.Sprintf("%d domain(s)", i)))
+	// If the user owns domains, make sure there are other owners in each of them
+	if ds, dus, err := svc.TheDomainService.ListByDomainUser(&user.ID, &user.ID, false, true, "", "", data.SortAsc, -1); err != nil {
+		respServiceError(err)
+	} else {
+		// Figure out which domains the user owns
+		ownedDomains := make(map[uuid.UUID]bool)
+		for _, du := range dus {
+			if du.IsOwner && du.UserID == user.ID {
+				ownedDomains[du.DomainID] = true
+			}
+		}
+
+		// Count domain owners by domain ID
+		ownerCounts := make(map[uuid.UUID]int)
+		for _, du := range dus {
+			// Only take domains the user owns into account
+			if du.IsOwner && ownedDomains[du.DomainID] {
+				ownerCounts[du.DomainID]++
+			}
+		}
+
+		// Now figure out which domains have no other owners
+		var toBeOrphaned []string
+		for _, d := range ds {
+			if cnt, ok := ownerCounts[d.ID]; ok && cnt <= 1 {
+				toBeOrphaned = append(toBeOrphaned, d.Host)
+			}
+		}
+
+		// Verify none are to be orphaned
+		if len(toBeOrphaned) > 0 {
+			return respBadRequest(ErrorDeletingLastOwner.WithDetails(strings.Join(toBeOrphaned, ", ")))
+		}
 	}
 
 	// Delete the user
@@ -226,7 +261,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		WithSignup(params.HTTPRequest, "")
 
 	// If it's the first registered LOCAL user, make them a superuser
-	if cnt, err := svc.TheUserService.CountUsers(false, true, false); err != nil {
+	if cnt, err := svc.TheUserService.CountUsers(true, true, false, true, false); err != nil {
 		return respServiceError(err)
 	} else if cnt == 0 {
 		user.WithConfirmed(true).IsSuperuser = true

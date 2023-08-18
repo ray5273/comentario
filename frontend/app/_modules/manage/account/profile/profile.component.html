@@ -80,7 +80,9 @@
 
                 <!-- Delete account info -->
                 <p i18n>Here you can terminate your service account.</p>
-                <p i18n>Please note: you first need to delete all domains linked to your account.</p>
+
+                <!-- Superuser-specific warning -->
+                <p *ngIf="principal.isSuperuser" i18n>Since you are a superuser, you must make sure there are other superuser(s) in the system before you can proceed with deleting your account.</p>
 
                 <!-- Delete account button -->
                 <button [appConfirm]="deleteAccountDlg"

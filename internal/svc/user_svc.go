@@ -20,10 +20,12 @@ type UserService interface {
 	// ConfirmUser confirms the user's email by their ID
 	ConfirmUser(id *uuid.UUID) error
 	// CountUsers returns a number of registered users.
-	//   - includeSystem: if false, skips system users
-	//   - includeLocal: if false, skips local users
-	//   - includeFederated: if false, skips federated users
-	CountUsers(includeSystem, includeLocal, includeFederated bool) (int, error)
+	//   - inclSuper: if false, skips superusers
+	//   - inclNonSuper: if false, skips non-superusers
+	//   - inclSystem: if false, skips system users
+	//   - inclLocal: if false, skips local users
+	//   - inclFederated: if false, skips federated users
+	CountUsers(inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated bool) (int, error)
 	// Create persists a new user
 	Create(u *data.User) error
 	// CreateUserSession persists a new user session
@@ -81,32 +83,37 @@ func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	return nil
 }
 
-func (svc *userService) CountUsers(includeSystem, includeLocal, includeFederated bool) (int, error) {
-	logger.Debug("userService.CountUsers(%v, %v, %v)", includeSystem, includeLocal, includeFederated)
+func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated bool) (int, error) {
+	logger.Debug("userService.CountUsers(%v, %v, %v, %v, %v)", inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated)
 
-	// Prepare the statement
-	s := "select count(*) from cm_users"
-	var filters []string
-	if !includeSystem {
-		filters = append(filters, "system_account=false")
+	// Prepare the query
+	q := db.Dialect().
+		From("cm_users").
+		Select(goqu.COUNT("*"))
+	if !inclSuper {
+		q = q.Where(goqu.Ex{"is_superuser": false})
 	}
-	if !includeLocal {
-		filters = append(filters, "(federated_idp is not null or federated_sso is true)")
+	if !inclNonSuper {
+		q = q.Where(goqu.Ex{"is_superuser": true})
 	}
-	if !includeFederated {
-		filters = append(filters, "federated_idp is null and federated_sso is false")
+	if !inclSystem {
+		q = q.Where(goqu.Ex{"system_account": false})
 	}
-	if len(filters) > 0 {
-		s += " where " + strings.Join(filters, " and ")
+	if !inclLocal {
+		q = q.Where(goqu.Or(goqu.C("federated_idp").IsNotNull(), goqu.C("federated_sso").IsTrue()))
+	}
+	if !inclFederated {
+		q = q.Where(goqu.C("federated_idp").IsNull(), goqu.C("federated_sso").IsFalse())
 	}
 
 	// Query the count
 	var i int
-	if err := db.QueryRow(s + ";").Scan(&i); err != nil {
+	if err := db.SelectRow(q).Scan(&i); err != nil {
 		return 0, translateDBErrors(err)
-	} else {
-		return i, nil
 	}
+
+	// Succeeded
+	return i, nil
 }
 
 func (svc *userService) Create(u *data.User) error {

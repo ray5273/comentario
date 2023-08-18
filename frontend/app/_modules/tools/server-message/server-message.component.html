@@ -6,66 +6,67 @@
     <!--------------------------------------------------------------------------------------------------------------
      Success messages
      -------------------------------------------------------------------------------------------------------------->
-    <ng-container *ngSwitchCase="'account-deleted'"       i18n>Your account is successfully deleted.</ng-container>
-    <ng-container *ngSwitchCase="'data-saved'"            i18n>Saved successfully.</ng-container>
-    <ng-container *ngSwitchCase="'data-updated'"          i18n>Updated successfully.</ng-container>
-    <ng-container *ngSwitchCase="'domain-cleared'"        i18n>All comments on the domain have been successfully deleted.</ng-container>
-    <ng-container *ngSwitchCase="'domain-deleted'"        i18n>Domain has been successfully deleted.</ng-container>
-    <ng-container *ngSwitchCase="'email-confirmed'"       i18n>Your email address is now confirmed, you can sign in.</ng-container>
-    <ng-container *ngSwitchCase="'file-downloaded'"       i18n>File has been successfully downloaded.</ng-container>
-    <ng-container *ngSwitchCase="'moderator-added'"       i18n>Domain moderator is added.</ng-container>
-    <ng-container *ngSwitchCase="'moderator-removed'"     i18n>Domain moderator is removed.</ng-container>
-    <ng-container *ngSwitchCase="'no-change'"             i18n>No change identified.</ng-container>
-    <ng-container *ngSwitchCase="'password-changed'"      i18n>Your password has been changed. You can now sign in with your new password.</ng-container>
-    <ng-container *ngSwitchCase="'pwd-reset-email-sent'"  i18n>If your email is registered with us, we'll send you a password reset link!</ng-container>
-    <ng-container *ngSwitchCase="'unsubscribed-ok'"       i18n>You have been successfully unsubscribed from these emails.</ng-container>
+    <ng-container *ngSwitchCase="'account-deleted'"         i18n>Your account is successfully deleted.</ng-container>
+    <ng-container *ngSwitchCase="'data-saved'"              i18n>Saved successfully.</ng-container>
+    <ng-container *ngSwitchCase="'data-updated'"            i18n>Updated successfully.</ng-container>
+    <ng-container *ngSwitchCase="'domain-cleared'"          i18n>All comments on the domain have been successfully deleted.</ng-container>
+    <ng-container *ngSwitchCase="'domain-deleted'"          i18n>Domain has been successfully deleted.</ng-container>
+    <ng-container *ngSwitchCase="'email-confirmed'"         i18n>Your email address is now confirmed, you can sign in.</ng-container>
+    <ng-container *ngSwitchCase="'file-downloaded'"         i18n>File has been successfully downloaded.</ng-container>
+    <ng-container *ngSwitchCase="'moderator-added'"         i18n>Domain moderator is added.</ng-container>
+    <ng-container *ngSwitchCase="'moderator-removed'"       i18n>Domain moderator is removed.</ng-container>
+    <ng-container *ngSwitchCase="'no-change'"               i18n>No change identified.</ng-container>
+    <ng-container *ngSwitchCase="'password-changed'"        i18n>Your password has been changed. You can now sign in with your new password.</ng-container>
+    <ng-container *ngSwitchCase="'pwd-reset-email-sent'"    i18n>If your email is registered with us, we'll send you a password reset link!</ng-container>
+    <ng-container *ngSwitchCase="'unsubscribed-ok'"         i18n>You have been successfully unsubscribed from these emails.</ng-container>
 
     <!------------------------------------------------------------------------------------------------------------------
      Error messages
      ------------------------------------------------------------------------------------------------------------------>
-    <ng-container *ngSwitchCase="'bad-token'"             i18n>Required token is missing or invalid.</ng-container>
-    <ng-container *ngSwitchCase="'comment-deleted'"       i18n>This comment has been deleted.</ng-container>
-    <ng-container *ngSwitchCase="'domain-readonly'"       i18n>No comment can be added: this domain is read-only.</ng-container>
-    <ng-container *ngSwitchCase="'email-already-exists'"  i18n>This email is already registered in our system.</ng-container>
+    <ng-container *ngSwitchCase="'bad-token'"               i18n>Required token is missing or invalid.</ng-container>
+    <ng-container *ngSwitchCase="'deleting-last-superuser'" i18n>You can't delete the last superuser in the system. Please appoint another first.</ng-container>
+    <ng-container *ngSwitchCase="'deleting-last-owner'"     i18n>You appear to be the last owner in the following domains, please appoint other owner(s) or delete those domains first:</ng-container>
+    <ng-container *ngSwitchCase="'comment-deleted'"         i18n>This comment has been deleted.</ng-container>
+    <ng-container *ngSwitchCase="'domain-readonly'"         i18n>No comment can be added: this domain is read-only.</ng-container>
+    <ng-container *ngSwitchCase="'email-already-exists'"    i18n>This email is already registered in our system.</ng-container>
     <ng-container *ngSwitchCase="'email-not-confirmed'">
         <ng-container i18n>Your email is not confirmed yet.</ng-container>&ngsp;
         <ng-container i18n>Please check your email and click the confirmation link in it.</ng-container>&ngsp;
         <ng-container i18n>If you don't see the email, check your Spam folder.</ng-container>
     </ng-container>
-    <ng-container *ngSwitchCase="'email-send-failure'"    i18n>Server failed to send the email. Please check your input and try again.</ng-container>
-    <ng-container *ngSwitchCase="'host-already-exists'"   i18n>There's already a registered domain with this host.</ng-container>
-    <ng-container *ngSwitchCase="'idp-unconfigured'"      i18n>Identity provider isn't configured.</ng-container>
-    <ng-container *ngSwitchCase="'idp-unknown'"           i18n>Identity provider is unknown.</ng-container>
-    <ng-container *ngSwitchCase="'immutable-property'"    i18n>This property cannot be updated.</ng-container>
-    <ng-container *ngSwitchCase="'internal-error'"        i18n>A server error has occurred, please contact support.</ng-container>
-    <ng-container *ngSwitchCase="'invalid-avatar-format'" i18n>Avatar image must be in JPEG or PNG format.</ng-container>
-    <ng-container *ngSwitchCase="'invalid-avatar-size'"   i18n>Avatar image must not exceed 1 MB.</ng-container>
-    <ng-container *ngSwitchCase="'invalid-credentials'"   i18n>This user doesn't exist or the password is wrong.</ng-container>
-    <ng-container *ngSwitchCase="'invalid-mod-action'"    i18n>Invalid moderation action.</ng-container>
-    <ng-container *ngSwitchCase="'invalid-prop-value'"    i18n>Property value is invalid.</ng-container>
-    <ng-container *ngSwitchCase="'invalid-uuid'"          i18n>Invalid UUID value.</ng-container>
-    <ng-container *ngSwitchCase="'login-locally'"         i18n>You already have a Comentario account. Please login with your email and password.</ng-container>
-    <ng-container *ngSwitchCase="'login-using-idp'"       i18n>You already have a Comentario account. Please login via external provider:</ng-container>
-    <ng-container *ngSwitchCase="'login-using-sso'"       i18n>You already have a Comentario account. Please login via your Single Sign-On provider</ng-container>
-    <ng-container *ngSwitchCase="'new-owners-forbidden'"  i18n>Unfortunately, becoming an owner user is currently forbidden.</ng-container>
-    <ng-container *ngSwitchCase="'no-local-user'"         i18n>This operation is only applicable to locally authenticated users.</ng-container>
-    <ng-container *ngSwitchCase="'no-root-comment'"       i18n>This operation is only applicable to a root comment.</ng-container>
-    <ng-container *ngSwitchCase="'no-superuser'"          i18n>You must be a superuser to perform this operation.</ng-container>
-    <ng-container *ngSwitchCase="'not-domain-owner'"      i18n>You have to be a domain owner in order to do that.</ng-container>
-    <ng-container *ngSwitchCase="'not-moderator'"         i18n>You have to be a moderator in order to do that.</ng-container>
-    <ng-container *ngSwitchCase="'oauth-popup-failed'"    i18n>Failed to open OAuth login popup. Please check your browser settings.</ng-container>
-    <ng-container *ngSwitchCase="'oauth-login-failed'"    i18n>OAuth login was unsuccessful.</ng-container>
-    <ng-container *ngSwitchCase="'owner-has-domains'"     i18n>Account cannot be deleted: all domains linked to it must be deleted first.</ng-container>
-    <ng-container *ngSwitchCase="'page-readonly'"         i18n>No comment can be added: comment thread on this page is read-only.</ng-container>
-    <ng-container *ngSwitchCase="'self-vote'"             i18n>You cannot vote for your own comment.</ng-container>
-    <ng-container *ngSwitchCase="'signups-forbidden'"     i18n>Unfortunately, registration of new users is currently disabled.</ng-container>
-    <ng-container *ngSwitchCase="'sso-misconfigured'"     i18n>SSO configuration for this domain is invalid.</ng-container>
-    <ng-container *ngSwitchCase="'unauthenticated'"       i18n>This operation requires you to be signed in.</ng-container>
-    <ng-container *ngSwitchCase="'unauthorized'"          i18n>You are not allowed to perform this operation.</ng-container>
-    <ng-container *ngSwitchCase="'unknown-host'"          i18n>This domain is not registered in Comentario.</ng-container>
-    <ng-container *ngSwitchCase="'user-banned'"           i18n>This account is terminated due to a violation of our Terms of Service. If you believe it's an error, please contact support.</ng-container>
-    <ng-container *ngSwitchCase="'user-readonly'"         i18n>You are read-only and hence not allowed to add comments on this domain.</ng-container>
-    <ng-container *ngSwitchCase="'wrong-cur-password'"    i18n>Your current password is wrong.</ng-container>
+    <ng-container *ngSwitchCase="'email-send-failure'"      i18n>Server failed to send the email. Please check your input and try again.</ng-container>
+    <ng-container *ngSwitchCase="'host-already-exists'"     i18n>There's already a registered domain with this host.</ng-container>
+    <ng-container *ngSwitchCase="'idp-unconfigured'"        i18n>Identity provider isn't configured.</ng-container>
+    <ng-container *ngSwitchCase="'idp-unknown'"             i18n>Identity provider is unknown.</ng-container>
+    <ng-container *ngSwitchCase="'immutable-property'"      i18n>This property cannot be updated.</ng-container>
+    <ng-container *ngSwitchCase="'internal-error'"          i18n>A server error has occurred, please contact support.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-avatar-format'"   i18n>Avatar image must be in JPEG or PNG format.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-avatar-size'"     i18n>Avatar image must not exceed 1 MB.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-credentials'"     i18n>This user doesn't exist or the password is wrong.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-mod-action'"      i18n>Invalid moderation action.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-prop-value'"      i18n>Property value is invalid.</ng-container>
+    <ng-container *ngSwitchCase="'invalid-uuid'"            i18n>Invalid UUID value.</ng-container>
+    <ng-container *ngSwitchCase="'login-locally'"           i18n>You already have a Comentario account. Please login with your email and password.</ng-container>
+    <ng-container *ngSwitchCase="'login-using-idp'"         i18n>You already have a Comentario account. Please login via external provider:</ng-container>
+    <ng-container *ngSwitchCase="'login-using-sso'"         i18n>You already have a Comentario account. Please login via your Single Sign-On provider</ng-container>
+    <ng-container *ngSwitchCase="'new-owners-forbidden'"    i18n>Unfortunately, becoming an owner user is currently forbidden.</ng-container>
+    <ng-container *ngSwitchCase="'no-local-user'"           i18n>This operation is only applicable to locally authenticated users.</ng-container>
+    <ng-container *ngSwitchCase="'no-root-comment'"         i18n>This operation is only applicable to a root comment.</ng-container>
+    <ng-container *ngSwitchCase="'no-superuser'"            i18n>You must be a superuser to perform this operation.</ng-container>
+    <ng-container *ngSwitchCase="'not-domain-owner'"        i18n>You have to be a domain owner in order to do that.</ng-container>
+    <ng-container *ngSwitchCase="'not-moderator'"           i18n>You have to be a moderator in order to do that.</ng-container>
+    <ng-container *ngSwitchCase="'oauth-popup-failed'"      i18n>Failed to open OAuth login popup. Please check your browser settings.</ng-container>
+    <ng-container *ngSwitchCase="'oauth-login-failed'"      i18n>OAuth login was unsuccessful.</ng-container>
+    <ng-container *ngSwitchCase="'page-readonly'"           i18n>No comment can be added: comment thread on this page is read-only.</ng-container>
+    <ng-container *ngSwitchCase="'self-vote'"               i18n>You cannot vote for your own comment.</ng-container>
+    <ng-container *ngSwitchCase="'signups-forbidden'"       i18n>Unfortunately, registration of new users is currently disabled.</ng-container>
+    <ng-container *ngSwitchCase="'sso-misconfigured'"       i18n>SSO configuration for this domain is invalid.</ng-container>
+    <ng-container *ngSwitchCase="'unauthenticated'"         i18n>This operation requires you to be signed in.</ng-container>
+    <ng-container *ngSwitchCase="'unauthorized'"            i18n>You are not allowed to perform this operation.</ng-container>
+    <ng-container *ngSwitchCase="'unknown-host'"            i18n>This domain is not registered in Comentario.</ng-container>
+    <ng-container *ngSwitchCase="'user-banned'"             i18n>This account is terminated due to a violation of our Terms of Service. If you believe it's an error, please contact support.</ng-container>
+    <ng-container *ngSwitchCase="'user-readonly'"           i18n>You are read-only and hence not allowed to add comments on this domain.</ng-container>
+    <ng-container *ngSwitchCase="'wrong-cur-password'"      i18n>Your current password is wrong.</ng-container>
 
     <!--------------------------------------------------------------------------------------------------------------
      No luck with the ID: use the HTTP error code
