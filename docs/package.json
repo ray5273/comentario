@@ -5,7 +5,7 @@
     "scripts": {
         "clean": "rm -rf public",
         "build": "hugo --gc --minify",
-        "build:dev": "hugo -DF",
+        "build:dev": "hugo -DF --gc --minify --baseURL=https://edge.docs.comentario.app/",
         "postbuild": "echo '/*\\n  Access-Control-Allow-Origin: *' > public/_headers",
         "prebuild": "npm run clean",
         "prebuild:dev": "npm run clean",
@@ -13,9 +13,9 @@
     },
     "repository": "https://gitlab.com/comentario/docs.comentario.app",
     "dependencies": {
-        "@fortawesome/fontawesome-free": "^6.2.1",
-        "@popperjs/core": "^2.11.6",
-        "bootstrap": "^5.2.3",
-        "jquery": "^3.6.2"
+        "@fortawesome/fontawesome-free": "^6.4.2",
+        "@popperjs/core": "^2.11.8",
+        "bootstrap": "^5.3.1",
+        "jquery": "^3.7.0"
     }
 }
