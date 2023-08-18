@@ -3,7 +3,7 @@ import { languages } from './languages';
 export const environment = {
     production:  false,
     apiBaseUrl:  '/api', // Must be a relative or a schema-less URL for Angular's XSRF protection to work
-    docsBaseUrl: 'http://localhost:1313/',
+    docsBaseUrl: 'https://edge.docs.comentario.app/',
     languages,
 };
 
