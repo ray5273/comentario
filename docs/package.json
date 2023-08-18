@@ -7,6 +7,7 @@
         "build": "hugo --gc --minify",
         "build:dev": "hugo -DF --gc --minify --baseURL=https://edge.docs.comentario.app/",
         "postbuild": "echo '/*\\n  Access-Control-Allow-Origin: *' > public/_headers",
+        "postbuild:dev": "echo '/*\\n  Access-Control-Allow-Origin: *' > public/_headers",
         "prebuild": "npm run clean",
         "prebuild:dev": "npm run clean",
         "start": "hugo server -DF"
