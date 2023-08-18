@@ -29,8 +29,8 @@ export class ConfigService {
     private _config?: ComentarioConfig;
 
     constructor(
-        private readonly ngbConfig: NgbConfig,
-        private readonly toastConfig: NgbToastConfig,
+        ngbConfig: NgbConfig,
+        toastConfig: NgbToastConfig,
         private readonly api: ApiGeneralService,
     ) {
         // Detect if the e2e-test is active
@@ -63,7 +63,8 @@ export class ConfigService {
     }
 
     /**
-     * Returns whether the provided array is shorter than the configured result page size.
+     * Returns whether the length of the provided array (representing a portion of fetched data) is equal to the
+     * configured result page size, or greater.
      * @param d The array to check.
      */
     canLoadMore(d: any[] | null | undefined): boolean {

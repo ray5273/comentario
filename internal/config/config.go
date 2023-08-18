@@ -81,6 +81,7 @@ var (
 		AllowSignups    bool   `long:"allow-signups"     description:"Allow new user registration"                                                 env:"ALLOW_SIGNUPS"`
 		AllowNewOwners  bool   `long:"allow-new-owners"  description:"Allow non-owner users to add domains"                                        env:"ALLOW_NEW_OWNERS"`
 		LogFullIPs      bool   `long:"log-full-ips"      description:"Log IP addresses in full"                                                    env:"LOG_FULL_IPS"`
+		HomeContentURL  string `long:"home-content-url"  description:"URL of a HTML page to display on homepage"                                   env:"HOME_CONTENT_URL"`
 		GitLabURL       string `long:"gitlab-url"        description:"Custom GitLab URL for authentication"       default:""                       env:"GITLAB_URL"`
 		E2e             bool   `long:"e2e"               description:"End-2-end testing mode"`
 	}{}

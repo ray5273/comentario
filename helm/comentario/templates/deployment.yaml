@@ -41,6 +41,8 @@ spec:
               value: '80'
             - name: BASE_URL
               value: 'https://{{ .Values.ingress.host }}/'
+            - name: HOME_CONTENT_URL
+              value: '{{ .Values.comentario.homeContentURL }}'
             - name: ALLOW_SIGNUPS
               value: '{{ .Values.comentario.allowSignups | default true }}'
             - name: ALLOW_NEW_OWNERS

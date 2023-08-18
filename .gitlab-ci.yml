@@ -175,6 +175,7 @@ deploy-dev:
         --set "clusterIssuer=letsencrypt-prod"
         --set "image.repository=$CI_REGISTRY_IMAGE"
         --set "image.tag=$VERSION"
+        --set "comentario.homeContentURL=https://edge.docs.comentario.app/en/embed/front-page/"
         --set "comentario.emailFrom=noreply@yktoo.com"
         --set "comentario.secretName=comentario-edge-secrets"
         --set "ingress.host=edge.comentario.app"

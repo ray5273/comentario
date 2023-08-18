@@ -7,6 +7,7 @@ import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { Principal } from '../../generated-api';
 import { ToastService } from '../_services/toast.service';
+import { ConfigService } from '../_services/config.service';
 
 @UntilDestroy()
 @Component({
@@ -19,6 +20,7 @@ export class HomeComponent implements OnInit {
     principal?: Principal | null;
 
     readonly Paths = Paths;
+    readonly embedUrl = this.configSvc.config.homeContentUrl;
     readonly docGetStartedUrl = this.docsSvc.getPageUrl('getting-started/');
 
     // Icons
@@ -26,16 +28,21 @@ export class HomeComponent implements OnInit {
 
     /** Handlers to execute when a specific parameter is present */
     private readonly paramHandlers: {[name: string]: (...args: any[]) => any} = {
-        passwordResetToken: token => this.router.navigate([Paths.auth.resetPassword], {state: {token}}),
-        unsubscribed:       () => this.toastSvc.success('unsubscribed-ok'),
+        passwordResetToken: token => {
+            this.canRedirect = false;
+            this.router.navigate([Paths.auth.resetPassword], {state: {token}});
+        },
+        unsubscribed: () => this.toastSvc.success('unsubscribed-ok'),
     };
 
     private paramsProcessed = false;
+    private canRedirect = true;
 
     constructor(
         private readonly changeDetector: ChangeDetectorRef,
         private readonly route: ActivatedRoute,
         private readonly router: Router,
+        private readonly configSvc: ConfigService,
         private readonly docsSvc: DocsService,
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
@@ -55,6 +62,12 @@ export class HomeComponent implements OnInit {
                 if (!this.paramsProcessed) {
                     this.paramsProcessed = true;
                     this.processParams();
+                }
+
+                // If no upcoming redirect and no embed either
+                if (this.canRedirect && !this.embedUrl) {
+                    // Redirect a logged in user to the dashboard, otherwise to the login
+                    this.router.navigate([p ? Paths.manage.dashboard : Paths.auth.login]);
                 }
             });
     }

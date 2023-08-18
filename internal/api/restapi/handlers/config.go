@@ -43,6 +43,7 @@ func ComentarioConfig(api_general.ComentarioConfigParams) middleware.Responder {
 		BuildDate:        strfmt.DateTime(config.BuildDate),
 		DefaultLangID:    util.UIDefaultLangID,
 		FederatedIdps:    idps,
+		HomeContentURL:   strfmt.URI(config.CLIFlags.HomeContentURL),
 		NewOwnersAllowed: config.CLIFlags.AllowNewOwners,
 		ResultPageSize:   util.ResultPageSize,
 		SignupAllowed:    config.CLIFlags.AllowSignups,

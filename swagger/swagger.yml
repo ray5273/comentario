@@ -87,6 +87,12 @@ definitions:
         type: string
         x-isnullable: false
         description: Default interface language ID
+      homeContentUrl:
+        type: string
+        format: uri
+        description: >
+          URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for 
+          unauthenticated user) or dashboard (for authenticated)
       signupAllowed:
         type: boolean
         x-isnullable: false
