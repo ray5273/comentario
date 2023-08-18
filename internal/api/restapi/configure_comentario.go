@@ -131,6 +131,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainUserUpdateHandler = api_general.DomainUserUpdateHandlerFunc(handlers.DomainUserUpdate)
 	// Users
 	api.APIGeneralUserAvatarGetHandler = api_general.UserAvatarGetHandlerFunc(handlers.UserAvatarGet)
+	api.APIGeneralUserBanHandler = api_general.UserBanHandlerFunc(handlers.UserBan)
 	api.APIGeneralUserGetHandler = api_general.UserGetHandlerFunc(handlers.UserGet)
 	api.APIGeneralUserListHandler = api_general.UserListHandlerFunc(handlers.UserList)
 	api.APIGeneralUserUpdateHandler = api_general.UserUpdateHandlerFunc(handlers.UserUpdate)

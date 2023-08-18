@@ -1,9 +1,11 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
+import { ReactiveFormsModule } from '@angular/forms';
 import {UserPropertiesComponent} from './user-properties.component';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { NoDataComponent } from '../../no-data/no-data.component';
+import { ToastService } from '../../../../_services/toast.service';
 
 describe('UserPropertiesComponent', () => {
 
@@ -13,9 +15,10 @@ describe('UserPropertiesComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [UserPropertiesComponent, MockComponents(NoDataComponent)],
-            imports: [ToolsModule],
+            imports: [ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
+                MockProvider(ToastService),
             ],
         });
         fixture = TestBed.createComponent(UserPropertiesComponent);

@@ -36,7 +36,7 @@ export class HttpInterceptorService implements HttpInterceptor {
 
                     // Client-side error
                     if (error.error instanceof ErrorEvent) {
-                        this.toastSvc.error(errorId, -1, error.error?.message, details);
+                        this.toastSvc.error(errorId, -1, details, error.error);
 
                         // 401 Unauthorized from the backend, but not a login-related error
                     } else if (error.status === 401 && errorId !== 'invalid-credentials') {
@@ -44,11 +44,11 @@ export class HttpInterceptorService implements HttpInterceptor {
                         this.authSvc.update(null);
 
                         // Add an info toast that the user has to relogin
-                        this.toastSvc.info(errorId, 401, error.message, details);
+                        this.toastSvc.info(errorId, 401, details);
 
                     // Any other server-side error
                     } else {
-                        this.toastSvc.error(errorId, error.status, `${error.message} (error code: ${error.status})`, details);
+                        this.toastSvc.error(errorId, error.status, details, error);
                     }
                 }
 

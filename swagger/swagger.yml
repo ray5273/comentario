@@ -2655,6 +2655,39 @@ paths:
                 $ref: "#/definitions/user"
                 description: The updated user
 
+  /users/{uuid}/ban:
+    post:
+      operationId: UserBan
+      summary: Ban or unban a user
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - ban
+            properties:
+              ban:
+                type: boolean
+                description: Whether to ban (true) or unban (false) the user
+              deleteComments:
+                type: boolean
+                description: Whether to remove all comments from the user (only applies if ban is true, otherwise ignored)
+      responses:
+        200:
+          description: User has been (un)banned
+          schema:
+            type: object
+            properties:
+              countDeletedComments:
+                type: integer
+                description: Number of deleted comments (if opted in for deletion)
+                x-omitempty: false
+
   /users/{uuid}/avatar:
     get:
       operationId: UserAvatarGet

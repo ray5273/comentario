@@ -12,20 +12,35 @@
         </strong>
     </ng-template>
 
-    <!-- Toast icon -->
-    <fa-icon [icon]="t.icon" size="3x" class="mx-1"></fa-icon>
+    <!-- Toast body -->
+    <div class="d-flex">
+        <!-- Toast icon -->
+        <fa-icon [icon]="t.icon" size="3x" class="mx-1"></fa-icon>
 
-    <!-- Toast text -->
-    <div class="ms-3">
-        <!-- The main message -->
-        <app-server-message [messageId]="t.id" [errorCode]="t.errorCode"></app-server-message>
+        <!-- Toast text -->
+        <div class="ms-3">
+            <!-- The main message -->
+            <app-server-message [messageId]="t.id" [errorCode]="t.errorCode"></app-server-message>
 
-        <!-- Additional details, if any -->
-        <div *ngIf="t.details" class="toast-details small mt-2">({{ t.details }})</div>
-
-        <!-- "401 Unauthorized: show a login button (unless it's a login error) -->
-        <div *ngIf="t.errorCode === 401 && t.id !== 'invalid-credentials'" class="mt-3">
-            <button type="button" (click)="goLogin()" class="btn btn-primary w-100" i18n>Log in</button>
+            <!-- Additional details, if any -->
+            <div *ngIf="t.details" class="toast-details small mt-2">({{ t.details }})</div>
         </div>
+    </div>
+
+    <!-- "401 Unauthorized: show a login button (unless it's a login error) -->
+    <div *ngIf="t.errorCode === 401 && t.id !== 'invalid-credentials'" class="mt-3">
+        <button type="button" (click)="goLogin()" class="btn btn-primary w-100" i18n>Log in</button>
+    </div>
+
+    <!-- Technical error details, if there's an error -->
+    <div *ngIf="t.error" class="toast-tech-details small mt-2">
+        <div class="text-end">
+            <button [class.collapsed]="!techDetailsShown" (click)="toggleTechDetails()"
+                    type="button" class="btn btn-sm btn-link collapse-toggler">
+                <ng-container i18n>Technical details</ng-container>
+                <fa-icon [icon]="faChevronDown" class="ms-1"></fa-icon>
+            </button>
+        </div>
+        <div *ngIf="techDetailsShown" class="mt-2 fade-in"><pre>{{ t.error | json }}</pre></div>
     </div>
 </ngb-toast>

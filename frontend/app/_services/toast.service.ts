@@ -42,15 +42,15 @@ export class ToastService {
      * @param severity Toast severity.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
-     * @param message Optional toast message.
      * @param details Optional message details.
+     * @param error Optional error object.
      */
-    addToast(severity: Severity, id: string, errorCode?: number, message?: string, details?: string): ToastService {
+    addToast(severity: Severity, id: string, errorCode?: number, details?: string, error?: any): ToastService {
         // Remove any repeated toasts beforehand
         this.removeToastsOfSeverity(severity);
 
         // Insert a new toast at the beginning
-        this.toasts.splice(0, 0, new Toast(severity, id, errorCode, message, details));
+        this.toasts.splice(0, 0, new Toast(severity, id, errorCode, details, error));
         return this;
     }
 
@@ -77,44 +77,42 @@ export class ToastService {
      * Add an info toast.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
-     * @param message Optional toast message.
      * @param details Optional message details.
      */
-    info(id: string, errorCode?: number, message?: string, details?: string): ToastService {
-        return this.addToast(Severity.INFO, id, errorCode, message, details);
+    info(id: string, errorCode?: number, details?: string): ToastService {
+        return this.addToast(Severity.INFO, id, errorCode, details);
     }
 
     /**
      * Add a success toast.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
-     * @param message Optional toast message.
      * @param details Optional message details.
      */
-    success(id: string, errorCode?: number, message?: string, details?: string): ToastService {
-        return this.addToast(Severity.SUCCESS, id, errorCode, message, details);
+    success(id: string, errorCode?: number, details?: string): ToastService {
+        return this.addToast(Severity.SUCCESS, id, errorCode, details);
     }
 
     /**
      * Add a warning toast.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
-     * @param message Optional toast message.
      * @param details Optional message details.
+     * @param error Optional error object.
      */
-    warning(id: string, errorCode?: number, message?: string, details?: string): ToastService {
-        return this.addToast(Severity.WARNING, id, errorCode, message, details);
+    warning(id: string, errorCode?: number, details?: string, error?: any): ToastService {
+        return this.addToast(Severity.WARNING, id, errorCode, details, error);
     }
 
     /**
      * Add an error toast.
      * @param id Optional toast ID.
      * @param errorCode Optional toast error code.
-     * @param message Optional toast message.
      * @param details Optional message details.
+     * @param error Optional error object.
      */
-    error(id: string, errorCode?: number, message?: string, details?: string): ToastService {
-        return this.addToast(Severity.ERROR, id, errorCode, message, details);
+    error(id: string, errorCode?: number, details?: string, error?: any): ToastService {
+        return this.addToast(Severity.ERROR, id, errorCode, details, error);
     }
 
     /**

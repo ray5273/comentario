@@ -7,10 +7,21 @@
             <!-- Buttons -->
             <div class="col-sm-auto order-sm-last pb-3">
                 <!-- Edit user button -->
-                <a routerLink="edit" type="button" class="btn btn-secondary w-100">
+                <a routerLink="edit" class="btn btn-secondary w-100 mb-2">
                     <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
                     <ng-container i18n>Edit user</ng-container>
                 </a>
+                <!-- Ban user button -->
+                <button [class.active]="user.banned"
+                        [appSpinner]="banning.active"
+                        [appConfirm]="user.banned ? unbanConfirm : banConfirm"
+                        confirmAction="Proceed"
+                        (confirmed)="toggleBan()"
+                        type="button" class="btn btn-outline-warning w-100 mb-2" i18n-confirmAction>
+                    <fa-icon [icon]="faBan" class="me-1"></fa-icon>
+                    <ng-container *ngIf="!user.banned" i18n>Ban user</ng-container>
+                    <ng-container *ngIf="user.banned"  i18n>Unban user</ng-container>
+                </button>
             </div>
 
             <!-- Details -->
@@ -46,3 +57,21 @@
     <!-- Placeholder when no data -->
     <app-no-data *ngIf="!user"></app-no-data>
 </div>
+
+<!-- Template for the ban confirmation dialog -->
+<ng-template #banConfirm>
+    <p i18n>Are you sure you want to ban this user?</p>
+    <p i18n>You can also opt to delete all comments created by this user by ticking off the checkbox below.</p>
+    <form [formGroup]="banConfirmationForm">
+        <div class="form-check">
+            <input formControlName="deleteComments" type="checkbox" class="form-check-input" id="ban-delete-comments">
+            <label class="form-check-label text-danger" for="ban-delete-comments" i18n>Delete all user's comments</label>
+            <div class="form-text text-danger" i18n>Warning: comment removal cannot be undone</div>
+        </div>
+    </form>
+</ng-template>
+
+<!-- Template for the unban confirmation dialog -->
+<ng-template #unbanConfirm>
+    <div i18n>Are you sure you want to unban this user?</div>
+</ng-template>

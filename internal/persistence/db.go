@@ -85,16 +85,21 @@ func (db *Database) ExecOne(query string, args ...any) error {
 	return nil
 }
 
-// Execute executes the provided goqu executor against the database
-func (db *Database) Execute(e exp.SQLExpression) error {
-	if eSQL, eParams, err := e.ToSQL(); err != nil {
-		return err
-	} else {
-		return db.Exec(eSQL, eParams...)
+// ExecRes executes the provided statement against the database and returns its result
+func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
+	if db.debug {
+		logger.Debugf("db.ExecRes()\n - SQL: %s\n - Args: %#v", query, args)
 	}
+	return db.db.Exec(query, args...)
 }
 
-// ExecuteOne executes the provided goqu executor against the database and verifies there's exactly one row affected
+// Execute executes the provided goqu expression against the database
+func (db *Database) Execute(e exp.SQLExpression) error {
+	_, err := db.ExecuteRes(e)
+	return err
+}
+
+// ExecuteOne executes the provided goqu expression against the database and verifies there's exactly one row affected
 func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 	if eSQL, eParams, err := e.ToSQL(); err != nil {
 		return err
@@ -103,12 +108,13 @@ func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 	}
 }
 
-// ExecRes executes the provided statement against the database and returns its result
-func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
-	if db.debug {
-		logger.Debugf("db.ExecRes()\n - SQL: %s\n - Args: %#v", query, args)
+// ExecuteRes executes the provided goqu expression against the database and returns its result
+func (db *Database) ExecuteRes(e exp.SQLExpression) (sql.Result, error) {
+	if eSQL, eParams, err := e.ToSQL(); err != nil {
+		return nil, err
+	} else {
+		return db.ExecRes(eSQL, eParams...)
 	}
-	return db.db.Exec(query, args...)
 }
 
 // Migrate installs necessary migrations

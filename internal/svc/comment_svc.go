@@ -32,9 +32,6 @@ type CommentService interface {
 		inclApproved, inclPending, inclRejected, inclDeleted bool) (int64, error)
 	// Create creates, persists, and returns a new comment
 	Create(comment *data.Comment) error
-	// DeleteByHost deletes all comments for the specified domain
-	// Deprecated
-	DeleteByHost(host models.Host) error
 	// FindByID finds and returns a comment with the given ID
 	FindByID(id *uuid.UUID) (*data.Comment, error)
 	// ListByDomain returns a list of comments for the given domain. No comment property filtering is applied, so
@@ -61,6 +58,8 @@ type CommentService interface {
 		pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
+	// MarkDeletedByUser deletes all comments by the specified user, returning the affected comment count
+	MarkDeletedByUser(curUserID, userID *uuid.UUID) (int64, error)
 	// Moderate updates the moderation status of a comment with the given ID in the database
 	Moderate(commentID, userID *uuid.UUID, pending, approved bool) error
 	// UpdateSticky updates the stickiness flag of a comment with the given ID in the database
@@ -149,19 +148,6 @@ func (svc *commentService) Create(c *data.Comment) error {
 		c.CreatedTime, c.ModeratedTime, c.DeletedTime, &c.UserCreated, &c.UserModerated, &c.UserDeleted,
 	); err != nil {
 		logger.Errorf("commentService.Create: Exec() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
-}
-
-func (svc *commentService) DeleteByHost(host models.Host) error {
-	logger.Debugf("commentService.DeleteByHost('%s')", host)
-
-	// Delete records from the database
-	if err := db.Exec("delete from comments where domain=$1;", host); err != nil {
-		logger.Errorf("commentService.DeleteByHost: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -517,6 +503,27 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 
 	// Succeeded
 	return nil
+}
+
+func (svc *commentService) MarkDeletedByUser(curUserID, userID *uuid.UUID) (int64, error) {
+	logger.Debugf("commentService.MarkDeletedByUser(%s, %s)", curUserID, userID)
+
+	// Delete records from the database
+	q := db.Dialect().
+		Update("cm_comments").
+		Set(goqu.Record{"is_deleted": true, "ts_deleted": time.Now().UTC(), "user_deleted": curUserID}).
+		Where(goqu.Ex{"user_created": userID})
+
+	if res, err := db.ExecuteRes(q.Prepared(true)); err != nil {
+		logger.Errorf("commentService.MarkDeletedByUser: ExecuteRes() failed: %v", err)
+		return 0, translateDBErrors(err)
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		logger.Errorf("commentService.MarkDeletedByUser: RowsAffected() failed: %v", err)
+		return 0, translateDBErrors(err)
+	} else {
+		// Succeeded
+		return cnt, nil
+	}
 }
 
 func (svc *commentService) Moderate(commentID, userID *uuid.UUID, pending, approved bool) error {

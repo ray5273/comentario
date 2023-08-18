@@ -32,13 +32,13 @@ export class Toast {
          */
         readonly errorCode?: number,
         /**
-         * Optional message.
-         */
-        readonly message?: string,
-        /**
          * Optional details.
          */
         readonly details?: string,
+        /**
+         * Optional error object.
+         */
+        readonly error?: any,
     ) {}
 
     /**

@@ -63,6 +63,8 @@ type UserService interface {
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]*data.User, error)
 	// Update updates the given user's data in the database
 	Update(user *data.User) error
+	// UpdateBanned updates the given user's banned status in the database
+	UpdateBanned(curUserID, userID *uuid.UUID, banned bool) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -526,14 +528,41 @@ func (svc *userService) Update(user *data.User) error {
 	logger.Debugf("userService.Update(%#v)", user)
 
 	// Update the record
-	if err := db.ExecOne(
-		"update cm_users "+
-			"set email=$1, name=$2, password_hash=$3, is_superuser=$4, confirmed=$5, ts_confirmed=$6, remarks=$7, website_url=$8, federated_id=$9 "+
-			"where id=$10;",
-		user.Email, user.Name, user.PasswordHash, user.IsSuperuser, user.Confirmed, user.ConfirmedTime, user.Remarks,
-		user.WebsiteURL, user.FederatedID, &user.ID,
-	); err != nil {
-		logger.Errorf("userService.Update: ExecOne() failed: %v", err)
+	q := db.Dialect().
+		Update("cm_users").
+		Set(goqu.Record{
+			"email":         user.Email,
+			"name":          user.Name,
+			"password_hash": user.PasswordHash,
+			"is_superuser":  user.IsSuperuser,
+			"confirmed":     user.Confirmed,
+			"ts_confirmed":  user.ConfirmedTime,
+			"remarks":       user.Remarks,
+			"website_url":   user.WebsiteURL,
+			"federated_id":  user.FederatedID,
+		}).
+		Where(goqu.Ex{"id": &user.ID})
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("userService.Update: ExecuteOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) UpdateBanned(curUserID, userID *uuid.UUID, banned bool) error {
+	logger.Debugf("userService.UpdateBanned(%s, %s, %v)", curUserID, userID, banned)
+
+	// Update the record
+	q := db.Dialect().Update("cm_users").Where(goqu.Ex{"id": userID})
+	if banned {
+		q = q.Set(goqu.Record{"banned": true, "ts_banned": time.Now().UTC(), "user_banned": curUserID})
+	} else {
+		q = q.Set(goqu.Record{"banned": false, "ts_banned": nil, "user_banned": nil})
+	}
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("userService.UpdateBanned: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

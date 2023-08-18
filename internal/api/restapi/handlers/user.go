@@ -34,6 +34,39 @@ func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder 
 	}
 }
 
+func UserBan(params api_general.UserBanParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Fetch the user
+	u, r := userGet(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Update the user if necessary
+	ban := swag.BoolValue(params.Body.Ban)
+	if u.Banned != ban {
+		if err := svc.TheUserService.UpdateBanned(&user.ID, &u.ID, ban); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// When banning the user, all user's comment can also be deleted
+	var cc int64
+	if ban && params.Body.DeleteComments {
+		var err error
+		if cc, err = svc.TheCommentService.MarkDeletedByUser(&user.ID, &u.ID); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// Succeeded
+	return api_general.NewUserBanOK().WithPayload(&api_general.UserBanOKBody{CountDeletedComments: cc})
+}
+
 func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
 	// Verify the user is a superuser
 	if r := Verifier.UserIsSuperuser(user); r != nil {

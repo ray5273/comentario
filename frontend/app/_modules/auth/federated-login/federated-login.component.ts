@@ -80,7 +80,7 @@ export class FederatedLoginComponent {
                     this.router.navigateByUrl(this.authSvc.afterLoginRedirectUrl || Paths.manage.dashboard);
                 },
                 // Show a toast on a failed authentication
-                error: () => this.toastSvc.error('oauth-login-failed'),
+                error: err => this.toastSvc.error('oauth-login-failed', undefined, undefined, err),
             });
     }
 }
