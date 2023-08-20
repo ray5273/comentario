@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { concat, EMPTY, Observable } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faAngleDown, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faCopy, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
@@ -52,6 +52,7 @@ export class ProfileComponent implements OnInit {
 
     // Icons
     readonly faAngleDown       = faAngleDown;
+    readonly faCopy            = faCopy;
     readonly faSkullCrossbones = faSkullCrossbones;
     readonly faTrashAlt        = faTrashAlt;
 

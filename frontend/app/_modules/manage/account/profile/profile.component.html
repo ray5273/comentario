@@ -37,6 +37,18 @@
                                         id="newPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
                 </div>
 
+                <!-- User ID -->
+                <div class="col-md-6">
+                    <label for="userId" class="form-label colon" i18n>User ID</label>
+                    <div class="input-group mb-3">
+                        <input [value]="principal.id" type="text" class="form-control" id="userId" disabled>
+                        <button [appCopyText]="principal.id" ngbTooltip
+                                class="btn btn-outline-secondary" type="button" title="Copy" i18n-title>
+                            <fa-icon [icon]="faCopy"></fa-icon>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Avatar -->
                 <div class="col-12">
                     <label for="user-avatar" class="form-label colon" i18n>Avatar</label>
