@@ -7,6 +7,7 @@ import { HomeComponent } from './home.component';
 import { DocsService } from '../_services/docs.service';
 import { AuthService } from '../_services/auth.service';
 import { DocEmbedDirective } from '../_directives/doc-embed.directive';
+import { ConfigService } from '../_services/config.service';
 
 describe('HomeComponent', () => {
 
@@ -19,6 +20,7 @@ describe('HomeComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 MockProvider(AuthService, {principal: of(null)}),
+                MockProvider(ConfigService, {config: {homeContentUrl: ''} as any}),
                 MockProvider(DocsService),
             ],
         })
