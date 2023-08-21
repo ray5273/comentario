@@ -2661,6 +2661,15 @@ paths:
                 $ref: "#/definitions/user"
                 description: The updated user
 
+    delete:
+      operationId: UserDelete
+      summary: Delete a user
+      tags:
+        - ApiGeneral
+      responses:
+        204:
+          description: User has been deleted
+
   /users/{uuid}/ban:
     post:
       operationId: UserBan

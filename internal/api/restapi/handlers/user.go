@@ -46,6 +46,11 @@ func UserBan(params api_general.UserBanParams, user *data.User) middleware.Respo
 		return r
 	}
 
+	// Make sure the user isn't updating themselves
+	if r := Verifier.IsAnotherUser(&user.ID, &u.ID); r != nil {
+		return r
+	}
+
 	// Update the user if necessary
 	ban := swag.BoolValue(params.Body.Ban)
 	if u.Banned != ban {
@@ -65,6 +70,32 @@ func UserBan(params api_general.UserBanParams, user *data.User) middleware.Respo
 
 	// Succeeded
 	return api_general.NewUserBanOK().WithPayload(&api_general.UserBanOKBody{CountDeletedComments: cc})
+}
+
+func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Extract user ID
+	userID, err := data.DecodeUUID(params.UUID)
+	if err != nil {
+		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
+	}
+
+	// Make sure the user isn't deleting themselves
+	if r := Verifier.IsAnotherUser(&user.ID, userID); r != nil {
+		return r
+	}
+
+	// Delete the user
+	if err := svc.TheUserService.DeleteUserByID(userID); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewUserDeleteNoContent()
 }
 
 func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {

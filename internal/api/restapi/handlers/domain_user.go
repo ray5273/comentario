@@ -64,7 +64,7 @@ func DomainUserUpdate(params api_general.DomainUserUpdateParams, user *data.User
 
 	// Make sure the user isn't editing themselves
 	if du.UserID == user.ID {
-		return respForbidden(ErrorSelfEdit)
+		return respBadRequest(ErrorSelfOperation)
 	}
 
 	// Update the domain user

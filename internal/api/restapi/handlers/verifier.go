@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -26,6 +27,8 @@ type VerifierService interface {
 	FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder)
 	// FederatedIdProviders verifies each federated identity provider is properly configured for authentication
 	FederatedIdProviders(ids []models.FederatedIdpID) middleware.Responder
+	// IsAnotherUser checks if the given user is not the current user
+	IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Responder
 	// NeedsModeration returns whether the given comment needs to be moderated
 	NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error)
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
@@ -121,6 +124,13 @@ func (v *verifier) FederatedIdProviders(ids []models.FederatedIdpID) middleware.
 	}
 
 	// Succeeded
+	return nil
+}
+
+func (v *verifier) IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Responder {
+	if *curUserID == *userID {
+		return respBadRequest(ErrorSelfOperation)
+	}
 	return nil
 }
 

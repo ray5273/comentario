@@ -1,11 +1,13 @@
 import {ComponentFixture, TestBed} from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import {UserPropertiesComponent} from './user-properties.component';
+import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
+import {UserPropertiesComponent} from './user-properties.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { NoDataComponent } from '../../no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
+import { AuthService } from '../../../../_services/auth.service';
 
 describe('UserPropertiesComponent', () => {
 
@@ -19,6 +21,7 @@ describe('UserPropertiesComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),
+                MockProvider(AuthService, {principal: of(null)}),
             ],
         });
         fixture = TestBed.createComponent(UserPropertiesComponent);

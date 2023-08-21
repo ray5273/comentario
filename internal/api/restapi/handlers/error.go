@@ -27,7 +27,7 @@ var (
 	ErrorNotDomainOwner        = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator          = &exmodels.Error{ID: "not-moderator", Message: "User is not a moderator"}
 	ErrorPageReadonly          = &exmodels.Error{ID: "page-readonly", Message: "This page is read-only"}
-	ErrorSelfEdit              = &exmodels.Error{ID: "self-edit", Message: "You cannot edit yourself"}
+	ErrorSelfOperation         = &exmodels.Error{ID: "self-operation", Message: "You cannot do this to yourself"}
 	ErrorSelfVote              = &exmodels.Error{ID: "self-vote", Message: "You cannot vote for your own comment"}
 	ErrorSignupsForbidden      = &exmodels.Error{ID: "signups-forbidden", Message: "New signups are forbidden"}
 	ErrorSSOMisconfigured      = &exmodels.Error{ID: "sso-misconfigured", Message: "Domain's SSO configuration is invalid"}

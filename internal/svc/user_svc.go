@@ -30,7 +30,7 @@ type UserService interface {
 	Create(u *data.User) error
 	// CreateUserSession persists a new user session
 	CreateUserSession(s *data.UserSession) error
-	// DeleteUserByID removes an owner user by their ID
+	// DeleteUserByID removes a user by their ID
 	DeleteUserByID(id *uuid.UUID) error
 	// DeleteUserSession removes a user session from the database
 	DeleteUserSession(id *uuid.UUID) error
@@ -165,8 +165,8 @@ func (svc *userService) DeleteUserByID(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserByID(%s)", id)
 
 	// Delete the user
-	if err := db.ExecOne("delete from cm_users where id=$1;", id); err != nil {
-		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
+	if err := db.ExecuteOne(db.Dialect().Delete("cm_users").Where(goqu.Ex{"id": id}).Prepared(true)); err != nil {
+		logger.Errorf("userService.DeleteUserByID: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
