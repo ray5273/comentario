@@ -3,6 +3,7 @@ package svc
 import (
 	"bytes"
 	"database/sql"
+	"errors"
 	"github.com/disintegration/imaging"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
@@ -64,7 +65,7 @@ func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, erro
 		Where(goqu.Ex{"user_id": userID})
 
 	ua := &data.UserAvatar{UserID: *userID}
-	if err := db.SelectRow(q).Scan(&ua.UpdatedTime, &ua.IsCustom, &ua.AvatarS, &ua.AvatarM, &ua.AvatarL); err == sql.ErrNoRows {
+	if err := db.SelectRow(q).Scan(&ua.UpdatedTime, &ua.IsCustom, &ua.AvatarS, &ua.AvatarM, &ua.AvatarL); errors.Is(err, sql.ErrNoRows) {
 		// No avatar exists
 		return nil, nil
 

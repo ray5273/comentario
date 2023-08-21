@@ -28,11 +28,11 @@ func checkErrors(errs ...error) error {
 
 // translateDBErrors "translates" database errors into a service error, picking the first non-nil error
 func translateDBErrors(errs ...error) error {
-	switch checkErrors(errs...) {
-	case nil:
+	switch err := checkErrors(errs...); {
+	case err == nil:
 		// No error
 		return nil
-	case sql.ErrNoRows:
+	case errors.Is(err, sql.ErrNoRows):
 		// Not found
 		return ErrNotFound
 	default:

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
@@ -113,10 +114,10 @@ func respNotFound(err *exmodels.Error) middleware.Responder {
 // behind this translation is to provide the user with some meaningful information about the failure, while keeping
 // any sensitive data (which is otherwise supposed to land in the logs) out of the response
 func respServiceError(err error) middleware.Responder {
-	switch err {
-	case svc.ErrEmailSend:
+	switch {
+	case errors.Is(err, svc.ErrEmailSend):
 		return api_general.NewGenericBadGateway().WithPayload(ErrorEmailSendFailure)
-	case svc.ErrNotFound:
+	case errors.Is(err, svc.ErrNotFound):
 		return api_general.NewGenericNotFound()
 	}
 

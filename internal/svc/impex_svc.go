@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"encoding/xml"
+	"errors"
 	"fmt"
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/go-openapi/strfmt"
@@ -331,12 +332,12 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 				// Proceed to the next record
 				continue
 
-			} else if err != ErrNotFound {
+			} else if !errors.Is(err, ErrNotFound) {
 				// Any other error than "not found"
 				return result.WithError(err)
 			}
 
-		} else if err != ErrNotFound {
+		} else if !errors.Is(err, ErrNotFound) {
 			// Any other error than "not found"
 			return result.WithError(err)
 		}
@@ -523,12 +524,12 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 				// Proceed to the next record
 				continue
 
-			} else if err != ErrNotFound {
+			} else if !errors.Is(err, ErrNotFound) {
 				// Any other error than "not found"
 				return result.WithError(err)
 			}
 
-		} else if err != ErrNotFound {
+		} else if !errors.Is(err, ErrNotFound) {
 			// Any other error than "not found"
 			return result.WithError(err)
 		}
@@ -712,12 +713,12 @@ func (svc *importExportService) importV3(curUser *data.User, domain *data.Domain
 				// Proceed to the next record
 				continue
 
-			} else if err != ErrNotFound {
+			} else if !errors.Is(err, ErrNotFound) {
 				// Any other error than "not found"
 				return result.WithError(err)
 			}
 
-		} else if err != ErrNotFound {
+		} else if !errors.Is(err, ErrNotFound) {
 			// Any other error than "not found"
 			return result.WithError(err)
 		}

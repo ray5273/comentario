@@ -4,6 +4,7 @@ package main
 //go:generate swagger generate server --exclude-main --name Comentario --target internal/api --spec ./swagger/swagger.yml --principal gitlab.com/comentario/comentario/internal/data.User
 
 import (
+	"errors"
 	"fmt"
 	"github.com/go-openapi/loads"
 	"github.com/jessevdk/go-flags"
@@ -52,7 +53,8 @@ func main() {
 	// Parse the command line
 	if _, err := parser.Parse(); err != nil {
 		code := 1
-		if fe, ok := err.(*flags.Error); ok {
+		var fe *flags.Error
+		if errors.As(err, &fe) {
 			if fe.Type == flags.ErrHelp {
 				code = 0
 			}

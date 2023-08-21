@@ -6,6 +6,7 @@ import (
 	"testing"
 )
 
+//goland:noinspection GoDirectComparisonOfErrors
 func Test_checkErrors(t *testing.T) {
 	tests := []struct {
 		name    string
@@ -26,6 +27,7 @@ func Test_checkErrors(t *testing.T) {
 	}
 }
 
+//goland:noinspection GoDirectComparisonOfErrors
 func Test_translateError(t *testing.T) {
 	tests := []struct {
 		name    string

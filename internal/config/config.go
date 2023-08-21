@@ -67,7 +67,7 @@ var (
 
 	// CLIFlags stores command-line flags
 	CLIFlags = struct {
-		Verbose         []bool `short:"v" long:"verbose" description:"Verbose logging"`
+		Verbose         []bool `short:"v" long:"verbose" description:"Verbose logging (-vv for debug)"`
 		BaseURL         string `long:"base-url"          description:"Server's own base URL"                      default:"http://localhost:8080/" env:"BASE_URL"`
 		CDNURL          string `long:"cdn-url"           description:"Static file CDN URL (defaults to base URL)" default:""                       env:"CDN_URL"`
 		EmailFrom       string `long:"email-from"        description:"'From' address in sent emails, defaults to SMTP username"                    env:"EMAIL_FROM"`

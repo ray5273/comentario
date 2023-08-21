@@ -2,6 +2,7 @@ package svc
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
@@ -700,7 +701,7 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 	// Fetch the data
 	if err := s.Scan(args...); err != nil {
 		// Log "not found" errors only in debug
-		if err != sql.ErrNoRows || logger.IsEnabledFor(logging.DEBUG) {
+		if !errors.Is(err, sql.ErrNoRows) || logger.IsEnabledFor(logging.DEBUG) {
 			logger.Errorf("userService.fetchUserSession: Scan() failed: %v", err)
 		}
 		return nil, nil, err

@@ -2,8 +2,9 @@ package handlers
 
 import (
 	"encoding/base64"
+	"errors"
 	"fmt"
-	"github.com/go-openapi/errors"
+	oaerrors "github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
@@ -17,8 +18,8 @@ import (
 )
 
 var (
-	ErrUnauthorised  = errors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-	ErrInternalError = errors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+	ErrUnauthorised  = oaerrors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
+	ErrInternalError = oaerrors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
 
 // AuthBearerToken inspects the header and determines if the token is of one of the provided scopes
@@ -218,7 +219,7 @@ func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.
 
 func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middleware.Responder {
 	// Find the local user with that email
-	if user, err := svc.TheUserService.FindUserByEmail(data.EmailPtrToString(params.Body.Email), true); err == svc.ErrNotFound {
+	if user, err := svc.TheUserService.FindUserByEmail(data.EmailPtrToString(params.Body.Email), true); errors.Is(err, svc.ErrNotFound) {
 		// No such email: apply a random delay to discourage email polling
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 
@@ -410,7 +411,7 @@ func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 func loginLocalUser(email, password, host string, req *http.Request) (*data.User, *data.UserSession, middleware.Responder) {
 	// Find the user
 	user, err := svc.TheUserService.FindUserByEmail(email, true)
-	if err == svc.ErrNotFound {
+	if errors.Is(err, svc.ErrNotFound) {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
 	} else if err != nil {

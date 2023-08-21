@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
@@ -70,7 +71,7 @@ func (v *verifier) DomainHostCanBeAdded(host string) middleware.Responder {
 	if _, err := svc.TheDomainService.FindByHost(host); err == nil {
 		// Domain host already exists in the DB
 		return respBadRequest(ErrorHostAlreadyExists)
-	} else if err != svc.ErrNotFound {
+	} else if !errors.Is(err, svc.ErrNotFound) {
 		// Any database error other than "not found"
 		return respServiceError(err)
 	}
@@ -239,7 +240,7 @@ func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.Domai
 func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 	// Try to find an existing user by email
 	user, err := svc.TheUserService.FindUserByEmail(email, false)
-	if err == svc.ErrNotFound {
+	if errors.Is(err, svc.ErrNotFound) {
 		// Success: no such email
 		return nil
 	} else if err != nil {

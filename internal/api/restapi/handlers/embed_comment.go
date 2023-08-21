@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -49,7 +50,7 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) middleware.Responder {
 	// Fetch the domain and the user (don't create one yet if there's none)
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
-	if err == svc.ErrNotFound {
+	if errors.Is(err, svc.ErrNotFound) {
 		// No domain found for this host
 		return respForbidden(ErrorUnknownHost)
 	} else if err != nil {
@@ -142,7 +143,7 @@ func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *dat
 func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) middleware.Responder {
 	// Fetch the domain and the user, creating one if necessary
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
-	if err == svc.ErrNotFound {
+	if errors.Is(err, svc.ErrNotFound) {
 		// No domain found for this host
 		return respForbidden(ErrorUnknownHost)
 	} else if err != nil {

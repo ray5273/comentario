@@ -3,6 +3,7 @@ package svc
 import (
 	"database/sql"
 	"encoding/hex"
+	"errors"
 	"gitlab.com/comentario/comentario/internal/data"
 	"time"
 )
@@ -49,7 +50,7 @@ func (svc *tokenService) DeleteByValue(value []byte) error {
 	logger.Debugf("tokenService.DeleteByValue(%x)", value)
 
 	// Delete the record
-	if err := db.ExecOne("delete from cm_tokens where value=$1", hex.EncodeToString(value)); err == sql.ErrNoRows {
+	if err := db.ExecOne("delete from cm_tokens where value=$1", hex.EncodeToString(value)); errors.Is(err, sql.ErrNoRows) {
 		// No rows affected
 		return ErrBadToken
 	} else if err != nil {

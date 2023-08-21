@@ -53,7 +53,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return oauthFailure(errors.New("invalid auth session ID"))
 
 		// Find and delete the session
-	} else if authSession, err = svc.TheAuthSessionService.TakeByID(&authSessID); err == svc.ErrNotFound {
+	} else if authSession, err = svc.TheAuthSessionService.TakeByID(&authSessID); errors.Is(err, svc.ErrNotFound) {
 		logger.Debugf("No auth session found with ID=%v: %v", authSessID, err)
 		return oauthFailure(errors.New("auth session not found"))
 
@@ -168,7 +168,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 	// Try to find an existing user by email
 	var user *data.User
-	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); err == svc.ErrNotFound {
+	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); errors.Is(err, svc.ErrNotFound) {
 		// No such email/user: it's a signup. Insert a new user
 		user = data.NewUser(fedUser.Email, fedUser.Name).
 			WithConfirmed(true). // Confirm the user right away as we trust the IdP

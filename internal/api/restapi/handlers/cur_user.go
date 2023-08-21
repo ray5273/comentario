@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/go-openapi/runtime/middleware"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -12,7 +13,7 @@ import (
 func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	// Try to authenticate the user
 	user, err := GetUserBySessionCookie(params.HTTPRequest)
-	if err == svc.ErrDB {
+	if errors.Is(err, svc.ErrDB) {
 		// Houston, we have a problem
 		return respInternalError(nil)
 	} else if err != nil {
