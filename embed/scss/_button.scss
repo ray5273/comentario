@@ -17,8 +17,16 @@
     transition: color 0.2s;
     white-space: nowrap;
 
-    &:hover, &:focus, &:active {
-        color: $link-hover-color;
+    &:not(:disabled) {
+        &:hover, &:focus, &:active {
+            color: $link-hover-color;
+            opacity: 1;
+        }
+    }
+
+    &:disabled {
+        cursor: not-allowed !important;
+        opacity: 0.3 !important;
     }
 }
 

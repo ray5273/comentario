@@ -292,6 +292,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         }
         const options = UIToolkit.div('options');
         const isModerator = ctx.principal && (ctx.principal.isSuperuser || ctx.principal.isOwner || ctx.principal.isModerator);
+        const ownComment = ctx.principal && this._comment.userCreated === ctx.principal.id;
 
         // Left- and right-hand side of the options bar
         const left = UIToolkit.div('options-sub').appendTo(options);
@@ -299,9 +300,11 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Upvote / Downvote buttons and the score
         left.append(
-            this.btnUpvote = this.getOptionButton('upvote', null, () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1)),
+            this.btnUpvote = this.getOptionButton('upvote', null, () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
+                .attr(ownComment && {disabled: 'true'}),
             this.eScore = UIToolkit.div('score').attr({title: 'Comment score'}),
-            this.btnDownvote = this.getOptionButton('downvote', null, () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1)));
+            this.btnDownvote = this.getOptionButton('downvote', null, () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
+                .attr(ownComment && {disabled: 'true'}));
         // Reply button
         if (!ctx.isReadonly) {
             this.btnReply = this.getOptionButton('reply', null, () => ctx.onReply(this)).appendTo(left);
@@ -327,7 +330,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         }
 
         // Moderator or own comment
-        if (isModerator || this._comment.userCreated === ctx.principal?.id) {
+        if (isModerator || ownComment) {
             right.append(
                 // Edit button
                 this.btnEdit = this.getOptionButton('edit', null, () => ctx.onEdit(this)).appendTo(right),
