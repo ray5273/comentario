@@ -662,6 +662,7 @@ export class Comentario extends HTMLElement {
      */
     private async voteComment(card: CommentCard, direction: -1 | 0 | 1): Promise<void> {
         // Only registered users can vote
+        let reloaded = false;
         if (!this.principal) {
             await this.profileBar!.loginUser();
 
@@ -669,13 +670,21 @@ export class Comentario extends HTMLElement {
             if (!this.principal) {
                 return;
             }
+
+            // The original card is gone at this point, because the comment tree is reloaded after the login
+            reloaded = true;
         }
 
         // Run the vote with the backend
         const r = await this.apiService.commentVote(card.comment.id, direction);
 
-        // Update the comment and the card
-        card.comment = this.replaceCommentById(card.comment, {score: r.score, direction});
+        // Update the comment and the card, if there's still one; otherwise reload the tree again (not optimal, but we
+        // can't find the card at the moment as we don't store any of them, only the underlying elements)
+        if (reloaded) {
+            await this.reload();
+        } else {
+            card.comment = this.replaceCommentById(card.comment, {score: r.score, direction});
+        }
     }
 
     /**
