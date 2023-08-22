@@ -245,11 +245,11 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         const ms = new Date(this._comment.createdTime).getTime();
 
         // Render a card
-        this.id(`card-${id}`) // ID for scrolling to
-            .classes('card', `border-${bgColor}`)
+        this.classes('card', `border-${bgColor}`)
             .append(
                 // Card self
                 this.eCardSelf = UIToolkit.div('card-self')
+                    .id(`card-${id}`) // ID for highlighting/scrolling to
                     .append(
                         // Card header
                         this.eHeader = UIToolkit.div('card-header')
@@ -265,10 +265,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                                 Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
                                                     .inner(commenter?.name ?? '[Deleted User]')
                                                     .classes('name')
-                                                    .attr({
-                                                        href: commenter?.websiteUrl,
-                                                        rel:  commenter?.websiteUrl && 'nofollow noopener noreferrer',
-                                                    }),
+                                                    .attr(commenter?.websiteUrl ?
+                                                        {href: commenter.websiteUrl, rel: 'nofollow noopener noreferrer'} :
+                                                        undefined),
                                                 // Moderator badge
                                                 this.eModeratorBadge),
                                         // Subtitle

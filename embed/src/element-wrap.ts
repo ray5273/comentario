@@ -69,7 +69,7 @@ export class Wrap<T extends HTMLElement> {
      * @param values Object that provides attribute names (keys, they can use camelCase, which will be converted to
      * kebab-case) and their values. null and undefined values cause attribute removal from the node.
      */
-    attr(values: { [k: string]: string | null | undefined }): Wrap<T> {
+    attr(values: { [k: string]: string | null | undefined } | false | null | undefined): Wrap<T> {
         if (this.el && values) {
             Object.keys(values).forEach(k => {
                 const v = values[k];
