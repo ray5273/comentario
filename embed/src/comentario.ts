@@ -231,7 +231,7 @@ export class Comentario extends HTMLElement {
      * @param id Comment ID to scroll to.
      */
     private scrollToComment(id: UUID) {
-        Wrap.byId(`card-${id}`)
+        Wrap.byId(id)
             .classes('bg-highlight')
             .scrollTo()
             .else(() => {
@@ -650,6 +650,11 @@ export class Comentario extends HTMLElement {
 
         // Rerender comments to reflect the changed stickiness
         this.renderComments();
+
+        // If sticky status is set, scroll to the comment
+        if (isSticky) {
+            this.scrollToComment(card.comment.id);
+        }
     }
 
     /**

@@ -299,7 +299,6 @@ export class Wrap<T extends HTMLElement> {
      */
     private vertVisible(): boolean {
         const r = this.el?.getBoundingClientRect();
-        return !!r && r.top >= 0 && r.bottom <= window.innerWidth;
+        return !!r && r.top >= 0 && r.bottom <= window.innerHeight;
     }
-
 }

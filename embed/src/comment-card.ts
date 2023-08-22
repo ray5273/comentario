@@ -249,7 +249,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             .append(
                 // Card self
                 this.eCardSelf = UIToolkit.div('card-self')
-                    .id(`card-${id}`) // ID for highlighting/scrolling to
+                    .id(id) // ID for highlighting/scrolling to
                     .append(
                         // Card header
                         this.eHeader = UIToolkit.div('card-header')

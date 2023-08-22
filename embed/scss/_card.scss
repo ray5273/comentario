@@ -8,6 +8,11 @@
         padding: 12px;
     }
 
+    // Hide the content of the card when there's an editor inside it (immediate child only, not nested ones)
+    &.comentario-editor-inserted > .comentario-card-self {
+        display: none;
+    }
+
     .comentario-card-children {
         padding-left: 12px;
     }
@@ -100,16 +105,6 @@
         p {
             margin-top: 6px;
             margin-bottom: 6px;
-        }
-    }
-
-    // Hide the header and the body when there's an editor inside the card (immediate children only, not in the nested
-    // cards)
-    &.comentario-editor-inserted {
-        > .comentario-card-header,
-        > .comentario-card-body,
-        > .comentario-options {
-            display: none;
         }
     }
 }
