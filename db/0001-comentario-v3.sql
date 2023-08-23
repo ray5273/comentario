@@ -416,11 +416,13 @@ begin
         -- same email (commenters.email isn't unique in Commento), thus mapping to the same owner and, subsequently, to
         -- the same user ID
         create temporary table temp_commenterhex_map(commenterhex varchar(64) primary key, id uuid not null);
+        insert into temp_commenterhex_map(commenterhex, id) values ('anonymous', '00000000-0000-0000-0000-000000000000');
         insert into temp_commenterhex_map(commenterhex, id)
             -- Map to the existing owner user, if there is one with the same email, otherwise to a new random UUID
             select cr.commenterhex, coalesce(m.id, gen_random_uuid())
                 from commenters cr
                 left join temp_ownerhex_map m on m.email=cr.email;
+
 
         -- Create a domain mapping table
         create temporary table temp_domain_map(domain varchar(259) primary key, id uuid not null unique);
@@ -537,7 +539,7 @@ begin
             select
                     dm.id, u.id, false, false, true, coalesce(bool_or(e.sendreplynotifications), false),
                     coalesce(bool_or(e.sendmoderatornotifications), false), min(u.ts_created)
-                from (select distinct commenterhex, domain from comments) c
+                from (select distinct commenterhex, domain from comments where commenterhex != 'anonymous') c
                 join temp_commenterhex_map cm on cm.commenterhex=c.commenterhex
                 join cm_users u on u.id=cm.id
                 join temp_domain_map dm on dm.domain=c.domain
