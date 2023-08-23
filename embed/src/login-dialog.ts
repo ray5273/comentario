@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { IdentityProvider } from './models';
+import { FederatedIdentityProvider } from './models';
 
 export class LoginDialog extends Dialog {
 
@@ -13,7 +13,7 @@ export class LoginDialog extends Dialog {
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly baseUrl: string,
-        private readonly idps: IdentityProvider[],
+        private readonly idps: FederatedIdentityProvider[],
     ) {
         super(parent, 'Log in', pos);
     }
@@ -46,7 +46,7 @@ export class LoginDialog extends Dialog {
      * @param baseUrl Base URL of the Comentario instance
      * @param idps List of enabled identity providers.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, idps: IdentityProvider[]): Promise<LoginDialog> {
+    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, idps: FederatedIdentityProvider[]): Promise<LoginDialog> {
         const dlg = new LoginDialog(parent, pos, baseUrl, idps);
         return dlg.run(dlg);
     }

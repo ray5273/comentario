@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { MarkdownHelp } from './markdown-help';
-import { PageInfo } from './models';
+import { ComentarioConfig, PageInfo } from './models';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
 
@@ -17,6 +17,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
      * @param isEdit Whether it's adding a new comment (false) or editing an existing one (true).
      * @param initialText Initial text to insert into the editor.
      * @param isAuthenticated Whether the user is authenticated.
+     * @param config Comentario configuration obtained from the backend.
      * @param pageInfo Page data.
      * @param onCancel Cancel callback.
      * @param onSubmit Submit callback.
@@ -27,6 +28,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         isEdit: boolean,
         initialText: string,
         isAuthenticated: boolean,
+        config: ComentarioConfig,
         pageInfo: PageInfo,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,
@@ -58,7 +60,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                         // Markdown help button
                         UIToolkit.button(
                             '<b>M⬇</b>&nbsp;Markdown',
-                            btn => MarkdownHelp.run(root, {ref: btn, placement: 'bottom-start'})),
+                            btn => MarkdownHelp.run(root, {ref: btn, placement: 'bottom-start'}, config)),
                         // Buttons
                         UIToolkit.div('comment-editor-buttons')
                             .append(

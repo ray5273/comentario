@@ -1,11 +1,12 @@
 import {
     ANONYMOUS_ID,
+    ComentarioConfig,
     Comment,
     CommenterMap,
     CommentsGroupedById,
     CommentSort,
+    DefaultComentarioConfig,
     ErrorMessage,
-    IdentityProvider,
     Message,
     OkMessage,
     PageInfo,
@@ -44,6 +45,9 @@ export class Comentario extends HTMLElement {
     /** The root element of Comentario embed. */
     private readonly root = Wrap.new('div').appendTo(new Wrap(this));
 
+    /** Comentario config obtained from the backend. */
+    private config: ComentarioConfig = DefaultComentarioConfig;
+
     /** Message panel (only shown when needed). */
     private messagePanel?: Wrap<HTMLDivElement>;
 
@@ -70,9 +74,6 @@ export class Comentario extends HTMLElement {
 
     /** Map of comments, grouped by their ID. */
     private parentIdMap?: CommentsGroupedById;
-
-    /** Federated identity providers configured on the backend. */
-    private federatedIdps: IdentityProvider[] = [];
 
     /** Current host. */
     private host = parent.location.host;
@@ -130,8 +131,8 @@ export class Comentario extends HTMLElement {
             }
         }
 
-        // Load client configuration
-        await this.loadClientConfig();
+        // Load Comentario configuration
+        this.config = await this.apiService.comentarioConfig();
 
         // Set up the root content
         this.root
@@ -141,7 +142,7 @@ export class Comentario extends HTMLElement {
                 this.profileBar = new ProfileBar(
                     this.origin,
                     this.root,
-                    this.federatedIdps,
+                    this.config,
                     () => this.createAvatarElement(this.principal),
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.openOAuthPopup(idp),
@@ -292,15 +293,6 @@ export class Comentario extends HTMLElement {
     }
 
     /**
-     * Fetch client configuration from the backend.
-     */
-    private async loadClientConfig(): Promise<void> {
-        this.federatedIdps = [];
-        const r = await this.apiService.comentarioConfig();
-        this.federatedIdps = r.federatedIdps ?? [];
-    }
-
-    /**
      * Request the authentication status of the current user from the backend, and return a promise that resolves as
      * soon as the status becomes definite.
      */
@@ -382,6 +374,7 @@ export class Comentario extends HTMLElement {
             false,
             '',
             !!this.principal,
+            this.config,
             this.pageInfo!,
             () => this.cancelCommentEdits(),
             async editor => await this.submitNewComment(parentCard, editor.markdown, editor.anonymous));
@@ -402,6 +395,7 @@ export class Comentario extends HTMLElement {
             true,
             card.comment.markdown!,
             true,
+            this.config,
             this.pageInfo!,
             () => this.cancelCommentEdits(),
             async editor => await this.submitCommentEdits(card, editor.markdown));

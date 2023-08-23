@@ -39,6 +39,7 @@ func ComentarioConfig(api_general.ComentarioConfigParams) middleware.Responder {
 
 	// Succeeded
 	return api_general.NewComentarioConfigOK().WithPayload(&models.ComentarioConfig{
+		BaseDocsURL:      config.CLIFlags.BaseDocsURL,
 		BaseURL:          config.BaseURL.String(),
 		BuildDate:        strfmt.DateTime(config.BuildDate),
 		DefaultLangID:    util.UIDefaultLangID,

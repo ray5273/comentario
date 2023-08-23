@@ -34,6 +34,6 @@ export class DocsService {
      * @param lang Language to return a URL for. Optional, defaults to the current UI language.
      */
     getPageUrl(path: string, lang?: string): string {
-        return Location.joinWithSlash(this.cfgSvc.docsBaseUrl, `${lang || this.locale}/${path}`);
+        return Location.joinWithSlash(this.cfgSvc.config.baseDocsUrl, `${lang || this.locale}/${path}`);
     }
 }

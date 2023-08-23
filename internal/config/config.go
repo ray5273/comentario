@@ -68,21 +68,22 @@ var (
 	// CLIFlags stores command-line flags
 	CLIFlags = struct {
 		Verbose         []bool `short:"v" long:"verbose" description:"Verbose logging (-vv for debug)"`
-		BaseURL         string `long:"base-url"          description:"Server's own base URL"                      default:"http://localhost:8080/" env:"BASE_URL"`
-		CDNURL          string `long:"cdn-url"           description:"Static file CDN URL (defaults to base URL)" default:""                       env:"CDN_URL"`
-		EmailFrom       string `long:"email-from"        description:"'From' address in sent emails, defaults to SMTP username"                    env:"EMAIL_FROM"`
-		DBIdleConns     int    `long:"db-idle-conns"     description:"Max. # of idle DB connections"              default:"50"                     env:"DB_MAX_IDLE_CONNS"`
+		BaseURL         string `long:"base-url"          description:"Server's own base URL"                      default:"http://localhost:8080/"       env:"BASE_URL"`
+		BaseDocsURL     string `long:"base-docs-url"     description:"Base documentation URL"                     default:"https://docs.comentario.app/" env:"BASE_DOCS_URL"`
+		CDNURL          string `long:"cdn-url"           description:"Static file CDN URL (defaults to base URL)" default:""                             env:"CDN_URL"`
+		EmailFrom       string `long:"email-from"        description:"'From' address in sent emails, defaults to SMTP username"                          env:"EMAIL_FROM"`
+		DBIdleConns     int    `long:"db-idle-conns"     description:"Max. # of idle DB connections"              default:"50"                           env:"DB_MAX_IDLE_CONNS"`
 		EnableSwaggerUI bool   `long:"enable-swagger-ui" description:"Enable Swagger UI at /api/docs"`
-		StaticPath      string `long:"static-path"       description:"Path to static files"                       default:"./frontend"             env:"STATIC_PATH"`
-		DBMigrationPath string `long:"db-migration-path" description:"Path to DB migration files"                 default:"./db"                   env:"DB_MIGRATION_PATH"`
+		StaticPath      string `long:"static-path"       description:"Path to static files"                       default:"./frontend"                   env:"STATIC_PATH"`
+		DBMigrationPath string `long:"db-migration-path" description:"Path to DB migration files"                 default:"./db"                         env:"DB_MIGRATION_PATH"`
 		DBDebug         bool   `long:"db-debug"          description:"Enable database debug logging"`
-		TemplatePath    string `long:"template-path"     description:"Path to template files"                     default:"./templates"            env:"TEMPLATE_PATH"`
-		SecretsFile     string `long:"secrets"           description:"Path to YAML file with secrets"             default:"secrets.yaml"           env:"SECRETS_FILE"`
-		AllowSignups    bool   `long:"allow-signups"     description:"Allow new user registration"                                                 env:"ALLOW_SIGNUPS"`
-		AllowNewOwners  bool   `long:"allow-new-owners"  description:"Allow non-owner users to add domains"                                        env:"ALLOW_NEW_OWNERS"`
-		LogFullIPs      bool   `long:"log-full-ips"      description:"Log IP addresses in full"                                                    env:"LOG_FULL_IPS"`
-		HomeContentURL  string `long:"home-content-url"  description:"URL of a HTML page to display on homepage"                                   env:"HOME_CONTENT_URL"`
-		GitLabURL       string `long:"gitlab-url"        description:"Custom GitLab URL for authentication"       default:""                       env:"GITLAB_URL"`
+		TemplatePath    string `long:"template-path"     description:"Path to template files"                     default:"./templates"                  env:"TEMPLATE_PATH"`
+		SecretsFile     string `long:"secrets"           description:"Path to YAML file with secrets"             default:"secrets.yaml"                 env:"SECRETS_FILE"`
+		AllowSignups    bool   `long:"allow-signups"     description:"Allow new user registration"                                                       env:"ALLOW_SIGNUPS"`
+		AllowNewOwners  bool   `long:"allow-new-owners"  description:"Allow non-owner users to add domains"                                              env:"ALLOW_NEW_OWNERS"`
+		LogFullIPs      bool   `long:"log-full-ips"      description:"Log IP addresses in full"                                                          env:"LOG_FULL_IPS"`
+		HomeContentURL  string `long:"home-content-url"  description:"URL of a HTML page to display on homepage"                                         env:"HOME_CONTENT_URL"`
+		GitLabURL       string `long:"gitlab-url"        description:"Custom GitLab URL for authentication"       default:""                             env:"GITLAB_URL"`
 		E2e             bool   `long:"e2e"               description:"End-2-end testing mode"`
 	}{}
 
@@ -106,6 +107,11 @@ func CLIParsed() error {
 		return fmt.Errorf("invalid Base URL: %v", err)
 	}
 	UseHTTPS = BaseURL.Scheme == "https"
+
+	// Validate the base docs URL
+	if !util.IsValidURL(CLIFlags.BaseDocsURL, true) {
+		return fmt.Errorf("invalid Base Docs URL: %q", CLIFlags.BaseDocsURL)
+	}
 
 	// Check the CDN URL: if it's empty, use the base URL instead
 	if CLIFlags.CDNURL == "" {

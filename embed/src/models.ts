@@ -12,6 +12,44 @@ export interface UILanguage {
     readonly nameNative:  string; // Language name in the language self
 }
 
+/** Comentario configuration. */
+export interface ComentarioConfig {
+    /** Base Comentario URL */
+    baseUrl: string;
+    /** Base Documentation URL */
+    baseDocsUrl: string;
+    /** Comentario version */
+    version: string;
+    /** Server build date */
+    buildDate: string;
+    /** Default interface language ID */
+    defaultLangId: string;
+    /** URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for  unauthenticated user) or dashboard (for authenticated) */
+    homeContentUrl?: string;
+    /** Whether registration of new users (including commenters) is allowed */
+    signupAllowed: boolean;
+    /** Whether non-owner users can add domains (and become owners) */
+    newOwnersAllowed: boolean;
+    /** Configured federated identity providers */
+    federatedIdps?: Array<FederatedIdentityProvider>;
+    /** Max number of database rows returned per page */
+    resultPageSize: number;
+    /** Available UI languages */
+    uiLanguages?: UILanguage[];
+}
+
+export const DefaultComentarioConfig: ComentarioConfig = {
+    baseUrl:          'https://comentario.app/',
+    baseDocsUrl:      'https://docs.comentario.app/',
+    version:          '',
+    buildDate:        '',
+    defaultLangId:    'en',
+    homeContentUrl:   'https://docs.comentario.app/en/embed/front-page/',
+    signupAllowed:    false,
+    newOwnersAllowed: false,
+    resultPageSize:   20,
+};
+
 /** User abstraction. **/
 export interface User {
     readonly id:          UUID;    // Unique user ID
@@ -105,8 +143,8 @@ export const sortingProps: { [k in CommentSort]: CommentSortProps } = {
     ta: {label: 'Oldest',  comparator: (a, b) => a.createdTime.localeCompare(b.createdTime)},
 };
 
-/** Identity provider data. */
-export interface IdentityProvider {
+/** Federated identity provider data. */
+export interface FederatedIdentityProvider {
     readonly id:    string; // Provider ID
     readonly name:  string; // Provider name
     readonly icon?: string; // Provider icon name

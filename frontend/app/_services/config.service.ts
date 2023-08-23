@@ -1,7 +1,6 @@
 import { Injectable } from '@angular/core';
 import { Observable, tap } from 'rxjs';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
-import { environment } from '../../environments/environment';
 import { ApiGeneralService, ComentarioConfig } from '../../generated-api';
 
 declare global {
@@ -46,13 +45,6 @@ export class ConfigService {
      */
     get config(): ComentarioConfig {
         return this._config!;
-    }
-
-    /**
-     * Return the base URL for embedded and linked documentation pages.
-     */
-    get docsBaseUrl(): string {
-        return environment.docsBaseUrl;
     }
 
     /**

@@ -58,11 +58,12 @@ definitions:
       type: "Error"
 
   comentarioConfig:
-    description: Server configuration
+    description: Comentario configuration
     type: object
     readOnly: true
     required:
       - baseUrl
+      - baseDocsUrl
       - version
       - buildDate
       - defaultLangId
@@ -74,6 +75,10 @@ definitions:
         type: string
         x-isnullable: false
         description: Base Comentario URL
+      baseDocsUrl:
+        type: string
+        x-isnullable: false
+        description: Base Documentation URL
       version:
         type: string
         x-isnullable: false

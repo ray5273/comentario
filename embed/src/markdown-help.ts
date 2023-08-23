@@ -1,10 +1,11 @@
 import { Wrap } from './element-wrap';
 import { Dialog, DialogPositioning } from './dialog';
 import { UIToolkit } from './ui-toolkit';
+import { ComentarioConfig } from './models';
 
 export class MarkdownHelp extends Dialog {
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning) {
+    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: ComentarioConfig) {
         super(parent, 'Markdown help', pos);
     }
 
@@ -12,9 +13,10 @@ export class MarkdownHelp extends Dialog {
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
+     * @param config Comentario configuration obtained from the backend.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning): void {
-        new MarkdownHelp(parent, pos).run(null);
+    static run(parent: Wrap<any>, pos: DialogPositioning, config: ComentarioConfig): void {
+        new MarkdownHelp(parent, pos, config).run(null);
     }
 
     override renderContent(): Wrap<any> {
@@ -35,8 +37,9 @@ export class MarkdownHelp extends Dialog {
                     .append(
                         Wrap.new('a')
                             .inner('Read more about Markdown')
-                            // TODO this link doesn't work yet
-                            .attr({href: 'https://docs.comentario.app/en/kb/markdown', target: '_blank'})));
+                            .attr({
+                                href:   `${this.config.baseDocsUrl}${this.config.defaultLangId}/kb/markdown/`,
+                                target: '_blank'})));
     }
 
     private row(md: string, text: string): Wrap<any> {

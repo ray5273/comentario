@@ -1,27 +1,10 @@
-import { Comment, Commenter, IdentityProvider, PageInfo, Principal, UILanguage, UUID } from './models';
+import { ComentarioConfig, Comment, Commenter, PageInfo, Principal, UUID } from './models';
 import { HttpClient } from './http-client';
 
 export interface ApiErrorResponse {
     readonly id?:      string;
     readonly message?: string;
     readonly details?: string;
-}
-
-export interface ApiComentarioConfigResponse {
-    /** Base Comentario URL. */
-    readonly baseUrl: string;
-    /** Comentario version. */
-    readonly version: string;
-    /** Server build date. */
-    readonly buildDate: string;
-    /** Whether registration of new users (including commenters) is allowed. */
-    readonly signupAllowed: boolean;
-    /** Whether non-owner users can add domains (and become owners). */
-    readonly newOwnersAllowed: boolean;
-    /** Configured federated identity providers. */
-    readonly federatedIdps?: IdentityProvider[];
-    /** Available UI languages. */
-    readonly uiLanguages?: UILanguage[];
 }
 
 export interface ApiCommentListResponse {
@@ -253,8 +236,8 @@ export class ApiService {
     /**
      * Obtain Comentario configuration.
      */
-    async comentarioConfig(): Promise<ApiComentarioConfigResponse> {
-        return this.apiClient.get<ApiComentarioConfigResponse>('config');
+    async comentarioConfig(): Promise<ComentarioConfig> {
+        return this.apiClient.get<ComentarioConfig>('config');
     }
 
     /**

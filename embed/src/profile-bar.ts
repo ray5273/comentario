@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { IdentityProvider, PageInfo, Principal, SignupData, UserSettings } from './models';
+import { ComentarioConfig, FederatedIdentityProvider, PageInfo, Principal, SignupData, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -15,7 +15,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     /**
      * @param baseUrl Base URL of the Comentario instance
      * @param root Root element (for showing popups).
-     * @param federatedIdps Federated identity providers configured on the backend.
+     * @param config Comentario configuration obtained from the backend.
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
      * @param onLocalAuth Callback for executing a local authentication.
      * @param onOAuth Callback for executing external (OAuth) authentication.
@@ -25,7 +25,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     constructor(
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
-        private readonly federatedIdps: IdentityProvider[],
+        private readonly config: ComentarioConfig,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
@@ -111,7 +111,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      */
     async loginUser(): Promise<void> {
         // Make a list of available identity providers
-        const idps: IdentityProvider[] = [];
+        const idps: FederatedIdentityProvider[] = [];
         // -- Local
         if (this._pageInfo?.authLocal) {
             idps.push({id: '', name: 'Local'});
@@ -121,7 +121,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             idps.push({id: 'sso', name: 'SSO'});
         }
         // -- Available federated IdPs enabled on the domain
-        this.federatedIdps.filter(idp => this._pageInfo?.idps?.includes(idp.id)).forEach(idp => idps.push(idp));
+        this.config.federatedIdps?.filter(idp => this._pageInfo?.idps?.includes(idp.id)).forEach(idp => idps.push(idp));
 
         // Make sure there's any IdP available
         if (!idps.length) {
