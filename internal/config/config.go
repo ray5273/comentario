@@ -54,10 +54,12 @@ var (
 		} `yaml:"smtpServer"`
 
 		IdP struct {
-			GitHub  KeySecret `yaml:"github"`  // GitHub auth config
-			GitLab  KeySecret `yaml:"gitlab"`  // GitLab auth config
-			Google  KeySecret `yaml:"google"`  // Google auth config
-			Twitter KeySecret `yaml:"twitter"` // Twitter auth config
+			Facebook KeySecret `yaml:"facebook"` // Facebook auth config
+			GitHub   KeySecret `yaml:"github"`   // GitHub auth config
+			GitLab   KeySecret `yaml:"gitlab"`   // GitLab auth config
+			Google   KeySecret `yaml:"google"`   // Google auth config
+			LinkedIn KeySecret `yaml:"linkedin"` // LinkedIn auth config
+			Twitter  KeySecret `yaml:"twitter"`  // Twitter auth config
 		} `yaml:"idp"`
 
 		Akismet struct {

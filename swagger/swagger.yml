@@ -470,9 +470,11 @@ definitions:
     description: Federated identity provider ID, a subset of identityProviderId
     type: string
     enum:
+      - facebook
       - github
       - gitlab
       - google
+      - linkedin
       - twitter
     x-isnullable: false
 
@@ -902,9 +904,11 @@ parameters:
     description: Federated identity provider ID
     type: string
     enum:
+      - facebook
       - github
       - gitlab
       - google
+      - linkedin
       - twitter
       - sso  # SSO is a special case of federated authentication, which requires additional configuration for a specific domain
 

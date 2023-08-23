@@ -1,6 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { faGithub, faGitlab, faGoogle, faTwitter } from '@fortawesome/free-brands-svg-icons';
+import { faFacebook, faGithub, faGitlab, faGoogle, faLinkedin, faTwitter } from '@fortawesome/free-brands-svg-icons';
 import { FederatedIdpId } from '../../../../generated-api';
 
 @Component({
@@ -17,12 +17,20 @@ export class IdentityProviderIconComponent {
     @Input({required: true})
     set idpId(id: FederatedIdpId) {
         switch (id) {
+            case FederatedIdpId.Facebook:
+                this.icon = faFacebook;
+                break;
+
             case FederatedIdpId.Github:
                 this.icon = faGithub;
                 break;
 
             case FederatedIdpId.Gitlab:
                 this.icon = faGitlab;
+                break;
+
+            case FederatedIdpId.Linkedin:
+                this.icon = faLinkedin;
                 break;
 
             case FederatedIdpId.Google:

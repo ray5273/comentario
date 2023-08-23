@@ -105,10 +105,12 @@ create table cm_fed_identity_providers (
 
 -- Data
 insert into cm_fed_identity_providers(id, name, icon) values
-    ('gitlab',  'GitLab',  'gitlab'),
-    ('github',  'GitHub',  'github'),
-    ('google',  'Google',  'google'),
-    ('twitter', 'Twitter', 'twitter');
+    ('facebook', 'Facebook', 'facebook'),
+    ('gitlab',   'GitLab',   'gitlab'),
+    ('github',   'GitHub',   'github'),
+    ('google',   'Google',   'google'),
+    ('linkedin', 'LinkedIn', 'linkedin'),
+    ('twitter',  'Twitter',  'twitter');
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Users

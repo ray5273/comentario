@@ -76,10 +76,12 @@ func (p *FederatedIdentityProvider) ToDTO() *models.FederatedIdentityProvider {
 
 // FederatedIdProviders accumulates information about all supported ID providers
 var FederatedIdProviders = map[models.FederatedIdpID]FederatedIdentityProvider{
-	models.FederatedIdpIDGithub:  {ID: models.FederatedIdpIDGithub, Name: "GitHub", Icon: "github", GothID: "github"},
-	models.FederatedIdpIDGitlab:  {ID: models.FederatedIdpIDGitlab, Name: "GitLab", Icon: "gitlab", GothID: "gitlab"},
-	models.FederatedIdpIDGoogle:  {ID: models.FederatedIdpIDGoogle, Name: "Google", Icon: "google", GothID: "google"},
-	models.FederatedIdpIDTwitter: {ID: models.FederatedIdpIDTwitter, Name: "Twitter", Icon: "twitter", GothID: "twitter"},
+	models.FederatedIdpIDFacebook: {ID: models.FederatedIdpIDFacebook, Name: "Facebook", Icon: "facebook", GothID: "facebook"},
+	models.FederatedIdpIDGithub:   {ID: models.FederatedIdpIDGithub, Name: "GitHub", Icon: "github", GothID: "github"},
+	models.FederatedIdpIDGitlab:   {ID: models.FederatedIdpIDGitlab, Name: "GitLab", Icon: "gitlab", GothID: "gitlab"},
+	models.FederatedIdpIDGoogle:   {ID: models.FederatedIdpIDGoogle, Name: "Google", Icon: "google", GothID: "google"},
+	models.FederatedIdpIDLinkedin: {ID: models.FederatedIdpIDLinkedin, Name: "LinkedIn", Icon: "linkedin", GothID: "linkedin"},
+	models.FederatedIdpIDTwitter:  {ID: models.FederatedIdpIDTwitter, Name: "Twitter", Icon: "twitter", GothID: "twitter"},
 }
 
 // GetFederatedIdP returns whether federated identity provider is known and configured, and if yes, its Provider

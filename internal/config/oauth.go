@@ -2,19 +2,41 @@ package config
 
 import (
 	"github.com/markbates/goth"
+	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 	"github.com/markbates/goth/providers/google"
+	"github.com/markbates/goth/providers/linkedin"
 	"github.com/markbates/goth/providers/twitter"
 	"strings"
 )
 
 // oauthConfigure configures federated (OAuth) authentication
 func oauthConfigure() {
+	facebookOauthConfigure()
 	githubOauthConfigure()
 	gitlabOauthConfigure()
 	googleOauthConfigure()
+	linkedinOauthConfigure()
 	twitterOauthConfigure()
+}
+
+// facebookOauthConfigure configures federated authentication via Facebook
+func facebookOauthConfigure() {
+	if !SecretsConfig.IdP.Facebook.Usable() {
+		logger.Debug("Facebook auth isn't configured or enabled")
+		return
+	}
+
+	logger.Infof("Registering Facebook OAuth2 provider for client %s", SecretsConfig.IdP.Facebook.Key)
+	goth.UseProviders(
+		facebook.New(
+			SecretsConfig.IdP.Facebook.Key,
+			SecretsConfig.IdP.Facebook.Secret,
+			URLForAPI("oauth/facebook/callback", nil),
+			"read:user",
+			"user:email"),
+	)
 }
 
 // githubOauthConfigure configures federated authentication via GitHub
@@ -79,6 +101,22 @@ func googleOauthConfigure() {
 			URLForAPI("oauth/google/callback", nil),
 			"email",
 			"profile"),
+	)
+}
+
+// linkedinOauthConfigure configures federated authentication via LinkedIn
+func linkedinOauthConfigure() {
+	if !SecretsConfig.IdP.LinkedIn.Usable() {
+		logger.Debug("LinkedIn auth isn't configured or enabled")
+		return
+	}
+
+	logger.Infof("Registering LinkedIn OAuth2 provider for client %s", SecretsConfig.IdP.LinkedIn.Key)
+	goth.UseProviders(
+		linkedin.New(
+			SecretsConfig.IdP.LinkedIn.Key,
+			SecretsConfig.IdP.LinkedIn.Secret,
+			URLForAPI("oauth/linkedin/callback", nil)),
 	)
 }
 
