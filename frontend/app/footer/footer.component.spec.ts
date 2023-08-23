@@ -1,10 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { FooterComponent } from './footer.component';
 import { DocsService } from '../_services/docs.service';
 import { ConfigService } from '../_services/config.service';
 import { ComentarioConfig } from '../../generated-api';
+import { AuthService } from '../_services/auth.service';
 
 describe('FooterComponent', () => {
 
@@ -18,6 +20,7 @@ describe('FooterComponent', () => {
             providers: [
                 MockProvider(DocsService),
                 MockProvider(ConfigService, {config: {} as ComentarioConfig}),
+                MockProvider(AuthService, {principal: of(null)}),
             ],
         })
             .compileComponents();
