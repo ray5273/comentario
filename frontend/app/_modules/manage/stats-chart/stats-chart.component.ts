@@ -21,7 +21,7 @@ export class StatsChartComponent {
 
     readonly loading = new ProcessingStatus();
     readonly chartOptions: ChartOptions = {
-        aspectRatio: 1.25,
+        maintainAspectRatio: false,
         backgroundColor: '#00000000',
         plugins: {
             legend: {display: false},
