@@ -1,7 +1,6 @@
 ---
 title: Legal
 description: Legal documents, terms, and conditions
-layout: single
 weight: 900
 menu:
     footer:
@@ -9,3 +8,6 @@ menu:
 tags:
     - legal
 ---
+
+In this section you find legal documents, as well as instructions on removing your data from the service.
+
