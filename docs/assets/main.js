@@ -23,4 +23,17 @@ $(document).ready(function () {
      * Permanent link for headings.
      */
     $(':header[id]').each((_, el) => $(el).append('<a href="#' + el.id + '" class="heading-link"></a>'));
+
+    /**
+     * Contact form validation.
+     */
+    $('#contact-submit-button').on('click', function (e) {
+        const contactForm = $('#contact-form');
+        if (contactForm[0].checkValidity() === false) {
+            // Stop the form from being submitted
+            e.preventDefault();
+            e.stopPropagation();
+        }
+        contactForm.addClass('was-validated');
+    });
 });

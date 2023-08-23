@@ -1,6 +1,7 @@
 ---
 title: Source code
 description: Comentario is an open-source software
+weight: 110
 menu:
     footer:
         weight: 30
@@ -12,7 +13,7 @@ tags:
     - git
 ---
 
-Open-source means that the source code of Comentario is freely available for downloading, modifying, and using, under the terms of the [Comentario license](license).
+Open-source means that the source code of Comentario is freely available for downloading, modifying, and using, under the terms of the [Comentario license](/legal/license).
 
 Comentario source code is available on GitLab.
 

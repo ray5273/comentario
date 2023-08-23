@@ -8,3 +8,11 @@
 - {id: tag,               translation: Tag}
 - {id: tags,              translation: Tags}
 - {id: viewDemo,          translation: View Demo}
+- {id: yourName,          translation: Your name}
+- {id: errorNameReq,      translation: Name is required.}
+- {id: yourEmail,         translation: Your email}
+- {id: errorEmailReq,     translation: Email is required.}
+- {id: messageSubject,    translation: Subject}
+- {id: messageBody,       translation: Your message}
+- {id: errorMessageReq,   translation: Message is required.}
+- {id: submit,            translation: Submit}

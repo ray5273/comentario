@@ -40,6 +40,7 @@ sectionPagesMenu: sidebar
 
 params:
   description: 'Documentation for Comentario, the powerful commenting tool for web pages.'
+  contactAction: 'https://formspree.io/f/mjvqwoaa'
 
 menu:
   # Will be lowercased in the template

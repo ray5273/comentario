@@ -1,8 +1,9 @@
 ---
 title: License
 description: Comentario license.
+weight: 100
 tags:
-    - about
+    - legal
     - license
     - MIT
     - open source

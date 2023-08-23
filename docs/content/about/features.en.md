@@ -1,6 +1,7 @@
 ---
 title: Features
 description: What's so special about Comentario?
+weight: 10
 tags:
     - about
     - features

@@ -2,6 +2,7 @@
 title: About
 description: General information about Comentario
 layout: single
+weight: 10
 menu:
     extNavbar:
         weight: 20
