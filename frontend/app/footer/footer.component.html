@@ -1,9 +1,24 @@
 <footer class="container-fluid py-3">
     <div class="row">
-        <div class="col-md">
+        <div class="col-md-auto">
             <ul class="list-unstyled">
                 <li><a [routerLink]="Paths.home">Comentario</a></li>
                 <li><a [href]="docsSvc.urlAbout" target="_blank" rel="noopener" i18n>About</a></li>
+            </ul>
+        </div>
+
+        <div class="col-md-auto">
+            <!-- Items for non-authenticated user -->
+            <ul *ngIf="!isAuthenticated" class="list-unstyled">
+                <li><a [routerLink]="Paths.auth.signup" i18n>Sign up</a></li>
+                <li><a [routerLink]="Paths.auth.login"  i18n>Sign in</a></li>
+            </ul>
+
+            <!-- Items for authenticated user -->
+            <ul *ngIf="isAuthenticated" class="list-unstyled">
+                <li><a [routerLink]="Paths.manage.dashboard"       i18n>Dashboard</a></li>
+                <li><a [routerLink]="Paths.manage.domains"         i18n>Domains</a></li>
+                <li><a [routerLink]="Paths.manage.account.profile" i18n>Profile</a></li>
             </ul>
         </div>
 
@@ -11,7 +26,7 @@
             <!-- Copyright and version -->
             <ul class="list-unstyled">
                 <li i18n>Copyright ©{{ year }} Comentario</li>
-                <li><ng-container i18n>Version</ng-container> {{ version }}</li>
+                <li class="small"><ng-container i18n>Version</ng-container> {{ version }}</li>
             </ul>
         </div>
     </div>
