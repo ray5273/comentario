@@ -1,5 +1,38 @@
 # Comentario changelog
 
+## v3.0.0-rc1
+
+This is a first major update to Comentario, phasing out the flawed legacy data model and improving on pretty much every aspect.
+
+As this is a huge code change, you're **strongly encouraged to back up your database** before updating. Please also read the [Migration section](https://edge.docs.comentario.app/en/getting-started/migration/comentario-2.x/) carefully.
+
+Since this is a pre-release, it's not sensible to use this in production.
+
+**Changes:**
+
+* **BREAKING:** Completely reworked data model, which replaces the old one once an automated migration is successful. **WARNING:** due to many limitations and quirks of the old model, this migration may fail or produce a somewhat skewed results. Caution and backups are **strongly advised**.
+* Overhauled user management. There's now a single user list, with role bindings for each domain.
+* The concept of *superuser* is introduced. Superusers can manages users and all other types of objects in the particular Comentario instance.
+* Except for superusers, user roles are configured per domain and include:
+  * *Owner*: can manage domain settings and user roles in the domain
+  * *Moderator*: can moderate, edit, or delete comments
+  * *Commenter*: can write comments
+  * *Read-only*: can only read comments or vote for them
+* User can be banned by a superuser, which makes them unable to login anymore or register with the same email.
+* Much more elaborate view statistics. Views are registered on the page level, and include data such as browser, IP, and country. (Most of that isn't visible in the UI yet.)
+* More moderation policy choices for domain, requiring moderation for:
+  * Users having fewer than N approved comments
+  * Users registered less than N days ago
+  * Comments containing links
+  * Comments containing images
+* Domain-wide page and comment list (#1).
+* Support for uploaded user avatars.
+* Fixes for numerous issues and bugs, including SSO authentication.
+* Backend configuration option to disable user registration altogether.
+* Backend configuration option to replace the home page content.
+* **BREAKING:** The embed part in implemented as a web component. Existing installs will need to use the tag `<comentario-comments>` instead of `<div>`.
+* **BREAKING:** Data attributes (`data-...`) on the script tag are no longer supported. Use attributes on the `<comentario-comments>` instead, omitting the `data-` prefix.
+
 ## v2.3.1
 
 **Changes:**
