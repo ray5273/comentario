@@ -157,6 +157,7 @@ package:
     - cp -r build/* "dist/$tar_name/"
     - (cd dist && tar -czvf "$tar_name.tar.gz" "$tar_name" && rm -rf "$tar_name")
 
+# Deploy the dev branch to edge.comentario.app
 deploy-dev:
   stage: deploy
   rules:
@@ -184,10 +185,11 @@ deploy-dev:
         comentario-edge
         helm/comentario
 
+# Deploy any tag, except those containing "rc" (release candidate), to production
 deploy-tag:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_TAG
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /rc/i
   image: alpine/k8s:1.25.6
   environment:
     name: comentario.app
