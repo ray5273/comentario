@@ -1,5 +1,6 @@
 # It's our root config
 root: true
+parser: '@typescript-eslint/parser'
 
 env:
   es6: true
@@ -18,7 +19,6 @@ overrides:
 
   # Embed TypeScript files
   - files: 'embed/**/*.ts'
-    parser: '@typescript-eslint/parser'
     plugins:
       - '@typescript-eslint'
     extends:
@@ -119,4 +119,8 @@ overrides:
   - files: cypress/**/*.ts
     extends:
       - 'plugin:cypress/recommended'
-    rules: {}
+    rules:
+      semi:
+        - error
+        - always
+
