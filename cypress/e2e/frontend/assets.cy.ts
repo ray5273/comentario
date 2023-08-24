@@ -53,7 +53,7 @@ context('Static assets', () => {
         cy.request({url: '/comentario.js', encoding: 'utf-8'}).then(r => {
             expect(r.status).eq(200);
             expect(r.headers['content-type']).eq('text/javascript; charset=utf-8');
-            expect(r.body).contains('class Comentario extends HTMLElement');
+            expect(r.body).contains('customElements.define(');
         });
     });
 
