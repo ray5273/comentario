@@ -11,6 +11,8 @@ tags:
 
 The source code of Comentario is freely available for downloading, modifying, and using, under the terms of the MIT License below.
 
+<!--more-->
+
 ## MIT License
 
 ```

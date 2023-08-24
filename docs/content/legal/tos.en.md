@@ -11,6 +11,10 @@ tags:
     - rights and responsibilities
 ---
 
+This document outlines the terms and conditions of use for the Comentario service. Read this document carefully before accessing or using our Services.
+
+<!--more-->
+
 **Comentario** refers to the service offered by [Yktoo Solutions](https://yktoo.solutions/) (the **"Company"** or **"We"**) through the [Comentario](https://comentario.app/) website (the **"Service"**) and the related websites (the **"Services"**). We sometimes refer to **"You"**, which may be a visitor on one of our websites, a user of one or more of our services (**"User"** or **"Customer"**), or a visitor of a page containing comments handled by the service (**"Visitor"**).
 
 The following terms and conditions (**"Terms"**) govern all use of the Comentario website and all content, services, and products available at or through the website. Our Services are offered subject to your acceptance without modification of all the terms and conditions contained herein and all other operating rules, policies (including, without limitation, [Comentario Privacy Policy](privacy)) and procedures that may be published from time to time by Yktoo Solutions (collectively, the **"Agreement"**). You agree that we may automatically upgrade our Services, and these Terms will apply to any upgrades.
