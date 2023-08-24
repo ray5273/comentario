@@ -39,8 +39,8 @@ export interface ComentarioConfig {
 }
 
 export const DefaultComentarioConfig: ComentarioConfig = {
-    baseUrl:          'https://comentario.app/',
-    baseDocsUrl:      'https://docs.comentario.app/',
+    baseUrl:          'https://comentario.app',
+    baseDocsUrl:      'https://docs.comentario.app',
     version:          '',
     buildDate:        '',
     defaultLangId:    'en',

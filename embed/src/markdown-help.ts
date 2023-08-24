@@ -2,6 +2,7 @@ import { Wrap } from './element-wrap';
 import { Dialog, DialogPositioning } from './dialog';
 import { UIToolkit } from './ui-toolkit';
 import { ComentarioConfig } from './models';
+import { Utils } from './utils';
 
 export class MarkdownHelp extends Dialog {
 
@@ -38,7 +39,7 @@ export class MarkdownHelp extends Dialog {
                         Wrap.new('a')
                             .inner('Read more about Markdown')
                             .attr({
-                                href:   `${this.config.baseDocsUrl}${this.config.defaultLangId}/kb/markdown/`,
+                                href:   Utils.joinUrl(this.config.baseDocsUrl, this.config.defaultLangId, 'kb/markdown/'),
                                 target: '_blank'})));
     }
 

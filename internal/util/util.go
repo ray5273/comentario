@@ -327,13 +327,16 @@ func ParseAbsoluteURL(s string, allowHTTP bool) (*url.URL, error) {
 		return nil, fmt.Errorf("invalid URL host: '%s'", u.Host)
 	}
 
-	// Verify it's a URL with a path starting with "/"
-	if !strings.HasPrefix(u.Path, "/") {
-		return nil, fmt.Errorf("invalid URL path (must begin with '/'): '%s'", u.Path)
-	}
+	// If the path is empty, set it to "/"
+	if u.Path == "" {
+		u.Path = "/"
 
-	// Remove any trailing slash from the base path, except when it's a root
-	if len(u.Path) > 1 {
+		// Otherwise, verify the path starts with "/"
+	} else if !strings.HasPrefix(u.Path, "/") {
+		return nil, fmt.Errorf("invalid URL path (must begin with '/'): '%s'", u.Path)
+
+	} else if len(u.Path) > 1 {
+		// Remove any trailing slash from the base path, except when it's a root
 		u.Path = strings.TrimSuffix(u.Path, "/")
 	}
 	return u, nil
