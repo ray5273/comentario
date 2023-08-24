@@ -14,7 +14,7 @@ export class ToastService {
     readonly toasts: Toast[] = [];
     private _keepOnRouteChange = false;
 
-    constructor(private router: Router) {
+    constructor(router: Router) {
         // Remove toasts on route change
         router.events
             .pipe(filter(event => event instanceof NavigationStart))
@@ -126,5 +126,4 @@ export class ToastService {
             }
         }
     }
-
 }

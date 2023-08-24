@@ -35,12 +35,12 @@
     <!-- Technical error details, if there's an error -->
     <div *ngIf="t.error" class="toast-tech-details small mt-2">
         <div class="text-end">
-            <button [class.collapsed]="!techDetailsShown" (click)="toggleTechDetails()"
+            <button [class.collapsed]="!t.detailsShown" [attr.aria-expanded]="t.detailsShown" (click)="t.toggleDetails()"
                     type="button" class="btn btn-sm btn-link collapse-toggler">
                 <ng-container i18n>Technical details</ng-container>
                 <fa-icon [icon]="faChevronDown" class="ms-1"></fa-icon>
             </button>
         </div>
-        <div *ngIf="techDetailsShown" class="mt-2 fade-in"><pre>{{ t.error | json }}</pre></div>
+        <div *ngIf="t.detailsShown" class="mt-2 fade-in"><pre>{{ t.error | json }}</pre></div>
     </div>
 </ngb-toast>

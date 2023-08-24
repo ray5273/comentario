@@ -1,10 +1,10 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 import { ToastService } from '../_services/toast.service';
 import { Toast } from '../_models/toast';
 import { Paths } from '../_utils/consts';
 import { AuthService } from '../_services/auth.service';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
     selector: 'app-toast',
@@ -14,7 +14,6 @@ import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
 export class ToastComponent {
 
     autohide = true;
-    techDetailsShown = false;
 
     readonly Paths = Paths;
 
@@ -44,9 +43,5 @@ export class ToastComponent {
 
         // Redirect to login
         this.router.navigate([Paths.auth.login]);
-    }
-
-    toggleTechDetails() {
-        this.techDetailsShown = !this.techDetailsShown;
     }
 }

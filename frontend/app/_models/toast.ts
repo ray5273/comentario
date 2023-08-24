@@ -10,13 +10,16 @@ export enum Severity {
     INFO,
     SUCCESS,
     WARNING,
-    ERROR
+    ERROR,
 }
 
 /**
  * A toast notification.
  */
 export class Toast {
+
+    /** Whether technical details should be shown. */
+    detailsShown = false;
 
     constructor(
         /**
@@ -51,7 +54,6 @@ export class Toast {
             case Severity.WARNING: return 'warning';
             case Severity.ERROR:   return 'danger';
         }
-        return 'secondary';
     }
 
     /**
@@ -64,7 +66,6 @@ export class Toast {
             case Severity.WARNING: return 'bg-warning';
             case Severity.ERROR:   return 'bg-danger';
         }
-        return 'bg-secondary';
     }
 
     /**
@@ -77,5 +78,12 @@ export class Toast {
             case Severity.ERROR:   return faCircleExclamation;
         }
         return faInfoCircle;
+    }
+
+    /**
+     * Toggle detailsShown on and off.
+     */
+    toggleDetails() {
+        this.detailsShown = !this.detailsShown;
     }
 }

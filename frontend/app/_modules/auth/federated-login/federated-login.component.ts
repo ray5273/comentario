@@ -8,6 +8,8 @@ import { ApiGeneralService, Configuration, FederatedIdpId } from '../../../../ge
 import { ToastService } from '../../../_services/toast.service';
 import { AuthService } from '../../../_services/auth.service';
 import { Paths } from '../../../_utils/consts';
+import { HttpContext } from '@angular/common/http';
+import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
 
 @UntilDestroy()
 @Component({
@@ -70,8 +72,13 @@ export class FederatedLoginComponent {
                 // the API config to be used for the token-based login
                 tap(data => this.apiConfig.credentials.token = data.token!),
 
-                // Redeem the token, removing it afterwards from the API config
-                switchMap(() => this.api.authLoginTokenRedeem().pipe(finalize(() => delete this.apiConfig.credentials.token))),
+                // Redeem the token, skipping error handling
+                switchMap(() => this.api.authLoginTokenRedeem(
+                        undefined,
+                        undefined,
+                        {context: new HttpContext().set(HTTP_ERROR_HANDLING, false)})
+                    // Removing the token from the API config upon completion
+                    .pipe(finalize(() => delete this.apiConfig.credentials.token))),
                 finalize(() => this.loggingIn = false))
             .subscribe({
                 // The user is supposed to be authenticated now
