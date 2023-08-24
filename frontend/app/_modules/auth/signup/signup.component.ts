@@ -8,6 +8,7 @@ import { ConfigService } from '../../../_services/config.service';
 import { Animations } from '../../../_utils/animations';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
+import { DocsService } from '../../../_services/docs.service';
 
 @Component({
     selector: 'app-signup',
@@ -27,6 +28,9 @@ export class SignupComponent {
         name:     '',
     });
 
+    readonly tosUrl     = this.docsSvc.getPageUrl('legal/tos/');
+    readonly privacyUrl = this.docsSvc.getPageUrl('legal/privacy/');
+
     // Icons
     readonly faBan   = faBan;
     readonly faCheck = faCheck;
@@ -35,6 +39,7 @@ export class SignupComponent {
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly cfgSvc: ConfigService,
+        private readonly docsSvc: DocsService,
         private readonly api: ApiGeneralService,
         private readonly toastSvc: ToastService,
     ) {}

@@ -32,12 +32,14 @@
                                required minlength="6" maxlength="255" autocomplete="email" placeholder="user@example.com">
                         <div class="invalid-feedback" i18n>Please enter a valid email.</div>
                     </div>
+
                     <!-- Password -->
                     <div class="mb-3">
                         <label for="password" class="form-label colon" i18n>Password</label>
                         <app-password-input formControlName="password" [required]="true" [strong]="true"
                                             autocomplete="new-password" id="password"></app-password-input>
                     </div>
+
                     <!-- Name -->
                     <div class="mb-3">
                         <label for="name" class="form-label colon" i18n>Your name</label>
@@ -48,6 +50,10 @@
                                i18n-placeholder>
                         <div class="invalid-feedback" i18n>Please enter your name.</div>
                     </div>
+
+                    <!-- Legal clause -->
+                    <p class="small" i18n>By signing up, you agree to our <a [href]="tosUrl" target="_blank" rel="noopener">Terms of Service</a> and <a [href]="privacyUrl" target="_blank" rel="noopener">Privacy Policy</a>.</p>
+
                     <!-- Submit button -->
                     <div class="mb-3 text-center">
                         <button [appSpinner]="submitting.active" type="submit" class="btn btn-primary" i18n="action">Sign up</button>
