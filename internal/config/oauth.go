@@ -34,8 +34,8 @@ func facebookOauthConfigure() {
 			SecretsConfig.IdP.Facebook.Key,
 			SecretsConfig.IdP.Facebook.Secret,
 			URLForAPI("oauth/facebook/callback", nil),
-			"read:user",
-			"user:email"),
+			"email",
+			"public_profile"),
 	)
 }
 
@@ -116,7 +116,9 @@ func linkedinOauthConfigure() {
 		linkedin.New(
 			SecretsConfig.IdP.LinkedIn.Key,
 			SecretsConfig.IdP.LinkedIn.Secret,
-			URLForAPI("oauth/linkedin/callback", nil)),
+			URLForAPI("oauth/linkedin/callback", nil),
+			"r_liteprofile",
+			"r_emailaddress"),
 	)
 }
 
