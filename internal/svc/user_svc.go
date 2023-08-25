@@ -76,6 +76,11 @@ type userService struct{}
 func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	logger.Debugf("userService.ConfirmUser(%s)", id)
 
+	// User cannot be anonymous
+	if *id == data.AnonymousUser.ID {
+		return ErrNotFound
+	}
+
 	// Update the owner's record
 	if err := db.ExecOne("update cm_users set confirmed=true, ts_confirmed=$1 where id=$2;", time.Now().UTC(), id); err != nil {
 		logger.Errorf("userService.ConfirmUser: ExecOne() failed: %v", err)
@@ -165,6 +170,11 @@ func (svc *userService) CreateUserSession(s *data.UserSession) error {
 func (svc *userService) DeleteUserByID(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserByID(%s)", id)
 
+	// User cannot be anonymous
+	if *id == data.AnonymousUser.ID {
+		return ErrNotFound
+	}
+
 	// Delete the user
 	if err := db.ExecuteOne(db.Dialect().Delete("cm_users").Where(goqu.Ex{"id": id}).Prepared(true)); err != nil {
 		logger.Errorf("userService.DeleteUserByID: ExecuteOne() failed: %v", err)
@@ -190,6 +200,11 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 
 func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error) {
 	logger.Debugf("userService.FindDomainUserByID(%s, %s)", userID, domainID)
+
+	// User cannot be anonymous
+	if *userID == data.AnonymousUser.ID {
+		return nil, nil, ErrNotFound
+	}
 
 	// Query the database
 	q := db.Dialect().
@@ -252,6 +267,11 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	logger.Debugf("userService.FindUserByID(%s)", id)
 
+	// If the user is anonymous, no need to query
+	if *id == data.AnonymousUser.ID {
+		return data.AnonymousUser, nil
+	}
+
 	// Prepare the query
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
@@ -277,6 +297,11 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 
 func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.User, *data.UserSession, error) {
 	logger.Debugf("userService.FindUserBySession(%s, %s)", userID, sessionID)
+
+	// User cannot be anonymous
+	if *userID == data.AnonymousUser.ID {
+		return nil, nil, ErrNotFound
+	}
 
 	// Prepare the query
 	now := time.Now().UTC()
@@ -554,6 +579,11 @@ func (svc *userService) Update(user *data.User) error {
 
 func (svc *userService) UpdateBanned(curUserID, userID *uuid.UUID, banned bool) error {
 	logger.Debugf("userService.UpdateBanned(%s, %s, %v)", curUserID, userID, banned)
+
+	// User cannot be anonymous
+	if *userID == data.AnonymousUser.ID {
+		return ErrNotFound
+	}
 
 	// Update the record
 	q := db.Dialect().Update("cm_users").Where(goqu.Ex{"id": userID})
