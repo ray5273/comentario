@@ -1,0 +1,70 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: {{ include "demo-recreate-db.fullname" . }}-cronjob
+  labels:
+    {{- include "demo-recreate-db.labels" . | nindent 4 }}
+spec:
+  schedule: {{ .Values.schedule }}
+  jobTemplate:
+    metadata:
+      {{- with .Values.podAnnotations }}
+      annotations:
+        {{- toYaml . | nindent 8 }}
+      {{- end }}
+      labels:
+        {{- include "demo-recreate-db.selectorLabels" . | nindent 8 }}
+    spec:
+      backoffLimit: 2
+      template:
+        spec:
+          containers:
+            - name: {{ .Chart.Name }}
+              securityContext:
+                {{- toYaml .Values.securityContext | nindent 16 }}
+              image: "{{ .Values.image.repository }}:{{ .Values.image.tag }}"
+              imagePullPolicy: {{ .Values.image.pullPolicy }}
+              command:
+                - sh
+              args:
+                - /db-reset/db-reset.sh
+              volumeMounts:
+                - name: secrets-volume
+                  mountPath: /secrets.yaml
+                  readOnly: true
+                  subPath: secrets.yaml
+                - name: db-reset-volume
+                  mountPath: /db-reset
+                  readOnly: true
+              resources:
+                {{- toYaml .Values.resources | nindent 16 }}
+          volumes:
+            - name: secrets-volume
+              secret:
+                secretName: {{ .Values.database.secretName }}
+            - name: db-reset-volume
+              configMap:
+                defaultMode: 0755
+                name: {{ include "demo-recreate-db.fullname" . }}-db-reset
+          restartPolicy: Never
+          {{- with .Values.imagePullSecrets }}
+          imagePullSecrets:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- if .Values.serviceAccount.create }}
+          serviceAccountName: {{ include "demo-recreate-db.serviceAccountName" . }}
+          {{- end }}
+          securityContext:
+            {{- toYaml .Values.podSecurityContext | nindent 12 }}
+          {{- with .Values.nodeSelector }}
+          nodeSelector:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.affinity }}
+          affinity:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
+          {{- with .Values.tolerations }}
+          tolerations:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}

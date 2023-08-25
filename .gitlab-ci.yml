@@ -189,6 +189,22 @@ deploy-dev:
         comentario-edge
         helm/comentario
 
+    # Deploy the recreate demo DB cronjob
+    - helm upgrade
+        --namespace $NAMESPACE
+        --install
+        --set "comentario.secretName=comentario-edge-secrets"
+        --wait
+        --timeout 1m
+        comentario-demo-recreate-db
+        helm/demo-recreate-db
+
+    # Trigger the job right away
+    - kubectl create job
+        --namespace $NAMESPACE
+        --from=cronjob/comentario-demo-recreate-db-cronjob
+        comentario-demo-recreate-db-cronjob-$(date +%s)
+
 # Deploy any tag, except those containing "rc" (release candidate), to production
 deploy-tag:
   stage: deploy
