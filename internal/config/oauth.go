@@ -117,8 +117,8 @@ func linkedinOauthConfigure() {
 			SecretsConfig.IdP.LinkedIn.Key,
 			SecretsConfig.IdP.LinkedIn.Secret,
 			URLForAPI("oauth/linkedin/callback", nil),
-			"r_liteprofile",
-			"r_emailaddress"),
+			"profile",
+			"email"),
 	)
 }
 
