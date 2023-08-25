@@ -193,7 +193,7 @@ deploy-dev:
     - helm upgrade
         --namespace $NAMESPACE
         --install
-        --set "comentario.secretName=comentario-edge-secrets"
+        --set "database.secretName=comentario-edge-secrets"
         --wait
         --timeout 1m
         comentario-demo-recreate-db
