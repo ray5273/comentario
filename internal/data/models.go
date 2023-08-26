@@ -19,7 +19,7 @@ import (
 )
 
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
-var AnonymousUser = &User{Name: "Anonymous"}
+var AnonymousUser = &User{Name: "Anonymous", SystemAccount: true}
 
 // MaxPageTitleLength is the maximum length allowed for a page title
 const MaxPageTitleLength = 100

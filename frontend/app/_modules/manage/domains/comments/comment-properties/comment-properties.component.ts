@@ -11,6 +11,7 @@ import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
 import { ConfirmDialogComponent } from '../../../../tools/confirm-dialog/confirm-dialog.component';
 import { CommentService } from '../../../_services/comment.service';
+import { Utils } from '../../../../../_utils/utils';
 
 @UntilDestroy()
 @Component({
@@ -33,6 +34,9 @@ export class CommentPropertiesComponent implements OnInit {
 
     /** Optional action extracted from query param. */
     action?: string;
+
+    /** Anonymous user ID. */
+    readonly anonUserId = Utils.ANONYMOUS_USER_ID;
 
     readonly Paths = Paths;
 

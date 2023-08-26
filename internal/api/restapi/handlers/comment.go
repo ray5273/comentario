@@ -78,7 +78,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 
 	// Find the comment author, if any
 	var cr *models.Commenter
-	if comment.UserCreated.Valid {
+	if comment.UserCreated.Valid && comment.UserCreated.UUID != data.AnonymousUser.ID {
 		if u, du, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
 			return respServiceError(err)
 		} else {

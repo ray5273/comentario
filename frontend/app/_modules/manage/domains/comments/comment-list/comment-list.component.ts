@@ -54,6 +54,9 @@ export class CommentListComponent implements OnInit, OnChanges {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
+    /** Anonymous user ID. */
+    readonly anonUserId = Utils.ANONYMOUS_USER_ID;
+
     readonly Paths = Paths;
 
     readonly sort = new Sort('created', true);

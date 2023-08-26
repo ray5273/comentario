@@ -74,15 +74,24 @@
                class="list-group-item list-group-item-action clearfix">
                 <!-- Comment metadata -->
                 <div class="list-group-item-header row align-items-center">
-                    <!-- User created -->
-                    <div *ngIf="commenters.get(c.userCreated!) as cr" class="col-12 col-sm ps-0 d-flex align-items-center">
-                        <!-- Avatar -->
-                        <app-user-avatar [user]="cr" size="S"></app-user-avatar>
-                        <!-- User link (superuser/owner) or name -->
-                        <a *ngIf="domainMeta?.canManageDomain else userNameText"
-                           [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'users', cr.id]"
-                           class="ms-2 fw-bold text-truncate">{{ cr.name }}</a>
-                        <ng-template #userNameText><div class="ms-2 fw-bold text-truncate">{{ cr.name }}</div></ng-template>
+                    <!-- User created and status badge -->
+                    <div class="col-12 col-sm ps-0 d-flex align-items-center">
+                        <!-- If there's an existing author user -->
+                        <ng-container *ngIf="commenters.get(c.userCreated!) as cr else delAuthor">
+                            <!-- Avatar -->
+                            <app-user-avatar [user]="cr" size="S"></app-user-avatar>
+                            <!-- User link (non-anonymous and for superuser/owner) or name -->
+                            <a *ngIf="cr.id !== anonUserId && domainMeta?.canManageDomain else userNameText"
+                               [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'users', cr.id]"
+                               class="ms-2 fw-bold text-truncate">{{ cr.name }}</a>
+                            <ng-template #userNameText><div class="ms-2 fw-bold text-truncate">{{ cr.name }}</div></ng-template>
+                        </ng-container>
+
+                        <!-- Author doesn't exist anymore -->
+                        <ng-template #delAuthor>
+                            <i class="text-muted" i18n>(deleted user)</i>
+                        </ng-template>
+
                         <!-- Status badge, sm+ -->
                         <app-comment-status-badge [comment]="c" [subtle]="true" class="ms-2 d-none d-sm-inline"></app-comment-status-badge>
                     </div>
