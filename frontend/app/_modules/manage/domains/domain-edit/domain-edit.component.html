@@ -29,7 +29,10 @@
         </div>
         <!-- Name -->
         <div class="mb-3 row">
-            <label for="name" class="col-sm-3 col-form-label colon fw-bold" i18n>Name</label>
+            <label for="name" class="col-sm-3 col-form-label colon fw-bold">
+                <ng-container i18n>Name</ng-container>&ngsp;
+                <i class="fw-normal" i18n>(optional)</i>
+            </label>
             <div class="col-sm-9">
                 <input formControlName="name" type="text" class="form-control" id="name"
                        [class.is-valid]="form.controls.name.touched && form.controls.name.valid"

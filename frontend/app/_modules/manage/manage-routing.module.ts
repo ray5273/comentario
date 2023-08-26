@@ -33,7 +33,7 @@ const children: Routes = [
 
     // Domains
     {path: 'domains',        component: DomainManagerComponent},
-    {path: 'domains/create', component: DomainEditComponent, data: {new: true}},
+    {path: 'domains/create', component: DomainEditComponent, data: {new: true, clean: true}},
     {
         path: 'domains/:id',
         component: DomainDetailComponent,

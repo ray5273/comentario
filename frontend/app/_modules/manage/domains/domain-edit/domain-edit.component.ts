@@ -11,6 +11,7 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Utils } from '../../../../_utils/utils';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
+import { XtraValidators } from '../../../../_utils/xtra-validators';
 
 @UntilDestroy()
 @Component({
@@ -32,7 +33,7 @@ export class DomainEditComponent implements OnInit {
     readonly saving  = new ProcessingStatus();
     readonly fedIdps = this.cfgSvc.config.federatedIdps;
     readonly form = this.fb.nonNullable.group({
-        host:             '',
+        host:             ['', [XtraValidators.host]],
         name:             '',
         isReadonly:       false,
         authAnonymous:    false,
@@ -72,7 +73,8 @@ export class DomainEditComponent implements OnInit {
     ngOnInit(): void {
         this.isNew = this.route.snapshot.data.new;
 
-        // Fetch the domain, if any
+        // If it isn't creating from scratch, fetch the domain data
+        if (!this.route.snapshot.data.clean) {
         this.domainSelectorSvc.domainMeta
             .pipe(this.loading.processing(), first())
             .subscribe(meta => {
@@ -101,6 +103,7 @@ export class DomainEditComponent implements OnInit {
                     });
                 }
             });
+        }
 
         // Host can't be changed for an existing domain
         if (!this.isNew) {
