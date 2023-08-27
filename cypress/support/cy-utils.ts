@@ -7,4 +7,8 @@ export const PATHS = {
         forgotPassword: '/en/auth/forgotPassword',
         resetPassword:  '/en/auth/resetPassword',
     },
+
+    manage: {
+        dashboard: '/en/manage/dashboard',
+    }
 };

@@ -1,11 +1,13 @@
 declare namespace Cypress {
 
-    interface Chainable {
+    interface SentMail {
+        headers:    { [k: string]: string };
+        embedFiles: string[];
+        body:       string;
+        succeeded:  boolean;
+    }
 
-        /**
-         * Request the backend to reset the database and all the settings to test defaults.
-         */
-        backendReset(): void;
+    interface Chainable {
 
         /**
          * Assert the current URL corresponds to the given relative path.
@@ -13,5 +15,43 @@ declare namespace Cypress {
          * @param ignoreQuery Whether to strip the query parameters before comparing
          */
         isAt(expected: string | RegExp, ignoreQuery?: boolean): Chainable<string>;
+
+        /**
+         * Set an input's value directly.
+         */
+        setValue(s: string): Chainable<JQueryWithSelector>;
+
+        /**
+         * Collect visible texts of all child elements or all elements matching the selector and return them as a string
+         * array. Must either be used as a child command, or be given a selector (or both).
+         */
+        texts(selector?: string): Chainable<string[]>;
+
+        /**
+         * Verify the passed element has no invalid feedback.
+         */
+        isValid(): Chainable<JQueryWithSelector>;
+
+        /**
+         * Verify the passed element has the .is-invalid class, invalid feedback, and, optionally, its text.
+         */
+        isInvalid(text?: string): Chainable<JQueryWithSelector>;
+
+        /**
+         * Request the backend to reset the database and all the settings to test defaults.
+         */
+        backendReset(): void;
+
+        /**
+         * Obtain and return all sent emails from the backend.
+         */
+        backendGetSentEmails(): Chainable<SentMail[]>;
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    interface Chainer<Subject> {
+        (chainer:
+             'arrayMatch'  | 'not.arrayMatch'  |
+             'matrixMatch' | 'not.matrixMatch'): Chainable<Subject>;
     }
 }

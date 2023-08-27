@@ -3,6 +3,7 @@ package restapi
 import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/internal/util"
 )
 
 // e2eApp is an End2EndApp implementation, which links this app to the e2e plugin
@@ -10,8 +11,8 @@ type e2eApp struct {
 	logger *logging.Logger
 }
 
-func (a *e2eApp) RecreateDBSchema(seedSQL string) error {
-	return svc.TheServiceManager.E2eRecreateDBSchema(seedSQL)
+func (a *e2eApp) SetMailer(mailer util.Mailer) {
+	util.TheMailer = mailer
 }
 
 func (a *e2eApp) LogError(fmt string, args ...any) {
@@ -24,4 +25,8 @@ func (a *e2eApp) LogInfo(fmt string, args ...any) {
 
 func (a *e2eApp) LogWarning(fmt string, args ...any) {
 	a.logger.Warningf(fmt, args...)
+}
+
+func (a *e2eApp) RecreateDBSchema(seedSQL string) error {
+	return svc.TheServiceManager.E2eRecreateDBSchema(seedSQL)
 }

@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
-	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/justinas/alice"
@@ -239,13 +238,8 @@ func configureE2eMode(api *operations.ComentarioAPI) error {
 
 	// Configure API endpoints
 	e2eHandler = *hPtr
-	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(func(api_e2e.E2eResetParams) middleware.Responder {
-		if err := e2eHandler.HandleReset(); err != nil {
-			logger.Errorf("E2eReset failed: %v", err)
-			return api_general.NewGenericInternalServerError()
-		}
-		return api_e2e.NewE2eResetNoContent()
-	})
+	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(E2eReset)
+	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
 
 	// Reduce delays during end-2-end tests
 	util.WrongAuthDelayMin = 0

@@ -2756,3 +2756,34 @@ paths:
       responses:
         204:
           description: The backend has been successfully reset
+
+  /e2e/mails:
+    get:
+      operationId: E2eMailsGet
+      summary: Obtain a list of all sent emails
+      tags:
+        - ApiE2e
+      security: []
+      responses:
+        200:
+          description: List of sent emails
+          schema:
+            type: array
+            items:
+              type: object
+              properties:
+                headers:
+                  type: object
+                  x-omitempty: false
+                embedFiles:
+                  type: array
+                  items:
+                    type: string
+                  x-omitempty: false
+                body:
+                  type: string
+                  x-omitempty: false
+                succeeded:
+                  type: boolean
+                  x-omitempty: false
+
