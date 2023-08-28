@@ -1,10 +1,8 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, combineLatestWith, Observable, tap } from 'rxjs';
+import { map, shareReplay } from 'rxjs/operators';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { ApiGeneralService, InstanceDynamicConfigItem, InstanceStaticConfig } from '../../generated-api';
-import { InstanceDynamicConfig } from '../_models/models';
-import { Mutable } from '../_models/types';
-import { map, shareReplay } from 'rxjs/operators';
 
 declare global {
     // noinspection JSUnusedGlobalSymbols
@@ -48,11 +46,11 @@ export class ConfigService {
     /**
      * Dynamic instance configuration obtained from the server.
      */
-    get dynamicConfig(): Observable<InstanceDynamicConfig> {
+    get dynamicConfig(): Observable<Map<string, InstanceDynamicConfigItem>> {
         return this.api.configDynamicGet()
             .pipe(
                 combineLatestWith(this._dynamicReload$),
-                map(([dc]) => this.makeDynamicConfig(dc)),
+                map(([dc]) => new Map<string, InstanceDynamicConfigItem>(dc?.map(i => [i.key, i]))),
                 shareReplay(1));
     }
 
@@ -84,29 +82,5 @@ export class ConfigService {
      */
     dynamicReload(): void {
         this._dynamicReload$.next(undefined);
-    }
-
-    /**
-     * Convert the given array of items into a flat dynamic configuration object.
-     */
-    private makeDynamicConfig(items: InstanceDynamicConfigItem[]): InstanceDynamicConfig {
-        // Default config
-        const cfg: Mutable<InstanceDynamicConfig> = {
-            authSignupConfirmUser:      false,
-            authSignupConfirmCommenter: false,
-        };
-
-        // Iterate items and update config
-        for (const item of items) {
-            switch (item.key) {
-                case 'auth.signup.confirm.user':
-                    cfg.authSignupConfirmUser = item.value === 'true';
-                    break;
-                case 'auth.signup.confirm.commenter':
-                    cfg.authSignupConfirmCommenter = item.value === 'true';
-                    break;
-            }
-        }
-        return cfg;
     }
 }

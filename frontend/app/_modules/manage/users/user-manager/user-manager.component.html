@@ -2,10 +2,7 @@
 <h1 class="mb-0" i18n="heading">Users</h1>
 
 <!-- Info block -->
-<div class="ps-2 mb-3">
-    <fa-icon [icon]="faLightbulb" class="me-1 text-info"></fa-icon>
-    <ng-container i18n>Below is a list of users registered in the system.</ng-container>
-</div>
+<app-info-block i18n>Below is a list of users registered in the system.</app-info-block>
 
 <div [appSpinner]="usersLoading.active" spinnerSize="lg">
     <!-- Toolbar -->

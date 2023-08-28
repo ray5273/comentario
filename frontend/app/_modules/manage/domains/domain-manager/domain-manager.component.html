@@ -2,11 +2,10 @@
 <h1 class="mb-0" i18n="heading">Domains</h1>
 
 <!-- Info block -->
-<div *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind" class="ps-2 mb-3">
-    <fa-icon [icon]="faLightbulb" class="me-1 text-info"></fa-icon>
+<app-info-block *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind">
     <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all domains registered in the system. Other users only see domains they registered on.</ng-container>
     <ng-container *ngSwitchDefault            i18n>Below you see all domains you registered on, and your role in each of them.</ng-container>
-</div>
+</app-info-block>
 
 <div [appSpinner]="domainsLoading.active" spinnerSize="lg">
     <!-- Toolbar. Hide when no domains are available and none can be added -->

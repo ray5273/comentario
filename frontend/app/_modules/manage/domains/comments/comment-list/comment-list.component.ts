@@ -3,14 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import {
-    faCheck,
-    faLightbulb,
-    faQuestion,
-    faTrashAlt,
-    faUpRightFromSquare,
-    faXmark,
-} from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faQuestion, faTrashAlt, faUpRightFromSquare, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ConfigService } from '../../../../../_services/config.service';
@@ -73,7 +66,6 @@ export class CommentListComponent implements OnInit, OnChanges {
 
     // Icons
     readonly faCheck             = faCheck;
-    readonly faLightbulb         = faLightbulb;
     readonly faQuestion          = faQuestion;
     readonly faTrashAlt          = faTrashAlt;
     readonly faUpRightFromSquare = faUpRightFromSquare;

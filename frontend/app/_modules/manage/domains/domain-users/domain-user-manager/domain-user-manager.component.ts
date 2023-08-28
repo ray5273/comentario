@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBan, faLightbulb, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faBan, faLock } from '@fortawesome/free-solid-svg-icons';
 import { Sort } from '../../../_models/sort';
 import { ApiGeneralService, DomainUser, User } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
@@ -38,9 +38,6 @@ export class DomainUserManagerComponent implements OnInit {
     readonly filterForm = this.fb.nonNullable.group({
         filter: '',
     });
-
-    // Icons
-    readonly faLightbulb = faLightbulb;
 
     private loadedPageNum = 0;
 

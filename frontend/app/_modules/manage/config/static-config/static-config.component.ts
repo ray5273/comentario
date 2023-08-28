@@ -7,7 +7,7 @@ import { ConfigService } from '../../../../_services/config.service';
 })
 export class StaticConfigComponent {
 
-    readonly cfg  = this.configSvc.staticConfig;
+    readonly cfg = this.configSvc.staticConfig;
 
     constructor(
         private readonly configSvc: ConfigService,

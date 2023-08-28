@@ -1,15 +1,14 @@
 <!-- Header with the badge -->
-<header class="d-flex flex-wrap align-items-center mb-3">
+<header class="d-flex flex-wrap align-items-center">
     <h1 class="mb-0 me-2" i18n="heading">Domain</h1>
     <app-domain-badge></app-domain-badge>
-
-    <!-- Info block -->
-    <div *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind" class="w-100 ps-2">
-        <fa-icon [icon]="faLightbulb" class="me-1 text-info"></fa-icon>
-        <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all users registered on the domain, just like domain owners.</ng-container>
-        <ng-container *ngSwitchCase="'owner'"     i18n>As a domain owner, you see all users registered on the domain. Other types of users don't have access to this page.</ng-container>
-    </div>
 </header>
+
+<!-- Info block -->
+<app-info-block *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind">
+    <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all users registered on the domain, just like domain owners.</ng-container>
+    <ng-container *ngSwitchCase="'owner'"     i18n>As a domain owner, you see all users registered on the domain. Other types of users don't have access to this page.</ng-container>
+</app-info-block>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
     <!-- Toolbar -->

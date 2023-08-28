@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faLightbulb, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, DomainPage } from '../../../../../../generated-api';
 import { Sort } from '../../../_models/sort';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
@@ -37,7 +37,6 @@ export class DomainPageManagerComponent implements OnInit {
     });
 
     // Icons
-    readonly faLightbulb         = faLightbulb;
     readonly faUpRightFromSquare = faUpRightFromSquare;
 
     private loadedPageNum = 0;

@@ -1,0 +1,10 @@
+@import '../../../../scss/vars';
+
+.info-block {
+    display: flex;
+    background-color: transparentize($primary, 0.9);
+    color: $text-muted;
+    border-radius: $border-radius-sm;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}

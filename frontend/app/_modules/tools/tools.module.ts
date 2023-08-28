@@ -11,6 +11,7 @@ import { CheckmarkComponent } from './checkmark/checkmark.component';
 import { ServerMessageComponent } from './server-message/server-message.component';
 import { CopyTextDirective } from './_directives/copy-text.directive';
 import { IdentityProviderIconComponent } from './identity-provider-icon/identity-provider-icon.component';
+import { InfoBlockComponent } from './info-block/info-block.component';
 
 @NgModule({
     declarations: [
@@ -22,6 +23,7 @@ import { IdentityProviderIconComponent } from './identity-provider-icon/identity
         PasswordInputComponent,
         ServerMessageComponent,
         SpinnerDirective,
+        InfoBlockComponent,
     ],
     imports: [
         CommonModule,
@@ -38,6 +40,7 @@ import { IdentityProviderIconComponent } from './identity-provider-icon/identity
         SpinnerDirective,
         CopyTextDirective,
         IdentityProviderIconComponent,
+        InfoBlockComponent,
     ],
 })
 export class ToolsModule {}
