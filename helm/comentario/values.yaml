@@ -47,6 +47,7 @@ ingress:
 clusterIssuer: letsencrypt-staging
 
 comentario:
+  baseDocsUrl: 'https://docs.comentario.app/'
   homeContentURL: 'https://docs.comentario.app/en/embed/front-page/'
   allowSignups: 'true'
   allowNewOwners: 'false'
