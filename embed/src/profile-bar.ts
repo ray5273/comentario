@@ -151,7 +151,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a signup dialog and return a promise that's resolved when the dialog is closed.
      */
     async signupUser(): Promise<void> {
-        const dlg = await SignupDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'});
+        const dlg = await SignupDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.config);
         if (dlg.confirmed) {
             await this.onSignup(dlg.data);
         }

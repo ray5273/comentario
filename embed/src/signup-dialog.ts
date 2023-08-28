@@ -1,7 +1,8 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { SignupData } from './models';
+import { InstanceStaticConfig, SignupData } from './models';
+import { Utils } from './utils';
 
 export class SignupDialog extends Dialog {
 
@@ -10,7 +11,7 @@ export class SignupDialog extends Dialog {
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning) {
+    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceStaticConfig) {
         super(parent, 'Create an account', pos);
     }
 
@@ -18,9 +19,10 @@ export class SignupDialog extends Dialog {
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
+     * @param config Comentario configuration obtained from the backend.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning): Promise<SignupDialog> {
-        const dlg = new SignupDialog(parent, pos);
+    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceStaticConfig): Promise<SignupDialog> {
+        const dlg = new SignupDialog(parent, pos, config);
         return dlg.run(dlg);
     }
 
@@ -50,7 +52,25 @@ export class SignupDialog extends Dialog {
                 UIToolkit.div('input-group').append(this._name),
                 UIToolkit.div('input-group').append(this._pwd),
                 UIToolkit.div('input-group').append(this._website),
-                UIToolkit.div('dialog-centered').append(UIToolkit.submit('Sign up', false)));
+                UIToolkit.div('dialog-centered')
+                    .append(
+                        Wrap.new('span').inner('By signing up, you agree to our '),
+                        Wrap.new('a')
+                            .inner('Terms of Service')
+                            .attr({
+                                href: Utils.joinUrl(this.config.baseDocsUrl, this.config.defaultLangId, 'legal/tos/'),
+                                target: '_blank',
+                            }),
+                        Wrap.new('span').inner(' and '),
+                        Wrap.new('a')
+                            .inner('Privacy Policy')
+                            .attr({
+                                href: Utils.joinUrl(this.config.baseDocsUrl, this.config.defaultLangId, 'legal/privacy/'),
+                                target: '_blank',
+                            }),
+                        Wrap.new('span').inner('.')),
+                UIToolkit.div('dialog-centered').append(UIToolkit.submit('Sign up', false)),
+            );
     }
 
     override onShow(): void {
