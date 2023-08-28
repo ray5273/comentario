@@ -46,6 +46,9 @@ import { CommentPropertiesComponent } from './domains/comments/comment-propertie
 import { CommentStatusBadgeComponent } from './domains/comments/comment-status-badge/comment-status-badge.component';
 import { MetricCardComponent } from './dashboard/metric-card/metric-card.component';
 import { CommentService } from './_services/comment.service';
+import { ConfigManagerComponent } from './config/config-manager/config-manager.component';
+import { StaticConfigComponent } from './config/static-config/static-config.component';
+import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 
 @NgModule({
     declarations: [
@@ -85,6 +88,9 @@ import { CommentService } from './_services/comment.service';
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
+        ConfigManagerComponent,
+        StaticConfigComponent,
+        DynamicConfigComponent,
     ],
     imports: [
         CommonModule,

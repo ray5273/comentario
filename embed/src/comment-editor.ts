@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { MarkdownHelp } from './markdown-help';
-import { ComentarioConfig, PageInfo } from './models';
+import { InstanceStaticConfig, PageInfo } from './models';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
 
@@ -28,7 +28,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         isEdit: boolean,
         initialText: string,
         isAuthenticated: boolean,
-        config: ComentarioConfig,
+        config: InstanceStaticConfig,
         pageInfo: PageInfo,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,

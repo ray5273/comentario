@@ -1,0 +1,19 @@
+<section class="container-fluid">
+    <!-- Heading -->
+    <h1 i18n="heading">Configuration</h1>
+
+    <!-- Tabs -->
+    <ul ngbNav [activeId]="router.url" class="nav-tabs mb-3">
+        <!-- Static config -->
+        <li [ngbNavItem]="Paths.manage.config.static">
+            <a ngbNavLink [routerLink]="Paths.manage.config.static" i18n>Static</a>
+        </li>
+        <!-- Dynamic config -->
+        <li [ngbNavItem]="Paths.manage.config.dynamic">
+            <a ngbNavLink [routerLink]="Paths.manage.config.dynamic" i18n>Dynamic</a>
+        </li>
+    </ul>
+
+    <!-- Tab content -->
+    <router-outlet></router-outlet>
+</section>

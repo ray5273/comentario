@@ -52,7 +52,7 @@ func (m *manager) E2eRecreateDBSchema(seedSQL string) error {
 	}
 
 	// Reload the configuration
-	if err := TheConfigService.Load(); err != nil {
+	if err := TheDynConfigService.Load(); err != nil {
 		return err
 	}
 
@@ -76,7 +76,7 @@ func (m *manager) Initialise() {
 	}
 
 	// Initialise the config service
-	if err := TheConfigService.Load(); err != nil {
+	if err := TheDynConfigService.Load(); err != nil {
 		logger.Fatalf("Failed to load configuration: %v", err)
 	}
 }
@@ -97,7 +97,7 @@ func (m *manager) Shutdown() {
 	}
 
 	// Persist the configuration
-	if err := TheConfigService.Save(); err != nil {
+	if err := TheDynConfigService.Save(); err != nil {
 		logger.Errorf("Failed to save configuration: %v", err)
 	}
 

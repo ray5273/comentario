@@ -1,0 +1,12 @@
+<dl *ngIf="cfg | async as cfg" class="detail-table">
+    <!-- New users must confirm email -->
+    <div>
+        <dt i18n>New users must confirm email</dt>
+        <dd><app-checkmark [value]="cfg.authSignupConfirmUser"></app-checkmark></dd>
+    </div>
+    <!-- New commenters must confirm email -->
+    <div>
+        <dt i18n>New commenters must confirm email</dt>
+        <dd><app-checkmark [value]="cfg.authSignupConfirmCommenter"></app-checkmark></dd>
+    </div>
+</dl>

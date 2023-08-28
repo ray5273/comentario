@@ -1,3 +1,6 @@
+/**
+ * An UI language.
+ */
 export interface Language {
     /** Name of the language in that language. */
     nativeName: string;
@@ -9,4 +12,14 @@ export interface Language {
     dateFormat: string;
     /** Datetime format for the language. */
     datetimeFormat: string;
+}
+
+/**
+ * Dynamic instance configuration, flattened.
+ */
+export interface InstanceDynamicConfig {
+    /** Whether new users must confirm their email address. */
+    readonly authSignupConfirmUser:      boolean;
+    /** Whether new commenters must confirm their email address. */
+    readonly authSignupConfirmCommenter: boolean;
 }

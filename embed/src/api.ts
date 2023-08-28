@@ -1,4 +1,4 @@
-import { ComentarioConfig, Comment, Commenter, PageInfo, Principal, UUID } from './models';
+import { InstanceStaticConfig, Comment, Commenter, PageInfo, Principal, UUID } from './models';
 import { HttpClient } from './http-client';
 
 export interface ApiErrorResponse {
@@ -234,10 +234,10 @@ export class ApiService {
     }
 
     /**
-     * Obtain Comentario configuration.
+     * Obtain static instance configuration.
      */
-    async comentarioConfig(): Promise<ComentarioConfig> {
-        return this.apiClient.get<ComentarioConfig>('config');
+    async configStaticGet(): Promise<InstanceStaticConfig> {
+        return this.apiClient.get<InstanceStaticConfig>('config/static');
     }
 
     /**

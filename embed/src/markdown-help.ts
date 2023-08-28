@@ -1,12 +1,12 @@
 import { Wrap } from './element-wrap';
 import { Dialog, DialogPositioning } from './dialog';
 import { UIToolkit } from './ui-toolkit';
-import { ComentarioConfig } from './models';
+import { InstanceStaticConfig } from './models';
 import { Utils } from './utils';
 
 export class MarkdownHelp extends Dialog {
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: ComentarioConfig) {
+    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceStaticConfig) {
         super(parent, 'Markdown help', pos);
     }
 
@@ -16,7 +16,7 @@ export class MarkdownHelp extends Dialog {
      * @param pos Positioning options.
      * @param config Comentario configuration obtained from the backend.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, config: ComentarioConfig): void {
+    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceStaticConfig): void {
         new MarkdownHelp(parent, pos, config).run(null);
     }
 

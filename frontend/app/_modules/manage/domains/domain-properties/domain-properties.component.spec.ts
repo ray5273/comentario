@@ -8,7 +8,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { DocsService } from '../../../../_services/docs.service';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
-import { ComentarioConfig } from '../../../../../generated-api';
+import { InstanceStaticConfig } from '../../../../../generated-api';
 import { NoDataComponent } from '../../no-data/no-data.component';
 
 describe('DomainPropertiesComponent', () => {
@@ -21,7 +21,7 @@ describe('DomainPropertiesComponent', () => {
             declarations: [DomainPropertiesComponent, MockComponents(DomainBadgeComponent, NoDataComponent)],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
-                MockProvider(ConfigService, {config: {baseUrl: '/'} as ComentarioConfig}),
+                MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig}),
                 MockProvider(DocsService),
                 MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],

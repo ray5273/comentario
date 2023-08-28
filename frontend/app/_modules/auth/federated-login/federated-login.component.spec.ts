@@ -20,7 +20,7 @@ describe('FederatedLoginComponent', () => {
             providers: [
                 {provide: Configuration, useValue: new Configuration()},
                 MockProvider(ApiGeneralService),
-                MockProvider(ConfigService, {config: {federatedIdps: []} as any}),
+                MockProvider(ConfigService, {staticConfig: {federatedIdps: []} as any}),
                 MockProvider(ToastService),
                 MockProvider(AuthService),
             ],

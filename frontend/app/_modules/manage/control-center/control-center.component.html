@@ -111,11 +111,11 @@
                 </ng-container>
             </ul>
 
-            <!--------------------------------------------------------------------------------------------------------->
-            <!-- Administration: super user only -->
-            <!--------------------------------------------------------------------------------------------------------->
-
             <ul *ngIf="isSuper" class="nav">
+                <!--------------------------------------------------------------------------------------------------------->
+                <!-- Administration: super user only -->
+                <!--------------------------------------------------------------------------------------------------------->
+
                 <li class="nav-item cc-divider">
                     <h2 class="cc-hide-collapsed" i18n>Administration</h2>
                 </li>
@@ -125,6 +125,22 @@
                     <a [routerLink]="Paths.manage.users" routerLinkActive="active" class="cc-link">
                         <fa-icon class="cc-icon" [icon]="faUsers"></fa-icon>
                         <div class="cc-hide-collapsed" i18n>Users</div>
+                    </a>
+                </li>
+
+                <!--------------------------------------------------------------------------------------------------------->
+                <!-- Configuration: super user only -->
+                <!--------------------------------------------------------------------------------------------------------->
+
+                <li class="nav-item cc-divider">
+                    <h2 class="cc-hide-collapsed" i18n>Configuration</h2>
+                </li>
+
+                <!-- Configuration -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.config._" routerLinkActive="active" class="cc-link">
+                        <fa-icon class="cc-icon" [icon]="faWrench"></fa-icon>
+                        <div class="cc-hide-collapsed" i18n>Configuration</div>
                     </a>
                 </li>
             </ul>

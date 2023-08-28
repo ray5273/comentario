@@ -23,6 +23,9 @@ import { DomainUserEditComponent } from './domains/domain-users/domain-user-edit
 import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { CommentPropertiesComponent } from './domains/comments/comment-properties/comment-properties.component';
+import { ConfigManagerComponent } from './config/config-manager/config-manager.component';
+import { StaticConfigComponent } from './config/static-config/static-config.component';
+import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 
 const children: Routes = [
     // Default route
@@ -71,6 +74,18 @@ const children: Routes = [
     {path: 'users',                component: UserManagerComponent,          canActivate: [ManageGuard.isSuper]},
     {path: 'users/:id',            component: UserPropertiesComponent,       canActivate: [ManageGuard.isSuper]},
     {path: 'users/:id/edit',       component: UserEditComponent,             canActivate: [ManageGuard.isSuper]},
+
+    // Config
+    {
+        path: 'config',
+        component: ConfigManagerComponent,
+        children: [
+            {path: '', pathMatch: 'full', redirectTo: 'static'},
+            {path: 'static',  component: StaticConfigComponent},
+            {path: 'dynamic', component: DynamicConfigComponent},
+        ],
+        canActivate: [ManageGuard.isSuper],
+    },
 
     // Account
     {path: 'account/profile',      component: ProfileComponent},

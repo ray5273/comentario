@@ -23,7 +23,7 @@ export class DomainPropertiesComponent implements OnInit {
 
     readonly Paths = Paths;
     readonly snippet =
-        `<script defer src="${Location.joinWithSlash(this.cfgSvc.config.baseUrl, 'comentario.js')}"></script>\n` +
+        `<script defer src="${Location.joinWithSlash(this.cfgSvc.staticConfig.baseUrl, 'comentario.js')}"></script>\n` +
         `<comentario-comments></comentario-comments>`;
     readonly installDocsUrl = this.docsSvc.getPageUrl('getting-started/');
 
@@ -59,7 +59,7 @@ export class DomainPropertiesComponent implements OnInit {
             .subscribe(meta => {
                 this.domainMeta = meta;
                 // Only add those federated identity providers available globally
-                this.fedIdps = this.cfgSvc.config.federatedIdps?.filter(idp => meta.federatedIdpIds?.includes(idp.id));
+                this.fedIdps = this.cfgSvc.staticConfig.federatedIdps?.filter(idp => meta.federatedIdpIds?.includes(idp.id));
             });
     }
 }

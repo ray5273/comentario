@@ -20,7 +20,7 @@ export class HomeComponent implements OnInit {
     principal?: Principal | null;
 
     readonly Paths = Paths;
-    readonly embedUrl = this.configSvc.config.homeContentUrl;
+    readonly embedUrl = this.configSvc.staticConfig.homeContentUrl;
     readonly docGetStartedUrl = this.docsSvc.getPageUrl('getting-started/');
 
     // Icons

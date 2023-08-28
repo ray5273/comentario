@@ -57,71 +57,6 @@ definitions:
         package: "gitlab.com/comentario/comentario/internal/api/exmodels"
       type: "Error"
 
-  comentarioConfig:
-    description: Comentario configuration
-    type: object
-    readOnly: true
-    required:
-      - baseUrl
-      - baseDocsUrl
-      - version
-      - buildDate
-      - defaultLangId
-      - signupAllowed
-      - newOwnersAllowed
-      - resultPageSize
-    properties:
-      baseUrl:
-        type: string
-        x-isnullable: false
-        description: Base Comentario URL
-      baseDocsUrl:
-        type: string
-        x-isnullable: false
-        description: Base Documentation URL
-      version:
-        type: string
-        x-isnullable: false
-        description: Comentario version
-      buildDate:
-        type: string
-        format: date-time
-        x-isnullable: false
-        description: Server build date
-      defaultLangId:
-        type: string
-        x-isnullable: false
-        description: Default interface language ID
-      homeContentUrl:
-        type: string
-        format: uri
-        description: >
-          URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for 
-          unauthenticated user) or dashboard (for authenticated)
-      signupAllowed:
-        type: boolean
-        x-isnullable: false
-        description: Whether registration of new users (including commenters) is allowed
-      newOwnersAllowed:
-        type: boolean
-        x-isnullable: false
-        description: Whether non-owner users can add domains (and become owners)
-      federatedIdps:
-        type: array
-        items:
-          $ref: "#/definitions/federatedIdentityProvider"
-        description: Configured federated identity providers
-      resultPageSize:
-        type: integer
-        format: uint
-        x-isnullable: false
-        description: Max number of database rows returned per page
-      uiLanguages:
-        type: array
-        items:
-          $ref: "#/definitions/uiLanguage"
-        description: Available UI languages
-
   comment:
     description: Comment residing on a page
     type: object
@@ -540,6 +475,113 @@ definitions:
       error:
         type: string
         description: Any error message occurred during the import
+
+  instanceDynamicConfigItem:
+    description: Dynamic instance configuration item
+    type: object
+    required:
+      - key
+      - value
+    properties:
+      key:
+        type: string
+        description: Item key
+      value:
+        type: string
+        description: Item value
+      description:
+        type: string
+        readOnly: true
+        description: Item description
+      datatype:
+        $ref: "#/definitions/instanceDynamicConfigItemDatatype"
+        readOnly: true
+        description: Item datatype
+      updatedTime:
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp when the item was last updated in the database
+      userUpdated:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Reference to the user who last updated the item in the database
+      defaultValue:
+        type: string
+        readOnly: true
+        description: Item's default value
+
+  instanceDynamicConfigItemDatatype:
+    description: Dynamic instance configuration item datatype
+    type: string
+    enum:
+      - boolean
+
+  instanceStaticConfig:
+    description: Static instance configuration
+    type: object
+    readOnly: true
+    required:
+      - baseUrl
+      - baseDocsUrl
+      - version
+      - buildDate
+      - defaultLangId
+      - signupAllowed
+      - newOwnersAllowed
+      - resultPageSize
+    properties:
+      baseUrl:
+        type: string
+        x-isnullable: false
+        description: Base Comentario URL
+      baseDocsUrl:
+        type: string
+        x-isnullable: false
+        description: Base Documentation URL
+      version:
+        type: string
+        x-isnullable: false
+        description: Comentario version
+      buildDate:
+        type: string
+        format: date-time
+        x-isnullable: false
+        description: Server build date
+      defaultLangId:
+        type: string
+        x-isnullable: false
+        description: Default interface language ID
+      homeContentUrl:
+        type: string
+        format: uri
+        description: >
+          URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for 
+          unauthenticated user) or dashboard (for authenticated)
+      signupAllowed:
+        type: boolean
+        x-isnullable: false
+        description: Whether registration of new users (including commenters) is allowed
+      newOwnersAllowed:
+        type: boolean
+        x-isnullable: false
+        description: Whether non-owner users can add domains (and become owners)
+      federatedIdps:
+        type: array
+        items:
+          $ref: "#/definitions/federatedIdentityProvider"
+        description: Configured federated identity providers
+      resultPageSize:
+        type: integer
+        format: uint
+        x-isnullable: false
+        description: Max number of database rows returned per page
+      uiLanguages:
+        type: array
+        items:
+          $ref: "#/definitions/uiLanguage"
+        description: Available UI languages
 
   pageInfo:
     description: Information about a page displaying comments
@@ -1099,23 +1141,6 @@ paths:
           $ref: "#/responses/InternalError"
         502:
           $ref: "#/responses/BasGateway"
-
-  #---------------------------------------------------------------------------------------------------------------------
-  # Generic stuff
-  #---------------------------------------------------------------------------------------------------------------------
-
-  /config:
-    get:
-      operationId: ComentarioConfig
-      summary: Obtain Comentario configuration
-      tags:
-        - ApiGeneral
-      security: []
-      responses:
-        200:
-          description: Comentario configuration
-          schema:
-            $ref: "#/definitions/comentarioConfig"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Mail
@@ -2740,6 +2765,65 @@ paths:
             type: file
         204:
           description: User has no avatar
+
+  #---------------------------------------------------------------------------------------------------------------------
+  # Configuration
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /config/static:
+    get:
+      operationId: ConfigStaticGet
+      summary: Obtain static instance configuration
+      tags:
+        - ApiGeneral
+      security: []
+      responses:
+        200:
+          description: Static instance configuration
+          schema:
+            $ref: "#/definitions/instanceStaticConfig"
+
+  /config/dynamic:
+    get:
+      operationId: ConfigDynamicGet
+      summary: Obtain dynamic instance configuration
+      tags:
+        - ApiGeneral
+      security: []
+      responses:
+        200:
+          description: Dynamic instance configuration items
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/instanceDynamicConfigItem"
+
+    patch:
+      operationId: ConfigDynamicUpdate
+      summary: Update dynamic instance configuration items
+      tags:
+        - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/instanceDynamicConfigItem"
+            description: Instance configuration items to modify. Omitted items will not be modified
+      responses:
+        204:
+          description: Dynamic instance configuration has been updated
+
+    delete:
+      operationId: ConfigDynamicReset
+      summary: Reset the dynamic instance configuration to its defaults
+      tags:
+        - ApiGeneral
+      responses:
+        204:
+          description: Dynamic instance configuration has been reset
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

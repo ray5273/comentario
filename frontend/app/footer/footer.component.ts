@@ -18,7 +18,7 @@ export class FooterComponent {
 
     readonly Paths = Paths;
     readonly year = `2022–${new Date().getFullYear()}`;
-    readonly version = this.configSvc.config.version;
+    readonly version = this.configSvc.staticConfig.version;
 
     constructor(
         readonly docsSvc: DocsService,

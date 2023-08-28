@@ -4,7 +4,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { SignupComponent } from './signup.component';
 import { ConfigService } from '../../../_services/config.service';
-import { ApiGeneralService, ComentarioConfig } from '../../../../generated-api';
+import { ApiGeneralService, InstanceStaticConfig } from '../../../../generated-api';
 import { FederatedLoginComponent } from '../federated-login/federated-login.component';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { DocsService } from '../../../_services/docs.service';
@@ -19,7 +19,7 @@ describe('SignupComponent', () => {
             declarations: [SignupComponent, MockComponents(PasswordInputComponent, FederatedLoginComponent)],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
-                MockProvider(ConfigService, {config: {} as ComentarioConfig}),
+                MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
                 MockProvider(DocsService),
                 MockProvider(ApiGeneralService),
             ],

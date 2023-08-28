@@ -152,7 +152,7 @@ insert into cm_users(id, email, name, password_hash, system_account, confirmed, 
     values('00000000-0000-0000-0000-000000000000'::uuid, '', 'Anonymous', '', true, false, current_timestamp, gen_random_uuid());
 
 ------------------------------------------------------------------------------------------------------------------------
--- Instance configuration
+-- Dynamic instance configuration
 ------------------------------------------------------------------------------------------------------------------------
 create table cm_configuration (
     key          varchar(255) primary key,                        -- Unique configuration item key

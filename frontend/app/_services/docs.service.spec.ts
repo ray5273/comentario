@@ -12,7 +12,7 @@ describe('DocsService', () => {
         TestBed.configureTestingModule({
             providers: [
                 {provide: LOCALE_ID, useValue: 'it'},
-                MockProvider(ConfigService, {config: {baseDocsUrl: 'https://whatever.org'} as any}),
+                MockProvider(ConfigService, {staticConfig: {baseDocsUrl: 'https://whatever.org'} as any}),
             ],
         });
         service = TestBed.inject(DocsService);

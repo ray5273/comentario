@@ -20,7 +20,7 @@ export class FederatedLoginComponent {
 
     loggingIn = false;
 
-    readonly federatedIdps = this.cfgSvc.config.federatedIdps;
+    readonly federatedIdps = this.cfgSvc.staticConfig.federatedIdps;
 
     constructor(
         private readonly router: Router,

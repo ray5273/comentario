@@ -12,7 +12,7 @@ import {
     faSignOutAlt,
     faTachometerAlt,
     faUsers,
-    faUsersRectangle,
+    faUsersRectangle, faWrench,
 } from '@fortawesome/free-solid-svg-icons';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -52,6 +52,7 @@ export class ControlCenterComponent implements OnInit {
     readonly faTachometerAlt         = faTachometerAlt;
     readonly faUsers                 = faUsers;
     readonly faUsersRectangle        = faUsersRectangle;
+    readonly faWrench                = faWrench;
 
     constructor(
         private readonly router: Router,

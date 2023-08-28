@@ -1,7 +1,10 @@
 import { Injectable } from '@angular/core';
-import { Observable, tap } from 'rxjs';
+import { BehaviorSubject, combineLatestWith, Observable, tap } from 'rxjs';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
-import { ApiGeneralService, ComentarioConfig } from '../../generated-api';
+import { ApiGeneralService, InstanceDynamicConfigItem, InstanceStaticConfig } from '../../generated-api';
+import { InstanceDynamicConfig } from '../_models/models';
+import { Mutable } from '../_models/types';
+import { map, shareReplay } from 'rxjs/operators';
 
 declare global {
     // noinspection JSUnusedGlobalSymbols
@@ -25,7 +28,9 @@ export class ConfigService {
      */
     readonly isUnderTest: boolean = false;
 
-    private _config?: ComentarioConfig;
+    private _staticConfig?: InstanceStaticConfig;
+
+    private readonly _dynamicReload$ = new BehaviorSubject<void>(undefined);
 
     constructor(
         ngbConfig: NgbConfig,
@@ -41,17 +46,28 @@ export class ConfigService {
     }
 
     /**
-     * Comentario configuration obtained from the server.
+     * Dynamic instance configuration obtained from the server.
      */
-    get config(): ComentarioConfig {
-        return this._config!;
+    get dynamicConfig(): Observable<InstanceDynamicConfig> {
+        return this.api.configDynamicGet()
+            .pipe(
+                combineLatestWith(this._dynamicReload$),
+                map(([dc]) => this.makeDynamicConfig(dc)),
+                shareReplay(1));
+    }
+
+    /**
+     * Static instance configuration obtained from the server.
+     */
+    get staticConfig(): InstanceStaticConfig {
+        return this._staticConfig!;
     }
 
     /**
      * Initialise the app configuration.
      */
     init(): Observable<unknown> {
-        return this.api.comentarioConfig().pipe(tap(cc => this._config = cc));
+        return this.api.configStaticGet().pipe(tap(sc => this._staticConfig = sc));
     }
 
     /**
@@ -60,6 +76,37 @@ export class ConfigService {
      * @param d The array to check.
      */
     canLoadMore(d: any[] | null | undefined): boolean {
-        return (d?.length ?? 0) >= this.config.resultPageSize;
+        return (d?.length ?? 0) >= this.staticConfig.resultPageSize;
+    }
+
+    /**
+     * Trigger an update of the dynamic configuration.
+     */
+    dynamicReload(): void {
+        this._dynamicReload$.next(undefined);
+    }
+
+    /**
+     * Convert the given array of items into a flat dynamic configuration object.
+     */
+    private makeDynamicConfig(items: InstanceDynamicConfigItem[]): InstanceDynamicConfig {
+        // Default config
+        const cfg: Mutable<InstanceDynamicConfig> = {
+            authSignupConfirmUser:      false,
+            authSignupConfirmCommenter: false,
+        };
+
+        // Iterate items and update config
+        for (const item of items) {
+            switch (item.key) {
+                case 'auth.signup.confirm.user':
+                    cfg.authSignupConfirmUser = item.value === 'true';
+                    break;
+                case 'auth.signup.confirm.commenter':
+                    cfg.authSignupConfirmCommenter = item.value === 'true';
+                    break;
+            }
+        }
+        return cfg;
     }
 }

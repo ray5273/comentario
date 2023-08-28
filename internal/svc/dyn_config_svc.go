@@ -10,31 +10,35 @@ import (
 	"time"
 )
 
-// TheConfigService is a global ConfigService implementation
-var TheConfigService ConfigService = &configService{}
+// TheDynConfigService is a global DynConfigService implementation
+var TheDynConfigService DynConfigService = &dynConfigService{}
 
-// ConfigService is a service interface for dealing with instance configuration
-type ConfigService interface {
-	// Get returns a configuration entry by its key
-	Get(key data.InstanceConfigItemKey) (*data.InstanceConfigItem, error)
+// DynConfigService is a service interface for dealing with dynamic instance configuration
+type DynConfigService interface {
+	// Get returns a configuration item by its key
+	Get(key data.DynInstanceConfigItemKey) (*data.DynInstanceConfigItem, error)
+	// GetAll returns all available configuration items
+	GetAll() (map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem, error)
 	// Load configuration data from the database
 	Load() error
+	// Reset resets all configuration data to its defaults
+	Reset()
 	// Save changed configuration data to the database
 	Save() error
-	// Set updates the value of a configuration entry by its key
-	Set(curUserID *uuid.UUID, key data.InstanceConfigItemKey, value string) error
+	// Set updates the value of a configuration item by its key
+	Set(curUserID *uuid.UUID, key data.DynInstanceConfigItemKey, value string) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// configService is a blueprint ConfigService implementation
-type configService struct {
+// dynConfigService is a blueprint DynConfigService implementation
+type dynConfigService struct {
 	mu    sync.RWMutex
-	items map[data.InstanceConfigItemKey]*data.InstanceConfigItem
+	items map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem
 }
 
-func (svc *configService) Get(key data.InstanceConfigItemKey) (*data.InstanceConfigItem, error) {
-	logger.Debugf("configService.Get(%q)", key)
+func (svc *dynConfigService) Get(key data.DynInstanceConfigItemKey) (*data.DynInstanceConfigItem, error) {
+	logger.Debugf("dynConfigService.Get(%q)", key)
 
 	// Prevent concurrent write access
 	svc.mu.RLock()
@@ -42,8 +46,29 @@ func (svc *configService) Get(key data.InstanceConfigItemKey) (*data.InstanceCon
 	return svc.get(key)
 }
 
-func (svc *configService) Load() error {
-	logger.Debug("configService.Load()")
+func (svc *dynConfigService) GetAll() (map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem, error) {
+	logger.Debug("dynConfigService.GetAll()")
+
+	// Prevent concurrent write access
+	svc.mu.RLock()
+	defer svc.mu.RUnlock()
+
+	// Make sure the config is initialised
+	if svc.items == nil {
+		return nil, errors.New("config is not initialised")
+	}
+
+	// Make an (immutable) copy of the items
+	items := make(map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem, len(svc.items))
+	for k, v := range svc.items {
+		vCopy := *v
+		items[k] = &vCopy
+	}
+	return items, nil
+}
+
+func (svc *dynConfigService) Load() error {
+	logger.Debug("dynConfigService.Load()")
 
 	// Prevent concurrent access
 	svc.mu.Lock()
@@ -59,23 +84,23 @@ func (svc *configService) Load() error {
 
 	rows, err := db.Select(q)
 	if err != nil {
-		logger.Errorf("configService.Load: Select() failed: %v", err)
+		logger.Errorf("dynConfigService.Load: Select() failed: %v", err)
 		return err
 	}
 	defer rows.Close()
 
 	// Fetch the items
 	for rows.Next() {
-		var key data.InstanceConfigItemKey
+		var key data.DynInstanceConfigItemKey
 		var value string
 		var updatedTime time.Time
 		var userUpdated uuid.NullUUID
 		if err := rows.Scan(&key, &value, &updatedTime, &userUpdated); err != nil {
-			logger.Errorf("configService.Load: rows.Scan() failed: %v", err)
+			logger.Errorf("dynConfigService.Load: rows.Scan() failed: %v", err)
 			return err
 		}
 
-		// If the entry is a valid one
+		// If the item is a valid one
 		if ci, ok := svc.items[key]; ok && value != ci.DefaultValue {
 			ci.Value = value
 			ci.UpdatedTime = updatedTime
@@ -92,8 +117,19 @@ func (svc *configService) Load() error {
 	return nil
 }
 
-func (svc *configService) Save() error {
-	logger.Debug("configService.Save()")
+func (svc *dynConfigService) Reset() {
+	logger.Debug("dynConfigService.Reset()")
+
+	// Prevent concurrent access
+	svc.mu.Lock()
+	defer svc.mu.Unlock()
+
+	// Perform the reset
+	svc.reset()
+}
+
+func (svc *dynConfigService) Save() error {
+	logger.Debug("dynConfigService.Save()")
 
 	// Prevent concurrent access
 	svc.mu.Lock()
@@ -105,7 +141,7 @@ func (svc *configService) Save() error {
 	}
 
 	// Iterate non-default items
-	var keys []data.InstanceConfigItemKey
+	var keys []data.DynInstanceConfigItemKey
 	for key, ci := range svc.items {
 		if !ci.HasDefaultValue() {
 			q := db.Dialect().
@@ -141,8 +177,8 @@ func (svc *configService) Save() error {
 	return nil
 }
 
-func (svc *configService) Set(curUserID *uuid.UUID, key data.InstanceConfigItemKey, value string) error {
-	logger.Debugf("configService.Set(%s, %q, %q)", curUserID, key, value)
+func (svc *dynConfigService) Set(curUserID *uuid.UUID, key data.DynInstanceConfigItemKey, value string) error {
+	logger.Debugf("dynConfigService.Set(%s, %q, %q)", curUserID, key, value)
 
 	// Prevent concurrent access
 	svc.mu.Lock()
@@ -163,8 +199,8 @@ func (svc *configService) Set(curUserID *uuid.UUID, key data.InstanceConfigItemK
 	return nil
 }
 
-// get returns a configuration entry by its key, without locking
-func (svc *configService) get(key data.InstanceConfigItemKey) (*data.InstanceConfigItem, error) {
+// get returns a configuration item by its key, without locking
+func (svc *dynConfigService) get(key data.DynInstanceConfigItemKey) (*data.DynInstanceConfigItem, error) {
 	// Make sure the config is initialised
 	if svc.items == nil {
 		return nil, errors.New("config is not initialised")
@@ -181,8 +217,8 @@ func (svc *configService) get(key data.InstanceConfigItemKey) (*data.InstanceCon
 }
 
 // reset the configuration to its defaults
-func (svc *configService) reset() {
-	svc.items = map[data.InstanceConfigItemKey]*data.InstanceConfigItem{
+func (svc *dynConfigService) reset() {
+	svc.items = map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem{
 		data.ConfigKeyAuthSignupConfirmUser:      {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "Whether new users must confirm their email address"},
 		data.ConfigKeyAuthSignupConfirmCommenter: {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "Whether new commenters must confirm their email address"},
 	}

@@ -15,6 +15,11 @@ export const Paths = {
         dashboard:      '/manage/dashboard',
         domains:        '/manage/domains',
         users:          '/manage/users',
+        config: {
+            _:          '/manage/config',
+            static:     '/manage/config/static',
+            dynamic:    '/manage/config/dynamic',
+        },
 
         // Account
         account: {

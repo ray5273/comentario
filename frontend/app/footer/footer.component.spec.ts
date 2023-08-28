@@ -5,7 +5,7 @@ import { MockProvider } from 'ng-mocks';
 import { FooterComponent } from './footer.component';
 import { DocsService } from '../_services/docs.service';
 import { ConfigService } from '../_services/config.service';
-import { ComentarioConfig } from '../../generated-api';
+import { InstanceStaticConfig } from '../../generated-api';
 import { AuthService } from '../_services/auth.service';
 
 describe('FooterComponent', () => {
@@ -19,7 +19,7 @@ describe('FooterComponent', () => {
             imports: [RouterTestingModule],
             providers: [
                 MockProvider(DocsService),
-                MockProvider(ConfigService, {config: {} as ComentarioConfig}),
+                MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
                 MockProvider(AuthService, {principal: of(null)}),
             ],
         })

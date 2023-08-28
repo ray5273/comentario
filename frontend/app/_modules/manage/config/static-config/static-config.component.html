@@ -1,0 +1,72 @@
+<dl class="detail-table">
+    <!-- Base Comentario URL -->
+    <div>
+        <dt i18n>Base Comentario URL</dt>
+        <dd>{{ cfg.baseUrl }}</dd>
+    </div>
+    <!-- Base documentation URL -->
+    <div>
+        <dt i18n>Base documentation URL</dt>
+        <dd>{{ cfg.baseDocsUrl }}</dd>
+    </div>
+    <!-- Comentario version -->
+    <div>
+        <dt i18n>Comentario version</dt>
+        <dd>{{ cfg.version }}</dd>
+    </div>
+    <!-- Build date -->
+    <div>
+        <dt i18n>Build date</dt>
+        <dd>{{ cfg.buildDate | datetime }}</dd>
+    </div>
+    <!-- Default UI language ID -->
+    <div>
+        <dt i18n>Default UI language ID</dt>
+        <dd>{{ cfg.defaultLangId }}</dd>
+    </div>
+    <!-- Homepage content URL -->
+    <div>
+        <dt i18n>Homepage content URL</dt>
+        <dd>{{ cfg.homeContentUrl }}</dd>
+    </div>
+    <!-- New user registration is allowed -->
+    <div>
+        <dt i18n>New user registration is allowed</dt>
+        <dd><app-checkmark [value]="cfg.signupAllowed"></app-checkmark></dd>
+    </div>
+    <!-- New owner creation is allowed -->
+    <div>
+        <dt i18n>New owner creation is allowed</dt>
+        <dd><app-checkmark [value]="cfg.newOwnersAllowed"></app-checkmark></dd>
+    </div>
+    <!-- Configured federated identity providers -->
+    <div>
+        <dt i18n>Configured federated identity providers</dt>
+        <dd>
+            <ul *ngIf="cfg.federatedIdps?.length else noIdps" class="list-unstyled">
+                <li *ngFor="let idp of cfg.federatedIdps">
+                    <app-idp-icon [idpId]="idp.id"></app-idp-icon>
+                    <span class="ms-1">{{ idp.name }}</span>
+                </li>
+            </ul>
+            <ng-template #noIdps><i i18n>(none)</i></ng-template>
+        </dd>
+    </div>
+    <!-- Max. number of items per page -->
+    <div>
+        <dt i18n>Max. number of items per page</dt>
+        <dd>{{ cfg.resultPageSize }}</dd>
+    </div>
+    <!-- Available UI languages -->
+    <div>
+        <dt i18n>Available UI languages</dt>
+        <dd>
+            <ul class="list-unstyled">
+                <li *ngFor="let lang of cfg.uiLanguages">
+                    <code>{{ lang.id }}</code>
+                    <span class="ms-1">{{ lang.nameNative }} ({{ lang.nameEnglish }})</span>
+                </li>
+            </ul>
+        </dd>
+    </div>
+</dl>

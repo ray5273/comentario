@@ -31,7 +31,7 @@ export class DomainEditComponent implements OnInit {
     readonly modNotifyPolicies = Object.values(DomainModNotifyPolicy);
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
-    readonly fedIdps = this.cfgSvc.config.federatedIdps;
+    readonly fedIdps = this.cfgSvc.staticConfig.federatedIdps;
     readonly form = this.fb.nonNullable.group({
         host:             ['', [XtraValidators.host]],
         name:             '',

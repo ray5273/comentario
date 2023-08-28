@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { ComentarioConfig, FederatedIdentityProvider, PageInfo, Principal, SignupData, UserSettings } from './models';
+import { InstanceStaticConfig, FederatedIdentityProvider, PageInfo, Principal, SignupData, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -25,7 +25,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     constructor(
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
-        private readonly config: ComentarioConfig,
+        private readonly config: InstanceStaticConfig,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,

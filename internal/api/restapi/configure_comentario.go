@@ -90,7 +90,10 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralAuthOauthCallbackHandler = api_general.AuthOauthCallbackHandlerFunc(handlers.AuthOauthCallback)
 	api.APIGeneralAuthOauthInitHandler = api_general.AuthOauthInitHandlerFunc(handlers.AuthOauthInit)
 	// Config
-	api.APIGeneralComentarioConfigHandler = api_general.ComentarioConfigHandlerFunc(handlers.ComentarioConfig)
+	api.APIGeneralConfigDynamicGetHandler = api_general.ConfigDynamicGetHandlerFunc(handlers.ConfigDynamicGet)
+	api.APIGeneralConfigDynamicResetHandler = api_general.ConfigDynamicResetHandlerFunc(handlers.ConfigDynamicReset)
+	api.APIGeneralConfigDynamicUpdateHandler = api_general.ConfigDynamicUpdateHandlerFunc(handlers.ConfigDynamicUpdate)
+	api.APIGeneralConfigStaticGetHandler = api_general.ConfigStaticGetHandlerFunc(handlers.ConfigStaticGet)
 	// Mail
 	api.APIGeneralMailUnsubscribeHandler = api_general.MailUnsubscribeHandlerFunc(handlers.MailUnsubscribe)
 	// CurUser

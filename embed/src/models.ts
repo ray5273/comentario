@@ -12,8 +12,8 @@ export interface UILanguage {
     readonly nameNative:  string; // Language name in the language self
 }
 
-/** Comentario configuration. */
-export interface ComentarioConfig {
+/** Static instance configuration. */
+export interface InstanceStaticConfig {
     /** Base Comentario URL */
     baseUrl: string;
     /** Base Documentation URL */
@@ -38,7 +38,7 @@ export interface ComentarioConfig {
     uiLanguages?: UILanguage[];
 }
 
-export const DefaultComentarioConfig: ComentarioConfig = {
+export const DefaultStaticConfig: InstanceStaticConfig = {
     baseUrl:          'https://comentario.app',
     baseDocsUrl:      'https://docs.comentario.app',
     version:          '',

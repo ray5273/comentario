@@ -96,7 +96,7 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 		user.WithConfirmed(true)
 
 		// If confirmation is switched off in the config, mark the user confirmed, too
-	} else if ci, err := svc.TheConfigService.Get(data.ConfigKeyAuthSignupConfirmCommenter); err != nil {
+	} else if ci, err := svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupConfirmCommenter); err != nil {
 		respServiceError(err)
 	} else if !ci.AsBool() {
 		user.WithConfirmed(true)

@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { MockPipes, MockProvider } from 'ng-mocks';
 import { DomainEditComponent } from './domain-edit.component';
-import { ApiGeneralService, ComentarioConfig } from '../../../../../generated-api';
+import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { ToolsModule } from '../../../tools/tools.module';
 import { ToastService } from '../../../../_services/toast.service';
@@ -17,7 +17,7 @@ describe('DomainEditComponent', () => {
     let component: DomainEditComponent;
     let fixture: ComponentFixture<DomainEditComponent>;
 
-    const config: ComentarioConfig = {
+    const config: InstanceStaticConfig = {
         federatedIdps: [],
     } as any;
 
@@ -26,7 +26,7 @@ describe('DomainEditComponent', () => {
             declarations: [DomainEditComponent, MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe)],
             imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, ToolsModule],
             providers: [
-                MockProvider(ConfigService, {config}),
+                MockProvider(ConfigService, {staticConfig: config}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                 MockProvider(ToastService),
                 MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),

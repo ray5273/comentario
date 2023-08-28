@@ -62,7 +62,7 @@ export class DomainManagerComponent implements OnInit {
                 tap(meta => this.domainMeta = meta),
                 // Find out whether the user is allowed to add a domain: if the user isn't a superuser and no new owners
                 // are allowed, the user must already own at least one domain
-                switchMap(() => this.configSvc.config.newOwnersAllowed || this.domainMeta?.principal?.isSuperuser ?
+                switchMap(() => this.configSvc.staticConfig.newOwnersAllowed || this.domainMeta?.principal?.isSuperuser ?
                     of(true) :
                     this.api.domainCount(true, false).pipe(map(count => count > 0))))
             .subscribe(canAdd => this.canAdd = canAdd);

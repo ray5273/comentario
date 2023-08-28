@@ -20,7 +20,7 @@ describe('HomeComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 MockProvider(AuthService, {principal: of(null)}),
-                MockProvider(ConfigService, {config: {homeContentUrl: ''} as any}),
+                MockProvider(ConfigService, {staticConfig: {homeContentUrl: ''} as any}),
                 MockProvider(DocsService),
             ],
         })
