@@ -49,6 +49,7 @@ import { CommentService } from './_services/comment.service';
 import { ConfigManagerComponent } from './config/config-manager/config-manager.component';
 import { StaticConfigComponent } from './config/static-config/static-config.component';
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
+import { ConfigParamEditComponent } from './config/config-param-edit/config-param-edit.component';
 
 @NgModule({
     declarations: [
@@ -91,6 +92,7 @@ import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.c
         ConfigManagerComponent,
         StaticConfigComponent,
         DynamicConfigComponent,
+        ConfigParamEditComponent,
     ],
     imports: [
         CommonModule,

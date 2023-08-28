@@ -1,26 +1,22 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
-import { DynamicConfigComponent } from './dynamic-config.component';
+import { ConfigParamEditComponent } from './config-param-edit.component';
 import { ConfigService } from '../../../../_services/config.service';
-import { ToolsModule } from '../../../tools/tools.module';
-import { ApiGeneralService } from '../../../../../generated-api';
 
-describe('DynamicConfigComponent', () => {
+describe('DynamicConfigParamEditComponent', () => {
 
-    let component: DynamicConfigComponent;
-    let fixture: ComponentFixture<DynamicConfigComponent>;
+    let component: ConfigParamEditComponent;
+    let fixture: ComponentFixture<ConfigParamEditComponent>;
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [DynamicConfigComponent],
-            imports: [ToolsModule],
+            declarations: [ConfigParamEditComponent],
             providers: [
                 MockProvider(ConfigService, {dynamicConfig: of({}) as any}),
-                MockProvider(ApiGeneralService),
             ],
         });
-        fixture = TestBed.createComponent(DynamicConfigComponent);
+        fixture = TestBed.createComponent(ConfigParamEditComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

@@ -122,6 +122,11 @@ dl.detail-table, dl.detail-table > div {
     max-width: 500px !important;
 }
 
+// When in flex mode, scale to half the available space
+.flex-50 {
+    flex: 1 1 50%;
+}
+
 // Remove the default margin from the bottom after the comment text
 .comment-text p:last-child {
     margin-bottom: 0 !important;
