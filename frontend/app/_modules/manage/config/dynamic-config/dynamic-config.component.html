@@ -4,35 +4,33 @@
 <div *ngIf="items" class="row">
     <!-- Buttons -->
     <div class="col-sm-auto order-sm-last pb-3">
-        <!-- Reset config button -->
-        <button [appSpinner]="resetting.active" (confirmed)="reset()"
-                appConfirm="Are you sure you want to reset the configuration to defaults?"
-                confirmAction="Reset configuration"
-                type="button" class="btn btn-outline-warning w-100 mb-2" i18n-appConfirm i18n-confirmAction>
-            <fa-icon [icon]="faUndo" class="me-1"></fa-icon>
-            <ng-container i18n>Reset to defaults</ng-container>
-        </button>
+        <div class="d-grid gap-2">
+            <!-- Edit button -->
+            <a routerLink="edit" class="btn btn-secondary">
+                <fa-icon [icon]="faPencil" class="me-1"></fa-icon>
+                <ng-container i18n>Edit</ng-container>
+            </a>
+            <!-- Reset button -->
+            <button [appSpinner]="resetting.active" (confirmed)="reset()"
+                    appConfirm="Are you sure you want to reset the configuration to defaults?"
+                    confirmAction="Reset configuration"
+                    type="button" class="btn btn-outline-warning w-100 mb-2" i18n-appConfirm i18n-confirmAction>
+                <fa-icon [icon]="faUndo" class="me-1"></fa-icon>
+                <ng-container i18n>Reset to defaults</ng-container>
+            </button>
+        </div>
     </div>
 
     <!-- Config items -->
     <div class="col-sm">
-        <div class="list-group">
-            <div *ngFor="let item of items" class="list-group-item d-flex">
-                <div class="flex-grow-1 d-md-flex">
-                    <!-- Name -->
-                    <div class="flex-50">{{ item.description }}</div>
-                    <!-- Value -->
-                    <div [ngSwitch]="item.datatype" class="flex-50">
-                        <app-checkmark *ngSwitchCase="'boolean'" [value]="item.value"></app-checkmark>
-                    </div>
-                </div>
-                <!-- Edit button -->
-                <div>
-                    <a [routerLink]="['..', 'edit', item.key]" class="btn btn-outline-secondary btn-sm me-2" title="Edit" i18n-title>
-                        <fa-icon [icon]="faPencil"></fa-icon>
-                    </a>
-                </div>
+        <dl class="detail-table">
+            <div *ngFor="let item of items">
+                <dt>{{ item.description }}</dt>
+                <dd [ngSwitch]="item.datatype">
+                    <app-checkmark *ngSwitchCase="'boolean'" [value]="item.value === 'true'"></app-checkmark>
+                    <span *ngSwitchDefault>{{ item.value }}</span>
+                </dd>
             </div>
-        </div>
+        </dl>
     </div>
 </div>

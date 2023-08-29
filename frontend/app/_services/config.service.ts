@@ -26,9 +26,21 @@ export class ConfigService {
      */
     readonly isUnderTest: boolean = false;
 
-    private _staticConfig?: InstanceStaticConfig;
-
     private readonly _dynamicReload$ = new BehaviorSubject<void>(undefined);
+
+    /**
+     * Dynamic instance configuration obtained from the server.
+     */
+    readonly dynamicConfig = this._dynamicReload$
+        .pipe(
+            // Fetch the config from the backend
+            switchMap(() => this.api.configDynamicGet()),
+            // Convert to a map
+            map(dc => new Map<string, InstanceDynamicConfigItem>(dc?.map(i => [i.key, i]))),
+            // Cache the last result
+            shareReplay(1));
+
+    private _staticConfig?: InstanceStaticConfig;
 
     constructor(
         ngbConfig: NgbConfig,
@@ -41,20 +53,6 @@ export class ConfigService {
         // Disable animations with e2e to speed up the tests
         ngbConfig.animation = !this.isUnderTest;
         toastConfig.delay = ConfigService.TOAST_DELAY;
-    }
-
-    /**
-     * Dynamic instance configuration obtained from the server.
-     */
-    get dynamicConfig(): Observable<Map<string, InstanceDynamicConfigItem>> {
-        return this._dynamicReload$
-            .pipe(
-                // Fetch the config from the backend
-                switchMap(() => this.api.configDynamicGet()),
-                // Convert to a map
-                map(dc => new Map<string, InstanceDynamicConfigItem>(dc?.map(i => [i.key, i]))),
-                // Cache the last result
-                shareReplay(1));
     }
 
     /**

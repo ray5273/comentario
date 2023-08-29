@@ -49,7 +49,7 @@ import { CommentService } from './_services/comment.service';
 import { ConfigManagerComponent } from './config/config-manager/config-manager.component';
 import { StaticConfigComponent } from './config/static-config/static-config.component';
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
-import { ConfigParamEditComponent } from './config/config-param-edit/config-param-edit.component';
+import { ConfigEditComponent } from './config/config-edit/config-edit.component';
 
 @NgModule({
     declarations: [
@@ -58,6 +58,8 @@ import { ConfigParamEditComponent } from './config/config-param-edit/config-para
         CommentPropertiesComponent,
         CommentSortPipe,
         CommentStatusBadgeComponent,
+        ConfigEditComponent,
+        ConfigManagerComponent,
         ControlCenterComponent,
         CurrentUserBadgeComponent,
         DashboardComponent,
@@ -77,22 +79,20 @@ import { ConfigParamEditComponent } from './config/config-param-edit/config-para
         DomainUserEditComponent,
         DomainUserManagerComponent,
         DomainUserPropertiesComponent,
+        DynamicConfigComponent,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
         NoDataComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
+        StaticConfigComponent,
         StatsChartComponent,
         UserAvatarComponent,
         UserDetailsComponent,
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
-        ConfigManagerComponent,
-        StaticConfigComponent,
-        DynamicConfigComponent,
-        ConfigParamEditComponent,
     ],
     imports: [
         CommonModule,

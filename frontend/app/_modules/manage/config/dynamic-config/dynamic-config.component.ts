@@ -31,7 +31,8 @@ export class DynamicConfigComponent implements OnInit {
         // Subscribe to param changes
         this.configSvc.dynamicConfig
             .pipe(untilDestroyed(this))
-            .subscribe(m => this.items = Array.from(m.values()));
+            // Convert the map into configuration items, sorting it by key
+            .subscribe(m => this.items = Array.from(m.values()).sort((a, b) => a.key.localeCompare(b.key)));
     }
 
     reset() {

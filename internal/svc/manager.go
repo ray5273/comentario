@@ -96,11 +96,6 @@ func (m *manager) Shutdown() {
 		return
 	}
 
-	// Persist the configuration
-	if err := TheDynConfigService.Save(); err != nil {
-		logger.Errorf("Failed to save configuration: %v", err)
-	}
-
 	// Teardown the database
 	_ = db.Shutdown()
 	db = nil

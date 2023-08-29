@@ -27,8 +27,8 @@ import { ConfigManagerComponent } from './config/config-manager/config-manager.c
 import { StaticConfigComponent } from './config/static-config/static-config.component';
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 import {
-    ConfigParamEditComponent
-} from './config/config-param-edit/config-param-edit.component';
+    ConfigEditComponent
+} from './config/config-edit/config-edit.component';
 
 const children: Routes = [
     // Default route
@@ -79,14 +79,15 @@ const children: Routes = [
     {path: 'users/:id/edit',       component: UserEditComponent,             canActivate: [ManageGuard.isSuper]},
 
     // Config
-    {path: 'config/edit/:key',     component: ConfigParamEditComponent,      canActivate: [ManageGuard.isSuper]},
+    {path: 'config/edit',          component: ConfigEditComponent,           canActivate: [ManageGuard.isSuper]},
     {
         path: 'config',
         component: ConfigManagerComponent,
         children: [
             {path: '', pathMatch: 'full', redirectTo: 'static'},
-            {path: 'static',            component: StaticConfigComponent},
-            {path: 'dynamic',           component: DynamicConfigComponent},
+            {path: 'static',       component: StaticConfigComponent},
+            {path: 'dynamic',      component: DynamicConfigComponent},
+            {path: 'dynamic/edit', component: ConfigEditComponent},
         ],
         canActivate: [ManageGuard.isSuper],
     },

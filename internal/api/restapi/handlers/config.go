@@ -38,6 +38,11 @@ func ConfigDynamicReset(_ api_general.ConfigDynamicResetParams, user *data.User)
 	// Reset the config
 	svc.TheDynConfigService.Reset()
 
+	// Save the config
+	if err := svc.TheDynConfigService.Save(); err != nil {
+		return respServiceError(err)
+	}
+
 	// Succeeded
 	return api_general.NewConfigDynamicResetNoContent()
 }
