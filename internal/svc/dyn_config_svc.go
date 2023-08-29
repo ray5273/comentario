@@ -219,8 +219,10 @@ func (svc *dynConfigService) get(key data.DynInstanceConfigItemKey) (*data.DynIn
 // reset the configuration to its defaults
 func (svc *dynConfigService) reset() {
 	svc.items = map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem{
+		data.ConfigKeyAuthSignupEnabled:          {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "Enable registration of new users"},
 		data.ConfigKeyAuthSignupConfirmUser:      {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "New users must confirm their email"},
 		data.ConfigKeyAuthSignupConfirmCommenter: {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
+		data.ConfigKeyOperationNewOwnerEnabled:   {DefaultValue: "false", Datatype: data.ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
 	}
 	// Reset all values to their defaults
 	for _, ci := range svc.items {

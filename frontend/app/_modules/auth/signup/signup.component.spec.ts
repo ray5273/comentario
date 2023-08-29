@@ -1,10 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
+import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { SignupComponent } from './signup.component';
 import { ConfigService } from '../../../_services/config.service';
-import { ApiGeneralService, InstanceStaticConfig } from '../../../../generated-api';
+import { ApiGeneralService, InstanceDynamicConfigItem } from '../../../../generated-api';
 import { FederatedLoginComponent } from '../federated-login/federated-login.component';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { DocsService } from '../../../_services/docs.service';
@@ -19,7 +20,7 @@ describe('SignupComponent', () => {
             declarations: [SignupComponent, MockComponents(PasswordInputComponent, FederatedLoginComponent)],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
-                MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
+                MockProvider(ConfigService, {dynamicConfig: of(new Map<string, InstanceDynamicConfigItem>())}),
                 MockProvider(DocsService),
                 MockProvider(ApiGeneralService),
             ],

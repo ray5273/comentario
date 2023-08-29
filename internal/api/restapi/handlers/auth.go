@@ -246,8 +246,8 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 
 func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	// Verify new users are allowed
-	if !config.CLIFlags.AllowSignups {
-		return respForbidden(ErrorSignupsForbidden)
+	if r := Verifier.SignupEnabled(); r != nil {
+		return r
 	}
 
 	// Verify no such email is registered yet

@@ -52,6 +52,8 @@ const (
 )
 
 const (
-	ConfigKeyAuthSignupConfirmUser      DynInstanceConfigItemKey = "auth.signup.confirm.user"
+	ConfigKeyAuthSignupEnabled          DynInstanceConfigItemKey = "auth.signup.enabled"
 	ConfigKeyAuthSignupConfirmCommenter DynInstanceConfigItemKey = "auth.signup.confirm.commenter"
+	ConfigKeyAuthSignupConfirmUser      DynInstanceConfigItemKey = "auth.signup.confirm.user"
+	ConfigKeyOperationNewOwnerEnabled   DynInstanceConfigItemKey = "operation.newOwner.enabled"
 )

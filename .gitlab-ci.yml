@@ -107,8 +107,6 @@ build:
         --secrets=k8s/secrets.yaml
         --base-docs-url="${DOCS_URL}"
         --home-content-url="${DOCS_URL}/en/embed/front-page/"
-        --allow-signups
-        --allow-new-owners
         &> ./tmp/logs/comentario-server.log &
     - sleep 2
 

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder } from '@angular/forms';
-import { debounceTime, distinctUntilChanged, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
+import { debounceTime, distinctUntilChanged, first, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { faCheck, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -60,9 +60,13 @@ export class DomainManagerComponent implements OnInit {
             .pipe(
                 untilDestroyed(this),
                 tap(meta => this.domainMeta = meta),
-                // Find out whether the user is allowed to add a domain: if the user isn't a superuser and no new owners
-                // are allowed, the user must already own at least one domain
-                switchMap(() => this.configSvc.staticConfig.newOwnersAllowed || this.domainMeta?.principal?.isSuperuser ?
+                // Find out whether the user is allowed to add a domain: if the user isn't a superuser, check whether
+                // new owners are allowed
+                switchMap(() => this.domainMeta?.principal?.isSuperuser ?
+                    of(true) :
+                    this.configSvc.dynamicConfig.pipe(first(), map(dc => dc.get('operation.newOwner.enabled')?.value === 'true'))),
+                // If no new owner enabled, the user must already own at least one domain
+                switchMap(enabled => enabled ?
                     of(true) :
                     this.api.domainCount(true, false).pipe(map(count => count > 0))))
             .subscribe(canAdd => this.canAdd = canAdd);

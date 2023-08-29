@@ -75,8 +75,8 @@ func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, user *data.User) mi
 
 func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responder {
 	// Verify new users are allowed
-	if !config.CLIFlags.AllowSignups {
-		return respForbidden(ErrorSignupsForbidden)
+	if r := Verifier.SignupEnabled(); r != nil {
+		return r
 	}
 
 	// Verify no such email is registered yet

@@ -169,7 +169,12 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	// Try to find an existing user by email
 	var user *data.User
 	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); errors.Is(err, svc.ErrNotFound) {
-		// No such email/user: it's a signup. Insert a new user
+		// No such email/user: it's a signup. Verify that signing up is allowed
+		if r := Verifier.SignupEnabled(); r != nil {
+			return r
+		}
+
+		// Insert a new user
 		user = data.NewUser(fedUser.Email, fedUser.Name).
 			WithConfirmed(true). // Confirm the user right away as we trust the IdP
 			WithSignup(params.HTTPRequest, authSession.Host).

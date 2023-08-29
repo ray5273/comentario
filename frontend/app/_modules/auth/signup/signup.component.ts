@@ -1,6 +1,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
+import { first } from 'rxjs';
 import { faBan, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { Paths } from '../../../_utils/consts';
@@ -18,9 +19,9 @@ import { DocsService } from '../../../_services/docs.service';
 export class SignupComponent {
 
     isComplete = false;
+    signupAllowed = false;
 
     readonly Paths = Paths;
-    readonly signupAllowed = this.cfgSvc.staticConfig.signupAllowed;
     readonly submitting = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
         email:    ['', [Validators.email]],
@@ -38,11 +39,15 @@ export class SignupComponent {
     constructor(
         private readonly fb: FormBuilder,
         private readonly router: Router,
-        private readonly cfgSvc: ConfigService,
         private readonly docsSvc: DocsService,
         private readonly api: ApiGeneralService,
         private readonly toastSvc: ToastService,
-    ) {}
+        cfgSvc: ConfigService,
+    ) {
+        cfgSvc.dynamicConfig
+            .pipe(first())
+            .subscribe(dc => this.signupAllowed = dc.get('auth.signup.enabled')?.value === 'true');
+    }
 
     submit(): void {
         // Mark all controls touched to display validation results

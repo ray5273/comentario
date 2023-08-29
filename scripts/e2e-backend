@@ -106,6 +106,4 @@ echo "Starting $build_dir/comentario"
     --secrets="$secrets" \
     --base-docs-url="https://edge.docs.comentario.app" \
     --home-content-url="https://edge.docs.comentario.app/en/embed/front-page/" \
-    --allow-signups \
-    --allow-new-owners \
     "$@"

@@ -3,18 +3,18 @@
     <form *ngIf="form" [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
         <fieldset [disabled]="loading.active || saving.active">
             <!-- Create a control for each item -->
-            <div *ngFor="let item of items" [ngSwitch]="item.datatype" class="mb-3 row">
+            <div *ngFor="let item of items" [ngSwitch]="item.datatype" class="row">
                 <!-- Label -->
-                <label [for]="item.key" class="col-sm-3 col-form-label colon fw-bold">{{ item.description }}</label>
+                <label [for]="item.key" class="col-sm-6 col-form-label colon fw-bold">{{ item.description }}</label>
 
                 <!-- Boolean value -->
-                <div *ngSwitchCase="'boolean'" class="col-sm-9 form-check form-switch">
+                <div *ngSwitchCase="'boolean'" class="col-sm-6 form-check form-switch">
                     <input [formControlName]="ctlName(item.key)" [id]="item.key" class="form-check-input" type="checkbox">
                     <label [for]="item.key" class="form-check-label" i18n>On</label>
                 </div>
 
                 <!-- Any other (string) value -->
-                <div *ngSwitchDefault class="col-sm-9">
+                <div *ngSwitchDefault class="col-sm-6">
                     <input [formControlName]="ctlName(item.key)" type="text" class="form-control" [id]="item.key">
                 </div>
             </div>

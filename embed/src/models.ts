@@ -26,10 +26,6 @@ export interface InstanceStaticConfig {
     defaultLangId: string;
     /** URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for  unauthenticated user) or dashboard (for authenticated) */
     homeContentUrl?: string;
-    /** Whether registration of new users (including commenters) is allowed */
-    signupAllowed: boolean;
-    /** Whether non-owner users can add domains (and become owners) */
-    newOwnersAllowed: boolean;
     /** Configured federated identity providers */
     federatedIdps?: Array<FederatedIdentityProvider>;
     /** Max number of database rows returned per page */
@@ -45,8 +41,6 @@ export const DefaultStaticConfig: InstanceStaticConfig = {
     buildDate:        '',
     defaultLangId:    'en',
     homeContentUrl:   'https://docs.comentario.app/en/embed/front-page/',
-    signupAllowed:    false,
-    newOwnersAllowed: false,
     resultPageSize:   20,
 };
 

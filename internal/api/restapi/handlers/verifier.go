@@ -7,7 +7,6 @@ import (
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -32,6 +31,8 @@ type VerifierService interface {
 	IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Responder
 	// NeedsModeration returns whether the given comment needs to be moderated
 	NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error)
+	// SignupEnabled checks if users are allowed to sign up
+	SignupEnabled() middleware.Responder
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
 	UserCanAddDomain(user *data.User) middleware.Responder
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
@@ -192,13 +193,29 @@ func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, u
 	return false, nil
 }
 
+func (v *verifier) SignupEnabled() middleware.Responder {
+	if i, err := svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupEnabled); err != nil {
+		return respServiceError(err)
+	} else if !i.AsBool() {
+		return respForbidden(ErrorSignupsForbidden)
+	}
+	return nil
+}
+
 func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
-	// If no new owners are allowed, verify this user is a superuser or already owns at least one domain
-	if !user.IsSuperuser && !config.CLIFlags.AllowNewOwners {
-		if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
+	// If the user isn't a superuser
+	if !user.IsSuperuser {
+		// Check if new owners are allowed
+		if noe, err := svc.TheDynConfigService.Get(data.ConfigKeyOperationNewOwnerEnabled); err != nil {
 			return respServiceError(err)
-		} else if i == 0 {
-			return respForbidden(ErrorNewOwnersForbidden)
+
+		} else if !noe.AsBool() {
+			// No new owners allowed: verify this user already owns at least one domain
+			if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
+				return respServiceError(err)
+			} else if i == 0 {
+				return respForbidden(ErrorNewOwnersForbidden)
+			}
 		}
 	}
 	return nil

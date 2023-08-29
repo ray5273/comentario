@@ -100,16 +100,14 @@ func ConfigStaticGet(api_general.ConfigStaticGetParams) middleware.Responder {
 
 	// Succeeded
 	return api_general.NewConfigStaticGetOK().WithPayload(&models.InstanceStaticConfig{
-		BaseDocsURL:      config.CLIFlags.BaseDocsURL,
-		BaseURL:          config.BaseURL.String(),
-		BuildDate:        strfmt.DateTime(config.BuildDate),
-		DefaultLangID:    util.UIDefaultLangID,
-		FederatedIdps:    idps,
-		HomeContentURL:   strfmt.URI(config.CLIFlags.HomeContentURL),
-		NewOwnersAllowed: config.CLIFlags.AllowNewOwners,
-		ResultPageSize:   util.ResultPageSize,
-		SignupAllowed:    config.CLIFlags.AllowSignups,
-		UILanguages:      langs,
-		Version:          config.AppVersion,
+		BaseDocsURL:    config.CLIFlags.BaseDocsURL,
+		BaseURL:        config.BaseURL.String(),
+		BuildDate:      strfmt.DateTime(config.BuildDate),
+		DefaultLangID:  util.UIDefaultLangID,
+		FederatedIdps:  idps,
+		HomeContentURL: strfmt.URI(config.CLIFlags.HomeContentURL),
+		ResultPageSize: util.ResultPageSize,
+		UILanguages:    langs,
+		Version:        config.AppVersion,
 	})
 }
