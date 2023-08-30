@@ -35,38 +35,6 @@ var (
 	// logger represents a package-wide logger instance
 	logger = logging.MustGetLogger("config")
 
-	// SecretsConfig is a configuration object for storing sensitive information
-	SecretsConfig = &struct {
-		Postgres struct {
-			Host     string `yaml:"host"`     // PostgreSQL host
-			Port     int    `yaml:"port"`     // PostgreSQL port
-			Username string `yaml:"username"` // PostgreSQL username
-			Password string `yaml:"password"` // PostgreSQL password
-			Database string `yaml:"database"` // PostgreSQL database
-			SSLMode  string `yaml:"sslmode"`  // PostgreSQL sslmode, defaults to "disable"
-		} `yaml:"postgres"`
-
-		SMTPServer struct {
-			Host string `yaml:"host"`     // SMTP server hostname
-			Port int    `yaml:"port"`     // SMTP server port
-			User string `yaml:"username"` // SMTP server username
-			Pass string `yaml:"password"` // SMTP server password
-		} `yaml:"smtpServer"`
-
-		IdP struct {
-			Facebook KeySecret `yaml:"facebook"` // Facebook auth config
-			GitHub   KeySecret `yaml:"github"`   // GitHub auth config
-			GitLab   KeySecret `yaml:"gitlab"`   // GitLab auth config
-			Google   KeySecret `yaml:"google"`   // Google auth config
-			LinkedIn KeySecret `yaml:"linkedin"` // LinkedIn auth config
-			Twitter  KeySecret `yaml:"twitter"`  // Twitter auth config
-		} `yaml:"idp"`
-
-		Akismet struct {
-			Key string `yaml:"key"` // Akismet key
-		} `yaml:"akismet"`
-	}{}
-
 	// CLIFlags stores command-line flags
 	CLIFlags = struct {
 		Verbose         []bool `short:"v" long:"verbose" description:"Verbose logging (-vv for debug)"`
@@ -129,16 +97,9 @@ func CLIParsed() error {
 	// Configure OAuth providers
 	oauthConfigure()
 
-	// If SMTP credentials are available, use a corresponding mailer
-	if SecretsConfig.SMTPServer.Host != "" && SecretsConfig.SMTPServer.User != "" && SecretsConfig.SMTPServer.Pass != "" {
-		util.TheMailer = util.NewSMTPMailer(
-			SecretsConfig.SMTPServer.Host,
-			SecretsConfig.SMTPServer.Port,
-			SecretsConfig.SMTPServer.User,
-			SecretsConfig.SMTPServer.Pass,
-			util.If(CLIFlags.EmailFrom == "", SecretsConfig.SMTPServer.User, CLIFlags.EmailFrom))
-		SMTPConfigured = true
-		logger.Infof("SMTP configured with server %s:%d", SecretsConfig.SMTPServer.Host, SecretsConfig.SMTPServer.Port)
+	// Configure mailer
+	if err := configureMailer(); err != nil {
+		return err
 	}
 
 	// Succeeded
@@ -234,4 +195,41 @@ func URLForUI(lang, subPath string, queryParams map[string]string) string {
 		lang = util.UIDefaultLangID
 	}
 	return URLFor(fmt.Sprintf("%s/%s", lang, subPath), queryParams)
+}
+
+func configureMailer() error {
+	// If SMTP credentials are available, use a corresponding mailer
+	cfg := &SecretsConfig.SMTPServer
+	if cfg.Host == "" || cfg.User == "" || cfg.Pass == "" {
+		return nil
+	}
+	SMTPConfigured = true
+
+	// Figure out encryption params
+	useSSL, useTLS := false, false
+	switch cfg.Encryption {
+	case SMTPEncryptionNone:
+		// Do nothing
+	case SMTPEncryptionDefault:
+		useSSL, useTLS = cfg.Port == 465, cfg.Port == 587
+	case SMTPEncryptionSSL:
+		useSSL = true
+	case SMTPEncryptionTLS:
+		useTLS = true
+	default:
+		return fmt.Errorf("invalid SMTP encryption: %q", cfg.Encryption)
+	}
+
+	// Create a mailer
+	util.TheMailer = util.NewSMTPMailer(
+		cfg.Host,
+		cfg.Port,
+		cfg.User,
+		cfg.Pass,
+		util.If(CLIFlags.EmailFrom == "", cfg.User, CLIFlags.EmailFrom),
+		cfg.Insecure,
+		useSSL,
+		useTLS)
+	logger.Infof("SMTP configured with server %s:%d%s", cfg.Host, cfg.Port, util.If(cfg.Insecure, " (INSECURE)", ""))
+	return nil
 }

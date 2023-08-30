@@ -1,15 +1,26 @@
 package util
 
 import (
+	"crypto/tls"
 	"gopkg.in/gomail.v2"
 )
 
 // NewSMTPMailer instantiates a new Mailer capable of sending out emails using SMTP
-func NewSMTPMailer(host string, port int, username, password, emailFrom string) Mailer {
-	return &smtpMailer{
+func NewSMTPMailer(host string, port int, username, password, emailFrom string, insecure, useSSL, useTLS bool) Mailer {
+	m := &smtpMailer{
 		emailFrom: emailFrom,
 		dialer:    gomail.NewDialer(host, port, username, password),
 	}
+
+	// Configure encryption settings
+	m.dialer.SSL = useSSL
+	if useSSL || useTLS {
+		m.dialer.TLSConfig = &tls.Config{ServerName: host}
+		if insecure {
+			m.dialer.TLSConfig.InsecureSkipVerify = true
+		}
+	}
+	return m
 }
 
 // smtpMailer is a Mailer implementation that sends emails using the specified SMTP server
