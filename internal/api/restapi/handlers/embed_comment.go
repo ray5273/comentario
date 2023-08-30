@@ -196,7 +196,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Determine comment state
-	if b, err := Verifier.NeedsModeration(comment, domain, user, domainUser); err != nil {
+	if b, err := Verifier.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
 		return respServiceError(err)
 	} else if b {
 		// Comment needs to be approved

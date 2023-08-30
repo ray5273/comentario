@@ -69,6 +69,9 @@ func (m *manager) Initialise() {
 	}
 	m.inited = true
 
+	// Init content scanners
+	ThePerlustrationService.Init()
+
 	// Initiate a DB connection
 	var err error
 	if db, err = persistence.InitDB(); err != nil {

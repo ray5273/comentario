@@ -10,6 +10,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"net/http"
 	"strings"
 )
 
@@ -30,7 +31,9 @@ type VerifierService interface {
 	// IsAnotherUser checks if the given user is not the current user
 	IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Responder
 	// NeedsModeration returns whether the given comment needs to be moderated
-	NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error)
+	NeedsModeration(
+		req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User,
+		domainUser *data.DomainUser, isEdit bool) (bool, error)
 	// SignupEnabled checks if users are allowed to sign up
 	SignupEnabled() middleware.Responder
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
@@ -136,7 +139,7 @@ func (v *verifier) IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Respon
 	return nil
 }
 
-func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, user *data.User, domainUser *data.DomainUser) (bool, error) {
+func (v *verifier) NeedsModeration(req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User, domainUser *data.DomainUser, isEdit bool) (bool, error) {
 	// Comments by superusers, owners, and moderators are always pre-approved
 	if user.IsSuperuser || domainUser.CanModerate() {
 		return false, nil
@@ -179,17 +182,14 @@ func (v *verifier) NeedsModeration(comment *data.Comment, domain *data.Domain, u
 		return true, nil
 	}
 
-	// TODO new-db if domain.AutoSpamFilter &&
-	//	svc.TheAntispamService.CheckForSpam(
-	//		domain.Host,
-	//		util.UserIP(params.HTTPRequest),
-	//		util.UserAgent(params.HTTPRequest),
-	//		commenter.Name,
-	//		commenter.Email,
-	//		commenter.WebsiteURL,
-	//		markdown,
-	//	) {
-	//	state = models.CommentStateFlagged
+	// TODO make this configurable
+	// Test the comment against online checkers
+	if b, err := svc.ThePerlustrationService.Scan(req, comment, domain, page, user, domainUser, isEdit); b && err == nil {
+		// Consider not inappropriate on an error
+		return true, nil
+	}
+
+	// No need to moderate
 	return false, nil
 }
 

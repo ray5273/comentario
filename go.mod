@@ -4,7 +4,6 @@ go 1.21
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.4.0
-	github.com/adtac/go-akismet v0.0.0-20181220032308-0ca9e1023047
 	github.com/avct/uasurfer v0.0.0-20191028135549-26b5daa857f1
 	github.com/disintegration/imaging v1.6.2
 	github.com/doug-martin/goqu/v9 v9.18.0
