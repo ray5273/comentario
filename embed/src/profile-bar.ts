@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { InstanceStaticConfig, FederatedIdentityProvider, PageInfo, Principal, SignupData, UserSettings } from './models';
+import { InstanceConfig, PageInfo, Principal, SignupData, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -25,7 +25,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     constructor(
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
-        private readonly config: InstanceStaticConfig,
+        private readonly config: InstanceConfig,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
@@ -110,26 +110,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a login dialog and return a promise that's resolved when the dialog is closed.
      */
     async loginUser(): Promise<void> {
-        // Make a list of available identity providers
-        const idps: FederatedIdentityProvider[] = [];
-        // -- Local
-        if (this._pageInfo?.authLocal) {
-            idps.push({id: '', name: 'Local'});
-        }
-        // -- SSO
-        if (this._pageInfo?.authSso) {
-            idps.push({id: 'sso', name: 'SSO'});
-        }
-        // -- Available federated IdPs enabled on the domain
-        this.config.federatedIdps?.filter(idp => this._pageInfo?.idps?.includes(idp.id)).forEach(idp => idps.push(idp));
-
-        // Make sure there's any IdP available
-        if (!idps.length) {
-            return Promise.reject('Cannot login: no configured authentication methods.');
-        }
-
-        // Display the login dialog
-        const dlg = await LoginDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.baseUrl, idps);
+        const dlg = await LoginDialog.run(
+            this.root,
+            {ref: this.btnLogin!, placement: 'bottom-end'},
+            this.baseUrl,
+            this.config,
+            this._pageInfo!);
         if (dlg.confirmed) {
             switch (dlg.navigateTo) {
                 case null:

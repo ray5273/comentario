@@ -55,7 +55,6 @@ export class DomainEditComponent implements OnInit {
 
     // Icons
     readonly faExclamationTriangle = faExclamationTriangle;
-
     constructor(
         private readonly fb: FormBuilder,
         private readonly route: ActivatedRoute,
@@ -68,6 +67,14 @@ export class DomainEditComponent implements OnInit {
         // Disable numeric controls when the corresponding checkbox is off
         this.form.controls.modNumCommentsOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.modNumComments));
         this.form.controls.modUserAgeDaysOn.valueChanges.pipe(untilDestroyed(this)).subscribe(b => Utils.enableControls(b, this.form.controls.modUserAgeDays));
+    }
+
+    /**
+     * Whether there's at least one authentication method enabled.
+     */
+    get authEnabled(): boolean {
+        const v = this.form.value;
+        return v.authAnonymous || v.authLocal || v.authSso || !!v.fedIdps?.includes(true);
     }
 
     ngOnInit(): void {

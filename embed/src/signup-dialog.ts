@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { InstanceStaticConfig, SignupData } from './models';
+import { InstanceConfig, SignupData } from './models';
 import { Utils } from './utils';
 
 export class SignupDialog extends Dialog {
@@ -11,7 +11,7 @@ export class SignupDialog extends Dialog {
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceStaticConfig) {
+    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceConfig) {
         super(parent, 'Create an account', pos);
     }
 
@@ -21,7 +21,7 @@ export class SignupDialog extends Dialog {
      * @param pos Positioning options.
      * @param config Comentario configuration obtained from the backend.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceStaticConfig): Promise<SignupDialog> {
+    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceConfig): Promise<SignupDialog> {
         const dlg = new SignupDialog(parent, pos, config);
         return dlg.run(dlg);
     }
@@ -58,14 +58,20 @@ export class SignupDialog extends Dialog {
                         Wrap.new('a')
                             .inner('Terms of Service')
                             .attr({
-                                href: Utils.joinUrl(this.config.baseDocsUrl, this.config.defaultLangId, 'legal/tos/'),
+                                href: Utils.joinUrl(
+                                    this.config.staticConfig.baseDocsUrl,
+                                    this.config.staticConfig.defaultLangId,
+                                    'legal/tos/'),
                                 target: '_blank',
                             }),
                         Wrap.new('span').inner(' and '),
                         Wrap.new('a')
                             .inner('Privacy Policy')
                             .attr({
-                                href: Utils.joinUrl(this.config.baseDocsUrl, this.config.defaultLangId, 'legal/privacy/'),
+                                href: Utils.joinUrl(
+                                    this.config.staticConfig.baseDocsUrl,
+                                    this.config.staticConfig.defaultLangId,
+                                    'legal/privacy/'),
                                 target: '_blank',
                             }),
                         Wrap.new('span').inner('.')),

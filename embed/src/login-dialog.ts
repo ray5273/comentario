@@ -1,19 +1,21 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { FederatedIdentityProvider } from './models';
+import { InstanceConfig, PageInfo } from './models';
 
 export class LoginDialog extends Dialog {
 
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
     private _navigateTo: string | null = null;
+    private _federatedIdps = this.config.staticConfig.federatedIdps?.filter(idp => this.pageInfo.idps?.includes(idp.id)) ?? [];
 
     private constructor(
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly baseUrl: string,
-        private readonly idps: FederatedIdentityProvider[],
+        private readonly config: InstanceConfig,
+        private readonly pageInfo: PageInfo,
     ) {
         super(parent, 'Log in', pos);
     }
@@ -44,21 +46,20 @@ export class LoginDialog extends Dialog {
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
      * @param baseUrl Base URL of the Comentario instance
-     * @param idps List of enabled identity providers.
+     * @param config Comentario configuration obtained from the backend.
+     * @param pageInfo Current page data.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, idps: FederatedIdentityProvider[]): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, baseUrl, idps);
+    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo): Promise<LoginDialog> {
+        const dlg = new LoginDialog(parent, pos, baseUrl, config, pageInfo);
         return dlg.run(dlg);
     }
 
     override renderContent(): Wrap<any> {
         // Create a login form
         const form = UIToolkit.form(() => this.dismiss(true), () => this.dismiss());
-        const federatedIdps = this.idps.filter(idp => idp.id !== '' && idp.id !== 'sso');
-        const hasLocalAuth = this.idps.some(idp => idp.id === '');
 
         // SSO auth
-        if (this.idps.some(idp => idp.id === 'sso')) {
+        if (this.pageInfo.authSso) {
             form.append(
                 // SSO button
                 UIToolkit.div('oauth-buttons')
@@ -66,25 +67,25 @@ export class LoginDialog extends Dialog {
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner(`Proceed with ${parent.location.host} authentication`),
                 // Separator
-                (federatedIdps.length > 0 || hasLocalAuth) && Wrap.new('hr'));
+                (this._federatedIdps.length > 0 || this.pageInfo.authLocal) && Wrap.new('hr'));
         }
 
         // Add OAuth buttons, if applicable
-        if (federatedIdps.length) {
+        if (this._federatedIdps.length) {
             form.append(
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner('Proceed with social login'),
                 // OAuth buttons
                 UIToolkit.div('oauth-buttons')
                     .append(
-                        ...federatedIdps.map(idp =>
+                        ...this._federatedIdps.map(idp =>
                             UIToolkit.button(idp.name, () => this.dismissWith(idp.id), 'oauth-button', `${idp.id}-button`))),
                 // Separator
-                hasLocalAuth && Wrap.new('hr'));
+                this.pageInfo.authLocal && Wrap.new('hr'));
         }
 
         // Local auth
-        if (hasLocalAuth) {
+        if (this.pageInfo.authLocal) {
             // Create inputs
             this._email = UIToolkit.input('email',    'email',    'Email address', 'email',            true);
             this._pwd   = UIToolkit.input('password', 'password', 'Password',      'current-password', true);
@@ -103,11 +104,12 @@ export class LoginDialog extends Dialog {
                         Wrap.new('a')
                             .inner('Forgot your password?')
                             .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})),
-                // Switch to signup link container
-                UIToolkit.div('dialog-centered')
-                    .append(
-                        Wrap.new('span').inner('Don\'t have an account? '),
-                        Wrap.new('a').inner('Sign up here').click(() => this.dismissWith('signup'))));
+                // Switch to signup link, if signup is enabled
+                this.config.dynamicConfig.get('auth.signup.enabled')?.value === 'true' &&
+                    UIToolkit.div('dialog-centered')
+                        .append(
+                            Wrap.new('span').inner('Don\'t have an account? '),
+                            Wrap.new('a').inner('Sign up here').click(() => this.dismissWith('signup'))));
         }
         return form;
     }

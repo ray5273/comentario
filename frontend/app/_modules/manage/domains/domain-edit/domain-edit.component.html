@@ -165,6 +165,13 @@
                         <ng-container i18n>Please enter a valid URL.</ng-container>
                     </div>
                 </div>
+
+                <!-- No available auth method warning -->
+                <div *ngIf="!authEnabled"
+                     class="form-text text-danger">
+                    <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                    <ng-container i18n>No authentication method enabled, your users won't be able to comment.</ng-container>
+                </div>
             </div>
         </div>
 

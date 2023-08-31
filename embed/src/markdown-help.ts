@@ -1,12 +1,12 @@
 import { Wrap } from './element-wrap';
 import { Dialog, DialogPositioning } from './dialog';
 import { UIToolkit } from './ui-toolkit';
-import { InstanceStaticConfig } from './models';
+import { InstanceConfig } from './models';
 import { Utils } from './utils';
 
 export class MarkdownHelp extends Dialog {
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceStaticConfig) {
+    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceConfig) {
         super(parent, 'Markdown help', pos);
     }
 
@@ -16,7 +16,7 @@ export class MarkdownHelp extends Dialog {
      * @param pos Positioning options.
      * @param config Comentario configuration obtained from the backend.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceStaticConfig): void {
+    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceConfig): void {
         new MarkdownHelp(parent, pos, config).run(null);
     }
 
@@ -39,7 +39,10 @@ export class MarkdownHelp extends Dialog {
                         Wrap.new('a')
                             .inner('Read more about Markdown')
                             .attr({
-                                href:   Utils.joinUrl(this.config.baseDocsUrl, this.config.defaultLangId, 'kb/markdown/'),
+                                href: Utils.joinUrl(
+                                    this.config.staticConfig.baseDocsUrl,
+                                    this.config.staticConfig.defaultLangId,
+                                    'kb/markdown/'),
                                 target: '_blank'})));
     }
 

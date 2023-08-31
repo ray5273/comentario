@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, Observable, switchMap, tap } from 'rxjs';
+import { BehaviorSubject, first, Observable, switchMap, tap } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { ApiGeneralService, InstanceDynamicConfigItem, InstanceStaticConfig } from '../../generated-api';
@@ -34,9 +34,11 @@ export class ConfigService {
     readonly dynamicConfig = this._dynamicReload$
         .pipe(
             // Fetch the config from the backend
-            switchMap(() => this.api.configDynamicGet()),
-            // Convert to a map
-            map(dc => new Map<string, InstanceDynamicConfigItem>(dc?.map(i => [i.key, i]))),
+            switchMap(() => this.api.configGet()),
+            // Store its static part permanently
+            tap(cfg => this._staticConfig = cfg.staticConfig),
+            // Convert the dynamic part into a map
+            map(cfg => new Map<string, InstanceDynamicConfigItem>(cfg.dynamicConfig?.map(i => [i.key, i]))),
             // Cache the last result
             shareReplay(1));
 
@@ -66,7 +68,7 @@ export class ConfigService {
      * Initialise the app configuration.
      */
     init(): Observable<unknown> {
-        return this.api.configStaticGet().pipe(tap(sc => this._staticConfig = sc));
+        return this.dynamicConfig.pipe(first());
     }
 
     /**

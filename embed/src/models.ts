@@ -34,14 +34,44 @@ export interface InstanceStaticConfig {
     uiLanguages?: UILanguage[];
 }
 
-export const DefaultStaticConfig: InstanceStaticConfig = {
-    baseUrl:          'https://comentario.app',
-    baseDocsUrl:      'https://docs.comentario.app',
-    version:          '',
-    buildDate:        '',
-    defaultLangId:    'en',
-    homeContentUrl:   'https://docs.comentario.app/en/embed/front-page/',
-    resultPageSize:   20,
+/** Dynamic instance configuration item datatype. */
+export type InstanceDynamicConfigItemDatatype = 'boolean';
+
+/** Dynamic instance configuration item. */
+export interface InstanceDynamicConfigItem {
+    /** Item key */
+    readonly key: string;
+    /** Item value */
+    readonly value: string;
+    /** Item description */
+    readonly description?: string;
+    /** Item datatype */
+    readonly datatype?: InstanceDynamicConfigItemDatatype;
+    /** Timestamp when the item was last updated in the database */
+    readonly updatedTime?: string;
+    /** Reference to the user who last updated the item in the database */
+    readonly userUpdated?: string;
+    /** Item's default value */
+    readonly defaultValue?: string;
+}
+
+/** Instance configuration. */
+export interface InstanceConfig {
+    staticConfig:  InstanceStaticConfig;
+    dynamicConfig: Map<string, InstanceDynamicConfigItem>;
+}
+
+export const DefaultInstanceConfig: InstanceConfig = {
+    staticConfig: {
+        baseUrl:        'https://comentario.app',
+        baseDocsUrl:    'https://docs.comentario.app',
+        version:        '',
+        buildDate:      '',
+        defaultLangId:  'en',
+        homeContentUrl: 'https://docs.comentario.app/en/embed/front-page/',
+        resultPageSize: 25,
+    },
+    dynamicConfig: new Map(),
 };
 
 /** User abstraction. **/

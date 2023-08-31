@@ -2760,33 +2760,29 @@ paths:
   # Configuration
   #---------------------------------------------------------------------------------------------------------------------
 
-  /config/static:
+  /config:
     get:
-      operationId: ConfigStaticGet
-      summary: Obtain static instance configuration
+      operationId: ConfigGet
+      summary: Obtain instance configuration
       tags:
         - ApiGeneral
       security: []
       responses:
         200:
-          description: Static instance configuration
+          description: Instance configuration
           schema:
-            $ref: "#/definitions/instanceStaticConfig"
-
-  /config/dynamic:
-    get:
-      operationId: ConfigDynamicGet
-      summary: Obtain dynamic instance configuration
-      tags:
-        - ApiGeneral
-      security: []
-      responses:
-        200:
-          description: Dynamic instance configuration items
-          schema:
-            type: array
-            items:
-              $ref: "#/definitions/instanceDynamicConfigItem"
+            type: object
+            required:
+              - static
+            properties:
+              staticConfig:
+                $ref: "#/definitions/instanceStaticConfig"
+                description: Static instance configuration
+              dynamicConfig:
+                type: array
+                items:
+                  $ref: "#/definitions/instanceDynamicConfigItem"
+                description: Dynamic instance configuration items
 
     patch:
       operationId: ConfigDynamicUpdate

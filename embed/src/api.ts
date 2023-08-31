@@ -1,4 +1,13 @@
-import { InstanceStaticConfig, Comment, Commenter, PageInfo, Principal, UUID } from './models';
+import {
+    Comment,
+    Commenter,
+    InstanceConfig,
+    InstanceDynamicConfigItem,
+    InstanceStaticConfig,
+    PageInfo,
+    Principal,
+    UUID,
+} from './models';
 import { HttpClient } from './http-client';
 
 export interface ApiErrorResponse {
@@ -29,6 +38,11 @@ export interface ApiCommentUpdateResponse {
 
 export interface ApiCommentVoteResponse {
     readonly score: number;
+}
+
+export interface ApiConfigResponse {
+    staticConfig:   InstanceStaticConfig;
+    dynamicConfig?: InstanceDynamicConfigItem[];
 }
 
 export interface ApiAuthSignupResponse {
@@ -234,10 +248,15 @@ export class ApiService {
     }
 
     /**
-     * Obtain static instance configuration.
+     * Obtain instance configuration.
      */
-    async configStaticGet(): Promise<InstanceStaticConfig> {
-        return this.apiClient.get<InstanceStaticConfig>('config/static');
+    async configGet(): Promise<InstanceConfig> {
+        const r = await this.apiClient.get<ApiConfigResponse>('config');
+        // Convert the dynamic config into a map
+        return {
+            staticConfig:  r.staticConfig,
+            dynamicConfig: new Map<string, InstanceDynamicConfigItem>(r.dynamicConfig?.map(i => [i.key, i])),
+        };
     }
 
     /**

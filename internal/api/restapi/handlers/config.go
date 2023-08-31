@@ -14,21 +14,6 @@ import (
 	"sort"
 )
 
-func ConfigDynamicGet(api_general.ConfigDynamicGetParams) middleware.Responder {
-	items, err := svc.TheDynConfigService.GetAll()
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Convert the map into a slice of DTO objects
-	var dtos []*models.InstanceDynamicConfigItem
-	for key, item := range items {
-		dtos = append(dtos, item.ToDTO(key))
-	}
-
-	return api_general.NewConfigDynamicGetOK().WithPayload(dtos)
-}
-
 func ConfigDynamicReset(_ api_general.ConfigDynamicResetParams, user *data.User) middleware.Responder {
 	// Verify the user is a superuser
 	if r := Verifier.UserIsSuperuser(user); r != nil {
@@ -73,7 +58,7 @@ func ConfigDynamicUpdate(params api_general.ConfigDynamicUpdateParams, user *dat
 	return api_general.NewConfigDynamicUpdateNoContent()
 }
 
-func ConfigStaticGet(api_general.ConfigStaticGetParams) middleware.Responder {
+func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	// Prepare a slice of IdP IDs
 	var idps []*models.FederatedIdentityProvider
 	for fid, fidp := range data.FederatedIdProviders {
@@ -98,16 +83,32 @@ func ConfigStaticGet(api_general.ConfigStaticGetParams) middleware.Responder {
 		})
 	}
 
+	// Fetch dynamic config
+	items, err := svc.TheDynConfigService.GetAll()
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Convert the map into a slice of DTO objects
+	var dynConfig []*models.InstanceDynamicConfigItem
+	for key, item := range items {
+		dynConfig = append(dynConfig, item.ToDTO(key))
+	}
+
 	// Succeeded
-	return api_general.NewConfigStaticGetOK().WithPayload(&models.InstanceStaticConfig{
-		BaseDocsURL:    config.CLIFlags.BaseDocsURL,
-		BaseURL:        config.BaseURL.String(),
-		BuildDate:      strfmt.DateTime(config.BuildDate),
-		DefaultLangID:  util.UIDefaultLangID,
-		FederatedIdps:  idps,
-		HomeContentURL: strfmt.URI(config.CLIFlags.HomeContentURL),
-		ResultPageSize: util.ResultPageSize,
-		UILanguages:    langs,
-		Version:        config.AppVersion,
-	})
+	return api_general.NewConfigGetOK().
+		WithPayload(&api_general.ConfigGetOKBody{
+			DynamicConfig: dynConfig,
+			StaticConfig: &models.InstanceStaticConfig{
+				BaseDocsURL:    config.CLIFlags.BaseDocsURL,
+				BaseURL:        config.BaseURL.String(),
+				BuildDate:      strfmt.DateTime(config.BuildDate),
+				DefaultLangID:  util.UIDefaultLangID,
+				FederatedIdps:  idps,
+				HomeContentURL: strfmt.URI(config.CLIFlags.HomeContentURL),
+				ResultPageSize: util.ResultPageSize,
+				UILanguages:    langs,
+				Version:        config.AppVersion,
+			},
+		})
 }

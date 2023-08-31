@@ -1,11 +1,10 @@
 import {
     ANONYMOUS_ID,
-    InstanceStaticConfig,
     Comment,
     CommenterMap,
     CommentsGroupedById,
     CommentSort,
-    DefaultStaticConfig,
+    DefaultInstanceConfig,
     ErrorMessage,
     Message,
     OkMessage,
@@ -46,7 +45,7 @@ export class Comentario extends HTMLElement {
     private readonly root = Wrap.new('div').appendTo(new Wrap(this));
 
     /** Comentario config obtained from the backend. */
-    private config: InstanceStaticConfig = DefaultStaticConfig;
+    private config = DefaultInstanceConfig;
 
     /** Message panel (only shown when needed). */
     private messagePanel?: Wrap<HTMLDivElement>;
@@ -132,7 +131,7 @@ export class Comentario extends HTMLElement {
         }
 
         // Load Comentario configuration
-        this.config = await this.apiService.configStaticGet();
+        this.config = await this.apiService.configGet();
 
         // Set up the root content
         this.root
