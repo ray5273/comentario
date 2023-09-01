@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockPipes, MockProvider } from 'ng-mocks';
 import { DomainEditComponent } from './domain-edit.component';
 import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generated-api';
@@ -24,9 +25,9 @@ describe('DomainEditComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [DomainEditComponent, MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe)],
-            imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, ToolsModule],
+            imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, NgbNavModule, ToolsModule],
             providers: [
-                MockProvider(ConfigService, {staticConfig: config}),
+                MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                 MockProvider(ToastService),
                 MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),

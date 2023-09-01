@@ -2,7 +2,14 @@ import { Injectable } from '@angular/core';
 import { HttpContext } from '@angular/common/http';
 import { BehaviorSubject, combineLatestWith, Observable, of, ReplaySubject, Subject, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, Domain, DomainUser, FederatedIdpId, Principal } from '../../../../generated-api';
+import {
+    ApiGeneralService,
+    Domain,
+    DomainExtension, DomainGet200Response,
+    DomainUser,
+    FederatedIdpId,
+    Principal,
+} from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
@@ -33,6 +40,8 @@ export class DomainMeta {
         readonly domainUser?: DomainUser,
         /** List of federated IdP IDs enabled for the domain. */
         readonly federatedIdpIds?: FederatedIdpId[],
+        /** List of extensions enabled for the domain. */
+        readonly extensions?: DomainExtension[],
         /** Authenticated principal, if any. */
         readonly principal?: Principal,
     ) {
@@ -137,10 +146,10 @@ export class DomainSelectorService {
     /**
      * Select domain by providing the domain instance and its federated IdP IDs.
      */
-    private setDomain(v: { domain?: Domain; domainUser?: DomainUser; federatedIdpIds?: Array<FederatedIdpId> } | undefined) {
+    private setDomain(v: DomainGet200Response | undefined) {
         // Notify the subscribers
         (this.domainMeta as ReplaySubject<DomainMeta>)
-            .next(new DomainMeta(v?.domain, v?.domainUser, v?.federatedIdpIds, this.principal));
+            .next(new DomainMeta(v?.domain, v?.domainUser, v?.federatedIdpIds, v?.extensions, this.principal));
 
         // Store the last used domainId
         this.localSettingSvc.storeValue<DomainSelectorSettings>('domainSelector', {domainId: v?.domain?.id});

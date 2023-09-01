@@ -1,4 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { EMPTY } from 'rxjs';
 import { MockPipes, MockProvider } from 'ng-mocks';
 import { StaticConfigComponent } from './static-config.component';
 import { ConfigService } from '../../../../_services/config.service';
@@ -15,7 +16,7 @@ describe('StaticConfigComponent', () => {
             declarations: [StaticConfigComponent, MockPipes(DatetimePipe)],
             imports: [ToolsModule],
             providers: [
-                MockProvider(ConfigService, {staticConfig: {} as any}),
+                MockProvider(ConfigService, {staticConfig: {} as any, extensions: EMPTY}),
             ],
         });
         fixture = TestBed.createComponent(StaticConfigComponent);

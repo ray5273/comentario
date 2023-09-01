@@ -556,10 +556,15 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 }
 
 func (svc *commentService) UpdateText(commentID *uuid.UUID, markdown, html string) error {
-	logger.Debugf("commentService.UpdateText(%s, ...)", commentID)
+	logger.Debugf("commentService.UpdateText(%s, %q, %q)", commentID, markdown, html)
 
 	// Update the row in the database
-	if err := db.ExecOne("update cm_comments set markdown=$1, html=$2 where id=$3;", markdown, html, commentID); err != nil {
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_comments").
+			Set(goqu.Record{"markdown": markdown, "html": html}).
+			Where(goqu.Ex{"id": commentID}),
+	); err != nil {
 		logger.Errorf("commentService.UpdateText: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}

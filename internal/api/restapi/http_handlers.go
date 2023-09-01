@@ -156,11 +156,9 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 	s := string(b)
 	if strings.Contains(s, "[[[.") {
 		b = []byte(
-			strings.Replace(strings.Replace(strings.Replace(strings.Replace(s,
+			strings.Replace(strings.Replace(s,
 				"[[[.Origin]]]", strings.TrimSuffix(config.BaseURL.String(), "/"), -1),
-				"[[[.CdnPrefix]]]", strings.TrimSuffix(config.CDNURL.String(), "/"), -1),
-				"[[[.Footer]]]", "TODO footer", -1),
-				"[[[.Version]]]", config.AppVersion, -1))
+				"[[[.CdnPrefix]]]", strings.TrimSuffix(config.CDNURL.String(), "/"), -1))
 	}
 
 	// Determine content type

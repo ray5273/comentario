@@ -27,10 +27,19 @@ Since this is a pre-release, it's not sensible to use this in production.
   * Comments containing images
 * Domain-wide page and comment list (#1).
 * Support for uploaded user avatars.
+* Support for login with Facebook (#3).
+* Support for so-called extensions, which are for now comment content checkers (spam or toxicity). Each extension can be enabled and configured for each domain separately. Available extensions:
+  * Akismet
+  * APILayer SpamChecker
+  * Perspective
 * Fixes for numerous issues and bugs, including SSO authentication.
-* Backend configuration option to disable user registration altogether.
-* Backend configuration option to replace the home page content.
-* **BREAKING:** The embed part in implemented as a web component. Existing installs will need to use the tag `<comentario-comments>` instead of `<div>`.
+* Backend configuration has been split into static and dynamic parts. Dynamic configuration can be changed on-the-fly and get immediately applied:
+  * Dynamic option to control email confirmation for commenters.
+  * Dynamic option to control email confirmation for users.
+  * Dynamic option to disable user registration altogether.
+  * Dynamic option to disable users become owners.
+* Static config option to replace the home page content.
+* **BREAKING:** The embed part is now a web component. Existing installs will need to use tag `<comentario-comments>` instead of `<div>`.
 * **BREAKING:** Data attributes (`data-...`) on the script tag are no longer supported. Use attributes on the `<comentario-comments>` instead, omitting the `data-` prefix.
 
 ## v2.3.1

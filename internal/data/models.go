@@ -15,6 +15,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/crypto/bcrypt"
 	"net/http"
+	"strings"
 	"time"
 )
 
@@ -899,4 +900,62 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 // URL returns the absolute URL of the comment
 func (c *Comment) URL(https bool, host, path string) string {
 	return fmt.Sprintf("%s://%s%s#comentario-%s", util.If(https, "https", "http"), host, path, c.ID)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// DomainExtension represents a known domain extension
+type DomainExtension struct {
+	ID      models.DomainExtensionID // Extension ID
+	Name    string                   // Extension display name
+	Config  string                   // Extension configuration, linebreak-separated list of key=value pairs
+	Enabled bool                     // Whether the extension is enabled (configured) globally
+}
+
+// ConfigParams returns the extension configuration parsed into a parameter map
+func (de *DomainExtension) ConfigParams() map[string]string {
+	params := make(map[string]string)
+	for _, kv := range strings.Split(de.Config, "\n") {
+		// Split the key=value pair
+		parts := strings.SplitN(kv, "=", 2)
+		if len(parts) == 2 {
+			// Remove all leading/trailing whitespace from the key and the value
+			if k := strings.TrimSpace(parts[0]); k != "" {
+				params[k] = strings.TrimSpace(parts[1])
+			}
+		}
+	}
+	return params
+}
+
+// HasDefaultConfig returns whether the extension has a configuration matching the default
+func (de *DomainExtension) HasDefaultConfig() bool {
+	if ex, ok := DomainExtensions[de.ID]; ok && strings.TrimSpace(de.Config) == ex.Config {
+		return true
+	}
+	return false
+}
+
+// ToDTO converts this model into an API model
+func (de *DomainExtension) ToDTO() *models.DomainExtension {
+	dto := &models.DomainExtension{
+		ID:     de.ID,
+		Name:   de.Name,
+		Config: de.Config,
+	}
+
+	// Empty config means default config
+	if dto.Config == "" {
+		if ex, ok := DomainExtensions[dto.ID]; ok {
+			dto.Config = ex.Config
+		}
+	}
+	return dto
+}
+
+// DomainExtensions is a map of known domain extensions and their default configurations. All disabled initially
+var DomainExtensions = map[models.DomainExtensionID]*DomainExtension{
+	models.DomainExtensionIDAkismet:                {ID: models.DomainExtensionIDAkismet, Name: "Akismet", Config: ""},
+	models.DomainExtensionIDPerspective:            {ID: models.DomainExtensionIDPerspective, Name: "Perspective", Config: "threshold=0.5"},
+	models.DomainExtensionIDAPILayerDotSpamChecker: {ID: models.DomainExtensionIDAPILayerDotSpamChecker, Name: "APILayer SpamChecker", Config: "threshold=5"},
 }

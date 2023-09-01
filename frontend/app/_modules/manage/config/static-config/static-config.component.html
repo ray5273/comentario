@@ -61,4 +61,13 @@
             </ul>
         </dd>
     </div>
+    <!-- Enabled extensions -->
+    <div *ngIf="extensions?.length">
+        <dt i18n>Enabled extensions</dt>
+        <dd>
+            <ul class="ps-3 mb-0">
+                <li *ngFor="let ext of extensions">{{ ext.name }}</li>
+            </ul>
+        </dd>
+    </div>
 </dl>

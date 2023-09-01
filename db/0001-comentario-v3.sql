@@ -66,6 +66,7 @@ drop table if exists cm_auth_sessions          cascade;
 drop table if exists cm_domains                cascade;
 drop table if exists cm_domains_users          cascade;
 drop table if exists cm_domains_idps           cascade;
+drop table if exists cm_domains_extensions     cascade;
 drop table if exists cm_domain_pages           cascade;
 drop table if exists cm_domain_page_views      cascade;
 drop table if exists cm_comments               cascade;
@@ -111,6 +112,19 @@ insert into cm_fed_identity_providers(id, name, icon) values
     ('google',   'Google',   'google'),
     ('linkedin', 'LinkedIn', 'linkedin'),
     ('twitter',  'Twitter',  'twitter');
+
+------------------------------------------------------------------------------------------------------------------------
+-- Known extensions
+------------------------------------------------------------------------------------------------------------------------
+create table cm_extensions (
+    id   varchar(32) primary key -- Unique extensions ID, such as 'akismet'
+);
+
+-- Data
+insert into cm_extensions(id) values
+    ('akismet'),
+    ('perspective'),
+    ('apiLayer.spamChecker');
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Users
@@ -300,6 +314,17 @@ create table cm_domains_idps (
 -- Constraints
 alter table cm_domains_idps add constraint fk_domains_idps_domain_id  foreign key (domain_id)  references cm_domains(id)                on delete cascade;
 alter table cm_domains_idps add constraint fk_domains_idps_fed_idp_id foreign key (fed_idp_id) references cm_fed_identity_providers(id) on delete cascade;
+
+-- Links between domains and extensions
+create table cm_domains_extensions (
+    domain_id    uuid                     not null, -- Reference to the domain
+    extension_id varchar(32)              not null, -- Reference to the extension
+    config       varchar(4096) default '' not null  -- Extension configuration parameters
+);
+
+-- Constraints
+alter table cm_domains_extensions add constraint fk_domains_extensions_domain_id    foreign key (domain_id)    references cm_domains(id)    on delete cascade;
+alter table cm_domains_extensions add constraint fk_domains_extensions_extension_id foreign key (extension_id) references cm_extensions(id) on delete cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Domain pages
@@ -550,13 +575,17 @@ begin
 
         -- Migrate domain IdPs
         insert into cm_domains_idps(domain_id, fed_idp_id)
-            select id, 'gitlab' from temp_domain_map where domain in (select domain from domains where gitlabprovider)
+            select id, 'gitlab' from temp_domain_map where domain in (select domain from domains where gitlabprovider is true)
             union all
-            select id, 'github' from temp_domain_map where domain in (select domain from domains where githubprovider)
+            select id, 'github' from temp_domain_map where domain in (select domain from domains where githubprovider is true)
             union all
-            select id, 'google' from temp_domain_map where domain in (select domain from domains where googleprovider)
+            select id, 'google' from temp_domain_map where domain in (select domain from domains where googleprovider is true)
             union all
-            select id, 'twitter' from temp_domain_map where domain in (select domain from domains where twitterprovider);
+            select id, 'twitter' from temp_domain_map where domain in (select domain from domains where twitterprovider is true);
+
+        -- Migrate domain extensions
+        insert into cm_domains_extensions(domain_id, extension_id)
+            select id, 'akismet' from temp_domain_map where domain in (select domain from domains where autospamfilter is true);
 
         -- Migrate pages
         insert into cm_domain_pages(id, domain_id, path, title, ts_created, is_readonly, count_comments)

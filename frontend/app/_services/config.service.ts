@@ -42,6 +42,11 @@ export class ConfigService {
             // Cache the last result
             shareReplay(1));
 
+    /**
+     * Enabled extensions obtained from the server.
+     */
+    readonly extensions = this.api.configExtensionsGet().pipe(map(r => r.extensions), shareReplay(1));
+
     private _staticConfig?: InstanceStaticConfig;
 
     constructor(

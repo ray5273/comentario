@@ -2,178 +2,237 @@
 <h1 *ngIf="isNew"  i18n="heading">Create domain</h1>
 <h1 *ngIf="!isNew" i18n="heading">Edit domain</h1>
 
+<!-- Info -->
+<div *ngIf="isNew" class="mb-3">
+    <ng-container i18n>Add a domain to enable comments on it.</ng-container>
+</div>
+
 <!-- Edit form -->
-<form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
+<form *ngIf="form" [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
     <fieldset [disabled]="loading.active || saving.active">
-        <!-- Info -->
-        <div *ngIf="isNew" class="mb-3">
-            <ng-container i18n>Add a domain to enable comments on it.</ng-container>
-        </div>
-        <!-- Host -->
-        <div class="mb-3 row">
-            <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
-            <div class="col-sm-9">
-                <input formControlName="host" type="text" class="form-control" id="host"
-                       [class.is-valid]="isNew && form.controls.host.touched && form.controls.host.valid"
-                       [class.is-invalid]="isNew && form.controls.host.touched && form.controls.host.invalid"
-                       required minlength="1" maxlength="253" placeholder="example.com">
-                <!-- Invalid feedback -->
-                <div class="invalid-feedback">
-                    <ng-container i18n>Please enter a valid domain host.</ng-container>
-                </div>
-                <small *ngIf="isNew" id="nameHelpBlock" class="form-text text-muted">
-                    <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
-                    <ng-container i18n>You won't be able to change the host once domain is created.</ng-container>
-                </small>
-            </div>
-        </div>
-        <!-- Name -->
-        <div class="mb-3 row">
-            <label for="name" class="col-sm-3 col-form-label colon fw-bold">
-                <ng-container i18n>Name</ng-container>&ngsp;
-                <i class="fw-normal" i18n>(optional)</i>
-            </label>
-            <div class="col-sm-9">
-                <input formControlName="name" type="text" class="form-control" id="name"
-                       [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
-                       [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
-                       maxlength="255" placeholder="My blog" i18n-placeholder>
-                <div class="invalid-feedback" i18n>Value is too long.</div>
-            </div>
-        </div>
-
-        <!-- Comment moderation -->
-        <div class="mb-3 row">
-            <div class="col-sm-3 colon fw-bold" i18n>Require moderator approval on comment, if</div>
-            <div class="col-sm-9">
-                <!-- Author is anonymous -->
-                <div class="form-check me-3">
-                    <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="modAnonymous">
-                    <label class="form-check-label" for="modAnonymous" i18n>Author is anonymous</label>
-                </div>
-                <!-- Author is authenticated -->
-                <div class="form-check me-3">
-                    <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="modAuthenticated">
-                    <label class="form-check-label" for="modAuthenticated" i18n>Author is authenticated</label>
-                </div>
-                <!-- Author has less than this number of approved comments -->
-                <div class="form-check me-3">
-                    <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="modNumCommentsOn">
-                    <label class="form-check-label colon" for="modNumCommentsOn" i18n>Author has less than this number of approved comments</label>
-                </div>
-                <!-- Number of approved comments -->
-                <div *ngIf="form.controls.modNumComments.enabled" class="mb-3">
-                    <input formControlName="modNumComments" type="number" class="form-control" id="modNumComments"
-                           [class.is-valid]="form.controls.modNumComments.touched && form.controls.modNumComments.valid"
-                           [class.is-invalid]="form.controls.modNumComments.touched && form.controls.modNumComments.invalid"
-                           required min="1" max="999">
-                    <!-- Invalid feedback -->
-                    <div class="invalid-feedback">
-                        <ng-container i18n>Please enter a valid value.</ng-container>
+        <!-- Tabs -->
+        <ul ngbNav #nav="ngbNav" class="nav-tabs ps-3 mb-3">
+            <!-- General properties -->
+            <li ngbNavItem>
+                <a ngbNavLink class="fw-bold" i18n>General</a>
+                <ng-template ngbNavContent>
+                    <!-- Host -->
+                    <div class="mb-3 row">
+                        <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
+                        <div class="col-sm-9">
+                            <input formControlName="host" type="text" class="form-control" id="host"
+                                   [class.is-valid]="isNew && form.controls.host.touched && form.controls.host.valid"
+                                   [class.is-invalid]="isNew && form.controls.host.touched && form.controls.host.invalid"
+                                   required minlength="1" maxlength="253" placeholder="example.com">
+                            <!-- Invalid feedback -->
+                            <div class="invalid-feedback">
+                                <ng-container i18n>Please enter a valid domain host.</ng-container>
+                            </div>
+                            <small *ngIf="isNew" id="nameHelpBlock" class="form-text text-muted">
+                                <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                                <ng-container i18n>You won't be able to change the host once domain is created.</ng-container>
+                            </small>
+                        </div>
                     </div>
-                </div>
-                <!-- Author is registered less than this number of days ago -->
-                <div class="form-check me-3">
-                    <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="modUserAgeDaysOn">
-                    <label class="form-check-label colon" for="modUserAgeDaysOn" i18n>Author is registered less than this number of days ago</label>
-                </div>
-                <!-- Number of days for minimum user age -->
-                <div *ngIf="form.controls.modUserAgeDays.enabled" class="mb-3">
-                    <input formControlName="modUserAgeDays" type="number" class="form-control" id="modUserAgeDays"
-                           [class.is-valid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.valid"
-                           [class.is-invalid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.invalid"
-                           required min="1" max="999">
-                    <!-- Invalid feedback -->
-                    <div class="invalid-feedback">
-                        <ng-container i18n>Please enter a valid value.</ng-container>
+
+                    <!-- Name -->
+                    <div class="mb-3 row">
+                        <label for="name" class="col-sm-3 col-form-label colon fw-bold">
+                            <ng-container i18n>Name</ng-container>&ngsp;
+                            <i class="fw-normal" i18n>(optional)</i>
+                        </label>
+                        <div class="col-sm-9">
+                            <input formControlName="name" type="text" class="form-control" id="name"
+                                   [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
+                                   [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
+                                   maxlength="255" placeholder="My blog" i18n-placeholder>
+                            <div class="invalid-feedback" i18n>Value is too long.</div>
+                        </div>
                     </div>
-                </div>
-                <!-- Comment contains link -->
-                <div class="form-check me-3">
-                    <input formControlName="modLinks" type="checkbox" class="form-check-input" id="modLinks">
-                    <label class="form-check-label" for="modLinks" i18n>Comment contains link</label>
-                </div>
-                <!-- Comment contains image -->
-                <div class="form-check me-3">
-                    <input formControlName="modImages" type="checkbox" class="form-check-input" id="modImages">
-                    <label class="form-check-label" for="modImages" i18n>Comment contains image</label>
-                </div>
-            </div>
-        </div>
 
-        <!-- Email moderators -->
-        <div class="mb-3 row">
-            <div class="col-sm-3 colon fw-bold" i18n>Email moderators</div>
-            <div class="col-sm-9">
-                <div *ngFor="let p of modNotifyPolicies" class="form-check">
-                    <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" [id]="'modNotifyPolicy-'+p" [value]="p">
-                    <label class="form-check-label" [for]="'modNotifyPolicy-'+p" i18n>{{ p | moderatorNotifyPolicy }}</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Default comment sort -->
-        <div class="mb-3 row">
-            <div class="col-sm-3 colon fw-bold" i18n>Default comment sort</div>
-            <div class="col-sm-9">
-                <div *ngFor="let s of sorts" class="form-check">
-                    <input formControlName="defaultSort" class="form-check-input" type="radio" [id]="'sort-'+s" [value]="s">
-                    <label class="form-check-label" [for]="'sort-'+s" i18n>{{ s | commentSort }}</label>
-                </div>
-            </div>
-        </div>
-
-        <!-- Authentication -->
-        <div class="mb-3 row">
-            <div class="col-sm-3 colon fw-bold" i18n>Authentication</div>
-            <div class="col-sm-9">
-                <!-- Anonymous comments -->
-                <div class="form-check me-3">
-                    <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
-                    <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
-                </div>
-
-                <!-- Local auth -->
-                <div class="form-check me-3">
-                    <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
-                    <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
-                </div>
-
-                <!-- Federated IdPs -->
-                <div formArrayName="fedIdps">
-                    <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
-                        <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
-                        <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+                    <!-- Default comment sort -->
+                    <div class="mb-3 row">
+                        <div class="col-sm-3 colon fw-bold" i18n>Default comment sort</div>
+                        <div class="col-sm-9">
+                            <div *ngFor="let s of sorts" class="form-check">
+                                <input formControlName="defaultSort" class="form-check-input" type="radio" [id]="'sort-'+s" [value]="s">
+                                <label class="form-check-label" [for]="'sort-'+s" i18n>{{ s | commentSort }}</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
+                </ng-template>
+            </li>
 
-                <!-- SSO -->
-                <div class="form-check me-3">
-                    <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
-                    <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
-                </div>
-
-                <!-- SSO server URL -->
-                <div *ngIf="form.controls.authSso.value" class="mb-3">
-                    <label for="ssoUrl" class="col-sm-3 col-form-label colon" i18n>SSO server URL</label>
-                    <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
-                           [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
-                           [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
-                           required minlength="1" maxlength="253" placeholder="https://sso.example.com">
-                    <!-- Invalid feedback -->
-                    <div class="invalid-feedback">
-                        <ng-container i18n>Please enter a valid URL.</ng-container>
+            <!-- Moderation -->
+            <li ngbNavItem>
+                <a ngbNavLink class="fw-bold" i18n>Moderation</a>
+                <ng-template ngbNavContent>
+                    <!-- Require moderator approval -->
+                    <div class="mb-3 row">
+                        <div class="col-sm-3 colon fw-bold" i18n>Require moderator approval on comment, if</div>
+                        <div class="col-sm-9">
+                            <!-- Author is anonymous -->
+                            <div class="form-check me-3">
+                                <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="modAnonymous">
+                                <label class="form-check-label" for="modAnonymous" i18n>Author is anonymous</label>
+                            </div>
+                            <!-- Author is authenticated -->
+                            <div class="form-check me-3">
+                                <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="modAuthenticated">
+                                <label class="form-check-label" for="modAuthenticated" i18n>Author is authenticated</label>
+                            </div>
+                            <!-- Author has less than this number of approved comments -->
+                            <div class="form-check me-3">
+                                <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="modNumCommentsOn">
+                                <label class="form-check-label colon" for="modNumCommentsOn" i18n>Author has less than this number of approved comments</label>
+                            </div>
+                            <!-- Number of approved comments -->
+                            <div *ngIf="form.controls.modNumComments.enabled" class="mb-3">
+                                <input formControlName="modNumComments" type="number" class="form-control" id="modNumComments"
+                                       [class.is-valid]="form.controls.modNumComments.touched && form.controls.modNumComments.valid"
+                                       [class.is-invalid]="form.controls.modNumComments.touched && form.controls.modNumComments.invalid"
+                                       required min="1" max="999">
+                                <!-- Invalid feedback -->
+                                <div class="invalid-feedback">
+                                    <ng-container i18n>Please enter a valid value.</ng-container>
+                                </div>
+                            </div>
+                            <!-- Author is registered less than this number of days ago -->
+                            <div class="form-check me-3">
+                                <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="modUserAgeDaysOn">
+                                <label class="form-check-label colon" for="modUserAgeDaysOn" i18n>Author is registered less than this number of days ago</label>
+                            </div>
+                            <!-- Number of days for minimum user age -->
+                            <div *ngIf="form.controls.modUserAgeDays.enabled" class="mb-3">
+                                <input formControlName="modUserAgeDays" type="number" class="form-control" id="modUserAgeDays"
+                                       [class.is-valid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.valid"
+                                       [class.is-invalid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.invalid"
+                                       required min="1" max="999">
+                                <!-- Invalid feedback -->
+                                <div class="invalid-feedback">
+                                    <ng-container i18n>Please enter a valid value.</ng-container>
+                                </div>
+                            </div>
+                            <!-- Comment contains link -->
+                            <div class="form-check me-3">
+                                <input formControlName="modLinks" type="checkbox" class="form-check-input" id="modLinks">
+                                <label class="form-check-label" for="modLinks" i18n>Comment contains link</label>
+                            </div>
+                            <!-- Comment contains image -->
+                            <div class="form-check me-3">
+                                <input formControlName="modImages" type="checkbox" class="form-check-input" id="modImages">
+                                <label class="form-check-label" for="modImages" i18n>Comment contains image</label>
+                            </div>
+                        </div>
                     </div>
-                </div>
 
-                <!-- No available auth method warning -->
-                <div *ngIf="!authEnabled"
-                     class="form-text text-danger">
-                    <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
-                    <ng-container i18n>No authentication method enabled, your users won't be able to comment.</ng-container>
-                </div>
-            </div>
-        </div>
+                    <!-- Email moderators -->
+                    <div class="mb-3 row">
+                        <div class="col-sm-3 colon fw-bold" i18n>Email moderators</div>
+                        <div class="col-sm-9">
+                            <div *ngFor="let p of modNotifyPolicies" class="form-check">
+                                <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" [id]="'modNotifyPolicy-'+p" [value]="p">
+                                <label class="form-check-label" [for]="'modNotifyPolicy-'+p" i18n>{{ p | moderatorNotifyPolicy }}</label>
+                            </div>
+                        </div>
+                    </div>
+                </ng-template>
+            </li>
+
+            <!-- Authentication -->
+            <li ngbNavItem>
+                <a ngbNavLink>
+                    <!-- Tab title -->
+                    <span class="fw-bold me-1" i18n>Authentication</span>
+                    <!-- Badge with a number -->
+                    <span *ngIf="numAuths as n else noAuths" class="badge bg-success">{{ n }}</span>
+                    <ng-template #noAuths>
+                        <span class="badge bg-danger">0</span>
+                    </ng-template>
+                </a>
+                <ng-template ngbNavContent>
+                    <!-- Anonymous comments -->
+                    <div class="form-check me-3">
+                        <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
+                        <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
+                    </div>
+
+                    <!-- Local auth -->
+                    <div class="form-check me-3">
+                        <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
+                        <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
+                    </div>
+
+                    <!-- Federated IdPs -->
+                    <div formArrayName="fedIdps">
+                        <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
+                            <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
+                            <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+                        </div>
+                    </div>
+
+                    <!-- SSO -->
+                    <div class="form-check me-3">
+                        <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
+                        <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
+                    </div>
+
+                    <!-- SSO server URL -->
+                    <div *ngIf="form.controls.authSso.value" class="mb-3">
+                        <label for="ssoUrl" class="col-sm-3 col-form-label colon" i18n>SSO server URL</label>
+                        <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
+                               [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
+                               [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
+                               required minlength="1" maxlength="253" placeholder="https://sso.example.com">
+                        <!-- Invalid feedback -->
+                        <div class="invalid-feedback">
+                            <ng-container i18n>Please enter a valid URL.</ng-container>
+                        </div>
+                    </div>
+
+                    <!-- No available auth method warning -->
+                    <div *ngIf="!numAuths"
+                         class="form-text text-danger">
+                        <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                        <ng-container i18n>No authentication method enabled, your users won't be able to comment.</ng-container>
+                    </div>
+                </ng-template>
+            </li>
+
+            <!-- Extensions -->
+            <li ngbNavItem>
+                <a ngbNavLink>
+                    <!-- Tab title -->
+                    <span class="fw-bold me-1" i18n>Extensions</span>
+                    <!-- Badge with a number -->
+                    <span *ngIf="numExtensions as n" class="badge bg-secondary">{{ n }}</span>
+                </a>
+                <ng-template ngbNavContent>
+                    <div formGroupName="extensions">
+                        <!-- Iterate extensions enabled globally -->
+                        <div *ngFor="let e of extensions; index as idx" [formGroupName]="idx">
+                            <!-- Enabled checkbox -->
+                            <div class="form-check">
+                                <input #extCB [id]="'extension-' + e.id + '-enabled'"
+                                       formControlName="enabled" type="checkbox" class="form-check-input">
+                                <label class="form-check-label" [for]="extCB.id">{{ e.name }}</label>
+                            </div>
+                            <!-- Extension config, only when enabled -->
+                            <div *ngIf="extCB.checked" class="mb-3 ps-4">
+                                <label class="form-check-label colon" [for]="'extension-' + e.id + '-config'" i18n>Configuration</label>
+                                <textarea [id]="'extension-' + e.id + '-config'"
+                                          formControlName="config" class="form-control" rows="3" maxlength="4096"></textarea>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- No data placeholder -->
+                    <app-no-data *ngIf="!extensions?.length"></app-no-data>
+                </ng-template>
+            </li>
+        </ul>
+
+        <!-- Tab content -->
+        <div [ngbNavOutlet]="nav"></div>
 
         <!-- Buttons -->
         <div class="form-footer">

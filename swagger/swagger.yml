@@ -295,6 +295,33 @@ definitions:
         description: Root URL of the domain, without trailing slash
         readOnly: true
 
+  domainExtension:
+    description: Domain extension info
+    type: object
+    required:
+      - id
+    properties:
+      id:
+        $ref: "#/definitions/domainExtensionId"
+        description: Extension ID
+        example: akismet
+      name:
+        type: string
+        description: Extension display name
+        example: Akismet
+      config:
+        type: string
+        description: Extension configuration, linebreak-separated list of key=value pairs
+
+  domainExtensionId:
+    description: Domain extension ID
+    type: string
+    enum:
+      - akismet
+      - perspective
+      - apiLayer.spamChecker
+    x-isnullable: false
+
   domainModNotifyPolicy:
     description: Moderator notification policy for domain
     type: string
@@ -392,7 +419,7 @@ definitions:
         example: github
       name:
         type: string
-        description: Provider name
+        description: Provider display name
         x-isnullable: false
         example: GitHub
       icon:
@@ -402,7 +429,7 @@ definitions:
         example: github
 
   federatedIdpId:
-    description: Federated identity provider ID, a subset of identityProviderId
+    description: Federated identity provider ID
     type: string
     enum:
       - facebook
@@ -2022,6 +2049,11 @@ paths:
                 items:
                   $ref: "#/definitions/federatedIdpId"
                 description: IDs of federated identity providers enabled for the domain
+              extensions:
+                type: array
+                items:
+                  $ref: "#/definitions/domainExtension"
+                description: List of extensions enabled for the domain, and their configurations
       responses:
         200:
           description: Domain added successfully
@@ -2078,6 +2110,11 @@ paths:
                 items:
                   $ref: "#/definitions/federatedIdpId"
                 description: IDs of federated identity providers enabled for the domain
+              extensions:
+                type: array
+                items:
+                  $ref: "#/definitions/domainExtension"
+                description: List of extensions enabled for the domain, and their configurations
 
     put:
       operationId: DomainUpdate
@@ -2101,6 +2138,11 @@ paths:
                 items:
                   $ref: "#/definitions/federatedIdpId"
                 description: IDs of federated identity providers enabled for the domain
+              extensions:
+                type: array
+                items:
+                  $ref: "#/definitions/domainExtension"
+                description: List of extensions enabled for the domain, and their configurations
       responses:
         200:
           description: Domain properties have been updated
@@ -2810,6 +2852,24 @@ paths:
       responses:
         204:
           description: Dynamic instance configuration has been reset
+
+  /config/extensions:
+    get:
+      operationId: ConfigExtensionsGet
+      summary: Obtain a list of enabled extensions
+      tags:
+        - ApiGeneral
+      responses:
+        200:
+          description: List of enabled extensions
+          schema:
+            type: object
+            properties:
+              extensions:
+                type: array
+                items:
+                  $ref: "#/definitions/domainExtension"
+                description: List of extensions, with a default configuration
 
   #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints

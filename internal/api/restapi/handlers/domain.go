@@ -86,11 +86,16 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 	} else if idps, err := svc.TheDomainService.ListDomainFederatedIdPs(&d.ID); err != nil {
 		return respServiceError(err)
 
+		// Prepare a list of extensions
+	} else if exts, err := svc.TheDomainService.ListDomainExtensions(&d.ID); err != nil {
+		return respServiceError(err)
+
 	} else {
 		// Succeeded
 		return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
 			Domain:          d.ToDTO(),
 			DomainUser:      du.ToDTO(),
+			Extensions:      data.SliceToDTOs[*data.DomainExtension, *models.DomainExtension](exts),
 			FederatedIdpIds: idps,
 		})
 	}
@@ -163,6 +168,12 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		return r
 	}
 
+	// Convert extensions
+	exts, r := domainConvertExtensions(params.Body.Extensions)
+	if r != nil {
+		return r
+	}
+
 	// Persist a new domain record in the database
 	d := &data.Domain{
 		ID:               uuid.New(),
@@ -184,7 +195,7 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		ModNotifyPolicy:  data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
 		DefaultSort:      string(domain.DefaultSort),
 	}
-	if err := svc.TheDomainService.Create(&user.ID, d, params.Body.FederatedIdpIds); err != nil {
+	if err := svc.TheDomainService.Create(&user.ID, d, params.Body.FederatedIdpIds, exts); err != nil {
 		return respServiceError(err)
 	}
 
@@ -258,6 +269,12 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 		return r
 	}
 
+	// Convert extensions
+	exts, r := domainConvertExtensions(params.Body.Extensions)
+	if r != nil {
+		return r
+	}
+
 	// Update domain properties
 	domain.Name = newDomain.Name
 	domain.AuthAnonymous = newDomain.AuthAnonymous
@@ -274,12 +291,37 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	domain.DefaultSort = string(newDomain.DefaultSort)
 
 	// Persist the updated properties
-	if err := svc.TheDomainService.Update(domain, params.Body.FederatedIdpIds); err != nil {
+	if err := svc.TheDomainService.Update(domain, params.Body.FederatedIdpIds, exts); err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
 	return api_general.NewDomainUpdateOK().WithPayload(domain.ToDTO())
+}
+
+// domainConvertExtensions converts domain extensions into data models, verifying the given extensions are enabled
+func domainConvertExtensions(exIn []*models.DomainExtension) ([]*data.DomainExtension, middleware.Responder) {
+	var exOut []*data.DomainExtension
+	for _, e := range exIn {
+		// Check the extension is known
+		if ex, ok := data.DomainExtensions[e.ID]; !ok {
+			return nil, respBadRequest(ErrorInvalidPropertyValue.WithDetails(fmt.Sprintf("unknown extension (ID=%q)", e.ID)))
+
+			// Check the extension is enabled
+		} else if !ex.Enabled {
+			return nil, respBadRequest(ErrorInvalidPropertyValue.WithDetails(fmt.Sprintf("extension (ID=%q) is disabled", e.ID)))
+
+		} else {
+			// Convert the model
+			exOut = append(exOut, &data.DomainExtension{
+				ID:      ex.ID,
+				Name:    ex.Name,
+				Config:  e.Config,
+				Enabled: true,
+			})
+		}
+	}
+	return exOut, nil
 }
 
 // domainGetWithUser parses a string UUID and fetches the corresponding domain and its user, optionally verifying they

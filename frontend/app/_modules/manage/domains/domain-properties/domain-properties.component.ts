@@ -1,8 +1,9 @@
 import { Component, OnInit } from '@angular/core';
 import { Location } from '@angular/common';
+import { combineLatestWith, first } from 'rxjs';
 import { faCopy, faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { FederatedIdentityProvider } from '../../../../../generated-api';
+import { DomainExtension, FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { Paths } from '../../../../_utils/consts';
 import { DocsService } from '../../../../_services/docs.service';
@@ -20,6 +21,9 @@ export class DomainPropertiesComponent implements OnInit {
 
     /** List of federated identity providers configured in the domain. */
     fedIdps?: FederatedIdentityProvider[];
+
+    /** List of extensions enabled in the domain. */
+    extensions?: DomainExtension[];
 
     readonly Paths = Paths;
     readonly snippet =
@@ -55,11 +59,15 @@ export class DomainPropertiesComponent implements OnInit {
     ngOnInit(): void {
         // Subscribe to domain changes to obtain domain and IdP data
         this.domainSelectorSvc.domainMeta
-            .pipe(untilDestroyed(this))
-            .subscribe(meta => {
+            .pipe(
+                untilDestroyed(this),
+                combineLatestWith(this.cfgSvc.extensions.pipe(first())))
+            .subscribe(([meta, exts]) => {
                 this.domainMeta = meta;
                 // Only add those federated identity providers available globally
                 this.fedIdps = this.cfgSvc.staticConfig.federatedIdps?.filter(idp => meta.federatedIdpIds?.includes(idp.id));
+                // Only add those extensions available globally
+                this.extensions = exts?.filter(ex => meta.extensions?.some(me => me.id === ex.id));
             });
     }
 }

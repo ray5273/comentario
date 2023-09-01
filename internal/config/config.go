@@ -14,18 +14,6 @@ import (
 	"time"
 )
 
-// KeySecret is a record containing a key and a secret
-type KeySecret struct {
-	Disable bool   `yaml:"disable"` // Can be used to forcefully disable the corresponding functionality
-	Key     string `yaml:"key"`     // Public key
-	Secret  string `yaml:"secret"`  // Private key
-}
-
-// Usable returns whether the instance isn't disabled and the key and the secret are filled in
-func (c *KeySecret) Usable() bool {
-	return !c.Disable && c.Key != "" && c.Secret != ""
-}
-
 var (
 	AppVersion string    // Application version set during bootstrapping
 	BuildDate  time.Time // Application build date set during bootstrapping

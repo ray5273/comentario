@@ -196,8 +196,8 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Determine comment state
-	if b, err := Verifier.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
-		return respServiceError(err)
+	if b, r := Verifier.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); r != nil {
+		return r
 	} else if b {
 		// Comment needs to be approved
 		comment.IsPending = true
@@ -286,6 +286,17 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 		return r
 	}
 
+	// If the comment was approved, check the need for moderation again
+	unapprove := false
+	if !comment.IsPending && comment.IsApproved {
+		// Run the approval rules
+		if b, r := Verifier.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, true); r != nil {
+			return r
+		} else if b {
+			unapprove = true
+		}
+	}
+
 	// Render the comment into HTML
 	comment.Markdown = strings.TrimSpace(params.Body.Markdown)
 	comment.HTML = util.MarkdownToHTML(comment.Markdown)
@@ -293,6 +304,13 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	// Persist the edits in the database
 	if err := svc.TheCommentService.UpdateText(&comment.ID, comment.Markdown, comment.HTML); err != nil {
 		return respServiceError(err)
+	}
+
+	// If the comment approval is to be revoked
+	if unapprove {
+		if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, true, false); err != nil {
+			return respServiceError(err)
+		}
 	}
 
 	// Succeeded

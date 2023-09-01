@@ -31,8 +31,6 @@ export class Comentario extends HTMLElement {
     private readonly origin = '[[[.Origin]]]';
     /** CDN URL, injected by the backend on serving the file. */
     private readonly cdn = '[[[.CdnPrefix]]]';
-    /** App version, injected by the backend on serving the file. */
-    private readonly version = '[[[.Version]]]';
 
     /** Service handling API requests. */
     private readonly apiService = new ApiService(
@@ -167,7 +165,7 @@ export class Comentario extends HTMLElement {
 
         // Scroll to the requested comment, if any
         this.scrollToCommentHash();
-        console.info(`Initialised Comentario ${this.version}`);
+        console.info(`Initialised Comentario ${this.config.staticConfig.version}`);
     }
 
     /**

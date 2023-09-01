@@ -27,6 +27,7 @@ data:
     delete from cm_comments;
     delete from cm_domain_page_views;
     delete from cm_domain_pages;
+    delete from cm_domains_extensions;
     delete from cm_domains_idps;
     delete from cm_domains_users;
     delete from cm_domains;

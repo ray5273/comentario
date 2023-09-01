@@ -2,7 +2,6 @@ package svc
 
 import (
 	"database/sql"
-	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/postgres"
 	"github.com/google/uuid"
@@ -26,7 +25,7 @@ type DomainService interface {
 	//  - moderator indicates whether to only include domains where the user is a moderator
 	CountForUser(userID *uuid.UUID, owner, moderator bool) (int, error)
 	// Create creates and persists a new domain record
-	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error
+	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error
 	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
 	// domain by its ID
 	DeleteByID(id *uuid.UUID) error
@@ -57,13 +56,15 @@ type DomainService interface {
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListByDomainUser(userID, curUserID *uuid.UUID, superuser, withDomainUserOnly bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.Domain, []*data.DomainUser, error)
+	// ListDomainExtensions fetches and returns a list of extensions enabled for the domain with the given ID
+	ListDomainExtensions(domainID *uuid.UUID) ([]*data.DomainExtension, error)
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
 	// SetReadonly sets the readonly status for the given domain
 	SetReadonly(domainID *uuid.UUID, readonly bool) error
 	// Update updates an existing domain record in the database
-	Update(domain *data.Domain, idps []models.FederatedIdpID) error
+	Update(domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error
 	// UserAdd links the specified user to the given domain
 	UserAdd(du *data.DomainUser) error
 	// UserModify updates roles and settings of the specified user in the given domain
@@ -114,8 +115,8 @@ func (svc *domainService) CountForUser(userID *uuid.UUID, owner, moderator bool)
 	return i, nil
 }
 
-func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID) error {
-	logger.Debugf("domainService.Create(%s, %#v, %v)", userID, domain, idps)
+func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error {
+	logger.Debugf("domainService.Create(%s, %#v, %v, %v)", userID, domain, idps, extensions)
 
 	// Insert a new domain record
 	if err := db.Exec(
@@ -135,6 +136,11 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 
 	// Save the domain IdPs
 	if err := svc.saveIdPs(&domain.ID, idps); err != nil {
+		return err
+	}
+
+	// Save the domain extensions
+	if err := svc.saveExtensions(&domain.ID, extensions); err != nil {
 		return err
 	}
 
@@ -431,13 +437,59 @@ func (svc *domainService) ListByDomainUser(userID, curUserID *uuid.UUID, superus
 	return ds, dus, nil
 }
 
+func (svc *domainService) ListDomainExtensions(domainID *uuid.UUID) ([]*data.DomainExtension, error) {
+	logger.Debugf("domainService.ListDomainExtensions(%s)", domainID)
+
+	// Query domain's extensions
+	q := db.Dialect().
+		From("cm_domains_extensions").
+		Select("extension_id", "config").
+		Where(goqu.Ex{"domain_id": domainID})
+	rows, err := db.Select(q)
+	if err != nil {
+		logger.Errorf("domainService.ListDomainExtensions: Select() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Fetch the extension data
+	var res []*data.DomainExtension
+	for rows.Next() {
+		var de data.DomainExtension
+		if err := rows.Scan(&de.ID, &de.Config); err != nil {
+			logger.Errorf("domainService.ListDomainExtensions: rows.Scan() failed: %v", err)
+			return nil, err
+
+			// Only add the extension if it's known and enabled globally
+		} else if ext, ok := data.DomainExtensions[de.ID]; ok && ext.Enabled {
+			res = append(res, &de)
+		}
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		logger.Errorf("domainService.ListDomainExtensions: rows.Next() failed: %v", err)
+		return nil, err
+	}
+
+	// Sort the extensions by ID for a stable ordering
+	sort.Slice(res, func(i, j int) bool { return res[i].ID < res[j].ID })
+
+	// Succeeded
+	return res, nil
+}
+
 func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error) {
 	logger.Debugf("domainService.ListDomainFederatedIdPs(%s)", domainID)
 
 	// Query domain's IdPs
-	rows, err := db.Query("select fed_idp_id from cm_domains_idps where domain_id=$1;", domainID)
+	q := db.Dialect().
+		From("cm_domains_idps").
+		Select("fed_idp_id").
+		Where(goqu.Ex{"domain_id": domainID})
+	rows, err := db.Select(q)
 	if err != nil {
-		logger.Errorf("domainService.ListDomainFederatedIdPs: Query() failed: %v", err)
+		logger.Errorf("domainService.ListDomainFederatedIdPs: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -473,8 +525,8 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	logger.Debugf("domainService.SetReadonly(%s, %v)", domainID, readonly)
 
 	// Update the domain record
-	if err := db.ExecOne("update cm_domains set is_readonly=$1 where id=$2;", readonly, domainID); err != nil {
-		logger.Errorf("domainService.SetReadonly: ExecOne() failed: %v", err)
+	if err := db.ExecuteOne(db.Dialect().Update("cm_domains").Set(goqu.Record{"is_readonly": readonly}).Where(goqu.Ex{"id": domainID}).Prepared(true)); err != nil {
+		logger.Errorf("domainService.SetReadonly: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -482,26 +534,41 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	return nil
 }
 
-func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID) error {
+func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error {
 	logger.Debugf("domainService.Update(%#v, %v)", domain, idps)
 
 	// Update the domain record
-	if err := db.ExecOne(
-		"update cm_domains "+
-			"set name=$1, is_https=$2, auth_anonymous=$3, auth_local=$4, auth_sso=$5, sso_url=$6, mod_anonymous=$7, "+
-			"mod_authenticated=$8, mod_num_comments=$9, mod_user_age_days=$10, mod_links=$11, mod_images=$12, "+
-			"mod_notify_policy=$13, default_sort=$14 "+
-			"where id=$15;",
-		domain.Name, domain.IsHTTPS, domain.AuthAnonymous, domain.AuthLocal, domain.AuthSSO, domain.SSOURL,
-		domain.ModAnonymous, domain.ModAuthenticated, domain.ModNumComments, domain.ModUserAgeDays, domain.ModLinks,
-		domain.ModImages, domain.ModNotifyPolicy, domain.DefaultSort, &domain.ID,
-	); err != nil {
-		logger.Errorf("domainService.Update: ExecOne() failed: %v", err)
+	q := db.Dialect().
+		Update("cm_domains").
+		Set(goqu.Record{
+			"name":              domain.Name,
+			"is_https":          domain.IsHTTPS,
+			"auth_anonymous":    domain.AuthAnonymous,
+			"auth_local":        domain.AuthLocal,
+			"auth_sso":          domain.AuthSSO,
+			"sso_url":           domain.SSOURL,
+			"mod_anonymous":     domain.ModAnonymous,
+			"mod_authenticated": domain.ModAuthenticated,
+			"mod_num_comments":  domain.ModNumComments,
+			"mod_user_age_days": domain.ModUserAgeDays,
+			"mod_links":         domain.ModLinks,
+			"mod_images":        domain.ModImages,
+			"mod_notify_policy": domain.ModNotifyPolicy,
+			"default_sort":      domain.DefaultSort,
+		}).
+		Where(goqu.Ex{"id": &domain.ID})
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("domainService.Update: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
 	// Save the domain IdPs
 	if err := svc.saveIdPs(&domain.ID, idps); err != nil {
+		return err
+	}
+
+	// Save the domain extensions
+	if err := svc.saveExtensions(&domain.ID, extensions); err != nil {
 		return err
 	}
 
@@ -515,13 +582,20 @@ func (svc *domainService) UserAdd(du *data.DomainUser) error {
 	// Don't bother if the user is an anonymous one
 	if du.UserID != data.AnonymousUser.ID {
 		// Insert a new domain-user link record
-		if err := db.Exec(
-			"insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created) "+
-				"values($1, $2, $3, $4, $5, $6, $7, $8);",
-			&du.DomainID, &du.UserID, du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator,
-			du.CreatedTime,
-		); err != nil {
-			logger.Errorf("domainService.UserAdd: Exec() failed: %v", err)
+		q := db.Dialect().
+			Insert("cm_domains_users").
+			Rows(goqu.Record{
+				"domain_id":        &du.DomainID,
+				"user_id":          &du.UserID,
+				"is_owner":         du.IsOwner,
+				"is_moderator":     du.IsModerator,
+				"is_commenter":     du.IsCommenter,
+				"notify_replies":   du.NotifyReplies,
+				"notify_moderator": du.NotifyModerator,
+				"ts_created":       du.CreatedTime,
+			})
+		if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+			logger.Errorf("domainService.UserAdd: ExecuteOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -536,12 +610,18 @@ func (svc *domainService) UserModify(du *data.DomainUser) error {
 	// Don't bother if the user is an anonymous one
 	if du.UserID != data.AnonymousUser.ID {
 		// Update the domain-user link record
-		if err := db.ExecOne(
-			"update cm_domains_users set is_owner=$1, is_moderator=$2, is_commenter=$3, notify_replies=$4, notify_moderator=$5 "+
-				"where domain_id=$6 and user_id=$7;",
-			du.IsOwner, du.IsModerator, du.IsCommenter, du.NotifyReplies, du.NotifyModerator, &du.DomainID, &du.UserID,
-		); err != nil {
-			logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
+		q := db.Dialect().
+			Update("cm_domains_users").
+			Set(goqu.Record{
+				"is_owner":         du.IsOwner,
+				"is_moderator":     du.IsModerator,
+				"is_commenter":     du.IsCommenter,
+				"notify_replies":   du.NotifyReplies,
+				"notify_moderator": du.NotifyModerator,
+			}).
+			Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID})
+		if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+			logger.Errorf("domainService.UserModify: ExecuteOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -556,8 +636,8 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 	// Don't bother if the user is an anonymous one
 	if *userID != data.AnonymousUser.ID {
 		// Delete the domain-user link record
-		if err := db.ExecOne("delete from cm_domains_users where domain_id=$1 and user_id=$2;", &domainID, userID); err != nil {
-			logger.Errorf("domainService.UserRemove: ExecOne() failed: %v", err)
+		if err := db.ExecuteOne(db.Dialect().Delete("cm_domains_users").Where(goqu.Ex{"domain_id": domainID, "user_id": userID}).Prepared(true)); err != nil {
+			logger.Errorf("domainService.UserRemove: ExecuteOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -675,39 +755,60 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*d
 	return &d, pdu, nil
 }
 
-// saveIdPs saves domain's identity provider links
-func (svc *domainService) saveIdPs(domainID *uuid.UUID, idps []models.FederatedIdpID) error {
+// saveExtensions saves domain's extension links
+func (svc *domainService) saveExtensions(domainID *uuid.UUID, extensions []*data.DomainExtension) error {
 	// Delete any existing links
-	if err := db.Exec("delete from cm_domains_idps where domain_id=$1", domainID); err != nil {
-		logger.Errorf("domainService.saveIdPs: Exec() failed for deleting links: %v", err)
+	if err := db.Execute(db.Dialect().Delete("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID}).Prepared(true)); err != nil {
+		logger.Errorf("domainService.saveExtensions: Execute() failed for deleting links: %v", err)
 		return translateDBErrors(err)
 	}
 
 	// Insert domain IdP records, if any
-	if len(idps) > 0 {
-		// Prepare an insert statement
-		var s strings.Builder
-		s.WriteString("insert into cm_domains_idps(domain_id, fed_idp_id) values")
-
-		// Add IdPs to the statement and params
-		var params []any
-		for i, id := range idps {
-			if i > 0 {
-				s.WriteByte(',')
-			}
-			s.WriteString(fmt.Sprintf("($%d,$%d)", i*2+1, i*2+2))
-			params = append(params, &domainID, id)
+	if len(extensions) > 0 {
+		// Prepare rows for inserting
+		var rows []goqu.Record
+		for _, de := range extensions {
+			rows = append(rows, goqu.Record{
+				"domain_id":    domainID,
+				"extension_id": de.ID,
+				"config":       util.If(de.HasDefaultConfig(), "", de.Config), // Empty config if it matches the default
+			})
 		}
-		s.WriteByte(';')
 
 		// Execute the statement
-		if err := db.Exec(s.String(), params...); err != nil {
-			logger.Errorf("domainService.saveIdPs: Exec() failed for inserting links: %v", err)
+		if err := db.Execute(db.Dialect().Insert("cm_domains_extensions").Rows(rows).Prepared(true)); err != nil {
+			logger.Errorf("domainService.saveExtensions: Execute() failed for inserting links: %v", err)
 			return translateDBErrors(err)
 		}
 	}
 
 	// Succeeded
 	return nil
+}
 
+// saveIdPs saves domain's identity provider links
+func (svc *domainService) saveIdPs(domainID *uuid.UUID, idps []models.FederatedIdpID) error {
+	// Delete any existing links
+	if err := db.Execute(db.Dialect().Delete("cm_domains_idps").Where(goqu.Ex{"domain_id": domainID}).Prepared(true)); err != nil {
+		logger.Errorf("domainService.saveIdPs: Execute() failed for deleting links: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Insert domain IdP records, if any
+	if len(idps) > 0 {
+		// Prepare rows for inserting
+		var rows []goqu.Record
+		for _, id := range idps {
+			rows = append(rows, goqu.Record{"domain_id": domainID, "fed_idp_id": id})
+		}
+
+		// Execute the statement
+		if err := db.Execute(db.Dialect().Insert("cm_domains_idps").Rows(rows).Prepared(true)); err != nil {
+			logger.Errorf("domainService.saveIdPs: Execute() failed for inserting links: %v", err)
+			return translateDBErrors(err)
+		}
+	}
+
+	// Succeeded
+	return nil
 }

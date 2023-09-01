@@ -96,6 +96,15 @@
                         </ul>
                     </dd>
                 </div>
+                <!-- Extensions -->
+                <div>
+                    <dt i18n>Extensions</dt>
+                    <dd>
+                        <ul class="ps-3 mb-0">
+                            <li *ngFor="let e of extensions">{{ e.name }}</li>
+                        </ul>
+                    </dd>
+                </div>
                 <!-- Created -->
                 <div *ngIf="domain.createdTime | datetime as v">
                     <dt i18n>Created</dt>

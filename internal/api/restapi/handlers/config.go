@@ -58,6 +58,24 @@ func ConfigDynamicUpdate(params api_general.ConfigDynamicUpdateParams, user *dat
 	return api_general.NewConfigDynamicUpdateNoContent()
 }
 
+func ConfigExtensionsGet(api_general.ConfigExtensionsGetParams, *data.User) middleware.Responder {
+	// Make a list of enabled extensions
+	var dtos []*models.DomainExtension
+	for _, de := range data.DomainExtensions {
+		if de.Enabled {
+			dtos = append(dtos, de.ToDTO())
+		}
+	}
+
+	// Sort the extensions by ID for a stable ordering
+	sort.Slice(dtos, func(i, j int) bool { return dtos[i].ID < dtos[j].ID })
+
+	// Succeeded
+	return api_general.NewConfigExtensionsGetOK().WithPayload(&api_general.ConfigExtensionsGetOKBody{
+		Extensions: dtos,
+	})
+}
+
 func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	// Prepare a slice of IdP IDs
 	var idps []*models.FederatedIdentityProvider

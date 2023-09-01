@@ -33,7 +33,7 @@ type VerifierService interface {
 	// NeedsModeration returns whether the given comment needs to be moderated
 	NeedsModeration(
 		req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User,
-		domainUser *data.DomainUser, isEdit bool) (bool, error)
+		domainUser *data.DomainUser, isEdit bool) (bool, middleware.Responder)
 	// SignupEnabled checks if users are allowed to sign up
 	SignupEnabled() middleware.Responder
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
@@ -139,38 +139,43 @@ func (v *verifier) IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Respon
 	return nil
 }
 
-func (v *verifier) NeedsModeration(req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User, domainUser *data.DomainUser, isEdit bool) (bool, error) {
+func (v *verifier) NeedsModeration(
+	req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User,
+	domainUser *data.DomainUser, isEdit bool,
+) (bool, middleware.Responder) {
 	// Comments by superusers, owners, and moderators are always pre-approved
 	if user.IsSuperuser || domainUser.CanModerate() {
 		return false, nil
 	}
 
-	// Check domain moderation settings
-	switch user.IsAnonymous() {
-	// Authenticated user
-	case false:
-		// If all authenticated are to be approved
-		if domain.ModAuthenticated {
-			return true, nil
+	// If it's a new comment, check domain moderation policy
+	if !isEdit {
+		switch user.IsAnonymous() {
+		// Authenticated user
+		case false:
+			// If all authenticated are to be approved
+			if domain.ModAuthenticated {
+				return true, nil
 
-			// If the user was created less than the required number of days ago
-		} else if domainUser.AgeInDays() < domain.ModUserAgeDays {
-			return true, nil
+				// If the user was created less than the required number of days ago
+			} else if domainUser.AgeInDays() < domain.ModUserAgeDays {
+				return true, nil
 
-			// If there's a number of comments specified for the domain
-		} else if domain.ModNumComments > 0 {
-			// Verify the user has the required number of approved comments
-			if i, err := svc.TheCommentService.Count(user, domainUser, &domain.ID, nil, &user.ID, true, false, false, false); err != nil {
-				return false, err
-			} else if i < int64(domain.ModNumComments) {
+				// If there's a number of comments specified for the domain
+			} else if domain.ModNumComments > 0 {
+				// Verify the user has the required number of approved comments
+				if i, err := svc.TheCommentService.Count(user, domainUser, &domain.ID, nil, &user.ID, true, false, false, false); err != nil {
+					return false, respServiceError(err)
+				} else if i < int64(domain.ModNumComments) {
+					return true, nil
+				}
+			}
+
+		// Anonymous user
+		case true:
+			if domain.ModAnonymous {
 				return true, nil
 			}
-		}
-
-	// Anonymous user
-	case true:
-		if domain.ModAnonymous {
-			return true, nil
 		}
 	}
 
@@ -182,9 +187,14 @@ func (v *verifier) NeedsModeration(req *http.Request, comment *data.Comment, dom
 		return true, nil
 	}
 
-	// TODO make this configurable
+	// Fetch domain extensions
+	extensions, err := svc.TheDomainService.ListDomainExtensions(&domain.ID)
+	if err != nil {
+		return false, respServiceError(err)
+	}
+
 	// Test the comment against online checkers
-	if b, err := svc.ThePerlustrationService.Scan(req, comment, domain, page, user, domainUser, isEdit); b && err == nil {
+	if b, err := svc.ThePerlustrationService.Scan(extensions, req, comment, domain, page, user, domainUser, isEdit); b && err == nil {
 		// Consider not inappropriate on an error
 		return true, nil
 	}

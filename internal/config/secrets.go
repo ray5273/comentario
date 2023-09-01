@@ -9,6 +9,29 @@ const (
 	SMTPEncryptionTLS     SMTPEncryption = "tls"
 )
 
+// KeySecret is a record containing a key and a secret
+type KeySecret struct {
+	Disable bool   `yaml:"disable"` // Can be used to forcefully disable the corresponding functionality
+	Key     string `yaml:"key"`     // Public key
+	Secret  string `yaml:"secret"`  // Private key
+}
+
+// Usable returns whether the instance isn't disabled and the key and the secret are filled in
+func (c *KeySecret) Usable() bool {
+	return !c.Disable && c.Key != "" && c.Secret != ""
+}
+
+// APIKey is a record containing an API key
+type APIKey struct {
+	Disable bool   `yaml:"disable"` // Can be used to forcefully disable the corresponding functionality
+	Key     string `yaml:"key"`     // API key
+}
+
+// Usable returns whether the instance isn't disabled and the key and the secret are filled in
+func (k *APIKey) Usable() bool {
+	return !k.Disable && k.Key != ""
+}
+
 // SecretsConfig is a configuration object for storing sensitive information
 var SecretsConfig = &struct {
 	Postgres struct {
@@ -38,7 +61,9 @@ var SecretsConfig = &struct {
 		Twitter  KeySecret `yaml:"twitter"`  // Twitter auth config
 	} `yaml:"idp"`
 
-	Akismet struct {
-		Key string `yaml:"key"` // Akismet key
-	} `yaml:"akismet"`
+	Extensions struct {
+		Akismet             APIKey `yaml:"akismet"`
+		Perspective         APIKey `yaml:"perspective"`
+		APILayerSpamChecker APIKey `yaml:"apiLayerSpamChecker"`
+	} `yaml:"extensions"`
 }{}
