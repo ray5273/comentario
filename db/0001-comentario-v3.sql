@@ -56,7 +56,6 @@ end $$;
 -- Drop any existing tables except for migrations
 
 drop table if exists cm_configuration          cascade;
-drop table if exists cm_fed_identity_providers cascade;
 drop table if exists cm_users                  cascade;
 drop table if exists cm_user_attrs             cascade;
 drop table if exists cm_user_avatars           cascade;
@@ -96,37 +95,6 @@ create table if not exists cm_migration_log (
 );
 
 ------------------------------------------------------------------------------------------------------------------------
--- Known federated identity providers
-------------------------------------------------------------------------------------------------------------------------
-create table cm_fed_identity_providers (
-    id   varchar(32) primary key,     -- Unique provider ID, such as 'google'
-    name varchar(63) not null unique, -- Unique display name, such as 'Google'
-    icon varchar(32) not null         -- Name of the icon to use for the provider
-);
-
--- Data
-insert into cm_fed_identity_providers(id, name, icon) values
-    ('facebook', 'Facebook', 'facebook'),
-    ('gitlab',   'GitLab',   'gitlab'),
-    ('github',   'GitHub',   'github'),
-    ('google',   'Google',   'google'),
-    ('linkedin', 'LinkedIn', 'linkedin'),
-    ('twitter',  'Twitter',  'twitter');
-
-------------------------------------------------------------------------------------------------------------------------
--- Known extensions
-------------------------------------------------------------------------------------------------------------------------
-create table cm_extensions (
-    id   varchar(32) primary key -- Unique extensions ID, such as 'akismet'
-);
-
--- Data
-insert into cm_extensions(id) values
-    ('akismet'),
-    ('perspective'),
-    ('apiLayer.spamChecker');
-
-------------------------------------------------------------------------------------------------------------------------
 -- Users
 ------------------------------------------------------------------------------------------------------------------------
 create table cm_users (
@@ -148,7 +116,7 @@ create table cm_users (
     ts_banned      timestamp,                                   -- When the user was banned
     user_banned    uuid,                                        -- Reference to the user who banned this one
     remarks        text          default ''    not null,        -- Optional remarks for the user
-    federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication. If empty and federated_sso is false, it's a local user
+    federated_idp  varchar(32),                                 -- Optional ID of the federated identity provider used for authentication (the set of available IDs is defined in the backend). If empty and federated_sso is false, it's a local user
     federated_sso  boolean       default false not null,        -- Whether the user is authenticated via SSO
     federated_id   varchar(255)  default ''    not null,        -- User ID as reported by the federated identity provider (only when federated_idp/federated_sso is set)
     website_url    varchar(2083) default ''    not null,        -- Optional user's website URL
@@ -156,9 +124,8 @@ create table cm_users (
 );
 
 -- Constraints
-alter table cm_users add constraint fk_users_user_created  foreign key (user_created)  references cm_users(id)                  on delete set null;
-alter table cm_users add constraint fk_users_user_banned   foreign key (user_banned)   references cm_users(id)                  on delete set null;
-alter table cm_users add constraint fk_users_federated_idp foreign key (federated_idp) references cm_fed_identity_providers(id) on delete restrict;
+alter table cm_users add constraint fk_users_user_created foreign key (user_created) references cm_users(id) on delete set null;
+alter table cm_users add constraint fk_users_user_banned  foreign key (user_banned)  references cm_users(id) on delete set null;
 
 -- Data
 insert into cm_users(id, email, name, password_hash, system_account, confirmed, ts_created, secret_token)
@@ -308,23 +275,21 @@ alter table cm_domains_users add constraint fk_domains_users_user_id   foreign k
 -- Links between domains and federated identity providers, specifying which IdPs are allowed on the domain
 create table cm_domains_idps (
     domain_id  uuid        not null, -- Reference to the domain
-    fed_idp_id varchar(32) not null  -- Reference to the identity provider
+    fed_idp_id varchar(32) not null  -- Reference to the identity provider (the set of available IDs is defined in the backend)
 );
 
 -- Constraints
-alter table cm_domains_idps add constraint fk_domains_idps_domain_id  foreign key (domain_id)  references cm_domains(id)                on delete cascade;
-alter table cm_domains_idps add constraint fk_domains_idps_fed_idp_id foreign key (fed_idp_id) references cm_fed_identity_providers(id) on delete cascade;
+alter table cm_domains_idps add constraint fk_domains_idps_domain_id foreign key (domain_id) references cm_domains(id) on delete cascade;
 
 -- Links between domains and extensions
 create table cm_domains_extensions (
     domain_id    uuid                     not null, -- Reference to the domain
-    extension_id varchar(32)              not null, -- Reference to the extension
+    extension_id varchar(32)              not null, -- Extension ID (the set of available IDs is defined in the backend)
     config       varchar(4096) default '' not null  -- Extension configuration parameters
 );
 
 -- Constraints
-alter table cm_domains_extensions add constraint fk_domains_extensions_domain_id    foreign key (domain_id)    references cm_domains(id)    on delete cascade;
-alter table cm_domains_extensions add constraint fk_domains_extensions_extension_id foreign key (extension_id) references cm_extensions(id) on delete cascade;
+alter table cm_domains_extensions add constraint fk_domains_extensions_domain_id foreign key (domain_id) references cm_domains(id) on delete cascade;
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Domain pages
