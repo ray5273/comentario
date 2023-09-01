@@ -364,6 +364,18 @@ func StripPort(hostOrIP string) string {
 	return rePortInHostname.ReplaceAllString(hostOrIP, "")
 }
 
+// StrToFloatDef converts a string to a float64. If conversion fails, returns the given default
+func StrToFloatDef(s string, def float64) float64 {
+	if s == "" {
+		return def
+	}
+	f, err := strconv.ParseFloat(s, 64)
+	if err != nil {
+		return def
+	}
+	return f
+}
+
 // ToStringSlice converts a slice of string-derived elements into a string slice
 func ToStringSlice[T ~string](in []T) []string {
 	// Don't convert nil

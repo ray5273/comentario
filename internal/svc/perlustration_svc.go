@@ -183,13 +183,20 @@ type perspectiveScanner struct {
 	apiKey string
 }
 
+type perspectiveAttrScore struct {
+	SummaryScore struct {
+		Value float64 `json:"value"`
+	} `json:"summaryScore"`
+}
+
 type perspectiveResponse struct {
 	AttributeScores struct {
-		Toxicity struct {
-			SummaryScore struct {
-				Value float64 `json:"value"`
-			} `json:"summaryScore"`
-		} `json:"TOXICITY"`
+		Toxicity       perspectiveAttrScore `json:"TOXICITY"`
+		SevereToxicity perspectiveAttrScore `json:"SEVERE_TOXICITY"`
+		IdentityAttack perspectiveAttrScore `json:"IDENTITY_ATTACK"`
+		Insult         perspectiveAttrScore `json:"INSULT"`
+		Profanity      perspectiveAttrScore `json:"PROFANITY"`
+		Threat         perspectiveAttrScore `json:"THREAT"`
 	} `json:"attributeScores"`
 }
 
@@ -201,10 +208,44 @@ func (s *perspectiveScanner) Scan(
 	config map[string]string, _ *http.Request, comment *data.Comment, _ *data.Domain, _ *data.DomainPage, _ *data.User,
 	_ *data.DomainUser, _ bool,
 ) (bool, error) {
+	// Identify requested attributes
+	y := struct{}{} // Translates to an empty JSON object
+	attrs := make(map[string]any)
+	toxicity := util.StrToFloatDef(config["toxicity"], 1)
+	severeToxicity := util.StrToFloatDef(config["severeToxicity"], 1)
+	identityAttack := util.StrToFloatDef(config["identityAttack"], 1)
+	insult := util.StrToFloatDef(config["insult"], 1)
+	profanity := util.StrToFloatDef(config["profanity"], 1)
+	threat := util.StrToFloatDef(config["threat"], 1)
+
+	if toxicity < 1 {
+		attrs["TOXICITY"] = y
+	}
+	if severeToxicity < 1 {
+		attrs["SEVERE_TOXICITY"] = y
+	}
+	if identityAttack < 1 {
+		attrs["IDENTITY_ATTACK"] = y
+	}
+	if insult < 1 {
+		attrs["INSULT"] = y
+	}
+	if profanity < 1 {
+		attrs["PROFANITY"] = y
+	}
+	if threat < 1 {
+		attrs["THREAT"] = y
+	}
+
+	// If there are no attributes, it makes no sense to send the request
+	if len(attrs) == 0 {
+		return false, nil
+	}
+
 	// Prepare a request
 	d, err := json.Marshal(map[string]any{
 		"comment":             map[string]any{"text": comment.Markdown},
-		"requestedAttributes": map[string]any{"TOXICITY": struct{}{}},
+		"requestedAttributes": attrs,
 	})
 	if err != nil {
 		return false, err
@@ -219,7 +260,7 @@ func (s *perspectiveScanner) Scan(
 	if err != nil {
 		return false, err
 	}
-	rq.Header.Set("apikey", s.apiKey)
+	rq.Header.Add("Content-Type", "application/json")
 
 	// Fetch the response
 	res, err := client.Do(rq)
@@ -240,14 +281,16 @@ func (s *perspectiveScanner) Scan(
 		return false, err
 	}
 
-	// Try to extract the threshold from the config
-	threshold, err := strconv.ParseFloat(config["threshold"], 32)
-	if err != nil {
-		threshold = 0.5
-	}
+	// Check the scores. Ignore those not explicitly provided (i.e. set the threshold to 1)
+	b := result.AttributeScores.Toxicity.SummaryScore.Value > toxicity ||
+		result.AttributeScores.SevereToxicity.SummaryScore.Value > severeToxicity ||
+		result.AttributeScores.IdentityAttack.SummaryScore.Value > identityAttack ||
+		result.AttributeScores.Insult.SummaryScore.Value > insult ||
+		result.AttributeScores.Profanity.SummaryScore.Value > profanity ||
+		result.AttributeScores.Threat.SummaryScore.Value > threat
 
-	// Succeeded: check the score
-	return result.AttributeScores.Toxicity.SummaryScore.Value > threshold, nil
+	// Succeeded
+	return b, nil
 }
 
 //----------------------------------------------------------------------------------------------------------------------

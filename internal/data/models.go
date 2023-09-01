@@ -955,7 +955,18 @@ func (de *DomainExtension) ToDTO() *models.DomainExtension {
 
 // DomainExtensions is a map of known domain extensions and their default configurations. All disabled initially
 var DomainExtensions = map[models.DomainExtensionID]*DomainExtension{
-	models.DomainExtensionIDAkismet:                {ID: models.DomainExtensionIDAkismet, Name: "Akismet", Config: ""},
-	models.DomainExtensionIDPerspective:            {ID: models.DomainExtensionIDPerspective, Name: "Perspective", Config: "threshold=0.5"},
-	models.DomainExtensionIDAPILayerDotSpamChecker: {ID: models.DomainExtensionIDAPILayerDotSpamChecker, Name: "APILayer SpamChecker", Config: "threshold=5"},
+	models.DomainExtensionIDAkismet: {
+		ID:   models.DomainExtensionIDAkismet,
+		Name: "Akismet",
+	},
+	models.DomainExtensionIDPerspective: {
+		ID:     models.DomainExtensionIDPerspective,
+		Name:   "Perspective",
+		Config: "toxicity=0.5\nsevereToxicity=0.5\nidentityAttack=0.5\ninsult=0.5\nprofanity=0.5\nthreat=0.5",
+	},
+	models.DomainExtensionIDAPILayerDotSpamChecker: {
+		ID:     models.DomainExtensionIDAPILayerDotSpamChecker,
+		Name:   "APILayer SpamChecker",
+		Config: "threshold=5",
+	},
 }

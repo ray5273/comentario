@@ -733,6 +733,29 @@ func TestStripPort(t *testing.T) {
 	}
 }
 
+func TestStrToFloatDef(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		def  float64
+		want float64
+	}{
+		{"empty string   ", "", 0.1234, 0.1234},
+		{"no number      ", "foo", 0.1234, 0.1234},
+		{"zero           ", "0", 0.1234, 0},
+		{"floating zero  ", "0.00000000000", 0.1234, 0},
+		{"positive number", "123.4", 0.1234, 123.4},
+		{"negative number", "-123.4", 0.1234, -123.4},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := StrToFloatDef(tt.s, tt.def); got != tt.want {
+				t.Errorf("StrToFloatDef() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestToStringSlice(t *testing.T) {
 	in := []strfmt.UUID{"foo", "", "bar"}
 	want := []string{"foo", "", "bar"}
