@@ -281,7 +281,7 @@ func (s *perspectiveScanner) Scan(
 		return false, err
 	}
 
-	// Check the scores. Ignore those not explicitly provided (i.e. set the threshold to 1)
+	// Check the scores. Those not returned will be set to 0
 	b := result.AttributeScores.Toxicity.SummaryScore.Value > toxicity ||
 		result.AttributeScores.SevereToxicity.SummaryScore.Value > severeToxicity ||
 		result.AttributeScores.IdentityAttack.SummaryScore.Value > identityAttack ||
