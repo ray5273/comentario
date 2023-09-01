@@ -56,6 +56,9 @@ data:
           ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'google'),
           ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'twitter');
 
+    insert into cm_domains_extensions(domain_id, extension_id, config)
+        values('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'perspective', 'toxicity=0.5');
+
     insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
       values
         ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '39a71854-bcfd-42d5-af62-5e931d7a72d8', true,  true,  true,  false, false, '2023-01-17 17:55:47.008851');
