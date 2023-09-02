@@ -20,8 +20,8 @@ import (
 // ThePerlustrationService is a global PerlustrationService implementation
 var ThePerlustrationService PerlustrationService = &perlustrationService{}
 
-// CommentScanningContext is a context for scanning a comment
-type CommentScanningContext struct {
+// commentScanningContext is a context for scanning a comment
+type commentScanningContext struct {
 	Request    *http.Request    // HTTP request sent by the commenter
 	Comment    *data.Comment    // Comment being submitted
 	Domain     *data.Domain     // Comment's domain
@@ -37,8 +37,8 @@ type CommentScanner interface {
 	ID() models.DomainExtensionID
 	// KeyProvided returns whether an API key was globally provided for this domain extension
 	KeyProvided() bool
-	// Scan scans the provided comment for inappropriate content and returns whether it was found
-	Scan(config map[string]string, ctx *CommentScanningContext) (bool, error)
+	// Scan scans the provided comment for inappropriate content and returns whether it was found, and a reason for that
+	Scan(config map[string]string, ctx *commentScanningContext) (bool, string, error)
 }
 
 // PerlustrationService is a collection of CommentScanners that allows to scan comments against those of them enabled
@@ -46,8 +46,10 @@ type CommentScanner interface {
 type PerlustrationService interface {
 	// Init the service
 	Init()
-	// Scan scans the provided comment for inappropriate content and returns whether it was found
-	Scan(ctx *CommentScanningContext) (bool, error)
+	// NeedsModeration returns whether the given comment needs to be moderated, and if so, the reason for that
+	NeedsModeration(
+		req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User,
+		domainUser *data.DomainUser, isEdit bool) (bool, string, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,11 +89,81 @@ func (svc *perlustrationService) Init() {
 	}
 }
 
-func (svc *perlustrationService) Scan(ctx *CommentScanningContext) (bool, error) {
+func (svc *perlustrationService) NeedsModeration(
+	req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage, user *data.User,
+	domainUser *data.DomainUser, isEdit bool) (bool, string, error) {
+
+	// Comments by superusers, owners, and moderators are always pre-approved
+	if user.IsSuperuser || domainUser.CanModerate() {
+		return false, "", nil
+	}
+
+	// If it's a new comment, check domain moderation policy
+	if !isEdit {
+		switch user.IsAnonymous() {
+		// Authenticated user
+		case false:
+			// If all authenticated are to be approved
+			if domain.ModAuthenticated {
+				return true, "Domain policy requires moderation on comments by authenticated users", nil
+			}
+
+			// If the user was created less than the required number of days ago
+			if age := domainUser.AgeInDays(); age < domain.ModUserAgeDays {
+				return true, fmt.Sprintf("User is created %d days ago (domain policy requires at least %d)", age, domain.ModUserAgeDays), nil
+			}
+
+			// If there's a number of comments specified for the domain
+			if domain.ModNumComments > 0 {
+				// Verify the user has the required number of approved comments
+				if cnt, err := TheCommentService.Count(user, domainUser, &domain.ID, nil, &user.ID, true, false, false, false); err != nil {
+					return false, "", err
+				} else if cnt < int64(domain.ModNumComments) {
+					return true, fmt.Sprintf("User has %d approved comments (domain policy requires at least %d)", cnt, domain.ModNumComments), nil
+				}
+			}
+
+		// Anonymous user
+		case true:
+			if domain.ModAnonymous {
+				return true, "Domain policy requires moderation on comments by anonymous users", nil
+			}
+		}
+	}
+
+	// Check link/image moderation policy
+	html := strings.ToLower(comment.HTML)
+	if domain.ModLinks && strings.Contains(html, "<a") {
+		return true, "Comment contains a link", nil
+	} else if domain.ModImages && strings.Contains(html, "<img") {
+		return true, "Comment contains an image", nil
+	}
+
+	// Test the comment against online checkers
+	ctx := &commentScanningContext{
+		Request:    req,
+		Comment:    comment,
+		Domain:     domain,
+		Page:       page,
+		User:       user,
+		DomainUser: domainUser,
+		IsEdit:     isEdit,
+	}
+	if b, reason, err := svc.scan(ctx); b && err == nil {
+		// Don't consider inappropriate if an error occurred
+		return true, reason, nil
+	}
+
+	// No need to moderate
+	return false, "", nil
+}
+
+// Scan scans the provided comment for inappropriate content and returns whether it was found
+func (svc *perlustrationService) scan(ctx *commentScanningContext) (bool, string, error) {
 	// Fetch domain extensions
 	extensions, err := TheDomainService.ListDomainExtensions(&ctx.Domain.ID)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	// Iterate known comment scanners
@@ -108,17 +180,17 @@ func (svc *perlustrationService) Scan(ctx *CommentScanningContext) (bool, error)
 
 		// Scan and skip over a failed scanner
 		if ex != nil {
-			if b, err := cs.Scan(ex.ConfigParams(), ctx); err != nil {
+			if b, reason, err := cs.Scan(ex.ConfigParams(), ctx); err != nil {
 				lastErr = err
 			} else if b {
 				// Exit on a first positive
-				return true, nil
+				return true, reason, nil
 			}
 		}
 	}
 
 	// Return a (tentative) negative and any occurred error
-	return false, lastErr
+	return false, "", lastErr
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -143,14 +215,14 @@ func (s *akismetScanner) ID() models.DomainExtensionID {
 	return models.DomainExtensionIDAkismet
 }
 
-func (s *akismetScanner) Scan(config map[string]string, ctx *CommentScanningContext) (bool, error) {
+func (s *akismetScanner) Scan(config map[string]string, ctx *commentScanningContext) (bool, string, error) {
 	// Check if the service is usable: the locally configured API key takes precedence
 	apiKey := config["apiKey"]
 	if apiKey == "" {
 		apiKey = s.apiKey
 	}
 	if apiKey == "" {
-		return false, errors.New("no Akismet API key configured")
+		return false, "", errors.New("no Akismet API key configured")
 	}
 
 	// Prepare a request
@@ -179,13 +251,13 @@ func (s *akismetScanner) Scan(config map[string]string, ctx *CommentScanningCont
 	logger.Debugf("Submitting comment to Akismet: %s", dataStr)
 	rq, err := http.NewRequest("POST", "https://rest.akismet.com/1.1/comment-check", strings.NewReader(dataStr))
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	rq.Header.Add("Content-Type", "application/x-www-form-urlencoded")
 	rq.Header.Add("Content-Length", strconv.Itoa(len(dataStr)))
 	resp, err := client.Do(rq)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer resp.Body.Close()
@@ -193,18 +265,18 @@ func (s *akismetScanner) Scan(config map[string]string, ctx *CommentScanningCont
 	// Fetch the response
 	respBody, err := io.ReadAll(resp.Body)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	logger.Debugf("Akismet response: %s", respBody)
 
 	// Check the content
 	switch string(respBody) {
 	case "true":
-		return true, nil
+		return true, "Akismet identified the comment as spam", nil
 	case "false":
-		return false, nil
+		return false, "", nil
 	}
-	return false, fmt.Errorf("failed to call Akismet API: %s", respBody)
+	return false, "", fmt.Errorf("failed to call Akismet API: %s", respBody)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -235,14 +307,14 @@ func (s *perspectiveScanner) ID() models.DomainExtensionID {
 	return models.DomainExtensionIDPerspective
 }
 
-func (s *perspectiveScanner) Scan(config map[string]string, ctx *CommentScanningContext) (bool, error) {
+func (s *perspectiveScanner) Scan(config map[string]string, ctx *commentScanningContext) (bool, string, error) {
 	// Check if the service is usable: the locally configured API key takes precedence
 	apiKey := config["apiKey"]
 	if apiKey == "" {
 		apiKey = s.apiKey
 	}
 	if apiKey == "" {
-		return false, errors.New("no Perspective API key configured")
+		return false, "", errors.New("no Perspective API key configured")
 	}
 
 	// Identify requested attributes
@@ -276,7 +348,7 @@ func (s *perspectiveScanner) Scan(config map[string]string, ctx *CommentScanning
 
 	// If there are no attributes, it makes no sense to send the request
 	if len(attrs) == 0 {
-		return false, nil
+		return false, "", nil
 	}
 
 	// Prepare a request
@@ -285,7 +357,7 @@ func (s *perspectiveScanner) Scan(config map[string]string, ctx *CommentScanning
 		"requestedAttributes": attrs,
 	})
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	// Submit a request to Perspective
@@ -295,39 +367,51 @@ func (s *perspectiveScanner) Scan(config map[string]string, ctx *CommentScanning
 		fmt.Sprintf("https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=%s", apiKey),
 		bytes.NewReader(d))
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	rq.Header.Add("Content-Type", "application/json")
 
 	// Fetch the response
 	res, err := client.Do(rq)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	logger.Debugf("Perspective response: %s", body)
 
 	// Unmarshal the response
 	var result perspectiveResponse
 	if err := json.Unmarshal(body, &result); err != nil {
-		return false, err
+		return false, "", err
 	}
 
 	// Check the scores. Those not returned will be set to 0
-	b := result.AttributeScores.Toxicity.SummaryScore.Value > toxicity ||
-		result.AttributeScores.SevereToxicity.SummaryScore.Value > severeToxicity ||
-		result.AttributeScores.IdentityAttack.SummaryScore.Value > identityAttack ||
-		result.AttributeScores.Insult.SummaryScore.Value > insult ||
-		result.AttributeScores.Profanity.SummaryScore.Value > profanity ||
-		result.AttributeScores.Threat.SummaryScore.Value > threat
+	if v := result.AttributeScores.Toxicity.SummaryScore.Value; v > toxicity {
+		return true, fmt.Sprintf("Perspective toxicity threshold (%v) exceeded (actual value %v)", toxicity, v), nil
+	}
+	if v := result.AttributeScores.SevereToxicity.SummaryScore.Value; v > severeToxicity {
+		return true, fmt.Sprintf("Perspective severeToxicity threshold (%v) exceeded (actual value %v)", severeToxicity, v), nil
+	}
+	if v := result.AttributeScores.IdentityAttack.SummaryScore.Value; v > identityAttack {
+		return true, fmt.Sprintf("Perspective identityAttack threshold (%v) exceeded (actual value %v)", identityAttack, v), nil
+	}
+	if v := result.AttributeScores.Insult.SummaryScore.Value; v > insult {
+		return true, fmt.Sprintf("Perspective insult threshold (%v) exceeded (actual value %v)", insult, v), nil
+	}
+	if v := result.AttributeScores.Profanity.SummaryScore.Value; v > profanity {
+		return true, fmt.Sprintf("Perspective profanity threshold (%v) exceeded (actual value %v)", profanity, v), nil
+	}
+	if v := result.AttributeScores.Threat.SummaryScore.Value; v > threat {
+		return true, fmt.Sprintf("Perspective threat threshold (%v) exceeded (actual value %v)", threat, v), nil
+	}
 
 	// Succeeded
-	return b, nil
+	return false, "", nil
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -348,14 +432,14 @@ func (s *apiLayerSpamCheckerScanner) ID() models.DomainExtensionID {
 	return models.DomainExtensionIDAPILayerDotSpamChecker
 }
 
-func (s *apiLayerSpamCheckerScanner) Scan(config map[string]string, ctx *CommentScanningContext) (bool, error) {
+func (s *apiLayerSpamCheckerScanner) Scan(config map[string]string, ctx *commentScanningContext) (bool, string, error) {
 	// Check if the service is usable: the locally configured API key takes precedence
 	apiKey := config["apiKey"]
 	if apiKey == "" {
 		apiKey = s.apiKey
 	}
 	if apiKey == "" {
-		return false, errors.New("no APILayer SpamChecker API key configured")
+		return false, "", errors.New("no APILayer SpamChecker API key configured")
 	}
 
 	// Submit a request to the APILayer
@@ -365,29 +449,34 @@ func (s *apiLayerSpamCheckerScanner) Scan(config map[string]string, ctx *Comment
 		fmt.Sprintf("https://api.apilayer.com/spamchecker?threshold=%s", config["threshold"]),
 		strings.NewReader(ctx.Comment.Markdown))
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	rq.Header.Set("apikey", apiKey)
 
 	// Fetch the response
 	res, err := client.Do(rq)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer res.Body.Close()
 	body, err := io.ReadAll(res.Body)
 	if err != nil {
-		return false, err
+		return false, "", err
 	}
 	logger.Debugf("APILayer SpamChecker response: %s", body)
 
 	// Unmarshal the response
 	var result apiLayerSpamCheckerResponse
 	if err := json.Unmarshal(body, &result); err != nil {
-		return false, err
+		return false, "", err
+	}
+
+	// If it's spam
+	if result.IsSpam {
+		return true, "APILayer SpamChecker returned: " + result.Result, nil
 	}
 
 	// Succeeded
-	return result.IsSpam, nil
+	return false, "", nil
 }

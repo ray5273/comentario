@@ -124,6 +124,9 @@ definitions:
         type: string
         format: uuid
         description: ID of the user who deleted the comment
+      pendingReason:
+        type: string
+        description: Reason for the pending state of the comment
       direction:
         type: integer
         format: int8

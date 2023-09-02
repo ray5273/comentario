@@ -61,7 +61,7 @@ type CommentService interface {
 	// MarkDeletedByUser deletes all comments by the specified user, returning the affected comment count
 	MarkDeletedByUser(curUserID, userID *uuid.UUID) (int64, error)
 	// Moderate updates the moderation status of a comment with the given ID in the database
-	Moderate(commentID, userID *uuid.UUID, pending, approved bool) error
+	Moderate(commentID, userID *uuid.UUID, pending, approved bool, reason string) error
 	// UpdateSticky updates the stickiness flag of a comment with the given ID in the database
 	UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	// UpdateText updates the markdown and the HTML of a comment with the given ID in the database
@@ -139,15 +139,29 @@ func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 
 	// Insert a record into the database
-	if err := db.Exec(
-		"insert into cm_comments("+
-			"id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, "+
-			"ts_moderated, ts_deleted, user_created, user_moderated, user_deleted) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16);",
-		&c.ID, &c.ParentID, &c.PageID, c.Markdown, c.HTML, c.Score, c.IsSticky, c.IsApproved, c.IsPending, c.IsDeleted,
-		c.CreatedTime, c.ModeratedTime, c.DeletedTime, &c.UserCreated, &c.UserModerated, &c.UserDeleted,
-	); err != nil {
-		logger.Errorf("commentService.Create: Exec() failed: %v", err)
+	q := db.Dialect().
+		Insert("cm_comments").
+		Rows(goqu.Record{
+			"id":             &c.ID,
+			"parent_id":      &c.ParentID,
+			"page_id":        c.PageID,
+			"markdown":       c.Markdown,
+			"html":           c.HTML,
+			"score":          c.Score,
+			"is_sticky":      c.IsSticky,
+			"is_approved":    c.IsApproved,
+			"is_pending":     c.IsPending,
+			"is_deleted":     c.IsDeleted,
+			"ts_created":     c.CreatedTime,
+			"ts_moderated":   c.ModeratedTime,
+			"ts_deleted":     c.DeletedTime,
+			"user_created":   &c.UserCreated,
+			"user_moderated": &c.UserModerated,
+			"user_deleted":   &c.UserDeleted,
+			"pending_reason": util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength),
+		})
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("commentService.Create: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -160,26 +174,19 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 
 	// Query the database
 	var c data.Comment
-	if err := db.QueryRow(
-		"select c.id, c.parent_id, c.page_id, c.markdown, c.html, c.score, c.is_sticky, c.is_approved, c.is_pending, c.is_deleted, c.ts_created, c.user_created "+
-			"from cm_comments c "+
-			"where c.id=$1;",
-		id,
-	).Scan(
-		&c.ID,
-		&c.ParentID,
-		&c.PageID,
-		&c.Markdown,
-		&c.HTML,
-		&c.Score,
-		&c.IsSticky,
-		&c.IsApproved,
-		&c.IsPending,
-		&c.IsDeleted,
-		&c.CreatedTime,
-		&c.UserCreated,
-	); err != nil {
-		logger.Errorf("commentService.FindByID: QueryRow() failed: %v", err)
+	q := db.Dialect().
+		From("cm_comments").
+		Select(
+			"id", "parent_id", "page_id", "markdown", "html", "score", "is_sticky", "is_approved", "is_pending",
+			"is_deleted", "ts_created", "user_created", "pending_reason").
+		Where(goqu.Ex{"id": id})
+
+	if err := db.SelectRow(q).
+		Scan(
+			&c.ID, &c.ParentID, &c.PageID, &c.Markdown, &c.HTML, &c.Score, &c.IsSticky, &c.IsApproved, &c.IsPending,
+			&c.IsDeleted, &c.CreatedTime, &c.UserCreated, &c.PendingReason,
+		); err != nil {
+		logger.Errorf("commentService.FindByID: SelectRow() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -196,7 +203,7 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 		Select(
 			// Comment fields
 			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
-			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created",
+			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created", "c.pending_reason",
 			// Page fields
 			"p.path",
 			// Domain fields
@@ -211,7 +218,7 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 	// Fetch the comments
 	rows, err := db.Select(q)
 	if err != nil {
-		logger.Errorf("commentService.ListByDomain: Query() failed: %v", err)
+		logger.Errorf("commentService.ListByDomain: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -237,6 +244,7 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 			&c.IsDeleted,
 			&c.CreatedTime,
 			&c.UserCreated,
+			&c.PendingReason,
 			// Page
 			&pagePath,
 			// Domain
@@ -278,7 +286,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		Select(
 			// Comment fields
 			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
-			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created",
+			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created", "c.pending_reason",
 			// Commenter fields
 			"u.id", "u.email", "u.name", "u.website_url", "u.is_superuser", "du.is_owner", "du.is_moderator",
 			"du.is_commenter",
@@ -374,7 +382,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	// Fetch the comments
 	rows, err := db.Select(q)
 	if err != nil {
-		logger.Errorf("commentService.ListWithCommentersByDomainPage: Query() failed: %v", err)
+		logger.Errorf("commentService.ListWithCommentersByDomainPage: Select() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -406,6 +414,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			&c.IsDeleted,
 			&c.CreatedTime,
 			&c.UserCreated,
+			&c.PendingReason,
 			// User
 			&uID,
 			&uEmail,
@@ -493,11 +502,19 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 	logger.Debugf("commentService.MarkDeleted(%s, %s)", commentID, userID)
 
 	// Update the record in the database
-	err := db.ExecOne(
-		"update cm_comments set is_deleted=true, markdown='', html='', ts_deleted=$1, user_deleted=$2 where id=$3;",
-		time.Now().UTC(), userID, commentID)
-	if err != nil {
-		logger.Errorf("commentService.MarkDeleted: Exec() failed: %v", err)
+	q := db.Dialect().
+		Update("cm_comments").
+		Set(goqu.Record{
+			"is_deleted":     true,
+			"markdown":       "",
+			"html":           "",
+			"pending_reason": "",
+			"ts_deleted":     time.Now().UTC(),
+			"user_deleted":   userID,
+		}).
+		Where(goqu.Ex{"id": commentID})
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("commentService.MarkDeleted: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -511,7 +528,14 @@ func (svc *commentService) MarkDeletedByUser(curUserID, userID *uuid.UUID) (int6
 	// Delete records from the database
 	q := db.Dialect().
 		Update("cm_comments").
-		Set(goqu.Record{"is_deleted": true, "ts_deleted": time.Now().UTC(), "user_deleted": curUserID}).
+		Set(goqu.Record{
+			"is_deleted":     true,
+			"markdown":       "",
+			"html":           "",
+			"pending_reason": "",
+			"ts_deleted":     time.Now().UTC(),
+			"user_deleted":   curUserID,
+		}).
 		Where(goqu.Ex{"user_created": userID})
 
 	if res, err := db.ExecuteRes(q.Prepared(true)); err != nil {
@@ -526,15 +550,22 @@ func (svc *commentService) MarkDeletedByUser(curUserID, userID *uuid.UUID) (int6
 	}
 }
 
-func (svc *commentService) Moderate(commentID, userID *uuid.UUID, pending, approved bool) error {
-	logger.Debugf("commentService.Moderate(%s, %s, %v, %v)", commentID, userID, pending, approved)
+func (svc *commentService) Moderate(commentID, userID *uuid.UUID, pending, approved bool, reason string) error {
+	logger.Debugf("commentService.Moderate(%s, %s, %v, %v, %q)", commentID, userID, pending, approved, reason)
 
 	// Update the record in the database
-	err := db.ExecOne(
-		"update cm_comments set is_pending=$1, is_approved=$2, ts_moderated=$3, user_moderated=$4 where id=$5;",
-		pending, approved, time.Now().UTC(), userID, commentID)
-	if err != nil {
-		logger.Errorf("commentService.Moderate: Exec() failed: %v", err)
+	q := db.Dialect().
+		Update("cm_comments").
+		Set(goqu.Record{
+			"is_pending":     pending,
+			"is_approved":    approved,
+			"pending_reason": util.TruncateStr(reason, data.MaxPendingReasonLength),
+			"ts_moderated":   time.Now().UTC(),
+			"user_moderated": userID,
+		}).
+		Where(goqu.Ex{"id": commentID})
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("commentService.Moderate: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -546,7 +577,8 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	logger.Debugf("commentService.UpdateSticky(%s, %v)", commentID, sticky)
 
 	// Update the row in the database
-	if err := db.ExecOne("update cm_comments set is_sticky=$1 where id=$2;", sticky, commentID); err != nil {
+	q := db.Dialect().Update("cm_comments").Set(goqu.Record{"is_sticky": sticky}).Where(goqu.Ex{"id": commentID})
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
 		logger.Errorf("commentService.UpdateSticky: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -577,13 +609,12 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 	// Retrieve the current score and any vote for the user
 	var score int
 	var neg sql.NullBool
-	if err := db.QueryRow(
-		"select c.score, v.negative "+
-			"from cm_comments c "+
-			"left join cm_comment_votes v on v.comment_id=c.id and v.user_id=$1 "+
-			"where c.id=$2;",
-		userID, commentID,
-	).Scan(&score, &neg); err != nil {
+	q := db.Dialect().
+		From(goqu.T("cm_comments").As("c")).
+		Select("c.score", "v.negative").
+		LeftJoin(goqu.T("cm_comment_votes").As("v"), goqu.On(goqu.Ex{"v.comment_id": goqu.I("c.id"), "v.user_id": userID})).
+		Where(goqu.Ex{"c.id": commentID})
+	if err := db.SelectRow(q).Scan(&score, &neg); err != nil {
 		return 0, translateDBErrors(err)
 	}
 

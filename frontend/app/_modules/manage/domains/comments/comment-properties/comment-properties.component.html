@@ -59,6 +59,11 @@
                         <dt i18n>Status</dt>
                         <dd><app-comment-status-badge [comment]="comment"></app-comment-status-badge></dd>
                     </div>
+                    <!-- Reason for pending status -->
+                    <div *ngIf="comment.isPending && comment.pendingReason">
+                        <dt i18n>Reason for pending status</dt>
+                        <dd>{{ comment.pendingReason }}</dd>
+                    </div>
                     <!-- Score -->
                     <div>
                         <dt i18n>Score</dt>

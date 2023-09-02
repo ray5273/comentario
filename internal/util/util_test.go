@@ -765,3 +765,28 @@ func TestToStringSlice(t *testing.T) {
 		}
 	})
 }
+
+func TestTruncateStr(t *testing.T) {
+	tests := []struct {
+		name   string
+		s      string
+		maxLen int
+		want   string
+	}{
+		{"empty, zero len", "", 0, ""},
+		{"empty, 1 len", "", 1, ""},
+		{"1 char, 1 len", "a", 1, "a"},
+		{"2 chars, 1 len", "ab", 1, "…"},
+		{"4 chars, 5 len", "abcd", 5, "abcd"},
+		{"equal len", "Crust", 5, "Crust"},
+		{"6 chars, 5 len", "Crisis", 5, "Cris…"},
+		{"stress test", strings.Repeat("ab", 1000), 2, "a…"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := TruncateStr(tt.s, tt.maxLen); got != tt.want {
+				t.Errorf("TruncateStr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}

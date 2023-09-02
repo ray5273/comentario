@@ -110,9 +110,7 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 	}
 
 	// Make sure the title doesn't exceed the size of the database field
-	if len(title) > data.MaxPageTitleLength {
-		title = title[:data.MaxPageTitleLength]
-	}
+	title = util.TruncateStr(title, data.MaxPageTitleLength)
 
 	// Check if there's a change needed
 	if page.Title == title {

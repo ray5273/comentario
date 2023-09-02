@@ -23,11 +23,11 @@ import (
 // AnonymousUser is a predefined "anonymous" user, identified by a special UUID ('00000000-0000-0000-0000-000000000000')
 var AnonymousUser = &User{Name: "Anonymous", SystemAccount: true}
 
-// MaxPageTitleLength is the maximum length allowed for a page title
-const MaxPageTitleLength = 100
-
-// ColourIndexCount is the number of colours in the palette used to colourise users based on their IDs
-const ColourIndexCount = 60
+const (
+	MaxPageTitleLength     = 100 // Maximum length allowed for a page title
+	MaxPendingReasonLength = 255 // Maximum length allowed for Comment.PendingReason field
+	ColourIndexCount       = 60  // Number of colours in the palette used to colourise users based on their IDs
+)
 
 // DTOAware is an interface capable of converting a model into an API model
 type DTOAware[T any] interface {
@@ -819,6 +819,7 @@ type Comment struct {
 	UserCreated   uuid.NullUUID // Reference to the user who created the comment
 	UserModerated uuid.NullUUID // Reference to the user who last moderated the comment
 	UserDeleted   uuid.NullUUID // Reference to the user who deleted the comment
+	PendingReason string        // The reason for the pending status
 }
 
 // CloneWithClearance returns a clone of the comment with a limited set of properties, depending on the specified
@@ -844,7 +845,7 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		UserCreated: c.UserCreated,
 	}
 
-	// Comment author can see a bit more, but no audit fields
+	// Comment author can see a bit more, but no audit fields. No reason for pending status either
 	if c.UserCreated.UUID == user.ID {
 		cc.Markdown = c.Markdown
 		cc.IsPending = c.IsPending
@@ -866,6 +867,7 @@ func (c *Comment) IsRoot() bool {
 func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
 	c.IsApproved = true
 	c.IsPending = false
+	c.PendingReason = ""
 	c.UserModerated = uuid.NullUUID{UUID: *userID, Valid: true}
 	c.ModeratedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
 }
@@ -890,6 +892,7 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 		ModeratedTime: NullDateTime(c.ModeratedTime),
 		PageID:        strfmt.UUID(c.PageID.String()),
 		ParentID:      NullUUIDStr(&c.ParentID),
+		PendingReason: c.PendingReason,
 		Score:         int64(c.Score),
 		URL:           strfmt.URI(c.URL(https, host, path)),
 		UserCreated:   NullUUIDStr(&c.UserCreated),

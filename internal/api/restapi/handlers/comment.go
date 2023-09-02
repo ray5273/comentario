@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
@@ -164,8 +165,16 @@ func CommentModerate(params api_general.CommentModerateParams, user *data.User) 
 		return r
 	}
 
+	// Determine the pending reason (if pending)
+	pending := swag.BoolValue(params.Body.Pending)
+	approve := swag.BoolValue(params.Body.Approve)
+	reason := ""
+	if pending {
+		reason = fmt.Sprintf("Set to pending by %s <%s>", user.Name, user.Email)
+	}
+
 	// Update the comment's state in the database
-	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, swag.BoolValue(params.Body.Pending), swag.BoolValue(params.Body.Approve)); err != nil {
+	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, pending, approve, reason); err != nil {
 		return respServiceError(err)
 	}
 

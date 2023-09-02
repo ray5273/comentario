@@ -132,7 +132,7 @@ func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *dat
 	}
 
 	// Update the comment's state in the database
-	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, false, swag.BoolValue(params.Body.Approve)); err != nil {
+	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, false, swag.BoolValue(params.Body.Approve), ""); err != nil {
 		return respServiceError(err)
 	}
 
@@ -196,11 +196,12 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	comment.HTML = util.MarkdownToHTML(comment.Markdown)
 
 	// Determine comment state
-	if b, r := Verifier.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); r != nil {
-		return r
+	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
+		return respServiceError(err)
 	} else if b {
 		// Comment needs to be approved
 		comment.IsPending = true
+		comment.PendingReason = reason
 	} else {
 		// No need for moderator approval
 		comment.MarkApprovedBy(&user.ID)
@@ -288,12 +289,14 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 
 	// If the comment was approved, check the need for moderation again
 	unapprove := false
+	reason := ""
 	if !comment.IsPending && comment.IsApproved {
 		// Run the approval rules
-		if b, r := Verifier.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, true); r != nil {
-			return r
+		if b, s, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, true); err != nil {
+			return respServiceError(err)
 		} else if b {
 			unapprove = true
+			reason = s
 		}
 	}
 
@@ -308,7 +311,7 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 
 	// If the comment approval is to be revoked
 	if unapprove {
-		if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, true, false); err != nil {
+		if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, true, false, reason); err != nil {
 			return respServiceError(err)
 		}
 	}

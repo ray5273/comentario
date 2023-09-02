@@ -342,22 +342,23 @@ create index idx_domain_page_views_ts_created on cm_domain_page_views(ts_created
 ------------------------------------------------------------------------------------------------------------------------
 
 create table cm_comments (
-    id             uuid primary key,               -- Unique record ID
-    parent_id      uuid,                           -- Parent record ID, null if it's a root comment on the page
-    page_id        uuid                  not null, -- Reference to the page
-    markdown       text                  not null, -- Comment text in markdown
-    html           text                  not null, -- Rendered comment text in HTML
-    score          integer default 0     not null, -- Comment score
-    is_sticky      boolean default false not null, -- Whether the comment is sticky (attached to the top of page)
-    is_approved    boolean default false not null, -- Whether the comment is approved and can be seen by everyone
-    is_pending     boolean default false not null, -- Whether the comment is pending approval
-    is_deleted     boolean default false not null, -- Whether the comment is marked as deleted
-    ts_created     timestamp             not null, -- When the comment was created
-    ts_moderated   timestamp,                      -- When a moderation action has last been applied to the comment
-    ts_deleted     timestamp,                      -- When the comment was marked as deleted
-    user_created   uuid,                           -- Reference to the user who created the comment
-    user_moderated uuid,                           -- Reference to the user who last moderated the comment
-    user_deleted   uuid                            -- Reference to the user who deleted the comment
+    id             uuid primary key,                    -- Unique record ID
+    parent_id      uuid,                                -- Parent record ID, null if it's a root comment on the page
+    page_id        uuid                       not null, -- Reference to the page
+    markdown       text                       not null, -- Comment text in markdown
+    html           text                       not null, -- Rendered comment text in HTML
+    score          integer      default 0     not null, -- Comment score
+    is_sticky      boolean      default false not null, -- Whether the comment is sticky (attached to the top of page)
+    is_approved    boolean      default false not null, -- Whether the comment is approved and can be seen by everyone
+    is_pending     boolean      default false not null, -- Whether the comment is pending approval
+    is_deleted     boolean      default false not null, -- Whether the comment is marked as deleted
+    ts_created     timestamp                  not null, -- When the comment was created
+    ts_moderated   timestamp,                           -- When a moderation action has last been applied to the comment
+    ts_deleted     timestamp,                           -- When the comment was marked as deleted
+    user_created   uuid,                                -- Reference to the user who created the comment
+    user_moderated uuid,                                -- Reference to the user who last moderated the comment
+    user_deleted   uuid,                                -- Reference to the user who deleted the comment
+    pending_reason varchar(255) default ''    not null  -- Reason for the pending state of the comment
 );
 
 -- Constraints

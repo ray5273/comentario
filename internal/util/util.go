@@ -391,6 +391,14 @@ func ToStringSlice[T ~string](in []T) []string {
 	return res
 }
 
+// TruncateStr truncates a string to the given byte length, adding an ellipsis if truncated
+func TruncateStr(s string, maxLen int) string {
+	if len(s) <= maxLen {
+		return s
+	}
+	return s[:maxLen-1] + "…"
+}
+
 // UserAgent return the value of the User-Agent request header
 func UserAgent(r *http.Request) string {
 	return r.Header.Get("User-Agent")
