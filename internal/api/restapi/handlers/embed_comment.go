@@ -65,17 +65,18 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 
 	// Prepare page info
 	pageInfo := &models.PageInfo{
-		AuthAnonymous:    domain.AuthAnonymous,
-		AuthLocal:        domain.AuthLocal,
-		AuthSso:          domain.AuthSSO,
-		DefaultSort:      models.CommentSort(domain.DefaultSort),
-		DomainID:         strfmt.UUID(domain.ID.String()),
-		DomainName:       domain.DisplayName(),
-		Idps:             nil,
-		IsDomainReadonly: domain.IsReadonly,
-		IsPageReadonly:   page.IsReadonly,
-		PageID:           strfmt.UUID(page.ID.String()),
-		SsoURL:           domain.SSOURL,
+		AuthAnonymous:     domain.AuthAnonymous,
+		AuthLocal:         domain.AuthLocal,
+		AuthSso:           domain.AuthSSO,
+		DefaultSort:       models.CommentSort(domain.DefaultSort),
+		DomainID:          strfmt.UUID(domain.ID.String()),
+		DomainName:        domain.DisplayName(),
+		Idps:              nil,
+		IsDomainReadonly:  domain.IsReadonly,
+		IsPageReadonly:    page.IsReadonly,
+		PageID:            strfmt.UUID(page.ID.String()),
+		SsoNonInteractive: domain.SSONonInteractive,
+		SsoURL:            domain.SSOURL,
 	}
 
 	// Fetch the domain's identity providers

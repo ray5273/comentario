@@ -91,7 +91,11 @@
                         <ul class="ps-3 mb-0">
                             <li *ngIf="domain.authAnonymous" i18n>Anonymous comments</li>
                             <li *ngIf="domain.authLocal" i18n>Local (password-based)</li>
-                            <li *ngIf="domain.authSso"><ng-container i18n>Single Sign-On</ng-container>&ngsp;<i i18n>via</i> {{ domain.ssoUrl }}</li>
+                            <li *ngIf="domain.authSso">
+                                <ng-container i18n>Single Sign-On</ng-container>&ngsp;
+                                <ng-container><i i18n>via</i> {{ domain.ssoUrl }}</ng-container>&ngsp;
+                                <ng-container *ngIf="domain.ssoNonInteractive" i18n>(non-interactive)</ng-container>
+                            </li>
                             <li *ngFor="let idp of fedIdps">{{ idp.name }}</li>
                         </ul>
                     </dd>

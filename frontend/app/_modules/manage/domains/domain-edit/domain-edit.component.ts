@@ -102,24 +102,25 @@ export class DomainEditComponent implements OnInit {
                 const d = this.domainMeta?.domain;
                 if (d) {
                     this.form!.patchValue({
-                        host:             d.host,
-                        name:             d.name,
-                        isReadonly:       d.isReadonly,
-                        authAnonymous:    d.authAnonymous,
-                        authLocal:        d.authLocal,
-                        authSso:          d.authSso,
-                        modAnonymous:     d.modAnonymous,
-                        modAuthenticated: d.modAuthenticated,
-                        modNumCommentsOn: !!d.modNumComments,
-                        modNumComments:   d.modNumComments || 3,
-                        modUserAgeDaysOn: !!d.modUserAgeDays,
-                        modUserAgeDays:   d.modUserAgeDays || 7,
-                        modImages:        d.modImages,
-                        modLinks:         d.modLinks,
-                        modNotifyPolicy:  d.modNotifyPolicy,
-                        ssoUrl:           d.ssoUrl,
-                        defaultSort:      d.defaultSort,
-                        fedIdps:          this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
+                        host:              d.host,
+                        name:              d.name,
+                        isReadonly:        d.isReadonly,
+                        authAnonymous:     d.authAnonymous,
+                        authLocal:         d.authLocal,
+                        authSso:           d.authSso,
+                        ssoNonInteractive: d.ssoNonInteractive,
+                        modAnonymous:      d.modAnonymous,
+                        modAuthenticated:  d.modAuthenticated,
+                        modNumCommentsOn:  !!d.modNumComments,
+                        modNumComments:    d.modNumComments || 3,
+                        modUserAgeDaysOn:  !!d.modUserAgeDays,
+                        modUserAgeDays:    d.modUserAgeDays || 7,
+                        modImages:         d.modImages,
+                        modLinks:          d.modLinks,
+                        modNotifyPolicy:   d.modNotifyPolicy,
+                        ssoUrl:            d.ssoUrl,
+                        defaultSort:       d.defaultSort,
+                        fedIdps:           this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
                     });
 
                     // Update enabled extension controls
@@ -153,21 +154,22 @@ export class DomainEditComponent implements OnInit {
             const vals = this.form.value;
             const domain: Domain = {
                 // Host cannot be changed once set
-                host:             vals.host || this.domainMeta!.domain!.host,
-                name:             vals.name,
-                isReadonly:       vals.isReadonly,
-                authAnonymous:    !!vals.authAnonymous,
-                authLocal:        !!vals.authLocal,
-                authSso:          !!vals.authSso,
-                modAnonymous:     !!vals.modAnonymous,
-                modAuthenticated: !!vals.modAuthenticated,
-                modNumComments:   vals.modNumCommentsOn ? (vals.modNumComments ?? 0) : 0,
-                modUserAgeDays:   vals.modUserAgeDaysOn ? (vals.modUserAgeDays ?? 0) : 0,
-                modImages:        !!vals.modImages,
-                modLinks:         !!vals.modLinks,
-                modNotifyPolicy:  vals.modNotifyPolicy ?? DomainModNotifyPolicy.Pending,
-                ssoUrl:           vals.ssoUrl ?? '',
-                defaultSort:      vals.defaultSort ?? CommentSort.Td,
+                host:              vals.host || this.domainMeta!.domain!.host,
+                name:              vals.name,
+                isReadonly:        vals.isReadonly,
+                authAnonymous:     !!vals.authAnonymous,
+                authLocal:         !!vals.authLocal,
+                authSso:           !!vals.authSso,
+                ssoNonInteractive: !!vals.ssoNonInteractive,
+                modAnonymous:      !!vals.modAnonymous,
+                modAuthenticated:  !!vals.modAuthenticated,
+                modNumComments:    vals.modNumCommentsOn ? (vals.modNumComments ?? 0) : 0,
+                modUserAgeDays:    vals.modUserAgeDaysOn ? (vals.modUserAgeDays ?? 0) : 0,
+                modImages:         !!vals.modImages,
+                modLinks:          !!vals.modLinks,
+                modNotifyPolicy:   vals.modNotifyPolicy ?? DomainModNotifyPolicy.Pending,
+                ssoUrl:            vals.ssoUrl ?? '',
+                defaultSort:       vals.defaultSort ?? CommentSort.Td,
             };
 
             // Collect IDs of enabled IdPs
@@ -212,25 +214,26 @@ export class DomainEditComponent implements OnInit {
                     // Create the form
                     const f = this.fb.nonNullable.group({
                         // Host can't be changed for an existing domain
-                        host:             [{value: '', disabled: !this.isNew}, [XtraValidators.host]],
-                        name:             '',
-                        isReadonly:       false,
-                        authAnonymous:    false,
-                        authLocal:        true,
-                        authSso:          false,
-                        modAnonymous:     true,
-                        modAuthenticated: false,
-                        modNumCommentsOn: false,
-                        modNumComments:   [{value: 3, disabled: true}, [Validators.min(1), Validators.max(999)]],
-                        modUserAgeDaysOn: false,
-                        modUserAgeDays:   [{value: 7, disabled: true}, [Validators.min(1), Validators.max(999)]],
-                        modImages:        true,
-                        modLinks:         true,
-                        modNotifyPolicy:  DomainModNotifyPolicy.Pending,
-                        ssoUrl:           ['', [Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
-                        defaultSort:      CommentSort.Td,
-                        fedIdps:          this.fb.array(Array(this.fedIdps?.length).fill(true)), // Enable all by default
-                        extensions:       this.getExtensionsFormGroup(),
+                        host:              [{value: '', disabled: !this.isNew}, [XtraValidators.host]],
+                        name:              '',
+                        isReadonly:        false,
+                        authAnonymous:     false,
+                        authLocal:         true,
+                        authSso:           false,
+                        ssoNonInteractive: false,
+                        modAnonymous:      true,
+                        modAuthenticated:  false,
+                        modNumCommentsOn:  false,
+                        modNumComments:    [{value: 3, disabled: true}, [Validators.min(1), Validators.max(999)]],
+                        modUserAgeDaysOn:  false,
+                        modUserAgeDays:    [{value: 7, disabled: true}, [Validators.min(1), Validators.max(999)]],
+                        modImages:         true,
+                        modLinks:          true,
+                        modNotifyPolicy:   DomainModNotifyPolicy.Pending,
+                        ssoUrl:            ['', [Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
+                        defaultSort:       CommentSort.Td,
+                        fedIdps:           this.fb.array(Array(this.fedIdps?.length).fill(true)), // Enable all by default
+                        extensions:        this.getExtensionsFormGroup(),
                     });
 
                     // Disable numeric controls when the corresponding checkbox is off
@@ -244,7 +247,7 @@ export class DomainEditComponent implements OnInit {
                     // SSO URL is only relevant when SSO auth is enabled
                     f.controls.authSso.valueChanges
                         .pipe(untilDestroyed(this))
-                        .subscribe(b => Utils.enableControls(b, f.controls.ssoUrl));
+                        .subscribe(b => Utils.enableControls(b, f.controls.ssoUrl, f.controls.ssoNonInteractive));
 
                     // Extensions: disable the config control when the extension is disabled
                     this.extensions?.forEach((_, idx) =>

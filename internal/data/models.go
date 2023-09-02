@@ -550,27 +550,28 @@ const (
 
 // Domain holds domain configuration
 type Domain struct {
-	ID               uuid.UUID             // Unique record ID
-	Name             string                // Domain display name
-	Host             string                // Domain host
-	CreatedTime      time.Time             // When the domain was created
-	IsHTTPS          bool                  // Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
-	IsReadonly       bool                  // Whether the domain is readonly (no new comments are allowed)
-	AuthAnonymous    bool                  // Whether anonymous comments are allowed
-	AuthLocal        bool                  // Whether local authentication is allowed
-	AuthSSO          bool                  // Whether SSO authentication is allowed
-	SSOURL           string                // SSO provider URL
-	SSOSecret        []byte                // SSO secret
-	ModAnonymous     bool                  // Whether all anonymous comments are to be approved by a moderator
-	ModAuthenticated bool                  // Whether all non-anonymous comments are to be approved by a moderator
-	ModNumComments   int                   // Number of first comments by user on this domain that require a moderator approval
-	ModUserAgeDays   int                   // Number of first days since user has registered on this domain to require a moderator approval on their comments
-	ModLinks         bool                  // Whether all comments containing a link are to be approved by a moderator
-	ModImages        bool                  // Whether all comments containing an image are to be approved by a moderator
-	ModNotifyPolicy  DomainModNotifyPolicy // Moderator notification policy for domain: 'none', 'pending', 'all'
-	DefaultSort      string                // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
-	CountComments    int64                 // Total number of comments
-	CountViews       int64                 // Total number of views
+	ID                uuid.UUID             // Unique record ID
+	Name              string                // Domain display name
+	Host              string                // Domain host
+	CreatedTime       time.Time             // When the domain was created
+	IsHTTPS           bool                  // Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
+	IsReadonly        bool                  // Whether the domain is readonly (no new comments are allowed)
+	AuthAnonymous     bool                  // Whether anonymous comments are allowed
+	AuthLocal         bool                  // Whether local authentication is allowed
+	AuthSSO           bool                  // Whether SSO authentication is allowed
+	SSOURL            string                // SSO provider URL
+	SSOSecret         []byte                // SSO secret
+	SSONonInteractive bool                  // Whether to use a non-interactive SSO login
+	ModAnonymous      bool                  // Whether all anonymous comments are to be approved by a moderator
+	ModAuthenticated  bool                  // Whether all non-anonymous comments are to be approved by a moderator
+	ModNumComments    int                   // Number of first comments by user on this domain that require a moderator approval
+	ModUserAgeDays    int                   // Number of first days since user has registered on this domain to require a moderator approval on their comments
+	ModLinks          bool                  // Whether all comments containing a link are to be approved by a moderator
+	ModImages         bool                  // Whether all comments containing an image are to be approved by a moderator
+	ModNotifyPolicy   DomainModNotifyPolicy // Moderator notification policy for domain: 'none', 'pending', 'all'
+	DefaultSort       string                // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+	CountComments     int64                 // Total number of comments
+	CountViews        int64                 // Total number of views
 }
 
 // CloneWithClearance returns a clone of the domain with a limited set of properties, depending on the specified
@@ -584,17 +585,18 @@ func (d *Domain) CloneWithClearance(isSuperuser, isOwner bool) *Domain {
 
 	// Non-owner only sees what's publicly available
 	return &Domain{
-		ID:            d.ID,
-		Host:          d.Host,
-		IsHTTPS:       d.IsHTTPS,
-		IsReadonly:    d.IsReadonly,
-		AuthAnonymous: d.AuthAnonymous,
-		AuthLocal:     d.AuthLocal,
-		AuthSSO:       d.AuthSSO,
-		SSOURL:        d.SSOURL,
-		DefaultSort:   d.DefaultSort,
-		CountComments: -1, // -1 indicates no count data is available
-		CountViews:    -1, // idem
+		ID:                d.ID,
+		Host:              d.Host,
+		IsHTTPS:           d.IsHTTPS,
+		IsReadonly:        d.IsReadonly,
+		AuthAnonymous:     d.AuthAnonymous,
+		AuthLocal:         d.AuthLocal,
+		AuthSSO:           d.AuthSSO,
+		SSOURL:            d.SSOURL,
+		SSONonInteractive: d.SSONonInteractive,
+		DefaultSort:       d.DefaultSort,
+		CountComments:     -1, // -1 indicates no count data is available
+		CountViews:        -1, // idem
 	}
 }
 
@@ -679,6 +681,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		ModUserAgeDays:      uint64(d.ModUserAgeDays),
 		Name:                d.Name,
 		RootURL:             strfmt.URI(d.RootURL()),
+		SsoNonInteractive:   d.SSONonInteractive,
 		SsoSecretConfigured: len(d.SSOSecret) == 32,
 		SsoURL:              d.SSOURL,
 	}

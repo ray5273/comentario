@@ -244,6 +244,10 @@ definitions:
         type: string
         description: SSO provider URL
         x-omitempty: false
+      ssoNonInteractive:
+        type: boolean
+        description: Whether to use a non-interactive SSO login
+        x-omitempty: false
       ssoSecretConfigured:
         type: boolean
         readOnly: true
@@ -648,6 +652,10 @@ definitions:
       ssoUrl:
         type: string
         description: SSO provider URL
+      ssoNonInteractive:
+        type: boolean
+        description: Whether to use a non-interactive SSO login
+        x-omitempty: false
       defaultSort:
         $ref: "#/definitions/commentSort"
         description: Default comment sorting for domain

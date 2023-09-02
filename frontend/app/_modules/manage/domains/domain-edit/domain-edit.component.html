@@ -72,17 +72,17 @@
                         <div class="col-sm-3 colon fw-bold" i18n>Require moderator approval on comment, if</div>
                         <div class="col-sm-9">
                             <!-- Author is anonymous -->
-                            <div class="form-check me-3">
+                            <div class="form-check">
                                 <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="modAnonymous">
                                 <label class="form-check-label" for="modAnonymous" i18n>Author is anonymous</label>
                             </div>
                             <!-- Author is authenticated -->
-                            <div class="form-check me-3">
+                            <div class="form-check">
                                 <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="modAuthenticated">
                                 <label class="form-check-label" for="modAuthenticated" i18n>Author is authenticated</label>
                             </div>
                             <!-- Author has less than this number of approved comments -->
-                            <div class="form-check me-3">
+                            <div class="form-check">
                                 <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="modNumCommentsOn">
                                 <label class="form-check-label colon" for="modNumCommentsOn" i18n>Author has less than this number of approved comments</label>
                             </div>
@@ -98,7 +98,7 @@
                                 </div>
                             </div>
                             <!-- Author is registered less than this number of days ago -->
-                            <div class="form-check me-3">
+                            <div class="form-check">
                                 <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="modUserAgeDaysOn">
                                 <label class="form-check-label colon" for="modUserAgeDaysOn" i18n>Author is registered less than this number of days ago</label>
                             </div>
@@ -114,12 +114,12 @@
                                 </div>
                             </div>
                             <!-- Comment contains link -->
-                            <div class="form-check me-3">
+                            <div class="form-check">
                                 <input formControlName="modLinks" type="checkbox" class="form-check-input" id="modLinks">
                                 <label class="form-check-label" for="modLinks" i18n>Comment contains link</label>
                             </div>
                             <!-- Comment contains image -->
-                            <div class="form-check me-3">
+                            <div class="form-check">
                                 <input formControlName="modImages" type="checkbox" class="form-check-input" id="modImages">
                                 <label class="form-check-label" for="modImages" i18n>Comment contains image</label>
                             </div>
@@ -152,41 +152,49 @@
                 </a>
                 <ng-template ngbNavContent>
                     <!-- Anonymous comments -->
-                    <div class="form-check me-3">
+                    <div class="form-check">
                         <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
                         <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
                     </div>
 
                     <!-- Local auth -->
-                    <div class="form-check me-3">
+                    <div class="form-check">
                         <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
                         <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
                     </div>
 
                     <!-- Federated IdPs -->
                     <div formArrayName="fedIdps">
-                        <div *ngFor="let idp of fedIdps; index as idx" class="form-check me-3">
+                        <div *ngFor="let idp of fedIdps; index as idx" class="form-check">
                             <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
                             <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
                         </div>
                     </div>
 
                     <!-- SSO -->
-                    <div class="form-check me-3">
+                    <div class="form-check">
                         <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
                         <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
                     </div>
 
-                    <!-- SSO server URL -->
-                    <div *ngIf="form.controls.authSso.value" class="mb-3">
-                        <label for="ssoUrl" class="col-sm-3 col-form-label colon" i18n>SSO server URL</label>
-                        <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
-                               [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
-                               [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
-                               required minlength="1" maxlength="253" placeholder="https://sso.example.com">
-                        <!-- Invalid feedback -->
-                        <div class="invalid-feedback">
-                            <ng-container i18n>Please enter a valid URL.</ng-container>
+                    <div *ngIf="form.controls.authSso.value" class="ms-4">
+                        <!-- SSO server URL -->
+                        <div class="mb-2">
+                            <label for="ssoUrl" class="form-label colon" i18n>SSO server URL</label>
+                            <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
+                                   [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
+                                   [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
+                                   required minlength="1" maxlength="253" placeholder="https://sso.example.com">
+                            <!-- Invalid feedback -->
+                            <div class="invalid-feedback">
+                                <ng-container i18n>Please enter a valid URL.</ng-container>
+                            </div>
+                        </div>
+
+                        <!-- SSO -->
+                        <div class="form-check">
+                            <input formControlName="ssoNonInteractive" type="checkbox" class="form-check-input" id="sso-non-interactive">
+                            <label class="form-check-label" for="sso-non-interactive" i18n>Non-interactive</label>
                         </div>
                     </div>
 

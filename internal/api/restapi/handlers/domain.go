@@ -176,24 +176,25 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 
 	// Persist a new domain record in the database
 	d := &data.Domain{
-		ID:               uuid.New(),
-		Name:             strings.TrimSpace(domain.Name),
-		Host:             host,
-		CreatedTime:      time.Now().UTC(),
-		IsHTTPS:          domain.IsHTTPS,
-		IsReadonly:       domain.IsReadonly,
-		AuthAnonymous:    domain.AuthAnonymous,
-		AuthLocal:        domain.AuthLocal,
-		AuthSSO:          domain.AuthSso,
-		SSOURL:           domain.SsoURL,
-		ModAnonymous:     domain.ModAnonymous,
-		ModAuthenticated: domain.ModAuthenticated,
-		ModNumComments:   int(domain.ModNumComments),
-		ModUserAgeDays:   int(domain.ModUserAgeDays),
-		ModLinks:         domain.ModLinks,
-		ModImages:        domain.ModImages,
-		ModNotifyPolicy:  data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
-		DefaultSort:      string(domain.DefaultSort),
+		ID:                uuid.New(),
+		Name:              strings.TrimSpace(domain.Name),
+		Host:              host,
+		CreatedTime:       time.Now().UTC(),
+		IsHTTPS:           domain.IsHTTPS,
+		IsReadonly:        domain.IsReadonly,
+		AuthAnonymous:     domain.AuthAnonymous,
+		AuthLocal:         domain.AuthLocal,
+		AuthSSO:           domain.AuthSso,
+		SSOURL:            domain.SsoURL,
+		SSONonInteractive: domain.SsoNonInteractive,
+		ModAnonymous:      domain.ModAnonymous,
+		ModAuthenticated:  domain.ModAuthenticated,
+		ModNumComments:    int(domain.ModNumComments),
+		ModUserAgeDays:    int(domain.ModUserAgeDays),
+		ModLinks:          domain.ModLinks,
+		ModImages:         domain.ModImages,
+		ModNotifyPolicy:   data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
+		DefaultSort:       string(domain.DefaultSort),
 	}
 	if err := svc.TheDomainService.Create(&user.ID, d, params.Body.FederatedIdpIds, exts); err != nil {
 		return respServiceError(err)
@@ -281,6 +282,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	domain.AuthLocal = newDomain.AuthLocal
 	domain.AuthSSO = newDomain.AuthSso
 	domain.SSOURL = newDomain.SsoURL
+	domain.SSONonInteractive = newDomain.SsoNonInteractive
 	domain.ModAnonymous = newDomain.ModAnonymous
 	domain.ModAuthenticated = newDomain.ModAuthenticated
 	domain.ModNumComments = int(newDomain.ModNumComments)

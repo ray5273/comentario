@@ -232,27 +232,28 @@ alter table cm_auth_sessions add constraint fk_auth_sessions_token_value foreign
 ------------------------------------------------------------------------------------------------------------------------
 
 create table cm_domains (
-    id                uuid primary key,                            -- Unique record ID
-    name              varchar(255)                not null,        -- Domain display name
-    host              varchar(259)                not null unique, -- Domain host
-    ts_created        timestamp                   not null,        -- When the record was created
-    is_https          boolean       default false not null,        -- Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
-    is_readonly       boolean       default false not null,        -- Whether the domain is readonly (no new comments are allowed)
-    auth_anonymous    boolean       default false not null,        -- Whether anonymous comments are allowed
-    auth_local        boolean       default false not null,        -- Whether local authentication is allowed
-    auth_sso          boolean       default false not null,        -- Whether SSO authentication is allowed
-    sso_url           varchar(2083) default ''    not null,        -- SSO provider URL
-    sso_secret        char(64),                                    -- SSO secret
-    mod_anonymous     boolean       default true  not null,        -- Whether all anonymous comments are to be approved by a moderator
-    mod_authenticated boolean       default false not null,        -- Whether all non-anonymous comments are to be approved by a moderator
-    mod_num_comments  integer       default 0     not null,        -- Number of first comments by user on this domain that require a moderator approval
-    mod_user_age_days integer       default 0     not null,        -- Number of first days since user has registered on this domain to require a moderator approval on their comments
-    mod_links         boolean       default false not null,        -- Whether all comments containing a link are to be approved by a moderator
-    mod_images        boolean       default false not null,        -- Whether all comments containing an image are to be approved by a moderator
-    mod_notify_policy varchar(16)                 not null,        -- Moderator notification policy for domain: 'none', 'pending', 'all'
-    default_sort      char(2)                     not null,        -- Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
-    count_comments    integer       default 0     not null,        -- Total number of comments
-    count_views       integer       default 0     not null         -- Total number of views
+    id                 uuid primary key,                            -- Unique record ID
+    name               varchar(255)                not null,        -- Domain display name
+    host               varchar(259)                not null unique, -- Domain host
+    ts_created         timestamp                   not null,        -- When the record was created
+    is_https           boolean       default false not null,        -- Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
+    is_readonly        boolean       default false not null,        -- Whether the domain is readonly (no new comments are allowed)
+    auth_anonymous     boolean       default false not null,        -- Whether anonymous comments are allowed
+    auth_local         boolean       default false not null,        -- Whether local authentication is allowed
+    auth_sso           boolean       default false not null,        -- Whether SSO authentication is allowed
+    sso_url            varchar(2083) default ''    not null,        -- SSO provider URL
+    sso_secret         char(64),                                    -- SSO secret
+    sso_noninteractive boolean       default false not null,        -- Whether to use a non-interactive SSO login
+    mod_anonymous      boolean       default true  not null,        -- Whether all anonymous comments are to be approved by a moderator
+    mod_authenticated  boolean       default false not null,        -- Whether all non-anonymous comments are to be approved by a moderator
+    mod_num_comments   integer       default 0     not null,        -- Number of first comments by user on this domain that require a moderator approval
+    mod_user_age_days  integer       default 0     not null,        -- Number of first days since user has registered on this domain to require a moderator approval on their comments
+    mod_links          boolean       default false not null,        -- Whether all comments containing a link are to be approved by a moderator
+    mod_images         boolean       default false not null,        -- Whether all comments containing an image are to be approved by a moderator
+    mod_notify_policy  varchar(16)                 not null,        -- Moderator notification policy for domain: 'none', 'pending', 'all'
+    default_sort       char(2)                     not null,        -- Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+    count_comments     integer       default 0     not null,        -- Total number of comments
+    count_views        integer       default 0     not null         -- Total number of views
 );
 
 -- Links between domains and users
