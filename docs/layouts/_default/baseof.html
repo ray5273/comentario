@@ -33,6 +33,12 @@
 
 <!-- Main page content -->
 <section id="content" class="container">
+    <!-- TODO remove before 3.x release -->
+    <div class="alert alert-warning">
+        <p>This documentation site is about the <strong>upcoming Comentario 3.x version.</strong></p>
+        <div><a href="https://docs.comentario.app/">Switch to the stable version »</a></div>
+    </div>
+
     <!-- Heading -->
     {{- block "heading" . }}
     {{- if default true .Params.showHeading }}<h1 class="mt-3">{{ .Title | markdownify }}</h1>{{ end }}
