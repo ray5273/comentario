@@ -949,20 +949,12 @@ func (de *DomainExtension) HasDefaultConfig() bool {
 
 // ToDTO converts this model into an API model
 func (de *DomainExtension) ToDTO() *models.DomainExtension {
-	dto := &models.DomainExtension{
+	return &models.DomainExtension{
 		ID:          de.ID,
 		Name:        de.Name,
 		Config:      de.Config,
 		RequiresKey: swag.Bool(de.KeyRequired && !de.KeyProvided),
 	}
-
-	// Empty config means default config
-	if dto.Config == "" {
-		if ex, ok := DomainExtensions[dto.ID]; ok {
-			dto.Config = ex.Config
-		}
-	}
-	return dto
 }
 
 // DomainExtensions is a map of known domain extensions and their default configurations. All disabled initially

@@ -464,6 +464,11 @@ func (svc *domainService) ListDomainExtensions(domainID *uuid.UUID) ([]*data.Dom
 		} else if ext, ok := data.DomainExtensions[de.ID]; ok && ext.Enabled {
 			de.KeyRequired = ext.KeyRequired
 			de.KeyProvided = ext.KeyProvided
+
+			// Empty config means default config
+			if de.Config == "" {
+				de.Config = ext.Config
+			}
 			res = append(res, &de)
 		}
 	}
