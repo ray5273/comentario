@@ -27,11 +27,6 @@ type APIKey struct {
 	Key     string `yaml:"key"`     // API key
 }
 
-// Usable returns whether the instance isn't disabled and the key and the secret are filled in
-func (k *APIKey) Usable() bool {
-	return !k.Disable && k.Key != ""
-}
-
 // SecretsConfig is a configuration object for storing sensitive information
 var SecretsConfig = &struct {
 	Postgres struct {

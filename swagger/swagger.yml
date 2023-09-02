@@ -307,11 +307,17 @@ definitions:
         example: akismet
       name:
         type: string
+        readOnly: true
         description: Extension display name
         example: Akismet
       config:
         type: string
         description: Extension configuration, linebreak-separated list of key=value pairs
+      requiresKey:
+        type: boolean
+        readOnly: true
+        description: Whether the extension requires an API key at domain level
+        x-omitempty: false
 
   domainExtensionId:
     description: Domain extension ID

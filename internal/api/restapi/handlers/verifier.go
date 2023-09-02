@@ -187,15 +187,18 @@ func (v *verifier) NeedsModeration(
 		return true, nil
 	}
 
-	// Fetch domain extensions
-	extensions, err := svc.TheDomainService.ListDomainExtensions(&domain.ID)
-	if err != nil {
-		return false, respServiceError(err)
-	}
-
 	// Test the comment against online checkers
-	if b, err := svc.ThePerlustrationService.Scan(extensions, req, comment, domain, page, user, domainUser, isEdit); b && err == nil {
-		// Consider not inappropriate on an error
+	ctx := &svc.CommentScanningContext{
+		Request:    req,
+		Comment:    comment,
+		Domain:     domain,
+		Page:       page,
+		User:       user,
+		DomainUser: domainUser,
+		IsEdit:     isEdit,
+	}
+	if b, err := svc.ThePerlustrationService.Scan(ctx); b && err == nil {
+		// Don't consider inappropriate if an error occurred
 		return true, nil
 	}
 

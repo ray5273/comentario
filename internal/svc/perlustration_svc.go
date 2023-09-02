@@ -3,6 +3,7 @@ package svc
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -19,15 +20,25 @@ import (
 // ThePerlustrationService is a global PerlustrationService implementation
 var ThePerlustrationService PerlustrationService = &perlustrationService{}
 
+// CommentScanningContext is a context for scanning a comment
+type CommentScanningContext struct {
+	Request    *http.Request    // HTTP request sent by the commenter
+	Comment    *data.Comment    // Comment being submitted
+	Domain     *data.Domain     // Comment's domain
+	Page       *data.DomainPage // Comment's domain page
+	User       *data.User       // User who submitted the comment
+	DomainUser *data.DomainUser // Domain user corresponding to User
+	IsEdit     bool             // Whether the comment was edited, as opposed to a new comment
+}
+
 // CommentScanner can scan a comment for inappropriate content
 type CommentScanner interface {
 	// ID returns the domain extension ID that corresponds to this scanner
 	ID() models.DomainExtensionID
-
+	// KeyProvided returns whether an API key was globally provided for this domain extension
+	KeyProvided() bool
 	// Scan scans the provided comment for inappropriate content and returns whether it was found
-	Scan(
-		config map[string]string, req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage,
-		user *data.User, domainUser *data.DomainUser, isEdit bool) (bool, error)
+	Scan(config map[string]string, ctx *CommentScanningContext) (bool, error)
 }
 
 // PerlustrationService is a collection of CommentScanners that allows to scan comments against those of them enabled
@@ -35,55 +46,57 @@ type CommentScanner interface {
 type PerlustrationService interface {
 	// Init the service
 	Init()
-
 	// Scan scans the provided comment for inappropriate content and returns whether it was found
-	Scan(
-		extensions []*data.DomainExtension, req *http.Request, comment *data.Comment, domain *data.Domain,
-		page *data.DomainPage, user *data.User, domainUser *data.DomainUser, isEdit bool) (bool, error)
+	Scan(ctx *CommentScanningContext) (bool, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 // perlustrationService is a blueprint PerlustrationService implementation
 type perlustrationService struct {
-	css []CommentScanner
+	scanners []CommentScanner
 }
 
 func (svc *perlustrationService) Init() {
 	// Akismet
 	ak := config.SecretsConfig.Extensions.Akismet
-	if ak.Usable() {
+	if !ak.Disable {
 		logger.Info("Registering Akismet extension")
-		svc.css = append(svc.css, &akismetScanner{apiKey: ak.Key})
+		svc.scanners = append(svc.scanners, &akismetScanner{apiScanner{apiKey: ak.Key}})
 	}
 
 	// Perspective
 	pk := config.SecretsConfig.Extensions.Perspective
-	if pk.Usable() {
+	if !pk.Disable {
 		logger.Info("Registering Perspective extension")
-		svc.css = append(svc.css, &perspectiveScanner{apiKey: pk.Key})
+		svc.scanners = append(svc.scanners, &perspectiveScanner{apiScanner{apiKey: pk.Key}})
 	}
 
 	// APILayer SpamChecker
 	asck := config.SecretsConfig.Extensions.APILayerSpamChecker
-	if ak.Usable() {
+	if !asck.Disable {
 		logger.Info("Registering APILayer SpamChecker extension")
-		svc.css = append(svc.css, &apiLayerSpamCheckerScanner{apiKey: asck.Key})
+		svc.scanners = append(svc.scanners, &apiLayerSpamCheckerScanner{apiScanner{apiKey: asck.Key}})
 	}
 
-	// Enable corresponding extensions in the config
-	for _, scanner := range svc.css {
-		data.DomainExtensions[scanner.ID()].Enabled = true
+	// Enable/update corresponding extensions in the config
+	for _, scanner := range svc.scanners {
+		x := data.DomainExtensions[scanner.ID()]
+		x.Enabled = true
+		x.KeyProvided = scanner.KeyProvided()
 	}
 }
 
-func (svc *perlustrationService) Scan(
-	extensions []*data.DomainExtension, req *http.Request, comment *data.Comment, domain *data.Domain,
-	page *data.DomainPage, user *data.User, domainUser *data.DomainUser, isEdit bool,
-) (bool, error) {
+func (svc *perlustrationService) Scan(ctx *CommentScanningContext) (bool, error) {
+	// Fetch domain extensions
+	extensions, err := TheDomainService.ListDomainExtensions(&ctx.Domain.ID)
+	if err != nil {
+		return false, err
+	}
+
 	// Iterate known comment scanners
 	var lastErr error
-	for _, cs := range svc.css {
+	for _, cs := range svc.scanners {
 		// Check if the scanner is enabled for the domain by searching for the corresponding extension
 		var ex *data.DomainExtension
 		for _, _ex := range extensions {
@@ -95,7 +108,7 @@ func (svc *perlustrationService) Scan(
 
 		// Scan and skip over a failed scanner
 		if ex != nil {
-			if b, err := cs.Scan(ex.ConfigParams(), req, comment, domain, page, user, domainUser, isEdit); err != nil {
+			if b, err := cs.Scan(ex.ConfigParams(), ctx); err != nil {
 				lastErr = err
 			} else if b {
 				// Exit on a first positive
@@ -110,35 +123,53 @@ func (svc *perlustrationService) Scan(
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// apiScanner is a base generic CommentScanner that requires an API key
+type apiScanner struct {
+	apiKey string
+}
+
+func (s *apiScanner) KeyProvided() bool {
+	return s.apiKey != ""
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 // akismetScanner is a CommentScanner that uses Akismet for comment content checking
 type akismetScanner struct {
-	apiKey string
+	apiScanner
 }
 
 func (s *akismetScanner) ID() models.DomainExtensionID {
 	return models.DomainExtensionIDAkismet
 }
 
-func (s *akismetScanner) Scan(
-	_ map[string]string, req *http.Request, comment *data.Comment, domain *data.Domain, page *data.DomainPage,
-	user *data.User, _ *data.DomainUser, isEdit bool,
-) (bool, error) {
+func (s *akismetScanner) Scan(config map[string]string, ctx *CommentScanningContext) (bool, error) {
+	// Check if the service is usable: the locally configured API key takes precedence
+	apiKey := config["apiKey"]
+	if apiKey == "" {
+		apiKey = s.apiKey
+	}
+	if apiKey == "" {
+		return false, errors.New("no Akismet API key configured")
+	}
+
+	// Prepare a request
 	d := url.Values{
-		"api_key":              {s.apiKey},
-		"blog":                 {domain.RootURL()},
-		"user_ip":              {util.UserIP(req)},
-		"user_agent":           {util.UserAgent(req)},
-		"referrer":             {req.Header.Get("Referer")},
-		"permalink":            {domain.RootURL() + page.Path},
+		"api_key":              {apiKey},
+		"blog":                 {ctx.Domain.RootURL()},
+		"user_ip":              {util.UserIP(ctx.Request)},
+		"user_agent":           {util.UserAgent(ctx.Request)},
+		"referrer":             {ctx.Request.Header.Get("Referer")},
+		"permalink":            {ctx.Domain.RootURL() + ctx.Page.Path},
 		"comment_type":         {"comment"},
-		"comment_author":       {user.Name},
-		"comment_author_email": {user.Email},
-		"comment_author_url":   {user.WebsiteURL},
-		"comment_content":      {comment.Markdown},
-		"comment_date_gmt":     {comment.CreatedTime.UTC().Format(time.RFC3339)},
+		"comment_author":       {ctx.User.Name},
+		"comment_author_email": {ctx.User.Email},
+		"comment_author_url":   {ctx.User.WebsiteURL},
+		"comment_content":      {ctx.Comment.Markdown},
+		"comment_date_gmt":     {ctx.Comment.CreatedTime.UTC().Format(time.RFC3339)},
 		"blog_charset":         {"UTF-8"},
 	}
-	if isEdit {
+	if ctx.IsEdit {
 		d.Set("recheck_reason", "edit")
 	}
 
@@ -180,7 +211,7 @@ func (s *akismetScanner) Scan(
 
 // perspectiveScanner is a CommentScanner that uses Perspective for comment content checking
 type perspectiveScanner struct {
-	apiKey string
+	apiScanner
 }
 
 type perspectiveAttrScore struct {
@@ -204,10 +235,16 @@ func (s *perspectiveScanner) ID() models.DomainExtensionID {
 	return models.DomainExtensionIDPerspective
 }
 
-func (s *perspectiveScanner) Scan(
-	config map[string]string, _ *http.Request, comment *data.Comment, _ *data.Domain, _ *data.DomainPage, _ *data.User,
-	_ *data.DomainUser, _ bool,
-) (bool, error) {
+func (s *perspectiveScanner) Scan(config map[string]string, ctx *CommentScanningContext) (bool, error) {
+	// Check if the service is usable: the locally configured API key takes precedence
+	apiKey := config["apiKey"]
+	if apiKey == "" {
+		apiKey = s.apiKey
+	}
+	if apiKey == "" {
+		return false, errors.New("no Perspective API key configured")
+	}
+
 	// Identify requested attributes
 	y := struct{}{} // Translates to an empty JSON object
 	attrs := make(map[string]any)
@@ -244,7 +281,7 @@ func (s *perspectiveScanner) Scan(
 
 	// Prepare a request
 	d, err := json.Marshal(map[string]any{
-		"comment":             map[string]any{"text": comment.Markdown},
+		"comment":             map[string]any{"text": ctx.Comment.Markdown},
 		"requestedAttributes": attrs,
 	})
 	if err != nil {
@@ -255,7 +292,7 @@ func (s *perspectiveScanner) Scan(
 	client := &http.Client{}
 	rq, err := http.NewRequest(
 		"POST",
-		fmt.Sprintf("https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=%s", s.apiKey),
+		fmt.Sprintf("https://commentanalyzer.googleapis.com/v1alpha1/comments:analyze?key=%s", apiKey),
 		bytes.NewReader(d))
 	if err != nil {
 		return false, err
@@ -297,7 +334,7 @@ func (s *perspectiveScanner) Scan(
 
 // apiLayerSpamCheckerScanner is a CommentScanner that uses APILayer SpamChecker for comment content checking
 type apiLayerSpamCheckerScanner struct {
-	apiKey string
+	apiScanner
 }
 
 type apiLayerSpamCheckerResponse struct {
@@ -311,20 +348,26 @@ func (s *apiLayerSpamCheckerScanner) ID() models.DomainExtensionID {
 	return models.DomainExtensionIDAPILayerDotSpamChecker
 }
 
-func (s *apiLayerSpamCheckerScanner) Scan(
-	config map[string]string, _ *http.Request, comment *data.Comment, _ *data.Domain, _ *data.DomainPage,
-	_ *data.User, _ *data.DomainUser, _ bool,
-) (bool, error) {
+func (s *apiLayerSpamCheckerScanner) Scan(config map[string]string, ctx *CommentScanningContext) (bool, error) {
+	// Check if the service is usable: the locally configured API key takes precedence
+	apiKey := config["apiKey"]
+	if apiKey == "" {
+		apiKey = s.apiKey
+	}
+	if apiKey == "" {
+		return false, errors.New("no APILayer SpamChecker API key configured")
+	}
+
 	// Submit a request to the APILayer
 	client := &http.Client{}
 	rq, err := http.NewRequest(
 		"POST",
 		fmt.Sprintf("https://api.apilayer.com/spamchecker?threshold=%s", config["threshold"]),
-		strings.NewReader(comment.Markdown))
+		strings.NewReader(ctx.Comment.Markdown))
 	if err != nil {
 		return false, err
 	}
-	rq.Header.Set("apikey", s.apiKey)
+	rq.Header.Set("apikey", apiKey)
 
 	// Fetch the response
 	res, err := client.Do(rq)

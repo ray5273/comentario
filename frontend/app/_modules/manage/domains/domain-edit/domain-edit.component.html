@@ -28,7 +28,7 @@
                             <div class="invalid-feedback">
                                 <ng-container i18n>Please enter a valid domain host.</ng-container>
                             </div>
-                            <small *ngIf="isNew" id="nameHelpBlock" class="form-text text-muted">
+                            <small *ngIf="isNew" id="nameHelpBlock" class="form-text text-warning-emphasis">
                                 <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
                                 <ng-container i18n>You won't be able to change the host once domain is created.</ng-container>
                             </small>
@@ -192,7 +192,7 @@
 
                     <!-- No available auth method warning -->
                     <div *ngIf="!numAuths"
-                         class="form-text text-danger">
+                         class="form-text text-warning-emphasis">
                         <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
                         <ng-container i18n>No authentication method enabled, your users won't be able to comment.</ng-container>
                     </div>
@@ -221,7 +221,12 @@
                             <div *ngIf="extCB.checked" class="mb-3 ps-4">
                                 <label class="form-check-label colon" [for]="'extension-' + e.id + '-config'" i18n>Configuration</label>
                                 <textarea [id]="'extension-' + e.id + '-config'"
-                                          formControlName="config" class="form-control" rows="3" maxlength="4096"></textarea>
+                                          formControlName="config" class="form-control font-monospace" rows="5" maxlength="4096"></textarea>
+                                <!-- Requires key warning -->
+                                <div *ngIf="e.requiresKey" class="form-text text-warning-emphasis">
+                                    <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                                    <ng-container i18n>You have to provide an API key for this extension to work.</ng-container>
+                                </div>
                             </div>
                         </div>
                     </div>

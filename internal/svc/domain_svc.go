@@ -462,6 +462,8 @@ func (svc *domainService) ListDomainExtensions(domainID *uuid.UUID) ([]*data.Dom
 
 			// Only add the extension if it's known and enabled globally
 		} else if ext, ok := data.DomainExtensions[de.ID]; ok && ext.Enabled {
+			de.KeyRequired = ext.KeyRequired
+			de.KeyProvided = ext.KeyProvided
 			res = append(res, &de)
 		}
 	}

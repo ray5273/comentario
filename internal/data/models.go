@@ -9,6 +9,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -906,16 +907,23 @@ func (c *Comment) URL(https bool, host, path string) string {
 
 // DomainExtension represents a known domain extension
 type DomainExtension struct {
-	ID      models.DomainExtensionID // Extension ID
-	Name    string                   // Extension display name
-	Config  string                   // Extension configuration, linebreak-separated list of key=value pairs
-	Enabled bool                     // Whether the extension is enabled (configured) globally
+	ID          models.DomainExtensionID // Extension ID
+	Name        string                   // Extension display name
+	Config      string                   // Extension configuration, linebreak-separated list of key=value pairs
+	KeyRequired bool                     // Whether the extension requires an API key to be usable
+	KeyProvided bool                     // Whether an API key is globally provided for the extension
+	Enabled     bool                     // Whether the extension is globally enabled
 }
 
 // ConfigParams returns the extension configuration parsed into a parameter map
 func (de *DomainExtension) ConfigParams() map[string]string {
 	params := make(map[string]string)
 	for _, kv := range strings.Split(de.Config, "\n") {
+		// Ignore comments and empty lines
+		if kv == "" || strings.HasPrefix(kv, "#") {
+			continue
+		}
+
 		// Split the key=value pair
 		parts := strings.SplitN(kv, "=", 2)
 		if len(parts) == 2 {
@@ -939,9 +947,10 @@ func (de *DomainExtension) HasDefaultConfig() bool {
 // ToDTO converts this model into an API model
 func (de *DomainExtension) ToDTO() *models.DomainExtension {
 	dto := &models.DomainExtension{
-		ID:     de.ID,
-		Name:   de.Name,
-		Config: de.Config,
+		ID:          de.ID,
+		Name:        de.Name,
+		Config:      de.Config,
+		RequiresKey: swag.Bool(de.KeyRequired && !de.KeyProvided),
 	}
 
 	// Empty config means default config
@@ -956,17 +965,21 @@ func (de *DomainExtension) ToDTO() *models.DomainExtension {
 // DomainExtensions is a map of known domain extensions and their default configurations. All disabled initially
 var DomainExtensions = map[models.DomainExtensionID]*DomainExtension{
 	models.DomainExtensionIDAkismet: {
-		ID:   models.DomainExtensionIDAkismet,
-		Name: "Akismet",
+		ID:          models.DomainExtensionIDAkismet,
+		Name:        "Akismet",
+		Config:      "#apiKey=...",
+		KeyRequired: true,
 	},
 	models.DomainExtensionIDPerspective: {
-		ID:     models.DomainExtensionIDPerspective,
-		Name:   "Perspective",
-		Config: "toxicity=0.5\nsevereToxicity=0.5\nidentityAttack=0.5\ninsult=0.5\nprofanity=0.5\nthreat=0.5",
+		ID:          models.DomainExtensionIDPerspective,
+		Name:        "Perspective",
+		Config:      "#apiKey=...\ntoxicity=0.5\nsevereToxicity=0.5\nidentityAttack=0.5\ninsult=0.5\nprofanity=0.5\nthreat=0.5",
+		KeyRequired: true,
 	},
 	models.DomainExtensionIDAPILayerDotSpamChecker: {
-		ID:     models.DomainExtensionIDAPILayerDotSpamChecker,
-		Name:   "APILayer SpamChecker",
-		Config: "threshold=5",
+		ID:          models.DomainExtensionIDAPILayerDotSpamChecker,
+		Name:        "APILayer SpamChecker",
+		Config:      "#apiKey=...\nthreshold=5",
+		KeyRequired: true,
 	},
 }
