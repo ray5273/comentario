@@ -1,6 +1,8 @@
 package svc
 
 import (
+	"fmt"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/persistence"
 )
 
@@ -51,8 +53,8 @@ func (m *manager) E2eRecreateDBSchema(seedSQL string) error {
 		return err
 	}
 
-	// Reload the configuration
-	if err := TheDynConfigService.Load(); err != nil {
+	// Run post-init tasks
+	if err := m.postDBInit(); err != nil {
 		return err
 	}
 
@@ -78,9 +80,9 @@ func (m *manager) Initialise() {
 		logger.Fatalf("Failed to connect to database: %v", err)
 	}
 
-	// Initialise the config service
-	if err := TheDynConfigService.Load(); err != nil {
-		logger.Fatalf("Failed to load configuration: %v", err)
+	// Run post-init tasks
+	if err := m.postDBInit(); err != nil {
+		logger.Fatalf("Post-DB-init tasks failed: %v", err)
 	}
 }
 
@@ -103,4 +105,23 @@ func (m *manager) Shutdown() {
 	_ = db.Shutdown()
 	db = nil
 	m.inited = false
+}
+
+// postDBInit is called after the DB is initialised to finalise schema initialisation
+func (m *manager) postDBInit() error {
+	// Initialise the config service
+	if err := TheDynConfigService.Load(); err != nil {
+		return fmt.Errorf("failed to load configuration: %v", err)
+	}
+
+	// If superuser's ID or email is provided, turn that user into a superuser
+	if s := config.CLIFlags.Superuser; s != "" {
+		if err := TheUserService.EnsureSuperuser(s); err != nil {
+			return fmt.Errorf("failed to turn user %q into superuser: %v", s, err)
+		}
+		logger.Infof("User %q is made a superuser", s)
+	}
+
+	// Succeeded
+	return nil
 }

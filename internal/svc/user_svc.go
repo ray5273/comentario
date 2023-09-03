@@ -3,6 +3,7 @@ package svc
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
@@ -35,6 +36,8 @@ type UserService interface {
 	DeleteUserByID(id *uuid.UUID) error
 	// DeleteUserSession removes a user session from the database
 	DeleteUserSession(id *uuid.UUID) error
+	// EnsureSuperuser ensures that the user with the given ID or email is a superuser
+	EnsureSuperuser(idOrEmail string) error
 	// FindDomainUserByID fetches and returns a User and DomainUser by domain and user IDs. If the user exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error)
@@ -191,6 +194,35 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 	// Delete the record
 	if err := db.Exec("delete from cm_user_sessions where id=$1;", id); err != nil {
 		logger.Errorf("userService.DeleteUserSession: Exec() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) EnsureSuperuser(idOrEmail string) error {
+	logger.Debugf("userService.EnsureSuperuser(%q)", idOrEmail)
+
+	// Try to parse the input as a UUID
+	var where goqu.Ex
+	if id, err := uuid.Parse(idOrEmail); err == nil {
+		// It's an ID indeed
+		where = goqu.Ex{"id": id}
+
+		// Not an ID, perhaps an email?
+	} else if !util.IsValidEmail(idOrEmail) {
+		return fmt.Errorf("%q is neither a UUID nor a valid email address", idOrEmail)
+
+	} else {
+		// It's an email
+		where = goqu.Ex{"email": idOrEmail}
+	}
+
+	// Update the user
+	q := db.Dialect().Update("cm_users").Set(goqu.Record{"is_superuser": true}).Where(where)
+	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+		logger.Errorf("userService.EnsureSuperuser: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

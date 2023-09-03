@@ -51,6 +51,7 @@ comentario:
   homeContentURL: 'https://docs.comentario.app/en/embed/front-page/'
   emailFrom: 'noreply@example.com'
   secretName: comentario-secrets
+  #superuser: admin@example.com
 
 resources:
    limits:

@@ -49,6 +49,8 @@ spec:
               value: /comentario-secrets/secrets.yaml
             - name: EMAIL_FROM
               value: '{{ .Values.comentario.emailFrom }}'
+            - name: SUPERUSER
+              value: '{{ .Values.comentario.superuser }}'
           ports:
             - name: http
               containerPort: 80
