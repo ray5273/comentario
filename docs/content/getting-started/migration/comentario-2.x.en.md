@@ -57,15 +57,19 @@ And if you start it with the `-v` command-line switch, you should have seen the 
 
 ### 4. Appoint a superuser
 
-The 3.x Comentario version introduces the concept of *superuser*: it's essentially an instance admin. Only superusers can manage (edit, ban, delete) other users and change configuration parameters.
+The 3.x Comentario version introduces the concept of *superuser*: it's essentially an instance admin. Only superusers can manage (edit, ban, delete) other users and change configuration parameters. You'll definitely need at least one for your installation.
 
-The *first local user* (i.e. one signing up with email and password) registered on the server **automatically gets a superuser role**.
+There are the following four ways to become a superuser:
 
-However, if you migrated from an existing Comentario install, you'll probably already have users. In this case, the only way to make yourself a superuser is updating the database directly, using a UI tool or the following SQL statement:
-
+1. The superuser role can be granted a user by another superuser. It can only work if you already have a superuser.
+2. The *first local user* (i.e. one signing up with email and password) registered on the server **automatically gets a superuser role**.
+3. Use the `--superuser=<ID-or-email>` [command-line switch](/getting-started/configuration/server) to turn a user into a superuser.
+4. Updating the database directly, using a UI tool or the following SQL statement:
 ```sql
-update cm_users set is_superuser = true where email = 'YOUR_EMAIL';
+update cm_users set is_superuser = true where email = 'YOUR@EMAIL';
 ```
+
+If you migrated from an existing Comentario install, you'd probably already have users, so you'll need to use the last two options. 
 
 ### 5. Update your Comentario snippet
 

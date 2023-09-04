@@ -28,17 +28,16 @@ services:
       - "5432:5432"
 
   app:
-    image: registry.gitlab.com/comentario/comentario:v2.3.1
+    image: registry.gitlab.com/comentario/comentario:v3.0.0-rc1
     environment:
       BASE_URL: http://localhost:8080/
-      ALLOW_NEW_OWNERS: "true"
       SECRETS_FILE: "/secrets.yaml"
     ports:
       - "8080:80"
     volumes:
       - ./secrets.yaml:/secrets.yaml:ro
 ```
-* `secrets.yaml`:
+* `secrets.yaml` (find [here](/getting-started/configuration/secrets) more details on secrets config):
 ```yaml
 postgres:
   host:     db
@@ -52,23 +51,6 @@ smtpServer:
   port:
   username:
   password:
-
-idp:
-  github:
-    key:    x
-    secret: x
-  gitlab:
-    key:    x
-    secret: x
-  google:
-    key:    x
-    secret: x
-  twitter:
-    key:    x
-    secret: x
-
-akismet:
-  key:
 ```
 
 The two files must reside in the same directory. Then, start the database and the backend using:
@@ -78,4 +60,4 @@ The two files must reside in the same directory. Then, start the database and th
 docker compose up
 ```
 
-Comentario will be reachable at [localhost:8080](http://localhost:8080). Just navigate to [Sign up](http://localhost:8080/en/auth/signup) and register with any email and password: you'll become an *owner* and will be able to add domains in the UI.
+Comentario will be reachable at [localhost:8080](http://localhost:8080). Just navigate to [Sign up](http://localhost:8080/en/auth/signup) and register with any email and password: you'll become a *superuser* and will be able to configure the server and add domains in the UI.
