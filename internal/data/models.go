@@ -88,15 +88,16 @@ var FederatedIdProviders = map[models.FederatedIdpID]FederatedIdentityProvider{
 
 // GetFederatedIdP returns whether federated identity provider is known and configured, and if yes, its Provider
 // interface
-func GetFederatedIdP(id models.FederatedIdpID) (known, configured bool, provider goth.Provider) {
+func GetFederatedIdP(id models.FederatedIdpID) (known, configured bool, provider goth.Provider, fPtr *FederatedIdentityProvider) {
 	// Look up the IdP
 	var fidp FederatedIdentityProvider
 	if fidp, known = FederatedIdProviders[id]; !known {
 		return
 	}
+	fPtr = &fidp
 
 	// IdP found, now verify it's configured
-	provider, err := goth.GetProvider(fidp.GothID)
+	provider, err := goth.GetProvider(fPtr.GothID)
 	configured = err == nil
 	return
 }

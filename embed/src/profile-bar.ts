@@ -41,7 +41,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     set pageInfo(v: PageInfo | undefined) {
         this._pageInfo = v;
         // Hide or show the login button based on the availability of any auth method
-        this.btnLogin?.setClasses(!(v?.authLocal || v?.authSso || v?.idps?.length), 'hidden');
+        this.btnLogin?.setClasses(!(v?.authLocal || (v?.authSso && !v.ssoNonInteractive) || v?.idps?.length), 'hidden');
     }
 
     /**
@@ -110,6 +110,23 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a login dialog and return a promise that's resolved when the dialog is closed.
      */
     async loginUser(): Promise<void> {
+        // If there's only one external auth method available, use it right away
+        if (!this._pageInfo?.authLocal) {
+            switch (this._pageInfo?.idps?.length || 0) {
+                // If only SSO is enabled: trigger an SSO login
+                case 0:
+                    if (this._pageInfo?.authSso) {
+                        return this.onOAuth('sso');
+                    }
+                    break;
+
+                // A single federated IdP is enabled: turn to that IdP
+                case 1:
+                    return this.onOAuth(this._pageInfo!.idps![0].id);
+            }
+        }
+
+        // Multiple options are available, show the login dialog
         const dlg = await LoginDialog.run(
             this.root,
             {ref: this.btnLogin!, placement: 'bottom-end'},

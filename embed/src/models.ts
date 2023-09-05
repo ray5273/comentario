@@ -12,26 +12,39 @@ export interface UILanguage {
     readonly nameNative:  string; // Language name in the language self
 }
 
+/** Federated identity provider ID */
+export type FederatedIdpId = 'facebook' | 'github' | 'gitlab' | 'google' | 'linkedin' | 'twitter';
+
+/** Federated identity provider info */
+export interface FederatedIdentityProvider {
+    /** Provider ID */
+    readonly id: FederatedIdpId;
+    /** Provider display name */
+    readonly name: string;
+    /** Provider icon name */
+    readonly icon: string;
+}
+
 /** Static instance configuration. */
 export interface InstanceStaticConfig {
     /** Base Comentario URL */
-    baseUrl: string;
+    readonly baseUrl: string;
     /** Base Documentation URL */
-    baseDocsUrl: string;
+    readonly baseDocsUrl: string;
     /** Comentario version */
-    version: string;
+    readonly version: string;
     /** Server build date */
-    buildDate: string;
+    readonly buildDate: string;
     /** Default interface language ID */
-    defaultLangId: string;
+    readonly defaultLangId: string;
     /** URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for  unauthenticated user) or dashboard (for authenticated) */
-    homeContentUrl?: string;
+    readonly homeContentUrl?: string;
     /** Configured federated identity providers */
-    federatedIdps?: Array<FederatedIdentityProvider>;
+    readonly federatedIdps?: FederatedIdentityProvider[];
     /** Max number of database rows returned per page */
-    resultPageSize: number;
+    readonly resultPageSize: number;
     /** Available UI languages */
-    uiLanguages?: UILanguage[];
+    readonly uiLanguages?: UILanguage[];
 }
 
 /** Dynamic instance configuration item datatype. */
@@ -116,19 +129,32 @@ export interface Comment {
 /** Stripped-down, read-only version of the user who authored a comment. For now equivalent to User. */
 export type Commenter = User;
 
-/** Information about a page displaying comments. */
+/** Information about a page displaying comments */
 export interface PageInfo {
-    readonly domainId:         UUID;        // Domain ID
-    readonly domainName:       string;      // Domain display name
-    readonly pageId:           UUID;        // Page ID
-    readonly isDomainReadonly: boolean;     // Whether the domain is readonly (no new comments are allowed)
-    readonly isPageReadonly:   boolean;     // Whether the page is readonly (no new comments are allowed)
-    readonly authAnonymous:    boolean;     // Whether anonymous comments are allowed
-    readonly authLocal:        boolean;     // Whether local authentication is allowed
-    readonly authSso:          boolean;     // Whether SSO authentication is allowed
-    readonly ssoUrl:           string;      // SSO provider URL
-    readonly defaultSort:      CommentSort; // Default comment sorting for domain
-    readonly idps?:            string[];    // List of IDs of enabled federated identity providers
+    /** Domain ID */
+    readonly domainId: string;
+    /** Domain display name */
+    readonly domainName: string;
+    /** Page ID */
+    readonly pageId: string;
+    /** Whether the domain is readonly (no new comments are allowed) */
+    readonly isDomainReadonly: boolean;
+    /** Whether the page is readonly (no new comments are allowed) */
+    readonly isPageReadonly: boolean;
+    /** Whether anonymous comments are allowed */
+    readonly authAnonymous: boolean;
+    /** Whether local authentication is allowed */
+    readonly authLocal: boolean;
+    /** Whether SSO authentication is allowed */
+    readonly authSso: boolean;
+    /** SSO provider URL */
+    readonly ssoUrl: string;
+    /** Whether to use a non-interactive SSO login */
+    readonly ssoNonInteractive: boolean;
+    /** Default comment sort */
+    readonly defaultSort: CommentSort;
+    /** List of enabled federated identity providers */
+    readonly idps?: FederatedIdentityProvider[];
 }
 
 export type CommentsGroupedById = { [k: UUID]: Comment[] };
@@ -167,13 +193,6 @@ export const sortingProps: { [k in CommentSort]: CommentSortProps } = {
     ta: {label: 'Oldest',  comparator: (a, b) => a.createdTime.localeCompare(b.createdTime)},
 };
 
-/** Federated identity provider data. */
-export interface FederatedIdentityProvider {
-    readonly id:    string; // Provider ID
-    readonly name:  string; // Provider name
-    readonly icon?: string; // Provider icon name
-}
-
 /** Generic message displayed to the user. */
 export interface Message {
     readonly severity: 'ok' | 'error'; // Message severity
@@ -206,14 +225,17 @@ export class ErrorMessage implements Message {
     ) {}
 
     /**
-     * Instantiate a new ErrorMessage instance from the given error object.
+     * Instantiate a new ErrorMessage instance from the given error object. For now, only handle a string and an HTTP
+     * error in a special way.
      * @param err Source error object.
      */
     static of(err: any): ErrorMessage {
         let text = 'Unknown error';
 
-        // For now, only handle an HTTP error in a special way
-        if (err instanceof HttpClientError) {
+        if (typeof err === 'string') {
+            text = err;
+
+        } else if (err instanceof HttpClientError) {
             // If there's a response, try to parse it as JSON
             let resp: ApiErrorResponse | undefined;
             if (typeof err.response === 'string') {
@@ -239,4 +261,13 @@ export class ErrorMessage implements Message {
         // Details will be a JSON representation of the error
         return new ErrorMessage(text, JSON.stringify(err, undefined, 2));
     }
+}
+
+export interface SsoLoginResponse {
+    /** Message type */
+    readonly type: 'auth.sso.result';
+    /** Whether the login was successful */
+    readonly success: boolean;
+    /** Any error message returned by the identity provider. */
+    readonly error?: string;
 }

@@ -524,7 +524,7 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 			return nil, err
 
 			// Only add a provider if it's enabled globally
-		} else if _, ok, _ := data.GetFederatedIdP(id); ok {
+		} else if _, ok, _, _ := data.GetFederatedIdP(id); ok {
 			res = append(res, id)
 		}
 	}

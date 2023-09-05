@@ -81,7 +81,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	var idps []*models.FederatedIdentityProvider
 	for fid, fidp := range data.FederatedIdProviders {
 		// If the provider is configured, add it to the slice
-		if _, ok, _ := data.GetFederatedIdP(fid); ok {
+		if _, ok, _, _ := data.GetFederatedIdP(fid); ok {
 			idps = append(idps, fidp.ToDTO())
 		}
 	}

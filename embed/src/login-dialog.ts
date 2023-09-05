@@ -8,7 +8,6 @@ export class LoginDialog extends Dialog {
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
     private _navigateTo: string | null = null;
-    private _federatedIdps = this.config.staticConfig.federatedIdps?.filter(idp => this.pageInfo.idps?.includes(idp.id)) ?? [];
 
     private constructor(
         parent: Wrap<any>,
@@ -67,18 +66,18 @@ export class LoginDialog extends Dialog {
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner(`Proceed with ${parent.location.host} authentication`),
                 // Separator
-                (this._federatedIdps.length > 0 || this.pageInfo.authLocal) && Wrap.new('hr'));
+                (!!this.pageInfo.idps?.length || this.pageInfo.authLocal) && Wrap.new('hr'));
         }
 
         // Add OAuth buttons, if applicable
-        if (this._federatedIdps.length) {
+        if (this.pageInfo.idps?.length) {
             form.append(
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner('Proceed with social login'),
                 // OAuth buttons
                 UIToolkit.div('oauth-buttons')
                     .append(
-                        ...this._federatedIdps.map(idp =>
+                        ...this.pageInfo.idps.map(idp =>
                             UIToolkit.button(idp.name, () => this.dismissWith(idp.id), 'oauth-button', `${idp.id}-button`))),
                 // Separator
                 this.pageInfo.authLocal && Wrap.new('hr'));

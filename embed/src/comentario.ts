@@ -11,6 +11,7 @@ import {
     PageInfo,
     Principal,
     SignupData,
+    SsoLoginResponse,
     StringBooleanMap,
     User,
     UserSettings,
@@ -142,7 +143,7 @@ export class Comentario extends HTMLElement {
                     this.config,
                     () => this.createAvatarElement(this.principal),
                     (email, password) => this.authenticateLocally(email, password),
-                    idp => this.openOAuthPopup(idp),
+                    idp => this.oAuthLogin(idp),
                     data => this.signup(data),
                     data => this.saveUserSettings(data)),
                 // Main area
@@ -192,6 +193,24 @@ export class Comentario extends HTMLElement {
                     .on('error', (_, e) => reject(e))
                     .appendTo(new Wrap(this.ownerDocument.head));
             });
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Explicitly initiate non-interactive SSO login. Supposed to be called externally, for example:
+     * ```
+     * $('comentario-comments').nonInteractiveSsoLogin();
+     * ```
+     * @public
+     */
+    async nonInteractiveSsoLogin(): Promise<void> {
+        // Verify non-interactive SSO is enabled
+        if (!this.pageInfo?.authSso || !this.pageInfo.ssoNonInteractive) {
+            return this.reject('Non-interactive SSO is not enabled.');
+        }
+
+        // Hand over to the login routine
+        await this.oAuthLogin('sso');
     }
 
     /**
@@ -504,16 +523,87 @@ export class Comentario extends HTMLElement {
     }
 
     /**
-     * Open a new browser popup window for authenticating with the given identity provider and return a promise that
-     * resolves as soon as the user is authenticated, or rejects when the authentication has been unsuccessful.
+     * Initiate an OAuth login for the given identity provider, either non-interactively (SSO only) or by opening a new
+     * browser popup window for completing authentication. Return a promise that resolves as soon as the user is
+     * authenticated, or rejects when the authentication has been unsuccessful.
      * @param idp Identity provider to initiate authentication with.
      */
-    private async openOAuthPopup(idp: string): Promise<void> {
+    private async oAuthLogin(idp: string): Promise<void> {
         // Request a new, anonymous login token
         const token = await this.apiService.authNewLoginToken();
+        const url = `${this.apiService.basePath}/oauth/${idp}?host=${encodeURIComponent(this.host)}&token=${token}`;
 
-        // Open a popup window
-        const popup = window.open(`${this.apiService.basePath}/oauth/${idp}?host=${encodeURIComponent(this.host)}&token=${token}`, '_blank', 'popup,width=800,height=600');
+        // If non-interactive SSO is triggered
+        if (idp === 'sso' && this.pageInfo?.ssoNonInteractive) {
+            await this.loginSsoNonInteractive(url);
+
+        } else {
+            // Interactive login: open a popup window
+            await this.loginOAuthPopup(url);
+        }
+
+        // If the authentication was successful, the token is supposed to be bound to the user now. Use it for login
+        await this.apiService.authLoginToken(token, this.host);
+
+        // Refresh the auth status
+        await this.updateAuthStatus();
+
+        // If authenticated, reload all comments and page data
+        if (this.principal) {
+            await this.reload();
+        }
+    }
+
+    /**
+     * Try to authenticate the user with non-interactive SSO.
+     */
+    private async loginSsoNonInteractive(url: string): Promise<void> {
+        // Promise resolving as soon as the iframe communicates back
+        const ready = new Promise<SsoLoginResponse>((resolve, reject) =>
+            window.addEventListener(
+                'message',
+                (e: MessageEvent<SsoLoginResponse>) => {
+                    // Make sure the message originates from the SSO iframe and is a valid response
+                    if (e.origin !== url || e.data?.type !== 'auth.sso.result') {
+                        return;
+                    }
+
+                    // Check if login was successful
+                    if (!e.data.success) {
+                        reject(e.data.error);
+
+                    } else {
+                        // Succeeded
+                        resolve(e.data);
+                    }
+                },
+                {once: true}));
+
+        // Time out after 60 seconds
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject('SSO login timed out'), 60_000));
+
+        // Insert an invisible iframe, initiating SSO
+        const iframe = Wrap.new('iframe')
+            .attr({src: url, style: 'display: none'})
+            .appendTo(this.root);
+
+        // Wait until login is complete or timed out
+        try {
+            await Promise.race([ready, timeout]);
+        } catch (e) {
+            this.setMessage(ErrorMessage.of(e || 'SSO authentication failed.'));
+            throw e;
+        } finally {
+            iframe.remove();
+        }
+    }
+
+    /**
+     * Open a popup for OAuth login and return a promise that resolves when the popup is closed.
+     */
+    private async loginOAuthPopup(url: string): Promise<void> {
+        // Open a new popup window
+        const popup = window.open(url, '_blank', 'popup,width=800,height=600');
         if (!popup) {
             return this.reject('Failed to open OAuth popup');
         }
@@ -529,17 +619,6 @@ export class Comentario extends HTMLElement {
                 },
                 500);
         });
-
-        // If the authentication was successful, the token is supposed to be bound to the user now. Use it for login
-        await this.apiService.authLoginToken(token, this.host);
-
-        // Refresh the auth status
-        await this.updateAuthStatus();
-
-        // If authenticated, reload all comments and page data
-        if (this.principal) {
-            await this.reload();
-        }
     }
 
     /**

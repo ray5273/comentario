@@ -71,7 +71,6 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		DefaultSort:       models.CommentSort(domain.DefaultSort),
 		DomainID:          strfmt.UUID(domain.ID.String()),
 		DomainName:        domain.DisplayName(),
-		Idps:              nil,
 		IsDomainReadonly:  domain.IsReadonly,
 		IsPageReadonly:    page.IsReadonly,
 		PageID:            strfmt.UUID(page.ID.String()),
@@ -80,8 +79,15 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 	}
 
 	// Fetch the domain's identity providers
-	if pageInfo.Idps, err = svc.TheDomainService.ListDomainFederatedIdPs(&domain.ID); err != nil {
+	if idpIDs, err := svc.TheDomainService.ListDomainFederatedIdPs(&domain.ID); err != nil {
 		return respServiceError(err)
+	} else {
+		// Make a list of identity providers whose IDs are on the list
+		for _, idpID := range idpIDs {
+			if _, ok, _, fidp := data.GetFederatedIdP(idpID); ok {
+				pageInfo.Idps = append(pageInfo.Idps, fidp.ToDTO())
+			}
+		}
 	}
 
 	// Fetch comments and commenters

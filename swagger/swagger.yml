@@ -617,44 +617,66 @@ definitions:
     description: Information about a page displaying comments
     type: object
     readOnly: true
+    required:
+      - domainId
+      - domainName
+      - pageId
+      - isDomainReadonly
+      - isPageReadonly
+      - authAnonymous
+      - authLocal
+      - authSso
+      - ssoUrl
+      - ssoNonInteractive
+      - defaultSort
     properties:
       domainId:
         type: string
         format: uuid
         description: Domain ID
+        x-isnullable: false
       domainName:
         type: string
         description: Domain display name
+        x-isnullable: false
       pageId:
         type: string
         format: uuid
         description: Page ID
+        x-isnullable: false
       isDomainReadonly:
         type: boolean
         description: Whether the domain is readonly (no new comments are allowed)
+        x-isnullable: false
         x-omitempty: false
       isPageReadonly:
         type: boolean
         description: Whether the page is readonly (no new comments are allowed)
+        x-isnullable: false
         x-omitempty: false
       authAnonymous:
         type: boolean
         description: Whether anonymous comments are allowed
+        x-isnullable: false
         x-omitempty: false
       authLocal:
         type: boolean
         description: Whether local authentication is allowed
+        x-isnullable: false
         x-omitempty: false
       authSso:
         type: boolean
         description: Whether SSO authentication is allowed
+        x-isnullable: false
         x-omitempty: false
       ssoUrl:
         type: string
         description: SSO provider URL
+        x-isnullable: false
       ssoNonInteractive:
         type: boolean
         description: Whether to use a non-interactive SSO login
+        x-isnullable: false
         x-omitempty: false
       defaultSort:
         $ref: "#/definitions/commentSort"
@@ -662,8 +684,8 @@ definitions:
       idps:
         type: array
         items:
-          $ref: "#/definitions/federatedIdpId"
-        description: List of IDs of enabled federated identity providers
+          $ref: "#/definitions/federatedIdentityProvider"
+        description: List of enabled federated identity providers
 
   path:
     description: Path on a certain host
