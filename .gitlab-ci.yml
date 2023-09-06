@@ -16,7 +16,7 @@ stages:
   - release
 
 variables:
-  CI_TOOLS_VERSION: "v13"
+  CI_TOOLS_VERSION: "v14"
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
   DOCS_URL: https://docs.comentario.app
@@ -37,7 +37,7 @@ build:
     # We want to store downloaded packages under the project dir, so we can cache them
     GOPATH: $CI_PROJECT_DIR/.go
     # URL the test-site service is available at
-    CYPRESS_TEST_SITE_URL: http://test-site
+    CYPRESS_TEST_SITE_URL: http://comentario-test-site:8000/
   services:
     - name: postgres:15-alpine
       variables:
@@ -46,7 +46,7 @@ build:
         POSTGRES_PASSWORD: postgres
     # The test-site service. Its URL (mentioned in CYPRESS_TEST_SITE_URL) must match the host (alias)
     - name: registry.gitlab.com/comentario/comentario-ci-tools/test-site:$CI_TOOLS_VERSION
-      alias: test-site
+      alias: comentario-test-site
   cache:
     key:
       files:
