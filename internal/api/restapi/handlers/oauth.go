@@ -77,15 +77,16 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	var fedUser goth.User
 
 	// SSO auth
+	var ssoDomain *data.Domain
 	if provider == nil {
 		// Find the domain the user is authenticating on
-		domain, err := svc.TheDomainService.FindByHost(authSession.Host)
+		ssoDomain, err = svc.TheDomainService.FindByHost(authSession.Host)
 		if err != nil {
 			return oauthFailure(err)
 		}
 
 		// Validate domain SSO config
-		if r := Verifier.DomainSSOConfig(domain); r != nil {
+		if r := Verifier.DomainSSOConfig(ssoDomain); r != nil {
 			return r
 		}
 
@@ -108,7 +109,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		} else if signature, err := hex.DecodeString(s); err != nil {
 			return oauthFailure(fmt.Errorf("hmac: invalid hex encoding: %s", err.Error()))
 		} else {
-			h := hmac.New(sha256.New, domain.SSOSecret)
+			h := hmac.New(sha256.New, ssoDomain.SSOSecret)
 			h.Write(payloadBytes)
 			if !hmac.Equal(h.Sum(nil), signature) {
 				return oauthFailure(fmt.Errorf("hmac: signature verification failed"))
@@ -227,8 +228,18 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return respServiceError(err)
 	}
 
-	// Succeeded: close the parent window, removing the auth session cookie
-	return NewCookieResponder(closeParentWindowResponse()).WithoutCookie(util.CookieNameAuthSession, "/")
+	// Auth successful. If it's non-interactive SSO
+	var resp middleware.Responder
+	if ssoDomain != nil && ssoDomain.SSONonInteractive {
+		// Send a success message to the opener window
+		resp = postSSOLoginResponse()
+	} else {
+		// Interactive auth: close the login popup
+		resp = closeParentWindowResponse()
+	}
+
+	// Succeeded: post the response, removing the auth session cookie
+	return NewCookieResponder(resp).WithoutCookie(util.CookieNameAuthSession, "/")
 }
 
 // AuthOauthInit initiates a federated authentication process

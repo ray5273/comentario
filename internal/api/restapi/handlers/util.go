@@ -21,6 +21,12 @@ func closeParentWindowResponse() middleware.Responder {
 	return NewHTMLResponder(http.StatusOK, "<html><script>window.parent.close();</script></html>")
 }
 
+// postSSOLoginResponse returns a responder that renders an HTML script posting a successful SSO login response to the
+// opener window
+func postSSOLoginResponse() middleware.Responder {
+	return NewHTMLResponder(http.StatusOK, "<html><script>window.opener.postMessage({type: 'auth.sso.result', success: true}, '*');</script></html>")
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
 // HTMLResponder is an implementation of middleware.Responder that serves out a static piece of HTML
