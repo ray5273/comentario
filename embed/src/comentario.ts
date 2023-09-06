@@ -40,6 +40,14 @@ export class Comentario extends HTMLElement {
         () => this.setMessage(),
         err => this.setMessage(ErrorMessage.of(err)));
 
+    /**
+     * Location of the current page.
+     *
+     * Note. The below is kinda hacky: it detects whether it's running under Cypress (e2e tests), which runs the web app
+     * inside an iframe. Not quite sure why otherwise the parent should be used, it comes from the legacy code.
+     */
+    private readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
+
     /** The root element of Comentario embed. */
     private readonly root = Wrap.new('div').appendTo(new Wrap(this));
 
@@ -73,9 +81,6 @@ export class Comentario extends HTMLElement {
     /** Map of comments, grouped by their ID. */
     private parentIdMap?: CommentsGroupedById;
 
-    /** Current host. */
-    private host = parent.location.host;
-
     /** Currently authenticated principal or undefined if the user isn't authenticated. */
     private principal?: Principal;
 
@@ -86,7 +91,7 @@ export class Comentario extends HTMLElement {
     private commentSort: CommentSort = 'sd';
 
     /** Path of the page for loading comments. Defaults to the actual path on the host. */
-    private readonly pagePath = this.getAttribute('page-id') || parent.location.pathname;
+    private readonly pagePath = this.getAttribute('page-id') || this.location.pathname;
 
     /**
      * Optional CSS stylesheet URL that gets loaded after the default one. Setting to 'false' disables loading any CSS
@@ -231,7 +236,7 @@ export class Comentario extends HTMLElement {
      * Scroll to the comment whose ID is provided in the current window's fragment (if any).
      */
     private scrollToCommentHash() {
-        const h = window.location.hash;
+        const h = this.location.hash;
 
         // If the hash starts with a valid ID
         if (h?.startsWith('#comentario-')) {
@@ -433,7 +438,7 @@ export class Comentario extends HTMLElement {
         // If we can proceed: user logged in or that wasn't required
         if (this.principal || !auth) {
             // Submit the comment to the backend
-            const r = await this.apiService.commentNew(this.host, this.pagePath, parentCard?.comment.id, markdown);
+            const r = await this.apiService.commentNew(this.location.host, this.pagePath, parentCard?.comment.id, markdown);
 
             // Make sure parent map exists
             if (!this.parentIdMap) {
@@ -492,7 +497,7 @@ export class Comentario extends HTMLElement {
      */
     private async signup(data: SignupData): Promise<void> {
         // Sign the user up
-        const isConfirmed = await this.apiService.authSignup(data.email, data.name, data.password, data.websiteUrl, parent.location.href);
+        const isConfirmed = await this.apiService.authSignup(data.email, data.name, data.password, data.websiteUrl, this.location.href);
 
         // If the user is confirmed, log them immediately in
         if (isConfirmed) {
@@ -511,7 +516,7 @@ export class Comentario extends HTMLElement {
      */
     private async authenticateLocally(email: string, password: string): Promise<void> {
         // Log the user in
-        await this.apiService.authLogin(email, password, this.host);
+        await this.apiService.authLogin(email, password, this.location.host);
 
         // Refresh the auth status
         await this.updateAuthStatus();
@@ -531,7 +536,7 @@ export class Comentario extends HTMLElement {
     private async oAuthLogin(idp: string): Promise<void> {
         // Request a new, anonymous login token
         const token = await this.apiService.authNewLoginToken();
-        const url = `${this.apiService.basePath}/oauth/${idp}?host=${encodeURIComponent(this.host)}&token=${token}`;
+        const url = `${this.apiService.basePath}/oauth/${idp}?host=${encodeURIComponent(this.location.host)}&token=${token}`;
 
         // If non-interactive SSO is triggered
         if (idp === 'sso' && this.pageInfo?.ssoNonInteractive) {
@@ -543,7 +548,7 @@ export class Comentario extends HTMLElement {
         }
 
         // If the authentication was successful, the token is supposed to be bound to the user now. Use it for login
-        await this.apiService.authLoginToken(token, this.host);
+        await this.apiService.authLoginToken(token, this.location.host);
 
         // Refresh the auth status
         await this.updateAuthStatus();
@@ -640,7 +645,7 @@ export class Comentario extends HTMLElement {
         // Retrieve page settings and a comment list from the backend
         let r: ApiCommentListResponse;
         try {
-            r = await this.apiService.commentList(this.host, this.pagePath);
+            r = await this.apiService.commentList(this.location.host, this.pagePath);
 
             // Store page- and backend-related properties
             this.pageInfo = r.pageInfo;
