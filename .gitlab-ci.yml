@@ -16,7 +16,7 @@ stages:
   - release
 
 variables:
-  CI_TOOLS_VERSION: "v15"
+  CI_TOOLS_VERSION: "v16"
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
   DOCS_URL: https://docs.comentario.app
@@ -107,16 +107,20 @@ build:
         --base-docs-url="${DOCS_URL}"
         --home-content-url="${DOCS_URL}/en/embed/front-page/"
         &> ./tmp/logs/comentario-server.log &
-    # Start the relay
+    # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
     - ./build/comentario-relay 
         -listen 127.0.0.1:8000
-        -target http://comentario-test-site:8000
+        -target http://comentario-test-site
         &> ./tmp/logs/comentario-relay.log &
     - sleep 2
 
     # Test the server is up and running
     - curl -vs http://localhost:8080/
     - curl -vs http://localhost:8080/en/
+
+    # Test the relay is up and running
+    - curl -vs http://localhost:8000/
+    - curl -vs http://localhost:8000/comments/
 
     # Run the e2e tests
     - npx cypress install

@@ -6,9 +6,11 @@ import (
 	"net/url"
 )
 
-// This is an HTTP relay to facilitate access in the CI pipeline, transparently relaying requests from localhost:8000 to
-// comentario-test-site container. Thanks to this, we can configure Comentario to render comments on localhost:8000 for
-// running it locally.
+/*
+  This is an HTTP relay to facilitate access in the CI pipeline, transparently relaying requests from localhost:8000 to
+  comentario-test-site container. Thanks to this, we can configure Comentario to render comments on localhost:8000 for
+  running it locally.
+*/
 
 import (
 	"flag"

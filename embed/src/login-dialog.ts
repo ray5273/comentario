@@ -60,11 +60,12 @@ export class LoginDialog extends Dialog {
         // SSO auth
         if (this.pageInfo.authSso) {
             form.append(
+                // Subtitle
+                UIToolkit.div('dialog-centered')
+                    .inner(`Login via ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
                 // SSO button
                 UIToolkit.div('oauth-buttons')
                     .append(UIToolkit.button('Single Sign-On', () => this.dismissWith('sso'), 'oauth-button', 'sso-button')),
-                // Subtitle
-                UIToolkit.div('dialog-centered').inner(`Proceed with ${parent.location.host} authentication`),
                 // Separator
                 (!!this.pageInfo.idps?.length || this.pageInfo.authLocal) && Wrap.new('hr'));
         }
