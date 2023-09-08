@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"crypto/hmac"
-	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
 	"encoding/json"
@@ -14,6 +13,7 @@ import (
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -22,12 +22,10 @@ import (
 )
 
 type ssoPayload struct {
-	Domain string `json:"domain"`
-	Token  string `json:"token"`
-	Email  string `json:"email"`
-	Name   string `json:"name"`
-	Link   string `json:"link"`
-	Photo  string `json:"photo"`
+	Token string `json:"token"`
+	Email string `json:"email"`
+	Name  string `json:"name"`
+	Photo string `json:"photo"`
 }
 
 func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Responder {
@@ -108,12 +106,8 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailure(errors.New("hmac is missing"))
 		} else if signature, err := hex.DecodeString(s); err != nil {
 			return oauthFailure(fmt.Errorf("hmac: invalid hex encoding: %s", err.Error()))
-		} else {
-			h := hmac.New(sha256.New, ssoDomain.SSOSecret)
-			h.Write(payloadBytes)
-			if !hmac.Equal(h.Sum(nil), signature) {
-				return oauthFailure(fmt.Errorf("hmac: signature verification failed"))
-			}
+		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, ssoDomain.SSOSecret)) {
+			return oauthFailure(fmt.Errorf("hmac: signature verification failed"))
 		}
 
 		// Prepare a federated user
@@ -231,7 +225,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	// Auth successful. If it's non-interactive SSO
 	var resp middleware.Responder
 	if ssoDomain != nil && ssoDomain.SSONonInteractive {
-		// Send a success message to the opener window
+		// Send a success message to the parent window
 		resp = postSSOLoginResponse()
 	} else {
 		// Interactive auth: close the login popup
@@ -285,20 +279,15 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		}
 
 		// Parse the SSO URL
-		ssoURL, err := util.ParseAbsoluteURL(domain.SSOURL, false)
+		ssoURL, err := util.ParseAbsoluteURL(domain.SSOURL, true)
 		if err != nil {
 			return oauthFailure(err)
 		}
 
-		// Generate a new HMAC signature
-		h := hmac.New(sha256.New, domain.SSOSecret)
-		h.Write(token.Value)
-		signature := hex.EncodeToString(h.Sum(nil))
-
-		// Add the token and the signature to the SSO URL
+		// Add the token and its HMAC signature to the SSO URL
 		q := ssoURL.Query()
 		q.Set("token", token.String())
-		q.Set("hmac", signature)
+		q.Set("hmac", hex.EncodeToString(util.HMACSign(token.Value, domain.SSOSecret)))
 		ssoURL.RawQuery = q.Encode()
 		authURL = ssoURL.String()
 
@@ -339,7 +328,14 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
 	return NewCookieResponder(api_general.NewAuthOauthInitTemporaryRedirect().WithLocation(authURL)).
-		WithCookie(util.CookieNameAuthSession, authSession.ID.String(), "/", util.AuthSessionDuration, true, http.SameSiteLaxMode)
+		WithCookie(
+			util.CookieNameAuthSession,
+			authSession.ID.String(),
+			"/",
+			util.AuthSessionDuration,
+			true,
+			// Allow sending it cross-origin, but only via HTTPS as only a secure cookie can use SameSite=None
+			util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode))
 }
 
 // oauthFailure returns a generic "Unauthorized" responder, with the error message in the details. Also wipes out any

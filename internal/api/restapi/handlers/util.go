@@ -9,6 +9,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"time"
 )
@@ -22,9 +23,9 @@ func closeParentWindowResponse() middleware.Responder {
 }
 
 // postSSOLoginResponse returns a responder that renders an HTML script posting a successful SSO login response to the
-// opener window
+// parent window
 func postSSOLoginResponse() middleware.Responder {
-	return NewHTMLResponder(http.StatusOK, "<html><script>window.opener.postMessage({type: 'auth.sso.result', success: true}, '*');</script></html>")
+	return NewHTMLResponder(http.StatusOK, "<html><script>window.parent.postMessage({type: 'auth.sso.result', success: true}, '*');</script></html>")
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -92,7 +93,13 @@ func (r *CookieResponder) WithCookie(name, value, path string, maxAge time.Durat
 
 // WithoutCookie removes a cookie in the response by submitting a "pre-expired" cookie
 func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
-	r.cookies[name] = &http.Cookie{Name: name, Path: path, MaxAge: -1}
+	r.cookies[name] = &http.Cookie{
+		Name:   name,
+		Path:   path,
+		MaxAge: -1,
+		// Allow sending it cross-origin, but only via HTTPS as only a secure cookie can use SameSite=None
+		SameSite: util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode),
+	}
 	return r
 }
 

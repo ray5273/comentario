@@ -36,13 +36,14 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 
 func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
 	// Verify the user can log in and create a new session
-	us, r := loginUser(user, "", params.HTTPRequest)
+	host := string(params.Body.Host)
+	us, r := loginUser(user, host, params.HTTPRequest)
 	if r != nil {
 		return r
 	}
 
 	// Find the domain user, creating one if necessary
-	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	_, du, err := svc.TheDomainService.FindDomainUserByHost(host, &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}

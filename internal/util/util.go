@@ -3,7 +3,9 @@ package util
 import (
 	"bytes"
 	"compress/gzip"
+	"crypto/hmac"
 	cryptorand "crypto/rand"
+	"crypto/sha256"
 	"encoding/hex"
 	"errors"
 	"fmt"
@@ -137,6 +139,13 @@ func Default[T comparable](value, defaultValue T) T {
 // FormatVersion renders the given uasurfer.Version as a string
 func FormatVersion(v *uasurfer.Version) string {
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
+}
+
+// HMACSign signs the given data with the given secret, using HMAC with SHA256
+func HMACSign(b, secret []byte) []byte {
+	h := hmac.New(sha256.New, secret)
+	h.Write(b)
+	return h.Sum(nil)
 }
 
 // HTMLDocumentTitle parses and returns the title of an HTML document

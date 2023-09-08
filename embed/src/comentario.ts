@@ -562,14 +562,14 @@ export class Comentario extends HTMLElement {
     /**
      * Try to authenticate the user with non-interactive SSO.
      */
-    private async loginSsoNonInteractive(url: string): Promise<void> {
+    private async loginSsoNonInteractive(ssoUrl: string): Promise<void> {
         // Promise resolving as soon as the iframe communicates back
         const ready = new Promise<SsoLoginResponse>((resolve, reject) =>
             window.addEventListener(
                 'message',
                 (e: MessageEvent<SsoLoginResponse>) => {
-                    // Make sure the message originates from the SSO iframe and is a valid response
-                    if (e.origin !== url || e.data?.type !== 'auth.sso.result') {
+                    // Make sure the message originates from the backend and is a valid response
+                    if (e.origin !== this.origin || e.data?.type !== 'auth.sso.result') {
                         return;
                     }
 
@@ -584,12 +584,12 @@ export class Comentario extends HTMLElement {
                 },
                 {once: true}));
 
-        // Time out after 60 seconds
-        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject('SSO login timed out'), 60_000));
+        // Time out after 30 seconds
+        const timeout = new Promise<never>((_, reject) => setTimeout(() => reject('SSO login timed out'), 30_000));
 
         // Insert an invisible iframe, initiating SSO
         const iframe = Wrap.new('iframe')
-            .attr({src: url, style: 'display: none'})
+            .attr({src: ssoUrl, style: 'display: none'})
             .appendTo(this.root);
 
         // Wait until login is complete or timed out

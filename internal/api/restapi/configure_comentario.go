@@ -2,7 +2,6 @@ package restapi
 
 import (
 	"crypto/tls"
-	"fmt"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
@@ -11,24 +10,16 @@ import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/e2e"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
-	"os"
-	"path"
-	"plugin"
 )
 
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("restapi")
-
-// Global e2e handler instance (only in e2e testing mode)
-var e2eHandler e2e.End2EndHandler
 
 func configureFlags(api *operations.ComentarioAPI) {
 	api.CommandLineOptionsGroups = []swag.CommandLineOptionsGroup{
@@ -168,7 +159,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 
 	// If in e2e-testing mode, configure the backend accordingly
 	if config.CLIFlags.E2e {
-		if err := configureE2eMode(api); err != nil {
+		if err := handlers.E2eConfigure(api); err != nil {
 			logger.Fatalf("Failed to configure e2e plugin: %v", err)
 		}
 	}
@@ -201,53 +192,12 @@ func configureServer(_ *http.Server, scheme, _ string) {
 	svc.TheServiceManager.Initialise()
 
 	// Init the e2e handler, if in the e2e testing mode
-	if e2eHandler != nil {
-		if err := e2eHandler.Init(&e2eApp{logger: logging.MustGetLogger("e2e")}); err != nil {
+	if config.CLIFlags.E2e {
+		if err := handlers.E2eInit(); err != nil {
 			logger.Fatalf("e2e handler init failed: %v", err)
 		}
 	}
 
 	// Start background services
 	svc.TheServiceManager.Run()
-}
-
-// configureE2eMode configures the app to run in the end-2-end testing mode
-func configureE2eMode(api *operations.ComentarioAPI) error {
-	// Get the plugin path
-	p, err := os.Executable()
-	if err != nil {
-		return err
-	}
-	pluginFile := path.Join(path.Dir(p), "comentario-e2e.so")
-
-	// Load the e2e plugin
-	logger.Infof("Loading e2e plugin %s", pluginFile)
-	plug, err := plugin.Open(pluginFile)
-	if err != nil {
-		return err
-	}
-
-	// Look up the handler
-	h, err := plug.Lookup("Handler")
-	if err != nil {
-		return err
-	}
-
-	// Fetch the service interface (hPtr is a pointer, because Lookup always returns a pointer to symbol)
-	hPtr, ok := h.(*e2e.End2EndHandler)
-	if !ok {
-		return fmt.Errorf("symbol Handler from plugin %s doesn't implement End2EndHandler", pluginFile)
-	}
-
-	// Configure API endpoints
-	e2eHandler = *hPtr
-	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(E2eReset)
-	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
-
-	// Reduce delays during end-2-end tests
-	util.WrongAuthDelayMin = 0
-	util.WrongAuthDelayMax = 0
-
-	// Succeeded
-	return nil
 }

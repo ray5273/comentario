@@ -2956,3 +2956,27 @@ paths:
                   type: boolean
                   x-omitempty: false
 
+  /e2e/oauth/{uuid}/sso/noninteractive:
+    get:
+      operationId: E2eOAuthSSONonInteractive
+      summary: Perform a fake non-interactive SSO-auth for a domain with the given UUID
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - $ref: "#/parameters/queryToken"
+        - in: query
+          name: hmac
+          required: true
+          type: string
+          minLength: 64
+          maxLength: 64
+          pattern: '[0-9a-f]{64}'
+          description: HMAC signature for token
+      responses:
+        302:
+          description: Auth successful, redirecting to the callback URL
+          headers:
+            Location:
+              type: string
