@@ -710,7 +710,8 @@ func TestMarkdownToHTML(t *testing.T) {
 		{"Image, images off      ", "![Image](http://example.com/image.jpg)", false, false, "<p></p>"},
 		{"Image, images on       ", "![Image](http://example.com/image.jpg)", false, true, "<p><img src=\"http://example.com/image.jpg\" alt=\"Image\"></p>"},
 		{"Formatting             ", "**bold** *italics*", false, false, "<p><strong>bold</strong> <em>italics</em></p>"},
-		{"URL                    ", "http://example.com/autolink", false, false, "<p><a href=\"http://example.com/autolink\" rel=\"nofollow noopener\" target=\"_blank\">http://example.com/autolink</a></p>"},
+		{"URL, links off         ", "http://example.com/autolink", false, false, "<p>http://example.com/autolink</p>"},
+		{"URL, links on          ", "http://example.com/autolink", true, false, "<p><a href=\"http://example.com/autolink\" rel=\"nofollow noopener\" target=\"_blank\">http://example.com/autolink</a></p>"},
 		{"HTML                   ", "<b>not bold</b>", false, false, "<p>not bold</p>"},
 	}
 	for _, tt := range tests {
