@@ -79,6 +79,11 @@ rm -rf "$build_dir/db" "$build_dir/templates"
     echo "Building e2e plugin" &&
     go build -buildmode=plugin -o "$build_dir/comentario-e2e.so" "$root_dir/e2e/plugin/"
 
+# Build the e2e relay
+((do_build)) &&
+    echo "Building e2e relay" &&
+    go build -o "$build_dir/comentario-relay" "$root_dir/e2e/relay/"
+
 # (Re)start the database
 if ((do_db)); then
     docker compose -f "$root_dir/docker-compose.yml" down -v
