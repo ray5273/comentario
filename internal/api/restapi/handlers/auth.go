@@ -272,9 +272,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		user.WithConfirmed(true)
 
 		// If confirmation is switched off in the config, mark the user confirmed, too
-	} else if ci, err := svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupConfirmUser); err != nil {
-		respServiceError(err)
-	} else if !ci.AsBool() {
+	} else if !svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser, true) {
 		user.WithConfirmed(true)
 	}
 

@@ -697,23 +697,27 @@ func TestMarkdownToHTML(t *testing.T) {
 	tests := []struct {
 		name     string
 		markdown string
+		links    bool
+		images   bool
 		want     string
 	}{
-		{"Bare text   ", "Foo", "<p>Foo</p>"},
-		{"Paragraphs  ", "Foo\n\nBar", "<p>Foo</p>\n\n<p>Bar</p>"},
-		{"Script      ", "XSS: <script src='http://example.com/script.js'></script> Foo", "<p>XSS:  Foo</p>"},
-		{"Regular link", "Regular [Link](http://example.com)", "<p>Regular <a href=\"http://example.com\" rel=\"nofollow noopener\" target=\"_blank\">Link</a></p>"},
-		{"XSS link    ", "XSS [Link](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pgo=)", "<p>XSS <tt>Link</tt></p>"},
-		{"Image       ", "![Images disallowed](http://example.com/image.jpg)", "<p></p>"},
-		{"Formatting  ", "**bold** *italics*", "<p><strong>bold</strong> <em>italics</em></p>"},
-		{"URL         ", "http://example.com/autolink", "<p><a href=\"http://example.com/autolink\" rel=\"nofollow noopener\" target=\"_blank\">http://example.com/autolink</a></p>"},
-		{"HTML        ", "<b>not bold</b>", "<p>not bold</p>"},
+		{"Bare text              ", "Foo", false, false, "<p>Foo</p>"},
+		{"Paragraphs             ", "Foo\n\nBar", false, false, "<p>Foo</p>\n\n<p>Bar</p>"},
+		{"Script                 ", "XSS: <script src='http://example.com/script.js'></script> Foo", false, false, "<p>XSS:  Foo</p>"},
+		{"Regular link, links off", "Regular [Link](http://example.com)", false, false, "<p>Regular <tt>Link</tt></p>"},
+		{"Regular link, links on ", "Regular [Link](http://example.com)", true, false, "<p>Regular <a href=\"http://example.com\" rel=\"nofollow noopener\" target=\"_blank\">Link</a></p>"},
+		{"XSS link               ", "XSS [Link](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pgo=)", false, false, "<p>XSS <tt>Link</tt></p>"},
+		{"Image, images off      ", "![Image](http://example.com/image.jpg)", false, false, "<p></p>"},
+		{"Image, images on       ", "![Image](http://example.com/image.jpg)", false, true, "<p><img src=\"http://example.com/image.jpg\" alt=\"Image\"></p>"},
+		{"Formatting             ", "**bold** *italics*", false, false, "<p><strong>bold</strong> <em>italics</em></p>"},
+		{"URL                    ", "http://example.com/autolink", false, false, "<p><a href=\"http://example.com/autolink\" rel=\"nofollow noopener\" target=\"_blank\">http://example.com/autolink</a></p>"},
+		{"HTML                   ", "<b>not bold</b>", false, false, "<p>not bold</p>"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			// Trim leading/trailing whitespace explicitly before comparing (because it doesn't matter in the resulting
 			// HTML)
-			if got := strings.TrimSpace(MarkdownToHTML(tt.markdown)); got != tt.want {
+			if got := strings.TrimSpace(MarkdownToHTML(tt.markdown, tt.links, tt.images)); got != tt.want {
 				t.Errorf("MarkdownToHTML() = %v, want %v", got, tt.want)
 			}
 		})

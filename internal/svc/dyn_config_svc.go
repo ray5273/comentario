@@ -19,6 +19,8 @@ type DynConfigService interface {
 	Get(key data.DynInstanceConfigItemKey) (*data.DynInstanceConfigItem, error)
 	// GetAll returns all available configuration items
 	GetAll() (map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem, error)
+	// GetBool returns the bool value of a configuration item by its key, or the default value on error
+	GetBool(key data.DynInstanceConfigItemKey, defValue bool) bool
 	// Load configuration data from the database
 	Load() error
 	// Reset resets all configuration data to its defaults
@@ -38,9 +40,6 @@ type dynConfigService struct {
 }
 
 func (svc *dynConfigService) Get(key data.DynInstanceConfigItemKey) (*data.DynInstanceConfigItem, error) {
-	logger.Debugf("dynConfigService.Get(%q)", key)
-
-	// Prevent concurrent write access
 	svc.mu.RLock()
 	defer svc.mu.RUnlock()
 	return svc.get(key)
@@ -65,6 +64,13 @@ func (svc *dynConfigService) GetAll() (map[data.DynInstanceConfigItemKey]*data.D
 		items[k] = &vCopy
 	}
 	return items, nil
+}
+
+func (svc *dynConfigService) GetBool(key data.DynInstanceConfigItemKey, defValue bool) bool {
+	if i, err := svc.Get(key); err == nil {
+		return i.AsBool()
+	}
+	return defValue
 }
 
 func (svc *dynConfigService) Load() error {
@@ -218,14 +224,14 @@ func (svc *dynConfigService) get(key data.DynInstanceConfigItemKey) (*data.DynIn
 
 // reset the configuration to its defaults
 func (svc *dynConfigService) reset() {
-	svc.items = map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem{
-		data.ConfigKeyAuthSignupEnabled:          {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "Enable registration of new users"},
-		data.ConfigKeyAuthSignupConfirmUser:      {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "New users must confirm their email"},
-		data.ConfigKeyAuthSignupConfirmCommenter: {DefaultValue: "true", Datatype: data.ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
-		data.ConfigKeyOperationNewOwnerEnabled:   {DefaultValue: "false", Datatype: data.ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
-	}
-	// Reset all values to their defaults
-	for _, ci := range svc.items {
-		ci.Value = ci.DefaultValue
+	// Clone the default config, resetting all values to their defaults
+	svc.items = make(map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem, len(data.DefaultDynInstanceConfig))
+	for key, item := range data.DefaultDynInstanceConfig {
+		svc.items[key] = &data.DynInstanceConfigItem{
+			Value:        item.DefaultValue,
+			Description:  item.Description,
+			Datatype:     item.Datatype,
+			DefaultValue: item.DefaultValue,
+		}
 	}
 }

@@ -296,15 +296,38 @@ func LogError(f func() error, details string) {
 }
 
 // MarkdownToHTML renders the provided markdown string as HTML
-func MarkdownToHTML(markdown string) string {
-	// Lazy-initialise the renderer
-	if markdownRenderer == nil {
-		createMarkdownRenderer()
+func MarkdownToHTML(markdown string, links, images bool) string {
+	policy := bluemonday.UGCPolicy()
+	policy.AddTargetBlankToFullyQualifiedLinks(true)
+	policy.RequireNoFollowOnFullyQualifiedLinks(true)
+
+	extensions := 0 |
+		blackfriday.EXTENSION_STRIKETHROUGH
+
+	htmlFlags := 0 |
+		blackfriday.HTML_SKIP_HTML |
+		blackfriday.HTML_SKIP_STYLE |
+		blackfriday.HTML_SAFELINK |
+		blackfriday.HTML_NOFOLLOW_LINKS |
+		blackfriday.HTML_NOREFERRER_LINKS |
+		blackfriday.HTML_NOOPENER_LINKS |
+		blackfriday.HTML_HREF_TARGET_BLANK
+
+	// Link processing
+	if links {
+		extensions |= blackfriday.EXTENSION_AUTOLINK
+	} else {
+		htmlFlags |= blackfriday.HTML_SKIP_LINKS
 	}
 
-	// Render the markdown
-	unsafe := blackfriday.Markdown([]byte(markdown), markdownRenderer, markdownExtensions)
-	return string(markdownPolicy.SanitizeBytes(unsafe))
+	// Image processing
+	if !images {
+		htmlFlags |= blackfriday.HTML_SKIP_IMAGES
+	}
+
+	renderer := blackfriday.HtmlRenderer(htmlFlags, "", "")
+	unsafe := blackfriday.Markdown([]byte(markdown), renderer, extensions)
+	return string(policy.SanitizeBytes(unsafe))
 }
 
 // MD5ToHex converts the given MD5 binary checksum into its string representation. If checksum is nil, return an empty
@@ -432,28 +455,4 @@ func UserIPCountry(r *http.Request) (ip, country string) {
 	ip = UserIP(r)
 	country = CountryByIP(ip)
 	return
-}
-
-var markdownPolicy *bluemonday.Policy
-var markdownRenderer blackfriday.Renderer
-
-var markdownExtensions int
-
-// createMarkdownRenderer creates and initialises a markdown renderer
-func createMarkdownRenderer() {
-	markdownPolicy = bluemonday.UGCPolicy()
-	markdownPolicy.AddTargetBlankToFullyQualifiedLinks(true)
-	markdownPolicy.RequireNoFollowOnFullyQualifiedLinks(true)
-
-	markdownExtensions = 0
-	markdownExtensions |= blackfriday.EXTENSION_AUTOLINK
-	markdownExtensions |= blackfriday.EXTENSION_STRIKETHROUGH
-
-	htmlFlags := 0
-	htmlFlags |= blackfriday.HTML_SKIP_HTML
-	htmlFlags |= blackfriday.HTML_SKIP_IMAGES
-	htmlFlags |= blackfriday.HTML_SAFELINK
-	htmlFlags |= blackfriday.HTML_HREF_TARGET_BLANK
-
-	markdownRenderer = blackfriday.HtmlRenderer(htmlFlags, "", "")
 }

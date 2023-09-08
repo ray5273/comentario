@@ -652,7 +652,10 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 
 		// Render Markdown into HTML (the latter doesn't get exported)
 		if !del {
-			c.HTML = util.MarkdownToHTML(comment.Markdown)
+			c.HTML = util.MarkdownToHTML(
+				comment.Markdown,
+				TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled, false),
+				TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled, false))
 		}
 
 		// File it under the appropriate parent ID

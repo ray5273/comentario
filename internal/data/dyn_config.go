@@ -56,4 +56,16 @@ const (
 	ConfigKeyAuthSignupConfirmCommenter DynInstanceConfigItemKey = "auth.signup.confirm.commenter"
 	ConfigKeyAuthSignupConfirmUser      DynInstanceConfigItemKey = "auth.signup.confirm.user"
 	ConfigKeyOperationNewOwnerEnabled   DynInstanceConfigItemKey = "operation.newOwner.enabled"
+	ConfigKeyMarkdownLinksEnabled       DynInstanceConfigItemKey = "markdown.links.enabled"
+	ConfigKeyMarkdownImagesEnabled      DynInstanceConfigItemKey = "markdown.images.enabled"
 )
+
+// DefaultDynInstanceConfig is the default dynamic instance configuration
+var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigItem{
+	ConfigKeyAuthSignupEnabled:          {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable registration of new users"},
+	ConfigKeyAuthSignupConfirmUser:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New users must confirm their email"},
+	ConfigKeyAuthSignupConfirmCommenter: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
+	ConfigKeyOperationNewOwnerEnabled:   {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
+	ConfigKeyMarkdownLinksEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable links in comments"},
+	ConfigKeyMarkdownImagesEnabled:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},
+}
