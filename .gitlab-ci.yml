@@ -36,8 +36,6 @@ build:
   variables:
     # We want to store downloaded packages under the project dir, so we can cache them
     GOPATH: $CI_PROJECT_DIR/.go
-    # URL the test-site service is available at
-    CYPRESS_TEST_SITE_URL: http://comentario-test-site:8000/
   services:
     - name: postgres:15-alpine
       variables:

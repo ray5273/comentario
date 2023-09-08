@@ -1,5 +1,5 @@
 /** The base URL for the test site. */
-const testSiteUrl = Cypress.env('TEST_SITE_URL') || 'http://comentario-test-site:8000/';
+const testSiteUrl = Cypress.env('TEST_SITE_URL') || 'http://localhost:8000/';
 
 context('Comments', () => {
 
