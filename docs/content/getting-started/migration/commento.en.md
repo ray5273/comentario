@@ -25,7 +25,7 @@ The data model was developed from scratch, and all the constituent components ha
 
 We've done our best to make the migration transparent, keeping Comentario "plug-n-play." The database will be automatically migrated on first run.
 
-Contrary to Comentario 2.x, it's a one-way ticket though; once migrated, the original database will be deleted. The only way to revert that is making a back-up copy prior to migration.
+Contrary to Comentario 2.x, it's a one-way ticket though; once migrated, the original database will be deleted. The only way to revert that is restoring a back-up copy made prior to migration.
 
 ## Migration steps
 

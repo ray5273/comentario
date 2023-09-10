@@ -23,32 +23,53 @@ In order to add (*embed*) comments to your website, you'll need to do the follow
 The HTML snippet is displayed in domain properties and looks like this:
 
 ```html
-<script defer src="https://example.com/js/comentario.js"></script>
-<div id="comentario"></div>
+<script defer src="https://example.com/comentario.js"></script>
+<comentario-comments></comentario-comments>
 ```
 
-As you can see, it consists of two tags: a `<script>` and a `<div>`.
+As you can see, it consists of two tags: a `<script>` and a `<comentario-comments>`.
 
 ### Script tag
 
 The `<script>` tag provides the entire commenting functionality, including comment layout, content, and styling.
 
-The script tag allows for further customisation of comments on the page by extending it with `data-*`-attributes.
+### Comments tag
+
+The `<comentario-comments>` tag is a [web component](https://developer.mozilla.org/en-US/docs/Web/API/Web_components) that provides the comment functionality. It marks the location for displayed comments.
+
+After Comentario engine is initialised, the comments will appear inside the `<comentario-comments>` tag — as well as the profile bar, comment editor, and other relevant elements.
+
+You can further customise Comentario by adding attributes to the `<comentario-comments>` tag:
 
 {{< table "table table-narrow table-striped" >}}
 
-| Attribute           | Description                                            | Default value |
-|---------------------|--------------------------------------------------------|---------------|
-| `data-page-id`      | Overrides the path (URL) of the current page           |               |
-| `data-css-override` | URL of an additional CSS stylesheet to load            |               |
-| `data-auto-init`    | Whether to automatically initialise Comentario         | `true`        |
-| `data-id-root`      | ID of root `<div>` HTML element for embedding comments | `comentario`  |
-| `data-no-fonts`     | Whether to avoid applying default Comentario fonts     | `false`       |
-| `data-hide-deleted` | Whether to hide deleted comments on the page           | `false`       |
+| Attribute      | Description                                                                    | Default value |
+|----------------|--------------------------------------------------------------------------------|---------------|
+| `auto-init`    | Whether to automatically initialise Comentario                                 | `true`        |
+| `css-override` | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |               |
+| `no-fonts`     | Set to `true` to avoid applying default Comentario fonts                       | `false`       |
+| `page-id`      | Overrides the path (URL) of the current page                                   |               |
 {{< /table >}}
 
-### Div tag
+Example of a customised `<comentario-comments>` tag:
 
-The `<div>` element is merely an *insertion point*, which marks the location for displayed comments. After Comentario engine is initialised, its content gets replaced by comments, new comment editor, and other relevant elements.
+```html
+<comentario-comments auto-init="false" 
+                     css-override="https://example.com/custom.css" 
+                     no-fonts="true" 
+                     page-id="/blog/post/123"></comentario-comments>
+```
 
-By default, it has to have the `id="comentario"`, but this can be overridden by using the `data-id-root` attribute (see above).
+#### Manual initialisation
+
+If you disabled automatic initialisation by adding `auto-init="false"`, you'll need to initialise Comentario manually. Here's a simple example:
+
+```html
+<comentario-comments id="comments"></comentario-comments>
+<script>
+    window.onload = function() {
+      document.getElementById('comments').main();
+    };
+</script>
+```
+
