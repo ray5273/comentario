@@ -1,44 +1,49 @@
-[Homepage](https://comentario.app) · [Demo](https://demo.comentario.app) · [Documentation](https://docs.comentario.app/) · [Author's blog](https://yktoo.com/)
-
 # Comentario
+
+[Homepage](https://comentario.app/) · [Demo](https://demo.comentario.app) · [Docs](https://docs.comentario.app/) · [Author's Blog](https://yktoo.com/)
+
+---
 
 **[Comentario](https://comentario.app)** is a platform that you can embed in your website to allow your readers to add comments. It's lightweight and fast.
 
-Comentario supports Markdown syntax, import from Disqus, comment voting, automated spam detection, moderation tools, sticky comments, thread locking, OAuth login, single sign-on, and email notifications.
+Comentario supports Markdown syntax, import from Disqus, comment voting, automated spam and toxicity detection, moderation tools, sticky comments, thread locking, OAuth login, email notifications, user roles, single sign-on, and more.
 
-**Comentario** is a fork of [Commento](https://gitlab.com/commento/commento) by Adhityaa Chandrasekar, an open source web comment server that has been discontinued: see a list of major differences below.
+**Comentario** 2.x was a fork of [Commento](https://gitlab.com/commento/commento) by Adhityaa Chandrasekar, now discontinued.
+
+As of **Comentario 3**, the whole codebase and the data model have been rewritten, so any resemblance to Commento is mostly cosmetic.
 
 ## FAQ
 
 ### How is this different from Disqus, Facebook Comments, and the rest?
 
-Most other products in this space do not respect your privacy; showing ads is their primary business model and that nearly always comes at the users' cost. Comentario has no ads; you're the customer, not the product.
+Most other products in this category have privacy downsides you should know about.
 
-Comentario is also orders of magnitude lighter than alternatives.
+Many of these systems like to collect data — stuff like analytics, ads, and user info. This can be a privacy issue, especially if they're after your personal data.
+
+Apart from turning you, the user, into a product, theres a data security concern. If the commenting system gets hacked, your info might end up in the wrong hands. A good idea is to check the privacy policies and how they handle data before picking a commenting system for your site.
+
+Here's a start:
+
+* Comentario has no ads: you're the customer, not the product.
+* Comentario offers self-hosted options that give you more control over privacy settings.
+* Comentario is orders of magnitude lighter than alternatives: the downloadable embed part is some 20 KB compressed.
 
 ### Why should I care about my readers' privacy?
 
-For starters, your readers value their privacy. Not caring about them is disrespectful, and you will end up alienating your audience; they won't come back. Disqus adds megabytes to your page size; what happens when a random third-party script that is injected into your website turns malicious?
+Firstly, it fosters trust and bolsters your website's reputation. When users believe that their personal information is handled responsibly, they are more likely to engage with your content and feel comfortable interacting with your online platform. Additionally, compliance with privacy laws and regulations is a must, as failure to do so can lead to legal repercussions and fines, making it essential to prioritize privacy as a fundamental aspect of your online presence.
+
+Moreover, beyond legal requirements, there are ethical considerations. Respecting user privacy reflects a commitment to treating your readers with respect and acknowledging the value of their personal data. This ethical stance not only aligns with responsible online practices but also contributes to long-term sustainability by fostering user loyalty and trust. By prioritizing user privacy, you create a secure and welcoming digital space, which is vital for your website's credibility, user engagement, and overall success.
 
 ### How does Comentario differ from its predecessor Commento?
 
-There are quite a few major points (and counting):
+The list of differences is [really long](CHANGELOG.md), but here are a few major points:
 
-* Comentario is running the latest and greatest software versions: Go 1.20, Postgres 15.x (older version supported down to 9.6), ES6 and so on.
-* The "embeddable" part (`comentario.js`) is a complete rewrite:
-    * Code is modernised and reimplemented using Typescript.
-    * Layouts are optimised for all screen sizes (300 pixels up).
-    * Login, Signup, and Markdown Help are made popup dialogs (we're using [Popper](https://popper.js.org/) for correct positioning).
-    * Login, Signup, and Comment Editor are using HTML `form` element and proper `autocomplete` attribute values, which makes them compatible with password managers.
-    * Improvements for WCAG (accessibility), including keyboard navigation.
-    * Subtle animations are added.
-    * Keyboard-enabled dialogs (<kbd>Escape</kbd> cancels, <kbd>Enter</kbd> (<kbd>Ctrl</kbd><kbd>Enter</kbd> in a multiline field) submits the dialog).
-    * Tons of other issues and inconsistencies have been fixed.
-* Dropped support for local service installation. Instead, we're recommending deploying Comentario in the cloud, ideally into a Kubernetes cluster — there's a [Helm chart](https://docs.comentario.app/en/getting-started/installation/helm-chart/) for that.
-* The Comentario server ("backend") is using automated code generation from an Open API spec, with lots of extra checks and validations.
-* Resolved all issues with OAuth identity providers (Google, GitHub, GitLab, Twitter), including user avatars.
-* Every change is automatically end-to-end-tested using Cypress to prevent regressions.
+* Comentario is in active development, regularly adding tons of features and improvements.
+* Comentario is running the latest and greatest software versions, with all necessary security updates.
+* Comentario is blazing fast due to extensive code and data model optimisations.
+* Comentario is built following the best practices for security, privacy, responsive design, and accessibility.
+* Comentario is (aiming to be) fully tested using automated tests to prevent regressions.
 
 ## Getting started
 
-Please refer to [Comentario documentation](https://docs.comentario.app/en/getting-started/) to learn how to install and configure it.
+Refer to [Comentario documentation](https://docs.comentario.app/en/getting-started/) to learn how to install and configure it.

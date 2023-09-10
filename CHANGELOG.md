@@ -2,45 +2,52 @@
 
 ## v3.0.0-rc1
 
-This is a first major update to Comentario, phasing out the flawed legacy data model and improving on pretty much every aspect.
+This is the first major update to Comentario, which phases out the flawed legacy data model and improves on pretty much every aspect.
 
-As this is a huge code change, you're **strongly encouraged to back up your database** before updating. Please also read the [Migration section](https://edge.docs.comentario.app/en/getting-started/migration/comentario-2.x/) carefully.
+**❗ IMPORTANT:**
 
-Since this is a pre-release, it's not sensible to use this in production.
+* This release brings an extensive code change. You're strongly encouraged to **back up your database** before updating. Please read the [Migration docs section](https://edge.docs.comentario.app/en/getting-started/migration/comentario-2.x/) carefully.
+* Since this is a pre-release, **do not use this in production**.
 
 **Changes:**
 
-* **BREAKING:** Completely reworked data model, which replaces the old one once an automated migration is successful. **WARNING:** due to many limitations and quirks of the old model, this migration may fail or produce a somewhat skewed results. Caution and backups are **strongly advised**.
+* **❗ BREAKING:** The new data model, which will replace the old one once the automated migration is successful.\
+  **❗ WARNING:** due to many limitations and quirks of the legacy data model, this migration may fail or produce a somewhat skewed results. Proceed with caution and **verify the migration results carefully**.
 * Overhauled user management. There's now a single user list, with role bindings for each domain.
-* The concept of *superuser* is introduced. Superusers can manages users and all other types of objects in the particular Comentario instance.
-* Except for superusers, user roles are configured per domain and include:
+* The concept of *superuser* is introduced. Superusers can manages users, configuration, and all other types of objects in a particular Comentario instance.
+* Other user roles are configured per domain and include:
   * *Owner*: can manage domain settings and user roles in the domain
   * *Moderator*: can moderate, edit, or delete comments
   * *Commenter*: can write comments
   * *Read-only*: can only read comments or vote for them
-* User can be banned by a superuser, which makes them unable to login anymore or register with the same email.
+* User can be *banned* by a superuser, which makes them unable to login anymore or register with the same email.
 * Much more elaborate view statistics. Views are registered on the page level, and include data such as browser, IP, and country. (Most of that isn't visible in the UI yet.)
 * More moderation policy choices for domain, requiring moderation for:
-  * Users having fewer than N approved comments
-  * Users registered less than N days ago
+  * Users having fewer than `N` approved comments
+  * Users registered less than `N` days ago
   * Comments containing links
   * Comments containing images
 * Domain-wide page and comment list (#1).
 * Support for uploaded user avatars.
 * Support for login with Facebook (#3).
-* Support for so-called extensions, which are for now comment content checkers (spam or toxicity). Each extension can be enabled and configured for each domain separately. Available extensions:
+* Support for images in comments (#13).
+* Support for so-called extensions; for now, these include comment content checkers for spam or toxicity. Each extension can be enabled and configured for each domain separately. Available extensions:
   * Akismet
-  * APILayer SpamChecker
-  * Perspective
-* Fixes for numerous issues and bugs, including SSO authentication.
-* Backend configuration has been split into static and dynamic parts. Dynamic configuration can be changed on-the-fly and get immediately applied:
-  * Dynamic option to control email confirmation for commenters.
-  * Dynamic option to control email confirmation for users.
-  * Dynamic option to disable user registration altogether.
-  * Dynamic option to disable users become owners.
+  * APILayer SpamChecker (configurable spam threshold)
+  * Perspective (configurable thresholds for `toxicity`, `severeToxicity`, `identityAttack`, `insult`, `profanity`, `threat`)
+* Support for non-interactive SSO (#21).
+* Backend configuration has been split into static and dynamic parts. The dynamic configuration can be changed on-the-fly and includes settings such as:
+  * Require email confirmation for commenters.
+  * Require email confirmation for users.
+  * Disable user registration altogether.
+  * Disable users become owners.
+  * Disable inserting links into comments, including turning URLs into links.
+  * Disable inserting images into comments.
 * Static config option to replace the home page content.
-* **BREAKING:** The embed part is now a web component. Existing installs will need to use tag `<comentario-comments>` instead of `<div>`.
-* **BREAKING:** Data attributes (`data-...`) on the script tag are no longer supported. Use attributes on the `<comentario-comments>` instead, omitting the `data-` prefix.
+* **❗ BREAKING:** The embed part is now a web component. Existing installs will need to use tag `<comentario-comments>` instead of `<div>`.
+* **❗ BREAKING:** Data attributes (`data-...`) on the script tag are no longer supported. Use attributes on the `<comentario-comments>` instead, omitting the `data-` prefix (#14).
+* More elaborate end-2-end tests (many more coming).
+* Fixes for numerous issues and bugs.
 
 ## v2.3.1
 
