@@ -7,6 +7,18 @@ declare namespace Cypress {
         succeeded:  boolean;
     }
 
+    /** Rendered comment. */
+    interface Comment {
+        id:        string;
+        html:      string;
+        author:    string;
+        score:     number;
+        upvoted:   boolean;
+        downvoted: boolean;
+        sticky:    boolean;
+        children?: Comment[];
+    }
+
     interface Chainable {
 
         /**
@@ -15,6 +27,11 @@ declare namespace Cypress {
          * @param ignoreQuery Whether to strip the query parameters before comparing
          */
         isAt(expected: string | RegExp, ignoreQuery?: boolean): Chainable<string>;
+
+        /**
+         * Collect page comments and return them as a tree structure.
+         */
+        commentTree(): Chainable<Comment[]>;
 
         /**
          * Set an input's value directly.

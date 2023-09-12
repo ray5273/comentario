@@ -123,5 +123,4 @@ overrides:
       semi:
         - error
         - always
-      cypress/unsafe-to-chain-commands: off
-
+      cypress/unsafe-to-chain-command: off

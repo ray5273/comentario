@@ -321,7 +321,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         const isSticky = this._comment.isSticky;
         if (!this._comment.parentId && (isSticky || isModerator)) {
             this.btnSticky = this.getOptionButton('sticky', null, () => ctx.onSticky(this))
-                .setClasses(isSticky, 'text-warning')
+                .setClasses(isSticky, 'is-sticky')
                 .attr({
                     disabled: isModerator ? null : 'true',
                     title: isSticky ? (isModerator ? 'Unsticky' : 'This comment has been stickied') : 'Sticky',

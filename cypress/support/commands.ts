@@ -1,7 +1,46 @@
 import JQueryWithSelector = Cypress.JQueryWithSelector;
 
-const { config } = Cypress;
+// @ts-ignore
+const { config, $ } = Cypress;
 const baseUrl = config('baseUrl');
+
+const getChildComments = (root: Element): Cypress.Comment[] =>
+    // Query comment cards
+    Array.from(root.children)
+        // Filter comment cards
+        .filter(c => c.classList.contains('comentario-card'))
+        // Turn the card into a comment
+        .map(c => $(c))
+        .map($card => {
+            const $self     = $card.find('> .comentario-card-self');
+            const $header   = $self.find('> .comentario-card-header');
+            const $options  = $self.find('> .comentario-options');
+            const c: Cypress.Comment = {
+                id:        $self.attr('id')?.replace('comentario-', ''),
+                html:      $self.find(' > .comentario-card-body').html(),
+                author:    $header.find('.comentario-name').html(),
+                score:     Number($options.find('.comentario-score').html()),
+                upvoted:   $options.find('.comentario-button[title=Upvote]')  .hasClass('comentario-upvoted'),
+                downvoted: $options.find('.comentario-button[title=Downvote]').hasClass('comentario-downvoted'),
+                sticky:    !!$options.find('.comentario-is-sticky').length,
+            };
+
+            // Recurse children, if any
+            const $children = $card.find('> .comentario-card-children');
+            if ($children.length) {
+                const ch = getChildComments($children[0]);
+                if (ch.length) {
+                    c.children = ch;
+                }
+            }
+            return c;
+        });
+
+Cypress.Commands.addQuery(
+    'commentTree',
+    function commentTree() {
+        return () => $('.comentario-comments').map((_, c) => getChildComments(c)).get();
+    });
 
 Cypress.Commands.add('isAt', (expected: string | RegExp, ignoreQuery?: boolean) => cy.url().should((url) => {
     // Strip off any parameters before comparing
@@ -37,7 +76,7 @@ Cypress.Commands.addQuery(
             if (!(element instanceof HTMLElement) && !selector) {
                 throw Error('cy.texts(): either element or selector must be provided.');
             }
-            return (element ? (selector ? Cypress.$(element).find(selector) : Cypress.$(element)) : Cypress.$(selector))
+            return (element ? (selector ? $(element).find(selector) : $(element)) : $(selector))
                 .map((i, e) => e.innerText)
                 .get();
         };
