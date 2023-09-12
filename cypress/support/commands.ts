@@ -4,6 +4,23 @@ import JQueryWithSelector = Cypress.JQueryWithSelector;
 const { config, $ } = Cypress;
 const baseUrl = config('baseUrl');
 
+/** The base URL for the test site. */
+const testSiteUrl = Cypress.env('TEST_SITE_URL') || 'http://localhost:8000/';
+
+const commentDeepMap = (c: Cypress.Comment, props: (keyof Cypress.Comment)[]) => {
+    const x: any = {};
+    props.forEach(p => x[p] = c[p]);
+    if (c.children?.length) {
+        x.children = c.children.map(child => commentDeepMap(child, props));
+    }
+    return x;
+};
+
+Cypress.Commands.add(
+    'commentMap',
+    {prevSubject: true},
+    (tree: Cypress.Comment[], ...props: (keyof Cypress.Comment)[]) => cy.wrap(tree.map(c => commentDeepMap(c, props))));
+
 const getChildComments = (root: Element): Cypress.Comment[] =>
     // Query comment cards
     Array.from(root.children)
@@ -95,6 +112,11 @@ Cypress.Commands.add(
             .siblings('.invalid-feedback').should('be.visible')
             .should(fb => text && expect(fb.text()).eq(text))
             .wrap(element));
+
+Cypress.Commands.add(
+    'visitTestSite',
+    {prevSubject: false},
+    (path: string) => cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
 
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));

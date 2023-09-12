@@ -29,6 +29,11 @@ declare namespace Cypress {
         isAt(expected: string | RegExp, ignoreQuery?: boolean): Chainable<string>;
 
         /**
+         * Recursively map a comment tree by keeping only the specified properties and any children from each comment.
+         */
+        commentMap(...props: (keyof Comment)[]): Chainable<Partial<Comment>[]>;
+
+        /**
          * Collect page comments and return them as a tree structure.
          */
         commentTree(): Chainable<Comment[]>;
@@ -55,6 +60,12 @@ declare namespace Cypress {
         isInvalid(text?: string): Chainable<JQueryWithSelector>;
 
         /**
+         * Just like cy.visit(), but uses the test site URL as base.
+         * @param path Path to visit.
+         */
+        visitTestSite(path: string): Chainable<AUTWindow>;
+
+        /**
          * Request the backend to reset the database and all the settings to test defaults.
          */
         backendReset(): void;
@@ -69,6 +80,8 @@ declare namespace Cypress {
     interface Chainer<Subject> {
         (chainer:
              'arrayMatch'  | 'not.arrayMatch'  |
-             'matrixMatch' | 'not.matrixMatch'): Chainable<Subject>;
+             'matrixMatch' | 'not.matrixMatch' |
+             'yamlMatch'   | 'not.yamlMatch'
+        ): Chainable<Subject>;
     }
 }

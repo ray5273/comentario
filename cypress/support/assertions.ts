@@ -1,3 +1,5 @@
+const YAML = require('yamljs');
+
 chai.use((_chai) => {
 
     // Checks the passed array against the expectation. If a string array is passed for expected, it's converted into a linebreak-separated
@@ -113,5 +115,74 @@ chai.use((_chai) => {
 
         // Verify every element, which is itself a string[]
         expected.forEach((exp, idx) => matchSubArray(this._obj[idx], exp, idx));
+    });
+
+    // Deeply compares the object, passed as a YAML string, against the expectation
+    _chai.Assertion.addMethod('yamlMatch', function(expStr: string) {
+
+        const deepMatch = (path: string, act: any, exp: any) => {
+            // Verify type
+            const expType = typeof exp;
+            const actType = typeof act;
+            this.assert(
+                actType === expType,
+                `expected element at "${path}" ("${act}", type ${actType}) to be ${expType}`,
+                `expected element at "${path}" ("${act}", type ${actType}) not to be ${expType}`,
+                expType,
+                actType);
+
+            // Compare values
+            switch (expType) {
+                // Primitive: compare for literal equality
+                case 'string':
+                case 'number':
+                case 'bigint':
+                case 'boolean':
+                case 'undefined':
+                    this.assert(
+                        act === exp,
+                        `expected element at "${path}" ("${act}") to equal "${exp}"`,
+                        `expected element at "${path}" ("${act}") not to equal "${exp}"`,
+                        exp,
+                        act,
+                        true);
+                    break;
+
+                // Object: compare individual properties
+                case 'object':
+                    // Check for expected properties
+                    for (const key in exp) {
+                        // First, check the property is present
+                        this.assert(
+                            key in act,
+                            `expected element at "${path}" to have property "${key}" (value = "${exp[key]}")`,
+                            `expected element at "${path}" not to have property "${key}" (value = "${exp[key]}")`,
+                            exp,
+                            act);
+
+                        // Now check its value
+                        deepMatch(
+                            key.match(/^\d+$/) ? `${path}[${key}]` : `${path}.${key}`,
+                            act[key],
+                            exp[key]);
+                    }
+                    // Check for unexpected properties
+                    for (const key in act) {
+                        this.assert(
+                            key in exp,
+                            `expected element at "${path}" not to have property "${key}" (value = "${act[key]}")`,
+                            `expected element at "${path}" to have property "${key}" (value = "${act[key]}")`,
+                            exp,
+                            act);
+                    }
+                    break;
+
+                case 'function':
+                case 'symbol':
+                    throw Error(`Unsupported type: ${expType}`);
+            }
+        };
+
+        deepMatch('$', this._obj, YAML.parse(expStr));
     });
 });

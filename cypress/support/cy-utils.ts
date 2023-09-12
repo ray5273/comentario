@@ -1,3 +1,4 @@
+/** Paths in the administration UI. */
 export const PATHS = {
     home: '/en/',
 
@@ -11,4 +12,12 @@ export const PATHS = {
     manage: {
         dashboard: '/en/manage/dashboard',
     }
+};
+
+/** Paths for the test site. */
+export const TEST_PATHS = {
+    home:      '/',
+    comments:  '/comments/',
+    noComment: '/nocomment/',
+    readonly:  '/readonly/',
 };
