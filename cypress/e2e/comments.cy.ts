@@ -2,7 +2,7 @@ import { TEST_PATHS } from '../support/cy-utils';
 
 context('Comments', () => {
 
-    before(cy.backendReset);
+    beforeEach(cy.backendReset);
 
     const checkRoot = () =>
         cy.get('comentario-comments').should('be.visible')
@@ -18,8 +18,11 @@ context('Comments', () => {
     const checkMainArea = (addHost: boolean) => {
         cy.get('@root').find('.comentario-main-area').as('mainArea')
             .should('be.visible');
-        cy.get('@mainArea').find('.comentario-add-comment-host')
-            .should(addHost ? 'be.visible' : 'not.exist');
+        if (addHost) {
+            cy.get('@mainArea').find('.comentario-add-comment-host').as('addCommentHost').should('be.visible');
+        } else {
+            cy.get('@mainArea').find('.comentario-add-comment-host').should('not.exist');
+        }
         cy.get('@mainArea').find('.comentario-sort-policy-buttons-container').should('be.visible');
         cy.get('@mainArea').find('.comentario-comments').as('comments').should('exist');
     };
@@ -54,7 +57,7 @@ context('Comments', () => {
         checkFooter();
 
         // Verify comments
-        cy.commentTree().commentMap('html', 'author', 'score')
+        cy.commentTree('html', 'author', 'score')
             .should(
                 'yamlMatch',
                 // language=yaml
@@ -121,32 +124,6 @@ context('Comments', () => {
                 `);
     });
 
-    it('displays comments on Comments page', () => {
-        // Verify headings
-        cy.visitTestSite(TEST_PATHS.comments);
-        cy.get('h1').should('have.text', 'Comments');
-        cy.get('h2#comments').should('have.text', 'Comments');
-
-        // Verify the layout
-        checkRoot();
-        checkProfileBarLogin();
-        checkMainArea(true);
-        checkModerationNotice();
-        checkFooter();
-
-        // Verify comments
-        cy.commentTree().commentMap('html', 'author', 'score', 'sticky')
-            .should(
-                'yamlMatch',
-                // language=yaml
-                `
-                - author: Anonymous
-                  html: <p>This is a <b>root</b>, sticky comment</p>
-                  score: 0
-                  sticky: true
-                `);
-    });
-
     it('shows page without comments', () => {
         // Verify headings
         cy.visitTestSite(TEST_PATHS.noComment);
@@ -161,7 +138,7 @@ context('Comments', () => {
         checkFooter();
 
         // Verify comments
-        cy.commentTree().commentMap('html', 'author', 'score')
+        cy.commentTree('html', 'author', 'score')
             .should(
                 'yamlMatch',
                 // language=yaml
@@ -182,6 +159,97 @@ context('Comments', () => {
         checkFooter();
 
         // Verify comments
-        cy.commentTree().commentMap('html', 'author', 'score').should('yamlMatch', '');
+        cy.commentTree('html', 'author', 'score').should('yamlMatch', '');
+    });
+
+    context('comment editor', () => {
+
+        beforeEach(() => {
+            // Go to the Comments page
+            cy.visitTestSite(TEST_PATHS.comments);
+
+            // Verify headings
+            cy.visitTestSite(TEST_PATHS.comments);
+            cy.get('h1').should('have.text', 'Comments');
+            cy.get('h2#comments').should('have.text', 'Comments');
+
+            // Verify the layout / create aliases
+            checkRoot();
+            checkProfileBarLogin();
+            checkMainArea(true);
+            checkModerationNotice();
+            checkFooter();
+        });
+
+        it('can be entered', () => {
+            // Verify comments
+            cy.commentTree('html', 'author', 'score', 'sticky')
+                .should(
+                    'yamlMatch',
+                    // language=yaml
+                    `
+                    - author: Anonymous
+                      html: <p>This is a <b>root</b>, sticky comment</p>
+                      score: 0
+                      sticky: true
+                    `);
+
+            // Focus the host, the editor should be inserted
+            cy.get('@addCommentHost').focus()
+                .should('have.class', 'comentario-editor-inserted')
+                .find('form.comentario-comment-editor').as('editor').should('be.visible')
+                .find('textarea').should('be.focused').should('have.value', '')
+                // Type some text, then press Esc, and the editor's gone
+                .type('Hi there{esc}');
+            cy.get('@editor').should('not.exist');
+            cy.get('@addCommentHost').should('not.have.class', 'comentario-editor-inserted');
+
+            // Now open the editor by clicking
+            cy.get('@addCommentHost').click();
+            cy.get('@editor').should('be.visible')
+                // The value is reset
+                .find('textarea').should('be.focused').should('have.value', '')
+                .type('Hey');
+
+            // Click on Cancel, the editor is gone again
+            cy.get('@editor').contains('.comentario-comment-editor-buttons button', 'Cancel').click();
+            cy.get('@editor').should('not.exist');
+            cy.get('@addCommentHost').should('not.have.class', 'comentario-editor-inserted');
+
+            // Open the editor again, try to submit an empty comment
+            cy.get('@addCommentHost').click();
+            cy.get('@editor').find('textarea').type('{ctrl+enter}')
+                .should('have.class', 'comentario-touched')
+                .should('match', ':invalid');
+
+            // Still one comment
+            cy.commentTree().should('have.length', 1).its(0).should('not.have.property', 'children');
+
+            // Open the editor again, enter text, tick off "Anonymous" and submit
+            cy.get('@addCommentHost').focus();
+            cy.get('@editor').find('textarea').setValue('This is **bold** *italic* `code` ~~strikethrough~~');
+            cy.get('@editor').contains('label', 'Comment anonymously').click();
+            cy.get('@editor').find('.comentario-comment-editor-buttons button[type=submit]')
+                .should('have.text', 'Add Comment')
+                .click();
+
+            // New comment is added, in the Pending state since anonymous comments are to be moderated
+            cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+                .should(
+                    'yamlMatch',
+                    // language=yaml
+                    `
+                    - author: Anonymous
+                      html: <p>This is a <b>root</b>, sticky comment</p>
+                      score: 0
+                      sticky: true
+                      pending: false
+                    - author: Anonymous
+                      html: <p>This is <strong>bold</strong> <em>italic</em> <code>code</code> <del>strikethrough</del></p>
+                      score: 0
+                      sticky: false
+                      pending: true
+                    `);
+        });
     });
 });

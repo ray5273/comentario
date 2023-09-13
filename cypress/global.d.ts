@@ -16,6 +16,7 @@ declare namespace Cypress {
         upvoted:   boolean;
         downvoted: boolean;
         sticky:    boolean;
+        pending:   boolean;
         children?: Comment[];
     }
 
@@ -29,14 +30,10 @@ declare namespace Cypress {
         isAt(expected: string | RegExp, ignoreQuery?: boolean): Chainable<string>;
 
         /**
-         * Recursively map a comment tree by keeping only the specified properties and any children from each comment.
-         */
-        commentMap(...props: (keyof Comment)[]): Chainable<Partial<Comment>[]>;
-
-        /**
          * Collect page comments and return them as a tree structure.
+         * @param properties Properties to keep for each comment. If not provided, keeps all properties.
          */
-        commentTree(): Chainable<Comment[]>;
+        commentTree(...properties: (keyof Comment)[]): Chainable<Partial<Comment>[]>;
 
         /**
          * Set an input's value directly.

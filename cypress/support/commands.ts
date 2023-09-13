@@ -16,11 +16,6 @@ const commentDeepMap = (c: Cypress.Comment, props: (keyof Cypress.Comment)[]) =>
     return x;
 };
 
-Cypress.Commands.add(
-    'commentMap',
-    {prevSubject: true},
-    (tree: Cypress.Comment[], ...props: (keyof Cypress.Comment)[]) => cy.wrap(tree.map(c => commentDeepMap(c, props))));
-
 const getChildComments = (root: Element): Cypress.Comment[] =>
     // Query comment cards
     Array.from(root.children)
@@ -40,6 +35,7 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
                 upvoted:   $options.find('.comentario-button[title=Upvote]')  .hasClass('comentario-upvoted'),
                 downvoted: $options.find('.comentario-button[title=Downvote]').hasClass('comentario-downvoted'),
                 sticky:    !!$options.find('.comentario-is-sticky').length,
+                pending:   $self.hasClass('comentario-pending'),
             };
 
             // Recurse children, if any
@@ -55,8 +51,13 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
 
 Cypress.Commands.addQuery(
     'commentTree',
-    function commentTree() {
-        return () => $('.comentario-comments').map((_, c) => getChildComments(c)).get();
+    function commentTree(...properties: (keyof Cypress.Comment)[]) {
+        return () => {
+            // Collect the commments
+            let cc = $('.comentario-comments').map((_, c) => getChildComments(c)).get();
+            // Map properties, if needed
+            return properties.length ? cc.map(c => commentDeepMap(c, properties)) : cc;
+        };
     });
 
 Cypress.Commands.add('isAt', (expected: string | RegExp, ignoreQuery?: boolean) => cy.url().should((url) => {

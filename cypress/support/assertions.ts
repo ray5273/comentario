@@ -133,8 +133,20 @@ chai.use((_chai) => {
 
             // Compare values
             switch (expType) {
-                // Primitive: compare for literal equality
+                // String: compare trimmed
                 case 'string':
+                    act = act.trim();
+                    exp = exp.trim();
+                    this.assert(
+                        act === exp,
+                        `expected element at "${path}" ("${act}") to equal "${exp}"`,
+                        `expected element at "${path}" ("${act}") not to equal "${exp}"`,
+                        exp,
+                        act,
+                        true);
+                    break;
+
+                // Primitive: compare for literal equality
                 case 'number':
                 case 'bigint':
                 case 'boolean':
