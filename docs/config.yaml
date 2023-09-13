@@ -7,6 +7,11 @@ disableKinds:
   - RSS
   - sitemap
 
+outputs:
+  home:
+    - HTML
+    - JSON
+
 defaultContentLanguage: en
 defaultContentLanguageInSubdir: true
 languages:

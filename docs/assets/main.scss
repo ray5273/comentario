@@ -34,6 +34,9 @@ $theme-colors: (
 // Remove underlining from all links
 $link-decoration: none;
 
+// Remove <mark> padding
+$mark-padding: 0;
+
 // Configuration
 @import "node_modules/bootstrap/scss/functions";
 @import "node_modules/bootstrap/scss/variables";
@@ -57,7 +60,7 @@ $link-decoration: none;
 // @import "node_modules/bootstrap/scss/button-group";
 @import "node_modules/bootstrap/scss/nav";
 @import "node_modules/bootstrap/scss/navbar";
-// @import "node_modules/bootstrap/scss/card";
+@import "node_modules/bootstrap/scss/card";
 // @import "node_modules/bootstrap/scss/accordion";
 // @import "node_modules/bootstrap/scss/breadcrumb";
 // @import "node_modules/bootstrap/scss/pagination";
