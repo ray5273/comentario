@@ -53,7 +53,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         this.classes('comment-editor')
             .append(
                 // Textarea
-                this.textarea = UIToolkit.textarea(null, true, true).value(initialText),
+                this.textarea = UIToolkit.textarea(null, true, true).attr({maxlength: '4096'}).value(initialText),
                 // Textarea footer
                 UIToolkit.div('comment-editor-footer')
                     .append(

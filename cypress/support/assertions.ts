@@ -125,25 +125,39 @@ chai.use((_chai) => {
             const expType = typeof exp;
             const actType = typeof act;
             this.assert(
-                actType === expType,
+                // The type must be exactly the same, with one exception: a RegExp expectation can be used to verify a
+                // string
+                actType === expType ||
+                    actType === 'string' && exp instanceof RegExp,
                 `expected element at "${path}" ("${act}", type ${actType}) to be ${expType}`,
                 `expected element at "${path}" ("${act}", type ${actType}) not to be ${expType}`,
                 expType,
                 actType);
 
             // Compare values
-            switch (expType) {
-                // String: compare trimmed
+            switch (actType) {
+                // String
                 case 'string':
-                    act = act.trim();
-                    exp = exp.trim();
-                    this.assert(
-                        act === exp,
-                        `expected element at "${path}" ("${act}") to equal "${exp}"`,
-                        `expected element at "${path}" ("${act}") not to equal "${exp}"`,
-                        exp,
-                        act,
-                        true);
+                    // If the expectation is a RegExp, match against it
+                    if (exp instanceof RegExp) {
+                        this.assert(
+                            act.match(exp),
+                            `expected element at "${path}" ("${act}") to match "${exp}"`,
+                            `expected element at "${path}" ("${act}") not to match "${exp}"`,
+                            exp,
+                            act);
+
+                    // Otherwise, just compare the strings. Trim the actual value
+                    } else {
+                        act = act.trim();
+                        this.assert(
+                            act === exp,
+                            `expected element at "${path}" ("${act}") to equal "${exp}"`,
+                            `expected element at "${path}" ("${act}") not to equal "${exp}"`,
+                            exp,
+                            act,
+                            true);
+                    }
                     break;
 
                 // Primitive: compare for literal equality
