@@ -9,7 +9,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
 
     private btnSettings?: Wrap<HTMLAnchorElement>;
     private btnLogin?: Wrap<HTMLButtonElement>;
-    private principal?: Principal;
+    private _principal?: Principal;
     private _pageInfo?: PageInfo;
 
     /**
@@ -19,6 +19,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
      * @param onLocalAuth Callback for executing a local authentication.
      * @param onOAuth Callback for executing external (OAuth) authentication.
+     * @param onLogout Callback for executing logout.
      * @param onSignup Callback for executing user registration.
      * @param onSaveSettings Callback for saving user settings.
      */
@@ -29,6 +30,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
+        private readonly onLogout: () => void,
         private readonly onSignup: (data: SignupData) => Promise<void>,
         private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
     ) {
@@ -40,70 +42,15 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      */
     set pageInfo(v: PageInfo | undefined) {
         this._pageInfo = v;
-        // Hide or show the login button based on the availability of any auth method
-        this.btnLogin?.setClasses(!(v?.authLocal || (v?.authSso && !v.ssoNonInteractive) || v?.idps?.length), 'hidden');
+        this.render();
     }
 
     /**
-     * Called whenever there's an authenticated user. Sets up the controls related to the current user.
-     * @param principal Currently authenticated user.
-     * @param onLogout Logout button click handler.
+     * Currently authenticated principal, if any.
      */
-    authenticated(principal: Principal, onLogout: () => void): void {
-        this.btnLogin = undefined;
-        this.principal = principal;
-
-        // Recreate the content
-        this.html('')
-            .append(
-                // Commenter avatar and name
-                UIToolkit.div('logged-in-as')
-                    .append(
-                        // Avatar
-                        this.onGetAvatar(),
-                        // Name and link
-                        Wrap.new(this.principal.websiteUrl ? 'a' : 'div')
-                            .classes('name')
-                            .inner(this.principal.name!)
-                            .attr({
-                                href: this.principal.websiteUrl,
-                                rel:  this.principal.websiteUrl && 'nofollow noopener noreferrer',
-                            })),
-                // Buttons on the right
-                UIToolkit.div()
-                    .append(
-                        // Settings link
-                        this.btnSettings = Wrap.new('a')
-                            .classes('profile-link')
-                            .inner('Settings')
-                            .click((_, e) => {
-                                // Prevent the page from being reloaded because of the empty href
-                                e.preventDefault();
-                                return this.editSettings();
-                            }),
-                        // Logout link
-                        Wrap.new('a')
-                            .classes('profile-link')
-                            .inner('Logout')
-                            .attr({href: ''})
-                            .click((_, e) => {
-                                // Prevent the page from being reloaded because of the empty href
-                                e.preventDefault();
-                                onLogout();
-                            })));
-    }
-
-    /**
-     * Called whenever there's no authenticated user. Sets up the login controls.
-     */
-    notAuthenticated(): void {
-        // Remove all content
-        this.html('')
-            .append(
-                // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
-                UIToolkit.div(),
-                // Add a Login button
-                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(), 'fw-bold'));
+    set principal(v: Principal | undefined) {
+        this._principal = v;
+        this.render();
     }
 
     /**
@@ -168,10 +115,70 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             this.root,
             {ref: this.btnSettings!, placement: 'bottom-end'},
             this.baseUrl,
-            this.principal!,
+            this._principal!,
             this._pageInfo!);
         if (dlg.confirmed) {
             await this.onSaveSettings(dlg.data);
+        }
+    }
+
+    /**
+     * (Re)render the profile bar.
+     */
+    private render() {
+        // Remove all content
+        this.html('');
+        this.btnSettings = undefined;
+        this.btnLogin = undefined;
+
+        // If the user is authenticated
+        if (this._principal) {
+            this.append(
+                // Commenter avatar and name
+                UIToolkit.div('logged-in-as')
+                    .append(
+                        // Avatar
+                        this.onGetAvatar(),
+                        // Name and link
+                        Wrap.new(this._principal.websiteUrl ? 'a' : 'div')
+                            .classes('name')
+                            .inner(this._principal.name!)
+                            .attr({
+                                href: this._principal.websiteUrl,
+                                rel:  this._principal.websiteUrl && 'nofollow noopener noreferrer',
+                            })),
+                // Buttons on the right
+                UIToolkit.div()
+                    .append(
+                        // Settings link
+                        this.btnSettings = Wrap.new('a')
+                            .classes('profile-link')
+                            .inner('Settings')
+                            .click((_, e) => {
+                                // Prevent the page from being reloaded because of the empty href
+                                e.preventDefault();
+                                return this.editSettings();
+                            }),
+                        // Logout link
+                        Wrap.new('a')
+                            .classes('profile-link')
+                            .inner('Logout')
+                            .attr({href: ''})
+                            .click((_, e) => {
+                                // Prevent the page from being reloaded because of the empty href
+                                e.preventDefault();
+                                this.onLogout();
+                            })));
+            return;
+        }
+
+        // User is anonymous. Add a login button, but only if there's an auth method available
+        if (this._pageInfo?.authLocal || (this._pageInfo?.authSso && !this._pageInfo.ssoNonInteractive) || this._pageInfo?.idps?.length) {
+            this.append(
+                // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
+                UIToolkit.div(),
+                // Add a Login button
+                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(), 'fw-bold'));
         }
     }
 }

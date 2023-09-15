@@ -150,6 +150,7 @@ export class Comentario extends HTMLElement {
                     () => this.createAvatarElement(this.principal),
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.oAuthLogin(idp),
+                    () => this.logout(),
                     data => this.signup(data),
                     data => this.saveUserSettings(data)),
                 // Main area
@@ -321,15 +322,8 @@ export class Comentario extends HTMLElement {
     private async updateAuthStatus(): Promise<void> {
         this.principal = await this.apiService.authPrincipal();
 
-        // User is authenticated
-        if (this.principal) {
-            // Update the profile bar
-            this.profileBar!.authenticated(this.principal, () => this.logout());
-
-        } else {
-            // User isn't authenticated: clean up the profile bar (known auth methods will be set up later)
-            this.profileBar!.notAuthenticated();
-        }
+        // Update the profile bar
+        this.profileBar!.principal = this.principal;
     }
 
     /**
