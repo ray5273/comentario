@@ -349,7 +349,8 @@ export class Comentario extends HTMLElement {
 
         // If the domain or the page are readonly, add a corresponding message
         if (this.pageInfo?.isDomainReadonly || this.pageInfo?.isPageReadonly) {
-            this.mainArea!.append(UIToolkit.div('moderation-notice').inner('This thread is locked. You cannot add new comments.'));
+            this.mainArea!.append(
+                UIToolkit.div('page-moderation-notice').inner('This thread is locked. You cannot add new comments.'));
 
         // Otherwise, add a comment editor host, which will get an editor for creating a new comment
         } else {

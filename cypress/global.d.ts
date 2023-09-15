@@ -1,5 +1,14 @@
 declare namespace Cypress {
 
+    interface User {
+        isAnonymous: boolean;
+        id:          string;
+        email:       string;
+        name:        string;
+        password?:   string;
+        isBanned?:   boolean;
+    }
+
     interface SentMail {
         headers:    { [k: string]: string };
         embedFiles: string[];

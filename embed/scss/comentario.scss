@@ -49,13 +49,12 @@
         }
     }
 
-    .comentario-moderation-notice {
+    .comentario-page-moderation-notice {
         width: 100%;
-        border-radius: 4px;
-        height: 32px;
+        padding-top: 16px;
+        padding-bottom: 16px;
         text-align: center;
         color: $orange-8;
-        margin-top: 16px;
     }
 
     .comentario-sort-policy-buttons-container {
