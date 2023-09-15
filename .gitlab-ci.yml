@@ -107,20 +107,26 @@ build:
         --base-docs-url="${DOCS_URL}"
         --home-content-url="${DOCS_URL}/en/embed/front-page/"
         &> ./tmp/logs/comentario-server.log &
+
+    # Wait for the backend server to come online
+    - i=0
+    - while ((i++ < 30)); do
+    -    curl --max-time 2 -vs http://localhost:8080/en/ && break
+    -    sleep 1
+    - done
+
     # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
     - ./build/comentario-relay 
         -listen 127.0.0.1:8000
         -target http://comentario-test-site
         &> ./tmp/logs/comentario-relay.log &
-    - sleep 2
 
-    # Test the server is up and running
-    - curl -vs http://localhost:8080/
-    - curl -vs http://localhost:8080/en/
-
-    # Test the relay is up and running
-    - curl -vs http://localhost:8000/
-    - curl -vs http://localhost:8000/comments/
+    # Wait for the relay to come online
+    - i=0
+    - while ((i++ < 30)); do
+    -    curl --max-time 2 -vs http://localhost:8000/comments/ && break
+    -    sleep 1
+    - done
 
     # Run the e2e tests
     - npx cypress install
