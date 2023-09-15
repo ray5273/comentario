@@ -30,7 +30,8 @@ declare namespace Cypress {
         isAt(expected: string | RegExp, ignoreQuery?: boolean): Chainable<string>;
 
         /**
-         * Collect page comments and return them as a tree structure.
+         * Collect page comments and return them as a tree structure. Can be chained off an element containing the
+         * desired Comentario instance, if no subject is provided, looks for the first <comentario-comments> tag.
          * @param properties Properties to keep for each comment. If not provided, keeps all properties.
          */
         commentTree(...properties: (keyof Comment)[]): Chainable<Partial<Comment>[]>;

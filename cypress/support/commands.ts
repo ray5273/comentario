@@ -52,9 +52,15 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
 Cypress.Commands.addQuery(
     'commentTree',
     function commentTree(...properties: (keyof Cypress.Comment)[]) {
-        return () => {
-            // Collect the commments
-            let cc = $('.comentario-comments').map((_, c) => getChildComments(c)).get();
+        return (element?: HTMLElement) => {
+            // Collect the comments
+            let cc = $(element as any ?? 'comentario-comments').first()
+                // Find the comment container
+                .find('.comentario-comments')
+                // Recurse into child comments
+                .map((_, c) => getChildComments(c))
+                // Unwrap the Comment[]
+                .get();
             // Map properties, if needed
             return properties.length ? cc.map(c => commentDeepMap(c, properties)) : cc;
         };

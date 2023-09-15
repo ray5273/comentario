@@ -49,7 +49,7 @@ export class Comentario extends HTMLElement {
     private readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
 
     /** The root element of Comentario embed. */
-    private readonly root = Wrap.new('div').appendTo(new Wrap(this));
+    private readonly root = UIToolkit.div('root').appendTo(new Wrap(this));
 
     /** Comentario config obtained from the backend. */
     private config = DefaultInstanceConfig;
@@ -139,7 +139,8 @@ export class Comentario extends HTMLElement {
 
         // Set up the root content
         this.root
-            .classes('root', !this.noFonts && 'root-font')
+            .inner('')
+            .classes(!this.noFonts && 'root-font')
             .append(
                 // Profile bar
                 this.profileBar = new ProfileBar(
@@ -188,7 +189,7 @@ export class Comentario extends HTMLElement {
      */
     cssLoad(url: string): Promise<void> {
         // Don't bother if the stylesheet has been loaded already
-        return this.loadedCss[url] ?
+        return this.loadedCss[url] || this.ownerDocument.querySelector(`link[href="${url}"]`) ?
             Promise.resolve() :
             new Promise((resolve, reject) => {
                 this.loadedCss[url] = true;
@@ -303,7 +304,7 @@ export class Comentario extends HTMLElement {
             let hidden = true;
             this.messagePanel.append(
                 // Details toggle link
-                Wrap.new('div').append(
+                UIToolkit.div().append(
                     Wrap.new('a').classes('small').inner('Details ▾').click(() => details.setClasses(hidden = !hidden, 'hidden'))),
                 // Details text
                 details);

@@ -7,5 +7,8 @@ export default defineConfig({
         },
         // Backend's (API and the admin app) base URL
         baseUrl: 'http://localhost:8080',
+
+        // Disable scrubbing as it never works well with web components
+        numTestsKeptInMemory: 0,
     },
 });

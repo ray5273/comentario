@@ -18,6 +18,16 @@ export const PATHS = {
 export const TEST_PATHS = {
     home:      '/',
     comments:  '/comments/',
+    double:    '/double/',
+    dynamic:   '/dynamic/',
     noComment: '/nocomment/',
     readonly:  '/readonly/',
+
+    attr: {
+        autoInit:         '/attr/auto-init/',
+        noFonts:          '/attr/no-fonts/',
+        cssOverride:      '/attr/css-override/',
+        cssOverrideFalse: '/attr/css-override-false/',
+        pageId:           '/attr/page-id/',
+    },
 };

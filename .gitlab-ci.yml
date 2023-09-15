@@ -16,7 +16,7 @@ stages:
   - release
 
 variables:
-  CI_TOOLS_VERSION: "v16"
+  CI_TOOLS_VERSION: "v18"
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
   DOCS_URL: https://docs.comentario.app
