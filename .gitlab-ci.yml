@@ -111,7 +111,7 @@ build:
     # Wait for the backend server to come online
     - i=0
     - while ((i++ < 30)); do
-    -    curl --max-time 2 -vs http://localhost:8080/en/ && break
+    -    curl --max-time 2 -vs http://localhost:8080/en/ >/dev/null && break
     -    sleep 1
     - done
 
@@ -124,7 +124,7 @@ build:
     # Wait for the relay to come online
     - i=0
     - while ((i++ < 30)); do
-    -    curl --max-time 2 -vs http://localhost:8000/comments/ && break
+    -    curl --max-time 2 -vs http://localhost:8000/comments/ >/dev/null && break
     -    sleep 1
     - done
 
