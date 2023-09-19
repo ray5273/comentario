@@ -7,16 +7,26 @@ tags:
     - features
 ---
 
-Comentario supports the Markdown syntax and can do a lot for you. Here's a brief list of Comentario's features:
+From the end-user perspective, Comentario consists of two parts: the **embedded comment engine** and the **Administration UI** (we also call it the frontend). 
 
-* Modern, mobile-first responsive design
-* Nested, editable comments and replies
+## Embedded comments
+
+Comentario's embedded comment engine allows to render a comment thread (tree), and each page it's embedded on has its own comment tree.
+
+* The term *comment tree* means that comments are organized in a tree structure, so that comments can have children — which we call **replies**. Child comments can also be *collapsed* with a button.
+* Comment text can be formatted using the [Markdown syntax](/kb/markdown): you can make words **bold**, insert images and links, and so on.
+* Comment thread uses mobile-first responsive design, which looks great on all devices.
+* Comments can be edited and deleted.
+* Other users can vote on comments they like or dislike. Voting is reflected in the comment **score**.
+
+{{< imgfig "/img/comentario-embed-ui-elements.png" >}}
+
+Other features include:
+
 * Custom avatars
-* Import from Disqus
-* Comment voting
-* Automated spam detection
+* Import from Commento and Disqus
+* Automated spam and toxicity detection
 * Moderation tools
-* Sticky comments
 * Thread locking
 * OAuth login
 * Single sign-on

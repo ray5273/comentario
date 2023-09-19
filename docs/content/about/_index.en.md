@@ -22,6 +22,10 @@ You can see it in action on our [demo page](https://demo.comentario.app).
 {{< button "https://demo.comentario.app" `View Demo<i class="fas fa-external-link ms-2"></i>` "primary" "BFOR" >}}
 </p>
 
+## Features
+
+Comentario is a fully featured comment engine. It supports lots of things out-of-the-box: Markdown, images, comment replies, and much more — visit the [](features) page for more details.
+
 ## Getting started
 
 If you're interested in using Comentario, please refer to [](/getting-started).
