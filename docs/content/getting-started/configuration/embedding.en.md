@@ -62,7 +62,7 @@ Example of a customised `<comentario-comments>` tag:
 
 #### Manual initialisation
 
-If you disabled automatic initialisation by adding `auto-init="false"`, you'll need to initialise Comentario manually. Here's a simple example:
+If you disabled automatic initialisation by adding `auto-init="false"`, you need to initialise Comentario manually by calling the `main()` method of the web component. Here's a simple example:
 
 ```html
 <comentario-comments id="comments"></comentario-comments>
@@ -73,3 +73,4 @@ If you disabled automatic initialisation by adding `auto-init="false"`, you'll n
 </script>
 ```
 
+Calling `main()` initialises Comentario. Repeated calls will re-initialise the web component, erasing and filling the comments from scratch.
