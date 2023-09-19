@@ -5,7 +5,6 @@
 - {id: errorMessageReq,   translation: Message is required.}
 - {id: getStarted,        translation: Get Started}
 - {id: numPages,          translation: {one: 'One page', other: '{{ .Count }} pages'}}
-- {id: readMore,          translation: Read more}
 - {id: search,            translation: Search}
 - {id: tag,               translation: Tag}
 - {id: tags,              translation: Tags}
@@ -18,3 +17,4 @@
 - {id: messageBody,       translation: Your message}
 - {id: noResults,         translation: No matches found.}
 - {id: submit,            translation: Submit}
+- {id: typeSomething,     translation: Type something}

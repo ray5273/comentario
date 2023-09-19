@@ -10,23 +10,11 @@ tags:
     - upgrade
 ---
 
-Commento was once a popular open-source commenting system.
-
-It is in fact a predecessor of Comentario, because Comentario 2.x started as a fork to Commento 1.8, reworking the user interface and the internals, but keeping the database structure intact.
+This page explains how you can migrate to Comentario version 3 from a 2.x installation.
 
 <!--more-->
 
-The fact that Comentario 2.x database was 100% compatible with Commento made the migration very easy: it was basically a drop-in replacement, which only required adjusting some server parameters. It made also a reverse migration possible.
-
-## Comentario 3
-
-The **version 3** of Comentario is a major step forward: it addresses many inconsistencies and limitations of Commento data model, which slowed down the development of the latter and made solving some issues nearly impossible.
-
-The data model was developed from scratch, and all the constituent components had to be overhauled and rewritten.
-
-We've done our best to make the migration transparent, keeping Comentario "plug-n-play." The database will be automatically migrated on first run.
-
-Contrary to Comentario 2.x, it's a one-way ticket though; once migrated, the original database will be deleted. The only way to revert that is making a back-up copy prior to migration.
+The most important part of the migration is the database conversion, which happens automatically on the first run. This process is irreversible; once migrated, the original database will be deleted. The only way to revert that is making a back-up copy prior to migration.
 
 ## Migration steps
 
@@ -82,7 +70,7 @@ In practice, it only means updating the code snippet you place on your web pages
 <comentario-comments></comentario-comments>
 ```
 
-If you used `data-*` attributes, you'll need to change those, too:
+If you used [`data-*` attributes](/getting-started/configuration/embedding#comments-tag), you'll need to change those, too:
 
 * Firstly, they now have to be put on the `<comentario-comments>` tag (not on the `<script>`).
 * Secondly, the `data-` prefix should be removed.
