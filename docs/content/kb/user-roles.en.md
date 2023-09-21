@@ -33,7 +33,7 @@ There are the following ways to create a superuser:
 
 1. Superuser privilege can be granted by another superuser.
 2. The *first local user* (i.e. one signing up with email and password) registered on the server automatically gets a superuser privilege.
-3. Using the `--superuser=<ID-or-email>` [command-line switch](/configuration/server) to turn an existing user into a superuser.
+3. Using the `--superuser=<ID-or-email>` [command-line switch](/configuration/backend/static) to turn an existing user into a superuser.
 4. Updating the database directly with a UI tool or the following SQL statement (put the correct email below):
 ```sql
 update cm_users set is_superuser = true where email = 'email@address';

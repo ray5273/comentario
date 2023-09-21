@@ -1,7 +1,7 @@
 ---
-title: Server configuration
+title: Static configuration
 description: Comentario command-line and environment configuration
-weight: 100
+weight: 10
 tags:
     - configuration
     - secrets
@@ -13,12 +13,9 @@ tags:
     - debug
 ---
 
-Comentario server can be configured in two ways:
+The static, or start-up, configuration of Comentario server can be set using command-line options or environment variables. Both methods are equivalent, with command-line options taking precedence.
 
 <!--more-->
-
-* Using command-line options;
-* Using environment variables.
 
 ## Command-line help
 

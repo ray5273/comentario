@@ -1,9 +1,11 @@
 ---
 title: Secrets
 description: Secrets configuration
-weight: 200
+weight: 20
 tags:
     - configuration
+    - backend
+    - server
     - secrets
     - database
     - PostgreSQL
@@ -22,13 +24,13 @@ tags:
     - extension
 ---
 
-Comentario stores its sensitive data in a YAML file called *secrets*.
+Comentario stores its sensitive data in a YAML file called *secrets*. The secrets file is a part of [static backend configuration](static).
 
 <!--more-->
 
 The main reason for choosing this approach was that a separate *secrets* file can easily be deployed and connected to Comentario running in a [Docker container](/installation/docker-image) or [Kubernetes cluster](/installation/helm-chart).
 
-The file is a regular YAML file; it doesn't necessarily need to be named `secrets.yaml`, but it's the default name unless [configured](server) otherwise.
+The file is a regular YAML file; it doesn't necessarily need to be named `secrets.yaml`, but it's the default name unless [configured](static) otherwise.
 
 ## Secrets file reference
 

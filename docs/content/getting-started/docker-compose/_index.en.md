@@ -37,7 +37,7 @@ services:
     volumes:
       - ./secrets.yaml:/secrets.yaml:ro
 ```
-* `secrets.yaml` (find [here](/configuration/secrets) more details on secrets config):
+* `secrets.yaml` (find more details in [](/configuration/backend/secrets)):
 ```yaml
 postgres:
   host:     db

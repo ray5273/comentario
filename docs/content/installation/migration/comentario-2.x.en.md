@@ -51,7 +51,7 @@ There are the following four ways to become a superuser:
 
 1. Superuser privilege can be granted a user by another superuser. It can only work if you already have a superuser.
 2. The *first local user* (i.e. one signing up with email and password) registered on the server automatically gets a superuser privilege.
-3. Using the `--superuser=<ID-or-email>` [command-line switch](/configuration/server) to turn a user into a superuser.
+3. Using the `--superuser=<ID-or-email>` [command-line switch](/configuration/backend/static) to turn a user into a superuser.
 4. Updating the database directly with a UI tool or the following SQL statement:
 ```sql
 update cm_users set is_superuser = true where email = 'YOUR@EMAIL';
