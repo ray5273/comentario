@@ -21,4 +21,4 @@ Comentario source code is available on GitLab.
 {{< button "https://gitlab.com/comentario/comentario" `<i class="fab fa-gitlab me-1"></i>Comentario GitLab repository` "secondary" "BFOR" >}}
 </p>
 
-If you're interested in compiling the code yourself, refer to the [](/getting-started/installation/building) section.
+If you're interested in compiling the code yourself, refer to the [](/installation/building) section.

@@ -42,7 +42,7 @@ kubectl create namespace $NAMESPACE
 
 ## Deploy PostgreSQL
 
-Comentario requires a PostgreSQL server (refer to [](/getting-started/installation/requirements) for details), which has to be installed separately.
+Comentario requires a PostgreSQL server (refer to [](/installation/requirements) for details), which has to be installed separately.
 
 The easiest way to do that in a Kubernetes cluster is by using a Helm chart by [Bitnami](https://bitnami.com/stacks/helm).
 
@@ -75,7 +75,7 @@ After this, a new release called `comentario-postgres` will be installed, with P
 
 ## Deploy Comentario server
 
-1. Edit the values in `k8s/comentario-secrets.yaml` as required (see [](/getting-started/configuration) for details) and copy-paste its contents into `comentario-secrets.yaml` (indent with 4 spaces)
+1. Edit the values in `k8s/comentario-secrets.yaml` as required (see [](/configuration) for details) and copy-paste its contents into `comentario-secrets.yaml` (indent with 4 spaces)
 2. Create the secret: `kubectl create -f k8s/comentario-secrets.yaml --namespace $NAMESPACE`
 3. Install Comentario using Helm (adjust the values as you see fit):
 ```bash

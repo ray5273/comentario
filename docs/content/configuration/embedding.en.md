@@ -7,7 +7,7 @@ tags:
     - embedding
 ---
 
-The whole point of [installing](/getting-started/installation) Comentario is, of course, using it as a *web comment engine*.
+The whole point of [installing](/installation) Comentario is, of course, using it as a *web comment engine*.
 
 <!--more-->
 

@@ -41,7 +41,7 @@ The migration can fail, go wrong, or wipe the original data. This is especially 
 
 ### 3. Deploy Comentario
 
-[Install](/getting-started/installation) Comentario and [configure](/getting-started/configuration/server) it to connect to the same PostgreSQL database Commento used (or a copy of it).
+[Install](/installation) Comentario and [configure](/configuration/server) it to connect to the same PostgreSQL database Commento used (or a copy of it).
 
 The database should be automatically migrated on the first run. If everything goes smoothly, the server will just run without any error or warning message in the console.
 
@@ -60,9 +60,9 @@ Comentario introduces the concept of *superuser*: it's essentially an instance a
 
 There are the following four ways to become a superuser:
 
-1. The superuser role can be granted a user by another superuser. It can only work if you already have a superuser.
-2. The *first local user* (i.e. one signing up with email and password) registered on the server **automatically gets a superuser role**.
-3. Using the `--superuser=<ID-or-email>` [command-line switch](/getting-started/configuration/server) to turn a user into a superuser.
+1. Superuser privilege can be granted a user by another superuser. It can only work if you already have a superuser.
+2. The *first local user* (i.e. one signing up with email and password) registered on the server automatically gets a superuser privilege.
+3. Using the `--superuser=<ID-or-email>` [command-line switch](/configuration/server) to turn a user into a superuser.
 4. Updating the database directly with a UI tool or the following SQL statement:
 ```sql
 update cm_users set is_superuser = true where email = 'YOUR@EMAIL';
@@ -81,7 +81,7 @@ In practice, it only means updating the code snippet you place on your web pages
 <comentario-comments></comentario-comments>
 ```
 
-If you used [`data-*` attributes](/getting-started/configuration/embedding#comments-tag), you'll need to change those, too:
+If you used [`data-*` attributes](/configuration/embedding#comments-tag), you'll need to change those, too:
 
 * Firstly, they now have to be put on the `<comentario-comments>` tag (not on the `<script>`).
 * Secondly, the `data-` prefix should be removed.

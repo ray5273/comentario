@@ -12,9 +12,7 @@ tags:
     - about
 ---
 
-**[Comentario](https://comentario.app)** is a free and open-source *web comment engine*. It's powerful and flexible, while being lightweight and clutter-free.
-
-You can easily embed it in your website to allow your readers to add comments.
+**[Comentario](https://comentario.app)** is a free and open-source *web comment engine*. It's powerful and flexible, while being lightweight and clutter-free. You can easily embed it in your website to allow your readers to add comments.
 
 You can see it in action on our [demo page](https://demo.comentario.app).
 

@@ -1,5 +1,5 @@
 ---
-title: Docker Compose playground
+title: Docker playground
 description: You can easily try Comentario out with Docker 
 weight: 90
 tags:
@@ -37,7 +37,7 @@ services:
     volumes:
       - ./secrets.yaml:/secrets.yaml:ro
 ```
-* `secrets.yaml` (find [here](/getting-started/configuration/secrets) more details on secrets config):
+* `secrets.yaml` (find [here](/configuration/secrets) more details on secrets config):
 ```yaml
 postgres:
   host:     db
@@ -45,12 +45,6 @@ postgres:
   database: comentario
   username: postgres
   password: postgres
-
-smtpServer:
-  host:
-  port:
-  username:
-  password:
 ```
 
 The two files must reside in the same directory. Then, start the database and the backend using:

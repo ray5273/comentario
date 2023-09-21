@@ -17,13 +17,16 @@ tags:
     - Google
     - Twitter
     - Akismet
+    - Perspective
+    - APILayer
+    - extension
 ---
 
 Comentario stores its sensitive data in a YAML file called *secrets*.
 
 <!--more-->
 
-The main reason for choosing this approach was that a separate *secrets* file can easily be deployed and connected to Comentario running in a [Docker container](/getting-started/installation/docker-image) or [Kubernetes cluster](/getting-started/installation/helm-chart).
+The main reason for choosing this approach was that a separate *secrets* file can easily be deployed and connected to Comentario running in a [Docker container](/installation/docker-image) or [Kubernetes cluster](/installation/helm-chart).
 
 The file is a regular YAML file; it doesn't necessarily need to be named `secrets.yaml`, but it's the default name unless [configured](server) otherwise.
 

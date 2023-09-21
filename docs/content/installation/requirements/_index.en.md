@@ -15,7 +15,7 @@ Please read this first: this page explains what you'll need to *self-host* a Com
 
 <!--more-->
 
-If you're interested in *building* Comentario from the source code, please refer to [](/getting-started/installation/building).
+If you're interested in *building* Comentario from the source code, please refer to [](/installation/building).
 
 ## PostgreSQL
 
@@ -33,8 +33,8 @@ Please note, however, that it's usually a good idea to use the latest available 
 
 The Comentario server, or the *backend*, currently supports (presumably all) **Linux x86_64** flavours.
 
-The official [Docker builds](/getting-started/installation/docker-image) are based on Alpine Linux and are linked statically.
+The official [Docker builds](/installation/docker-image) are based on Alpine Linux and are linked statically.
 
-It's also possible to run Comentario on a "full-fledged" Linux variant (such as Ubuntu or Fedora), as well as to link it dynamically against `libc` or `musl` (see [](/getting-started/installation/building)).
+It's also possible to run Comentario on a "full-fledged" Linux variant (such as Ubuntu or Fedora), as well as to link it dynamically against `libc` or `musl` (see [](/installation/building)).
 
 Support for **Linux ARM** is planned, but we'll need to see if there's enough demand for it.
