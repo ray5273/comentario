@@ -1,6 +1,7 @@
 ---
 title: Helm chart
 description: Deploying Comentario in a Kubernetes cluster with Helm
+weight: 100
 tags:
     - installation
     - configuration

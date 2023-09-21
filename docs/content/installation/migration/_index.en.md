@@ -1,7 +1,7 @@
 ---
 title: Migration
 description: How to upgrade from a previous version or migrate to Comentario from another commenting system
-weight: 500
+weight: 1000
 tags:
     - getting started
     - installation

@@ -1,6 +1,7 @@
 ---
 title: Docker image
 description: Comentario provides ready-for-use Docker images
+weight: 110
 tags:
     - installation
     - Docker

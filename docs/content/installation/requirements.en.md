@@ -1,7 +1,7 @@
 ---
 title: Requirements
 description: What is required for running Comentario
-weight: 100
+weight: 10
 tags:
     - configuration
     - database
@@ -22,6 +22,8 @@ If you're interested in *building* Comentario from the source code, please refer
 Comentario requires a [PostgreSQL](https://www.postgresql.org/) database instance for storing comments, users, domain configuration etc.
 
 It doesn't matter where exactly this database is running — on the same machine, on another machine, in the cloud — as long as it's reachable by the Comentario server.
+
+An important thing to consider, however, is the round-trip time to the PostgreSQL server. Any network latency will negatively impact the overall server performance, so it's a good idea to make sure the database network connection is as fast as possible.
 
 ### Supported PostgreSQL versions
 

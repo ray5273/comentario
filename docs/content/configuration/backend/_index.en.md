@@ -8,7 +8,7 @@ tags:
     - server
 ---
 
-Comentario backend (server) has two sets of parameters: **static** and **dynamic**.
+Comentario backend (server) has two sets of parameters: **[static](static)** and **[dynamic](dynamic)**.
 
 <!--more-->
 

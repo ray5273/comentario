@@ -1,7 +1,7 @@
 ---
 title: Cloud version
 description: Using Comentario cloud-hosted (SaaS) version
-weight: 100
+weight: 200
 tags:
     - getting started
     - cloud
