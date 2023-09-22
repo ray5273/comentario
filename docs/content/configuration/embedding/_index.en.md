@@ -10,6 +10,7 @@ tags:
 seeAlso:
     - /configuration/backend
     - /configuration/frontend
+    - /configuration/frontend/domain
 ---
 
 The whole point of [installing](/installation) Comentario is, of course, using it as a *web comment engine*.
@@ -22,7 +23,7 @@ Or, in other words, its ability to add comment threads to web pages.
 
 In order to add (*embed*) comments to your website, you'll need to do the following:
 
-1. Register a new *domain* in the admin console.
+1. Register a new [domain](/configuration/frontend/domain) in the [Administration UI](/configuration/frontend).
 2. Add an HTML snippet to every web page that's supposed to have comment functionality.
 
 The HTML snippet is displayed in domain properties and looks like this:
