@@ -3,13 +3,18 @@ title: Domain
 description: What is domain object
 tags:
     - domain
+seeAlso:
+    - comment
+    - comment-tree
+    - domain-page
+    - /configuration/embedding
 ---
 
-The concept of domain is central to Comentario, it is a basic building block of the comment engine.
+The concept of domain is central to Comentario: it is a basic building block.
 
 <!--more-->
 
-A **domain** binds comments to a website, providing all necessary website [configuration](/configuration/frontend/domain).
+A **domain** links comments to a website, providing all necessary website [configuration](/configuration/frontend/domain).
 
 ## Host
 
@@ -19,3 +24,11 @@ Examples of valid host values:
 
 * `example.com` — only a hostname without port
 * `example.com:8080` — hostname with port 8080
+
+## Pages
+
+A domain can own a number of [pages](domain-page), which, in turn, can have a number of [comments](comment).
+
+## Read-only
+
+A domain can be made read-only ("frozen"), which disables adding any new comments on its pages.

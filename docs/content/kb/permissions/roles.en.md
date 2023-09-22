@@ -12,6 +12,8 @@ tags:
     - moderator
     - commenter
     - read-only
+seeAlso:
+  - superuser
 ---
 
 A **user domain role**, or just **role** for brevity, defines what actions a user can perform on Comentario *with respect to a specific domain*. For example, a user can be an *Owner* in one domain, but a *Commenter* in another.

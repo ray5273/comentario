@@ -11,6 +11,10 @@ tags:
     - spam
     - toxicity
     - moderation
+seeAlso:
+    - /configuration/frontend/domain
+    - /configuration/frontend/domain/moderation
+    - /configuration/backend/secrets
 ---
 
 The `Extensions` tab provides configuration for domain extensions. **Extensions** are external services that can be used for inspecting comments for spam or toxic content (such as insults or threats).

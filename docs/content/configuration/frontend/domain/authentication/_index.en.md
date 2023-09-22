@@ -17,6 +17,8 @@ tags:
     - Twitter
     - SSO
     - Single Sign-On
+seeAlso:
+    - /configuration/frontend/domain
 ---
 
 The `Authentication` tab allows to configure commenter authentication options for the domain.

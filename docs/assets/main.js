@@ -163,7 +163,7 @@ $(document).ready(function () {
                         <h5 class="card-title">${searchMark(item.title, query)}</h5>
                         <p>${(searchMark(searchSnippet(item.text, item.pos), query))}</p>
                     </div>
-                    ${tags}
+                    ${tags ?? ''}
                 </a>
             `);
         });

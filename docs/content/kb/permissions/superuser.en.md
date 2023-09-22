@@ -8,6 +8,8 @@ tags:
     - moderation
     - configuration
     - superuser
+seeAlso:
+  - roles
 ---
 
 **Superuser** is a system-wide permission that allows a user to perform any action on this specific Comentario installation.

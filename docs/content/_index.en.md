@@ -22,15 +22,15 @@ You can embed it in your website to allow your readers to add comments. It's fas
 <div class="row row-cols-1 row-cols-md-2 g-4">
 
 {{< card title="Domains" image="/img/home/cd-domains.jpg" >}}
-Configure each domain separately, including its moderation and authentication settings.
+Configure each [domain](/kb/domain) separately, including its moderation and authentication settings.
 {{< /card >}}
 
 {{< card title="Anonymous or logged-in" image="/img/home/cd-auth.jpg" >}}
-You can choose whether anonymous or only authenticated users can leave comments. We also support social login.
+You can choose whether [anonymous or only authenticated](/configuration/frontend/domain/authentication) users can leave comments. We also support social login.
 {{< /card >}}
 
 {{< card title="Keep it clean" image="/img/home/cd-clean.jpg" >}}
-Choose which comments are allowed, and which are to be checked by moderators.
+Choose which [comments are allowed](/configuration/frontend/domain/moderation), and which are to be checked by moderators. You can also use [external services](/configuration/frontend/domain/extensions) that check comments for spam and abuse.
 {{< /card >}}
 
 {{< card title="Monitor" image="/img/home/cd-stats.jpg" >}}

@@ -8,6 +8,9 @@ tags:
     - Administration UI
     - domain
     - moderation
+seeAlso:
+    - /configuration/frontend/domain
+    - /configuration/frontend/domain/extensions
 ---
 
 The `Moderation` tab defines moderation and moderator notification policies for domain comments.

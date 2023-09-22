@@ -6,6 +6,9 @@ tags:
     - configuration
     - backend
     - server
+seeAlso:
+    - /configuration/frontend
+    - /configuration/embedding
 ---
 
 Comentario backend (server) has two sets of parameters: **[static](static)** and **[dynamic](dynamic)**.

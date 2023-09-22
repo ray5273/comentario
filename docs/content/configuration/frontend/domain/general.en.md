@@ -7,6 +7,8 @@ tags:
     - frontend
     - Administration UI
     - domain
+seeAlso:
+    - /configuration/frontend/domain
 ---
 
 The `General` tab contains the following settings.

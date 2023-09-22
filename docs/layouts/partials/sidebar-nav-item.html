@@ -13,7 +13,7 @@
 {{- $children   := .page.Pages }}
 <li class="nav-item">
     <!-- Link to the section page -->
-    <a class="nav-link{{ if $isCurrent }} active{{ end }}{{ if and $isSection $children }} has-children{{ end }}{{ if $isCurrent }} is-current{{ end }}"
+    <a class="nav-link{{ if $isCurrent }} active{{ end }}{{ if and $isSection $children }} has-children{{ end }}{{ if $isExpanded }} is-expanded{{ end }}"
        href="{{ $url }}"
        {{ if $isCurrent }}aria-current="page"{{ end }}>
         {{- with .item }}{{ .Title }}{{ else }}{{ .page.Title }}{{ end -}}

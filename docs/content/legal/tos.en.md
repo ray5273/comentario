@@ -9,6 +9,9 @@ tags:
     - terms of service
     - personal data
     - rights and responsibilities
+seeAlso:
+    - privacy
+    - license
 ---
 
 This document outlines the terms and conditions of use for the Comentario service. Read this document carefully before accessing or using our Services.

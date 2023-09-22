@@ -6,8 +6,11 @@ tags:
     - configuration
     - frontend
     - Administration UI
+seeAlso:
+    - /configuration/backend
+    - /configuration/embedding
 ---
 
-Various Comentario objects — such as domains and domain pages — can be configured via the Administration UI.
+Various Comentario objects — such as [domains](/kb/domain) and [domain pages](/kb/domain-page) — can be configured via the Administration UI.
 
 <!--more-->

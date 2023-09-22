@@ -10,6 +10,10 @@ tags:
     - personal data
     - data disclosure
     - data retention
+seeAlso:
+    - account-removal
+    - tos
+    - /about/contact
 ---
 
 Welcome to the Comentario privacy policy! We pride ourselves upon the fact that we're privacy-focused. This document explains what information we collect through your access and use of our service and how we make use of this information.

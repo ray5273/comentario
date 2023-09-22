@@ -16,5 +16,6 @@
 - {id: messageSubject,    translation: Subject}
 - {id: messageBody,       translation: Your message}
 - {id: noResults,         translation: No matches found.}
+- {id: seeAlso,           translation: See also}
 - {id: submit,            translation: Submit}
 - {id: typeSomething,     translation: Type something}
