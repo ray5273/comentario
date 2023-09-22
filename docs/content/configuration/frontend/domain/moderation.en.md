@@ -1,7 +1,7 @@
 ---
 title: Moderation
 description: Moderation domain settings
-weight: 20
+weight: 30
 tags:
     - configuration
     - frontend

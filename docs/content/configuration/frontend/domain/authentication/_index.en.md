@@ -1,7 +1,7 @@
 ---
 title: Authentication
 description: Authentication domain settings
-weight: 30
+weight: 20
 tags:
     - configuration
     - frontend
