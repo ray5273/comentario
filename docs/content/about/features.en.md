@@ -29,7 +29,7 @@ The Administration UI is an extensive web application that allows users to perfo
 
 There's also the Profile section, where users can edit their profile, change their password, or upload a custom avatar. It also allows users to [delete their account](/legal/account-removal).
 
-The functionality available in the Administration UI depends on [user roles](/kb/user-roles) and includes:
+The functionality available in the Administration UI depends on [user roles](/kb/permissions) and includes:
 
 * Managing domain settings:
     * Authentication (anonymous comment, social login, SSO)

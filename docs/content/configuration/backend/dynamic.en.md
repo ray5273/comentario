@@ -21,6 +21,10 @@ These items include options such as:
 
 and others.
 
+## Managing dynamic configuration
+
+You have to be a [superuser](/kb/permissions/superuser) to manage dynamic configuration.
+
 In order to view or edit the dynamic configuration, open the Administrative UI and navigate to `Administration` → `Configuration` → `Dynamic`.
 
 Any changes will be saved in the database and apply right away.

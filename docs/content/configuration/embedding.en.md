@@ -1,6 +1,7 @@
 ---
 title: Embedding comments
 description: How to add comments to a web page by embedding Comentario
+weight: 100
 tags:
     - configuration
     - comments

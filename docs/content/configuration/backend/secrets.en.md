@@ -82,5 +82,5 @@ As you can see above, only the database configuration is mandatory, and the rest
 * If no SMTP server configuration is provided, no emails will be sent by Comentario.
 * If no configuration provided for a federated identity provider (Twitter, Google, etc.), this provider will not be available for user authentication.
 * If you want to (temporarily) disable a fully-configured identity provider, set its `disable` flag to `true`.
-* If no extension (Akismet, Perspective, etc.) API key is provided, this extension will *still be available for users*, but they will need to configure the key on the domain level in order to activate it.
+* If no extension (Akismet, Perspective, etc.) API key is provided, this extension will *still be available for users*, but they will need to [configure](/configuration/frontend/domain/extensions) the key on the domain level in order to activate it.
 * To disable an extension altogether, set its `disable` flag to `true`.
