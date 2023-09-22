@@ -2,7 +2,7 @@ import { NgModule } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
-import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModalModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { PasswordInputComponent } from './password-input/password-input.component';
 import { SpinnerDirective } from './_directives/spinner.directive';
 import { ConfirmDirective } from './_directives/confirm.directive';
@@ -12,6 +12,7 @@ import { ServerMessageComponent } from './server-message/server-message.componen
 import { CopyTextDirective } from './_directives/copy-text.directive';
 import { IdentityProviderIconComponent } from './identity-provider-icon/identity-provider-icon.component';
 import { InfoBlockComponent } from './info-block/info-block.component';
+import { InfoIconComponent } from './info-icon/info-icon.component';
 
 @NgModule({
     declarations: [
@@ -20,16 +21,18 @@ import { InfoBlockComponent } from './info-block/info-block.component';
         ConfirmDirective,
         CopyTextDirective,
         IdentityProviderIconComponent,
+        InfoBlockComponent,
+        InfoIconComponent,
         PasswordInputComponent,
         ServerMessageComponent,
         SpinnerDirective,
-        InfoBlockComponent,
     ],
     imports: [
         CommonModule,
         FormsModule,
         FontAwesomeModule,
         NgbModalModule,
+        NgbTooltipModule,
     ],
     exports: [
         CheckmarkComponent,
@@ -41,6 +44,7 @@ import { InfoBlockComponent } from './info-block/info-block.component';
         CopyTextDirective,
         IdentityProviderIconComponent,
         InfoBlockComponent,
+        InfoIconComponent,
     ],
 })
 export class ToolsModule {}

@@ -5,11 +5,12 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainPropertiesComponent } from './domain-properties.component';
 import { ConfigService } from '../../../../_services/config.service';
-import { DocsService } from '../../../../_services/docs.service';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
 import { InstanceStaticConfig } from '../../../../../generated-api';
 import { NoDataComponent } from '../../no-data/no-data.component';
+import { ToolsModule } from '../../../tools/tools.module';
+import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 
 describe('DomainPropertiesComponent', () => {
 
@@ -18,11 +19,13 @@ describe('DomainPropertiesComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainPropertiesComponent, MockComponents(DomainBadgeComponent, NoDataComponent)],
-            imports: [RouterTestingModule, FontAwesomeTestingModule],
+            declarations: [
+                DomainPropertiesComponent,
+                MockComponents(DomainBadgeComponent, NoDataComponent, InfoIconComponent),
+            ],
+            imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig, extensions: of(undefined)}),
-                MockProvider(DocsService),
                 MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
             ],
         })

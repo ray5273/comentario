@@ -9,6 +9,7 @@ import { DomainMeta, DomainSelectorService } from '../../../_services/domain-sel
 import { ToastService } from '../../../../../_services/toast.service';
 import { DomainUserBadgeComponent } from '../../../domain-user-badge/domain-user-badge.component';
 import { ToolsModule } from '../../../../tools/tools.module';
+import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 
 describe('DomainUserEditComponent', () => {
 
@@ -17,7 +18,7 @@ describe('DomainUserEditComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [DomainUserEditComponent, MockComponents(DomainUserBadgeComponent)],
+            declarations: [DomainUserEditComponent, MockComponents(DomainUserBadgeComponent, InfoIconComponent)],
             imports: [RouterTestingModule, ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),

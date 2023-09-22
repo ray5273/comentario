@@ -8,7 +8,10 @@
     <fieldset [disabled]="loading.active || saving.active">
         <!-- User role -->
         <div class="mb-3 row">
-            <div class="col-sm-3 colon fw-bold" i18n>User role</div>
+            <div class="col-sm-3">
+                <span class="colon fw-bold" i18n>User role</span>
+                <app-info-icon docLink="kb/permissions/roles/" class="ms-2"></app-info-icon>
+            </div>
             <div class="col-sm-9">
                 <!-- Owner -->
                 <div class="form-check mb-3">

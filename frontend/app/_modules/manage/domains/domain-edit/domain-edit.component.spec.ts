@@ -3,7 +3,7 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
-import { MockPipes, MockProvider } from 'ng-mocks';
+import { MockComponents, MockPipes, MockProvider } from 'ng-mocks';
 import { DomainEditComponent } from './domain-edit.component';
 import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
@@ -12,6 +12,7 @@ import { ToastService } from '../../../../_services/toast.service';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from '../../_pipes/comment-sort.pipe';
+import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 
 describe('DomainEditComponent', () => {
 
@@ -24,7 +25,11 @@ describe('DomainEditComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainEditComponent, MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe)],
+            declarations: [
+                DomainEditComponent,
+                MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe),
+                MockComponents(InfoIconComponent),
+            ],
             imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, NgbNavModule, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),

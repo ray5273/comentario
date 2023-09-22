@@ -6,7 +6,7 @@ This is the first major update to Comentario, which phases out the flawed legacy
 
 **❗ IMPORTANT:**
 
-* This release brings an extensive code change. You're strongly encouraged to **back up your database** before updating. Please read the [Migration docs section](https://edge.docs.comentario.app/en/getting-started/migration/comentario-2.x/) carefully.
+* This release brings an extensive code change. You're strongly encouraged to **back up your database** before updating. Please read the [Migration docs section](https://edge.docs.comentario.app/en/installation/migration/comentario-2.x/) carefully.
 * Since this is a pre-release, **do not use this in production**.
 
 **Changes:**

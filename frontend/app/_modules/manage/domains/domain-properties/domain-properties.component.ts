@@ -1,13 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { Location } from '@angular/common';
 import { combineLatestWith, first } from 'rxjs';
 import { faCopy, faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DomainExtension, FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { Paths } from '../../../../_utils/consts';
-import { DocsService } from '../../../../_services/docs.service';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
+import { Utils } from '../../../../_utils/utils';
 
 @UntilDestroy()
 @Component({
@@ -27,9 +26,8 @@ export class DomainPropertiesComponent implements OnInit {
 
     readonly Paths = Paths;
     readonly snippet =
-        `<script defer src="${Location.joinWithSlash(this.cfgSvc.staticConfig.baseUrl, 'comentario.js')}"></script>\n` +
+        `<script defer src="${Utils.joinUrl(this.cfgSvc.staticConfig.baseUrl, 'comentario.js')}"></script>\n` +
         `<comentario-comments></comentario-comments>`;
-    readonly installDocsUrl = this.docsSvc.getPageUrl('getting-started/');
 
     // Icons
     readonly faCopy   = faCopy;
@@ -38,7 +36,6 @@ export class DomainPropertiesComponent implements OnInit {
 
     constructor(
         private readonly cfgSvc: ConfigService,
-        private readonly docsSvc: DocsService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
 

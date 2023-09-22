@@ -16,6 +16,12 @@
             <li ngbNavItem>
                 <a ngbNavLink class="fw-bold" i18n>General</a>
                 <ng-template ngbNavContent>
+                    <!-- Info -->
+                    <app-info-block>
+                        <ng-container i18n>General settings describe the website that will display comments.</ng-container>
+                        <app-info-icon docLink="configuration/frontend/domain/general/" class="ms-2"></app-info-icon>
+                    </app-info-block>
+
                     <!-- Host -->
                     <div class="mb-3 row">
                         <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
@@ -63,10 +69,91 @@
                 </ng-template>
             </li>
 
+            <!-- Authentication -->
+            <li ngbNavItem>
+                <a ngbNavLink>
+                    <!-- Tab title -->
+                    <span class="fw-bold me-1" i18n>Authentication</span>
+                    <!-- Badge with a number -->
+                    <span *ngIf="numAuths as n else noAuths" class="badge bg-success">{{ n }}</span>
+                    <ng-template #noAuths>
+                        <span class="badge bg-danger">0</span>
+                    </ng-template>
+                </a>
+                <ng-template ngbNavContent>
+                    <!-- Info -->
+                    <app-info-block>
+                        <ng-container i18n>Choose what authentication methods your commenters will be able to use.</ng-container>
+                        <app-info-icon docLink="configuration/frontend/domain/authentication/" class="ms-2"></app-info-icon>
+                    </app-info-block>
+
+                    <!-- Anonymous comments -->
+                    <div class="form-check">
+                        <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
+                        <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
+                    </div>
+
+                    <!-- Local auth -->
+                    <div class="form-check">
+                        <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
+                        <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
+                    </div>
+
+                    <!-- Federated IdPs -->
+                    <div formArrayName="fedIdps">
+                        <div *ngFor="let idp of fedIdps; index as idx" class="form-check">
+                            <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
+                            <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+                        </div>
+                    </div>
+
+                    <!-- SSO -->
+                    <div class="form-check">
+                        <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
+                        <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
+                        <app-info-icon docLink="configuration/frontend/domain/authentication/sso/" class="ms-2"></app-info-icon>
+                    </div>
+
+                    <div *ngIf="form.controls.authSso.value" class="ms-4">
+                        <!-- SSO server URL -->
+                        <div class="mb-2">
+                            <label for="ssoUrl" class="form-label colon" i18n>SSO server URL</label>
+                            <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
+                                   [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
+                                   [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
+                                   required minlength="1" maxlength="253" placeholder="https://sso.example.com">
+                            <!-- Invalid feedback -->
+                            <div class="invalid-feedback">
+                                <ng-container i18n>Please enter a valid URL.</ng-container>
+                            </div>
+                        </div>
+
+                        <!-- SSO -->
+                        <div class="form-check">
+                            <input formControlName="ssoNonInteractive" type="checkbox" class="form-check-input" id="sso-non-interactive">
+                            <label class="form-check-label" for="sso-non-interactive" i18n>Non-interactive</label>
+                        </div>
+                    </div>
+
+                    <!-- No available auth method warning -->
+                    <div *ngIf="!numAuths"
+                         class="form-text text-warning-emphasis">
+                        <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                        <ng-container i18n>No authentication method enabled, your users won't be able to comment.</ng-container>
+                    </div>
+                </ng-template>
+            </li>
+
             <!-- Moderation -->
             <li ngbNavItem>
                 <a ngbNavLink class="fw-bold" i18n>Moderation</a>
                 <ng-template ngbNavContent>
+                    <!-- Info -->
+                    <app-info-block>
+                        <ng-container i18n>Here you can specify moderation policy setting for the domain.</ng-container>
+                        <app-info-icon docLink="configuration/frontend/domain/moderation/" class="ms-2"></app-info-icon>
+                    </app-info-block>
+
                     <!-- Require moderator approval -->
                     <div class="mb-3 row">
                         <div class="col-sm-3 colon fw-bold" i18n>Require moderator approval on comment, if</div>
@@ -139,74 +226,6 @@
                 </ng-template>
             </li>
 
-            <!-- Authentication -->
-            <li ngbNavItem>
-                <a ngbNavLink>
-                    <!-- Tab title -->
-                    <span class="fw-bold me-1" i18n>Authentication</span>
-                    <!-- Badge with a number -->
-                    <span *ngIf="numAuths as n else noAuths" class="badge bg-success">{{ n }}</span>
-                    <ng-template #noAuths>
-                        <span class="badge bg-danger">0</span>
-                    </ng-template>
-                </a>
-                <ng-template ngbNavContent>
-                    <!-- Anonymous comments -->
-                    <div class="form-check">
-                        <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
-                        <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
-                    </div>
-
-                    <!-- Local auth -->
-                    <div class="form-check">
-                        <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
-                        <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
-                    </div>
-
-                    <!-- Federated IdPs -->
-                    <div formArrayName="fedIdps">
-                        <div *ngFor="let idp of fedIdps; index as idx" class="form-check">
-                            <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
-                            <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
-                        </div>
-                    </div>
-
-                    <!-- SSO -->
-                    <div class="form-check">
-                        <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
-                        <label class="form-check-label" for="auth-sso" i18n>Single Sign-On</label>
-                    </div>
-
-                    <div *ngIf="form.controls.authSso.value" class="ms-4">
-                        <!-- SSO server URL -->
-                        <div class="mb-2">
-                            <label for="ssoUrl" class="form-label colon" i18n>SSO server URL</label>
-                            <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
-                                   [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
-                                   [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
-                                   required minlength="1" maxlength="253" placeholder="https://sso.example.com">
-                            <!-- Invalid feedback -->
-                            <div class="invalid-feedback">
-                                <ng-container i18n>Please enter a valid URL.</ng-container>
-                            </div>
-                        </div>
-
-                        <!-- SSO -->
-                        <div class="form-check">
-                            <input formControlName="ssoNonInteractive" type="checkbox" class="form-check-input" id="sso-non-interactive">
-                            <label class="form-check-label" for="sso-non-interactive" i18n>Non-interactive</label>
-                        </div>
-                    </div>
-
-                    <!-- No available auth method warning -->
-                    <div *ngIf="!numAuths"
-                         class="form-text text-warning-emphasis">
-                        <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
-                        <ng-container i18n>No authentication method enabled, your users won't be able to comment.</ng-container>
-                    </div>
-                </ng-template>
-            </li>
-
             <!-- Extensions -->
             <li ngbNavItem>
                 <a ngbNavLink>
@@ -216,6 +235,12 @@
                     <span *ngIf="numExtensions as n" class="badge bg-secondary">{{ n }}</span>
                 </a>
                 <ng-template ngbNavContent>
+                    <!-- Info -->
+                    <app-info-block>
+                        <ng-container i18n>Extensions allow to engage external services for spam and toxicity checking in comments.</ng-container>
+                        <app-info-icon docLink="configuration/frontend/domain/extensions/" class="ms-2"></app-info-icon>
+                    </app-info-block>
+
                     <div formGroupName="extensions">
                         <!-- Iterate extensions enabled globally -->
                         <div *ngFor="let e of extensions; index as idx" [formGroupName]="idx">

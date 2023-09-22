@@ -20,8 +20,10 @@
                 <ng-container i18n>Copy</ng-container>
             </button>
         </div>
-        <p i18n>That's all! Comentario will automatically load and render comments for every page based on its URL.</p>
-        <p i18n>Read more on Comentario installation and configuration in the <a [href]="installDocsUrl" target="_blank" rel="noopener">documentation</a>.</p>
+        <p>
+            <ng-container i18n>That's all! Comentario will automatically load and render comments for every page based on its URL.</ng-container>
+            <app-info-icon docLink="configuration/embedding/" class="ms-2"></app-info-icon>
+        </p>
     </section>
 
     <!-- Heading -->
@@ -86,7 +88,10 @@
                 </div>
                 <!-- Authentication -->
                 <div>
-                    <dt i18n>Authentication</dt>
+                    <dt>
+                        <ng-container i18n>Authentication</ng-container>
+                        <app-info-icon docLink="configuration/frontend/domain/authentication/" position="right"></app-info-icon>
+                    </dt>
                     <dd>
                         <ul class="ps-3 mb-0">
                             <li *ngIf="domain.authAnonymous" i18n>Anonymous comments</li>
@@ -101,8 +106,11 @@
                     </dd>
                 </div>
                 <!-- Extensions -->
-                <div>
-                    <dt i18n>Extensions</dt>
+                <div *ngIf="extensions?.length">
+                    <dt>
+                        <ng-container i18n>Extensions</ng-container>
+                        <app-info-icon docLink="configuration/frontend/domain/extensions/" position="right"></app-info-icon>
+                    </dt>
                     <dd>
                         <ul class="ps-3 mb-0">
                             <li *ngFor="let e of extensions">{{ e.name }}</li>

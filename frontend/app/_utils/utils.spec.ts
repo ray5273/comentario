@@ -20,4 +20,30 @@ describe('Utils', () => {
                 expect(Utils.isHexToken(test.v)).toBe(test.want);
             }));
     });
+
+    describe('joinUrl', () => {
+        [
+            {v: [],                               want: ''},
+            {v: ['a'],                            want: 'a'},
+            {v: ['a/'],                           want: 'a/'},
+            {v: ['/a'],                           want: '/a'},
+            {v: ['/a/'],                          want: '/a/'},
+            {v: ['a',   ''],                      want: 'a/'},
+            {v: ['a/',  ''],                      want: 'a/'},
+            {v: ['/a/', ''],                      want: '/a/'},
+            {v: ['/a',  '/'],                     want: '/a/'},
+            {v: ['/a/', '/'],                     want: '/a/'},
+            {v: ['a',   'b'],                     want: 'a/b'},
+            {v: ['a/',  'b'],                     want: 'a/b'},
+            {v: ['/a/', 'b'],                     want: '/a/b'},
+            {v: ['a',   '/b'],                    want: 'a/b'},
+            {v: ['a/',  '/b'],                    want: 'a/b'},
+            {v: ['/a/', '/b'],                    want: '/a/b'},
+            {v: ['/a/', 'b/'],                    want: '/a/b/'},
+            {v: ['a',   'b/', '/c/', '/d', 'e/'], want: 'a/b/c/d/e/'},
+        ]
+            .forEach(test => it(`given '${test.v}', returns ${test.want}`, () => {
+                expect(Utils.joinUrl(...test.v)).toBe(test.want);
+            }));
+    });
 });
