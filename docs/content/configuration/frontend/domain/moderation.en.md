@@ -16,7 +16,7 @@ The `Moderation` tab defines moderation and moderator notification policies for 
 
 ## Require moderator approval on comment
 
-The moderation policy outlines situations in which cases the comment doesn't get automatically the `Approved` status, queueing for moderation instead:
+The moderation policy outlines situations the comment doesn't get automatically the `Approved` status in, queueing for moderation instead:
 
 * Author is anonymous
 * Author is authenticated
