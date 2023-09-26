@@ -4,7 +4,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -92,12 +91,10 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 		WithSignup(params.HTTPRequest, data.URIPtrToString(params.Body.URL)).
 		WithWebsiteURL(string(params.Body.WebsiteURL))
 
-	// If SMTP isn't configured, mark the user as confirmed right away
-	if !config.SMTPConfigured {
-		user.WithConfirmed(true)
-
-		// If confirmation is switched off in the config, mark the user confirmed, too
-	} else if !svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmCommenter, true) {
+	// If no operational mailer is configured, or confirmation is switched off in the config, mark the user confirmed
+	// right away
+	if !util.TheMailer.Operational() ||
+		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmCommenter, true) {
 		user.WithConfirmed(true)
 	}
 

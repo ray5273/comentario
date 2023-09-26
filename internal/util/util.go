@@ -36,6 +36,8 @@ type Scanner interface {
 
 // Mailer allows sending emails
 type Mailer interface {
+	// Operational returns whether the mailer is functional (used to distinguish between a "real" mailer and noOpMailer)
+	Operational() bool
 	// Mail sends an email to the specified recipient.
 	//  - replyTo:     email address/name of the sender (optional).
 	//  - recipient:   email address/name of the recipient.
@@ -83,6 +85,10 @@ func (s *ErrScanner) Scan(...any) error {
 
 // noOpMailer is a Mailer implementation that doesn't send any emails
 type noOpMailer struct{}
+
+func (m *noOpMailer) Operational() bool {
+	return false
+}
 
 func (m *noOpMailer) Mail(_, recipient, subject, _ string, _ ...string) error {
 	logger.Debugf("NoOpMailer: not sending email to '%s' (subject: '%s')", recipient, subject)

@@ -2926,6 +2926,23 @@ paths:
         204:
           description: The backend has been successfully reset
 
+  /e2e/config/dynamic:
+    put:
+      operationId: E2eConfigDynamicItemSet
+      summary: Update dynamic instance configuration item
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/instanceDynamicConfigItem"
+      responses:
+        204:
+          description: Dynamic instance configuration item has been updated
+
   /e2e/mails:
     get:
       operationId: E2eMailsGet

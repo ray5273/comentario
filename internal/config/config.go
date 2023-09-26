@@ -46,10 +46,9 @@ var (
 
 	// Derived values
 
-	BaseURL        *url.URL // The parsed base URL
-	CDNURL         *url.URL // The parsed CDN URL
-	UseHTTPS       bool     // Whether the base URL is an HTTPS one
-	SMTPConfigured bool     // Whether sending emails is properly configured
+	BaseURL  *url.URL // The parsed base URL
+	CDNURL   *url.URL // The parsed CDN URL
+	UseHTTPS bool     // Whether the base URL is an HTTPS one
 )
 
 // CLIParsed is a callback that signals the config the CLI flags have been parsed
@@ -192,7 +191,6 @@ func configureMailer() error {
 	if cfg.Host == "" || cfg.User == "" || cfg.Pass == "" {
 		return nil
 	}
-	SMTPConfigured = true
 
 	// Figure out encryption params
 	useSSL, useTLS := false, false

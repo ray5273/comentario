@@ -1,4 +1,4 @@
-import { PATHS } from '../../../support/cy-utils';
+import { DYN_CONFIG_ITEMS, PATHS } from '../../../support/cy-utils';
 
 context('Signup', () => {
 
@@ -6,6 +6,7 @@ context('Signup', () => {
         cy.backendReset();
         cy.visit(PATHS.auth.signup);
         cy.isAt(PATHS.auth.signup);
+
         // Aliases
         cy.get('#signup-form')       .as('form');
         cy.get('#email')             .as('email');
@@ -81,19 +82,58 @@ context('Signup', () => {
             .type('{backspace}').isValid();
     });
 
-    it('allows user to sign up', () => {
-        cy.get('@email')   .setValue('test@example').isValid();
-        cy.get('@password').setValue('Passw0rd')    .isValid();
-        cy.get('@name')    .setValue('Imp')         .isValid();
-        cy.get('@submit').click();
+    it('allows user to sign up with confirmation', () => {
+        // Sign up
+        const user = {email: 'test@example', name: 'Imp', password: 'Passw0rd'};
+        cy.signup(user, {goTo: false});
+
+        // We're still on the signup page
+        cy.noToast();
+        cy.isAt(PATHS.auth.signup);
+        cy.get('#signup-complete').should('be.visible')
+            .should('contain.text', 'Your registration is almost complete!');
+
+        // Try to login and fail because the email isn't confirmed
+        cy.login(user, {goTo: true, verify: false});
+        cy.toastCheckAndClose('email-not-confirmed');
+
+        // Fetch the sent email: there must be exactly one
+        cy.backendGetSentEmails().then(mails => {
+            // Check there's exactly one email
+            expect(mails).length(1);
+
+            // Verify the email's headers
+            const m = mails[0];
+            expect(m.headers['Subject']).eq('Comentario: Please confirm your email address');
+            expect(m.headers['From'])   .eq('noreply@localhost');
+            expect(m.headers['To'])     .eq('test@example');
+
+            // Extract a confirmation link from the body
+            const matches = m.body.match(/http:\/\/localhost:8080\/api\/auth\/confirm\?access_token=[^"]+/g);
+            expect(matches).length(1);
+
+            // Confirm user's email address by following the link
+            cy.visit(matches[0]);
+        });
+
+        // There's a success toast
+        cy.toastCheckAndClose('email-confirmed');
+
+        // We're at the login page. Login, now successfully
+        cy.isAt(PATHS.auth.login, {ignoreQuery: true});
+        cy.login(user, {goTo: false});
+    });
+
+    it('allows user to sign up without confirmation', () => {
+        // Deactivate email confirmation (on by default)
+        cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupConfirmUser, 'false');
+
+        // Sign up
+        const user = {email: 'test@example', name: 'Imp', password: 'Passw0rd'};
+        cy.signup(user, {goTo: false});
 
         // We're at the login page
         cy.isAt(PATHS.auth.login);
-        cy.get('#email').setValue('test@example');
-        cy.get('#password input').setValue('Passw0rd');
-        cy.get('button[type=submit]').click();
-
-        // We're in the Dashboard
-        cy.isAt(PATHS.manage.dashboard);
+        cy.login(user, {goTo: false});
     });
 });

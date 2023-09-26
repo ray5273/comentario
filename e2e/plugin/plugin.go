@@ -1,7 +1,9 @@
 package main
 
-import "gitlab.com/comentario/comentario/internal/e2e"
-import _ "embed"
+import (
+	_ "embed"
+	"gitlab.com/comentario/comentario/internal/e2e"
+)
 
 // Handler is the exported plugin implementation
 //
@@ -23,23 +25,13 @@ func (h *handler) AddMailerFailure(email string) {
 
 func (h *handler) HandleReset() error {
 	h.app.LogInfo("Resetting the e2e plugin")
-
-	// Reset the mailer
-	h.mailer = &e2eMailer{}
-
-	// Drop and recreate the public schema
-	return h.app.RecreateDBSchema(dbSeedSQL)
+	return h.reset()
 }
 
 func (h *handler) Init(app e2e.End2EndApp) error {
 	h.app = app
 
-	// Init the Mailer
-	h.mailer = &e2eMailer{}
-	h.app.SetMailer(h.mailer)
-
-	// Reinit the DB to install the seed
-	if err := h.app.RecreateDBSchema(dbSeedSQL); err != nil {
+	if err := h.reset(); err != nil {
 		return err
 	}
 
@@ -49,4 +41,13 @@ func (h *handler) Init(app e2e.End2EndApp) error {
 
 func (h *handler) Mails() []e2e.MockMail {
 	return h.mailer.mails
+}
+
+func (h *handler) reset() error {
+	// Recreate the mailer
+	h.mailer = &e2eMailer{}
+	h.app.SetMailer(h.mailer)
+
+	// Reinit the DB to install the seed
+	return h.app.RecreateDBSchema(dbSeedSQL)
 }

@@ -27,7 +27,7 @@ type DynConfigService interface {
 	Reset()
 	// Save changed configuration data to the database
 	Save() error
-	// Set updates the value of a configuration item by its key
+	// Set updates the value of a configuration item by its key. curUserID can be nil
 	Set(curUserID *uuid.UUID, key data.DynInstanceConfigItemKey, value string) error
 }
 
@@ -199,7 +199,11 @@ func (svc *dynConfigService) Set(curUserID *uuid.UUID, key data.DynInstanceConfi
 	// Update the item
 	ci.Value = value
 	ci.UpdatedTime = time.Now().UTC()
-	ci.UserUpdated = uuid.NullUUID{UUID: *curUserID, Valid: true}
+	if curUserID == nil {
+		ci.UserUpdated = uuid.NullUUID{}
+	} else {
+		ci.UserUpdated = uuid.NullUUID{UUID: *curUserID, Valid: true}
+	}
 
 	// Succeeded
 	return nil

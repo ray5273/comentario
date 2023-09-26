@@ -34,9 +34,9 @@ declare namespace Cypress {
         /**
          * Assert the current URL corresponds to the given relative path.
          * @param expected Literal path or a regex to match the current path against
-         * @param ignoreQuery Whether to strip the query parameters before comparing
+         * @param options Additional options
          */
-        isAt(expected: string | RegExp, ignoreQuery?: boolean): Chainable<string>;
+        isAt(expected: string | RegExp, options?: {ignoreQuery?: boolean}): Chainable<string>;
 
         /**
          * Collect page comments and return them as a tree structure. Can be chained off an element containing the
@@ -67,6 +67,30 @@ declare namespace Cypress {
         isInvalid(text?: string): Chainable<JQueryWithSelector>;
 
         /**
+         * Signup as provided user via the UI.
+         * @param user User to login as
+         * @param options Additional options, default to {goTo: true}
+         */
+        signup(user: {email: string, name: string, password: string}, options?: {goTo?: boolean}): Chainable<void>;
+
+        /**
+         * Login as provided user via the UI.
+         * @param user User to login as
+         * @param options Additional options, default to {goTo: true, verify: true}
+         */
+        login(user: {email: string, password: string}, options?: {goTo?: boolean, verify?: boolean}): Chainable<void>;
+
+        /**
+         * Verify there is no toast.
+         */
+        noToast(): Chainable<Element>;
+
+        /**
+         * Verify the topmost toast has the given ID, and, optionally, details text, then close it with the Close button.
+         */
+        toastCheckAndClose(id: string, details?: string): Chainable<Element>;
+
+        /**
          * Just like cy.visit(), but uses the test site URL as base.
          * @param path Path to visit.
          */
@@ -76,6 +100,11 @@ declare namespace Cypress {
          * Request the backend to reset the database and all the settings to test defaults.
          */
         backendReset(): void;
+
+        /**
+         * Request the backend to update the given dynamic config item.
+         */
+        backendSetDynConfigItem(key: string, value: string): void;
 
         /**
          * Obtain and return all sent emails from the backend.

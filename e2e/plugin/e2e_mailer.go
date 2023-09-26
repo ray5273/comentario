@@ -11,6 +11,10 @@ type e2eMailer struct {
 	failEmail map[string]bool // Map of emails to fail -> true
 }
 
+func (m *e2eMailer) Operational() bool {
+	return true
+}
+
 // addFailure adds the given email address to the failure recipient list
 func (m *e2eMailer) addFailure(email string) {
 	if m.failEmail == nil {

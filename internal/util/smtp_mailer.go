@@ -29,6 +29,10 @@ type smtpMailer struct {
 	dialer    *gomail.Dialer
 }
 
+func (m *smtpMailer) Operational() bool {
+	return true
+}
+
 func (m *smtpMailer) Mail(replyTo, recipient, subject, htmlMessage string, embedFiles ...string) error {
 	// Compose an email
 	msg := gomail.NewMessage()

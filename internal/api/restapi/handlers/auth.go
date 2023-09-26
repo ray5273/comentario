@@ -267,12 +267,10 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	} else if cnt == 0 {
 		user.WithConfirmed(true).IsSuperuser = true
 
-		// If SMTP isn't configured, mark the user confirmed right away
-	} else if !config.SMTPConfigured {
-		user.WithConfirmed(true)
-
-		// If confirmation is switched off in the config, mark the user confirmed, too
-	} else if !svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser, true) {
+		// If no operational mailer is configured, or confirmation is switched off in the config, mark the user confirmed
+		// right away
+	} else if !util.TheMailer.Operational() ||
+		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser, true) {
 		user.WithConfirmed(true)
 	}
 

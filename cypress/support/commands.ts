@@ -1,4 +1,5 @@
 import JQueryWithSelector = Cypress.JQueryWithSelector;
+import { PATHS } from './cy-utils';
 
 // @ts-ignore
 const { config, $ } = Cypress;
@@ -66,12 +67,12 @@ Cypress.Commands.addQuery(
         };
     });
 
-Cypress.Commands.add('isAt', (expected: string | RegExp, ignoreQuery?: boolean) => cy.url().should((url) => {
+Cypress.Commands.add('isAt', (expected: string | RegExp, options?: {ignoreQuery?: boolean}) => cy.url().should((url) => {
     // Strip off any parameters before comparing
     url = url.replace(/;.*$/, '');
 
     // Strip off any query params, if needed
-    if (ignoreQuery) {
+    if (options?.ignoreQuery) {
         url = url.replace(/\?.*$/, '');
     }
 
@@ -120,6 +121,51 @@ Cypress.Commands.add(
             .should(fb => text && expect(fb.text()).eq(text))
             .wrap(element));
 
+Cypress.Commands.add('signup', (user: {email: string, name: string, password: string}, options?: {goTo?: boolean}) => {
+    if (options?.goTo ?? true) {
+        cy.visit(PATHS.auth.signup);
+        cy.isAt(PATHS.auth.signup);
+    }
+
+    // Fill out the form
+    cy.get('#email')         .setValue(user.email)   .isValid();
+    cy.get('#password input').setValue(user.password).isValid();
+    cy.get('#name')          .setValue(user.name)    .isValid();
+    cy.get('button[type=submit]').click();
+});
+
+Cypress.Commands.add('login', (user: {email: string, password: string}, options?: {goTo?: boolean, verify?: boolean}) => {
+    if (options?.goTo ?? true) {
+        cy.visit(PATHS.auth.login);
+        cy.isAt(PATHS.auth.login);
+    }
+
+    // Fill out the form
+    cy.get('#email')         .setValue(user.email)   .isValid();
+    cy.get('#password input').setValue(user.password).isValid();
+    cy.get('button[type=submit]').click();
+
+    // Verify the outcome if needed
+    if (options?.verify ?? true) {
+        cy.isAt(PATHS.manage.dashboard);
+    }
+});
+
+Cypress.Commands.add('noToast', () => void cy.get('#toast-0').should('not.exist'));
+
+Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
+    // Verify the toast's message ID
+    cy.get('#toast-0 .message-id').should('have.text', id);
+
+    // Verify the toast's details text, if any
+    if (details) {
+        cy.get('#toast-0 .toast-details').should('have.text', details);
+    }
+
+    // Close the toast and verify it's gone
+    cy.get('#toast-0 button.btn-close').click().should('not.exist');
+});
+
 Cypress.Commands.add(
     'visitTestSite',
     {prevSubject: false},
@@ -127,6 +173,9 @@ Cypress.Commands.add(
 
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));
+
+Cypress.Commands.add('backendSetDynConfigItem', (key: string, value: string) =>
+    cy.request('PUT', '/api/e2e/config/dynamic', {key, value}).its('status').should('eq', 204));
 
 Cypress.Commands.add('backendGetSentEmails', () =>
     cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body'));

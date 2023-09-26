@@ -51,3 +51,12 @@ export const USERS: { [k: string ]: Cypress.User } = {
     twitterUser:  {isAnonymous: false, id: '28053af1-612b-4d42-b03d-9e30f42f73c2', email: 'twitter-user@twitter.com',   name: 'Twitter User'},
     ssoUser:      {isAnonymous: false, id: '683251c4-e70a-4831-b60c-10c564c894a8', email: 'sso-user@example.com',       name: 'SSO User'},
 };
+
+export enum DYN_CONFIG_ITEMS {
+    authSignupEnabled          = 'auth.signup.enabled',
+    authSignupConfirmCommenter = 'auth.signup.confirm.commenter',
+    authSignupConfirmUser      = 'auth.signup.confirm.user',
+    operationNewOwnerEnabled   = 'operation.newOwner.enabled',
+    markdownLinksEnabled       = 'markdown.links.enabled',
+    markdownImagesEnabled      = 'markdown.images.enabled',
+}

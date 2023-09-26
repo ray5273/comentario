@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/swag"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
@@ -79,6 +80,7 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 
 	// Configure API endpoints
 	e2eHandler = *hPtr
+	api.APIE2eE2eConfigDynamicItemSetHandler = api_e2e.E2eConfigDynamicItemSetHandlerFunc(E2eConfigDynamicItemSet)
 	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
 	api.APIE2eE2eOAuthSSONonInteractiveHandler = api_e2e.E2eOAuthSSONonInteractiveHandlerFunc(E2eOAuthSSONonInteractive)
 	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(E2eReset)
@@ -94,6 +96,24 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 // E2eInit initialises the e2e plugin
 func E2eInit() error {
 	return e2eHandler.Init(&e2eApp{logger: logging.MustGetLogger("e2e")})
+}
+
+func E2eConfigDynamicItemSet(params api_e2e.E2eConfigDynamicItemSetParams) middleware.Responder {
+	err := svc.TheDynConfigService.Set(
+		nil,
+		data.DynInstanceConfigItemKey(swag.StringValue(params.Body.Key)),
+		swag.StringValue(params.Body.Value))
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Save the config
+	if err := svc.TheDynConfigService.Save(); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_e2e.NewE2eConfigDynamicItemSetNoContent()
 }
 
 func E2eMailsGet(api_e2e.E2eMailsGetParams) middleware.Responder {
