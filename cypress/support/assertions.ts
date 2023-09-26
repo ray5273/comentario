@@ -211,4 +211,74 @@ chai.use((_chai) => {
 
         deepMatch('$', this._obj, YAML.parse(expStr));
     });
+
+    // Checks the passed anchor element that it's an external link
+    _chai.Assertion.addMethod(
+        'anchor',
+        function(
+            expectedUrl: string | RegExp,
+            options?: {newTab?: boolean; noOpener?: boolean; noReferrer?: boolean; noFollow?: boolean},
+        ) {
+            // Verify it's an anchor
+            const a = this._obj[0];
+            this.assert(
+                a.tagName === 'A',
+                `expected #{this} to be an anchor element`,
+                `expected #{this} not to be an anchor element`,
+                a);
+
+            // Verify the href
+            if (expectedUrl instanceof RegExp) {
+                this.assert(
+                    a.href.match(expectedUrl),
+                    `expected href='${a.href}' to match "${expectedUrl}"`,
+                    `expected href='${a.href}' not to match "${expectedUrl}"`,
+                    expectedUrl,
+                    a.href);
+            } else {
+                this.assert(
+                    a.href === expectedUrl,
+                    `expected href='${a.href}' to equal "${expectedUrl}"`,
+                    `expected href='${a.href}' not to equal "${expectedUrl}"`,
+                    expectedUrl,
+                    a.href);
+            }
+
+            // Verify options
+            if (options) {
+                if (options.newTab) {
+                    this.assert(
+                        a.target === '_blank',
+                        `expected target='${a.target}' to be "_blank"`,
+                        `expected target='${a.target}' not to be "_blank"`,
+                        true,
+                        a.target);
+                }
+                if (options.noOpener) {
+                    this.assert(
+                        (a.rel.indexOf('noopener') >= 0) === options.noOpener,
+                        `expected rel='${a.rel}' to not contain "noopener"`,
+                        `expected rel='${a.rel}' to contain "noopener"`,
+                        options.noOpener,
+                        a.rel);
+                }
+                if (options.noReferrer) {
+                    this.assert(
+                        (a.rel.indexOf('noreferrer') >= 0) === options.noReferrer,
+                        `expected rel='${a.rel}' to not contain "noreferrer"`,
+                        `expected rel='${a.rel}' to contain "noreferrer"`,
+                        options.noReferrer,
+                        a.rel);
+                }
+                if (options.noFollow) {
+                    this.assert(
+                        (a.rel.indexOf('nofollow') >= 0) === options.noFollow,
+                        `expected rel='${a.rel}' to not contain "nofollow"`,
+                        `expected rel='${a.rel}' to contain "nofollow"`,
+                        options.noFollow,
+                        a.rel);
+                }
+            }
+        });
+
 });

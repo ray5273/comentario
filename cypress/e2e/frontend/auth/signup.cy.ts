@@ -23,11 +23,17 @@ context('Signup', () => {
         cy.get('@form').contains('label', 'Your email');
         cy.get('@form').contains('label', 'Password');
         cy.get('@form').contains('label', 'Your name');
-        cy.get('@form').contains('By signing up, you agree to our Terms of Service and Privacy Policy.');
         cy.get('@email')   .should('be.visible').should('be.enabled').should('have.value', '');
         cy.get('@password').should('be.visible').should('be.enabled').should('have.value', '');
         cy.get('@name')    .should('be.visible').should('be.enabled').should('have.value', '');
         cy.get('@submit')  .should('be.visible').should('be.enabled').should('have.text',  'Sign up');
+
+        // Check consent
+        cy.get('@form').contains('By signing up, you agree to our Terms of Service and Privacy Policy.').as('consent');
+        cy.get('@consent').contains('a', 'Terms of Service')
+            .should('be.anchor', /\/en\/legal\/tos\/$/, {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
+        cy.get('@consent').contains('a', 'Privacy Policy')
+            .should('be.anchor', /\/en\/legal\/privacy\/$/, {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
 
         // Check social buttons
         cy.get('app-federated-login').should('be.visible')

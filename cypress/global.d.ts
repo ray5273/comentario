@@ -88,7 +88,8 @@ declare namespace Cypress {
         (chainer:
              'arrayMatch'  | 'not.arrayMatch'  |
              'matrixMatch' | 'not.matrixMatch' |
-             'yamlMatch'   | 'not.yamlMatch'
+             'yamlMatch'   | 'not.yamlMatch'   |
+             'be.anchor'   | 'not.be.anchor'
         ): Chainable<Subject>;
     }
 }
