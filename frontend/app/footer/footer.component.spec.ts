@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
+import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider } from 'ng-mocks';
 import { FooterComponent } from './footer.component';
 import { DocsService } from '../_services/docs.service';
@@ -16,7 +17,7 @@ describe('FooterComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [FooterComponent],
-            imports: [RouterTestingModule],
+            imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 MockProvider(DocsService),
                 MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),

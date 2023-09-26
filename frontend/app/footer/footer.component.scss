@@ -7,11 +7,14 @@
 
 footer {
     background-color: var(--app-footer-bg-color);
-    color: #ced1e1;
+    background-image: linear-gradient(
+        180deg,
+        $sidebar-bg-color 0%,
+        var(--app-footer-bg-color) 100%);
+    color: adjust-color($primary, $saturation: -25%, $alpha: -0.3);
     padding-top: 2rem;
     padding-bottom: 2rem;
     font-size: 0.875rem;
-
 
     // Leave room for the sidebar (if any), which is displayed above the footer with width < md
     @include media-breakpoint-down(md){
@@ -20,10 +23,21 @@ footer {
 }
 
 a {
-    color: inherit;
+    color: adjust-color($primary, $saturation: -16.666%);
     transition: color 0.1s linear;
 
-    &:hover, &:active {
-        color: #ffffff;
+    &.active {
+        font-weight: bold;
     }
+
+    &:hover, &:active {
+        color: adjust-color($primary, $saturation: -16.666%, $lightness: -25%);
+    }
+}
+
+.heading {
+    font-weight: $font-weight-bold;
+    color: adjust-color($primary, $saturation: -16.666%, $lightness: -25%);
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
 }

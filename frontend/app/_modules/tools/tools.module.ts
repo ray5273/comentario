@@ -13,6 +13,7 @@ import { CopyTextDirective } from './_directives/copy-text.directive';
 import { IdentityProviderIconComponent } from './identity-provider-icon/identity-provider-icon.component';
 import { InfoBlockComponent } from './info-block/info-block.component';
 import { InfoIconComponent } from './info-icon/info-icon.component';
+import { UserAvatarComponent } from './user-avatar/user-avatar.component';
 
 @NgModule({
     declarations: [
@@ -26,6 +27,7 @@ import { InfoIconComponent } from './info-icon/info-icon.component';
         PasswordInputComponent,
         ServerMessageComponent,
         SpinnerDirective,
+        UserAvatarComponent,
     ],
     imports: [
         CommonModule,
@@ -38,13 +40,14 @@ import { InfoIconComponent } from './info-icon/info-icon.component';
         CheckmarkComponent,
         ConfirmDialogComponent,
         ConfirmDirective,
-        PasswordInputComponent,
-        ServerMessageComponent,
-        SpinnerDirective,
         CopyTextDirective,
         IdentityProviderIconComponent,
         InfoBlockComponent,
         InfoIconComponent,
+        PasswordInputComponent,
+        ServerMessageComponent,
+        SpinnerDirective,
+        UserAvatarComponent,
     ],
 })
 export class ToolsModule {}

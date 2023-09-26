@@ -7,6 +7,8 @@
     <!-- Navbar content -->
     <div class="nav-row flex-md-grow-1 flex-wrap flex-md-nowrap" id="navbar-content">
         <ul class="navbar-nav ms-md-auto">
+            <!-- Docs -->
+            <li class="nav-item"><a class="nav-link" [href]="docsSvc.urlHome" target="_blank" rel="noopener" i18n="menu item">Docs</a></li>
             <!-- About -->
             <li class="nav-item"><a class="nav-link" [href]="docsSvc.urlAbout" target="_blank" rel="noopener" i18n="menu item">About</a></li>
         </ul>
@@ -14,9 +16,9 @@
         <ul class="navbar-nav">
             <!-- User button -->
             <li class="nav-item" *ngIf="authSvc.principal | async as p else signin" [routerLink]="Paths.manage.dashboard">
-                <a class="nav-link btn btn-outline-secondary d-flex align-items-center" id="userMenu">
+                <a class="btn btn-outline-info d-flex align-items-center" id="userMenu">
                     <!-- User icon -->
-                    <fa-icon [icon]="faUser" class="me-1"></fa-icon>
+                    <app-user-avatar [user]="p" class="me-1"></app-user-avatar>
                     <!-- User's name -->
                     <div class="text-truncate position-relative ms-1" style="max-width: 100px">
                         <ng-container>{{ p.name }}</ng-container>

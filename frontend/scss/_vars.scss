@@ -18,7 +18,7 @@ $cta:       #ec8100;
 // Custom vars
 $navbar-bg-color: adjust-color($primary, $saturation: - 33%, $lightness: +36%);
 $sidebar-bg-color: $navbar-bg-color;
-$footer-bg-color: adjust-color($primary, $saturation: -33%, $lightness: 0%);
+$footer-bg-color: adjust-color($primary, $saturation: -33%, $lightness: +25%);
 
 // Extend the (default) theme color with the cta color
 $theme-colors: (

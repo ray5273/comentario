@@ -7,8 +7,8 @@ import { AuthService } from '../../../_services/auth.service';
 import { ControlCenterComponent } from './control-center.component';
 import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
 import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
-import { UserAvatarComponent } from '../users/user-avatar/user-avatar.component';
 import { CommentService } from '../_services/comment.service';
+import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
 
 describe('ControlCenterComponent', () => {
 

@@ -1,6 +1,6 @@
 import { Component, HostBinding, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
-import { Commenter, Configuration, Principal, User } from '../../../../../generated-api';
+import { Commenter, Configuration, Principal, User } from '../../../../generated-api';
 
 @Component({
     selector: 'app-user-avatar',

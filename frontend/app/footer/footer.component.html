@@ -1,32 +1,67 @@
 <footer class="container-fluid py-3">
     <div class="row">
-        <div class="col-md-auto">
-            <ul class="list-unstyled">
-                <li><a [routerLink]="Paths.home">Comentario</a></li>
-                <li><a [href]="docsSvc.urlAbout" target="_blank" rel="noopener" i18n>About</a></li>
-            </ul>
+        <!-- Logo, copyright, and version -->
+        <div class="col-md">
+            <!-- Logo -->
+            <div class="mb-3">
+                <a [routerLink]="Paths.home"><img src="images/logo.svg" width="200" alt="Comentario"></a>
+            </div>
+            <!-- Links -->
+            <div class="my-3 d-flex align-items-start">
+                <!-- comentario.app -->
+                <a href="https://comentario.app/" target="_blank" rel="noopener" class="me-3" title="comentario.app">
+                    <img src="images/icon.svg" style="width: 2rem" alt="comentario.app">
+                </a>
+                <!-- GitLab -->
+                <a href="https://gitlab.com/comentario/comentario" target="_blank" rel="noopener" class="me-3"
+                   title="GitLab"><fa-icon [icon]="faGitlab" size="2x"></fa-icon></a>
+                <!-- Xwitter -->
+                <a href="https://twitter.com/ComentarioApp" target="_blank" rel="noopener" class="me-3"
+                   title="XXXXXXXwitter"><fa-icon [icon]="faXTwitter" size="2x"></fa-icon></a>
+                <!-- LinkedIn -->
+                <a href="https://www.linkedin.com/company/comentario-app/" target="_blank" rel="noopener" class="me-3"
+                   title="LinkedIn"><fa-icon [icon]="faLinkedin" size="2x"></fa-icon></a>
+            </div>
+            <!-- Copyright -->
+            <div i18n>Copyright ©{{ year }} Comentario</div>
+            <!-- Version -->
+            <div class="small"><ng-container i18n>Version</ng-container> {{ version }}</div>
         </div>
 
-        <div class="col-md-auto">
-            <!-- Items for non-authenticated user -->
-            <ul *ngIf="!isAuthenticated" class="list-unstyled">
-                <li><a [routerLink]="Paths.auth.signup" i18n>Sign up</a></li>
-                <li><a [routerLink]="Paths.auth.login"  i18n>Sign in</a></li>
-            </ul>
-
-            <!-- Items for authenticated user -->
-            <ul *ngIf="isAuthenticated" class="list-unstyled">
-                <li><a [routerLink]="Paths.manage.dashboard"       i18n>Dashboard</a></li>
-                <li><a [routerLink]="Paths.manage.domains"         i18n>Domains</a></li>
-                <li><a [routerLink]="Paths.manage.account.profile" i18n>Profile</a></li>
+        <div class="col-md">
+            <ul class="list-unstyled">
+                <li class="heading" i18n>Documentation</li>
+                <li><a [href]="docsSvc.urlHome"           target="_blank" rel="noopener" i18n>Docs</a></li>
+                <li><a [href]="docsSvc.urlAbout"          target="_blank" rel="noopener" i18n>About</a></li>
+                <li><a [href]="docsSvc.urlPrivacyPolicy"  target="_blank" rel="noopener" i18n>Privacy Policy</a></li>
+                <li><a [href]="docsSvc.urlTermsOfService" target="_blank" rel="noopener" i18n>Terms of Service</a></li>
             </ul>
         </div>
 
         <div class="col-md">
-            <!-- Copyright and version -->
-            <ul class="list-unstyled">
-                <li i18n>Copyright ©{{ year }} Comentario</li>
-                <li class="small"><ng-container i18n>Version</ng-container> {{ version }}</li>
+            <!-- Items for non-authenticated user -->
+            <ul *ngIf="!isAuthenticated" class="list-unstyled">
+                <li class="heading" i18n>Get started</li>
+                <li><a [routerLink]="Paths.auth.signup"
+                       routerLinkActive="active"
+                       ariaCurrentWhenActive="page" i18n>Sign up</a></li>
+                <li><a [routerLink]="Paths.auth.login"
+                       routerLinkActive="active"
+                       ariaCurrentWhenActive="page" i18n>Sign in</a></li>
+            </ul>
+
+            <!-- Items for authenticated user -->
+            <ul *ngIf="isAuthenticated" class="list-unstyled">
+                <li class="heading" i18n>Manage</li>
+                <li><a [routerLink]="Paths.manage.dashboard"
+                       routerLinkActive="active"
+                       ariaCurrentWhenActive="page" i18n>Dashboard</a></li>
+                <li><a [routerLink]="Paths.manage.domains"
+                       routerLinkActive="active"
+                       ariaCurrentWhenActive="page" i18n>Domains</a></li>
+                <li><a [routerLink]="Paths.manage.account.profile"
+                       routerLinkActive="active"
+                       ariaCurrentWhenActive="page" i18n>Profile</a></li>
             </ul>
         </div>
     </div>

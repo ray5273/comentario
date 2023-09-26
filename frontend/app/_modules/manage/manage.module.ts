@@ -31,7 +31,6 @@ import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.
 import { DatetimePipe } from './_pipes/datetime.pipe';
 import { DomainPagePropertiesComponent } from './domains/domain-pages/domain-page-properties/domain-page-properties.component';
 import { CommentListComponent } from './domains/comments/comment-list/comment-list.component';
-import { UserAvatarComponent } from './users/user-avatar/user-avatar.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
 import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
@@ -88,7 +87,6 @@ import { ConfigEditComponent } from './config/config-edit/config-edit.component'
         SortSelectorComponent,
         StaticConfigComponent,
         StatsChartComponent,
-        UserAvatarComponent,
         UserDetailsComponent,
         UserEditComponent,
         UserManagerComponent,

@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { faGitlab, faLinkedin, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { ConfigService } from "../_services/config.service";
@@ -19,6 +20,11 @@ export class FooterComponent {
     readonly Paths = Paths;
     readonly year = `2022–${new Date().getFullYear()}`;
     readonly version = this.configSvc.staticConfig.version;
+
+    // Icons
+    readonly faGitlab   = faGitlab;
+    readonly faLinkedin = faLinkedin;
+    readonly faXTwitter = faXTwitter;
 
     constructor(
         readonly docsSvc: DocsService,

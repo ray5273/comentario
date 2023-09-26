@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserAvatarComponent } from './user-avatar.component';
-import { Configuration } from '../../../../../generated-api';
+import { Configuration } from '../../../../generated-api';
 
 describe('UserAvatarComponent', () => {
 
