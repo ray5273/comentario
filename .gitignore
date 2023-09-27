@@ -15,6 +15,10 @@ node_modules/
 # Caches
 .angular/
 
+# Test artifacts
+/cypress/screenshots
+/cypress/video
+
 # IDE
 /.idea/
 

@@ -1,9 +1,7 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { faExternalLink } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { AuthService } from '../_services/auth.service';
-import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { Principal } from '../../generated-api';
 import { ToastService } from '../_services/toast.service';
@@ -13,7 +11,6 @@ import { ConfigService } from '../_services/config.service';
 @Component({
     selector: 'app-home',
     templateUrl: './home.component.html',
-    styleUrls: ['./home.component.scss'],
 })
 export class HomeComponent implements OnInit {
 
@@ -21,10 +18,6 @@ export class HomeComponent implements OnInit {
 
     readonly Paths = Paths;
     readonly embedUrl = this.configSvc.staticConfig.homeContentUrl;
-    readonly docGetStartedUrl = this.docsSvc.getPageUrl('getting-started/');
-
-    // Icons
-    readonly faExternalLink = faExternalLink;
 
     /** Handlers to execute when a specific parameter is present */
     private readonly paramHandlers: {[name: string]: (...args: any[]) => any} = {
@@ -43,7 +36,6 @@ export class HomeComponent implements OnInit {
         private readonly route: ActivatedRoute,
         private readonly router: Router,
         private readonly configSvc: ConfigService,
-        private readonly docsSvc: DocsService,
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
     ) {}
