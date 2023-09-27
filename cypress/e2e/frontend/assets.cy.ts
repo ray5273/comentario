@@ -32,7 +32,6 @@ context('Static assets', () => {
         // Images
         {path: '/en/images/icon.svg',   dir: 'frontend/assets/images', encoding: 'binary', ctype: 'image/svg+xml'},
         {path: '/en/images/logo.svg',   dir: 'frontend/assets/images', encoding: 'binary', ctype: 'image/svg+xml'},
-        {path: '/en/images/worker.svg', dir: 'frontend/assets/images', encoding: 'binary', ctype: 'image/svg+xml'},
     ]
         .forEach(asset => {
             it(`asset ${asset.path} is served correctly`, () => {
