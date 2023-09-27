@@ -61,7 +61,7 @@ Comentario supports all screen sizes, both for embedded comments and the Adminis
 Visit our Live Demo site to witness it for yourself!
 
 {{< button "https://demo.comentario.app/" "Comments Demo" "primary mb-2" "BO" >}}
-{{< button "https://edge.comentario.app/" "Administration UI" "outline-primary mb-2" "BO" >}}
+{{< button "https://edge.comentario.app/en/auth/login" "Administration UI" "outline-primary mb-2" "BO" >}}
 
 Use the email `admin@admin` and password `admin` to log in.
 
