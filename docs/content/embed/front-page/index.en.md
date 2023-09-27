@@ -1,37 +1,73 @@
 ---
 title: comentario.app
+layout: front-page
 ---
 
-## What is Comentario? {#about}
+## What is Comentario?
 
-Comentario is a powerful commenting tool for web pages. You can embed it in your website to allow your readers to add comments.
+Comentario is an open-source web comment engine, which adds discussion functionality to plain, boring web pages.
 
-Enhance collaboration with your readers, collect useful feedback and engage in conversations. Say goodbye to boring plain posts and hello to well-organized, contextual comments directly on the page!
+Just put a `<comentario-comments>` where you want a comment thread to appear, and you're all set!
 
-{{< imgfig "/img/comment-thread-screenshot.png" "" "border shadow" >}}
+{{< button "/configuration/embedding" "Learn More" "outline-secondary" "BO" >}}
 
-## Why Comentario? {#why}
+## Why Comentario?
 
-Comentario is a free and lightweight alternative to services such as Disqus, Jetpack, and Facebook Comments.
+{{< div "row" >}}
 
-The web comment module is **privacy-focused** and has a **tiny footprint**: some 20 KB gzipped! 
+{{< div "col-md-4" >}}
+### Free & Open
 
-## Features {#features}
+Comentario is a free, [open-source](/about/source-code) software. Anyone can download or self-host it.
+{{< /div >}}
 
-Comentario supports comment threads written in [Markdown](/kb/markdown) and is packed with features:
+{{< div "col-md-4" >}}
+### Tiny
 
-* Modern, mobile-first design;
-* Nested, editable comments and replies;
-* Import from Commento and Disqus;
-* Automated spam and toxicity detection;
-* Moderation tools;
-* Thread locking;
-* OAuth login;
-* Single sign-on;
-* Email notifications.
+The embeddable script is only **20 KB** gzipped. That's orders of magnitude less than Disqus or Facebook Comments.
+{{< /div >}}
 
-Find out more in the [](/about/features) section.
+{{< div "col-md-4" >}}
+### Privacy-Focused
 
-## Installation {#install}
+Comentario doesn't add any tracking scripts or pixels to your pages. And serves no ads!
+{{< /div >}}
+
+{{< div "col-md-4" >}}
+### Powerful
+
+Comentario is packed with [features](/about/features): it supports nested comments, Markdown, social login, and more.
+{{< /div >}}
+
+{{< div "col-md-4" >}}
+### Clean & Friendly
+
+Configure [moderation policy](/configuration/frontend/domain/moderation) per domain, including using [external services](/configuration/frontend/domain/extensions) (such as Perspective API) to detect toxic comments.
+{{< /div >}}
+
+{{< div "col-md-4" >}}
+### Responsive
+
+Comentario supports all screen sizes, both for embedded comments and the Administration UI.
+{{< /div >}}
+
+{{< /div >}}
+
+{{< button "/about/features" "More about Features" "secondary" "BO" >}}
+
+
+## See It in Action
+
+Visit our Live Demo site to witness it for yourself!
+
+{{< button "https://demo.comentario.app/" "Comments Demo" "primary mb-2" "BO" >}}
+{{< button "https://edge.comentario.app/" "Administration UI" "outline-primary mb-2" "BO" >}}
+
+Use the email `admin@admin` and password `admin` to log in.
+
+
+## Get Started
 
 Please refer to the [](/getting-started) documentation to learn how to get Comentario up and running.
+
+{{< button "/getting-started" "Show Me the Docs!" "cta" "BO" >}}

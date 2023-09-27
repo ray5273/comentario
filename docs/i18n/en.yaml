@@ -1,5 +1,6 @@
 - {id: about,             translation: About}
 - {id: copyright,         translation: Copyright ©2023 Comentario.}
+- {id: dashboard,         translation: Dashboard}
 - {id: demo,              translation: Demo}
 - {id: documentation,     translation: Documentation}
 - {id: errorMessageReq,   translation: Message is required.}
@@ -17,5 +18,9 @@
 - {id: messageBody,       translation: Your message}
 - {id: noResults,         translation: No matches found.}
 - {id: seeAlso,           translation: See also}
+- {id: signUp,            translation: Sign Up}
+- {id: slogan1,           translation: Comments.}
+- {id: slogan2,           translation: Easy.}
+- {id: sloganSub,         translation: Add comments to your web page or blog in a matter of minutes.}
 - {id: submit,            translation: Submit}
 - {id: typeSomething,     translation: Type something}
