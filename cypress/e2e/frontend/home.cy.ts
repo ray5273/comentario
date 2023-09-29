@@ -28,9 +28,13 @@ context('Home', () => {
         cy.get('app-navbar nav').should('be.visible').as('navbar');
         cy.get('@navbar').find('#navbar-logo img').as('logo').should('have.attr', 'src', 'images/logo.svg');
         cy.get('@navbar').contains('a', 'Docs')
-            .should('be.anchor', 'https://edge.docs.comentario.app/en/', {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
+            .should('be.anchor',
+                'https://edge.docs.comentario.app/en/',
+                {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
         cy.get('@navbar').contains('a', 'About')
-            .should('be.anchor', 'https://edge.docs.comentario.app/en/about/', {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
+            .should('be.anchor',
+                'https://edge.docs.comentario.app/en/about/',
+                {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
 
         // Click on Sign in
         cy.get('#user-nav-button').should('not.exist');
@@ -56,16 +60,24 @@ context('Home', () => {
 
         // Check external links
         cy.get('@footer').find('a[href="https://comentario.app/"]')
-            .should('be.anchor', 'https://comentario.app/', {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
+            .should('be.anchor',
+                'https://comentario.app/',
+                {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
             .should('have.attr', 'title', 'comentario.app');
         cy.get('@footer').find('a[href*="gitlab"]')
-            .should('be.anchor', 'https://gitlab.com/comentario/comentario', {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
+            .should('be.anchor',
+                'https://gitlab.com/comentario/comentario',
+                {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
             .should('have.attr', 'title', 'GitLab');
         cy.get('@footer').find('a[href*="twitter"]')
-            .should('be.anchor', 'https://twitter.com/ComentarioApp', {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
+            .should('be.anchor',
+                'https://twitter.com/ComentarioApp',
+                {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
             .should('have.attr', 'title', 'XXXXXXXwitter');
         cy.get('@footer').find('a[href*="linkedin"]')
-            .should('be.anchor', 'https://www.linkedin.com/company/comentario-app/', {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
+            .should('be.anchor',
+                'https://www.linkedin.com/company/comentario-app/',
+                {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
             .should('have.attr', 'title', 'LinkedIn');
 
         // Check copyright

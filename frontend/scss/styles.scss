@@ -194,14 +194,12 @@ dl.detail-table, dl.detail-table > div {
 .fade-in {
     animation: fade-in-animation 0.5s ease forwards 1;
 }
-.fade-in-1s {
-    animation: fade-in-animation 1s ease forwards 1;
-}
-.fade-in-3s {
-    animation: fade-in-animation 3s ease forwards 1;
-}
-.fade-in-5s {
-    animation: fade-in-animation 5s ease forwards 1;
+
+// Generate a fade-in animation classes for various delays
+@for $i from 1 through 5 {
+    .fade-in-#{$i}s {
+        animation: fade-in-animation #{$i}s ease forwards 1;
+    }
 }
 @keyframes fade-in-animation {
     0%   { opacity: 0; }
