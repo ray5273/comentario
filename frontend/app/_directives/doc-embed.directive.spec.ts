@@ -7,7 +7,7 @@ import { DocEmbedDirective } from './doc-embed.directive';
 import { ConfigService } from '../_services/config.service';
 
 @Component({
-    template: '<div docEmbed="https://page.url/test"></div>',
+    template: '<div docEmbed="https://page.url/test"><p>Content <span>Subcontent</span></p></div>',
 })
 class TestComponent {
 }
@@ -36,7 +36,7 @@ describe('DocEmbedDirective', () => {
 
     it('contains a placeholder initially', () => {
         // The element is initially empty
-        expect(getDiv().innerHTML).toMatch(/<div class="placeholder.*">/);
+        expect(getDiv().innerHTML).toBe('<p>Content <span>Subcontent</span></p>');
         // No classes
         expect(getDiv().classList.value).toBe('');
     });
