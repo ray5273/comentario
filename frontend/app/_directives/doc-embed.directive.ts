@@ -18,18 +18,17 @@ export class DocEmbedDirective implements OnChanges {
         private readonly element: ElementRef,
         private readonly http: HttpClient,
         private readonly cfgSvc: ConfigService,
-    ) {
-        // Initially put a placeholder into the directive's element. It'll be replaced with the actual content on load
-        // (or with an alert on error)
-        element.nativeElement.innerHTML =
-            '<div class="placeholder mb-3"></div>' +
-            '<div class="placeholder py-5"></div>';
-    }
+    ) {}
 
     ngOnChanges(changes: SimpleChanges): void {
-        // Do not bother requesting pages during an end-2-end test
-        if (changes.docEmbed && !this.cfgSvc.isUnderTest && this.docEmbed) {
+        if (changes.docEmbed && this.docEmbed) {
             const e = this.element.nativeElement;
+
+            // Do not bother requesting pages during an end-2-end test
+            if (this.cfgSvc.isUnderTest) {
+                e.innerHTML = `<div class="container py-5 m5-5 border rounded text-center">[${this.docEmbed}]</div>`;
+                return;
+            }
 
             // Load the document, suppressing errors (since it's a less important resource)
             this.http.get(this.docEmbed, {responseType: 'text', context: new HttpContext().set(HTTP_ERROR_HANDLING, false)})

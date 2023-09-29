@@ -1,7 +1,7 @@
 <nav id="app-navbar" class="navbar navbar-expand navbar-light flex-wrap flex-md-nowrap" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}">
     <!-- Logo -->
     <div class="nav-row">
-        <a [routerLink]="Paths.home" id="navbarLogo"><img src="images/logo.svg" width="192" height="48" alt="Logo"></a>
+        <a [routerLink]="Paths.home" id="navbar-logo"><img src="images/logo.svg" width="192" height="48" alt="Logo"></a>
     </div>
 
     <!-- Navbar content -->
@@ -15,8 +15,8 @@
 
         <ul class="navbar-nav">
             <!-- User button -->
-            <li class="nav-item" *ngIf="authSvc.principal | async as p else signin" [routerLink]="Paths.manage.dashboard">
-                <a class="btn btn-outline-info d-flex align-items-center" id="userMenu">
+            <li *ngIf="authSvc.principal | async as p else signin" class="nav-item">
+                <a [routerLink]="Paths.manage.dashboard" class="btn btn-outline-info d-flex align-items-center" id="user-nav-button">
                     <!-- User icon -->
                     <app-user-avatar [user]="p" class="me-1"></app-user-avatar>
                     <!-- User's name -->
@@ -27,7 +27,7 @@
             </li>
             <!-- Sign in -->
             <ng-template #signin>
-                <li class="nav-item"><a class="btn btn-primary" [routerLink]="Paths.auth.login" i18n>Sign in</a></li>
+                <li class="nav-item"><a [routerLink]="Paths.auth.login" class="btn btn-primary" id="login-nav-button" i18n>Sign in</a></li>
             </ng-template>
         </ul>
     </div>

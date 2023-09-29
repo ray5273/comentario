@@ -1,2 +1,21 @@
 <!-- Embed the doc front page -->
-<section [docEmbed]="embedUrl" [class.authenticated]="principal" [class.unauthenticated]="!principal"></section>
+<section id="front-page" [docEmbed]="embedUrl" [class.authenticated]="principal" [class.unauthenticated]="!principal">
+    <!-- Render placeholders while content is being loaded -->
+    <div class="text-center placeholder-wave">
+        <div class="py-5 mt-5">
+            <div class="display-4"><span class="placeholder placeholder-lg col-5"></span></div>
+            <p><span class="placeholder col-7"></span></p>
+            <p class="my-5">
+                <span class="placeholder col-1 disabled me-2 btn btn-primary"></span>
+                <span class="placeholder col-1 disabled me-2 btn btn-cta"></span>
+                <span class="placeholder col-1 disabled me-2 btn btn-secondary"></span>
+            </p>
+        </div>
+        <h2><span class="placeholder col-6"></span></h2>
+        <div class="my-3"><span class="placeholder col-11"></span></div>
+        <h2><span class="placeholder col-6"></span></h2>
+        <div class="my-3"><span class="placeholder col-11"></span></div>
+        <h2><span class="placeholder col-6"></span></h2>
+        <div class="my-3"><span class="placeholder col-11"></span></div>
+    </div>
+</section>

@@ -11,7 +11,11 @@ export const PATHS = {
 
     manage: {
         dashboard: '/en/manage/dashboard',
-    }
+        domains:   '/en/manage/domains',
+        account: {
+            profile: '/en/manage/account/profile',
+        },
+    },
 };
 
 /** Paths for the test site. */

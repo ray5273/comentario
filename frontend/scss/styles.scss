@@ -143,13 +143,12 @@ dl.detail-table, dl.detail-table > div {
 }
 
 // Home
-
-app-home {
-    .authenticated .hide-authenticated {
+#front-page {
+    &.authenticated .hide-authenticated {
         display: none !important;
     }
 
-    .unauthenticated .hide-unauthenticated {
+    &.unauthenticated .hide-unauthenticated {
         display: none !important;
     }
 
