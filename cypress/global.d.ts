@@ -1,11 +1,14 @@
 declare namespace Cypress {
 
-    interface User {
+    interface Credentials {
+        email:    string;
+        password: string;
+    }
+
+    interface User extends Credentials {
         isAnonymous: boolean;
         id:          string;
-        email:       string;
         name:        string;
-        password?:   string;
         isBanned?:   boolean;
     }
 
@@ -27,6 +30,17 @@ declare namespace Cypress {
         sticky:    boolean;
         pending:   boolean;
         children?: Comment[];
+    }
+
+    interface LoginOptions {
+        /** Whether to go to the login page before trying to login. Defaults to true. */
+        goTo?: boolean;
+        /** Whether login must succeed. Defaults to true. */
+        succeeds?: boolean;
+        /** Path the user is redirected to after login. Only when succeeds is true. Defaults to the Dashboard path. */
+        redirectPath?: string;
+        /** Error toast shown after login fails. Mandatory is succeeds is false, otherwise ignored. */
+        errToast?: string;
     }
 
     interface Chainable {
@@ -77,14 +91,14 @@ declare namespace Cypress {
          * @param user User to login as
          * @param options Additional options, default to {goTo: true}
          */
-        signup(user: {email: string, name: string, password: string}, options?: {goTo?: boolean}): Chainable<void>;
+        signup(user: Credentials & {name: string}, options?: {goTo?: boolean}): Chainable<void>;
 
         /**
          * Login as provided user via the UI.
-         * @param user User to login as
-         * @param options Additional options, default to {goTo: true, verify: true}
+         * @param creds Credentials to login with
+         * @param options Additional login options
          */
-        login(user: {email: string, password: string}, options?: {goTo?: boolean, verify?: boolean}): Chainable<void>;
+        login(creds: Credentials, options?: LoginOptions): Chainable<void>;
 
         /**
          * Log the currently authenticated user out via the UI.
@@ -94,10 +108,10 @@ declare namespace Cypress {
 
         /**
          * Login as provided user directly, via an API call.
-         * @param user User to login as
+         * @param creds Credentials to login with
          * @param targetUrl URL to go to after the login.
          */
-        loginViaApi(user: {email: string, password: string}, targetUrl: string): Chainable<void>;
+        loginViaApi(creds: Credentials, targetUrl: string): Chainable<void>;
 
         /**
          * Verify there is no toast.
@@ -108,6 +122,11 @@ declare namespace Cypress {
          * Verify the topmost toast has the given ID, and, optionally, details text, then close it with the Close button.
          */
         toastCheckAndClose(id: string, details?: string): Chainable<Element>;
+
+        /**
+         * Click the label associated with the given element (based on the label's "for" attribute).
+         */
+        clickLabel(position?: PositionType): Chainable<JQueryWithSelector>;
 
         /**
          * Return the currently open confirmation dialog.
@@ -138,6 +157,12 @@ declare namespace Cypress {
          * NB: the input must be touched.
          */
         verifyPasswordInputValidation(options?: {required?: boolean, strong?: boolean}): Chainable<JQueryWithSelector>;
+
+        /**
+         * Run common user name input validations against the passed element.
+         * NB: the input must be touched.
+         */
+        verifyUserNameInputValidation(): Chainable<JQueryWithSelector>;
 
         /**
          * Just like cy.visit(), but uses the test site URL as base.

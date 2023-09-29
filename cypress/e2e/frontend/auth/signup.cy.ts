@@ -67,11 +67,7 @@ context('Signup', () => {
         cy.get('@password').verifyPasswordInputValidation({required: true, strong: true});
 
         // Name
-        cy.get('@name').isInvalid('Please enter your name.')
-            .type('a').isInvalid()
-            .type('b').isValid()
-            .setValue('b'.repeat(64)).isInvalid()
-            .type('{backspace}').isValid();
+        cy.get('@name').verifyUserNameInputValidation();
     });
 
     it('allows user to sign up with confirmation', () => {
@@ -86,8 +82,7 @@ context('Signup', () => {
             .should('contain.text', 'Your registration is almost complete!');
 
         // Try to login and fail because the email isn't confirmed
-        cy.login(user, {goTo: true, verify: false});
-        cy.toastCheckAndClose('email-not-confirmed');
+        cy.login(user, {goTo: true, succeeds: false, errToast: 'email-not-confirmed'});
 
         // Fetch the sent email: there must be exactly one
         cy.backendGetSentEmails().then(mails => {

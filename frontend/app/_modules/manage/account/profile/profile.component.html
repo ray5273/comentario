@@ -4,7 +4,7 @@
 
     <!-- Profile form -->
     <section>
-        <form [formGroup]="userForm" (ngSubmit)="submit()">
+        <form [formGroup]="userForm" (ngSubmit)="submit()" id="profile-form">
             <fieldset [disabled]="saving.active" class="row g-3">
                 <!-- Email -->
                 <div class="col-md-6">
@@ -20,28 +20,28 @@
                            [class.is-valid]="userForm.controls.name.touched && userForm.controls.name.valid"
                            [class.is-invalid]="userForm.controls.name.touched && userForm.controls.name.invalid"
                            required minlength="2" maxlength="63" placeholder="Enter name" i18n-placeholder>
-                    <div class="invalid-feedback" i18n>Please enter your name.</div>
+                    <div class="invalid-feedback" i18n>Please enter a valid name.</div>
                 </div>
 
                 <!-- Current password -->
                 <div *ngIf="userForm.controls.curPassword.enabled" class="col-md-6">
-                    <label for="curPassword" class="form-label colon" i18n>Current password</label>
+                    <label for="cur-password" class="form-label colon" i18n>Current password</label>
                     <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
-                                        id="curPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                                        id="cur-password" placeholder="(unchanged)" i18n-placeholder></app-password-input>
                 </div>
 
                 <!-- New password -->
                 <div *ngIf="userForm.controls.newPassword.enabled" class="col-md-6">
-                    <label for="newPassword" class="form-label colon" i18n>New password</label>
+                    <label for="new-password" class="form-label colon" i18n>New password</label>
                     <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
-                                        id="newPassword" placeholder="(unchanged)" i18n-placeholder></app-password-input>
+                                        id="new-password" placeholder="(unchanged)" i18n-placeholder></app-password-input>
                 </div>
 
                 <!-- User ID -->
                 <div class="col-md-6">
-                    <label for="userId" class="form-label colon" i18n>User ID</label>
+                    <label for="current-user-id" class="form-label colon" i18n>User ID</label>
                     <div class="input-group mb-3">
-                        <input [value]="principal.id" type="text" class="form-control" id="userId" disabled>
+                        <input [value]="principal.id" type="text" class="form-control" id="current-user-id" disabled>
                         <button [appCopyText]="principal.id" ngbTooltip
                                 class="btn btn-outline-secondary" type="button" title="Copy" i18n-title>
                             <fa-icon [icon]="faCopy"></fa-icon>
@@ -50,12 +50,12 @@
                 </div>
 
                 <!-- Avatar -->
-                <div class="col-12">
-                    <label for="user-avatar" class="form-label colon" i18n>Avatar</label>
+                <div class="col-12" id="user-avatar">
+                    <label for="user-avatar-picture" class="form-label colon" i18n>Avatar</label>
                     <div class="d-flex flex-wrap align-items-center gap-2">
                         <div class="p-2">
                             <app-user-avatar [user]="principal" [avatarOverride]="avatarFile"
-                                             size="L" id="user-avatar"></app-user-avatar>
+                                             size="L" id="user-avatar-picture"></app-user-avatar>
                         </div>
                         <div>
                             <div class="mb-2" i18n>Avatar image should be a JPEG or a PNG image up to 1 MB in size. A 128×128 pixel image is recommended.</div>
@@ -64,7 +64,7 @@
                         </div>
                     </div>
                     <!-- Invisible avatar file input -->
-                    <input #avatarFileInput (change)="avatarSelected()" class="d-none" type="file">
+                    <input #avatarFileInput (change)="avatarSelected()" class="d-none" type="file" id="user-avatar-file">
                 </div>
             </fieldset>
 
@@ -80,12 +80,12 @@
         <!-- Collapse link -->
         <button [class.collapsed]="isDangerZoneCollapsed" [attr.aria-expanded]="!isDangerZoneCollapsed"
                 (click)="collapse.toggle()"
-                type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="dangerZoneContainer">
+                type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="danger-zone-container">
             <span class="me-2" i18n>Danger zone</span>
             <fa-icon [icon]="faAngleDown"></fa-icon>
         </button>
         <!-- Danger zone content -->
-        <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="dangerZoneContainer">
+        <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="danger-zone-container">
             <!-- Delete account -->
             <section>
                 <h3 i18n="heading">Delete my account</h3>

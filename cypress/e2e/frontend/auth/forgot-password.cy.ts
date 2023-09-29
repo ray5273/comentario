@@ -90,7 +90,7 @@ context('Forgot password', () => {
         cy.get('@rpPassword').setValue('NewPassword456').type('{enter}');
 
         // We're at the login page. Verify we can login with the new password
-        cy.login({email: USERS.commenterOne.email, password: 'NewPassword456'}, {goTo: false});
+        cy.login(USERS.commenterOne.withPassword('NewPassword456'), {goTo: false});
     });
 
     it('ignores nonexistent user', () => {

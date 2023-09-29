@@ -116,7 +116,7 @@ Cypress.Commands.addQuery(
                 throw Error('cy.texts(): either element or selector must be provided.');
             }
             return (element ? (selector ? $(element).find(selector) : $(element)) : $(selector))
-                .map((i, e) => e.innerText)
+                .map((_, e) => e.innerText)
                 .get();
         };
     });
@@ -135,7 +135,7 @@ Cypress.Commands.add(
             .should(fb => text && expect(fb.text()).eq(text))
             .wrap(element));
 
-Cypress.Commands.add('signup', (user: {email: string, name: string, password: string}, options?: {goTo?: boolean}) => {
+Cypress.Commands.add('signup', (user: {email: string; name: string, password: string}, options?: {goTo?: boolean}) => {
     if (options?.goTo ?? true) {
         cy.visit(PATHS.auth.signup);
         cy.isAt(PATHS.auth.signup);
@@ -148,21 +148,30 @@ Cypress.Commands.add('signup', (user: {email: string, name: string, password: st
     cy.get('button[type=submit]').click();
 });
 
-Cypress.Commands.add('login', (user: {email: string, password: string}, options?: {goTo?: boolean, verify?: boolean}) => {
+Cypress.Commands.add('login', (creds: Cypress.Credentials, options?: Cypress.LoginOptions) => {
+    // Go to the login page and verify, if needed
     if (options?.goTo ?? true) {
         cy.visit(PATHS.auth.login);
         cy.isAt(PATHS.auth.login);
     }
 
     // Fill out the form
-    cy.get('#email')         .setValue(user.email)   .isValid();
-    cy.get('#password input').setValue(user.password).isValid();
+    cy.get('#email')         .setValue(creds.email)   .isValid();
+    cy.get('#password input').setValue(creds.password).isValid();
     cy.get('button[type=submit]').click();
 
-    // Verify the outcome if needed
-    if (options?.verify ?? true) {
-        cy.isAt(PATHS.manage.dashboard);
+    // Verify the outcome
+    if (options?.succeeds ?? true) {
         cy.isLoggedIn();
+        cy.isAt(options?.redirectPath ?? PATHS.manage.dashboard);
+
+    } else if (!options?.errToast) {
+        throw Error('cy.login(): options.errToast must be provided when succeeds is false.');
+
+    } else {
+        // Still on the login page, and there's an error toast
+        cy.isAt(PATHS.auth.login);
+        cy.toastCheckAndClose(options.errToast);
     }
 });
 
@@ -173,11 +182,11 @@ Cypress.Commands.add('logout', () => {
     cy.isLoggedIn(false);
 });
 
-Cypress.Commands.add('loginViaApi', (user: {email: string, password: string}, targetUrl: string) => {
-    cy.request('POST', '/api/auth/login', {email: user.email, password: user.password})
+Cypress.Commands.add('loginViaApi', (creds: Cypress.Credentials, targetUrl: string) => {
+    cy.request('POST', '/api/auth/login', {email: creds.email, password: creds.password})
         .should(resp => {
             expect(resp.status).to.eq(200);
-            expect(resp.body.email).to.eq(user.email);
+            expect(resp.body.email).to.eq(creds.email);
         });
     cy.visit(targetUrl);
     cy.isLoggedIn();
@@ -197,6 +206,11 @@ Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
     // Close the toast and verify it's gone
     cy.get('#toast-0 button.btn-close').click().should('not.exist');
 });
+
+Cypress.Commands.add(
+    'clickLabel',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, position?: Cypress.PositionType) => cy.get(`label[for=${element.attr('id')}]`).click(position).wrap(element));
 
 Cypress.Commands.add(
     'confirmationDialog',
@@ -274,6 +288,16 @@ Cypress.Commands.add(
         return el.setValue('xY1!'.repeat(16)).isInvalid() // 64 chars is too much
             .type('{backspace}').isValid(); // 63 is good enough
     });
+
+Cypress.Commands.add(
+    'verifyUserNameInputValidation',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector) => cy.wrap(element)
+        .clear().isInvalid('Please enter a valid name.')
+        .type('a').isInvalid()
+        .type('b').isValid()
+        .setValue('b'.repeat(64)).isInvalid() // 64 chars is too much
+        .type('{backspace}').isValid()); // 63 is good enough
 
 Cypress.Commands.add(
     'visitTestSite',

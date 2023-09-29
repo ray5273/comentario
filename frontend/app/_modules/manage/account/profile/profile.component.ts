@@ -1,5 +1,5 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { concat, EMPTY, Observable } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -41,7 +41,7 @@ export class ProfileComponent implements OnInit {
 
     readonly userForm = this.fb.nonNullable.group({
         email:       {value: '', disabled: true},
-        name:        '',
+        name:        ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
         curPassword: '',
         newPassword: '',
     });

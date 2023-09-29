@@ -74,18 +74,15 @@ context('Login', () => {
         cy.logout();
 
         // Try to log in as a banned user and fail
-        cy.login(USERS.banned, {verify: false});
-        cy.toastCheckAndClose('user-banned');
+        cy.login(USERS.banned, {succeeds: false, errToast: 'user-banned'});
         cy.isAt(PATHS.auth.login);
 
         // Try to log in as a nonexistent user and fail
-        cy.login({email: 'who@knows', password: 'Passw0rd'}, {goTo: false, verify: false});
-        cy.toastCheckAndClose('invalid-credentials');
+        cy.login({email: 'who@knows', password: 'Passw0rd'}, {goTo: false, succeeds: false, errToast: 'invalid-credentials'});
         cy.isAt(PATHS.auth.login);
 
         // Try to log in with the wrong password and fail
-        cy.login({email: USERS.ace.email, password: 'wrong'}, {goTo: false, verify: false});
-        cy.toastCheckAndClose('invalid-credentials');
+        cy.login(USERS.ace.withPassword('wrong'), {goTo: false, succeeds: false, errToast: 'invalid-credentials'});
         cy.isAt(PATHS.auth.login);
     });
 });
