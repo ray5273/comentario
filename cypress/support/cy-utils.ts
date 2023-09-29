@@ -33,7 +33,7 @@ export const TEST_PATHS = {
 };
 
 /** Predefined users. */
-export const USERS: { [k: string ]: Cypress.User } = {
+export const USERS = {
     anonymous:    {isAnonymous: true,  id: '00000000-0000-0000-0000-000000000000', email: '',                           name: 'Anonymous'},
     root:         {isAnonymous: false, id: '00000000-0000-0000-0000-000000000001', email: 'root@comentario.app',        name: 'Root',           password: 'test'},
     ace:          {isAnonymous: false, id: '5787eece-7aa3-44d7-bbba-51866edc4867', email: 'ace@comentario.app',         name: 'Captain Ace',    password: 'test'},

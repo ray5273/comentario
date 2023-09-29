@@ -89,6 +89,20 @@ Cypress.Commands.add('isAt', (expected: string | RegExp, options?: {ignoreQuery?
 }));
 
 Cypress.Commands.add(
+    'isLoggedIn',
+    {prevSubject: false},
+    (loggedIn?: boolean) => {
+        if (loggedIn ?? true) {
+            cy.contains('app-footer a', 'Dashboard').should('be.visible');
+            cy.contains('app-footer a', 'Sign in')  .should('not.exist');
+        } else {
+            cy.contains('app-navbar a', 'Sign in')  .should('be.visible');
+            cy.contains('app-footer a', 'Dashboard').should('not.exist');
+            cy.contains('app-footer a', 'Sign in'  ).should('be.visible');
+        }
+    });
+
+Cypress.Commands.add(
     'setValue',
     {prevSubject: 'element'},
     (element: JQueryWithSelector, s: string) =>
@@ -148,7 +162,25 @@ Cypress.Commands.add('login', (user: {email: string, password: string}, options?
     // Verify the outcome if needed
     if (options?.verify ?? true) {
         cy.isAt(PATHS.manage.dashboard);
+        cy.isLoggedIn();
     }
+});
+
+Cypress.Commands.add('logout', () => {
+    cy.contains('app-control-center li a.cc-link', 'Logout').click();
+    cy.confirmationDialog('Are you sure you want to logout?').dlgButtonClick('Logout');
+    cy.isAt(PATHS.home);
+    cy.isLoggedIn(false);
+});
+
+Cypress.Commands.add('loginViaApi', (user: {email: string, password: string}, targetUrl: string) => {
+    cy.request('POST', '/api/auth/login', {email: user.email, password: user.password})
+        .should(resp => {
+            expect(resp.status).to.eq(200);
+            expect(resp.body.email).to.eq(user.email);
+        });
+    cy.visit(targetUrl);
+    cy.isLoggedIn();
 });
 
 Cypress.Commands.add('noToast', () => void cy.get('#toast-0').should('not.exist'));
@@ -165,6 +197,83 @@ Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
     // Close the toast and verify it's gone
     cy.get('#toast-0 button.btn-close').click().should('not.exist');
 });
+
+Cypress.Commands.add(
+    'confirmationDialog',
+    {prevSubject: false},
+    (text?: string | RegExp) =>
+        cy.get('ngb-modal-window[role=dialog] app-confirm-dialog')
+            .should(dlg => {
+                if (text) {
+                    const s = dlg.find('.modal-body').text();
+                    if (text instanceof RegExp) {
+                        expect(s).match(text);
+                    } else {
+                        expect(s).eq(text);
+                    }
+                }
+                return dlg;
+            }));
+
+Cypress.Commands.add(
+    'dlgButtonClick',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, text: string) => cy.wrap(element).contains('.modal-footer button', text).click());
+
+Cypress.Commands.add(
+    'dlgCancel',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector) => cy.wrap(element).dlgButtonClick('Cancel'));
+
+Cypress.Commands.add(
+    'verifyEmailInputValidation',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector) => cy.wrap(element)
+        .clear().isInvalid('Please enter a valid email.')
+        .type('abc').isInvalid()
+        .type('@').isInvalid()
+        .type('example.com').isValid()
+        .setValue('x@y' + '.whatever'.repeat(28)).isInvalid() // 255 chars is too much
+        .type('{backspace}').isValid()); // 254 chars is exactly right
+
+Cypress.Commands.add(
+    'verifyPasswordInputValidation',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, options?: {required?: boolean, strong?: boolean}) => {
+        // eslint-disable-next-line cypress/no-assigning-return-values
+        const el = cy.wrap(element).clear();
+
+        // Check required
+        if (options?.required) {
+            el.isInvalid('Please enter a password.');
+        } else {
+            el.isValid();
+        }
+
+        // Check strongness
+        if (options?.strong) {
+            el.type('p').isInvalid(
+                'Password must be at least 8 characters long.' +
+                'Password must contain an uppercase letter (A-Z).' +
+                'Password must contain a digit or a special symbol.')
+            .setValue('P').isInvalid(
+                'Password must be at least 8 characters long.' +
+                'Password must contain a lowercase letter (a-z).' +
+                'Password must contain a digit or a special symbol.')
+            .type('Pass').isInvalid(
+                'Password must be at least 8 characters long.' +
+                'Password must contain a digit or a special symbol.')
+            .type('word').isInvalid(
+                'Password must contain a digit or a special symbol.')
+            .type('!').isValid();
+        } else {
+            el.type('p').isValid();
+        }
+
+        // Check max length
+        return el.setValue('xY1!'.repeat(16)).isInvalid() // 64 chars is too much
+            .type('{backspace}').isValid(); // 63 is good enough
+    });
 
 Cypress.Commands.add(
     'visitTestSite',

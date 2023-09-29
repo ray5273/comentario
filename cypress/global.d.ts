@@ -39,6 +39,12 @@ declare namespace Cypress {
         isAt(expected: string | RegExp, options?: {ignoreQuery?: boolean}): Chainable<string>;
 
         /**
+         * Assert the user is authenticated (or not).
+         * @param loggedIn If true (the default), the user must be logged in, otherwise they must be logged out.
+         */
+        isLoggedIn(loggedIn?: boolean): Chainable<void>;
+
+        /**
          * Collect page comments and return them as a tree structure. Can be chained off an element containing the
          * desired Comentario instance, if no subject is provided, looks for the first <comentario-comments> tag.
          * @param properties Properties to keep for each comment. If not provided, keeps all properties.
@@ -81,6 +87,19 @@ declare namespace Cypress {
         login(user: {email: string, password: string}, options?: {goTo?: boolean, verify?: boolean}): Chainable<void>;
 
         /**
+         * Log the currently authenticated user out via the UI.
+         * NB: the sidebar must be visible.
+         */
+        logout(): Chainable<void>;
+
+        /**
+         * Login as provided user directly, via an API call.
+         * @param user User to login as
+         * @param targetUrl URL to go to after the login.
+         */
+        loginViaApi(user: {email: string, password: string}, targetUrl: string): Chainable<void>;
+
+        /**
          * Verify there is no toast.
          */
         noToast(): Chainable<Element>;
@@ -89,6 +108,36 @@ declare namespace Cypress {
          * Verify the topmost toast has the given ID, and, optionally, details text, then close it with the Close button.
          */
         toastCheckAndClose(id: string, details?: string): Chainable<Element>;
+
+        /**
+         * Return the currently open confirmation dialog.
+         * @param text Optional text the dialog has to contain.
+         */
+        confirmationDialog(text?: string | RegExp): Chainable<JQueryWithSelector>;
+
+        /**
+         * Click a confirmation dialog button having the given label. Must be chained off a dialog returned with
+         * confirmationDialog().
+         * @param text Button text.
+         */
+        dlgButtonClick(text: string): Chainable<JQueryWithSelector>;
+
+        /**
+         * Cancel the confirmation dialog. Must be chained off a dialog returned with confirmationDialog().
+         */
+        dlgCancel(): Chainable<JQueryWithSelector>;
+
+        /**
+         * Run common email input validations against the passed element.
+         * NB: the input must be touched.
+         */
+        verifyEmailInputValidation(): Chainable<JQueryWithSelector>;
+
+        /**
+         * Run common password input validations against the passed element.
+         * NB: the input must be touched.
+         */
+        verifyPasswordInputValidation(options?: {required?: boolean, strong?: boolean}): Chainable<JQueryWithSelector>;
 
         /**
          * Just like cy.visit(), but uses the test site URL as base.

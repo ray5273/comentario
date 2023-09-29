@@ -5,14 +5,14 @@
     <div class="row justify-content-center">
         <!-- Login form -->
         <div class="col-sm-6 col-lg-5 col-xl-4">
-            <form [formGroup]="form" (ngSubmit)="submit()">
+            <form [formGroup]="form" (ngSubmit)="submit()" id="login-form">
                 <!-- Email -->
                 <div class="mb-3">
                     <label for="email" class="form-label colon" i18n>Your email</label>
                     <input formControlName="email" type="email" class="form-control" id="email" size="45"
                            [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
                            [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
-                           required minlength="6" maxlength="255" placeholder="user@example.com" autocomplete="email">
+                           autocomplete="email" placeholder="user@example.com">
                     <div class="invalid-feedback" i18n>Please enter a valid email.</div>
                 </div>
                 <!-- Password -->

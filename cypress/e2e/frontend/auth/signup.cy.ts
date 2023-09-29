@@ -1,4 +1,4 @@
-import { DYN_CONFIG_ITEMS, PATHS } from '../../../support/cy-utils';
+import { DYN_CONFIG_ITEMS, PATHS, USERS } from '../../../support/cy-utils';
 
 context('Signup', () => {
 
@@ -12,8 +12,17 @@ context('Signup', () => {
         cy.get('#email')             .as('email');
         cy.get('#password input')    .as('password');
         cy.get('#name')              .as('name');
-        cy.get('#name')              .as('name');
         cy.get('button[type=submit]').as('submit');
+    });
+
+    it('stays on the page after reload', () => {
+        cy.reload();
+        cy.isAt(PATHS.auth.signup);
+    });
+
+    it('redirects authenticated user to Dashboard', () => {
+        cy.loginViaApi(USERS.commenterOne, PATHS.auth.signup);
+        cy.isAt(PATHS.manage.dashboard);
     });
 
     it('has all necessary controls', () => {
@@ -52,27 +61,10 @@ context('Signup', () => {
         cy.isAt(PATHS.auth.signup);
 
         // Email
-        cy.get('@email').isInvalid('Please enter a valid email.')
-            .type('abc').isInvalid()
-            .type('@').isInvalid()
-            .type('example.com').isValid();
+        cy.get('@email').verifyEmailInputValidation();
 
         // Password
-        cy.get('@password').isInvalid('Please enter a password.')
-            .type('p').isInvalid(
-                'Password must be at least 8 characters long.' +
-                'Password must contain an uppercase letter (A-Z).' +
-                'Password must contain a digit or a special symbol.')
-            .setValue('P').isInvalid(
-                'Password must be at least 8 characters long.' +
-                'Password must contain a lowercase letter (a-z).' +
-                'Password must contain a digit or a special symbol.')
-            .type('Pass').isInvalid(
-                'Password must be at least 8 characters long.' +
-                'Password must contain a digit or a special symbol.')
-            .type('word').isInvalid(
-                'Password must contain a digit or a special symbol.')
-            .type('!').isValid();
+        cy.get('@password').verifyPasswordInputValidation({required: true, strong: true});
 
         // Name
         cy.get('@name').isInvalid('Please enter your name.')

@@ -19,9 +19,9 @@ export class UserEditComponent {
     readonly saving  = new ProcessingStatus();
 
     readonly form = this.fb.nonNullable.group({
-        name:       ['', [Validators.required, Validators.minLength(1), Validators.maxLength(63)]],
-        email:      ['', [Validators.required, Validators.email]],
-        password:   [''],
+        name:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
+        email:      ['', [Validators.required, Validators.email, Validators.minLength(6), Validators.maxLength(254)]],
+        password:   '',
         websiteUrl: ['', [Validators.maxLength(2083)]],
         remarks:    ['', [Validators.maxLength(4096)]],
         confirmed:  false,

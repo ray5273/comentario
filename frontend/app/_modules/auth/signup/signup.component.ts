@@ -24,9 +24,9 @@ export class SignupComponent {
     readonly Paths = Paths;
     readonly submitting = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
-        email:    ['', [Validators.email]],
+        email:    ['', [Validators.required, Validators.email, Validators.minLength(6), Validators.maxLength(254)]],
         password: '',
-        name:     '',
+        name:     ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
     });
 
     readonly tosUrl     = this.docsSvc.getPageUrl('legal/tos/');

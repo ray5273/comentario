@@ -16,6 +16,7 @@ node_modules/
 .angular/
 
 # Test artifacts
+/cypress/downloads
 /cypress/screenshots
 /cypress/video
 

@@ -29,7 +29,7 @@
                         <input formControlName="email" type="email" class="form-control" id="email" size="45"
                                [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
                                [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
-                               required minlength="6" maxlength="255" autocomplete="email" placeholder="user@example.com">
+                               autocomplete="email" placeholder="user@example.com">
                         <div class="invalid-feedback" i18n>Please enter a valid email.</div>
                     </div>
 
@@ -46,8 +46,7 @@
                         <input formControlName="name" type="text" class="form-control" id="name" size="45"
                                [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
                                [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
-                               required minlength="2" maxlength="63" placeholder="Enter name" autocomplete="name"
-                               i18n-placeholder>
+                               autocomplete="name" placeholder="Enter name" i18n-placeholder>
                         <div class="invalid-feedback" i18n>Please enter your name.</div>
                     </div>
 
