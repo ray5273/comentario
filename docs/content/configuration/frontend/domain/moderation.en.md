@@ -30,7 +30,7 @@ The moderation policy outlines situations the comment doesn't get automatically 
 
 ### Extensions
 
-Given that none of the above criteria wasn't triggered to flag a comment for moderation, it will further be checked by any [configured extensions](extensions), which can still flag the comment.
+Given that none of the above criteria was triggered to flag a comment for moderation, it will further be checked by any [configured extensions](extensions), which can still flag the comment.
 
 ## Email moderators
 
