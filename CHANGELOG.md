@@ -1,5 +1,11 @@
 # Comentario changelog
 
+## v3.0.0-rc2
+
+**Changes:**
+
+* Binary `.deb` and `.rpm` packages allow to install Comentario locally as a systemd service.
+
 ## v3.0.0-rc1
 
 This is the first major update to Comentario, which phases out the flawed legacy data model and improves on pretty much every aspect.

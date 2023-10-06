@@ -1,0 +1,11 @@
+[Unit]
+Description=Comentario
+After=network.target
+
+[Service]
+Type=simple
+EnvironmentFile=/etc/comentario/comentario.conf
+ExecStart=/usr/bin/comentario -v
+
+[Install]
+WantedBy=multi-user.target

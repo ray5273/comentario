@@ -1,0 +1,89 @@
+project_name: comentario
+
+before:
+  hooks:
+    - go generate
+    - go mod download
+    - yarn install --frozen-lockfile --no-progress
+    - yarn run build:prod
+
+builds:
+  - id: comentario
+    binary: comentario
+    goos:
+      - linux
+    goarch:
+      - amd64
+
+archives:
+  - id: comentario-binary
+    builds:
+      - comentario
+    wrap_in_directory: 'true'
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - src: build/frontend
+        dst: frontend
+      - db
+      - templates
+      - src: resources/etc
+        dst: etc
+
+checksum:
+  name_template: 'checksums.txt'
+
+snapshot:
+  name_template: "{{ .Tag }}-next"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - '^ci:'
+      - '^code:'
+      - '^docs:'
+      - '^test:'
+      - '^wip:'
+
+nfpms:
+  - id: comentario
+    package_name: comentario
+
+    vendor: Dmitry Kann
+    homepage: https://comentario.app/
+    maintainer: Dmitry Kann <yktooo@gmail.com>
+    description: Fast, flexible, and powerful free comment server for web pages.
+    license: MIT
+    formats:
+      - deb
+      - rpm
+    dependencies:
+      - libc6
+      - systemd
+    recommends:
+      - postgresql
+    suggests: []
+    conflicts: []
+    bindir: /usr/bin
+    contents:
+      - src: db
+        dst: /usr/lib/comentario/db
+      - src: templates
+        dst: /usr/lib/comentario/templates
+      - src: build/frontend
+        dst: /usr/lib/comentario/frontend
+      - src: resources/etc
+        dst: /etc
+      - src: resources/systemd
+        dst: /usr/lib/systemd
+    scripts:
+      postinstall: resources/pkg-scripts/post-install
+      preremove:   resources/pkg-scripts/pre-remove
+
+    overrides:
+      rpm:
+        dependencies:
+          - glibc
+          - systemd

@@ -1,0 +1,40 @@
+#!/bin/sh
+
+service_name="comentario.service"
+
+remove() {
+    printf "\033[32m* Disabling service %s\033[0m\n" $service_name
+    systemctl disable $service_name ||:
+
+    printf "\033[32m* Stopping service %s\033[0m\n" $service_name
+    systemctl stop $service_name ||:
+}
+
+purge() {
+    remove
+}
+
+upgrade() {
+    # Post Remove of an upgrade
+    true
+}
+
+echo "$@"
+
+action="$1"
+
+case "$action" in
+    "0" | "remove")
+        remove
+        ;;
+    "1" | "upgrade")
+        upgrade
+        ;;
+    "purge")
+        purge
+        ;;
+    *)
+        printf "\033[32m* Alpine\033[0m"
+        remove
+        ;;
+esac

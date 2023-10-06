@@ -20,6 +20,7 @@ variables:
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
   DOCS_URL: https://docs.comentario.app
+  GORELEASER_VERSION: "1.21.2"
 
 build:
   stage: build
@@ -167,11 +168,18 @@ package:
           docker push "$IMG_TAG_LATEST"
       fi
 
-    # Make a tarball with the binary and all related static files
-    - tar_name="comentario-$VERSION-linux-amd64"
-    - mkdir -p "dist/$tar_name"
-    - cp -r build/* "dist/$tar_name/"
-    - (cd dist && tar -czvf "$tar_name.tar.gz" "$tar_name" && rm -rf "$tar_name")
+    # Build source/binary packages (tag only)
+    - |
+      if [[ -n "$CI_COMMIT_TAG" ]]; then
+          # Install goreleaser
+          curl https://github.com/goreleaser/goreleaser/releases/download/v"$GORELEASER_VERSION"/goreleaser_"$GORELEASER_VERSION"_amd64.deb \
+              -o /tmp/goreleaser.deb
+          dpkg -i /tmp/goreleaser.deb
+          rm -f /tmp/goreleaser.deb
+
+          # Create packages
+          goreleaser release --clean --skip=publish
+      fi
 
 # Deploy the dev branch to edge.comentario.app
 deploy-dev:
@@ -259,12 +267,19 @@ release:
     # Strip the 'v' prefix from the version number
     - ver_num="${VERSION#v}"
     - package_registry_url="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/comentario/$ver_num"
-    - tarball="comentario-$VERSION-linux-amd64.tar.gz"
+    - basename="comentario_v$VERSION_linux_amd64"
 
-    # Upload the tarball
-    - echo "Uploading artifact $tarball to $package_registry_url"
+    # Upload the packages
+    - assets=""
     - |
-      curl -fs --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "dist/$tarball" "$package_registry_url/$tarball"
+      for f in "$basename.deb" "$basename.rpm" "$basename.tar.gz" "checksums.txt" "metadata.json"; do
+          echo "Uploading artifact $f to $package_registry_url"
+          curl -fs --header "JOB-TOKEN: $CI_JOB_TOKEN" --upload-file "dist/$f" "$package_registry_url/$f"
+      
+          # Accumulate assets JSON
+          [[ -n "$assets" ]] && assets="$assets,"
+          assets="$assets{\"name\":\"$f\",\"url\":\"$package_registry_url/$f\"}"
+      done
 
     # Extract the release text from CHANGELOG.md
     - awk "/^##\s*$VERSION/{flag=1; next} /^##/{flag=0} flag" CHANGELOG.md > release-text
@@ -276,4 +291,4 @@ release:
 
     # Create a release
     - echo "Creating release $CI_COMMIT_TAG"
-    - release-cli create --name "$CI_COMMIT_TAG" --tag-name "$CI_COMMIT_TAG" --description release-text --assets-link "{\"name\":\"$tarball\",\"url\":\"$package_registry_url/$tarball\"}"
+    - release-cli create --name "$CI_COMMIT_TAG" --tag-name "$CI_COMMIT_TAG" --description release-text --assets-link "[$assets]"

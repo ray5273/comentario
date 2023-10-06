@@ -1,5 +1,6 @@
 # Build output
 /build/
+/dist/
 
 # Generated code
 /internal/api/models/*.go
