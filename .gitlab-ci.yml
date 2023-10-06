@@ -103,7 +103,7 @@ build:
         --static-path=build/frontend
         --db-migration-path=build/db
         --template-path=build/templates
-        --secrets=k8s/secrets.yaml
+        --secrets=resources/k8s/secrets.yaml
         --base-docs-url="${DOCS_URL}"
         --home-content-url="${DOCS_URL}/en/embed/front-page/"
         &> ./tmp/logs/comentario-server.log &
@@ -200,7 +200,7 @@ deploy-dev:
         --wait
         --timeout 2m
         comentario-edge
-        helm/comentario
+        resources/helm/comentario
 
     # Deploy the recreate demo DB cronjob
     - helm upgrade
@@ -210,7 +210,7 @@ deploy-dev:
         --wait
         --timeout 1m
         comentario-demo-recreate-db
-        helm/demo-recreate-db
+        resources/helm/demo-recreate-db
 
     # Trigger the job right away
     - kubectl create job
@@ -243,7 +243,7 @@ deploy-tag:
         --wait
         --timeout 2m
         comentario-app
-        helm/comentario
+        resources/helm/comentario
 
 release:
   stage: release
