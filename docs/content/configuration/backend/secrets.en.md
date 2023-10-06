@@ -34,7 +34,7 @@ The file is a regular YAML file; it doesn't necessarily need to be named `secret
 
 ## Secrets file reference
 
-There's a sample [secrets.yaml](https://gitlab.com/comentario/comentario/-/blob/master/k8s/secrets.yaml) file in Comentario [git repository](/about/source-code), which you can (and should) use as a starting point for your production configuration.
+There's a sample [secrets.yaml](https://gitlab.com/comentario/comentario/-/blob/master/resources/k8s/secrets.yaml) file in Comentario [git repository](/about/source-code), which you can (and should) use as a starting point for your production configuration.
 
 Below is a summary of the values in the secrets file.
 

@@ -25,7 +25,7 @@ Kubernetes provides numerous tools for reliable, scalable cloud deployments, but
 
 Comentario addresses that complexity by providing a so-called [Helm](https://helm.sh/) chart, which greatly facilitates server deployment in a cloud environment.
 
-The chart is available in [Comentario git repository](/about/source-code) in the `helm/comentario` directory.
+The chart is available in [Comentario git repository](/about/source-code) in the `resources/helm/comentario` directory.
 
 ## Prerequisites
 
@@ -49,10 +49,10 @@ The easiest way to do that in a Kubernetes cluster is by using a Helm chart by [
 
 **Step 1**: Before installing PostgreSQL, it may be a good idea to manually create a storage volume ({{< abbr "PVC" "Persistent Volume Claim" >}}), because it would give you a full control over its size and lifecycle.
 
-You can create a volume of 1 GiB by using the provided [postgres-pvc.yaml](https://gitlab.com/comentario/comentario/-/blob/master/k8s/postgres-pvc.yaml):
+You can create a volume of 1 GiB by using the provided [postgres-pvc.yaml](https://gitlab.com/comentario/comentario/-/blob/master/resources/k8s/postgres-pvc.yaml):
 
 ```bash
-kubectl create -f k8s/postgres-pvc.yaml --namespace $NAMESPACE
+kubectl create -f resources/k8s/postgres-pvc.yaml --namespace $NAMESPACE
 ```
 
 **Step 2**: install the PostgreSQL server:
@@ -76,8 +76,8 @@ After this, a new release called `comentario-postgres` will be installed, with P
 
 ## Deploy Comentario server
 
-1. Edit the values in `k8s/comentario-secrets.yaml` as required (see [](/configuration) for details) and copy-paste its contents into `comentario-secrets.yaml` (indent with 4 spaces)
-2. Create the secret: `kubectl create -f k8s/comentario-secrets.yaml --namespace $NAMESPACE`
+1. Edit the values in `resources/k8s/comentario-secrets.yaml` as required (see [](/configuration) for details) and copy-paste its contents into `comentario-secrets.yaml` (indent with 4 spaces)
+2. Create the secret: `kubectl create -f resources/k8s/comentario-secrets.yaml --namespace $NAMESPACE`
 3. Install Comentario using Helm (adjust the values as you see fit):
 ```bash
 helm upgrade --install \
@@ -85,12 +85,12 @@ helm upgrade --install \
     --set "clusterIssuer=letsencrypt-staging" \         # Replace with letsencrypt-prod when you're ready for production
     --set "image.repository=registry.gitlab.com/comentario/comentario" \
     --set "image.tag=<VERSION>" \                       # Use the desired Comentario version here
-    --set "comentario.secretName=comentario-secrets" \  # This is the name of the secret from k8s/comentario-secrets.yaml
+    --set "comentario.secretName=comentario-secrets" \  # This is the name of the secret from resources/k8s/comentario-secrets.yaml
     --set "comentario.smtpHost=mail.example.com" \      # Name of the SMTP host you're using for emails
     --set "comentario.smtpFromAddress=x@example.com" \  # Email to set in the Reply field
     --set "ingress.host=comment.example.com" \          # Domain where your Comentario instance should be reachable on 
     my-comentario \                                     # Name of your instance (and Helm release)
-    helm/comentario
+    resources/helm/comentario
 ```
 
 ## Backing up the database
