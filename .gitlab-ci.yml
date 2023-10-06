@@ -7,7 +7,6 @@ workflow:
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         VERSION: "$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA"
-        DOCS_URL: https://edge.docs.comentario.app
 
 stages:
   - build
@@ -19,8 +18,10 @@ variables:
   CI_TOOLS_VERSION: "v18"
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
-  DOCS_URL: https://docs.comentario.app
   GORELEASER_VERSION: "1.21.2"
+  SKIP_TESTS:
+    value: "false"
+    description: Whether to skip executing front-end tests
 
 build:
   stage: build
@@ -77,61 +78,65 @@ build:
     # Backend: run unit tests
     - go test -v ./...
 
-    # Build the backend, e2e plugin and relay
-    - go build -v -o "./build/comentario" -ldflags "-X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
-    - go build -buildmode=plugin -o "./build/comentario-e2e.so" "./e2e/plugin/"
-    - go build -v -o "./build/comentario-relay" "./e2e/relay/"
-
     # Frontend: fetch the dependencies
     - yarn install --frozen-lockfile --no-progress --cache-folder .yarn-cache
 
     # Frontend: build
     - yarn run build:prod
 
-    # Frontend: lint
-    - yarn run lint
-
-    # Frontend: unit tests
-    - yarn run test:ci
-
     # Copy static assets
     - cp -r db/ templates/ build/
 
-    # Start the backend
-    - ./build/comentario -vv
-        --e2e
-        --port=8080
-        --static-path=build/frontend
-        --db-migration-path=build/db
-        --template-path=build/templates
-        --secrets=resources/k8s/secrets.yaml
-        --base-docs-url="${DOCS_URL}"
-        --home-content-url="${DOCS_URL}/en/embed/front-page/"
-        &> ./tmp/logs/comentario-server.log &
+    # Run frontend linting and tests if enabled
+    - if [[ "$SKIP_TESTS" != "true" ]]; then
 
-    # Wait for the backend server to come online
-    - i=0
-    - while ((i++ < 30)); do
-    -    curl --max-time 2 -vs http://localhost:8080/en/ >/dev/null && break
-    -    sleep 1
-    - done
+        # Frontend: lint
+    -   yarn run lint
 
-    # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
-    - ./build/comentario-relay 
-        -listen 127.0.0.1:8000
-        -target http://comentario-test-site
-        &> ./tmp/logs/comentario-relay.log &
+        # Frontend: unit tests
+    -   yarn run test:ci
 
-    # Wait for the relay to come online
-    - i=0
-    - while ((i++ < 30)); do
-    -    curl --max-time 2 -vs http://localhost:8000/comments/ >/dev/null && break
-    -    sleep 1
-    - done
+        # Build the backend, e2e plugin and relay
+    -   go build -v -o "./build/comentario" -ldflags "-X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
+    -   go build -buildmode=plugin -o "./build/comentario-e2e.so" "./e2e/plugin/"
+    -   go build -v -o "./build/comentario-relay" "./e2e/relay/"
 
-    # Run the e2e tests
-    - npx cypress install
-    - npx cypress run
+        # Start the backend
+    -   ./build/comentario -vv
+          --e2e
+          --port=8080
+          --static-path=build/frontend
+          --db-migration-path=build/db
+          --template-path=build/templates
+          --secrets=resources/k8s/secrets.yaml
+          --base-docs-url="https://edge.docs.comentario.app"
+          --home-content-url="https://edge.docs.comentario.app/en/embed/front-page/"
+          &> ./tmp/logs/comentario-server.log &
+
+        # Wait for the backend server to come online
+    -   i=0
+    -   while ((i++ < 30)); do
+    -      curl --max-time 2 -vs http://localhost:8080/en/ >/dev/null && break
+    -      sleep 1
+    -   done
+
+        # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
+    -   ./build/comentario-relay 
+          -listen 127.0.0.1:8000
+          -target http://comentario-test-site
+          &> ./tmp/logs/comentario-relay.log &
+
+        # Wait for the relay to come online
+    -   i=0
+    -   while ((i++ < 30)); do
+    -      curl --max-time 2 -vs http://localhost:8000/comments/ >/dev/null && break
+    -      sleep 1
+    -   done
+
+        # Run e2e tests
+    -   npx cypress install
+    -   npx cypress run
+    - fi
 
     # Rebuild the backend in the production mode. Disable CGO to statically link the executable so that we can run that
     # in Alpine
