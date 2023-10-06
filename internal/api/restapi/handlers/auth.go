@@ -266,9 +266,10 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		return respServiceError(err)
 	} else if cnt == 0 {
 		user.WithConfirmed(true).IsSuperuser = true
+		logger.Infof("User %s (%s) is made a superuser", &user.ID, user.Email)
 
-		// If no operational mailer is configured, or confirmation is switched off in the config, mark the user confirmed
-		// right away
+		// If no operational mailer is configured, or confirmation is switched off in the config, mark the user
+		// confirmed right away
 	} else if !util.TheMailer.Operational() ||
 		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser, true) {
 		user.WithConfirmed(true)
