@@ -14,8 +14,9 @@ You can install Comentario locally or deploy it somewhere on the Internet.
 
 Depending on your needs, Comentario can be installed and run in a number of ways:
 
-* Using its Kubernetes Helm chart. This is the most straightforward way to deploy Comentario into a Kubernetes cluster.
-* Using a Docker image. This might prove a bit more involved, especially when in comes to HTTPS (SSL) configuration.
-* By building from source code.
+* From a **binary package**: locally. This will require manual HTTPS (SSL) configuration.
+* Into a **Kubernetes cluster**: using its Helm chart. This is the most straightforward way to deploy Comentario if you have Kubernetes.
+* Using a **Docker image**. This might prove a bit more involved, especially when in comes to HTTPS (SSL) configuration.
+* By building from **source code**: the most hardcore way.
 
 If you're upgrading from a previous Comentario version, or upgrading from Commento, we've covered that, too — make sure to check the [](migration) section. 
