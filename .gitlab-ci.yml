@@ -139,7 +139,7 @@ build:
      # Build source and binary packages (tag only)
     - |
       if [[ -n "$CI_COMMIT_TAG" ]]; then
-          goreleaser release --clean --skip=publish
+          goreleaser release --clean --skip=publish --snapshot
       fi
 
     # Rebuild the backend in the production mode. Disable CGO to statically link the executable so that we can run that
