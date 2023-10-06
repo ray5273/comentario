@@ -183,6 +183,10 @@ package:
   artifacts:
     paths:
       - dist/
+  before_script:
+    # Install go-swagger
+    - go install github.com/go-swagger/go-swagger/cmd/swagger@v0.30.5
+    - swagger version
   script:
     - goreleaser release --clean --skip=publish
 
