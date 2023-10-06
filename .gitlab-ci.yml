@@ -160,7 +160,7 @@ package:
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
     # Remove the e2e plugin (it isn't supposed to be in the image)
-    - rm build/comentario-e2e.so
+    - rm -f build/comentario-e2e.so
 
     # Build and push the image
     - docker build -t "$IMG_TAG_CURRENT" .
