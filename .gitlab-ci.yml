@@ -180,13 +180,11 @@ package:
           apk add --no-cache curl
       
           # Install goreleaser
-          curl https://github.com/goreleaser/goreleaser/releases/download/v"$GORELEASER_VERSION"/goreleaser_"$GORELEASER_VERSION"_amd64.deb \
-              -o /tmp/goreleaser.deb
-          dpkg -i /tmp/goreleaser.deb
-          rm -f /tmp/goreleaser.deb
+          curl -fsSL "https://github.com/goreleaser/goreleaser/releases/download/v${GORELEASER_VERSION}/goreleaser_Linux_x86_64.tar.gz" | 
+            tar -xzf - goreleaser > /goreleaser
 
           # Create packages
-          goreleaser release --clean --skip=publish
+          /goreleaser release --clean --skip=publish
       fi
 
 # Deploy the dev branch to edge.comentario.app
