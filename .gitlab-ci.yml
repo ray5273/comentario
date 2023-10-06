@@ -258,7 +258,7 @@ release:
     # Strip the 'v' prefix from the version number
     - ver_num="${VERSION#v}"
     - package_registry_url="$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/generic/comentario/$ver_num"
-    - basename="comentario_v${VERSION}_linux_amd64"
+    - basename="comentario_${VERSION}_linux_amd64"
 
     # Upload the packages
     - assets=""
