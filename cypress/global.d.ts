@@ -12,6 +12,12 @@ declare namespace Cypress {
         isBanned?:   boolean;
     }
 
+    interface Domain {
+        id:    string;
+        host:  string;
+        name?: string;
+    }
+
     interface SentMail {
         headers:    { [k: string]: string };
         embedFiles: string[];
@@ -127,6 +133,20 @@ declare namespace Cypress {
          * Click the label associated with the given element (based on the label's "for" attribute).
          */
         clickLabel(position?: PositionType): Chainable<JQueryWithSelector>;
+
+        /**
+         * Click a sidebar item with the given label and verify the resulting path.
+         * @param itemLabel Label of the sidebar item to click.
+         * @param isAt Path to verify.
+         */
+        sidebarClick(itemLabel: string, isAt: string | RegExp): Chainable<void>;
+
+        /**
+         * Select a domain using the Domains page.
+         * NB: the sidebar must be visible.
+         * @param domain Domain to select.
+         */
+        selectDomain(domain: Domain): Chainable<void>;
 
         /**
          * Return the currently open confirmation dialog.

@@ -1,4 +1,4 @@
-import { PATHS, USERS } from '../../../support/cy-utils';
+import { PATHS, USERS } from '../../../../support/cy-utils';
 
 context('Profile', () => {
 

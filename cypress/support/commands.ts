@@ -213,6 +213,29 @@ Cypress.Commands.add(
     (element: JQueryWithSelector, position?: Cypress.PositionType) => cy.get(`label[for=${element.attr('id')}]`).click(position).wrap(element));
 
 Cypress.Commands.add(
+    'sidebarClick',
+    {prevSubject: false},
+    (itemLabel: string, isAt: string | RegExp) => {
+        cy.contains('app-control-center li a.cc-link', itemLabel).click();
+        cy.isAt(isAt);
+    });
+
+Cypress.Commands.add(
+    'selectDomain',
+    {prevSubject: false},
+    (domain: Cypress.Domain) => {
+        // Click on 'Domains'
+        cy.contains('app-control-center li a.cc-link', 'Domains').click();
+        cy.isAt(PATHS.manage.domains);
+
+        // Click on the required domain
+        cy.contains('app-domain-manager #domain-list a', domain.host).click();
+
+        // We're a the domain properties
+        cy.isAt(PATHS.manage.domainId(domain.id).props);
+    });
+
+Cypress.Commands.add(
     'confirmationDialog',
     {prevSubject: false},
     (text?: string | RegExp) =>

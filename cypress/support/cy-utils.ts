@@ -10,10 +10,23 @@ export const PATHS = {
     },
 
     manage: {
-        dashboard: '/en/manage/dashboard',
-        domains:   '/en/manage/domains',
+        dashboard:      '/en/manage/dashboard',
+        domains:        '/en/manage/domains',
+        domainId:  (id: string) => ({
+            props:      `${PATHS.manage.domains}/${id}`,
+            pages:      `${PATHS.manage.domains}/${id}/pages`,
+            comments:   `${PATHS.manage.domains}/${id}/comments`,
+            users:      `${PATHS.manage.domains}/${id}/users`,
+            stats:      `${PATHS.manage.domains}/${id}/stats`,
+            operations: `${PATHS.manage.domains}/${id}/operations`,
+        }),
+        users:          '/en/manage/users',
+        config: {
+            static:     '/en/manage/config/static',
+            dynamic:    '/en/manage/config/dynamic',
+        },
         account: {
-            profile: '/en/manage/account/profile',
+            profile:    '/en/manage/account/profile',
         },
     },
 };
@@ -86,3 +99,10 @@ export enum DYN_CONFIG_ITEMS {
     markdownLinksEnabled       = 'markdown.links.enabled',
     markdownImagesEnabled      = 'markdown.images.enabled',
 }
+
+/** Predefined domains. */
+export const DOMAINS = {
+    localhost: {id: '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', host: 'localhost:8000'},
+    access:    {id: '79756dc6-4057-481f-a9c2-ae2fa6d9f844', host: 'access.example.com'},
+    spirit:    {id: '6fcb3173-3a00-4aa5-8113-e39767b469a7', host: 'spirit.example.com'},
+};
