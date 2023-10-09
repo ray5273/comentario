@@ -136,6 +136,9 @@ build:
     -   npx cypress run
     - fi
 
+    # Debug output
+    - git status -v
+
      # Build source and binary packages (tag only)
     - |
       if [[ -n "$CI_COMMIT_TAG" ]]; then
