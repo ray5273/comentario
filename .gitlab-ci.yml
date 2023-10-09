@@ -180,6 +180,43 @@ docker-image:
           docker push "$IMG_TAG_LATEST"
       fi
 
+# Verify the .deb package
+verify-package-deb:
+  stage: package
+  image: ubuntu:22.04
+  services:
+    - name: postgres:15-alpine
+      variables:
+        POSTGRES_DB: comentario
+        POSTGRES_USER: postgres
+        POSTGRES_PASSWORD: postgres
+  dependencies:
+    - build
+  before_script:
+    # Install systemd
+    - apt-get update
+    - apt-get install -y systemd
+  script:
+    # Install the package
+    - pkg_name="$(find dist -maxdepth 1 -name '*.deb')"
+    - '[[ -z "$pkg_name" ]] && echo "Failed to find the .deb package" && exit 1'
+    - dpkg -i "$pkg_name"
+
+    # Fix the secrets to point to the database that is started as a service
+    - |
+      cat <<EOF > /etc/comentario/secrets.yaml
+      postgres:
+        host:     localhost
+        port:     5432
+        database: comentario
+        username: postgres
+        password: postgres
+      EOF
+    - systemctl restart comentario.service
+
+    # Check if the service is running
+    - systemctl is-active comentario.service
+
 # Deploy the dev branch to edge.comentario.app
 deploy-dev:
   stage: deploy
