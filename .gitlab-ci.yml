@@ -142,8 +142,8 @@ build:
      # Build source and binary packages
     - goreleaser_opts='--clean --skip=publish'
     - if [[ -z "$CI_COMMIT_TAG" ]]; then
-          goreleaser_opts="$goreleaser_opts --snapshot"
-      fi
+    -     goreleaser_opts="$goreleaser_opts --snapshot"
+    - fi
     - goreleaser release $goreleaser_opts
 
     # Rebuild the backend in the production mode. Disable CGO to statically link the executable so that we can run that
