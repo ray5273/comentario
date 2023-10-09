@@ -24,5 +24,8 @@ node_modules/
 # IDE
 /.idea/
 
+# CI pipeline
+/.go/
+
 # Locally kept files
 ~*
