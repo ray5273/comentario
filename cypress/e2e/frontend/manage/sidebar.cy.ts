@@ -10,7 +10,7 @@ context('Sidebar', () => {
 
     const noDomainSidebarItems = (userName: string): SidebarItem[] => ([
         {label: 'Dashboard', path: PATHS.manage.dashboard},
-        {label: 'Domains',   path: PATHS.manage.domains},
+        {label: 'Domains',   path: PATHS.manage.domains._},
         {label: 'ACCOUNT'},
         {label: userName,    path: PATHS.manage.account.profile, partial: true},
         {label: 'LOGOUT'},
@@ -20,10 +20,10 @@ context('Sidebar', () => {
     /** Items for both commenter and readonly domain user. */
     const commenterSidebarItems = (userName: string, domain: Cypress.Domain): SidebarItem[] => ([
         {label: 'Dashboard', path: PATHS.manage.dashboard},
-        {label: 'Domains',   path: PATHS.manage.domains},
-        {label: domain.host, path: PATHS.manage.domainId(domain.id).props, partial: true},
-        {label: 'Pages',     path: PATHS.manage.domainId(domain.id).pages},
-        {label: 'Comments',  path: PATHS.manage.domainId(domain.id).comments},
+        {label: 'Domains',   path: PATHS.manage.domains._},
+        {label: domain.host, path: PATHS.manage.domains.id(domain.id).props, partial: true},
+        {label: 'Pages',     path: PATHS.manage.domains.id(domain.id).pages},
+        {label: 'Comments',  path: PATHS.manage.domains.id(domain.id).comments},
         {label: 'ACCOUNT'},
         {label: userName,    path: PATHS.manage.account.profile, partial: true},
         {label: 'LOGOUT'},
@@ -32,13 +32,13 @@ context('Sidebar', () => {
 
     const ownerSidebarItems = (userName: string, domain: Cypress.Domain): SidebarItem[] => ([
         {label: 'Dashboard',    path: PATHS.manage.dashboard},
-        {label: 'Domains',      path: PATHS.manage.domains},
-        {label: domain.host,    path: PATHS.manage.domainId(domain.id).props, partial: true},
-        {label: 'Pages',        path: PATHS.manage.domainId(domain.id).pages},
-        {label: 'Comments',     path: PATHS.manage.domainId(domain.id).comments},
-        {label: 'Domain users', path: PATHS.manage.domainId(domain.id).users},
-        {label: 'Statistics',   path: PATHS.manage.domainId(domain.id).stats},
-        {label: 'Operations',   path: PATHS.manage.domainId(domain.id).operations},
+        {label: 'Domains',      path: PATHS.manage.domains._},
+        {label: domain.host,    path: PATHS.manage.domains.id(domain.id).props, partial: true},
+        {label: 'Pages',        path: PATHS.manage.domains.id(domain.id).pages},
+        {label: 'Comments',     path: PATHS.manage.domains.id(domain.id).comments},
+        {label: 'Domain users', path: PATHS.manage.domains.id(domain.id).users},
+        {label: 'Statistics',   path: PATHS.manage.domains.id(domain.id).stats},
+        {label: 'Operations',   path: PATHS.manage.domains.id(domain.id).operations},
         {label: 'ACCOUNT'},
         {label: userName,       path: PATHS.manage.account.profile, partial: true},
         {label: 'LOGOUT'},
@@ -47,7 +47,7 @@ context('Sidebar', () => {
 
     const superNoDomainSidebarItems = (userName: string): SidebarItem[] => ([
         {label: 'Dashboard',     path: PATHS.manage.dashboard},
-        {label: 'Domains',       path: PATHS.manage.domains},
+        {label: 'Domains',       path: PATHS.manage.domains._},
         {label: 'ADMINISTRATION'},
         {label: 'Users',         path: PATHS.manage.users},
         {label: 'CONFIGURATION'},
@@ -60,13 +60,13 @@ context('Sidebar', () => {
 
     const superSidebarItems = (userName: string, domain: Cypress.Domain): SidebarItem[] => ([
         {label: 'Dashboard',     path: PATHS.manage.dashboard},
-        {label: 'Domains',       path: PATHS.manage.domains},
-        {label: domain.host,     path: PATHS.manage.domainId(domain.id).props, partial: true},
-        {label: 'Pages',         path: PATHS.manage.domainId(domain.id).pages},
-        {label: 'Comments',      path: PATHS.manage.domainId(domain.id).comments},
-        {label: 'Domain users',  path: PATHS.manage.domainId(domain.id).users},
-        {label: 'Statistics',    path: PATHS.manage.domainId(domain.id).stats},
-        {label: 'Operations',    path: PATHS.manage.domainId(domain.id).operations},
+        {label: 'Domains',       path: PATHS.manage.domains._},
+        {label: domain.host,     path: PATHS.manage.domains.id(domain.id).props, partial: true},
+        {label: 'Pages',         path: PATHS.manage.domains.id(domain.id).pages},
+        {label: 'Comments',      path: PATHS.manage.domains.id(domain.id).comments},
+        {label: 'Domain users',  path: PATHS.manage.domains.id(domain.id).users},
+        {label: 'Statistics',    path: PATHS.manage.domains.id(domain.id).stats},
+        {label: 'Operations',    path: PATHS.manage.domains.id(domain.id).operations},
         {label: 'ADMINISTRATION'},
         {label: 'Users',         path: PATHS.manage.users},
         {label: 'CONFIGURATION'},

@@ -44,9 +44,13 @@ declare namespace Cypress {
         /** Whether login must succeed. Defaults to true. */
         succeeds?: boolean;
         /** Path the user is redirected to after login. Only when succeeds is true. Defaults to the Dashboard path. */
-        redirectPath?: string;
+        redirectPath?: string | RegExp | IsAtObjectWithUnderscore;
         /** Error toast shown after login fails. Mandatory is succeeds is false, otherwise ignored. */
         errToast?: string;
+    }
+
+    interface IsAtObjectWithUnderscore {
+        _: string | RegExp;
     }
 
     interface Chainable {
@@ -56,7 +60,7 @@ declare namespace Cypress {
          * @param expected Literal path or a regex to match the current path against
          * @param options Additional options
          */
-        isAt(expected: string | RegExp, options?: {ignoreQuery?: boolean}): Chainable<string>;
+        isAt(expected: string | RegExp | IsAtObjectWithUnderscore, options?: {ignoreQuery?: boolean}): Chainable<string>;
 
         /**
          * Assert the user is authenticated (or not).

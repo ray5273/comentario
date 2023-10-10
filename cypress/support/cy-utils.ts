@@ -11,15 +11,18 @@ export const PATHS = {
 
     manage: {
         dashboard:      '/en/manage/dashboard',
-        domains:        '/en/manage/domains',
-        domainId:  (id: string) => ({
-            props:      `${PATHS.manage.domains}/${id}`,
-            pages:      `${PATHS.manage.domains}/${id}/pages`,
-            comments:   `${PATHS.manage.domains}/${id}/comments`,
-            users:      `${PATHS.manage.domains}/${id}/users`,
-            stats:      `${PATHS.manage.domains}/${id}/stats`,
-            operations: `${PATHS.manage.domains}/${id}/operations`,
-        }),
+        domains: {
+            _:      '/en/manage/domains',
+            create: '/en/manage/domains/create',
+            id:  (id: string) => ({
+                props:      `${PATHS.manage.domains._}/${id}`,
+                pages:      `${PATHS.manage.domains._}/${id}/pages`,
+                comments:   `${PATHS.manage.domains._}/${id}/comments`,
+                users:      `${PATHS.manage.domains._}/${id}/users`,
+                stats:      `${PATHS.manage.domains._}/${id}/stats`,
+                operations: `${PATHS.manage.domains._}/${id}/operations`,
+            }),
+        },
         users:          '/en/manage/users',
         config: {
             static:     '/en/manage/config/static',

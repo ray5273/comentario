@@ -67,7 +67,7 @@ Cypress.Commands.addQuery(
         };
     });
 
-Cypress.Commands.add('isAt', (expected: string | RegExp, options?: {ignoreQuery?: boolean}) => cy.url().should((url) => {
+Cypress.Commands.add('isAt', (expected: string | RegExp | Cypress.IsAtObjectWithUnderscore, options?: {ignoreQuery?: boolean}) => cy.url().should((url) => {
     // Strip off any parameters before comparing
     url = url.replace(/;.*$/, '');
 
@@ -78,6 +78,11 @@ Cypress.Commands.add('isAt', (expected: string | RegExp, options?: {ignoreQuery?
 
     // The URL must begin with the base URL
     expect(url.substring(0, baseUrl.length)).eq(baseUrl);
+
+    // Check if we need to "deunderscorise" the expected
+    if (typeof expected === 'object' && '_' in expected) {
+        expected = expected._;
+    }
 
     // Compare the path part
     const actual = url.substring(baseUrl.length);
@@ -232,7 +237,7 @@ Cypress.Commands.add(
         cy.contains('app-domain-manager #domain-list a', domain.host).click();
 
         // We're a the domain properties
-        cy.isAt(PATHS.manage.domainId(domain.id).props);
+        cy.isAt(PATHS.manage.domains.id(domain.id).props);
     });
 
 Cypress.Commands.add(
