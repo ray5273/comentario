@@ -184,16 +184,10 @@ docker-image:
 verify-package-deb:
   stage: package
   image: ubuntu:22.04
-  services:
-    - name: postgres:15-alpine
-      variables:
-        POSTGRES_DB: comentario
-        POSTGRES_USER: postgres
-        POSTGRES_PASSWORD: postgres
   dependencies:
     - build
   before_script:
-    # Install systemd
+    # Install systemd to fulfill the requirements
     - apt-get update
     - apt-get install -y systemd
   script:
@@ -202,20 +196,46 @@ verify-package-deb:
     - '[[ -z "$pkg_name" ]] && echo "Failed to find the .deb package" && exit 1'
     - dpkg -i "$pkg_name"
 
-    # Fix the secrets to point to the database that is started as a service
-    - |
-      cat <<EOF > /etc/comentario/secrets.yaml
-      postgres:
-        host:     localhost
-        port:     5432
-        database: comentario
-        username: postgres
-        password: postgres
-      EOF
-    - systemctl restart comentario.service
+    # We won't really start the service because it's way too much hassle to get systemd operational inside a container.
+    # For now, an installable package is good enough
+    - test -s /etc/comentario/comentario.conf
+    - test -s /etc/comentario/secrets.yaml
+    - test -x /usr/bin/comentario
+    - test -d /usr/lib/comentario/db
+    - test -s /usr/lib/comentario/frontend/comentario.css
+    - test -s /usr/lib/comentario/frontend/comentario.js
+    - test -s /usr/lib/comentario/frontend/favicon.ico
+    - test -s /usr/lib/comentario/frontend/en/index.html
+    - test -d /usr/lib/comentario/templates
+    - test -s /usr/lib/systemd/system/comentario.service
 
-    # Check if the service is running
-    - systemctl is-active comentario.service
+# Verify the .rpm package
+verify-package-rpm:
+  stage: package
+  image: centos:7
+  dependencies:
+    - build
+  before_script:
+    # Install systemd to fulfill the requirements
+    - yum install -y systemd
+  script:
+    # Install the package
+    - pkg_name="$(find dist -maxdepth 1 -name '*.rpm')"
+    - '[[ -z "$pkg_name" ]] && echo "Failed to find the .rpm package" && exit 1'
+    - rpm -i "$pkg_name"
+
+    # We won't really start the service because it's way too much hassle to get systemd operational inside a container.
+    # For now, an installable package is good enough
+    - test -s /etc/comentario/comentario.conf
+    - test -s /etc/comentario/secrets.yaml
+    - test -x /usr/bin/comentario
+    - test -d /usr/lib/comentario/db
+    - test -s /usr/lib/comentario/frontend/comentario.css
+    - test -s /usr/lib/comentario/frontend/comentario.js
+    - test -s /usr/lib/comentario/frontend/favicon.ico
+    - test -s /usr/lib/comentario/frontend/en/index.html
+    - test -d /usr/lib/comentario/templates
+    - test -s /usr/lib/systemd/system/comentario.service
 
 # Deploy the dev branch to edge.comentario.app
 deploy-dev:
