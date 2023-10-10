@@ -2,13 +2,12 @@
     <div class="card h-100">
         <div class="card-body text-center text-nowrap">
             <div class="card-title">
-                <div class="fw-bold text-truncate">{{ label }}</div>
-                <div *ngIf="sublabel" class="small text-truncate opacity-75">{{ sublabel }}</div>
+                <div class="metric-label">{{ label }}</div>
+                <div *ngIf="sublabel" class="metric-sublabel">{{ sublabel }}</div>
             </div>
             <div class="card-text">
-                <div *ngIf="value !== undefined else noValue"
-                     [class.display-6]="value < 1000000"
-                     [class.lead]="value >= 1000000">{{ value | number }}</div>
+                <div *ngIf="value !== undefined else noValue" [class.metric-value-1m]="value >= 1000000"
+                     class="metric-value">{{ value | number }}</div>
                 <ng-template #noValue>
                     <div class="spinner-grow spinner-grow-sm" role="status"></div>
                 </ng-template>

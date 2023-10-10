@@ -1,0 +1,22 @@
+.metric-label {
+    font-weight: bold;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.metric-sublabel {
+    font-size: 0.875em;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    opacity: 0.75;
+}
+
+.metric-value {
+    font-size: 2.5rem;
+
+    &.metric-value-1m {
+        font-size: 1.25rem;
+    }
+}
