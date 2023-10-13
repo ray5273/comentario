@@ -12,11 +12,13 @@ import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Utils } from '../../../../../_utils/utils';
 import { Paths } from '../../../../../_utils/consts';
 import { CommentService } from '../../../_services/comment.service';
+import { Animations } from '../../../../../_utils/animations';
 
 @UntilDestroy()
 @Component({
     selector: 'app-comment-list',
     templateUrl: './comment-list.component.html',
+    animations: [Animations.fadeIn('slow')],
 })
 export class CommentListComponent implements OnInit, OnChanges {
 

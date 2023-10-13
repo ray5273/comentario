@@ -6,7 +6,7 @@ import { DomainPagePropertiesComponent } from './domain-page-properties.componen
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ToolsModule } from '../../../../tools/tools.module';
-import { NoDataComponent } from '../../../no-data/no-data.component';
+import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 
 describe('DomainPagePropertiesComponent', () => {
 

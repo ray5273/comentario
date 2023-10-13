@@ -28,14 +28,4 @@ export class Animations {
             transition(':leave', [animate(d, style({opacity: 0}))]),
         ]);
     }
-
-    /**
-     * Animation trigger that makes an element fade in/out on every state change.
-     */
-    static fadeInOnChange(speed: 'fast' | 'slow'): AnimationTriggerMetadata {
-        const d = speed === 'fast' ? this.DURATION_FAST : this.DURATION_SLOW;
-        return trigger(`fadeInOnChange-${speed}`, [
-            transition('* => *', [style({opacity: 0}), animate(d, style({opacity: 1}))]),
-        ]);
-    }
 }

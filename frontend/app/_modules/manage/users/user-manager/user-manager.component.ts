@@ -8,11 +8,13 @@ import { ApiGeneralService, User } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ConfigService } from '../../../../_services/config.service';
+import { Animations } from '../../../../_utils/animations';
 
 @UntilDestroy()
 @Component({
     selector: 'app-user-manager',
     templateUrl: './user-manager.component.html',
+    animations: [Animations.fadeIn('slow')],
 })
 export class UserManagerComponent implements OnInit {
 

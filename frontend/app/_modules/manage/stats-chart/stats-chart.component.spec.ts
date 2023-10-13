@@ -3,7 +3,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { StatsChartComponent } from './stats-chart.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
-import { NoDataComponent } from '../no-data/no-data.component';
+import { NoDataComponent } from '../../tools/no-data/no-data.component';
 
 describe('StatsChartComponent', () => {
 

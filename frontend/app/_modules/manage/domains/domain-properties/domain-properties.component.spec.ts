@@ -8,7 +8,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
 import { InstanceStaticConfig } from '../../../../../generated-api';
-import { NoDataComponent } from '../../no-data/no-data.component';
+import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToolsModule } from '../../../tools/tools.module';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 

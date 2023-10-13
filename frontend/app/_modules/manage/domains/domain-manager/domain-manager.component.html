@@ -11,7 +11,7 @@
     <ng-container i18n>Select a domain to see its properties, pages, and comments.</ng-container>
 </app-info-block>
 
-<div [appSpinner]="domainsLoading.active" spinnerSize="lg">
+<div [appSpinner]="!domains && domainsLoading.active" spinnerSize="lg">
     <!-- Toolbar. Hide when no domains are available and none can be added -->
     <div *ngIf="canAdd || domains?.length || filterActive" class="mb-3">
         <div class="row g-2 flex-grow-1">
@@ -45,61 +45,56 @@
         </div>
     </div>
 
-    <ng-container *ngIf="domains?.length">
-        <!-- Domain list -->
-        <div class="list-group" id="domain-list">
-            <a *ngFor="let d of domains" [routerLink]="d.id" [class.active]="d.id === domainMeta?.domain?.id" class="list-group-item list-group-item-action">
-                <div class="row">
-                    <!-- Checkmark for the selected domain -->
-                    <div class="d-none d-sm-flex col-1 justify-content-center align-items-center">
-                        <fa-icon *ngIf="d.id === domainMeta?.domain?.id" [icon]="faCheck" size="2x"></fa-icon>
+    <!-- Domain list -->
+    <div *ngIf="domains?.length" class="list-group" id="domain-list">
+        <a *ngFor="let d of domains" @fadeIn-slow [routerLink]="d.id" [class.active]="d.id === domainMeta?.domain?.id" class="list-group-item list-group-item-action">
+            <div class="row">
+                <!-- Checkmark for the selected domain -->
+                <div class="d-none d-sm-flex col-1 justify-content-center align-items-center">
+                    <fa-icon *ngIf="d.id === domainMeta?.domain?.id" [icon]="faCheck" size="2x"></fa-icon>
+                </div>
+                <!-- Domain name/host -->
+                <div class="col">
+                    <div>
+                        <span class="fw-bold domain-host">{{ d.host }}</span>
+                        <app-domain-user-badge [domainUser]="domainUsers.get(d.id!)" class="ms-2"></app-domain-user-badge>
                     </div>
-                    <!-- Domain name/host -->
-                    <div class="col">
-                        <div>
-                            <span class="fw-bold domain-host">{{ d.host }}</span>
-                            <app-domain-user-badge [domainUser]="domainUsers.get(d.id!)" class="ms-2"></app-domain-user-badge>
-                        </div>
-                        <div *ngIf="d.name">{{ d.name }}</div>
-                        <!-- Comment/view counts (up to sm) -->
-                        <div *ngIf="d.countComments! >= 0 && d.countViews! >= 0" class="d-sm-none small text-opacity-75">
-                            <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
-                            <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
-                        </div>
-                    </div>
-                    <!-- Comment count (sm+) -->
-                    <div *ngIf="d.countComments! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-opacity-75 domain-cnt-comments">
-                        <div class="lead">{{ d.countComments | number }}</div>
-                        <div class="small" i18n>comments</div>
-                    </div>
-                    <!-- View count (sm+) -->
-                    <div *ngIf="d.countViews! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-opacity-75 domain-cnt-views">
-                        <div class="lead">{{ d.countViews | number }}</div>
-                        <div class="small" i18n>views</div>
+                    <div *ngIf="d.name">{{ d.name }}</div>
+                    <!-- Comment/view counts (up to sm) -->
+                    <div *ngIf="d.countComments! >= 0 && d.countViews! >= 0" class="d-sm-none small text-opacity-75">
+                        <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
+                        <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
                     </div>
                 </div>
-            </a>
-        </div>
-
-        <!-- Item count -->
-        <div class="py-2 text-center small text-muted">
-            <ng-container *ngIf="!canLoadMore" i18n>All</ng-container>&ngsp;<ng-container>{{ domains!.length }}</ng-container>&nbsp;<ng-container i18n>items displayed</ng-container>
-        </div>
-
-        <!-- Load more items button -->
-        <div *ngIf="canLoadMore" class="py-2 text-center">
-            <button type="button" (click)="load.next(false)" class="btn btn-outline-secondary">
-                <ng-container i18n>Load more</ng-container>
-            </button>
-        </div>
-    </ng-container>
-
-    <!-- Add a domain placeholder -->
-    <div *ngIf="!domainsLoading.active && !domains?.length" class="py-4 text-center text-muted">
-        <ng-container *ngIf="filterActive else noDomains" i18n>Nothing found.</ng-container>
-        <ng-template #noDomains>
-            <p i18n>You have no connected domains.</p>
-            <p *ngIf="canAdd" i18n>Begin by adding one using the button above.</p>
-        </ng-template>
+                <!-- Comment count (sm+) -->
+                <div *ngIf="d.countComments! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-opacity-75 domain-cnt-comments">
+                    <div class="lead">{{ d.countComments | number }}</div>
+                    <div class="small" i18n>comments</div>
+                </div>
+                <!-- View count (sm+) -->
+                <div *ngIf="d.countViews! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-opacity-75 domain-cnt-views">
+                    <div class="lead">{{ d.countViews | number }}</div>
+                    <div class="small" i18n>views</div>
+                </div>
+            </div>
+        </a>
     </div>
+
+    <!-- List footer -->
+    <app-list-footer [canLoadMore]="canLoadMore" [loading]="domainsLoading.active" [count]="domains?.length" (loadMore)="load.next(false)">
+        <!-- No data placeholder -->
+        <div *ngIf="!filterActive" class="text-muted">
+            <p>
+                <ng-container i18n>You have no connected domains.</ng-container>
+                <ng-container *ngIf="canAdd">
+                    &ngsp;
+                    <ng-container i18n>Begin by adding one.</ng-container>
+                </ng-container>
+            </p>
+            <!-- Add domain button: if adding domains is allowed -->
+            <div *ngIf="canAdd">
+                <a [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success" i18n>Add domain</a>
+            </div>
+        </div>
+    </app-list-footer>
 </div>

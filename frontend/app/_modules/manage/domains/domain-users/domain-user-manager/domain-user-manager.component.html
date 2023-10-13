@@ -10,7 +10,7 @@
     <ng-container *ngSwitchCase="'owner'"     i18n>As a domain owner, you see all users registered on the domain. Other types of users don't have access to this page.</ng-container>
 </app-info-block>
 
-<div [appSpinner]="loading.active" spinnerSize="lg">
+<div [appSpinner]="!domainUsers && loading.active" spinnerSize="lg">
     <!-- Toolbar -->
     <div class="mb-3">
         <div class="row g-2 flex-grow-1">
@@ -37,57 +37,43 @@
         </div>
     </div>
 
-    <ng-container *ngIf="domainUsers?.length">
-        <!-- Page list -->
-        <div class="list-group">
-            <a *ngFor="let du of domainUsers" [routerLink]="du.userId"
-               class="list-group-item list-group-item-action d-flex">
-                <ng-container *ngIf="userMap.get(du.userId!) as u">
-                    <!-- Avatar -->
-                    <div class="col-auto d-flex align-items-center pe-2">
-                        <app-user-avatar [user]="u" size="M"></app-user-avatar>
-                    </div>
-                    <div class="col">
-                        <!-- Name and badges -->
-                        <div>
-                            <!-- Name -->
-                            <span class="fw-bold">{{ u.name }}</span>
-                            <!-- Domain user badge -->
-                            <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
-                            <!-- Superuser badge -->
-                            <span *ngIf="u.isSuperuser" class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
-                            <!-- Banned badge -->
-                            <span *ngIf="u.banned" class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
+    <!-- Page list -->
+    <div *ngIf="domainUsers?.length" class="list-group" id="domain-user-list">
+        <a *ngFor="let du of domainUsers" @fadeIn-slow [routerLink]="du.userId"
+           class="list-group-item list-group-item-action d-flex">
+            <ng-container *ngIf="userMap.get(du.userId!) as u">
+                <!-- Avatar -->
+                <div class="col-auto d-flex align-items-center pe-2">
+                    <app-user-avatar [user]="u" size="M"></app-user-avatar>
+                </div>
+                <div class="col">
+                    <!-- Name and badges -->
+                    <div>
+                        <!-- Name -->
+                        <span class="fw-bold">{{ u.name }}</span>
+                        <!-- Domain user badge -->
+                        <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
+                        <!-- Superuser badge -->
+                        <span *ngIf="u.isSuperuser" class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
+                        <!-- Banned badge -->
+                        <span *ngIf="u.banned" class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
                                 <fa-icon [icon]="faBan" class="me-1"></fa-icon>
                                 <ng-container i18n>Banned</ng-container>
                             </span>
-                            <!-- Current user badge -->
-                            <app-current-user-badge [userId]="u.id" class="ms-2"></app-current-user-badge>
-                        </div>
-                        <!-- Provider icon and email -->
-                        <div>
-                            <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
-                            <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                            <ng-container>{{ u.email }}</ng-container>
-                        </div>
+                        <!-- Current user badge -->
+                        <app-current-user-badge [userId]="u.id" class="ms-2"></app-current-user-badge>
                     </div>
-                </ng-container>
-            </a>
-        </div>
+                    <!-- Provider icon and email -->
+                    <div>
+                        <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
+                        <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
+                        <ng-container>{{ u.email }}</ng-container>
+                    </div>
+                </div>
+            </ng-container>
+        </a>
+    </div>
 
-        <!-- Item count -->
-        <div class="py-2 text-center small text-muted">
-            <ng-container *ngIf="!canLoadMore" i18n>All</ng-container>&ngsp;<ng-container>{{ domainUsers!.length }}</ng-container>&nbsp;<ng-container i18n>items displayed</ng-container>
-        </div>
-
-        <!-- Load more items button -->
-        <div *ngIf="canLoadMore" class="py-2 text-center">
-            <button type="button" (click)="load.next(false)" class="btn btn-outline-secondary">
-                <ng-container i18n>Load more</ng-container>
-            </button>
-        </div>
-    </ng-container>
-
-    <!-- Nothing found placeholder -->
-    <div *ngIf="!loading.active && !domainUsers?.length" class="py-4 text-center text-muted" i18n>Nothing found.</div>
+    <!-- List footer -->
+    <app-list-footer [canLoadMore]="canLoadMore" [loading]="loading.active" [count]="domainUsers?.length" (loadMore)="load.next(false)"/>
 </div>

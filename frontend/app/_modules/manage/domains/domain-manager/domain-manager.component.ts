@@ -10,11 +10,13 @@ import { Paths } from '../../../../_utils/consts';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
+import { Animations } from '../../../../_utils/animations';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-manager',
     templateUrl: './domain-manager.component.html',
+    animations: [Animations.fadeIn('slow')],
 })
 export class DomainManagerComponent implements OnInit {
 

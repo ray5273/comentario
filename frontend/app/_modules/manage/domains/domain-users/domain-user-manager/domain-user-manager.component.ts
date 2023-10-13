@@ -3,17 +3,19 @@ import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBan, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faBan } from '@fortawesome/free-solid-svg-icons';
 import { Sort } from '../../../_models/sort';
 import { ApiGeneralService, DomainUser, User } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ConfigService } from '../../../../../_services/config.service';
+import { Animations } from '../../../../../_utils/animations';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-user-manager',
     templateUrl: './domain-user-manager.component.html',
+    animations: [Animations.fadeIn('slow')]
 })
 export class DomainUserManagerComponent implements OnInit {
 
@@ -40,6 +42,9 @@ export class DomainUserManagerComponent implements OnInit {
     });
 
     private loadedPageNum = 0;
+
+    // Icons
+    readonly faBan = faBan;
 
     constructor(
         private readonly fb: FormBuilder,
@@ -91,7 +96,4 @@ export class DomainUserManagerComponent implements OnInit {
                 r.users?.forEach(u => this.userMap.set(u.id!, u));
             });
     }
-
-    protected readonly faLock = faLock;
-    protected readonly faBan = faBan;
 }

@@ -6,12 +6,12 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { DomainUserManagerComponent } from './domain-user-manager.component';
 import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
-import { NoDataComponent } from '../../../no-data/no-data.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { ConfigService } from '../../../../../_services/config.service';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ToolsModule } from '../../../../tools/tools.module';
+import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
 
 describe('DomainUserManagerComponent', () => {
 
@@ -22,7 +22,7 @@ describe('DomainUserManagerComponent', () => {
         TestBed.configureTestingModule({
             declarations: [
                 DomainUserManagerComponent,
-                MockComponents(DomainBadgeComponent, NoDataComponent, SortSelectorComponent, SortPropertyComponent)],
+                MockComponents(DomainBadgeComponent, ListFooterComponent, SortSelectorComponent, SortPropertyComponent)],
             imports: [ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),

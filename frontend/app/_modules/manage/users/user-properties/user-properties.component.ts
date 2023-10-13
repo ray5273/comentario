@@ -8,10 +8,12 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { AuthService } from '../../../../_services/auth.service';
+import { Animations } from '../../../../_utils/animations';
 
 @Component({
     selector: 'app-user-properties',
     templateUrl: './user-properties.component.html',
+    animations: [Animations.fadeIn('slow')],
 })
 export class UserPropertiesComponent {
 

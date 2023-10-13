@@ -5,7 +5,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import {UserPropertiesComponent} from './user-properties.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
-import { NoDataComponent } from '../../no-data/no-data.component';
+import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
 import { AuthService } from '../../../../_services/auth.service';
 

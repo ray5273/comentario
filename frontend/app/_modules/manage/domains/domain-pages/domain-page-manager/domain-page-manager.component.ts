@@ -9,11 +9,13 @@ import { Sort } from '../../../_models/sort';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ConfigService } from '../../../../../_services/config.service';
+import { Animations } from '../../../../../_utils/animations';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-page-manager',
     templateUrl: './domain-page-manager.component.html',
+    animations: [Animations.fadeIn('slow')],
 })
 export class DomainPageManagerComponent implements OnInit {
 

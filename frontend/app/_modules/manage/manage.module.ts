@@ -20,7 +20,7 @@ import { StatsChartComponent } from './stats-chart/stats-chart.component';
 import { DomainSelectorService } from './_services/domain-selector.service';
 import { CommentManagerComponent } from './domains/comments/comment-manager/comment-manager.component';
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
-import { ManageGuard } from "./_guards/manage.guard";
+import { ManageGuard } from './_guards/manage.guard';
 import { ModeratorNotifyPolicyPipe } from './_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from './_pipes/comment-sort.pipe';
 import { DomainPageManagerComponent } from './domains/domain-pages/domain-page-manager/domain-page-manager.component';
@@ -35,7 +35,6 @@ import { UserPropertiesComponent } from './users/user-properties/user-properties
 import { UserEditComponent } from './users/user-edit/user-edit.component';
 import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
 import { DomainUserManagerComponent } from './domains/domain-users/domain-user-manager/domain-user-manager.component';
-import { NoDataComponent } from './no-data/no-data.component';
 import { DomainUserPropertiesComponent } from './domains/domain-users/domain-user-properties/domain-user-properties.component';
 import { UserDetailsComponent } from './users/user-details/user-details.component';
 import { DomainUserEditComponent } from './domains/domain-users/domain-user-edit/domain-user-edit.component';
@@ -81,7 +80,6 @@ import { ConfigEditComponent } from './config/config-edit/config-edit.component'
         DynamicConfigComponent,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
-        NoDataComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
