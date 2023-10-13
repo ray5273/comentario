@@ -15,10 +15,7 @@ context('Signup', () => {
         cy.get('button[type=submit]').as('submit');
     });
 
-    it('stays on the page after reload', () => {
-        cy.reload();
-        cy.isAt(PATHS.auth.signup);
-    });
+    it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.auth.signup));
 
     it('redirects authenticated user to Dashboard', () => {
         cy.loginViaApi(USERS.commenterOne, PATHS.auth.signup);

@@ -238,6 +238,9 @@ Cypress.Commands.add(
 
         // We're a the domain properties
         cy.isAt(PATHS.manage.domains.id(domain.id).props);
+
+        // Verify the domain is selected in the sidebar
+        cy.contains('app-control-center li a.cc-link', domain.host).should('have.class', 'active');
     });
 
 Cypress.Commands.add(
@@ -266,6 +269,90 @@ Cypress.Commands.add(
     'dlgCancel',
     {prevSubject: 'element'},
     (element: JQueryWithSelector) => cy.wrap(element).dlgButtonClick('Cancel'));
+
+Cypress.Commands.add(
+    'changeListSort',
+    {prevSubject: 'optional'},
+    (element: JQueryWithSelector, label: string, expectOrder: 'asc' | 'desc') => {
+        const el = () => (element ? cy.wrap(element) : cy).find('app-sort-selector');
+
+        // Click the sort dropdown
+        el().find('button[ngbdropdowntoggle]')
+            .should('have.text', 'Sort')
+            .click();
+
+        // Click the required sort button and check the sort order
+        el().contains('div[ngbdropdownmenu] button', label)
+            .click()
+            .should('have.class', 'sort-' + expectOrder)
+            .should('have.attr', 'aria-checked', 'true');
+
+        // Click on sort dropdown again
+        el().find('button[ngbdropdowntoggle]').click();
+
+        // Verify the sort menu is gone
+        el().find('div[ngbdropdownmenu]').should('not.be.visible');
+    });
+
+Cypress.Commands.add(
+    'verifyRedirectsAfterLogin',
+    {prevSubject: false},
+    (path: string, user: Cypress.User) => {
+        // Try to visit the path
+        cy.visit(path);
+
+        // We must be first redirected to the login
+        cy.isAt(PATHS.auth.login);
+
+        // Login with the given user, and we're redirected back
+        cy.login(user, {goTo: false, redirectPath: path});
+    });
+
+Cypress.Commands.add(
+    'verifyStayOnReload',
+    {prevSubject: false},
+    (path: string, user?: Cypress.User) => {
+        // Login or visit the page directly
+        if (user) {
+            cy.loginViaApi(user, path);
+        } else {
+            cy.visit(path);
+        }
+        cy.isAt(path);
+
+        // Reload the page
+        cy.reload();
+
+        // Verify we're still on the same page
+        cy.isAt(path);
+    });
+
+Cypress.Commands.add(
+    'verifyListFooter',
+    {prevSubject: 'optional'},
+    (element: JQueryWithSelector, count: number, more: boolean, noDataText?: string) =>
+        (element ? cy.wrap(element) : cy).get('app-list-footer').should(footer => {
+            // Verify footer text
+            switch (count) {
+                case 0:
+                    if (noDataText) {
+                        expect(footer.text()).contain(noDataText);
+                    } else {
+                        expect(footer.text()).eq('No data available.');
+                    }
+                    break;
+
+                case 1:
+                    expect(footer.text()).eq('The only item displayed.');
+                    break;
+
+                default:
+                    expect(footer.find('.item-count').text()).eq(`${more ? '' : 'All '}${count} items displayed.`);
+            }
+
+            // Verify whether there is a "Load more" button
+            expect(footer.find('button:contains("Load more")')).length(more ? 1 : 0);
+        }));
 
 Cypress.Commands.add(
     'verifyEmailInputValidation',

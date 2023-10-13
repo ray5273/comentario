@@ -21,8 +21,8 @@ values
 
 insert into cm_domains (id, name, host, ts_created, is_https, is_readonly, auth_anonymous, auth_local, auth_sso, sso_url, sso_secret, sso_noninteractive, mod_anonymous, mod_authenticated, mod_num_comments, mod_user_age_days, mod_links, mod_images, mod_notify_policy, default_sort, count_comments, count_views)
 values
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'Test Site', 'localhost:8000', '2023-01-17 17:56:10', false, false, true, true, true, 'http://localhost:8080/api/e2e/oauth/3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2/sso/noninteractive', 'd15679c635ff7a3b5e8196989141557764b3dc63c9f91b0eda46b246b12fe0f4', true, true,  false, 0, 0, false, false, 'pending', 'ta', 16, 5),
-    ('4d7affab-4db7-4521-aea2-9451e158d642', 'Frozen Domain', 'lacolhost.com:8000', '2023-01-17 17:56:11', false, true,  true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'Test Site',     'localhost:8000',     '2023-01-01 17:56:10', false, false, true, true, true, 'http://localhost:8080/api/e2e/oauth/3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2/sso/noninteractive', 'd15679c635ff7a3b5e8196989141557764b3dc63c9f91b0eda46b246b12fe0f4', true, true,  false, 0, 0, false, false, 'pending', 'ta', 16, 5),
+    ('4d7affab-4db7-4521-aea2-9451e158d642', 'Frozen Domain', 'lacolhost.com:8000', '2023-01-01 17:56:11', false, true,  true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('b5cacc60-6d24-45ca-af03-c62e863587b5', 'Course Domain', 'course.example.com', '2023-01-01 17:56:12', true,  false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('a15d2d4c-4353-44a2-a796-66ca2a3924ca', 'System Domain', 'system.example.com', '2023-01-02 17:56:13', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('2489fefb-c278-491e-8597-1729079c2b6d', 'School Domain', 'school.example.com', '2023-01-03 17:56:14', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
@@ -100,7 +100,7 @@ values
     ('a1a80515-8e47-457f-85c0-8d6c049d24c8', 'Effort Domain', 'effort.example.com', '2023-03-16 17:57:26', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('64cd0315-6d9b-41dc-bf21-fa98e01f319a', 'Career Domain', 'career.example.com', '2023-03-17 17:57:27', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('db9910fc-a0a4-439d-b950-f0b69e883ecc', '',              'attack.example.com', '2023-03-18 17:57:28', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
-    ('4c9c04cf-8958-46f8-a1ea-0dc0ccd9a89f', '',              'length.example.com', '2023-03-19 17:57:29', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
+    ('4c9c04cf-8958-46f8-a1ea-0dc0ccd9a89f', '',              'lethal.example.com', '2023-03-19 17:57:29', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('38b39174-2bb2-4e71-9148-2646eb55ff37', '',              'memory.example.com', '2023-03-20 17:57:30', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('12a41d7a-a8bd-4e7a-847e-b90a8d22650a', '',              'impact.example.com', '2023-03-21 17:57:31', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('15606012-e305-455f-9f7d-9d56c202e728', '',              'forest.example.com', '2023-03-22 17:57:32', false, false, true, true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),

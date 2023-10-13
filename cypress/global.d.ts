@@ -171,6 +171,37 @@ declare namespace Cypress {
         dlgCancel(): Chainable<JQueryWithSelector>;
 
         /**
+         * Click a sort dropdown and then a sort button with the given label.
+         * @param label Sort button label to click.
+         * @param expectOrder The expected sort order after the click.
+         */
+        changeListSort(label: string, expectOrder: 'asc' | 'desc'): Chainable<void>;
+
+        /**
+         * Verify that when visiting the given path, the application first redirects to the login page and subsequently
+         * back to that path.
+         * @param path Path to verify.
+         * @param user User to login as.
+         */
+        verifyRedirectsAfterLogin(path: string, user: User): Chainable<void>;
+
+        /**
+         * Verify the application stays on the provided page after a reload.
+         * @param path Path to verify.
+         * @param user Optional user to login as.
+         */
+        verifyStayOnReload(path: string, user?: User): Chainable<void>;
+
+        /**
+         * Verify text in the list footer. Can be chained off an element containing the footer.
+         * @param count Expected number of items reported in the footer.
+         * @param more Whether there are more items that can be loaded.
+         * @param noDataText Optional (partial) custom text to expect if there's no data.
+         * @return The footer element.
+         */
+        verifyListFooter(count: number, more: boolean, noDataText?: string): Chainable<JQueryWithSelector>;
+
+        /**
          * Run common email input validations against the passed element.
          * NB: the input must be touched.
          */

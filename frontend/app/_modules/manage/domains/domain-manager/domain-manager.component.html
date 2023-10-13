@@ -38,7 +38,7 @@
             <form [formGroup]="filterForm" class="col-12 col-sm-auto">
                 <!-- Substring filter -->
                 <div class="col-sm-auto">
-                    <input formControlName="filter" id="filterString" class="form-control" type="search"
+                    <input formControlName="filter" id="filter-string" class="form-control" type="search"
                            placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
                 </div>
             </form>
@@ -59,7 +59,7 @@
                         <span class="fw-bold domain-host">{{ d.host }}</span>
                         <app-domain-user-badge [domainUser]="domainUsers.get(d.id!)" class="ms-2"></app-domain-user-badge>
                     </div>
-                    <div *ngIf="d.name">{{ d.name }}</div>
+                    <div *ngIf="d.name" class="domain-name">{{ d.name }}</div>
                     <!-- Comment/view counts (up to sm) -->
                     <div *ngIf="d.countComments! >= 0 && d.countViews! >= 0" class="d-sm-none small text-opacity-75">
                         <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>

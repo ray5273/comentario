@@ -15,10 +15,7 @@ context('Login', () => {
         cy.contains('a', 'Forgot your password?').as('forgotPwdLink');
     });
 
-    it('stays on the page after reload', () => {
-        cy.reload();
-        cy.isAt(PATHS.auth.login);
-    });
+    it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.auth.login));
 
     it('redirects authenticated user to Dashboard', () => {
         cy.loginViaApi(USERS.commenterOne, PATHS.auth.login);

@@ -4,13 +4,7 @@ context('Profile', () => {
 
     beforeEach(cy.backendReset);
 
-    it('redirects user to login and back to Profile', () => {
-        cy.visit(PATHS.manage.account.profile);
-        cy.isAt(PATHS.auth.login);
-
-        // Login and get redirected to Profile
-        cy.login(USERS.commenterOne, {goTo: false, redirectPath: PATHS.manage.account.profile});
-    });
+    it('redirects user to login and back', () => cy.verifyRedirectsAfterLogin(PATHS.manage.account.profile, USERS.commenterOne));
 
     context('authenticated user', () => {
 
@@ -34,14 +28,11 @@ context('Profile', () => {
             // -- Submit
             cy.get('button[type=submit]')                 .as('submit');
             // -- Danger zone
-            cy.contains('button', 'Danger zone').as('dzToggle');
-            cy.get('#danger-zone-container')    .as('dzContainer');
+            cy.contains('button', 'Danger zone')          .as('dzToggle');
+            cy.get('#danger-zone-container')              .as('dzContainer');
         });
 
-        it('stays on the page after reload', () => {
-            cy.reload();
-            cy.isAt(PATHS.manage.account.profile);
-        });
+        it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.account.profile, USERS.commenterOne));
 
         it('has all necessary controls', () => {
             // Check page content

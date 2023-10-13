@@ -25,17 +25,9 @@ context('Dashboard', () => {
 
     beforeEach(cy.backendReset);
 
-    it('redirects user to login and back to Dashboard', () => {
-        cy.visit(PATHS.manage.dashboard);
-        cy.isAt(PATHS.auth.login);
-        cy.login(USERS.commenterOne, {goTo: false, redirectPath: PATHS.manage.dashboard});
-    });
+    it('redirects user to login and back', () => cy.verifyRedirectsAfterLogin(PATHS.manage.dashboard, USERS.commenterOne));
 
-    it('stays on the page after reload', () => {
-        cy.loginViaApi(USERS.commenterOne, PATHS.manage.dashboard);
-        cy.reload();
-        cy.isAt(PATHS.manage.dashboard);
-    });
+    it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.dashboard, USERS.commenterOne));
 
     it('shows metrics for user without domains', () => {
         cy.loginViaApi(USERS.commenterOne, PATHS.manage.dashboard);

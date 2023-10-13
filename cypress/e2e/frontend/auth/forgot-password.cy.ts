@@ -13,10 +13,7 @@ context('Forgot password', () => {
         cy.get('button[type=submit]')  .as('submit');
     });
 
-    it('stays on the page after reload', () => {
-        cy.reload();
-        cy.isAt(PATHS.auth.forgotPassword);
-    });
+    it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.auth.forgotPassword));
 
     it('redirects authenticated user to Dashboard', () => {
         cy.loginViaApi(USERS.commenterOne, PATHS.auth.forgotPassword);
