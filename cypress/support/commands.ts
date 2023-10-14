@@ -129,14 +129,9 @@ Cypress.Commands.addQuery(
 Cypress.Commands.addQuery(
     'dlTexts',
     function dlTexts() {
-        return (element: JQueryWithSelector) => {
-            const result: {[dt: string]: string} = {};
-            element.find('dt')
-                .each((_, dt) => {
-                    result[dt.innerText] = (dt.nextSibling as HTMLElement).innerText;
-                });
-            return result;
-        };
+        return (element: JQueryWithSelector) => element.find('dt')
+                .map((_, dt) => [[dt.innerText, (dt.nextSibling as HTMLElement).innerText]])
+                .get();
     });
 
 Cypress.Commands.add(
@@ -200,13 +195,13 @@ Cypress.Commands.add('logout', () => {
     cy.isLoggedIn(false);
 });
 
-Cypress.Commands.add('loginViaApi', (creds: Cypress.Credentials, targetUrl: string) => {
+Cypress.Commands.add('loginViaApi', (creds: Cypress.Credentials, targetUrl: string, visitOptions?: Partial<Cypress.VisitOptions>) => {
     cy.request('POST', '/api/auth/login', {email: creds.email, password: creds.password})
         .should(resp => {
             expect(resp.status).to.eq(200);
             expect(resp.body.email).to.eq(creds.email);
         });
-    cy.visit(targetUrl);
+    cy.visit(targetUrl, visitOptions);
     cy.isLoggedIn();
 });
 

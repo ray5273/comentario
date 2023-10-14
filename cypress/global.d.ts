@@ -87,9 +87,10 @@ declare namespace Cypress {
         texts(selector?: string): Chainable<string[]>;
 
         /**
-         * Collect visible texts of <dt> and <dd> elements of a definition list. Must be chained off a <dl> element.
+         * Collect visible texts of <dt> and <dd> elements of a definition list and return as an array of two-element
+         * arrays: [[dt, dd], [dt, dd], ...]. Must be chained off a <dl> element.
          */
-        dlTexts(): Chainable<{[dt: string]: string}>;
+        dlTexts(): Chainable<string[][]>;
 
         /**
          * Verify the passed element has no invalid feedback.
@@ -125,8 +126,9 @@ declare namespace Cypress {
          * Login as provided user directly, via an API call.
          * @param creds Credentials to login with
          * @param targetUrl URL to go to after the login.
+         * @param visitOptions Optional visit options.
          */
-        loginViaApi(creds: Credentials, targetUrl: string): Chainable<void>;
+        loginViaApi(creds: Credentials, targetUrl: string, visitOptions?: Partial<VisitOptions>): Chainable<void>;
 
         /**
          * Verify there is no toast.

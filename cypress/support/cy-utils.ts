@@ -1,3 +1,8 @@
+/** Canned regular expressions. */
+export const REGEXES = {
+    datetime: /^\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)$/,
+};
+
 /** Paths in the administration UI. */
 export const PATHS = {
     home: '/en/',
@@ -16,6 +21,8 @@ export const PATHS = {
             create: '/en/manage/domains/create',
             id:  (id: string) => ({
                 props:      `${PATHS.manage.domains._}/${id}`,
+                edit:       `${PATHS.manage.domains._}/${id}/edit`,
+                sso:        `${PATHS.manage.domains._}/${id}/sso`,
                 pages:      `${PATHS.manage.domains._}/${id}/pages`,
                 comments:   `${PATHS.manage.domains._}/${id}/comments`,
                 users:      `${PATHS.manage.domains._}/${id}/users`,
@@ -61,6 +68,7 @@ export class User implements Cypress.User {
     readonly id:          string;
     readonly name:        string;
     readonly isBanned:    boolean;
+    readonly isSuper:     boolean;
 
     constructor(props: Partial<User>) {
         Object.assign(this, props);
@@ -76,22 +84,22 @@ export class User implements Cypress.User {
 
 /** Predefined users. */
 export const USERS = {
-    anonymous:    new User({isAnonymous: true,  id: '00000000-0000-0000-0000-000000000000', email: '',                           name: 'Anonymous'}),
-    root:         new User({isAnonymous: false, id: '00000000-0000-0000-0000-000000000001', email: 'root@comentario.app',        name: 'Root',           password: 'test'}),
-    ace:          new User({isAnonymous: false, id: '5787eece-7aa3-44d7-bbba-51866edc4867', email: 'ace@comentario.app',         name: 'Captain Ace',    password: 'test'}),
-    king:         new User({isAnonymous: false, id: '2af9ecd2-a32a-4332-8717-396e9af28639', email: 'king@comentario.app',        name: 'Engineer King',  password: 'test'}),
-    queen:        new User({isAnonymous: false, id: '98732142-bc83-48e0-be92-f6dbd6976702', email: 'queen@comentario.app',       name: 'Cook Queen',     password: 'test'}),
-    jack:         new User({isAnonymous: false, id: '2d01d8dd-0bb1-4281-850e-e943b9f8128a', email: 'jack@comentario.app',        name: 'Navigator Jack', password: 'test'}),
-    commenterOne: new User({isAnonymous: false, id: '01d1cb57-d98c-46f6-b270-1198860f642f', email: 'one@blog.com',               name: 'Commenter One',  password: 'user'}),
-    commenterTwo: new User({isAnonymous: false, id: '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', email: 'two@blog.com',               name: 'Commenter Two',  password: 'user'}),
-    banned:       new User({isAnonymous: false, id: '460b2681-7411-4a38-b520-b23e2fac2230', email: 'banned@comentario.app',      name: 'Naughty One',    password: 'test', isBanned: true}),
-    facebookUser: new User({isAnonymous: false, id: '30f5efad-a266-46f2-8108-acbebba991de', email: 'facebook-user@facebook.com', name: 'Facebook User'}),
-    githubUser:   new User({isAnonymous: false, id: '84ba64a4-a723-4bb2-a903-9c89132964f7', email: 'github-user@github.com',     name: 'GitHub User'}),
-    gitlabUser:   new User({isAnonymous: false, id: '820a5748-2033-4cb7-90b4-3a7d1eee4cfd', email: 'gitlab-user@gitlab.com',     name: 'GitLab User'}),
-    googleUser:   new User({isAnonymous: false, id: 'b5962138-7a26-477c-aaea-50a70ef13696', email: 'google-user@google.com',     name: 'Google User'}),
-    linkedinUser: new User({isAnonymous: false, id: '59866240-df40-470b-ab5f-c06fc2ce6dd1', email: 'linkedin-user@linkedin.com', name: 'LinkedIn User'}),
-    twitterUser:  new User({isAnonymous: false, id: '28053af1-612b-4d42-b03d-9e30f42f73c2', email: 'twitter-user@twitter.com',   name: 'Twitter User'}),
-    ssoUser:      new User({isAnonymous: false, id: '683251c4-e70a-4831-b60c-10c564c894a8', email: 'sso-user@example.com',       name: 'SSO User'}),
+    anonymous:    new User({isAnonymous: true,  isSuper: false, id: '00000000-0000-0000-0000-000000000000', email: '',                           name: 'Anonymous'}),
+    root:         new User({isAnonymous: false, isSuper: true,  id: '00000000-0000-0000-0000-000000000001', email: 'root@comentario.app',        name: 'Root',           password: 'test'}),
+    ace:          new User({isAnonymous: false, isSuper: false, id: '5787eece-7aa3-44d7-bbba-51866edc4867', email: 'ace@comentario.app',         name: 'Captain Ace',    password: 'test'}),
+    king:         new User({isAnonymous: false, isSuper: false, id: '2af9ecd2-a32a-4332-8717-396e9af28639', email: 'king@comentario.app',        name: 'Engineer King',  password: 'test'}),
+    queen:        new User({isAnonymous: false, isSuper: false, id: '98732142-bc83-48e0-be92-f6dbd6976702', email: 'queen@comentario.app',       name: 'Cook Queen',     password: 'test'}),
+    jack:         new User({isAnonymous: false, isSuper: false, id: '2d01d8dd-0bb1-4281-850e-e943b9f8128a', email: 'jack@comentario.app',        name: 'Navigator Jack', password: 'test'}),
+    commenterOne: new User({isAnonymous: false, isSuper: false, id: '01d1cb57-d98c-46f6-b270-1198860f642f', email: 'one@blog.com',               name: 'Commenter One',  password: 'user'}),
+    commenterTwo: new User({isAnonymous: false, isSuper: false, id: '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', email: 'two@blog.com',               name: 'Commenter Two',  password: 'user'}),
+    banned:       new User({isAnonymous: false, isSuper: false, id: '460b2681-7411-4a38-b520-b23e2fac2230', email: 'banned@comentario.app',      name: 'Naughty One',    password: 'test', isBanned: true}),
+    facebookUser: new User({isAnonymous: false, isSuper: false, id: '30f5efad-a266-46f2-8108-acbebba991de', email: 'facebook-user@facebook.com', name: 'Facebook User'}),
+    githubUser:   new User({isAnonymous: false, isSuper: false, id: '84ba64a4-a723-4bb2-a903-9c89132964f7', email: 'github-user@github.com',     name: 'GitHub User'}),
+    gitlabUser:   new User({isAnonymous: false, isSuper: false, id: '820a5748-2033-4cb7-90b4-3a7d1eee4cfd', email: 'gitlab-user@gitlab.com',     name: 'GitLab User'}),
+    googleUser:   new User({isAnonymous: false, isSuper: false, id: 'b5962138-7a26-477c-aaea-50a70ef13696', email: 'google-user@google.com',     name: 'Google User'}),
+    linkedinUser: new User({isAnonymous: false, isSuper: false, id: '59866240-df40-470b-ab5f-c06fc2ce6dd1', email: 'linkedin-user@linkedin.com', name: 'LinkedIn User'}),
+    twitterUser:  new User({isAnonymous: false, isSuper: false, id: '28053af1-612b-4d42-b03d-9e30f42f73c2', email: 'twitter-user@twitter.com',   name: 'Twitter User'}),
+    ssoUser:      new User({isAnonymous: false, isSuper: false, id: '683251c4-e70a-4831-b60c-10c564c894a8', email: 'sso-user@example.com',       name: 'SSO User'}),
 };
 
 export enum DYN_CONFIG_ITEMS {
@@ -207,3 +215,24 @@ export const DOMAINS = {
     prison:    {id: '84a766a2-7154-4d7f-8307-20ec9df4fc68', host: 'prison.example.com', name: ''},
     bridge:    {id: '828f1362-37ae-4c8f-83e7-84801f84b6a8', host: 'bridge.example.com', name: ''},
 };
+
+export class Util {
+
+    /**
+     * VisitOptions instance that stubs the clipboard write method so that:
+     * 1. It works even in Chrome, which would normally first ask the user for permissions
+     * 2. It allows to 'read' the copied text afterwards without actually involving the clipboard
+     */
+    static readonly stubWriteText: Partial<Cypress.VisitOptions> = {
+        onBeforeLoad(win: Window): void {
+            cy.stub(win.navigator.clipboard, 'writeText').as('writeText').resolves('');
+        },
+    };
+
+    /**
+     * Return the installation HTML snippet for the given domain host.
+     */
+    static readonly installSnippet = () =>
+        `<script defer src="${Cypress.config().baseUrl}/comentario.js"></script>\n` +
+        '<comentario-comments></comentario-comments>';
+}

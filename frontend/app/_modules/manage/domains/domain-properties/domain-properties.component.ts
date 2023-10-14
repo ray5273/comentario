@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { combineLatestWith, first } from 'rxjs';
-import { faCopy, faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
+import { faCopy, faEdit, faTicket, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DomainExtension, FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
@@ -30,9 +30,10 @@ export class DomainPropertiesComponent implements OnInit {
         `<comentario-comments></comentario-comments>`;
 
     // Icons
-    readonly faCopy   = faCopy;
-    readonly faEdit   = faEdit;
-    readonly faTicket = faTicket;
+    readonly faCopy              = faCopy;
+    readonly faEdit              = faEdit;
+    readonly faTicket            = faTicket;
+    readonly faUpRightFromSquare = faUpRightFromSquare;
 
     constructor(
         private readonly cfgSvc: ConfigService,

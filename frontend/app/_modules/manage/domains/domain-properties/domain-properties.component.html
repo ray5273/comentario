@@ -11,7 +11,8 @@
         <h2 i18n>Installation</h2>
 
         <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
-        <div class="border d-flex flex-wrap flex-md-nowrap justify-content-center justify-content-md-between align-items-center p-3 mb-3">
+        <div id="install-snippet"
+             class="border d-flex flex-wrap flex-md-nowrap justify-content-center justify-content-md-between align-items-center p-3 mb-3">
             <!-- Code snippet -->
             <code class="overflow-hidden m-2"><pre class="mb-0">{{ snippet }}</pre></code>
             <!-- Copy button -->
@@ -45,12 +46,17 @@
         </div>
         <!-- Detail table -->
         <div class="col-sm">
-
             <dl id="domain-detail-table" class="detail-table">
                 <!-- Host -->
                 <div>
                     <dt i18n>Host</dt>
-                    <dd>{{ domain.host }}</dd>
+                    <dd>
+                        <a [href]="domain.rootUrl" target="_blank" rel="nofollow noopener noreferrer"
+                           title="Open in new tab" i18n-title>
+                            <ng-container>{{ domain.host }}</ng-container>
+                            <fa-icon [icon]="faUpRightFromSquare" class="ms-2"></fa-icon>
+                        </a>
+                    </dd>
                 </div>
                 <!-- Name -->
                 <div *ngIf="domain.name as v">
@@ -97,9 +103,11 @@
                             <li *ngIf="domain.authAnonymous" i18n>Anonymous comments</li>
                             <li *ngIf="domain.authLocal" i18n>Local (password-based)</li>
                             <li *ngIf="domain.authSso">
-                                <ng-container i18n>Single Sign-On</ng-container>&ngsp;
-                                <ng-container><i i18n>via</i> {{ domain.ssoUrl }}</ng-container>&ngsp;
-                                <ng-container *ngIf="domain.ssoNonInteractive" i18n>(non-interactive)</ng-container>
+                                <ng-container *ngIf="domain.ssoNonInteractive">
+                                    <ng-container i18n>Non-interactive</ng-container>&ngsp;
+                                </ng-container>
+                                <ng-container>Single Sign-On</ng-container>
+                                <div class="text-truncate"><i i18n>via</i> {{ domain.ssoUrl }}</div>
                             </li>
                             <li *ngFor="let idp of fedIdps">{{ idp.name }}</li>
                         </ul>
