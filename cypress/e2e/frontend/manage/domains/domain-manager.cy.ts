@@ -254,6 +254,7 @@ context('Domain Manager', () => {
             };
 
             // Filtering on "e" returns all domains
+            cy.get('@filterString').should('have.value', '');
             filterOn('e');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@loadMore').click();
@@ -278,6 +279,27 @@ context('Domain Manager', () => {
             // Click a domain
             cy.contains('app-domain-manager #domain-list a', DOMAINS.colour.host).click();
             cy.isAt(PATHS.manage.domains.id(DOMAINS.colour.id).props);
+
+            // Go back to the Domain Manager
+            cy.go('back');
+            cy.isAt(PATHS.manage.domains);
+            cy.get('@filterString').should('have.value', '');
+            filterOn('sItE');
+            cy.get('@domainManager').verifyListFooter(1, false);
+            cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.localhost.host]);
+        });
+    });
+
+    context('Domain Properties page', () => {
+
+        it('shows properties for readonly user', () => {
+            cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.spirit.id).props);
+            cy.get('#domain-detail-table').dlTexts().should('deep.equal', {
+                'Host':                 'spirit.example.com',
+                'Read-only':            '',
+                'Default comment sort': 'Oldest first',
+                'Authentication':       'Anonymous comments\n' + 'Local (password-based)',
+            });
         });
     });
 });

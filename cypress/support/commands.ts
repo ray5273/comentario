@@ -53,9 +53,9 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
 Cypress.Commands.addQuery(
     'commentTree',
     function commentTree(...properties: (keyof Cypress.Comment)[]) {
-        return (element?: HTMLElement) => {
+        return (element?: JQueryWithSelector) => {
             // Collect the comments
-            let cc = $(element as any ?? 'comentario-comments').first()
+            let cc = (element ?? $('comentario-comments')).first()
                 // Find the comment container
                 .find('.comentario-comments')
                 // Recurse into child comments
@@ -116,13 +116,26 @@ Cypress.Commands.add(
 Cypress.Commands.addQuery(
     'texts',
     function texts(selector?: string) {
-        return (element?: HTMLElement) => {
-            if (!(element instanceof HTMLElement) && !selector) {
+        return (element?: JQueryWithSelector) => {
+            if (!element?.jquery && !selector) {
                 throw Error('cy.texts(): either element or selector must be provided.');
             }
-            return (element ? (selector ? $(element).find(selector) : $(element)) : $(selector))
+            return (element ? (selector ? element.find(selector) : element) : $(selector))
                 .map((_, e) => e.innerText)
                 .get();
+        };
+    });
+
+Cypress.Commands.addQuery(
+    'dlTexts',
+    function dlTexts() {
+        return (element: JQueryWithSelector) => {
+            const result: {[dt: string]: string} = {};
+            element.find('dt')
+                .each((_, dt) => {
+                    result[dt.innerText] = (dt.nextSibling as HTMLElement).innerText;
+                });
+            return result;
         };
     });
 

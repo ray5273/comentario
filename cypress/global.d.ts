@@ -87,6 +87,11 @@ declare namespace Cypress {
         texts(selector?: string): Chainable<string[]>;
 
         /**
+         * Collect visible texts of <dt> and <dd> elements of a definition list. Must be chained off a <dl> element.
+         */
+        dlTexts(): Chainable<{[dt: string]: string}>;
+
+        /**
          * Verify the passed element has no invalid feedback.
          */
         isValid(): Chainable<JQueryWithSelector>;
