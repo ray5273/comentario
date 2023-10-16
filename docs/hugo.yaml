@@ -46,6 +46,8 @@ sectionPagesMenu: sidebar
 params:
   description: 'Documentation for Comentario, the powerful commenting tool for web pages.'
   contactAction: 'https://formspree.io/f/mjvqwoaa'
+  # Will replace googleAnalytics for a dev (edge) build
+  googleAnalyticsDev: 'G-03C68PL4NZ'
 
 menu:
   # Will be lowercased in the template
