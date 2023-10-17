@@ -159,7 +159,7 @@ func (svc *userService) Create(u *data.User) error {
 				"ts_banned":      u.BannedTime,
 				"user_banned":    u.UserBanned,
 				"remarks":        u.Remarks,
-				"federated_idp":  u.FederatedIdP,
+				"federated_idp":  u.FederatedIdPNullStr(),
 				"federated_sso":  u.FederatedSSO,
 				"federated_id":   u.FederatedID,
 				"website_url":    u.WebsiteURL,

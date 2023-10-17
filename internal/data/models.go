@@ -271,6 +271,14 @@ func (u *User) ColourIndex() byte {
 	return byte(n % ColourIndexCount)
 }
 
+// FederatedIdPNullStr returns FederatedIdP as a nullable string
+func (u *User) FederatedIdPNullStr() sql.NullString {
+	if u.FederatedIdP == "" {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: u.FederatedIdP, Valid: true}
+}
+
 // IsAnonymous returns whether the user is anonymous
 func (u *User) IsAnonymous() bool {
 	return u.ID == AnonymousUser.ID
