@@ -49,7 +49,7 @@ func InitDB() (*Database, error) {
 	}
 
 	// Run migrations
-	if err := db.Migrate(); err != nil {
+	if err := db.Migrate(""); err != nil {
 		return nil, err
 	}
 
@@ -62,20 +62,6 @@ func (db *Database) Dialect() goqu.DialectWrapper {
 	return goqu.Dialect("postgres")
 }
 
-// Exec executes the provided statement against the database
-func (db *Database) Exec(query string, args ...any) error {
-	_, err := db.ExecRes(query, args...)
-	return err
-}
-
-// ExecRes executes the provided statement against the database and returns its result
-func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
-	if db.debug {
-		logger.Debugf("db.ExecRes()\n - SQL: %s\n - Args: %#v", query, args)
-	}
-	return db.db.Exec(query, args...)
-}
-
 // Execute executes the provided goqu expression against the database
 func (db *Database) Execute(e exp.SQLExpression) error {
 	_, err := db.ExecuteRes(e)
@@ -84,6 +70,7 @@ func (db *Database) Execute(e exp.SQLExpression) error {
 
 // ExecuteOne executes the provided goqu expression against the database and verifies there's exactly one row affected
 func (db *Database) ExecuteOne(e exp.SQLExpression) error {
+	// Convert the expression into SQL and params
 	eSQL, eParams, err := e.ToSQL()
 	if err != nil {
 		return err
@@ -91,7 +78,7 @@ func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 
 	// Debug logging, if activated
 	if db.debug {
-		logger.Debugf("db.ExecOne()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
+		logger.Debugf("db.ExecuteOne()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
 	}
 
 	// Run the statement
@@ -111,15 +98,23 @@ func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 
 // ExecuteRes executes the provided goqu expression against the database and returns its result
 func (db *Database) ExecuteRes(e exp.SQLExpression) (sql.Result, error) {
-	if eSQL, eParams, err := e.ToSQL(); err != nil {
+	// Convert the expression into SQL and params
+	eSQL, eParams, err := e.ToSQL()
+	if err != nil {
 		return nil, err
-	} else {
-		return db.ExecRes(eSQL, eParams...)
 	}
+
+	// Debug logging, if activated
+	if db.debug {
+		logger.Debugf("db.ExecuteRes()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
+	}
+
+	// Execute the statement
+	return db.db.Exec(eSQL, eParams...)
 }
 
-// Migrate installs necessary migrations
-func (db *Database) Migrate() error {
+// Migrate installs necessary migrations, and, optionally the passed seed SQL
+func (db *Database) Migrate(seed string) error {
 	// Read available migrations
 	available, err := db.getAvailableMigrations()
 
@@ -148,9 +143,17 @@ func (db *Database) Migrate() error {
 		// If something was actually done
 		if status != "" {
 			// Add a log record, logging any error to the console
-			if dbErr := db.Exec(
-				"insert into cm_migration_log(filename, md5_expected, md5_actual, status, error_text) values($1, $2, $3, $4, $5);",
-				filename, util.MD5ToHex(csExpected), util.MD5ToHex(&csActual), status, errMsg,
+			if dbErr := db.ExecuteOne(
+				db.Dialect().
+					Insert("cm_migration_log").
+					Rows(goqu.Record{
+						"filename":     filename,
+						"md5_expected": util.MD5ToHex(csExpected),
+						"md5_actual":   util.MD5ToHex(&csActual),
+						"status":       status,
+						"error_text":   errMsg,
+					}).
+					Prepared(true),
 			); dbErr != nil {
 				logger.Errorf("Failed to add migration log record for '%s' (status '%s'): %v", filename, status, dbErr)
 			}
@@ -162,10 +165,17 @@ func (db *Database) Migrate() error {
 		}
 
 		// Migration processed successfully: register it in the database, updating the checksum if necessary
-		if err := db.Exec(
-			"insert into cm_migrations(filename, md5) values ($1, $2) "+
-				"on conflict (filename) do update set md5=$2, ts_installed=current_timestamp;",
-			filename, util.MD5ToHex(&csActual),
+		if err := db.ExecuteOne(
+			db.Dialect().
+				Insert("cm_migrations").
+				Rows(goqu.Record{
+					"filename": filename,
+					"md5":      util.MD5ToHex(&csActual),
+				}).
+				OnConflict(goqu.DoUpdate(
+					"filename",
+					goqu.Record{"md5": util.MD5ToHex(&csActual), "ts_installed": time.Now().UTC()})).
+				Prepared(true),
 		); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
 		}
@@ -181,6 +191,15 @@ func (db *Database) Migrate() error {
 	} else {
 		logger.Infof("No new migrations found")
 	}
+
+	// Install seed SQL, if any
+	if seed != "" {
+		if _, err := db.db.Exec(seed); err != nil {
+			return err
+		}
+	}
+
+	// Succeeded
 	return nil
 }
 
@@ -198,6 +217,22 @@ func (db *Database) QueryRow(query string, args ...any) *sql.Row {
 		logger.Debugf("db.QueryRow()\n - SQL: %s\n - Args: %#v", query, args)
 	}
 	return db.db.QueryRow(query, args...)
+}
+
+// RecreateSchema drops and recreates the public schema
+func (db *Database) RecreateSchema() error {
+	logger.Debug("db.RecreateSchema()")
+
+	// Drop the public schema
+	if _, err := db.db.Exec("drop schema public cascade"); err != nil {
+		return err
+	}
+
+	// Create the public schema
+	if _, err := db.db.Exec("create schema public"); err != nil {
+		return err
+	}
+	return nil
 }
 
 // Select executes the provided goqu query against the database
@@ -410,7 +445,7 @@ func (db *Database) installMigration(filename string, csExpected *[16]byte) (csA
 		// The checksum is different
 		errMsg := fmt.Sprintf("checksum mismatch for migration '%s': expected %x, actual %x", fullName, *csExpected, csActual)
 
-		// Check the metadata setting
+		// Check the metadata settingbe: git rid of literal SQL
 		switch metadata["onChecksumMismatch"] {
 		// Fail is the default
 		case "", "fail":
@@ -441,7 +476,7 @@ func (db *Database) installMigration(filename string, csExpected *[16]byte) (csA
 
 	// Run the content of the file
 	logger.Debugf("Installing migration '%s'", filename)
-	if err = db.Exec(string(contents)); err != nil {
+	if _, err = db.db.Exec(string(contents)); err != nil {
 		// #EXIT# is a special marker in the exception, which means script graciously exited
 		if strings.Contains(err.Error(), "#EXIT#") {
 			logger.Debugf("Migration script has successfully exited with: %v", err)

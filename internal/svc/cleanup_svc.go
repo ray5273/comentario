@@ -1,6 +1,8 @@
 package svc
 
 import (
+	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
@@ -28,8 +30,10 @@ func (svc *cleanupService) cleanupExpiredAuthSessions() {
 	for svc.runLogSleep(
 		time.Hour,
 		"expired auth sessions",
-		"delete from cm_auth_sessions where ts_expires<$1;",
-		time.Now().UTC(),
+		db.Dialect().
+			Delete("cm_auth_sessions").
+			Where(goqu.I("ts_expires").Lt(time.Now().UTC())).
+			Prepared(true),
 	) == nil {
 	}
 }
@@ -40,8 +44,10 @@ func (svc *cleanupService) cleanupExpiredTokens() {
 	for svc.runLogSleep(
 		time.Hour,
 		"expired tokens",
-		"delete from cm_tokens where ts_expires<$1;",
-		time.Now().UTC(),
+		db.Dialect().
+			Delete("cm_tokens").
+			Where(goqu.I("ts_expires").Lt(time.Now().UTC())).
+			Prepared(true),
 	) == nil {
 	}
 }
@@ -52,8 +58,10 @@ func (svc *cleanupService) cleanupExpiredUserSessions() {
 	for svc.runLogSleep(
 		util.OneDay,
 		"expired user sessions",
-		"delete from cm_user_sessions where ts_expires<$1;",
-		time.Now().UTC(),
+		db.Dialect().
+			Delete("cm_user_sessions").
+			Where(goqu.I("ts_expires").Lt(time.Now().UTC())).
+			Prepared(true),
 	) == nil {
 	}
 }
@@ -64,16 +72,18 @@ func (svc *cleanupService) cleanupStalePageViews() {
 	for svc.runLogSleep(
 		util.OneDay,
 		"stale page views",
-		"delete from cm_domain_page_views where ts_created<$1;",
-		time.Now().UTC().Add(-util.PageViewRetentionPeriod),
+		db.Dialect().
+			Delete("cm_domain_page_views").
+			Where(goqu.I("ts_created").Lt(time.Now().UTC().Add(-util.PageViewRetentionPeriod))).
+			Prepared(true),
 	) == nil {
 	}
 }
 
 // runLogSleep runs the provided cleanup query, logs the outcome, then sleeps for the given duration
-func (svc *cleanupService) runLogSleep(interval time.Duration, entity, query string, args ...any) error {
-	if res, err := db.ExecRes(query, args...); err != nil {
-		logger.Errorf("cleanupService.runLogSleep: Exec() failed for %s: %v", entity, err)
+func (svc *cleanupService) runLogSleep(interval time.Duration, entity string, e exp.SQLExpression) error {
+	if res, err := db.ExecuteRes(e); err != nil {
+		logger.Errorf("cleanupService.runLogSleep: ExecuteRes() failed for %s: %v", entity, err)
 		return err
 	} else if i, err := res.RowsAffected(); err == nil && i > 0 {
 		logger.Debugf("cleanupService: deleted %d %s", i, entity)

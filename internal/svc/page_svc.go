@@ -397,14 +397,23 @@ func (svc *pageService) insertPageView(page data.DomainPage, req *http.Request) 
 	ua := uasurfer.Parse(util.UserAgent(req))
 
 	// Register the visit
-	err := db.Exec(
-		"insert into cm_domain_page_views("+
-			"page_id, ts_created, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)",
-		&page.ID, time.Now().UTC(), req.Proto, ip, country, ua.Browser.Name.StringTrimPrefix(),
-		util.FormatVersion(&ua.Browser.Version), ua.OS.Name.StringTrimPrefix(), util.FormatVersion(&ua.OS.Version),
-		ua.DeviceType.StringTrimPrefix())
-	if err != nil {
-		logger.Errorf("pageService.insertPageView: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Insert("cm_domain_page_views").
+			Rows(goqu.Record{
+				"page_id":            &page.ID,
+				"ts_created":         time.Now().UTC(),
+				"proto":              req.Proto,
+				"ip":                 ip,
+				"country":            country,
+				"ua_browser_name":    ua.Browser.Name.StringTrimPrefix(),
+				"ua_browser_version": util.FormatVersion(&ua.Browser.Version),
+				"ua_os_name":         ua.OS.Name.StringTrimPrefix(),
+				"ua_os_version":      util.FormatVersion(&ua.OS.Version),
+				"ua_device":          ua.DeviceType.StringTrimPrefix(),
+			}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("pageService.insertPageView: ExecuteOne() failed: %v", err)
 	}
 }

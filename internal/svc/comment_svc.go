@@ -577,9 +577,14 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	logger.Debugf("commentService.UpdateSticky(%s, %v)", commentID, sticky)
 
 	// Update the row in the database
-	q := db.Dialect().Update("cm_comments").Set(goqu.Record{"is_sticky": sticky}).Where(goqu.Ex{"id": commentID})
-	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
-		logger.Errorf("commentService.UpdateSticky: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_comments").
+			Set(goqu.Record{"is_sticky": sticky}).
+			Where(goqu.Ex{"id": commentID}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("commentService.UpdateSticky: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -595,9 +600,10 @@ func (svc *commentService) UpdateText(commentID *uuid.UUID, markdown, html strin
 		db.Dialect().
 			Update("cm_comments").
 			Set(goqu.Record{"markdown": markdown, "html": html}).
-			Where(goqu.Ex{"id": commentID}),
+			Where(goqu.Ex{"id": commentID}).
+			Prepared(true),
 	); err != nil {
-		logger.Errorf("commentService.UpdateText: Exec() failed: %v", err)
+		logger.Errorf("commentService.UpdateText: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -636,9 +642,11 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 	inc := 0
 	if !neg.Valid {
 		// No vote exists, an insert is needed
-		err = db.Exec(
-			"insert into cm_comment_votes(comment_id, user_id, negative, ts_voted) values($1, $2, $3, $4);",
-			commentID, userID, direction < 0, time.Now().UTC())
+		err = db.ExecuteOne(
+			db.Dialect().
+				Insert("cm_comment_votes").
+				Rows(goqu.Record{"comment_id": commentID, "user_id": userID, "negative": direction < 0, "ts_voted": time.Now().UTC()}).
+				Prepared(true))
 		if direction < 0 {
 			inc = -1
 		} else {

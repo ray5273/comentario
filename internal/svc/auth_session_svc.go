@@ -2,6 +2,7 @@ package svc
 
 import (
 	"encoding/hex"
+	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
 	"time"
@@ -30,11 +31,20 @@ func (svc *authSessionService) Create(sessData, host string, token []byte) (*dat
 	as := data.NewAuthSession(sessData, host, token)
 
 	// Persist the session
-	err := db.Exec(
-		"insert into cm_auth_sessions(id, token_value, data, host, ts_created, ts_expires) values($1, $2, $3, $4, $5, $6);",
-		&as.ID, hex.EncodeToString(as.TokenValue), as.Data, as.Host, as.CreatedTime, as.ExpiresTime)
-	if err != nil {
-		logger.Errorf("authSessionService.Create: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Insert("cm_auth_sessions").
+			Rows(goqu.Record{
+				"id":          &as.ID,
+				"token_value": hex.EncodeToString(as.TokenValue),
+				"data":        as.Data,
+				"host":        as.Host,
+				"ts_created":  as.CreatedTime,
+				"ts_expires":  as.ExpiresTime,
+			}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("authSessionService.Create: ExecuteOne() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 

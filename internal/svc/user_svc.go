@@ -137,18 +137,37 @@ func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
 	// Insert a new record
-	err := db.Exec(
-		"insert into cm_users("+
-			"id, email, name, lang_id, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, "+
-			"user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, "+
-			"federated_idp, federated_sso, federated_id, website_url, secret_token) "+
-			"values("+
-			"$1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, nullif($19, ''), $20, $21, $22, $23);",
-		u.ID, u.Email, u.Name, u.LangID, u.PasswordHash, u.SystemAccount, u.IsSuperuser, u.Confirmed, u.ConfirmedTime,
-		u.CreatedTime, u.UserCreated, config.MaskIP(u.SignupIP), u.SignupCountry, u.SignupHost, u.Banned, u.BannedTime,
-		u.UserBanned, u.Remarks, u.FederatedIdP, u.FederatedSSO, u.FederatedID, u.WebsiteURL, u.SecretToken)
-	if err != nil {
-		logger.Errorf("userService.Create: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Insert("cm_users").
+			Rows(goqu.Record{
+				"id":             u.ID,
+				"email":          u.Email,
+				"name":           u.Name,
+				"lang_id":        u.LangID,
+				"password_hash":  u.PasswordHash,
+				"system_account": u.SystemAccount,
+				"is_superuser":   u.IsSuperuser,
+				"confirmed":      u.Confirmed,
+				"ts_confirmed":   u.ConfirmedTime,
+				"ts_created":     u.CreatedTime,
+				"user_created":   u.UserCreated,
+				"signup_ip":      config.MaskIP(u.SignupIP),
+				"signup_country": u.SignupCountry,
+				"signup_host":    u.SignupHost,
+				"banned":         u.Banned,
+				"ts_banned":      u.BannedTime,
+				"user_banned":    u.UserBanned,
+				"remarks":        u.Remarks,
+				"federated_idp":  u.FederatedIdP,
+				"federated_sso":  u.FederatedSSO,
+				"federated_id":   u.FederatedID,
+				"website_url":    u.WebsiteURL,
+				"secret_token":   u.SecretToken,
+			}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("userService.Create: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -160,15 +179,27 @@ func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	logger.Debugf("userService.CreateUserSession(%#v)", s)
 
 	// Insert a new record
-	err := db.Exec(
-		"insert into cm_user_sessions("+
-			"id, user_id, ts_created, ts_expires, host, proto, ip, country, ua_browser_name, ua_browser_version, "+
-			"ua_os_name, ua_os_version, ua_device) "+
-			"values($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13);",
-		s.ID, s.UserID, s.CreatedTime, s.ExpiresTime, s.Host, s.Proto, config.MaskIP(s.IP), s.Country, s.BrowserName,
-		s.BrowserVersion, s.OSName, s.OSVersion, s.Device)
-	if err != nil {
-		logger.Errorf("userService.CreateUserSession: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Insert("cm_user_sessions").
+			Rows(goqu.Record{
+				"id":                 s.ID,
+				"user_id":            s.UserID,
+				"ts_created":         s.CreatedTime,
+				"ts_expires":         s.ExpiresTime,
+				"host":               s.Host,
+				"proto":              s.Proto,
+				"ip":                 config.MaskIP(s.IP),
+				"country":            s.Country,
+				"ua_browser_name":    s.BrowserName,
+				"ua_browser_version": s.BrowserVersion,
+				"ua_os_name":         s.OSName,
+				"ua_os_version":      s.OSVersion,
+				"ua_device":          s.Device,
+			}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("userService.CreateUserSession: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -198,8 +229,8 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserSession(%s)", id)
 
 	// Delete the record
-	if err := db.Exec("delete from cm_user_sessions where id=$1;", id); err != nil {
-		logger.Errorf("userService.DeleteUserSession: Exec() failed: %v", err)
+	if err := db.ExecuteOne(db.Dialect().Delete("cm_user_sessions").Where(goqu.Ex{"id": id}).Prepared(true)); err != nil {
+		logger.Errorf("userService.DeleteUserSession: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

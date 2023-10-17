@@ -81,8 +81,8 @@ type domainService struct{}
 func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.ClearByID(%s)", id)
 
-	if err := db.Exec("delete from cm_domain_pages where domain_id=$1;", id); err != nil {
-		logger.Errorf("domainService.ClearByID: Exec() failed: %v", err)
+	if err := db.Execute(db.Dialect().Delete("cm_domain_pages").Where(goqu.Ex{"domain_id": id}).Prepared(true)); err != nil {
+		logger.Errorf("domainService.ClearByID: Execute() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -178,10 +178,8 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.DeleteByID(%s)", id)
-
-	err := db.Exec("delete from cm_domains where id=$1;", id)
-	if err != nil {
-		logger.Errorf("domainService.DeleteByID: Exec() failed: %v", err)
+	if err := db.ExecuteOne(db.Dialect().Delete("cm_domains").Where(goqu.Ex{"id": id}).Prepared(true)); err != nil {
+		logger.Errorf("domainService.DeleteByID: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -320,8 +318,8 @@ func (svc *domainService) GenerateSSOSecret(domainID *uuid.UUID) (string, error)
 
 	// Update the domain record
 	ss := d.SSOSecretStr()
-	if err := db.Exec("update cm_domains set sso_secret=$1 where id=$2;", ss, &d.ID); err != nil {
-		logger.Errorf("domainService.GenerateSSOSecret: Exec() failed: %v", err)
+	if err := db.ExecuteOne(db.Dialect().Update("cm_domains").Set(goqu.Record{"sso_secret": ss}).Where(goqu.Ex{"id": &d.ID}).Prepared(true)); err != nil {
+		logger.Errorf("domainService.GenerateSSOSecret: ExecuteOne() failed: %v", err)
 		return "", translateDBErrors(err)
 	}
 

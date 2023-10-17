@@ -35,11 +35,19 @@ func (svc *tokenService) Create(t *data.Token) error {
 	logger.Debugf("tokenService.Create(%v)", t)
 
 	// Insert a new record
-	err := db.Exec(
-		"insert into cm_tokens(value, user_id, scope, ts_expires, multiuse) values($1, $2, $3, $4, $5)",
-		t.String(), t.Owner, t.Scope, t.ExpiresTime, t.Multiuse)
-	if err != nil {
-		logger.Errorf("tokenService.Create: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Insert("cm_tokens").
+			Rows(goqu.Record{
+				"value":      t.String(),
+				"user_id":    t.Owner,
+				"scope":      t.Scope,
+				"ts_expires": t.ExpiresTime,
+				"multiuse":   t.Multiuse,
+			}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("tokenService.Create: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

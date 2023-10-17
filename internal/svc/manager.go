@@ -39,17 +39,12 @@ func (m *manager) E2eRecreateDBSchema(seedSQL string) error {
 	}
 
 	// Drop and recreate the public schema
-	if err := db.Exec("drop schema public cascade; create schema public;"); err != nil {
+	if err := db.RecreateSchema(); err != nil {
 		return err
 	}
 
-	// Install DB migrations
-	if err := db.Migrate(); err != nil {
-		return err
-	}
-
-	// Insert seed data
-	if err := db.Exec(seedSQL); err != nil {
+	// Install DB migrations and the seed
+	if err := db.Migrate(seedSQL); err != nil {
 		return err
 	}
 
