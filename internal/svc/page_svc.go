@@ -118,8 +118,14 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 	}
 
 	// Update the page in the database
-	if err := db.ExecOne("update cm_domain_pages set title=$1 where id=$2", title, &page.ID); err != nil {
-		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecOne() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_domain_pages").
+			Set(goqu.Record{"title": title}).
+			Where(goqu.Ex{"id": &page.ID}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecuteOne() failed: %v", err)
 		return false, err
 	}
 
@@ -170,11 +176,17 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 	logger.Debugf("pageService.IncrementCounts(%s, %d, %d)", pageID, incComments, incViews)
 
 	// Update the page record
-	if err := db.ExecOne(
-		"update cm_domain_pages set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
-		incComments, incViews, pageID,
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_domain_pages").
+			Set(goqu.Record{
+				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
+				"count_views":    goqu.L("? + ?", goqu.I("count_views"), incViews),
+			}).
+			Where(goqu.Ex{"id": pageID}).
+			Prepared(true),
 	); err != nil {
-		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
+		logger.Errorf("pageService.IncrementCounts: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -320,8 +332,14 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 	logger.Debugf("pageService.UpdateReadonly(%#v)", page)
 
 	// Update the page record
-	if err := db.ExecOne("update cm_domain_pages set is_readonly=$1 where id=$2", page.IsReadonly, &page.ID); err != nil {
-		logger.Errorf("pageService.UpdateReadonly: ExecOne() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_domain_pages").
+			Set(goqu.Record{"is_readonly": page.IsReadonly}).
+			Where(goqu.Ex{"id": &page.ID}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("pageService.UpdateReadonly: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

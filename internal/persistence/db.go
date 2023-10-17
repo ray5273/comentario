@@ -68,23 +68,6 @@ func (db *Database) Exec(query string, args ...any) error {
 	return err
 }
 
-// ExecOne executes the provided statement against the database and verifies there's exactly one row affected
-func (db *Database) ExecOne(query string, args ...any) error {
-	if db.debug {
-		logger.Debugf("db.ExecOne()\n - SQL: %s\n - Args: %#v", query, args)
-	}
-	if res, err := db.db.Exec(query, args...); err != nil {
-		return err
-	} else if cnt, err := res.RowsAffected(); err != nil {
-		return fmt.Errorf("RowsAffected() failed: %v", err)
-	} else if cnt == 0 {
-		return sql.ErrNoRows
-	} else if cnt != 1 {
-		return fmt.Errorf("statement affected %d rows, want 1", cnt)
-	}
-	return nil
-}
-
 // ExecRes executes the provided statement against the database and returns its result
 func (db *Database) ExecRes(query string, args ...any) (sql.Result, error) {
 	if db.debug {
@@ -101,11 +84,29 @@ func (db *Database) Execute(e exp.SQLExpression) error {
 
 // ExecuteOne executes the provided goqu expression against the database and verifies there's exactly one row affected
 func (db *Database) ExecuteOne(e exp.SQLExpression) error {
-	if eSQL, eParams, err := e.ToSQL(); err != nil {
+	eSQL, eParams, err := e.ToSQL()
+	if err != nil {
 		return err
-	} else {
-		return db.ExecOne(eSQL, eParams...)
 	}
+
+	// Debug logging, if activated
+	if db.debug {
+		logger.Debugf("db.ExecOne()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
+	}
+
+	// Run the statement
+	if res, err := db.db.Exec(eSQL, eParams...); err != nil {
+		return err
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("RowsAffected() failed: %v", err)
+	} else if cnt == 0 {
+		return sql.ErrNoRows
+	} else if cnt != 1 {
+		return fmt.Errorf("statement affected %d rows, want 1", cnt)
+	}
+
+	// Succeeded
+	return nil
 }
 
 // ExecuteRes executes the provided goqu expression against the database and returns its result

@@ -96,7 +96,7 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 	if r == nil {
 		// If a database record exists, delete it
 		if ua != nil {
-			if err = db.ExecOne("delete from cm_user_avatars where user_id=$1;", userID); err != nil {
+			if err = db.ExecuteOne(db.Dialect().Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID}).Prepared(true)); err != nil {
 				return err
 			}
 		}
@@ -109,11 +109,18 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 		}
 
 		// Update the database record
-		if err = db.ExecOne(
-			"update cm_user_avatars "+
-				"set ts_updated=$1, is_custom=$2, avatar_s=$3, avatar_m=$4, avatar_l=$5 "+
-				"where user_id=$6;",
-			time.Now().UTC(), isCustom, ua.AvatarS, ua.AvatarM, ua.AvatarL, userID,
+		if err = db.ExecuteOne(
+			db.Dialect().
+				Update("cm_user_avatars").
+				Set(goqu.Record{
+					"ts_updated": time.Now().UTC(),
+					"is_custom":  isCustom,
+					"avatar_s":   ua.AvatarS,
+					"avatar_m":   ua.AvatarM,
+					"avatar_l":   ua.AvatarL,
+				}).
+				Where(goqu.Ex{"user_id": userID}).
+				Prepared(true),
 		); err != nil {
 			return err
 		}
@@ -128,10 +135,18 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 		}
 
 		// Insert a new avatar database record
-		if err = db.ExecOne(
-			"insert into cm_user_avatars(user_id, ts_updated, is_custom, avatar_s, avatar_m, avatar_l) "+
-				"values($1, $2, $3, $4, $5, $6);",
-			ua.UserID, ua.UpdatedTime, ua.IsCustom, ua.AvatarS, ua.AvatarM, ua.AvatarL,
+		if err = db.ExecuteOne(
+			db.Dialect().
+				Insert("cm_user_avatars").
+				Rows(goqu.Record{
+					"user_id":    &ua.UserID,
+					"ts_updated": ua.UpdatedTime,
+					"is_custom":  ua.IsCustom,
+					"avatar_s":   ua.AvatarS,
+					"avatar_m":   ua.AvatarM,
+					"avatar_l":   ua.AvatarL,
+				}).
+				Prepared(true),
 		); err != nil {
 			return err
 		}

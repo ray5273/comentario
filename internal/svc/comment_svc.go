@@ -647,7 +647,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 
 	} else if direction == 0 {
 		// Vote exists and must be removed
-		err = db.ExecOne("delete from cm_comment_votes where comment_id=$1 and user_id=$2;", commentID, userID)
+		err = db.ExecuteOne(db.Dialect().Delete("cm_comment_votes").Where(goqu.Ex{"comment_id": commentID, "user_id": userID}).Prepared(true))
 		if neg.Bool {
 			inc = 1
 		} else {
@@ -656,8 +656,13 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 
 	} else {
 		// Vote exists and must be updated
-		err = db.ExecOne("update cm_comment_votes set negative=$1, ts_voted=$2 where comment_id=$3 and user_id=$4;",
-			direction < 0, time.Now().UTC(), commentID, userID)
+		err = db.ExecuteOne(
+			db.Dialect().
+				Update("cm_comment_votes").
+				Set(goqu.Record{"negative": direction < 0, "ts_voted": time.Now().UTC()}).
+				Where(goqu.Ex{"comment_id": commentID, "user_id": userID}).
+				Prepared(true),
+		)
 		if neg.Bool {
 			inc = 2
 		} else {
@@ -669,7 +674,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 	}
 
 	// Update the comment score
-	if err := db.ExecOne("update cm_comments set score=score+$1 where id=$2;", inc, commentID); err != nil {
+	if err := db.ExecuteOne(db.Dialect().Update("cm_comments").Set(goqu.Record{"score": score + inc}).Where(goqu.Ex{"id": commentID}).Prepared(true)); err != nil {
 		return 0, translateDBErrors(err)
 	}
 

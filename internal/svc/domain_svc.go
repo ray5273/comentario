@@ -333,11 +333,17 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	logger.Debugf("domainService.IncrementCounts(%s, %d, %d)", domainID, incComments, incViews)
 
 	// Update the domain record
-	if err := db.ExecOne(
-		"update cm_domains set count_comments=count_comments+$1, count_views=count_views+$2 where id=$3;",
-		incComments, incViews, domainID,
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_domains").
+			Set(goqu.Record{
+				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
+				"count_views":    goqu.L("? + ?", goqu.I("count_views"), incViews),
+			}).
+			Where(goqu.Ex{"id": domainID}).
+			Prepared(true),
 	); err != nil {
-		logger.Errorf("domainService.IncrementCounts: ExecOne() failed: %v", err)
+		logger.Errorf("domainService.IncrementCounts: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

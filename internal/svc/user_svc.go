@@ -85,8 +85,14 @@ func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	}
 
 	// Update the owner's record
-	if err := db.ExecOne("update cm_users set confirmed=true, ts_confirmed=$1 where id=$2;", time.Now().UTC(), id); err != nil {
-		logger.Errorf("userService.ConfirmUser: ExecOne() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_users").
+			Set(goqu.Record{"confirmed": true, "ts_confirmed": time.Now().UTC()}).
+			Where(goqu.Ex{"id": id}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("userService.ConfirmUser: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

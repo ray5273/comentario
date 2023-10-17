@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/hex"
 	"errors"
+	"github.com/doug-martin/goqu/v9"
 	"gitlab.com/comentario/comentario/internal/data"
 	"time"
 )
@@ -50,12 +51,13 @@ func (svc *tokenService) DeleteByValue(value []byte) error {
 	logger.Debugf("tokenService.DeleteByValue(%x)", value)
 
 	// Delete the record
-	if err := db.ExecOne("delete from cm_tokens where value=$1", hex.EncodeToString(value)); errors.Is(err, sql.ErrNoRows) {
+	err := db.ExecuteOne(db.Dialect().Delete("cm_tokens").Where(goqu.Ex{"value": hex.EncodeToString(value)}).Prepared(true))
+	if errors.Is(err, sql.ErrNoRows) {
 		// No rows affected
 		return ErrBadToken
 	} else if err != nil {
 		// Any other error
-		logger.Errorf("tokenService.DeleteByValue: ExecOne() failed: %v", err)
+		logger.Errorf("tokenService.DeleteByValue: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -105,11 +107,14 @@ func (svc *tokenService) Update(t *data.Token) error {
 	logger.Debugf("tokenService.Update(%v)", t)
 
 	// Insert a new record
-	err := db.ExecOne(
-		"update cm_tokens set user_id=$1, scope=$2, ts_expires=$3, multiuse=$4 where value=$5",
-		t.Owner, t.Scope, t.ExpiresTime, t.Multiuse, t.String())
-	if err != nil {
-		logger.Errorf("tokenService.Update: Exec() failed: %v", err)
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_tokens").
+			Set(goqu.Record{"user_id": t.Owner, "scope": t.Scope, "ts_expires": t.ExpiresTime, "multiuse": t.Multiuse}).
+			Where(goqu.Ex{"value": t.String()}).
+			Prepared(true),
+	); err != nil {
+		logger.Errorf("tokenService.Update: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
