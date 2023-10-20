@@ -3,15 +3,18 @@ workflow:
     - if: $CI_COMMIT_TAG
       variables:
         VERSION: "$CI_COMMIT_TAG"
+        ENV_HOST: comentario.app
 
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         VERSION: "$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA"
+        ENV_HOST: edge.comentario.app
 
 stages:
   - build
   - package
   - deploy
+  - post-deploy
   - release
 
 variables:
@@ -308,6 +311,25 @@ deploy-tag:
         --timeout 2m
         comentario-app
         resources/helm/comentario
+
+smoke-test:
+  stage: post-deploy
+  rules:
+    # Only makes sense if deploy has run
+    - if: $CI_COMMIT_BRANCH == "dev"
+    - if: $CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /rc/i
+  image: curlimages/curl:latest
+  dependencies: []  # Do not download any artifacts
+  script:
+    # Check function. Synopsis: checkRedirect <URL> <Expected Location>
+    - |
+      checkRedirect() {
+        curl -fisS "$1" | grep -i 'Location:' | tr -d '\r' | cut -d ' ' -f 2 | grep -Fx "$2"
+      }
+
+    # Check basic redirections
+    - checkRedirect http://$ENV_HOST/  https://$ENV_HOST/
+    - checkRedirect https://$ENV_HOST/ /en/
 
 release:
   stage: release
