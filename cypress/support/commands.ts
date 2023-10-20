@@ -114,6 +114,12 @@ Cypress.Commands.add(
         cy.wrap(element).invoke('val', s).trigger('input').trigger('change').wrap(element));
 
 Cypress.Commands.addQuery(
+    'hasClass',
+    function texts(className?: string) {
+        return (elements: JQueryWithSelector) => elements.map((_, e) => e.classList.contains(className)).get();
+    });
+
+Cypress.Commands.addQuery(
     'texts',
     function texts(selector?: string) {
         return (element?: JQueryWithSelector) => {
@@ -305,7 +311,7 @@ Cypress.Commands.add(
 Cypress.Commands.add(
     'verifyRedirectsAfterLogin',
     {prevSubject: false},
-    (path: string, user: Cypress.User) => {
+    (path: string, user: Cypress.User, redirectPath?: string) => {
         // Try to visit the path
         cy.visit(path);
 
@@ -313,7 +319,7 @@ Cypress.Commands.add(
         cy.isAt(PATHS.auth.login);
 
         // Login with the given user, and we're redirected back
-        cy.login(user, {goTo: false, redirectPath: path});
+        cy.login(user, {goTo: false, redirectPath: redirectPath ?? path});
     });
 
 Cypress.Commands.add(
@@ -330,6 +336,9 @@ Cypress.Commands.add(
 
         // Reload the page
         cy.reload();
+
+        // Wait for hte app to settle
+        cy.wait(100);
 
         // Verify we're still on the same page
         cy.isAt(path);

@@ -81,6 +81,12 @@ declare namespace Cypress {
         setValue(s: string): Chainable<JQueryWithSelector>;
 
         /**
+         * Tests every element passed as subject whether they have the specified class, and returns the result as a
+         * boolean[].
+         */
+        hasClass(className: string): Chainable<boolean[]>;
+
+        /**
          * Collect visible texts of all child elements or all elements matching the selector and return them as a string
          * array. Must either be used as a child command, or be given a selector (or both).
          */
@@ -189,8 +195,9 @@ declare namespace Cypress {
          * back to that path.
          * @param path Path to verify.
          * @param user User to login as.
+         * @param redirectPath Real redirect path. Defaults to `path`.
          */
-        verifyRedirectsAfterLogin(path: string, user: User): Chainable<void>;
+        verifyRedirectsAfterLogin(path: string, user: User, redirectPath?: string): Chainable<void>;
 
         /**
          * Verify the application stays on the provided page after a reload.

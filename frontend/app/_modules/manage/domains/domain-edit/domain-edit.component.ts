@@ -202,6 +202,14 @@ export class DomainEditComponent implements OnInit {
         }
     }
 
+    /**
+     * Get a HTML-safe ID for an extension. Replaces all dots with hyphens.
+     * @param ext Extension to get ID for.
+     */
+    getExtId(ext: DomainExtension): string {
+        return `extension-${ext.id.replaceAll('.', '-')}`;
+    }
+
     private initForm(): Observable<void> {
         // Fetch known extensions
         return this.cfgSvc.extensions
@@ -214,8 +222,8 @@ export class DomainEditComponent implements OnInit {
                     // Create the form
                     const f = this.fb.nonNullable.group({
                         // Host can't be changed for an existing domain
-                        host:              [{value: '', disabled: !this.isNew}, [XtraValidators.host]],
-                        name:              '',
+                        host:              [{value: '', disabled: !this.isNew}, [Validators.minLength(1), Validators.maxLength(259), XtraValidators.host]],
+                        name:              ['', [Validators.maxLength(255)]],
                         isReadonly:        false,
                         authAnonymous:     false,
                         authLocal:         true,
@@ -230,7 +238,7 @@ export class DomainEditComponent implements OnInit {
                         modImages:         true,
                         modLinks:          true,
                         modNotifyPolicy:   DomainModNotifyPolicy.Pending,
-                        ssoUrl:            ['', [Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
+                        ssoUrl:            ['', [Validators.minLength(1), Validators.maxLength(2084), Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
                         defaultSort:       CommentSort.Td,
                         fedIdps:           this.fb.array(Array(this.fedIdps?.length).fill(true)), // Enable all by default
                         extensions:        this.getExtensionsFormGroup(),
@@ -267,7 +275,7 @@ export class DomainEditComponent implements OnInit {
                         // Disabled by default
                         enabled: false,
                         // Config defaults to the extension default
-                        config:  {value: ex.config, disabled: true},
+                        config:  [{value: ex.config, disabled: true}, [Validators.maxLength(4096)]],
                     });
                     return acc;
                 },

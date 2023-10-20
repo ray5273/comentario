@@ -29,7 +29,7 @@
                             <input formControlName="host" type="text" class="form-control" id="host"
                                    [class.is-valid]="isNew && form.controls.host.touched && form.controls.host.valid"
                                    [class.is-invalid]="isNew && form.controls.host.touched && form.controls.host.invalid"
-                                   required minlength="1" maxlength="253" placeholder="example.com">
+                                   required placeholder="example.com">
                             <!-- Invalid feedback -->
                             <div class="invalid-feedback">
                                 <ng-container i18n>Please enter a valid domain host.</ng-container>
@@ -51,7 +51,7 @@
                             <input formControlName="name" type="text" class="form-control" id="name"
                                    [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
                                    [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
-                                   maxlength="255" placeholder="My blog" i18n-placeholder>
+                                   placeholder="My blog" i18n-placeholder>
                             <div class="invalid-feedback" i18n>Value is too long.</div>
                         </div>
                     </div>
@@ -89,8 +89,8 @@
 
                     <!-- Anonymous comments -->
                     <div class="form-check">
-                        <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="authAnonymous">
-                        <label class="form-check-label" for="authAnonymous" i18n>Anonymous comments</label>
+                        <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="auth-anonymous">
+                        <label class="form-check-label" for="auth-anonymous" i18n>Anonymous comments</label>
                     </div>
 
                     <!-- Local auth -->
@@ -117,11 +117,11 @@
                     <div *ngIf="form.controls.authSso.value" class="ms-4">
                         <!-- SSO server URL -->
                         <div class="mb-2">
-                            <label for="ssoUrl" class="form-label colon" i18n>SSO server URL</label>
-                            <input formControlName="ssoUrl" type="url" class="form-control" id="ssoUrl"
+                            <label for="sso-url" class="form-label colon" i18n>SSO server URL</label>
+                            <input formControlName="ssoUrl" type="url" class="form-control" id="sso-url"
                                    [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
                                    [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
-                                   required minlength="1" maxlength="253" placeholder="https://sso.example.com">
+                                   required placeholder="https://sso.example.com">
                             <!-- Invalid feedback -->
                             <div class="invalid-feedback">
                                 <ng-container i18n>Please enter a valid URL.</ng-container>
@@ -160,22 +160,22 @@
                         <div class="col-sm-9">
                             <!-- Author is anonymous -->
                             <div class="form-check">
-                                <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="modAnonymous">
-                                <label class="form-check-label" for="modAnonymous" i18n>Author is anonymous</label>
+                                <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="mod-anonymous">
+                                <label class="form-check-label" for="mod-anonymous" i18n>Author is anonymous</label>
                             </div>
                             <!-- Author is authenticated -->
                             <div class="form-check">
-                                <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="modAuthenticated">
-                                <label class="form-check-label" for="modAuthenticated" i18n>Author is authenticated</label>
+                                <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="mod-authenticated">
+                                <label class="form-check-label" for="mod-authenticated" i18n>Author is authenticated</label>
                             </div>
                             <!-- Author has less than this number of approved comments -->
                             <div class="form-check">
-                                <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="modNumCommentsOn">
-                                <label class="form-check-label colon" for="modNumCommentsOn" i18n>Author has less than this number of approved comments</label>
+                                <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="mod-num-comments-on">
+                                <label class="form-check-label colon" for="mod-num-comments-on" i18n>Author has less than this number of approved comments</label>
                             </div>
                             <!-- Number of approved comments -->
                             <div *ngIf="form.controls.modNumComments.enabled" class="mb-3">
-                                <input formControlName="modNumComments" type="number" class="form-control" id="modNumComments"
+                                <input formControlName="modNumComments" type="number" class="form-control" id="mod-num-comments"
                                        [class.is-valid]="form.controls.modNumComments.touched && form.controls.modNumComments.valid"
                                        [class.is-invalid]="form.controls.modNumComments.touched && form.controls.modNumComments.invalid"
                                        required min="1" max="999">
@@ -186,12 +186,12 @@
                             </div>
                             <!-- Author is registered less than this number of days ago -->
                             <div class="form-check">
-                                <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="modUserAgeDaysOn">
-                                <label class="form-check-label colon" for="modUserAgeDaysOn" i18n>Author is registered less than this number of days ago</label>
+                                <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="mod-user-age-days-on">
+                                <label class="form-check-label colon" for="mod-user-age-days-on" i18n>Author is registered less than this number of days ago</label>
                             </div>
                             <!-- Number of days for minimum user age -->
                             <div *ngIf="form.controls.modUserAgeDays.enabled" class="mb-3">
-                                <input formControlName="modUserAgeDays" type="number" class="form-control" id="modUserAgeDays"
+                                <input formControlName="modUserAgeDays" type="number" class="form-control" id="mod-user-age-days"
                                        [class.is-valid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.valid"
                                        [class.is-invalid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.invalid"
                                        required min="1" max="999">
@@ -202,13 +202,13 @@
                             </div>
                             <!-- Comment contains link -->
                             <div class="form-check">
-                                <input formControlName="modLinks" type="checkbox" class="form-check-input" id="modLinks">
-                                <label class="form-check-label" for="modLinks" i18n>Comment contains link</label>
+                                <input formControlName="modLinks" type="checkbox" class="form-check-input" id="mod-links">
+                                <label class="form-check-label" for="mod-links" i18n>Comment contains link</label>
                             </div>
                             <!-- Comment contains image -->
                             <div class="form-check">
-                                <input formControlName="modImages" type="checkbox" class="form-check-input" id="modImages">
-                                <label class="form-check-label" for="modImages" i18n>Comment contains image</label>
+                                <input formControlName="modImages" type="checkbox" class="form-check-input" id="mod-images">
+                                <label class="form-check-label" for="mod-images" i18n>Comment contains image</label>
                             </div>
                         </div>
                     </div>
@@ -218,8 +218,8 @@
                         <div class="col-sm-3 colon fw-bold" i18n>Email moderators</div>
                         <div class="col-sm-9">
                             <div *ngFor="let p of modNotifyPolicies" class="form-check">
-                                <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" [id]="'modNotifyPolicy-'+p" [value]="p">
-                                <label class="form-check-label" [for]="'modNotifyPolicy-'+p" i18n>{{ p | moderatorNotifyPolicy }}</label>
+                                <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" [id]="'mod-notify-policy-'+p" [value]="p">
+                                <label class="form-check-label" [for]="'mod-notify-policy-'+p" i18n>{{ p | moderatorNotifyPolicy }}</label>
                             </div>
                         </div>
                     </div>
@@ -246,15 +246,15 @@
                         <div *ngFor="let e of extensions; index as idx" [formGroupName]="idx">
                             <!-- Enabled checkbox -->
                             <div class="form-check">
-                                <input #extCB [id]="'extension-' + e.id + '-enabled'"
+                                <input #extCB [id]="getExtId(e) + '-enabled'"
                                        formControlName="enabled" type="checkbox" class="form-check-input">
                                 <label class="form-check-label" [for]="extCB.id">{{ e.name }}</label>
                             </div>
                             <!-- Extension config, only when enabled -->
                             <div *ngIf="extCB.checked" class="mb-3 ps-4">
                                 <label class="form-check-label colon" [for]="'extension-' + e.id + '-config'" i18n>Configuration</label>
-                                <textarea [id]="'extension-' + e.id + '-config'"
-                                          formControlName="config" class="form-control font-monospace" rows="5" maxlength="4096"></textarea>
+                                <textarea [id]="getExtId(e) + '-config'"
+                                          formControlName="config" class="form-control font-monospace" rows="5"></textarea>
                                 <!-- Requires key warning -->
                                 <div *ngIf="e.requiresKey" class="form-text text-warning-emphasis">
                                     <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>

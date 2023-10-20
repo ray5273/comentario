@@ -26,9 +26,7 @@ import { CommentPropertiesComponent } from './domains/comments/comment-propertie
 import { ConfigManagerComponent } from './config/config-manager/config-manager.component';
 import { StaticConfigComponent } from './config/static-config/static-config.component';
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
-import {
-    ConfigEditComponent
-} from './config/config-edit/config-edit.component';
+import { ConfigEditComponent } from './config/config-edit/config-edit.component';
 
 const children: Routes = [
     // Default route
