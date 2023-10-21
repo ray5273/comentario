@@ -13,7 +13,7 @@ import (
 // TheStatsService is a global StatsService implementation
 var TheStatsService StatsService = &statsService{}
 
-// StatsService is a service interface for dealing with statss
+// StatsService is a service interface for dealing with stats
 type StatsService interface {
 	// GetDailyStats collects and returns daily comment and views statistics for the given domain and number of days. If
 	// domainID is nil, statistics is collected for all domains owned by the user
@@ -151,6 +151,7 @@ func (svc *statsService) fetchStats(rs *sql.Rows, start time.Time, num int) ([]u
 
 		// Append a "real" data row
 		res = append(res, i)
+		start = start.AddDate(0, 0, 1)
 	}
 
 	// Check that Next() didn't error
