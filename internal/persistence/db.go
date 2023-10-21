@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
+	_ "github.com/lib/pq" // PostgreSQL driver
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -71,7 +72,7 @@ func (db *Database) Execute(e exp.SQLExpression) error {
 // ExecuteOne executes the provided goqu expression against the database and verifies there's exactly one row affected
 func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 	// Convert the expression into SQL and params
-	eSQL, eParams, err := e.ToSQL()
+	eSQL, eParams, err := setPrepared(e).ToSQL()
 	if err != nil {
 		return err
 	}
@@ -99,7 +100,7 @@ func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 // ExecuteRes executes the provided goqu expression against the database and returns its result
 func (db *Database) ExecuteRes(e exp.SQLExpression) (sql.Result, error) {
 	// Convert the expression into SQL and params
-	eSQL, eParams, err := e.ToSQL()
+	eSQL, eParams, err := setPrepared(e).ToSQL()
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +153,7 @@ func (db *Database) Migrate(seed string) error {
 						"md5_actual":   util.MD5ToHex(&csActual),
 						"status":       status,
 						"error_text":   errMsg,
-					}).
-					Prepared(true),
+					}),
 			); dbErr != nil {
 				logger.Errorf("Failed to add migration log record for '%s' (status '%s'): %v", filename, status, dbErr)
 			}
@@ -174,8 +174,7 @@ func (db *Database) Migrate(seed string) error {
 				}).
 				OnConflict(goqu.DoUpdate(
 					"filename",
-					goqu.Record{"md5": util.MD5ToHex(&csActual), "ts_installed": time.Now().UTC()})).
-				Prepared(true),
+					goqu.Record{"md5": util.MD5ToHex(&csActual), "ts_installed": time.Now().UTC()})),
 		); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
 		}
@@ -203,22 +202,6 @@ func (db *Database) Migrate(seed string) error {
 	return nil
 }
 
-// Query executes the provided query against the database
-func (db *Database) Query(query string, args ...any) (*sql.Rows, error) {
-	if db.debug {
-		logger.Debugf("db.Query()\n - SQL: %s\n - Args: %#v", query, args)
-	}
-	return db.db.Query(query, args...)
-}
-
-// QueryRow queries a single row from the database
-func (db *Database) QueryRow(query string, args ...any) *sql.Row {
-	if db.debug {
-		logger.Debugf("db.QueryRow()\n - SQL: %s\n - Args: %#v", query, args)
-	}
-	return db.db.QueryRow(query, args...)
-}
-
 // RecreateSchema drops and recreates the public schema
 func (db *Database) RecreateSchema() error {
 	logger.Debug("db.RecreateSchema()")
@@ -236,21 +219,37 @@ func (db *Database) RecreateSchema() error {
 }
 
 // Select executes the provided goqu query against the database
-func (db *Database) Select(q *goqu.SelectDataset) (*sql.Rows, error) {
-	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+func (db *Database) Select(e exp.SQLExpression) (*sql.Rows, error) {
+	// Convert the expression into SQL and params
+	eSQL, eParams, err := setPrepared(e).ToSQL()
+	if err != nil {
 		return nil, err
-	} else {
-		return db.Query(qSQL, qParams...)
 	}
+
+	// Debug logging, if activated
+	if db.debug {
+		logger.Debugf("db.Select()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
+	}
+
+	// Execute the query
+	return db.db.Query(eSQL, eParams...)
 }
 
 // SelectRow executes the provided goqu query against the database, returning a single row
-func (db *Database) SelectRow(q *goqu.SelectDataset) util.Scanner {
-	if qSQL, qParams, err := q.Prepared(true).ToSQL(); err != nil {
+func (db *Database) SelectRow(e exp.SQLExpression) util.Scanner {
+	// Convert the expression into SQL and params
+	eSQL, eParams, err := setPrepared(e).ToSQL()
+	if err != nil {
 		return util.NewErrScanner(err)
-	} else {
-		return db.QueryRow(qSQL, qParams...)
 	}
+
+	// Debug logging, if activated
+	if db.debug {
+		logger.Debugf("db.SelectRow()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
+	}
+
+	// Execute the query
+	return db.db.QueryRow(eSQL, eParams...)
 }
 
 // Shutdown ends the database connection and shuts down all dependent services
@@ -364,19 +363,23 @@ func (db *Database) getAvailableMigrations() ([]string, error) {
 
 // getInstalledMigrations returns a map of installed database migrations (filename: md5)
 func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
-	// If no migrations table is present, it means no migration in installed either (the schema is most likely empty)
-	row := db.QueryRow("select exists(select from pg_tables where schemaname='public' and tablename='cm_migrations')")
-	var exists bool
-	if err := row.Scan(&exists); err != nil {
+	// If no migrations table is present, it means no migration is installed either (the schema is most likely empty)
+	var cnt int
+	if err := db.SelectRow(
+		db.Dialect().
+			From("pg_tables").
+			Select(goqu.COUNT("*")).
+			Where(goqu.Ex{"schemaname": "public", "tablename": "cm_migrations"})).
+		Scan(&cnt); err != nil {
 		return nil, err
-	} else if !exists {
+	} else if cnt == 0 {
 		return nil, nil
 	}
 
 	// Query the migrations table
-	rows, err := db.Query("select filename, md5 from cm_migrations;")
+	rows, err := db.Select(db.Dialect().From("cm_migrations").Select("filename", "md5"))
 	if err != nil {
-		return nil, fmt.Errorf("getInstalledMigrations: Query() failed: %v", err)
+		return nil, fmt.Errorf("getInstalledMigrations: Select() failed: %v", err)
 	}
 	defer rows.Close()
 
@@ -445,7 +448,7 @@ func (db *Database) installMigration(filename string, csExpected *[16]byte) (csA
 		// The checksum is different
 		errMsg := fmt.Sprintf("checksum mismatch for migration '%s': expected %x, actual %x", fullName, *csExpected, csActual)
 
-		// Check the metadata settingbe: git rid of literal SQL
+		// Check the metadata setting
 		switch metadata["onChecksumMismatch"] {
 		// Fail is the default
 		case "", "fail":
@@ -562,6 +565,25 @@ func (db *Database) tryConnect(num, total int) error {
 		logger.Warningf("[Attempt %d/%d] Failed to ping database: %v", num, total, err)
 	}
 	return err
+}
+
+// setPrepared tries to set the Prepared to true on the given expression
+func setPrepared(e exp.SQLExpression) exp.SQLExpression {
+	switch x := e.(type) {
+	case *goqu.DeleteDataset:
+		return x.Prepared(true)
+	case *goqu.InsertDataset:
+		return x.Prepared(true)
+	case *goqu.SelectDataset:
+		return x.Prepared(true)
+	case *goqu.TruncateDataset:
+		return x.Prepared(true)
+	case *goqu.UpdateDataset:
+		return x.Prepared(true)
+	}
+
+	// No luck, pass e through
+	return e
 }
 
 // validateConfig verifies the database configuration is valid

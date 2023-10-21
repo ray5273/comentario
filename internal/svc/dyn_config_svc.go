@@ -150,18 +150,19 @@ func (svc *dynConfigService) Save() error {
 	var keys []data.DynInstanceConfigItemKey
 	for key, ci := range svc.items {
 		if !ci.HasDefaultValue() {
-			q := db.Dialect().
-				Insert("cm_configuration").
-				Rows(goqu.Record{
-					"key":          key,
-					"value":        ci.Value,
-					"ts_updated":   ci.UpdatedTime,
-					"user_updated": ci.UserUpdated,
-				}).
-				OnConflict(goqu.DoUpdate(
-					"key",
-					goqu.Record{"value": ci.Value, "ts_updated": ci.UpdatedTime, "user_updated": ci.UserUpdated}))
-			if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+			if err := db.ExecuteOne(
+				db.Dialect().
+					Insert("cm_configuration").
+					Rows(goqu.Record{
+						"key":          key,
+						"value":        ci.Value,
+						"ts_updated":   ci.UpdatedTime,
+						"user_updated": ci.UserUpdated,
+					}).
+					OnConflict(goqu.DoUpdate(
+						"key",
+						goqu.Record{"value": ci.Value, "ts_updated": ci.UpdatedTime, "user_updated": ci.UserUpdated})),
+			); err != nil {
 				return translateDBErrors(err)
 			}
 

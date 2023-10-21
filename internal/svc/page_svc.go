@@ -5,7 +5,6 @@ import (
 	"github.com/avct/uasurfer"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -57,11 +56,13 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
 
 	// Query paths/comment counts
-	rows, err := db.Query(
-		"select path, count_comments from cm_domain_pages where domain_id=$1 and path=any($2);",
-		domainID, pq.Array(paths))
+	rows, err := db.Select(
+		db.Dialect().
+			From("cm_domain_pages").
+			Select("path", "count_comments").
+			Where(goqu.Ex{"domain_id": domainID, "path": goqu.Any(paths)}))
 	if err != nil {
-		logger.Errorf("pageService.CommentCounts: Query() failed: %v", err)
+		logger.Errorf("pageService.CommentCounts: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -122,8 +123,7 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 		db.Dialect().
 			Update("cm_domain_pages").
 			Set(goqu.Record{"title": title}).
-			Where(goqu.Ex{"id": &page.ID}).
-			Prepared(true),
+			Where(goqu.Ex{"id": &page.ID}),
 	); err != nil {
 		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecuteOne() failed: %v", err)
 		return false, err
@@ -138,10 +138,11 @@ func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*dat
 
 	// Query a page row
 	var p data.DomainPage
-	if err := db.QueryRow(
-		"select id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views from cm_domain_pages "+
-			"where domain_id=$1 and path=$2;",
-		domainID, path,
+	if err := db.SelectRow(
+		db.Dialect().
+			From("cm_domain_pages").
+			Select("id", "domain_id", "path", "title", "is_readonly", "ts_created", "count_comments", "count_views").
+			Where(goqu.Ex{"domain_id": domainID, "path": path}),
 	).Scan(
 		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
 	); err != nil {
@@ -158,9 +159,11 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 
 	// Query a page row
 	var p data.DomainPage
-	if err := db.QueryRow(
-		"select id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views from cm_domain_pages where id=$1;",
-		id,
+	if err := db.SelectRow(
+		db.Dialect().
+			From("cm_domain_pages").
+			Select("id", "domain_id", "path", "title", "is_readonly", "ts_created", "count_comments", "count_views").
+			Where(goqu.Ex{"id": id}),
 	).Scan(
 		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
 	); err != nil {
@@ -183,8 +186,7 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
 				"count_views":    goqu.L("? + ?", goqu.I("count_views"), incViews),
 			}).
-			Where(goqu.Ex{"id": pageID}).
-			Prepared(true),
+			Where(goqu.Ex{"id": pageID}),
 	); err != nil {
 		logger.Errorf("pageService.IncrementCounts: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -208,7 +210,7 @@ func (svc *pageService) ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, e
 	// Query pages
 	rows, err := db.Select(q)
 	if err != nil {
-		logger.Errorf("pageService.ListByDomain: Query() failed: %v", err)
+		logger.Errorf("pageService.ListByDomain: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -300,7 +302,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	// Query pages
 	rows, err := db.Select(q)
 	if err != nil {
-		logger.Errorf("pageService.ListByDomainUser: Query() failed: %v", err)
+		logger.Errorf("pageService.ListByDomainUser: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
@@ -336,8 +338,7 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 		db.Dialect().
 			Update("cm_domain_pages").
 			Set(goqu.Record{"is_readonly": page.IsReadonly}).
-			Where(goqu.Ex{"id": &page.ID}).
-			Prepared(true),
+			Where(goqu.Ex{"id": &page.ID}),
 	); err != nil {
 		logger.Errorf("pageService.UpdateReadonly: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -355,12 +356,21 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req
 
 	// Query a page row
 	increment := util.If(req != nil, 1, 0)
-	row := db.QueryRow(
-		"insert into cm_domain_pages as p(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views) "+
-			"values($1, $2, $3, '', false, $4, 0, $5) "+
-			"on conflict (domain_id, path) do update set count_views=p.count_views+$5 "+
-			"returning id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views;",
-		&id, &domain.ID, path, time.Now().UTC(), increment)
+	row := db.SelectRow(
+		db.Dialect().
+			Insert(goqu.T("cm_domain_pages").As("p")).
+			Rows(goqu.Record{
+				"id":             &id,
+				"domain_id":      &domain.ID,
+				"path":           path,
+				"title":          "",
+				"is_readonly":    false,
+				"ts_created":     time.Now().UTC(),
+				"count_comments": 0,
+				"count_views":    increment,
+			}).
+			OnConflict(goqu.DoUpdate("domain_id, path", goqu.C("count_views").Set(goqu.L("p.count_views + ?", increment)))).
+			Returning("id", "domain_id", "path", "title", "is_readonly", "ts_created", "count_comments", "count_views"))
 
 	// Fetch the row
 	var p data.DomainPage
@@ -411,8 +421,7 @@ func (svc *pageService) insertPageView(page data.DomainPage, req *http.Request) 
 				"ua_os_name":         ua.OS.Name.StringTrimPrefix(),
 				"ua_os_version":      util.FormatVersion(&ua.OS.Version),
 				"ua_device":          ua.DeviceType.StringTrimPrefix(),
-			}).
-			Prepared(true),
+			}),
 	); err != nil {
 		logger.Errorf("pageService.insertPageView: ExecuteOne() failed: %v", err)
 	}

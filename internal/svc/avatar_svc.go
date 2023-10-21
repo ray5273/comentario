@@ -96,7 +96,7 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 	if r == nil {
 		// If a database record exists, delete it
 		if ua != nil {
-			if err = db.ExecuteOne(db.Dialect().Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID}).Prepared(true)); err != nil {
+			if err = db.ExecuteOne(db.Dialect().Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID})); err != nil {
 				return err
 			}
 		}
@@ -119,8 +119,7 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 					"avatar_m":   ua.AvatarM,
 					"avatar_l":   ua.AvatarL,
 				}).
-				Where(goqu.Ex{"user_id": userID}).
-				Prepared(true),
+				Where(goqu.Ex{"user_id": userID}),
 		); err != nil {
 			return err
 		}
@@ -145,8 +144,7 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 					"avatar_s":   ua.AvatarS,
 					"avatar_m":   ua.AvatarM,
 					"avatar_l":   ua.AvatarL,
-				}).
-				Prepared(true),
+				}),
 		); err != nil {
 			return err
 		}

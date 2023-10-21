@@ -139,28 +139,29 @@ func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 
 	// Insert a record into the database
-	q := db.Dialect().
-		Insert("cm_comments").
-		Rows(goqu.Record{
-			"id":             &c.ID,
-			"parent_id":      &c.ParentID,
-			"page_id":        c.PageID,
-			"markdown":       c.Markdown,
-			"html":           c.HTML,
-			"score":          c.Score,
-			"is_sticky":      c.IsSticky,
-			"is_approved":    c.IsApproved,
-			"is_pending":     c.IsPending,
-			"is_deleted":     c.IsDeleted,
-			"ts_created":     c.CreatedTime,
-			"ts_moderated":   c.ModeratedTime,
-			"ts_deleted":     c.DeletedTime,
-			"user_created":   &c.UserCreated,
-			"user_moderated": &c.UserModerated,
-			"user_deleted":   &c.UserDeleted,
-			"pending_reason": util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength),
-		})
-	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Insert("cm_comments").
+			Rows(goqu.Record{
+				"id":             &c.ID,
+				"parent_id":      &c.ParentID,
+				"page_id":        c.PageID,
+				"markdown":       c.Markdown,
+				"html":           c.HTML,
+				"score":          c.Score,
+				"is_sticky":      c.IsSticky,
+				"is_approved":    c.IsApproved,
+				"is_pending":     c.IsPending,
+				"is_deleted":     c.IsDeleted,
+				"ts_created":     c.CreatedTime,
+				"ts_moderated":   c.ModeratedTime,
+				"ts_deleted":     c.DeletedTime,
+				"user_created":   &c.UserCreated,
+				"user_moderated": &c.UserModerated,
+				"user_deleted":   &c.UserDeleted,
+				"pending_reason": util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength),
+			}),
+	); err != nil {
 		logger.Errorf("commentService.Create: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -502,18 +503,19 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 	logger.Debugf("commentService.MarkDeleted(%s, %s)", commentID, userID)
 
 	// Update the record in the database
-	q := db.Dialect().
-		Update("cm_comments").
-		Set(goqu.Record{
-			"is_deleted":     true,
-			"markdown":       "",
-			"html":           "",
-			"pending_reason": "",
-			"ts_deleted":     time.Now().UTC(),
-			"user_deleted":   userID,
-		}).
-		Where(goqu.Ex{"id": commentID})
-	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_comments").
+			Set(goqu.Record{
+				"is_deleted":     true,
+				"markdown":       "",
+				"html":           "",
+				"pending_reason": "",
+				"ts_deleted":     time.Now().UTC(),
+				"user_deleted":   userID,
+			}).
+			Where(goqu.Ex{"id": commentID}),
+	); err != nil {
 		logger.Errorf("commentService.MarkDeleted: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -538,7 +540,7 @@ func (svc *commentService) MarkDeletedByUser(curUserID, userID *uuid.UUID) (int6
 		}).
 		Where(goqu.Ex{"user_created": userID})
 
-	if res, err := db.ExecuteRes(q.Prepared(true)); err != nil {
+	if res, err := db.ExecuteRes(q); err != nil {
 		logger.Errorf("commentService.MarkDeletedByUser: ExecuteRes() failed: %v", err)
 		return 0, translateDBErrors(err)
 	} else if cnt, err := res.RowsAffected(); err != nil {
@@ -554,17 +556,18 @@ func (svc *commentService) Moderate(commentID, userID *uuid.UUID, pending, appro
 	logger.Debugf("commentService.Moderate(%s, %s, %v, %v, %q)", commentID, userID, pending, approved, reason)
 
 	// Update the record in the database
-	q := db.Dialect().
-		Update("cm_comments").
-		Set(goqu.Record{
-			"is_pending":     pending,
-			"is_approved":    approved,
-			"pending_reason": util.TruncateStr(reason, data.MaxPendingReasonLength),
-			"ts_moderated":   time.Now().UTC(),
-			"user_moderated": userID,
-		}).
-		Where(goqu.Ex{"id": commentID})
-	if err := db.ExecuteOne(q.Prepared(true)); err != nil {
+	if err := db.ExecuteOne(
+		db.Dialect().
+			Update("cm_comments").
+			Set(goqu.Record{
+				"is_pending":     pending,
+				"is_approved":    approved,
+				"pending_reason": util.TruncateStr(reason, data.MaxPendingReasonLength),
+				"ts_moderated":   time.Now().UTC(),
+				"user_moderated": userID,
+			}).
+			Where(goqu.Ex{"id": commentID}),
+	); err != nil {
 		logger.Errorf("commentService.Moderate: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -581,8 +584,7 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 		db.Dialect().
 			Update("cm_comments").
 			Set(goqu.Record{"is_sticky": sticky}).
-			Where(goqu.Ex{"id": commentID}).
-			Prepared(true),
+			Where(goqu.Ex{"id": commentID}),
 	); err != nil {
 		logger.Errorf("commentService.UpdateSticky: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -600,8 +602,7 @@ func (svc *commentService) UpdateText(commentID *uuid.UUID, markdown, html strin
 		db.Dialect().
 			Update("cm_comments").
 			Set(goqu.Record{"markdown": markdown, "html": html}).
-			Where(goqu.Ex{"id": commentID}).
-			Prepared(true),
+			Where(goqu.Ex{"id": commentID}),
 	); err != nil {
 		logger.Errorf("commentService.UpdateText: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -645,8 +646,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 		err = db.ExecuteOne(
 			db.Dialect().
 				Insert("cm_comment_votes").
-				Rows(goqu.Record{"comment_id": commentID, "user_id": userID, "negative": direction < 0, "ts_voted": time.Now().UTC()}).
-				Prepared(true))
+				Rows(goqu.Record{"comment_id": commentID, "user_id": userID, "negative": direction < 0, "ts_voted": time.Now().UTC()}))
 		if direction < 0 {
 			inc = -1
 		} else {
@@ -655,7 +655,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 
 	} else if direction == 0 {
 		// Vote exists and must be removed
-		err = db.ExecuteOne(db.Dialect().Delete("cm_comment_votes").Where(goqu.Ex{"comment_id": commentID, "user_id": userID}).Prepared(true))
+		err = db.ExecuteOne(db.Dialect().Delete("cm_comment_votes").Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
 		if neg.Bool {
 			inc = 1
 		} else {
@@ -668,9 +668,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 			db.Dialect().
 				Update("cm_comment_votes").
 				Set(goqu.Record{"negative": direction < 0, "ts_voted": time.Now().UTC()}).
-				Where(goqu.Ex{"comment_id": commentID, "user_id": userID}).
-				Prepared(true),
-		)
+				Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
 		if neg.Bool {
 			inc = 2
 		} else {
@@ -682,7 +680,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 	}
 
 	// Update the comment score
-	if err := db.ExecuteOne(db.Dialect().Update("cm_comments").Set(goqu.Record{"score": score + inc}).Where(goqu.Ex{"id": commentID}).Prepared(true)); err != nil {
+	if err := db.ExecuteOne(db.Dialect().Update("cm_comments").Set(goqu.Record{"score": score + inc}).Where(goqu.Ex{"id": commentID})); err != nil {
 		return 0, translateDBErrors(err)
 	}
 

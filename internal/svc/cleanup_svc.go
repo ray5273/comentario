@@ -32,8 +32,7 @@ func (svc *cleanupService) cleanupExpiredAuthSessions() {
 		"expired auth sessions",
 		db.Dialect().
 			Delete("cm_auth_sessions").
-			Where(goqu.I("ts_expires").Lt(time.Now().UTC())).
-			Prepared(true),
+			Where(goqu.I("ts_expires").Lt(time.Now().UTC())),
 	) == nil {
 	}
 }
@@ -46,8 +45,7 @@ func (svc *cleanupService) cleanupExpiredTokens() {
 		"expired tokens",
 		db.Dialect().
 			Delete("cm_tokens").
-			Where(goqu.I("ts_expires").Lt(time.Now().UTC())).
-			Prepared(true),
+			Where(goqu.I("ts_expires").Lt(time.Now().UTC())),
 	) == nil {
 	}
 }
@@ -60,8 +58,7 @@ func (svc *cleanupService) cleanupExpiredUserSessions() {
 		"expired user sessions",
 		db.Dialect().
 			Delete("cm_user_sessions").
-			Where(goqu.I("ts_expires").Lt(time.Now().UTC())).
-			Prepared(true),
+			Where(goqu.I("ts_expires").Lt(time.Now().UTC())),
 	) == nil {
 	}
 }
@@ -74,8 +71,7 @@ func (svc *cleanupService) cleanupStalePageViews() {
 		"stale page views",
 		db.Dialect().
 			Delete("cm_domain_page_views").
-			Where(goqu.I("ts_created").Lt(time.Now().UTC().Add(-util.PageViewRetentionPeriod))).
-			Prepared(true),
+			Where(goqu.I("ts_created").Lt(time.Now().UTC().Add(-util.PageViewRetentionPeriod))),
 	) == nil {
 	}
 }

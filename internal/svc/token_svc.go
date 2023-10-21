@@ -44,8 +44,7 @@ func (svc *tokenService) Create(t *data.Token) error {
 				"scope":      t.Scope,
 				"ts_expires": t.ExpiresTime,
 				"multiuse":   t.Multiuse,
-			}).
-			Prepared(true),
+			}),
 	); err != nil {
 		logger.Errorf("tokenService.Create: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
@@ -59,7 +58,7 @@ func (svc *tokenService) DeleteByValue(value []byte) error {
 	logger.Debugf("tokenService.DeleteByValue(%x)", value)
 
 	// Delete the record
-	err := db.ExecuteOne(db.Dialect().Delete("cm_tokens").Where(goqu.Ex{"value": hex.EncodeToString(value)}).Prepared(true))
+	err := db.ExecuteOne(db.Dialect().Delete("cm_tokens").Where(goqu.Ex{"value": hex.EncodeToString(value)}))
 	if errors.Is(err, sql.ErrNoRows) {
 		// No rows affected
 		return ErrBadToken
@@ -88,18 +87,18 @@ func (svc *tokenService) FindByValue(value []byte, allowExpired bool) (*data.Tok
 	logger.Debugf("tokenService.FindByValue(%x, %v)", value, allowExpired)
 
 	// Prepare the query
-	s := "select value, user_id, scope, ts_expires, multiuse from cm_tokens where value=$1"
-	params := []any{hex.EncodeToString(value)}
+	q := db.Dialect().
+		From("cm_tokens").
+		Select("value", "user_id", "scope", "ts_expires", "multiuse").
+		Where(goqu.Ex{"value": hex.EncodeToString(value)})
 	if !allowExpired {
-		s += " and ts_expires>$2"
-		params = append(params, time.Now().UTC())
+		q = q.Where(goqu.C("ts_expires").Gt(time.Now().UTC()))
 	}
 
 	// Query the token
 	var v string
 	var t data.Token
-	row := db.QueryRow(s, params...)
-	if err := row.Scan(&v, &t.Owner, &t.Scope, &t.ExpiresTime, &t.Multiuse); err != nil {
+	if err := db.SelectRow(q).Scan(&v, &t.Owner, &t.Scope, &t.ExpiresTime, &t.Multiuse); err != nil {
 		logger.Errorf("tokenService.FindByValue: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	} else if t.Value, err = hex.DecodeString(v); err != nil {
@@ -119,8 +118,7 @@ func (svc *tokenService) Update(t *data.Token) error {
 		db.Dialect().
 			Update("cm_tokens").
 			Set(goqu.Record{"user_id": t.Owner, "scope": t.Scope, "ts_expires": t.ExpiresTime, "multiuse": t.Multiuse}).
-			Where(goqu.Ex{"value": t.String()}).
-			Prepared(true),
+			Where(goqu.Ex{"value": t.String()}),
 	); err != nil {
 		logger.Errorf("tokenService.Update: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)

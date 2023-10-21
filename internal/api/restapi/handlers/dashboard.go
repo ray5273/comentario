@@ -22,7 +22,7 @@ func DashboardTotals(_ api_general.DashboardTotalsParams, user *data.User) middl
 
 func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *data.User) middleware.Responder {
 	// Collect comment/view stats
-	comments, views, err := svc.TheStatsService.GetDailyStats(&user.ID, nil, int(swag.Uint64Value(params.Days)))
+	comments, views, err := svc.TheStatsService.GetDailyStats(user.IsSuperuser, &user.ID, nil, int(swag.Uint64Value(params.Days)))
 	if err != nil {
 		return respServiceError(err)
 	}

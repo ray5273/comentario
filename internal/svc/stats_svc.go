@@ -3,6 +3,7 @@ package svc
 import (
 	"database/sql"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -17,7 +18,7 @@ var TheStatsService StatsService = &statsService{}
 type StatsService interface {
 	// GetDailyStats collects and returns daily comment and views statistics for the given domain and number of days. If
 	// domainID is nil, statistics is collected for all domains owned by the user
-	GetDailyStats(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error)
+	GetDailyStats(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error)
 	// GetTotals collects and returns total figures for all domains accessible to the specified user
 	GetTotals(curUser *data.User) (*StatsTotals, error)
 }
@@ -27,74 +28,72 @@ type StatsService interface {
 // statsService is a blueprint StatsService implementation
 type statsService struct{}
 
-func (svc *statsService) GetDailyStats(userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error) {
-	logger.Debugf("statsService.GetDailyStats(%s, %s, %d)", userID, domainID, numDays)
+func (svc *statsService) GetDailyStats(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error) {
+	logger.Debugf("statsService.GetDailyStats(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
 
 	// Correct the number of days if needed
 	if numDays > util.MaxNumberStatsDays {
 		numDays = util.MaxNumberStatsDays
 	}
 
-	// Prepare params
+	// Start date is now minus (numDays-1)
 	start := time.Now().UTC().Truncate(util.OneDay).AddDate(0, 0, -numDays+1)
-	params := []any{userID, start}
 
 	// Prepare a filter
-	domainFilter := ""
+	domainJoinOn := goqu.Ex{"d.id": goqu.I("p.domain_id")}
 	if domainID != nil {
-		domainFilter = "and d.id=$3 "
-		params = append(params, domainID)
+		domainJoinOn["d.id"] = domainID
 	}
 
-	// Query comment data from the database, grouped by day
-	var cRows *sql.Rows
-	cRows, err = db.Query(
-		"select count(*), date_trunc('day', c.ts_created) "+
-			"from cm_comments c "+
-			"join cm_domain_pages p on p.id=c.page_id "+
-			// Filter by domain
-			"join cm_domains d on d.id=p.domain_id "+domainFilter+
-			// Filter by owner user
-			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and is_owner=true "+
-			// Select only last N days
-			"where c.ts_created>=$2 "+
-			"group by date_trunc('day', c.ts_created) "+
-			"order by date_trunc('day', c.ts_created);",
-		params...)
-	if err != nil {
-		logger.Errorf("statsService.GetDailyStats: Query() failed for comments: %v", err)
+	// Prepare a query for comment counts, grouped by day
+	cDate := goqu.L("date_trunc('day', c.ts_created)")
+	cQuery := db.Dialect().
+		From(goqu.T("cm_comments").As("c")).
+		Select(goqu.COUNT("*"), cDate).
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
+		// Filter by domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(domainJoinOn)).
+		// Select only last N days
+		Where(goqu.I("c.ts_created").Gte(start)).
+		GroupBy(cDate).
+		Order(cDate.Asc())
+
+	// If the user isn't a superuser, filter by owned domains
+	if !isSuperuser {
+		cQuery = cQuery.
+			Join(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID, "du.is_owner": true}))
+	}
+
+	// Query comment data
+	if comments, err = svc.queryStats(cQuery, start, numDays); err != nil {
 		return nil, nil, translateDBErrors(err)
 	}
-	defer cRows.Close()
 
-	// Collect the data
-	if comments, err = svc.fetchStats(cRows, start, numDays); err != nil {
-		return nil, nil, translateDBErrors(err)
+	// Prepare a query for view counts, grouped by day
+	vDate := goqu.L("date_trunc('day', v.ts_created)")
+	vQuery := db.Dialect().
+		From(goqu.T("cm_domain_page_views").As("v")).
+		Select(goqu.COUNT("*"), vDate).
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("v.page_id")})).
+		// Filter by domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(domainJoinOn)).
+		// Select only last N days
+		Where(goqu.I("v.ts_created").Gte(start)).
+		GroupBy(vDate).
+		Order(vDate.Asc())
+
+	// If the user isn't a superuser, filter by owned domains
+	if !isSuperuser {
+		vQuery = vQuery.
+			Join(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID, "du.is_owner": true}))
 	}
 
-	// Query view data from the database, grouped by day
-	var vRows *sql.Rows
-	vRows, err = db.Query(
-		"select count(*), date_trunc('day', v.ts_created) "+
-			"from cm_domain_page_views v "+
-			"join cm_domain_pages p on p.id=v.page_id "+
-			// Filter by domain
-			"join cm_domains d on d.id=p.domain_id "+domainFilter+
-			// Filter by owner user
-			"join cm_domains_users du on du.domain_id=d.id and du.user_id=$1 and is_owner=true "+
-			// Select only last N days
-			"where v.ts_created>=$2 "+
-			"group by date_trunc('day', v.ts_created) "+
-			"order by date_trunc('day', v.ts_created);",
-		params...)
-	if err != nil {
-		logger.Errorf("statsService.GetDailyStats: Query() failed for views: %v", err)
-		return nil, nil, translateDBErrors(err)
-	}
-	defer vRows.Close()
-
-	// Collect the data
-	if views, err = svc.fetchStats(vRows, start, numDays); err != nil {
+	// Query view data
+	if views, err = svc.queryStats(vQuery, start, numDays); err != nil {
 		return nil, nil, translateDBErrors(err)
 	}
 
@@ -125,47 +124,6 @@ func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
 
 	// Succeeded
 	return totals, nil
-}
-
-// fetchStats collects and returns a daily statistics using the provided database rows
-func (svc *statsService) fetchStats(rs *sql.Rows, start time.Time, num int) ([]uint64, error) {
-	// Iterate data rows
-	var res []uint64
-	for rs.Next() {
-		// Fetch a count and a time
-		var i uint64
-		var t time.Time
-		if err := rs.Scan(&i, &t); err != nil {
-			logger.Errorf("statsService.fetchStats: rs.Scan() failed: %v", err)
-			return nil, err
-		}
-
-		// UTC-ise the time, just in case it's in a different timezone
-		t = t.UTC()
-
-		// Fill any gap in the day sequence with zeroes
-		for start.Before(t) {
-			res = append(res, 0)
-			start = start.AddDate(0, 0, 1)
-		}
-
-		// Append a "real" data row
-		res = append(res, i)
-		start = start.AddDate(0, 0, 1)
-	}
-
-	// Check that Next() didn't error
-	if err := rs.Err(); err != nil {
-		return nil, err
-	}
-
-	// Add missing rows up to the requested number (fill any gap at the end)
-	for len(res) < num {
-		res = append(res, 0)
-	}
-
-	// Succeeded
-	return res, nil
 }
 
 // fillCommentCommenterStats fills the statistics for comments and commenters in totals
@@ -285,7 +243,7 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 
 // fillUserStats fills the statistics for users in totals
 func (svc *statsService) fillUserStats(totals *StatsTotals) error {
-	rows, err := db.Select(db.Dialect().From(goqu.T("cm_users")).Select("banned", goqu.COUNT("*")).GroupBy("banned"))
+	rows, err := db.Select(db.Dialect().From("cm_users").Select("banned", goqu.COUNT("*")).GroupBy("banned"))
 	if err != nil {
 		logger.Errorf("statsService.fillUserStats: Select() failed: %v", err)
 		return err
@@ -318,6 +276,55 @@ func (svc *statsService) fillUserStats(totals *StatsTotals) error {
 
 	// Succeeded
 	return nil
+}
+
+// queryStats collects and returns a daily statistics using the provided database rows
+func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num int) ([]uint64, error) {
+	var rows *sql.Rows
+	rows, err := db.Select(e)
+	if err != nil {
+		logger.Errorf("statsService.queryStats: Select() failed: %v", err)
+		return nil, err
+	}
+	defer rows.Close()
+
+	// Iterate data rows
+	var res []uint64
+	for rows.Next() {
+		// Fetch a count and a time
+		var i uint64
+		var t time.Time
+		if err := rows.Scan(&i, &t); err != nil {
+			logger.Errorf("statsService.fetchStats: rs.Scan() failed: %v", err)
+			return nil, err
+		}
+
+		// UTC-ise the time, just in case it's in a different timezone
+		t = t.UTC()
+
+		// Fill any gap in the day sequence with zeroes
+		for start.Before(t) {
+			res = append(res, 0)
+			start = start.AddDate(0, 0, 1)
+		}
+
+		// Append a "real" data row
+		res = append(res, i)
+		start = start.AddDate(0, 0, 1)
+	}
+
+	// Check that Next() didn't error
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+
+	// Add missing rows up to the requested number (fill any gap at the end)
+	for len(res) < num {
+		res = append(res, 0)
+	}
+
+	// Succeeded
+	return res, nil
 }
 
 //----------------------------------------------------------------------------------------------------------------------

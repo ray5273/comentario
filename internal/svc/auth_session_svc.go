@@ -41,8 +41,7 @@ func (svc *authSessionService) Create(sessData, host string, token []byte) (*dat
 				"host":        as.Host,
 				"ts_created":  as.CreatedTime,
 				"ts_expires":  as.ExpiresTime,
-			}).
-			Prepared(true),
+			}),
 	); err != nil {
 		logger.Errorf("authSessionService.Create: ExecuteOne() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -58,13 +57,14 @@ func (svc *authSessionService) TakeByID(id *uuid.UUID) (*data.AuthSession, error
 	// Query and delete the session
 	var as data.AuthSession
 	var tv string
-	err := db.QueryRow(
-		"delete from cm_auth_sessions where id=$1 and ts_expires>$2 returning id, token_value, data, host, ts_created, ts_expires;",
-		&id, time.Now().UTC(),
-	).
+	err := db.SelectRow(
+		db.Dialect().
+			Delete("cm_auth_sessions").
+			Where(goqu.C("id").Eq(id), goqu.C("ts_expires").Gt(time.Now().UTC())).
+			Returning("id", "token_value", "data", "host", "ts_created", "ts_expires")).
 		Scan(&as.ID, &tv, &as.Data, &as.Host, &as.CreatedTime, &as.ExpiresTime)
 	if err != nil {
-		logger.Errorf("authSessionService.TakeByID: QueryRow() failed: %v", err)
+		logger.Errorf("authSessionService.TakeByID: SelectRow() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
