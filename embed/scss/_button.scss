@@ -1,6 +1,15 @@
 @import "colours";
 
 .comentario-button {
+    // Vars
+    --comentario-btn-color:         #{$link-color};
+    --comentario-btn-hover-color:   #{$link-hover-color};
+    --comentario-btn-bgcolor:       transparent;
+    --comentario-btn-hover-bgcolor: transparent;
+
+    color: var(--comentario-btn-color);
+    background-color: var(--comentario-btn-bgcolor);
+
     display: inline-flex;
     justify-content: center;
     align-items: center;
@@ -10,16 +19,14 @@
     padding: 6px 20px;
     border: 1px solid transparent;
     border-radius: 0.15rem;
-    margin-left: 5px;
-    margin-right: 5px;
-    background: transparent;
-    color: $link-color;
-    transition: color 0.2s;
+    margin: 5px;
+    transition: color 0.4s, background-color 0.4s;
     white-space: nowrap;
 
     &:not(:disabled) {
         &:hover, &:focus, &:active {
-            color: $link-hover-color;
+            color: var(--comentario-btn-hover-color);
+            background-color: var(--comentario-btn-hover-bgcolor);
             opacity: 1;
         }
     }
@@ -31,58 +38,72 @@
 }
 
 .comentario-submit-button {
-    color: $white;
-    background-color: $primary;
-    font-weight: bold;
-    transition: background-color 0.2s;
+    --comentario-btn-color:         #{$white};
+    --comentario-btn-hover-color:   #{$white};
+    --comentario-btn-bgcolor:       #{$primary};
+    --comentario-btn-hover-bgcolor: #{$blue-6};
 
-    @include btn-shadow();
+    font-weight: bold;
 
     &.comentario-submit-glyph {
-        background:
-            $primary no-repeat center/40%
-            url("data:image/svg+xml,%3Csvg viewBox='0 0 128 115.25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m102.53 52.839c-0.82333 5.8731-5.7084 10.612-11.819 11.234h-39.52v-25.633l-51.193 38.404 51.193 38.404v-25.505h51.138v-0.14637c14.161-0.036593 25.596-11.362 25.651-25.541h0.0183v-64.055h-25.468z' fill='%23fff'/%3E%3C/svg%3E");
+        background-repeat: no-repeat;
+        background-position: center;
+        background-size: 50%;
+        background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 115.25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m102.53 52.839c-0.82333 5.8731-5.7084 10.612-11.819 11.234h-39.52v-25.633l-51.193 38.404 51.193 38.404v-25.505h51.138v-0.14637c14.161-0.036593 25.596-11.362 25.651-25.541h0.0183v-64.055h-25.468z' fill='%23fff'/%3E%3C/svg%3E");
     }
 
-    &:not(:disabled) {
-        &:hover, &:focus, &:active {
-            color: $white;
-            background-color: $blue-6;
-        }
-    }
+    @include btn-shadow();
 }
 
 .comentario-danger-button {
-    color: $white;
-    background-color: $red-8;
-    transition: background-color 0.2s;
+    --comentario-btn-color:         #{$white};
+    --comentario-btn-hover-color:   #{$white};
+    --comentario-btn-bgcolor:       #{$red-8};
+    --comentario-btn-hover-bgcolor: #{$red-6};
 
-    @include btn-shadow();
-
-    &:hover, &:focus, &:active {
-        color: $white;
-        background-color: $red-6;
-    }
-}
-
-.comentario-oauth-button {
     font-weight: bold;
-    text-transform: uppercase;
 
     @include btn-shadow();
-
-    &, &:hover, &:focus, &:active {
-        color: $white;
-    }
 }
 
-.comentario-facebook-button {background: #1877f2;}
-.comentario-github-button   {background: #000000;}
-.comentario-gitlab-button   {background: #fc6d26;}
-.comentario-google-button   {background: #4285f4;}
-.comentario-linkedin-button {background: #0a66c2;}
-.comentario-twitter-button  {background: #1da1f2;}
-.comentario-sso-button      {background: #000000;}
+// OAuth buttons
+.comentario-oauth-button {
+    // Text defaults to white
+    --comentario-btn-color:         #{$white};
+    --comentario-btn-hover-color:   #{$white};
+
+    font-weight: bold;
+
+    @include btn-shadow();
+}
+.comentario-facebook-button {
+    --comentario-btn-bgcolor:       #1877f2;
+    --comentario-btn-hover-bgcolor: #{lighten(#1877f2, 15%)};
+}
+.comentario-github-button   {
+    --comentario-btn-bgcolor:       #000000;
+    --comentario-btn-hover-bgcolor: #{lighten(#000000, 30%)};
+}
+.comentario-gitlab-button   {
+    --comentario-btn-bgcolor:       #fc6d26;
+    --comentario-btn-hover-bgcolor: #{lighten(#fc6d26, 15%)};
+}
+.comentario-google-button   {
+    --comentario-btn-bgcolor:       #4285f4;
+    --comentario-btn-hover-bgcolor: #{lighten(#4285f4, 15%)};
+}
+.comentario-linkedin-button {
+    --comentario-btn-bgcolor:       #0a66c2;
+    --comentario-btn-hover-bgcolor: #{lighten(#0a66c2, 15%)};
+}
+.comentario-twitter-button  {
+    --comentario-btn-bgcolor:       #1da1f2;
+    --comentario-btn-hover-bgcolor: #{lighten(#1da1f2, 15%)};
+}
+.comentario-sso-button      {
+    --comentario-btn-bgcolor:       #7275ab;
+    --comentario-btn-hover-bgcolor: #{lighten(#7275ab, 15%)};
+}
 
 .comentario-oauth-buttons {
     display: flex;
