@@ -1,5 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { User } from '../../../../../generated-api';
+import { Paths } from '../../../../_utils/consts';
 
 /**
  * Renders a table with user properties.
@@ -14,4 +15,9 @@ export class UserDetailsComponent {
     @Input({required: true})
     user?: User;
 
+    /** Whether turn the ID into a link. */
+    @Input()
+    userLink?: boolean;
+
+    readonly Paths = Paths;
 }

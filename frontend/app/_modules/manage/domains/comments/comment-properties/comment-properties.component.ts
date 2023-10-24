@@ -4,7 +4,7 @@ import { BehaviorSubject, combineLatestWith, EMPTY, from, ReplaySubject, switchM
 import { catchError, filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
-import { faCheck, faTrashAlt, faUpRightFromSquare, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { faCheck, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter, DomainPage } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
@@ -45,10 +45,9 @@ export class CommentPropertiesComponent implements OnInit {
     readonly updating = new ProcessingStatus();
 
     // Icons
-    readonly faCheck             = faCheck;
-    readonly faTrashAlt          = faTrashAlt;
-    readonly faUpRightFromSquare = faUpRightFromSquare;
-    readonly faXmark             = faXmark;
+    readonly faCheck    = faCheck;
+    readonly faTrashAlt = faTrashAlt;
+    readonly faXmark    = faXmark;
 
     private readonly reload$ = new BehaviorSubject<void>(undefined);
     private readonly id$     = new ReplaySubject<string>();

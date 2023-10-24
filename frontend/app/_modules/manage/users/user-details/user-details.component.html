@@ -3,7 +3,11 @@
     <div>
         <dt i18n>ID</dt>
         <dd>
-            <ng-container>{{ user.id }}</ng-container>
+            <!-- Plain-text ID -->
+            <span *ngIf="!userLink" appCopyText class="text-copyable">{{ user.id }}</span>
+            <!-- User-linked ID -->
+            <a *ngIf="userLink" [routerLink]="[Paths.manage.users, user.id]" class="internal-link">{{ user.id }}</a>
+            <!-- Current user badge -->
             <app-current-user-badge [userId]="user.id" class="ms-2"></app-current-user-badge>
         </dd>
     </div>
@@ -24,7 +28,9 @@
     <!-- Email -->
     <div *ngIf="user.email as v">
         <dt i18n>Email</dt>
-        <dd>{{ v }}</dd>
+        <dd>
+            <span appCopyText class="text-copyable">{{ v }}</span>
+        </dd>
     </div>
     <!-- Language -->
     <div *ngIf="user.langId as v">

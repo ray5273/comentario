@@ -37,11 +37,8 @@
                     <div>
                         <dt i18n>Permalink</dt>
                         <dd>
-                            <a [href]="comment.url" target="_blank" rel="nofollow noopener noreferrer"
-                               title="Open in new tab" i18n-title>
-                                <ng-container>{{ comment.url }}</ng-container>
-                                <fa-icon [icon]="faUpRightFromSquare" class="ms-2"></fa-icon>
-                            </a>
+                            <a [href]="comment.url" class="external-link" target="_blank"
+                               rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>{{ comment.url }}</a>
                         </dd>
                     </div>
                     <!-- Parent comment -->

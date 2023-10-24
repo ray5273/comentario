@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faRotate, faUpRightFromSquare } from '@fortawesome/free-solid-svg-icons';
+import { faRotate } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, DomainPage } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { Paths } from '../../../../../_utils/consts';
@@ -28,8 +28,7 @@ export class DomainPagePropertiesComponent implements OnInit {
     readonly updatingTitle    = new ProcessingStatus();
 
     // Icons
-    readonly faRotate            = faRotate;
-    readonly faUpRightFromSquare = faUpRightFromSquare;
+    readonly faRotate = faRotate;
 
     /** Current page ID. */
     private _id?: string;

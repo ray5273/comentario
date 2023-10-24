@@ -15,7 +15,7 @@ export class CopyTextDirective {
     readonly tipAfterCopy  = $localize`Copied!`;
 
     constructor(
-        private readonly renderer: Renderer2,
+        renderer: Renderer2,
         private readonly element: ElementRef,
         @Optional() private readonly tooltip: NgbTooltip,
     ) {
@@ -27,8 +27,12 @@ export class CopyTextDirective {
             tooltip.container = 'body';
 
         // Put the hint into the title attribute otherwise
-        } else {
+        } else if (element.nativeElement instanceof HTMLElement) {
             renderer.setAttribute(element.nativeElement, 'title', this.tipBeforeCopy);
+
+        // No valid HTML element
+        } else {
+            throw new Error('No valid HTML element for appCopyText');
         }
     }
 

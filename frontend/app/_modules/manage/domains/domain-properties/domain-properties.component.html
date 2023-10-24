@@ -51,11 +51,8 @@
                 <div>
                     <dt i18n>Host</dt>
                     <dd>
-                        <a [href]="domain.rootUrl" target="_blank" rel="nofollow noopener noreferrer"
-                           title="Open in new tab" i18n-title>
-                            <ng-container>{{ domain.host }}</ng-container>
-                            <fa-icon [icon]="faUpRightFromSquare" class="ms-2"></fa-icon>
-                        </a>
+                        <a [href]="domain.rootUrl" class="external-link" target="_blank"
+                           rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>{{ domain.host }}</a>
                     </dd>
                 </div>
                 <!-- Name -->

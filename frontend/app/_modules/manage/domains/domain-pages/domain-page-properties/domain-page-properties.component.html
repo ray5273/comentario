@@ -21,17 +21,18 @@
                     <!-- Domain -->
                     <div>
                         <dt i18n>Domain</dt>
-                        <dd><a [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id]">{{ domainMeta!.domain!.host }}</a></dd>
+                        <dd>
+                            <a [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id]"
+                               class="internal-link">{{ domainMeta!.domain!.host }}</a>
+                        </dd>
                     </div>
                     <!-- Path -->
                     <div>
                         <dt i18n>Path</dt>
                         <dd>
-                            <a href="{{ domainMeta!.domain!.rootUrl }}{{ page.path }}" target="_blank"
-                               rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
-                                <ng-container>{{ page.path }}</ng-container>
-                                <fa-icon [icon]="faUpRightFromSquare" class="ms-2"></fa-icon>
-                            </a>
+                            <a href="{{ domainMeta!.domain!.rootUrl }}{{ page.path }}" class="external-link"
+                               target="_blank" rel="nofollow noopener noreferrer"
+                               title="Open in new tab" i18n-title>{{ page.path }}</a>
                         </dd>
                     </div>
                     <!-- Title -->
