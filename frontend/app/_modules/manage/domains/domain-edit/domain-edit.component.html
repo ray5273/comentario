@@ -13,8 +13,8 @@
         <!-- Tabs -->
         <ul ngbNav #nav="ngbNav" class="nav-tabs ps-3 mb-3">
             <!-- General properties -->
-            <li ngbNavItem>
-                <a ngbNavLink class="fw-bold" i18n>General</a>
+            <li ngbNavItem formGroupName="general">
+                <a ngbNavLink [class.text-danger]="ctlGroupGeneral.invalid" class="fw-bold" i18n>General</a>
                 <ng-template ngbNavContent>
                     <!-- Info -->
                     <app-info-block>
@@ -26,13 +26,25 @@
                     <div class="mb-3 row">
                         <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
                         <div class="col-sm-9">
-                            <input formControlName="host" type="text" class="form-control" id="host"
-                                   [class.is-valid]="isNew && form.controls.host.touched && form.controls.host.valid"
-                                   [class.is-invalid]="isNew && form.controls.host.touched && form.controls.host.invalid"
-                                   required placeholder="example.com">
-                            <!-- Invalid feedback -->
-                            <div class="invalid-feedback">
-                                <ng-container i18n>Please enter a valid domain host.</ng-container>
+                            <div class="input-group">
+                                <!-- HTTP(S) -->
+                                <div ngbDropdown class="d-inline-block">
+                                    <button ngbDropdownToggle type="button" class="btn btn-outline-secondary"
+                                            id="domain-schema">{{ isHttps ? 'https' : 'http' }}://</button>
+                                    <div ngbDropdownMenu aria-labelledby="domain-schema">
+                                        <button ngbDropdownItem (click)="isHttps = false" type="button">http://</button>
+                                        <button ngbDropdownItem (click)="isHttps = true"  type="button">https://</button>
+                                    </div>
+                                </div>
+                                <!-- Host -->
+                                <input formControlName="host" type="text" class="form-control" id="host"
+                                       [class.is-valid]="isNew && ctlGroupGeneral.controls.host.touched && ctlGroupGeneral.controls.host.valid"
+                                       [class.is-invalid]="isNew && ctlGroupGeneral.controls.host.touched && ctlGroupGeneral.controls.host.invalid"
+                                       placeholder="example.com">
+                                <!-- Invalid feedback -->
+                                <div class="invalid-feedback">
+                                    <ng-container i18n>Please enter a valid domain host.</ng-container>
+                                </div>
                             </div>
                             <small *ngIf="isNew" id="nameHelpBlock" class="form-text text-warning-emphasis">
                                 <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
@@ -49,8 +61,8 @@
                         </label>
                         <div class="col-sm-9">
                             <input formControlName="name" type="text" class="form-control" id="name"
-                                   [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
-                                   [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid"
+                                   [class.is-valid]="ctlGroupGeneral.controls.name.touched && ctlGroupGeneral.controls.name.valid"
+                                   [class.is-invalid]="ctlGroupGeneral.controls.name.touched && ctlGroupGeneral.controls.name.invalid"
                                    placeholder="My blog" i18n-placeholder>
                             <div class="invalid-feedback" i18n>Value is too long.</div>
                         </div>
@@ -70,8 +82,8 @@
             </li>
 
             <!-- Authentication -->
-            <li ngbNavItem>
-                <a ngbNavLink>
+            <li ngbNavItem formGroupName="auth">
+                <a ngbNavLink [class.text-danger]="ctlGroupAuth.invalid">
                     <!-- Tab title -->
                     <span class="fw-bold me-1" i18n>Authentication</span>
                     <!-- Badge with a number -->
@@ -89,13 +101,13 @@
 
                     <!-- Anonymous comments -->
                     <div class="form-check">
-                        <input formControlName="authAnonymous" type="checkbox" class="form-check-input" id="auth-anonymous">
+                        <input formControlName="anonymous" type="checkbox" class="form-check-input" id="auth-anonymous">
                         <label class="form-check-label" for="auth-anonymous" i18n>Anonymous comments</label>
                     </div>
 
                     <!-- Local auth -->
                     <div class="form-check">
-                        <input formControlName="authLocal" type="checkbox" class="form-check-input" id="auth-local">
+                        <input formControlName="local" type="checkbox" class="form-check-input" id="auth-local">
                         <label class="form-check-label" for="auth-local" i18n>Local (password-based)</label>
                     </div>
 
@@ -109,19 +121,19 @@
 
                     <!-- SSO -->
                     <div class="form-check">
-                        <input formControlName="authSso" type="checkbox" class="form-check-input" id="auth-sso">
+                        <input formControlName="sso" type="checkbox" class="form-check-input" id="auth-sso">
                         <label class="form-check-label" for="auth-sso">Single Sign-On</label>
                         <app-info-icon docLink="configuration/frontend/domain/authentication/sso/" class="ms-2"></app-info-icon>
                     </div>
 
-                    <div *ngIf="form.controls.authSso.value" class="ms-4">
+                    <div *ngIf="ctlGroupAuth.controls.sso.value" class="ms-4">
                         <!-- SSO server URL -->
                         <div class="mb-2">
                             <label for="sso-url" class="form-label colon" i18n>SSO server URL</label>
                             <input formControlName="ssoUrl" type="url" class="form-control" id="sso-url"
-                                   [class.is-valid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.valid"
-                                   [class.is-invalid]="form.controls.ssoUrl.touched && form.controls.ssoUrl.invalid"
-                                   required placeholder="https://sso.example.com">
+                                   [class.is-valid]="ctlGroupAuth.controls.ssoUrl.touched && ctlGroupAuth.controls.ssoUrl.valid"
+                                   [class.is-invalid]="ctlGroupAuth.controls.ssoUrl.touched && ctlGroupAuth.controls.ssoUrl.invalid"
+                                   placeholder="https://sso.example.com">
                             <!-- Invalid feedback -->
                             <div class="invalid-feedback">
                                 <ng-container i18n>Please enter a valid URL.</ng-container>
@@ -130,7 +142,7 @@
 
                         <!-- SSO -->
                         <div class="form-check">
-                            <input formControlName="ssoNonInteractive" type="checkbox" class="form-check-input" id="sso-non-interactive">
+                            <input formControlName="ssoNonInt" type="checkbox" class="form-check-input" id="sso-non-interactive">
                             <label class="form-check-label" for="sso-non-interactive" i18n>Non-interactive</label>
                         </div>
                     </div>
@@ -145,8 +157,8 @@
             </li>
 
             <!-- Moderation -->
-            <li ngbNavItem>
-                <a ngbNavLink class="fw-bold" i18n>Moderation</a>
+            <li ngbNavItem formGroupName="mod">
+                <a ngbNavLink [class.text-danger]="ctlGroupMod.invalid" class="fw-bold" i18n>Moderation</a>
                 <ng-template ngbNavContent>
                     <!-- Info -->
                     <app-info-block>
@@ -160,25 +172,24 @@
                         <div class="col-sm-9">
                             <!-- Author is anonymous -->
                             <div class="form-check">
-                                <input formControlName="modAnonymous" type="checkbox" class="form-check-input" id="mod-anonymous">
+                                <input formControlName="anonymous" type="checkbox" class="form-check-input" id="mod-anonymous">
                                 <label class="form-check-label" for="mod-anonymous" i18n>Author is anonymous</label>
                             </div>
                             <!-- Author is authenticated -->
                             <div class="form-check">
-                                <input formControlName="modAuthenticated" type="checkbox" class="form-check-input" id="mod-authenticated">
+                                <input formControlName="authenticated" type="checkbox" class="form-check-input" id="mod-authenticated">
                                 <label class="form-check-label" for="mod-authenticated" i18n>Author is authenticated</label>
                             </div>
                             <!-- Author has less than this number of approved comments -->
                             <div class="form-check">
-                                <input formControlName="modNumCommentsOn" type="checkbox" class="form-check-input" id="mod-num-comments-on">
+                                <input formControlName="numCommentsOn" type="checkbox" class="form-check-input" id="mod-num-comments-on">
                                 <label class="form-check-label colon" for="mod-num-comments-on" i18n>Author has less than this number of approved comments</label>
                             </div>
                             <!-- Number of approved comments -->
-                            <div *ngIf="form.controls.modNumComments.enabled" class="mb-3">
-                                <input formControlName="modNumComments" type="number" class="form-control" id="mod-num-comments"
-                                       [class.is-valid]="form.controls.modNumComments.touched && form.controls.modNumComments.valid"
-                                       [class.is-invalid]="form.controls.modNumComments.touched && form.controls.modNumComments.invalid"
-                                       required min="1" max="999">
+                            <div *ngIf="ctlGroupMod.controls.numComments.enabled" class="mb-3">
+                                <input formControlName="numComments" type="number" class="form-control" id="mod-num-comments"
+                                       [class.is-valid]="ctlGroupMod.controls.numComments.touched && ctlGroupMod.controls.numComments.valid"
+                                       [class.is-invalid]="ctlGroupMod.controls.numComments.touched && ctlGroupMod.controls.numComments.invalid">
                                 <!-- Invalid feedback -->
                                 <div class="invalid-feedback">
                                     <ng-container i18n>Please enter a valid value.</ng-container>
@@ -186,15 +197,14 @@
                             </div>
                             <!-- Author is registered less than this number of days ago -->
                             <div class="form-check">
-                                <input formControlName="modUserAgeDaysOn" type="checkbox" class="form-check-input" id="mod-user-age-days-on">
+                                <input formControlName="userAgeDaysOn" type="checkbox" class="form-check-input" id="mod-user-age-days-on">
                                 <label class="form-check-label colon" for="mod-user-age-days-on" i18n>Author is registered less than this number of days ago</label>
                             </div>
                             <!-- Number of days for minimum user age -->
-                            <div *ngIf="form.controls.modUserAgeDays.enabled" class="mb-3">
-                                <input formControlName="modUserAgeDays" type="number" class="form-control" id="mod-user-age-days"
-                                       [class.is-valid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.valid"
-                                       [class.is-invalid]="form.controls.modUserAgeDays.touched && form.controls.modUserAgeDays.invalid"
-                                       required min="1" max="999">
+                            <div *ngIf="ctlGroupMod.controls.userAgeDays.enabled" class="mb-3">
+                                <input formControlName="userAgeDays" type="number" class="form-control" id="mod-user-age-days"
+                                       [class.is-valid]="ctlGroupMod.controls.userAgeDays.touched && ctlGroupMod.controls.userAgeDays.valid"
+                                       [class.is-invalid]="ctlGroupMod.controls.userAgeDays.touched && ctlGroupMod.controls.userAgeDays.invalid">
                                 <!-- Invalid feedback -->
                                 <div class="invalid-feedback">
                                     <ng-container i18n>Please enter a valid value.</ng-container>
@@ -202,12 +212,12 @@
                             </div>
                             <!-- Comment contains link -->
                             <div class="form-check">
-                                <input formControlName="modLinks" type="checkbox" class="form-check-input" id="mod-links">
+                                <input formControlName="links" type="checkbox" class="form-check-input" id="mod-links">
                                 <label class="form-check-label" for="mod-links" i18n>Comment contains link</label>
                             </div>
                             <!-- Comment contains image -->
                             <div class="form-check">
-                                <input formControlName="modImages" type="checkbox" class="form-check-input" id="mod-images">
+                                <input formControlName="images" type="checkbox" class="form-check-input" id="mod-images">
                                 <label class="form-check-label" for="mod-images" i18n>Comment contains image</label>
                             </div>
                         </div>
@@ -218,7 +228,7 @@
                         <div class="col-sm-3 colon fw-bold" i18n>Email moderators</div>
                         <div class="col-sm-9">
                             <div *ngFor="let p of modNotifyPolicies" class="form-check">
-                                <input formControlName="modNotifyPolicy" class="form-check-input" type="radio" [id]="'mod-notify-policy-'+p" [value]="p">
+                                <input formControlName="notifyPolicy" class="form-check-input" type="radio" [id]="'mod-notify-policy-'+p" [value]="p">
                                 <label class="form-check-label" [for]="'mod-notify-policy-'+p" i18n>{{ p | moderatorNotifyPolicy }}</label>
                             </div>
                         </div>
@@ -227,8 +237,8 @@
             </li>
 
             <!-- Extensions -->
-            <li ngbNavItem>
-                <a ngbNavLink>
+            <li ngbNavItem formGroupName="extensions">
+                <a ngbNavLink [class.text-danger]="ctlGroupExtensions.invalid">
                     <!-- Tab title -->
                     <span class="fw-bold me-1" i18n>Extensions</span>
                     <!-- Badge with a number -->
@@ -241,7 +251,7 @@
                         <app-info-icon docLink="configuration/frontend/domain/extensions/" class="ms-2"></app-info-icon>
                     </app-info-block>
 
-                    <div formGroupName="extensions">
+                    <div>
                         <!-- Iterate extensions enabled globally -->
                         <div *ngFor="let e of extensions; index as idx" [formGroupName]="idx">
                             <!-- Enabled checkbox -->

@@ -679,7 +679,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		DefaultSort:         models.CommentSort(d.DefaultSort),
 		Host:                models.Host(d.Host),
 		ID:                  strfmt.UUID(d.ID.String()),
-		IsHTTPS:             d.IsHTTPS,
+		IsHTTPS:             swag.Bool(d.IsHTTPS),
 		IsReadonly:          d.IsReadonly,
 		ModAnonymous:        d.ModAnonymous,
 		ModAuthenticated:    d.ModAuthenticated,

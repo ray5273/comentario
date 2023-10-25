@@ -68,11 +68,11 @@ export class DomainEditComponent implements OnInit {
      * Number of authentication methods enabled.
      */
     get numAuths(): number {
-        const v = this.form?.value;
+        const v = this.ctlGroupAuth?.value;
         return v ?
-            (v.authAnonymous ? 1 : 0) +
-            (v.authLocal     ? 1 : 0) +
-            (v.authSso       ? 1 : 0) +
+            (v.anonymous ? 1 : 0) +
+            (v.local     ? 1 : 0) +
+            (v.sso       ? 1 : 0) +
             (v.fedIdps?.filter((e: boolean) => e).length ?? 0) : 0;
     }
 
@@ -84,6 +84,30 @@ export class DomainEditComponent implements OnInit {
         return v ?
             (Object.values(v) as ExtensionValue[]).filter(e => e.enabled).length :
             0;
+    }
+
+    get ctlGroupGeneral(): FormGroup {
+        return this.form!.controls.general as FormGroup;
+    }
+
+    get ctlGroupAuth(): FormGroup {
+        return this.form!.controls.auth as FormGroup;
+    }
+
+    get ctlGroupMod(): FormGroup {
+        return this.form!.controls.mod as FormGroup;
+    }
+
+    get ctlGroupExtensions(): FormGroup {
+        return this.form!.controls.extensions as FormGroup;
+    }
+
+    get isHttps(): boolean {
+        return !!this.ctlGroupGeneral.controls.isHttps.value;
+    }
+
+    set isHttps(b: boolean) {
+        this.ctlGroupGeneral.controls.isHttps.setValue(b);
     }
 
     ngOnInit(): void {
@@ -102,25 +126,31 @@ export class DomainEditComponent implements OnInit {
                 const d = this.domainMeta?.domain;
                 if (d) {
                     this.form!.patchValue({
-                        host:              d.host,
-                        name:              d.name,
-                        isReadonly:        d.isReadonly,
-                        authAnonymous:     d.authAnonymous,
-                        authLocal:         d.authLocal,
-                        authSso:           d.authSso,
-                        ssoNonInteractive: d.ssoNonInteractive,
-                        modAnonymous:      d.modAnonymous,
-                        modAuthenticated:  d.modAuthenticated,
-                        modNumCommentsOn:  !!d.modNumComments,
-                        modNumComments:    d.modNumComments || 3,
-                        modUserAgeDaysOn:  !!d.modUserAgeDays,
-                        modUserAgeDays:    d.modUserAgeDays || 7,
-                        modImages:         d.modImages,
-                        modLinks:          d.modLinks,
-                        modNotifyPolicy:   d.modNotifyPolicy,
-                        ssoUrl:            d.ssoUrl,
-                        defaultSort:       d.defaultSort,
-                        fedIdps:           this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
+                        general: {
+                            isHttps:     d.isHttps,
+                            host:        d.host,
+                            name:        d.name,
+                            defaultSort: d.defaultSort,
+                        },
+                        auth: {
+                            anonymous: d.authAnonymous,
+                            local:     d.authLocal,
+                            sso:       d.authSso,
+                            ssoUrl:    d.ssoUrl,
+                            ssoNonInt: d.ssoNonInteractive,
+                            fedIdps:   this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
+                        },
+                        mod: {
+                            anonymous:     d.modAnonymous,
+                            authenticated: d.modAuthenticated,
+                            numCommentsOn: !!d.modNumComments,
+                            numComments:   d.modNumComments || 3,
+                            userAgeDaysOn: !!d.modUserAgeDays,
+                            userAgeDays:   d.modUserAgeDays || 7,
+                            images:        d.modImages,
+                            links:         d.modLinks,
+                            notifyPolicy:  d.modNotifyPolicy,
+                        }
                     });
 
                     // Update enabled extension controls
@@ -153,27 +183,29 @@ export class DomainEditComponent implements OnInit {
         if (this.form.valid) {
             const vals = this.form.value;
             const domain: Domain = {
-                // Host cannot be changed once set
-                host:              vals.host || this.domainMeta!.domain!.host,
-                name:              vals.name,
-                isReadonly:        vals.isReadonly,
-                authAnonymous:     !!vals.authAnonymous,
-                authLocal:         !!vals.authLocal,
-                authSso:           !!vals.authSso,
-                ssoNonInteractive: !!vals.ssoNonInteractive,
-                modAnonymous:      !!vals.modAnonymous,
-                modAuthenticated:  !!vals.modAuthenticated,
-                modNumComments:    vals.modNumCommentsOn ? (vals.modNumComments ?? 0) : 0,
-                modUserAgeDays:    vals.modUserAgeDaysOn ? (vals.modUserAgeDays ?? 0) : 0,
-                modImages:         !!vals.modImages,
-                modLinks:          !!vals.modLinks,
-                modNotifyPolicy:   vals.modNotifyPolicy ?? DomainModNotifyPolicy.Pending,
-                ssoUrl:            vals.ssoUrl ?? '',
-                defaultSort:       vals.defaultSort ?? CommentSort.Td,
+                // General
+                isHttps:           !!vals.general.isHttps,
+                host:              vals.general.host || this.domainMeta!.domain!.host,
+                name:              vals.general.name,
+                defaultSort:       vals.general.defaultSort ?? CommentSort.Td,
+                // Auth
+                authAnonymous:     !!vals.auth.anonymous,
+                authLocal:         !!vals.auth.local,
+                authSso:           !!vals.auth.sso,
+                ssoUrl:            vals.auth.ssoUrl ?? '',
+                ssoNonInteractive: !!vals.auth.ssoNonInt,
+                // Moderation
+                modAnonymous:      !!vals.mod.anonymous,
+                modAuthenticated:  !!vals.mod.authenticated,
+                modNumComments:    vals.mod.numCommentsOn ? (vals.mod.numComments ?? 0) : 0,
+                modUserAgeDays:    vals.mod.userAgeDaysOn ? (vals.mod.userAgeDays ?? 0) : 0,
+                modImages:         !!vals.mod.images,
+                modLinks:          !!vals.mod.links,
+                modNotifyPolicy:   vals.mod.notifyPolicy ?? DomainModNotifyPolicy.Pending,
             };
 
             // Collect IDs of enabled IdPs
-            const federatedIdpIds = this.fedIdps?.filter((_, idx) => vals.fedIdps?.[idx]).map(idp => idp.id);
+            const federatedIdpIds = this.fedIdps?.filter((_, idx) => vals.auth.fedIdps?.[idx]).map(idp => idp.id);
 
             // Collect {id, config} of enabled extensions
             const extensions = this.extensions ?
@@ -221,41 +253,52 @@ export class DomainEditComponent implements OnInit {
 
                     // Create the form
                     const f = this.fb.nonNullable.group({
-                        // Host can't be changed for an existing domain
-                        host:              [{value: '', disabled: !this.isNew}, [Validators.minLength(1), Validators.maxLength(259), XtraValidators.host]],
-                        name:              ['', [Validators.maxLength(255)]],
-                        isReadonly:        false,
-                        authAnonymous:     false,
-                        authLocal:         true,
-                        authSso:           false,
-                        ssoNonInteractive: false,
-                        modAnonymous:      true,
-                        modAuthenticated:  false,
-                        modNumCommentsOn:  false,
-                        modNumComments:    [{value: 3, disabled: true}, [Validators.min(1), Validators.max(999)]],
-                        modUserAgeDaysOn:  false,
-                        modUserAgeDays:    [{value: 7, disabled: true}, [Validators.min(1), Validators.max(999)]],
-                        modImages:         true,
-                        modLinks:          true,
-                        modNotifyPolicy:   DomainModNotifyPolicy.Pending,
-                        ssoUrl:            ['', [Validators.minLength(1), Validators.maxLength(2084), Validators.pattern(/^https:\/\/.+/)]], // We only expect HTTPS URLs here
-                        defaultSort:       CommentSort.Td,
-                        fedIdps:           this.fb.array(Array(this.fedIdps?.length).fill(true)), // Enable all by default
-                        extensions:        this.getExtensionsFormGroup(),
+                        general: this.fb.nonNullable.group({
+                            isHttps:     true,
+                            host:        [
+                                {value: '', disabled: !this.isNew}, // Host can't be changed for an existing domain
+                                [Validators.required, Validators.minLength(1), Validators.maxLength(259), XtraValidators.host],
+                            ],
+                            name:        ['', [Validators.maxLength(255)]],
+                            defaultSort: CommentSort.Td,
+                        }),
+                        auth: this.fb.nonNullable.group({
+                            anonymous: false,
+                            local:     true,
+                            sso:       false,
+                            ssoUrl:    [
+                                {value: '', disabled: true},
+                                [Validators.required, XtraValidators.url(!this.cfgSvc.isUnderTest)], // Only allow insecure URL in e2e testing mode
+                            ],
+                            ssoNonInt: false,
+                            fedIdps:   this.fb.array(Array(this.fedIdps?.length).fill(true)), // Enable all by default
+                        }),
+                        mod: this.fb.nonNullable.group({
+                            anonymous:     true,
+                            authenticated: false,
+                            numCommentsOn: false,
+                            numComments:   [{value: 3, disabled: true}, [Validators.required, Validators.min(1), Validators.max(999)]],
+                            userAgeDaysOn: false,
+                            userAgeDays:   [{value: 7, disabled: true}, [Validators.required, Validators.min(1), Validators.max(999)]],
+                            images:        true,
+                            links:         true,
+                            notifyPolicy:  DomainModNotifyPolicy.Pending,
+                        }),
+                        extensions: this.getExtensionsFormGroup(),
                     });
 
-                    // Disable numeric controls when the corresponding checkbox is off
-                    f.controls.modNumCommentsOn.valueChanges
-                        .pipe(untilDestroyed(this))
-                        .subscribe(b => Utils.enableControls(b, f.controls.modNumComments));
-                    f.controls.modUserAgeDaysOn.valueChanges
-                        .pipe(untilDestroyed(this))
-                        .subscribe(b => Utils.enableControls(b, f.controls.modUserAgeDays));
-
                     // SSO URL is only relevant when SSO auth is enabled
-                    f.controls.authSso.valueChanges
+                    f.controls.auth.controls.sso.valueChanges
                         .pipe(untilDestroyed(this))
-                        .subscribe(b => Utils.enableControls(b, f.controls.ssoUrl, f.controls.ssoNonInteractive));
+                        .subscribe(b => Utils.enableControls(b, f.controls.auth.controls.ssoUrl, f.controls.auth.controls.ssoNonInt));
+
+                    // Disable numeric controls when the corresponding checkbox is off
+                    f.controls.mod.controls.numCommentsOn.valueChanges
+                        .pipe(untilDestroyed(this))
+                        .subscribe(b => Utils.enableControls(b, f.controls.mod.controls.numComments));
+                    f.controls.mod.controls.userAgeDaysOn.valueChanges
+                        .pipe(untilDestroyed(this))
+                        .subscribe(b => Utils.enableControls(b, f.controls.mod.controls.userAgeDays));
 
                     // Extensions: disable the config control when the extension is disabled
                     this.extensions?.forEach((_, idx) =>

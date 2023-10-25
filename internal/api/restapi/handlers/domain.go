@@ -180,8 +180,7 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		Name:              strings.TrimSpace(domain.Name),
 		Host:              host,
 		CreatedTime:       time.Now().UTC(),
-		IsHTTPS:           domain.IsHTTPS,
-		IsReadonly:        domain.IsReadonly,
+		IsHTTPS:           swag.BoolValue(domain.IsHTTPS),
 		AuthAnonymous:     domain.AuthAnonymous,
 		AuthLocal:         domain.AuthLocal,
 		AuthSSO:           domain.AuthSso,
@@ -277,6 +276,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	}
 
 	// Update domain properties
+	domain.IsHTTPS = swag.BoolValue(newDomain.IsHTTPS)
 	domain.Name = newDomain.Name
 	domain.AuthAnonymous = newDomain.AuthAnonymous
 	domain.AuthLocal = newDomain.AuthLocal

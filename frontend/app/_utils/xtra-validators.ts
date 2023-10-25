@@ -11,5 +11,16 @@ export class XtraValidators {
     static get host(): ValidatorFn {
         return Validators.pattern(/^([a-z\d]|[a-z\d][-a-z\d]{0,61}[a-z\d])(\.([a-z\d]|[a-z\d][-a-z\d]{0,61}[a-z\d]))*(:\d{1,5})?$/);
     }
+
+    /**
+     * Return a validator for checking a URL value.
+     * @param forceHttps Whether to force HTTPS.
+     */
+    static url(forceHttps: boolean): ValidatorFn {
+        return Validators.pattern(
+            forceHttps ?
+                /^https:\/\/.{1,2076}$/ :
+                /^https?:\/\/.{1,2076}$/);
+    }
 }
-// abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc.abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc.abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc.abcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabcabc
+

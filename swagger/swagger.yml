@@ -201,6 +201,7 @@ definitions:
     type: object
     required:
       - host
+      - isHttps
     properties:
       id:
         type: string
@@ -226,8 +227,10 @@ definitions:
         x-omitempty: false
       isReadonly:
         type: boolean
+        readOnly: true
         description: Whether the domain is readonly (no new comments are allowed)
         x-omitempty: false
+        x-isnullable: false
       authAnonymous:
         type: boolean
         description: Whether anonymous comments are allowed

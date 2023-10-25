@@ -134,62 +134,45 @@ context('Domain Edit page', () => {
                 // Click on Submit to engage validation
                 cy.get('@btnSubmit').click();
 
-                // Host
+                // Host. Only perform a basic validation here as it's extensively checked in a unit test
                 makeGeneralAliases();
                 cy.get('@host').isInvalid('Please enter a valid domain host.')
-                    .type('a')                                   .isValid()
-                    .setValue('abc')                             .isValid()
-                    .setValue('a.c')                             .isValid()
-                    .setValue('abc.xy')                          .isValid()
-                    .setValue('abc-xy')                          .isValid()
-                    .setValue('abc.123')                         .isValid()
-                    .setValue('1.a')                             .isValid()
-                    .setValue('2.3')                             .isValid()
-                    .setValue('2-abc.3-xyz')                     .isValid()
-                    .setValue('2-abc.3-xyz:19828')               .isValid()
-                    .setValue('abc!xy')                          .isInvalid()  // Bad character
-                    .setValue('abc@xy')                          .isInvalid()  // Bad character
-                    .setValue('abc#xy')                          .isInvalid()  // Bad character
-                    .setValue('abc$xy')                          .isInvalid()  // Bad character
-                    .setValue('abc%xy')                          .isInvalid()  // Bad character
-                    .setValue('abc^xy')                          .isInvalid()  // Bad character
-                    .setValue('abc&xy')                          .isInvalid()  // Bad character
-                    .setValue('abc*xy')                          .isInvalid()  // Bad character
-                    .setValue('abc(xy')                          .isInvalid()  // Bad character
-                    .setValue('abc)xy')                          .isInvalid()  // Bad character
-                    .setValue('abc_xy')                          .isInvalid()  // Bad character
-                    .setValue('abc+xy')                          .isInvalid()  // Bad character
-                    .setValue('abc=xy')                          .isInvalid()  // Bad character
-                    .setValue('abc`xy')                          .isInvalid()  // Bad character
-                    .setValue('abc~xy')                          .isInvalid()  // Bad character
-                    .setValue('abc[xy')                          .isInvalid()  // Bad character
-                    .setValue('abc]xy')                          .isInvalid()  // Bad character
-                    .setValue('abc{xy')                          .isInvalid()  // Bad character
-                    .setValue('abc}xy')                          .isInvalid()  // Bad character
-                    .setValue('abc;xy')                          .isInvalid()  // Bad character
-                    .setValue('abc\'xy')                         .isInvalid()  // Bad character
-                    .setValue('abc"xy')                          .isInvalid()  // Bad character
-                    .setValue('abc|xy')                          .isInvalid()  // Bad character
-                    .setValue('abc\\xy')                         .isInvalid()  // Bad character
-                    .setValue('abc<xy')                          .isInvalid()  // Bad character
-                    .setValue('abc>xy')                          .isInvalid()  // Bad character
-                    .setValue('abc,xy')                          .isInvalid()  // Bad character
-                    .setValue('abc/xy')                          .isInvalid()  // Bad character
-                    .setValue('abc?xy')                          .isInvalid()  // Bad character
-                    .setValue('abcde' + '.xy'.repeat(85))        .isInvalid()  // 260 chars is bad
-                    .setValue('abcd'  + '.xy'.repeat(85))        .isValid()    // 259 chars is OK (actually must be max. 253)
-                    .setValue('abcd'.repeat(16))                 .isInvalid()  // Segment of 64 chars is bad
-                    .type('{backspace}')                         .isValid()    // Segment of 63 chars is OK
-                    .setValue(('abc'.repeat(21) + '.').repeat(4)).isInvalid()  // '.' at the end
-                    .type('{backspace}')                         .isValid()    // 4 segments of 63 chars = 255 chars is OK (actually must be max. 253)
-                    .setValue('abc:')                            .isInvalid()  // Colon without host is bad
-                    .setValue('abc:1')                           .isValid()    // Host of 1 char is OK
-                    .setValue('abc:123')                         .isValid()    // Host of 3 chars is OK
-                    .setValue('abc:123456')                      .isInvalid()  // Host of 6 chars is bad
-                    .setValue('abc:x')                           .isInvalid(); // Alpha host is bad
+                    .type('a').isValid()
+                    .setValue('x'.repeat(260)).isInvalid();
 
                 // Name
-                // TODO
+                cy.get('@name').verifyTextInputValidation(0, 255, false, 'Value is too long.');
+
+                // Authentication -> SSO
+                cy.get('@tabAuth').click();
+                makeAuthAliases(false);
+                // No SSO controls exist
+                cy.get('@domainEdit').find('#sso-non-interactive').should('not.exist');
+                cy.get('@domainEdit').find('#sso-url')            .should('not.exist');
+                // Enable SSO, and controls appear
+                cy.get('@domainEdit').find('#auth-sso').clickLabel();
+                cy.get('@domainEdit').find('#sso-non-interactive').should('be.visible').should('not.be.checked');
+                cy.get('@domainEdit').find('#sso-url')
+                    .should('be.visible').should('have.value', '').isInvalid('Please enter a valid URL.')
+                    .setValue('https://whatever').isValid();
+
+                // Moderation
+                cy.get('@tabModeration').click();
+                makeModerationAliases();
+
+                // -- Number of comments input
+                cy.get('@domainEdit').find('#mod-num-comments').should('not.exist');
+                cy.get('@modNumCommentsOn').clickLabel();
+                cy.get('@domainEdit').find('#mod-num-comments').should('be.visible').should('have.value', '3')
+                    .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
+
+                // -- Age in days input
+                cy.get('@domainEdit').find('#mod-user-age-days').should('not.exist');
+                cy.get('@modUserAgeDaysOn').clickLabel();
+                cy.get('@domainEdit').find('#mod-user-age-days').should('be.visible').should('have.value', '7')
+                    .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
+
+                // TODO check tab validation display (.text-danger)
             });
         });
     });

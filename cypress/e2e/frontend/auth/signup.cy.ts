@@ -64,7 +64,7 @@ context('Signup', () => {
         cy.get('@password').verifyPasswordInputValidation({required: true, strong: true});
 
         // Name
-        cy.get('@name').verifyUserNameInputValidation();
+        cy.get('@name').verifyTextInputValidation(2, 63, true, 'Please enter a valid name.');
     });
 
     it('allows user to sign up with confirmation', () => {

@@ -216,6 +216,26 @@ declare namespace Cypress {
         verifyListFooter(count: number, more: boolean, noDataText?: string): Chainable<JQueryWithSelector>;
 
         /**
+         * Run common text input validations against the passed element.
+         * NB: the input must be touched.
+         * @param minLength Minimum allowed input length.
+         * @param maxLength Maximum allowed input length.
+         * @param required Whether the input is required.
+         * @param errMessage Error message to expect on an invalid input.
+         */
+        verifyTextInputValidation(minLength: number, maxLength: number, required: boolean, errMessage: string): Chainable<JQueryWithSelector>;
+
+        /**
+         * Run common numeric input validations against the passed element.
+         * NB: the input must be touched.
+         * @param min Minimum allowed input value.
+         * @param max Maximum allowed input value.
+         * @param required Whether the input is required.
+         * @param errMessage Error message to expect on an invalid input.
+         */
+        verifyNumericInputValidation(min: number, max: number, required: boolean, errMessage: string): Chainable<JQueryWithSelector>;
+
+        /**
          * Run common email input validations against the passed element.
          * NB: the input must be touched.
          */
@@ -226,12 +246,6 @@ declare namespace Cypress {
          * NB: the input must be touched.
          */
         verifyPasswordInputValidation(options?: {required?: boolean, strong?: boolean}): Chainable<JQueryWithSelector>;
-
-        /**
-         * Run common user name input validations against the passed element.
-         * NB: the input must be touched.
-         */
-        verifyUserNameInputValidation(): Chainable<JQueryWithSelector>;
 
         /**
          * Just like cy.visit(), but uses the test site URL as base.

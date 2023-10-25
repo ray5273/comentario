@@ -372,6 +372,45 @@ Cypress.Commands.add(
         }));
 
 Cypress.Commands.add(
+    'verifyTextInputValidation',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, minLength: number, maxLength: number, required: boolean, errMessage: string) => {
+        // If the input is required, verify it gets invalid on no entry
+        if (required) {
+            cy.wrap(element).clear().isInvalid(errMessage);
+        }
+
+        // Check minimum length, if provided
+        if (minLength > 0) {
+            cy.wrap(element)
+                .setValue('x'.repeat(minLength-1)).isInvalid(errMessage)
+                .type('x').isValid();
+        }
+
+        // Check maximum length
+        cy.wrap(element)
+            .setValue('b'.repeat(maxLength+1)).isInvalid(errMessage)
+            .type('{backspace}').isValid();
+    });
+
+Cypress.Commands.add(
+    'verifyNumericInputValidation',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, min: number, max: number, required: boolean, errMessage: string) => {
+        // If the input is required, verify it gets invalid on no entry
+        if (required) {
+            cy.wrap(element).clear().isInvalid(errMessage);
+        }
+
+        // Check ranges
+        cy.wrap(element)
+            .setValue(String(min-1)).isInvalid(errMessage)
+            .setValue(String(min)).isValid()
+            .setValue(String(max+1)).isInvalid(errMessage)
+            .setValue(String(max)).isValid();
+    });
+
+Cypress.Commands.add(
     'verifyEmailInputValidation',
     {prevSubject: 'element'},
     (element: JQueryWithSelector) => cy.wrap(element)
@@ -420,16 +459,6 @@ Cypress.Commands.add(
         return el.setValue('xY1!'.repeat(16)).isInvalid() // 64 chars is too much
             .type('{backspace}').isValid(); // 63 is good enough
     });
-
-Cypress.Commands.add(
-    'verifyUserNameInputValidation',
-    {prevSubject: 'element'},
-    (element: JQueryWithSelector) => cy.wrap(element)
-        .clear().isInvalid('Please enter a valid name.')
-        .type('a').isInvalid()
-        .type('b').isValid()
-        .setValue('b'.repeat(64)).isInvalid() // 64 chars is too much
-        .type('{backspace}').isValid()); // 63 is good enough
 
 Cypress.Commands.add(
     'visitTestSite',

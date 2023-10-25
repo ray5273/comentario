@@ -3,9 +3,9 @@ import { XtraValidators } from './xtra-validators';
 
 describe('XtraValidators', () => {
 
-    describe('host', () => {
+    const ok = true;
 
-        const ok = true;
+    describe('host', () => {
 
         [
             // Good
@@ -79,5 +79,45 @@ describe('XtraValidators', () => {
             .forEach(t => it(
                 `given '${t.in}', validates to ${t.ok ?? false}`,
                 () => expect(XtraValidators.host(new FormControl(t.in))).toEqual(t.ok ? null : jasmine.truthy())));
+    });
+
+    describe('url', () => {
+
+        [
+            // Good
+            {ok, secure: false, in: undefined},
+            {ok, secure: true,  in: null},
+            {ok, secure: false, in: undefined},
+            {ok, secure: true,  in: null},
+            {ok, secure: false, in: ''},
+            {ok, secure: true,  in: ''},
+            {ok, secure: false, in: 'http://a'},
+            {ok, secure: false, in: 'https://a'},
+            {ok, secure: true,  in: 'https://a'},
+            {ok, secure: false, in: 'http://'  + 'a'.repeat(2076)},
+            {ok, secure: false, in: 'https://' + 'a'.repeat(2076)},
+            {ok, secure: true,  in: 'https://' + 'a'.repeat(2076)},
+
+            // Bad
+            {secure: false, in: false},
+            {secure: false, in: true},
+            {secure: false, in: {}},
+            {secure: false, in: 'h'},
+            {secure: false, in: 'ht'},
+            {secure: false, in: 'htt'},
+            {secure: false, in: 'http'},
+            {secure: false, in: 'http:'},
+            {secure: false, in: 'http:/'},
+            {secure: false, in: 'http://'},
+            {secure: true,  in: 'http://'},
+            {secure: false, in: 'https://'},
+            {secure: true,  in: 'https://'},
+            {secure: true,  in: 'http://a'},
+            {secure: false, in: 'http://'  + 'a'.repeat(2077)},
+            {secure: true,  in: 'https://' + 'a'.repeat(2077)},
+        ]
+            .forEach(t => it(
+                `given '${t.in}', validates to ${t.ok ?? false}`,
+                () => expect(XtraValidators.url(t.secure)(new FormControl(t.in))).toEqual(t.ok ? null : jasmine.truthy())));
     });
 });

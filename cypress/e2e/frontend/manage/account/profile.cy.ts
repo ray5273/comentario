@@ -70,7 +70,7 @@ context('Profile', () => {
             // Name. Clear and try to submit to engage validation
             cy.get('@name').clear();
             cy.get('@submit').focus().should('be.enabled').click();
-            cy.get('@name').verifyUserNameInputValidation();
+            cy.get('@name').verifyTextInputValidation(2, 63, true, 'Please enter a valid name.');
 
             // Passwords
             cy.get('@curPwd').verifyPasswordInputValidation({required: false, strong: false});
