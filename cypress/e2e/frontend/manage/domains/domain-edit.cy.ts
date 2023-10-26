@@ -12,8 +12,10 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('.form-footer button[type=submit]')    .as('btnSubmit');
     };
     const makeGeneralAliases = () => {
-        cy.get('@domainEdit').find('#host').as('host');
-        cy.get('@domainEdit').find('#name').as('name');
+        cy.get('@domainEdit').find('#scheme').as('scheme')
+            .next().should('have.class', 'dropdown-menu').as('schemeMenu');
+        cy.get('@domainEdit').find('#host')  .as('host');
+        cy.get('@domainEdit').find('#name')  .as('name');
         // Default comment sort
         cy.get('@domainEdit').find('#sort-ta').as('sortTA');
         cy.get('@domainEdit').find('#sort-td').as('sortTD');
@@ -52,8 +54,98 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#extension-apiLayer-spamChecker-enabled').as('extApiLayerEnabled');
         cy.get('@domainEdit').find('#extension-perspective-enabled')         .as('extPerspectiveEnabled');
     };
-    const checkTabs = (activeState: boolean[]) =>
-        cy.get('@domainEdit').find('a[ngbnavlink]').hasClass('active').should('arrayMatch', activeState);
+
+    /** Check the activity state of all tabs. */
+    const checkActiveTabs = (states: boolean[]) =>
+        cy.get('@domainEdit').find('a[ngbnavlink]').hasClass('active').should('arrayMatch', states);
+
+    /** Check the invalid state of all tabs. */
+    const checkInvalidTabs = (states: boolean[]) =>
+        cy.get('@domainEdit').find('a[ngbnavlink]').hasClass('is-invalid').should('arrayMatch', states);
+
+    /** Select domain scheme using dropdown. General tab must be active and aliases created. */
+    const selectScheme = (https: boolean) => {
+        const scheme = https ? 'https://' : 'http://';
+        cy.get('@schemeMenu').should('not.be.visible');
+        cy.get('@scheme').click();
+        cy.get('@schemeMenu').should('be.visible')
+            .contains('button', scheme).click();
+        cy.get('@schemeMenu').should('not.be.visible');
+        cy.get('@scheme').should('have.text', scheme);
+    };
+
+    /** Check validations on all controls. */
+    const checkValidations = (checkHost: boolean, ssoEnabled: boolean) => {
+        // General
+        makeGeneralAliases();
+
+        // -- Scheme
+        selectScheme(false);
+        selectScheme(true);
+
+        // -- Host. Only perform a basic validation here as it's extensively checked in a unit test
+        if (checkHost) {
+            cy.get('@host').isInvalid('Please enter a valid domain host.')
+                .type('a').isValid()
+                .setValue('x'.repeat(260)).isInvalid()
+                .setValue('foo.bar');
+        }
+
+        // -- Name
+        cy.get('@name').verifyTextInputValidation(0, 255, false, 'Value is too long.')
+            .clear();
+
+        // Authentication -> SSO
+        cy.get('@tabAuth').click();
+        makeAuthAliases(ssoEnabled);
+        // Check if no SSO controls exist
+        if (!ssoEnabled) {
+            cy.get('@domainEdit').find('#sso-non-interactive').should('not.exist');
+            cy.get('@domainEdit').find('#sso-url').should('not.exist');
+            // Enable SSO, and controls appear
+            cy.get('@domainEdit').find('#auth-sso').clickLabel();
+        }
+        cy.get('@domainEdit').find('#sso-non-interactive').should('be.visible');
+        cy.get('@domainEdit').find('#sso-url')
+            .should('be.visible').clear().isInvalid('Please enter a valid URL.')
+            .setValue('https://whatever').isValid();
+        cy.get('@domainEdit').find('#auth-sso').clickLabel();
+
+        // Moderation
+        cy.get('@tabModeration').click();
+        makeModerationAliases();
+
+        // -- Number of comments input
+        cy.get('@domainEdit').find('#mod-num-comments').should('not.exist');
+        cy.get('@modNumCommentsOn').clickLabel();
+        cy.get('@domainEdit').find('#mod-num-comments').should('be.visible').should('have.value', '3')
+            .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
+
+        // -- Age in days input
+        cy.get('@domainEdit').find('#mod-user-age-days').should('not.exist');
+        cy.get('@modUserAgeDaysOn').clickLabel();
+        cy.get('@domainEdit').find('#mod-user-age-days').should('be.visible').should('have.value', '7')
+            .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
+
+        // Check tab validation display. Initially all valid
+        checkInvalidTabs([false, false, false, false]);
+
+        // -- General
+        cy.get('@tabGeneral').click();
+        cy.get('@domainEdit').find('#name').setValue('x'.repeat(256));
+        checkInvalidTabs([true, false, false, false]);
+
+        // -- Auth
+        cy.get('@tabAuth').click();
+        cy.get('@domainEdit').find('#auth-sso').clickLabel();
+        cy.get('@domainEdit').find('#sso-url').clear();
+        checkInvalidTabs([true, true, false, false]);
+
+        // -- Moderation
+        cy.get('@tabModeration').click();
+        cy.get('@domainEdit').find('#mod-user-age-days').clear();
+        checkInvalidTabs([true, true, true, false]);
+    };
 
     beforeEach(cy.backendReset);
 
@@ -79,15 +171,16 @@ context('Domain Edit page', () => {
                 cy.get('@btnSubmit').should('be.visible').should('be.enabled').should('have.text', 'Create');
 
                 // General
-                checkTabs([true, false, false, false]);
+                checkActiveTabs([true, false, false, false]);
                 makeGeneralAliases();
-                cy.get('@host').should('be.visible').and('have.value', '').and('be.enabled');
-                cy.get('@name').should('be.visible').and('have.value', '').and('be.enabled');
+                cy.get('@scheme').should('be.visible').and('have.text', 'https://').and('be.enabled');
+                cy.get('@host')  .should('be.visible').and('have.value', '').and('be.enabled');
+                cy.get('@name')  .should('be.visible').and('have.value', '').and('be.enabled');
                 cy.get('@sortTD').should('be.checked');
 
                 // Authentication
                 cy.get('@tabAuth').click();
-                checkTabs([false, true, false, false]);
+                checkActiveTabs([false, true, false, false]);
                 makeAuthAliases(false);
                 cy.get('@authAnonymous').should('be.visible').and('be.enabled').and('not.be.checked');
                 cy.get('@authLocal')    .should('be.visible').and('be.enabled').and('be.checked');
@@ -100,7 +193,7 @@ context('Domain Edit page', () => {
 
                 // Moderation
                 cy.get('@tabModeration').click();
-                checkTabs([false, false, true, false]);
+                checkActiveTabs([false, false, true, false]);
                 makeModerationAliases();
                 cy.get('@modAnonymous')          .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@modAuthenticated')      .should('be.visible').and('be.enabled').and('not.be.checked');
@@ -114,7 +207,7 @@ context('Domain Edit page', () => {
 
                 // Extensions
                 cy.get('@tabExtensions').click();
-                checkTabs([false, false, false, true]);
+                checkActiveTabs([false, false, false, true]);
                 makeExtensionsAliases();
                 cy.get('@extAkismetEnabled')    .should('be.visible').and('be.enabled').and('not.be.checked');
                 cy.get('@extApiLayerEnabled')   .should('be.visible').and('be.enabled').and('not.be.checked');
@@ -123,7 +216,7 @@ context('Domain Edit page', () => {
 
                 // Back to General
                 cy.get('@tabGeneral').click();
-                checkTabs([true, false, false, false]);
+                checkActiveTabs([true, false, false, false]);
 
                 // Click on Cancel and return to domain list
                 cy.get('@btnCancel').click();
@@ -133,46 +226,7 @@ context('Domain Edit page', () => {
             it('validates input', () => {
                 // Click on Submit to engage validation
                 cy.get('@btnSubmit').click();
-
-                // Host. Only perform a basic validation here as it's extensively checked in a unit test
-                makeGeneralAliases();
-                cy.get('@host').isInvalid('Please enter a valid domain host.')
-                    .type('a').isValid()
-                    .setValue('x'.repeat(260)).isInvalid();
-
-                // Name
-                cy.get('@name').verifyTextInputValidation(0, 255, false, 'Value is too long.');
-
-                // Authentication -> SSO
-                cy.get('@tabAuth').click();
-                makeAuthAliases(false);
-                // No SSO controls exist
-                cy.get('@domainEdit').find('#sso-non-interactive').should('not.exist');
-                cy.get('@domainEdit').find('#sso-url')            .should('not.exist');
-                // Enable SSO, and controls appear
-                cy.get('@domainEdit').find('#auth-sso').clickLabel();
-                cy.get('@domainEdit').find('#sso-non-interactive').should('be.visible').should('not.be.checked');
-                cy.get('@domainEdit').find('#sso-url')
-                    .should('be.visible').should('have.value', '').isInvalid('Please enter a valid URL.')
-                    .setValue('https://whatever').isValid();
-
-                // Moderation
-                cy.get('@tabModeration').click();
-                makeModerationAliases();
-
-                // -- Number of comments input
-                cy.get('@domainEdit').find('#mod-num-comments').should('not.exist');
-                cy.get('@modNumCommentsOn').clickLabel();
-                cy.get('@domainEdit').find('#mod-num-comments').should('be.visible').should('have.value', '3')
-                    .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
-
-                // -- Age in days input
-                cy.get('@domainEdit').find('#mod-user-age-days').should('not.exist');
-                cy.get('@modUserAgeDaysOn').clickLabel();
-                cy.get('@domainEdit').find('#mod-user-age-days').should('be.visible').should('have.value', '7')
-                    .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
-
-                // TODO check tab validation display (.text-danger)
+                checkValidations(true, false);
             });
         });
     });
@@ -210,7 +264,7 @@ context('Domain Edit page', () => {
                 cy.get('@btnSubmit').should('be.visible').should('be.enabled').should('have.text', 'Save');
 
                 // General
-                checkTabs([true, false, false, false]);
+                checkActiveTabs([true, false, false, false]);
                 makeGeneralAliases();
                 cy.get('@host').should('be.visible').and('have.value', DOMAINS.localhost.host).and('be.disabled');
                 cy.get('@name').should('be.visible').and('have.value', DOMAINS.localhost.name).and('be.enabled');
@@ -218,7 +272,7 @@ context('Domain Edit page', () => {
 
                 // Authentication
                 cy.get('@tabAuth').click();
-                checkTabs([false, true, false, false]);
+                checkActiveTabs([false, true, false, false]);
                 makeAuthAliases(true);
                 cy.get('@authAnonymous').should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authLocal')    .should('be.visible').and('be.enabled').and('be.checked');
@@ -233,7 +287,7 @@ context('Domain Edit page', () => {
 
                 // Moderation
                 cy.get('@tabModeration').click();
-                checkTabs([false, false, true, false]);
+                checkActiveTabs([false, false, true, false]);
                 makeModerationAliases();
                 cy.get('@modAnonymous')          .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@modAuthenticated')      .should('be.visible').and('be.enabled').and('not.be.checked');
@@ -247,7 +301,7 @@ context('Domain Edit page', () => {
 
                 // Extensions
                 cy.get('@tabExtensions').click();
-                checkTabs([false, false, false, true]);
+                checkActiveTabs([false, false, false, true]);
                 makeExtensionsAliases();
                 cy.get('@extAkismetEnabled')    .should('be.visible').and('be.enabled').and('not.be.checked');
                 cy.get('@extApiLayerEnabled')   .should('be.visible').and('be.enabled').and('not.be.checked');
@@ -256,7 +310,7 @@ context('Domain Edit page', () => {
 
                 // Back to General
                 cy.get('@tabGeneral').click();
-                checkTabs([true, false, false, false]);
+                checkActiveTabs([true, false, false, false]);
 
                 // Click on Cancel and return to domain properties
                 cy.get('@btnCancel').click();
@@ -264,7 +318,10 @@ context('Domain Edit page', () => {
             });
 
             it('validates input', () => {
-                // TODO
+                // Make form invalid, then click on Submit to engage validation
+                cy.get('@domainEdit').find('#name').setValue('x'.repeat(256));
+                cy.get('@btnSubmit').click();
+                checkValidations(false, true);
             });
         });
     });

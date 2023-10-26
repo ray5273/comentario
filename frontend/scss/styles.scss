@@ -180,6 +180,25 @@ dl.detail-table, dl.detail-table > div {
     }
 }
 
+.nav-item {
+    .nav-link {
+        &.is-invalid {
+            color: $danger;
+
+            &::before {
+                content: '!';
+                color: $white;
+                background-color: $danger;
+                text-align: center;
+                padding: 0 0.5em;
+                display: inline-block;
+                margin-right: .25rem;
+                font-size: 85%;
+            }
+        }
+    }
+}
+
 // Home
 #front-page {
     &.authenticated .hide-authenticated {

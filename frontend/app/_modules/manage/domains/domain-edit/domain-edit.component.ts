@@ -268,7 +268,8 @@ export class DomainEditComponent implements OnInit {
                             sso:       false,
                             ssoUrl:    [
                                 {value: '', disabled: true},
-                                [Validators.required, XtraValidators.url(!this.cfgSvc.isUnderTest)], // Only allow insecure URL in e2e testing mode
+                                // Only allow insecure URL if the app itself runs on an HTTP host
+                                [Validators.required, XtraValidators.url(window.location.protocol === 'https:')],
                             ],
                             ssoNonInt: false,
                             fedIdps:   this.fb.array(Array(this.fedIdps?.length).fill(true)), // Enable all by default

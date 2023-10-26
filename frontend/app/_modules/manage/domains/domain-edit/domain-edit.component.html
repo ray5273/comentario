@@ -14,7 +14,7 @@
         <ul ngbNav #nav="ngbNav" class="nav-tabs ps-3 mb-3">
             <!-- General properties -->
             <li ngbNavItem formGroupName="general">
-                <a ngbNavLink [class.text-danger]="ctlGroupGeneral.invalid" class="fw-bold" i18n>General</a>
+                <a ngbNavLink [class.is-invalid]="ctlGroupGeneral.invalid" class="fw-bold" i18n>General</a>
                 <ng-template ngbNavContent>
                     <!-- Info -->
                     <app-info-block>
@@ -30,8 +30,8 @@
                                 <!-- HTTP(S) -->
                                 <div ngbDropdown class="d-inline-block">
                                     <button ngbDropdownToggle type="button" class="btn btn-outline-secondary"
-                                            id="domain-schema">{{ isHttps ? 'https' : 'http' }}://</button>
-                                    <div ngbDropdownMenu aria-labelledby="domain-schema">
+                                            id="scheme">{{ isHttps ? 'https' : 'http' }}://</button>
+                                    <div ngbDropdownMenu aria-labelledby="scheme">
                                         <button ngbDropdownItem (click)="isHttps = false" type="button">http://</button>
                                         <button ngbDropdownItem (click)="isHttps = true"  type="button">https://</button>
                                     </div>
@@ -83,7 +83,7 @@
 
             <!-- Authentication -->
             <li ngbNavItem formGroupName="auth">
-                <a ngbNavLink [class.text-danger]="ctlGroupAuth.invalid">
+                <a ngbNavLink [class.is-invalid]="ctlGroupAuth.invalid">
                     <!-- Tab title -->
                     <span class="fw-bold me-1" i18n>Authentication</span>
                     <!-- Badge with a number -->
@@ -158,7 +158,7 @@
 
             <!-- Moderation -->
             <li ngbNavItem formGroupName="mod">
-                <a ngbNavLink [class.text-danger]="ctlGroupMod.invalid" class="fw-bold" i18n>Moderation</a>
+                <a ngbNavLink [class.is-invalid]="ctlGroupMod.invalid" class="fw-bold" i18n>Moderation</a>
                 <ng-template ngbNavContent>
                     <!-- Info -->
                     <app-info-block>
@@ -238,7 +238,7 @@
 
             <!-- Extensions -->
             <li ngbNavItem formGroupName="extensions">
-                <a ngbNavLink [class.text-danger]="ctlGroupExtensions.invalid">
+                <a ngbNavLink [class.is-invalid]="ctlGroupExtensions.invalid">
                     <!-- Tab title -->
                     <span class="fw-bold me-1" i18n>Extensions</span>
                     <!-- Badge with a number -->
