@@ -29,6 +29,16 @@ export const PATHS = {
                 stats:      `${PATHS.manage.domains._}/${id}/stats`,
                 operations: `${PATHS.manage.domains._}/${id}/operations`,
             }),
+            anyId: {
+                props:      /^\/en\/manage\/domains\/[-a-f\d]{36}$/,
+                edit:       /^\/en\/manage\/domains\/[-a-f\d]{36}\/edit$/,
+                sso:        /^\/en\/manage\/domains\/[-a-f\d]{36}\/sso$/,
+                pages:      /^\/en\/manage\/domains\/[-a-f\d]{36}\/pages$/,
+                comments:   /^\/en\/manage\/domains\/[-a-f\d]{36}\/comments$/,
+                users:      /^\/en\/manage\/domains\/[-a-f\d]{36}\/users$/,
+                stats:      /^\/en\/manage\/domains\/[-a-f\d]{36}\/stats$/,
+                operations: /^\/en\/manage\/domains\/[-a-f\d]{36}\/operations$/,
+            },
         },
         users:          '/en/manage/users',
         config: {

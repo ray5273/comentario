@@ -156,7 +156,7 @@ declare namespace Cypress {
          * @param itemLabel Label of the sidebar item to click.
          * @param isAt Path to verify.
          */
-        sidebarClick(itemLabel: string, isAt: string | RegExp): Chainable<void>;
+        sidebarClick(itemLabel: string, isAt: string | RegExp | IsAtObjectWithUnderscore): Chainable<void>;
 
         /**
          * Select a domain using the Domains page.

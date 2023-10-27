@@ -31,8 +31,6 @@ context('Domain Properties page', () => {
             ['Host',                                      DOMAINS.localhost.host],
             ['Name',                                      DOMAINS.localhost.name],
             ['Read-only',                                 ''],
-            ['Require moderator approval on comment, if', 'Author is anonymous'],
-            ['Email moderators',                          'For comments pending moderation'],
             ['Default comment sort',                      'Oldest first'],
             [
                 'Authentication',
@@ -48,6 +46,8 @@ context('Domain Properties page', () => {
                     'Twitter',
                 ],
             ],
+            ['Require moderator approval on comment, if', 'Author is anonymous'],
+            ['Email moderators',                          'For comments pending moderation'],
             ['Created',                                  REGEXES.datetime],
             ['Number of comments',                       '16'],
             ['Number of views',                          '5'],

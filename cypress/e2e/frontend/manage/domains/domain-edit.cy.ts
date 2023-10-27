@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, USERS } from '../../../../support/cy-utils';
+import { DOMAINS, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Domain Edit page', () => {
 
@@ -77,8 +77,6 @@ context('Domain Edit page', () => {
     /** Check validations on all controls. */
     const checkValidations = (checkHost: boolean, ssoEnabled: boolean) => {
         // General
-        makeGeneralAliases();
-
         // -- Scheme
         selectScheme(false);
         selectScheme(true);
@@ -159,6 +157,7 @@ context('Domain Edit page', () => {
             beforeEach(() => {
                 cy.loginViaApi(USERS.ace, PATHS.manage.domains.create);
                 makeAliases();
+                makeGeneralAliases(); // The General tab is already active
             });
 
             it('has all necessary controls', () => {
@@ -171,7 +170,6 @@ context('Domain Edit page', () => {
 
                 // General
                 checkActiveTabs([true, false, false, false]);
-                makeGeneralAliases();
                 cy.get('@scheme').should('be.visible').and('have.text', 'https://').and('be.enabled');
                 cy.get('@host')  .should('be.visible').and('have.value', '').and('be.enabled');
                 cy.get('@name')  .should('be.visible').and('have.value', '').and('be.enabled');
@@ -227,6 +225,150 @@ context('Domain Edit page', () => {
                 cy.get('@btnSubmit').click();
                 checkValidations(true, false);
             });
+
+            it('doesn\'t allow adding domain with existing host', () => {
+                // Try localhost
+                cy.get('@host').setValue(DOMAINS.localhost.host).type('{enter}');
+                cy.toastCheckAndClose('host-already-exists');
+
+                // Another try
+                cy.get('@host').setValue(DOMAINS.charge.host);
+                cy.get('@btnSubmit').click();
+                cy.toastCheckAndClose('host-already-exists');
+            });
+
+            it('allows to add domains', () => {
+                // Intercept the HTTP request to detect the new domain's ID
+                cy.intercept('POST', '/api/domains').as('postDomain');
+
+                // Add a domain
+                cy.get('@host').setValue('google.com').type('{enter}');
+                cy.toastCheckAndClose('data-saved');
+
+                // Wait for the HTTP request: we should land in the new domain properties
+                cy.wait('@postDomain').then(int => {
+                    const id = int.response.body.id;
+                    cy.log('New domain ID', id);
+                    cy.isAt(PATHS.manage.domains.id(id).props);
+                });
+
+                // Verify properties
+                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                    ['Host',                                      'google.com'],
+                    ['Read-only',                                 ''],
+                    ['Default comment sort',                      'Newest first'],
+                    ['Authentication',
+                        [
+                            'Local (password-based)',
+                            'Facebook',
+                            'GitHub',
+                            'GitLab',
+                            'Google',
+                            'Twitter',
+                        ],
+                    ],
+                    ['Require moderator approval on comment, if',
+                        [
+                            'Author is anonymous',
+                            'Comment contains link',
+                            'Comment contains image',
+                        ],
+                    ],
+                    ['Email moderators',                         'For comments pending moderation'],
+                    ['Created',                                  REGEXES.datetime],
+                    ['Number of comments',                       '0'],
+                    ['Number of views',                          '0'],
+                ]);
+
+                // Go to the domain list and verify there's a new domain
+                cy.sidebarClick('Domains', PATHS.manage.domains);
+                cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['google.com', DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-name')         .should('arrayMatch', [DOMAINS.localhost.name]);
+                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner']);
+
+                // Add another domain, this time with a port number and different settings
+                cy.contains('app-domain-manager button', 'New domain').click();
+                cy.isAt(PATHS.manage.domains.create);
+                cy.get('app-domain-edit #host').setValue('facebook.com:4551');
+                cy.get('app-domain-edit #name').setValue('Face Book');
+                cy.get('app-domain-edit #sort-sd').clickLabel();
+                // -- Auth
+                cy.get('@tabAuth').click();
+                makeAuthAliases(false);
+                cy.get('@authAnonymous').clickLabel();
+                cy.get('@authLocal')    .clickLabel();
+                cy.get('@authFacebook') .clickLabel();
+                cy.get('@authGithub')   .clickLabel();
+                cy.get('@authGitlab')   .clickLabel();
+                cy.get('@authGoogle')   .clickLabel();
+                cy.get('@authTwitter')  .clickLabel();
+                cy.get('@authSso')      .clickLabel();
+                cy.get('app-domain-edit #sso-url')            .setValue('https://sso.facebook.com');
+                cy.get('app-domain-edit #sso-non-interactive').clickLabel();
+                // -- Moderation
+                cy.get('@tabModeration').click();
+                makeModerationAliases();
+                cy.get('@modAnonymous')          .clickLabel();
+                cy.get('@modAuthenticated')      .clickLabel();
+                cy.get('@modNumCommentsOn')      .clickLabel();
+                cy.get('@modUserAgeDaysOn')      .clickLabel();
+                cy.get('@modLinks')              .clickLabel();
+                cy.get('@modImages')             .clickLabel();
+                cy.get('@modNotifyPolicyNone')   .clickLabel();
+                cy.get('app-domain-edit #mod-num-comments') .setValue('42');
+                cy.get('app-domain-edit #mod-user-age-days').setValue('47');
+                // -- Extensions
+                cy.get('@tabExtensions').click();
+                makeExtensionsAliases();
+                cy.get('@extAkismetEnabled')                                    .clickLabel();
+                cy.get('app-domain-edit #extension-akismet-config')             .setValue('name=akismet\nfoo=bar');
+                cy.get('@extApiLayerEnabled')                                   .clickLabel();
+                cy.get('app-domain-edit #extension-apiLayer-spamChecker-config').setValue('name=apiLayer-spamChecker\nbaz=42');
+                cy.get('@extPerspectiveEnabled')                                .clickLabel();
+                cy.get('app-domain-edit #extension-perspective-config')         .setValue('name=perspective\nabc=xyz');
+                cy.get('app-domain-edit button[type=submit]').click();
+                cy.toastCheckAndClose('data-saved');
+                cy.isAt(PATHS.manage.domains.anyId.props);
+
+                // Verify properties
+                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                    ['Host',                                      'facebook.com:4551'],
+                    ['Name',                                      'Face Book'],
+                    ['Read-only',                                 ''],
+                    ['Default comment sort',                      'Most upvoted first'],
+                    ['Authentication',
+                        [
+                            'Anonymous comments',
+                            'Non-interactive Single Sign-On',
+                            'via https://sso.facebook.com',
+                        ],
+                    ],
+                    ['Require moderator approval on comment, if',
+                        [
+                            'Author is authenticated',
+                            'Author has less than 42 approved comments',
+                            'Author is registered less than 47 days ago',
+                        ],
+                    ],
+                    ['Email moderators',                         'Don\'t email'],
+                    ['Extensions',
+                        [
+                            'Akismet',
+                            'APILayer SpamChecker',
+                            'Perspective',
+                        ],
+                    ],
+                    ['Created',                                  REGEXES.datetime],
+                    ['Number of comments',                       '0'],
+                    ['Number of views',                          '0'],
+                ]);
+
+                // Go to the domain list and verify there's a new domain
+                cy.sidebarClick('Domains', PATHS.manage.domains);
+                cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['facebook.com:4551', 'google.com', DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-name')         .should('arrayMatch', ['Face Book', DOMAINS.localhost.name]);
+                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner', 'Owner']);
+            });
         });
     });
 
@@ -252,6 +394,7 @@ context('Domain Edit page', () => {
             beforeEach(() => {
                 cy.loginViaApi(USERS.ace, pagePath);
                 makeAliases();
+                makeGeneralAliases(); // The General tab is already active
             });
 
             it('has all necessary controls', () => {
@@ -264,7 +407,6 @@ context('Domain Edit page', () => {
 
                 // General
                 checkActiveTabs([true, false, false, false]);
-                makeGeneralAliases();
                 cy.get('@host').should('be.visible').and('have.value', DOMAINS.localhost.host).and('be.disabled');
                 cy.get('@name').should('be.visible').and('have.value', DOMAINS.localhost.name).and('be.enabled');
                 cy.get('@sortTA').should('be.checked');
@@ -306,7 +448,6 @@ context('Domain Edit page', () => {
                 cy.get('@extApiLayerEnabled')   .should('be.visible').and('be.enabled').and('not.be.checked');
                 cy.get('@extPerspectiveEnabled').should('be.visible').and('be.enabled').and('not.be.checked');
 
-
                 // Back to General
                 cy.get('@tabGeneral').click();
                 checkActiveTabs([true, false, false, false]);
@@ -321,6 +462,122 @@ context('Domain Edit page', () => {
                 cy.get('@domainEdit').find('#name').setValue('x'.repeat(256));
                 cy.get('@btnSubmit').click();
                 checkValidations(false, true);
+            });
+
+            it('allows to edit domain', () => {
+                cy.get('@name').setValue('Big Time');
+                cy.get('@sortSA').clickLabel();
+                // -- Auth
+                cy.get('@tabAuth').click();
+                makeAuthAliases(false);
+                cy.get('@authAnonymous').clickLabel();
+                cy.get('@authLocal')    .clickLabel();
+                cy.get('@authFacebook') .clickLabel();
+                cy.get('@authGithub')   .clickLabel();
+                cy.get('@authGitlab')   .clickLabel();
+                cy.get('@authGoogle')   .clickLabel();
+                cy.get('@authTwitter')  .clickLabel();
+                cy.get('@authSso')      .clickLabel();
+                // Check there's "no auth method available" warning
+                cy.contains('div[ngbnavpane] .form-text', 'No authentication method enabled').should('be.visible');
+                // Enable local
+                cy.get('@authLocal').clickLabel();
+
+                // -- Moderation
+                cy.get('@tabModeration').click();
+                makeModerationAliases();
+                cy.get('@modAnonymous')          .clickLabel();
+                cy.get('@modAuthenticated')      .clickLabel();
+                cy.get('@modNumCommentsOn')      .clickLabel();
+                cy.get('@modUserAgeDaysOn')      .clickLabel();
+                cy.get('@modLinks')              .clickLabel();
+                cy.get('@modImages')             .clickLabel();
+                cy.get('@modNotifyPolicyAll')   .clickLabel();
+                cy.get('app-domain-edit #mod-num-comments') .setValue('15');
+                cy.get('app-domain-edit #mod-user-age-days').setValue('672');
+                // -- Extensions
+                cy.get('@tabExtensions').click();
+                makeExtensionsAliases();
+                cy.get('@extAkismetEnabled')                                    .clickLabel();
+                cy.get('app-domain-edit #extension-akismet-config')             .setValue('name=akismet\nfoo=bar');
+                cy.get('@extApiLayerEnabled')                                   .clickLabel();
+                cy.get('app-domain-edit #extension-apiLayer-spamChecker-config').setValue('name=apiLayer-spamChecker\nbaz=42');
+                cy.get('@extPerspectiveEnabled')                                .clickLabel();
+                cy.get('app-domain-edit #extension-perspective-config')         .setValue('name=perspective\nabc=xyz');
+                cy.get('app-domain-edit button[type=submit]').click();
+                cy.toastCheckAndClose('data-saved');
+                cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
+
+                // Verify properties
+                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                    ['Host',                                      DOMAINS.localhost.host],
+                    ['Name',                                      'Big Time'],
+                    ['Read-only',                                 ''],
+                    ['Default comment sort',                      'Least upvoted first'],
+                    ['Authentication',                            'Local (password-based)'],
+                    ['Require moderator approval on comment, if',
+                        [
+                            'Author is authenticated',
+                            'Author has less than 15 approved comments',
+                            'Author is registered less than 672 days ago',
+                            'Comment contains link',
+                            'Comment contains image',
+                        ],
+                    ],
+                    ['Email moderators',                         'For all new comments'],
+                    ['Extensions',
+                        [
+                            'Akismet',
+                            'APILayer SpamChecker',
+                            'Perspective',
+                        ],
+                    ],
+                    ['Created',                                  REGEXES.datetime],
+                    ['Number of comments',                       '16'],
+                    ['Number of views',                          '5'],
+                ]);
+
+                // Edit the domain again and verify control values
+                cy.contains('app-domain-detail a', 'Edit settings').click();
+                cy.isAt(pagePath);
+                // -- General
+                cy.get('app-domain-edit').find('#name')   .should('have.value', 'Big Time');
+                cy.get('app-domain-edit').find('#sort-sa').should('be.checked');
+                // -- Auth
+                cy.contains('app-domain-edit li[ngbnavitem]', 'Authentication').click();
+                cy.get('app-domain-edit #auth-anonymous').should('not.be.checked');
+                cy.get('app-domain-edit #auth-local')    .should('be.checked');
+                cy.get('app-domain-edit #auth-facebook') .should('not.be.checked');
+                cy.get('app-domain-edit #auth-github')   .should('not.be.checked');
+                cy.get('app-domain-edit #auth-gitlab')   .should('not.be.checked');
+                cy.get('app-domain-edit #auth-google')   .should('not.be.checked');
+                cy.get('app-domain-edit #auth-twitter')  .should('not.be.checked');
+                cy.get('app-domain-edit #auth-sso')      .should('not.be.checked');
+                // -- Moderation
+                cy.contains('app-domain-edit li[ngbnavitem]', 'Moderation').click();
+                cy.get('app-domain-edit #mod-anonymous')        .should('not.be.checked');
+                cy.get('app-domain-edit #mod-authenticated')    .should('be.checked');
+                cy.get('app-domain-edit #mod-num-comments-on')  .should('be.checked');
+                cy.get('app-domain-edit #mod-num-comments')     .should('have.value', '15');
+                cy.get('app-domain-edit #mod-user-age-days-on') .should('be.checked');
+                cy.get('app-domain-edit #mod-user-age-days')    .should('have.value', '672');
+                cy.get('app-domain-edit #mod-links')            .should('be.checked');
+                cy.get('app-domain-edit #mod-images')           .should('be.checked');
+                cy.get('app-domain-edit #mod-notify-policy-all').should('be.checked');
+                // -- Extensions
+                cy.contains('app-domain-edit li[ngbnavitem]', 'Extensions').click();
+                cy.get('app-domain-edit #extension-akismet-enabled')             .should('be.checked');
+                cy.get('app-domain-edit #extension-akismet-config')              .should('have.value', 'name=akismet\nfoo=bar');
+                cy.get('app-domain-edit #extension-apiLayer-spamChecker-enabled').should('be.checked');
+                cy.get('app-domain-edit #extension-apiLayer-spamChecker-config') .should('have.value', 'name=apiLayer-spamChecker\nbaz=42');
+                cy.get('app-domain-edit #extension-perspective-enabled')         .should('be.checked');
+                cy.get('app-domain-edit #extension-perspective-config')          .should('have.value', 'name=perspective\nabc=xyz');
+
+                // Go to the domain list and verify the domain is updated
+                cy.sidebarClick('Domains', PATHS.manage.domains);
+                cy.texts('#domain-list .domain-host')         .should('arrayMatch', [DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-name')         .should('arrayMatch', ['Big Time']);
+                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner']);
             });
         });
     });
