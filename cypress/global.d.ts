@@ -242,6 +242,15 @@ declare namespace Cypress {
         verifyEmailInputValidation(): Chainable<JQueryWithSelector>;
 
         /**
+         * Run common URL input validations against the passed element.
+         * NB: the input must be touched.
+         * @param required Whether the input is required.
+         * @param secureOnly Whether only secure URLs are allowed.
+         * @param errMessage Error message to expect on an invalid input.
+         */
+        verifyUrlInputValidation(required: boolean, secureOnly: boolean, errMessage: string): Chainable<JQueryWithSelector>;
+
+        /**
          * Run common password input validations against the passed element.
          * NB: the input must be touched.
          */

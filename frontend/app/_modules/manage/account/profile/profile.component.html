@@ -6,6 +6,18 @@
     <section>
         <form [formGroup]="userForm" (ngSubmit)="submit()" id="profile-form">
             <fieldset [disabled]="saving.active" class="row g-3">
+                <!-- User ID -->
+                <div class="col-md-6">
+                    <label for="current-user-id" class="form-label colon" i18n>User ID</label>
+                    <div class="input-group">
+                        <input [value]="principal.id" type="text" class="form-control" id="current-user-id" disabled>
+                        <button [appCopyText]="principal.id" ngbTooltip
+                                class="btn btn-outline-secondary" type="button" title="Copy" i18n-title>
+                            <fa-icon [icon]="faCopy"></fa-icon>
+                        </button>
+                    </div>
+                </div>
+
                 <!-- Email -->
                 <div class="col-md-6">
                     <label for="email" class="form-label colon" i18n>Email</label>
@@ -19,8 +31,19 @@
                     <input formControlName="name" type="text" class="form-control" id="name"
                            [class.is-valid]="userForm.controls.name.touched && userForm.controls.name.valid"
                            [class.is-invalid]="userForm.controls.name.touched && userForm.controls.name.invalid"
-                           placeholder="Enter name" i18n-placeholder>
+                           autocomplete="name" placeholder="John Doe" i18n-placeholder>
                     <div class="invalid-feedback" i18n>Please enter a valid name.</div>
+                </div>
+
+                <!-- Website URL -->
+                <div class="col-md-6">
+                    <label for="website-url" class="form-label colon" i18n>Website URL</label>
+                    <input formControlName="websiteUrl" type="url" class="form-control" id="website-url"
+                           [class.is-valid]="userForm.controls.websiteUrl.touched && userForm.controls.websiteUrl.valid"
+                           [class.is-invalid]="userForm.controls.websiteUrl.touched && userForm.controls.websiteUrl.invalid"
+                           autocomplete="url" placeholder="http://example.com">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback" i18n>Please enter a valid URL.</div>
                 </div>
 
                 <!-- Current password -->
@@ -35,18 +58,6 @@
                     <label for="new-password" class="form-label colon" i18n>New password</label>
                     <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
                                         id="new-password" placeholder="(unchanged)" i18n-placeholder></app-password-input>
-                </div>
-
-                <!-- User ID -->
-                <div class="col-md-6">
-                    <label for="current-user-id" class="form-label colon" i18n>User ID</label>
-                    <div class="input-group mb-3">
-                        <input [value]="principal.id" type="text" class="form-control" id="current-user-id" disabled>
-                        <button [appCopyText]="principal.id" ngbTooltip
-                                class="btn btn-outline-secondary" type="button" title="Copy" i18n-title>
-                            <fa-icon [icon]="faCopy"></fa-icon>
-                        </button>
-                    </div>
                 </div>
 
                 <!-- Avatar -->

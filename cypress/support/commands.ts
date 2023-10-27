@@ -422,6 +422,18 @@ Cypress.Commands.add(
         .type('{backspace}').isValid()); // 254 chars is exactly right
 
 Cypress.Commands.add(
+    'verifyUrlInputValidation',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, required: boolean, secureOnly: boolean, errMessage: string) => cy.wrap(element)
+        .clear().then(e => required ? cy.wrap(e).isInvalid(errMessage) : cy.wrap(e).isValid())
+        .setValue('a').isInvalid(errMessage)
+        .setValue('http://a').then(e => secureOnly ? cy.wrap(e).isInvalid(errMessage) : cy.wrap(e).isValid())
+        .setValue('http://' + 'a'.repeat(2077)).isInvalid(errMessage)
+        .setValue('https://a').isValid()
+        .setValue('https://' + 'a'.repeat(2077)).isInvalid(errMessage)
+        .setValue('https://' + 'a'.repeat(2076)).isValid());
+
+Cypress.Commands.add(
     'verifyPasswordInputValidation',
     {prevSubject: 'element'},
     (element: JQueryWithSelector, options?: {required?: boolean, strong?: boolean}) => {

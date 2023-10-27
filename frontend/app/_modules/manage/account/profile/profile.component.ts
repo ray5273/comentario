@@ -9,6 +9,7 @@ import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
+import { XtraValidators } from '../../../../_utils/xtra-validators';
 
 @UntilDestroy()
 @Component({
@@ -42,6 +43,7 @@ export class ProfileComponent implements OnInit {
     readonly userForm = this.fb.nonNullable.group({
         email:       {value: '', disabled: true},
         name:        ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
+        websiteUrl:  ['', [XtraValidators.url(false)]],
         curPassword: '',
         newPassword: '',
     });
@@ -71,7 +73,7 @@ export class ProfileComponent implements OnInit {
 
             // Update the form
             if (p) {
-                this.userForm.patchValue({email: p.email, name: p.name});
+                this.userForm.patchValue({email: p.email, name: p.name, websiteUrl: p.websiteUrl});
 
                 // Local user: the old password is required if there's a new one
                 if (p.isLocal) {
@@ -179,6 +181,11 @@ export class ProfileComponent implements OnInit {
 
         // Update the user's profile
         const vals = this.userForm.value;
-        return this.api.curUserUpdate({name: vals.name!, curPassword: vals.curPassword, newPassword: vals.newPassword});
+        return this.api.curUserUpdate({
+            name:        vals.name!,
+            websiteUrl:  vals.websiteUrl,
+            curPassword: vals.curPassword,
+            newPassword: vals.newPassword,
+        });
     }
 }

@@ -107,8 +107,7 @@ context('Domain Edit page', () => {
         }
         cy.get('@domainEdit').find('#sso-non-interactive').should('be.visible');
         cy.get('@domainEdit').find('#sso-url')
-            .should('be.visible').clear().isInvalid('Please enter a valid URL.')
-            .setValue('https://whatever').isValid();
+            .verifyUrlInputValidation(true, false /* Insecure allowed in e2e test */, 'Please enter a valid URL.');
         cy.get('@domainEdit').find('#auth-sso').clickLabel();
 
         // Moderation

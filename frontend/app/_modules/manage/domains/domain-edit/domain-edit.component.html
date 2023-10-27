@@ -42,9 +42,7 @@
                                        [class.is-invalid]="isNew && ctlGroupGeneral.controls.host.touched && ctlGroupGeneral.controls.host.invalid"
                                        placeholder="example.com">
                                 <!-- Invalid feedback -->
-                                <div class="invalid-feedback">
-                                    <ng-container i18n>Please enter a valid domain host.</ng-container>
-                                </div>
+                                <div class="invalid-feedback" i18n>Please enter a valid domain host.</div>
                             </div>
                             <small *ngIf="isNew" id="nameHelpBlock" class="form-text text-warning-emphasis">
                                 <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
@@ -135,9 +133,7 @@
                                    [class.is-invalid]="ctlGroupAuth.controls.ssoUrl.touched && ctlGroupAuth.controls.ssoUrl.invalid"
                                    placeholder="https://sso.example.com">
                             <!-- Invalid feedback -->
-                            <div class="invalid-feedback">
-                                <ng-container i18n>Please enter a valid URL.</ng-container>
-                            </div>
+                            <div class="invalid-feedback" i18n>Please enter a valid URL.</div>
                         </div>
 
                         <!-- SSO -->
@@ -191,9 +187,7 @@
                                        [class.is-valid]="ctlGroupMod.controls.numComments.touched && ctlGroupMod.controls.numComments.valid"
                                        [class.is-invalid]="ctlGroupMod.controls.numComments.touched && ctlGroupMod.controls.numComments.invalid">
                                 <!-- Invalid feedback -->
-                                <div class="invalid-feedback">
-                                    <ng-container i18n>Please enter a valid value.</ng-container>
-                                </div>
+                                <div class="invalid-feedback" i18n>Please enter a valid value.</div>
                             </div>
                             <!-- Author is registered less than this number of days ago -->
                             <div class="form-check">
@@ -206,9 +200,7 @@
                                        [class.is-valid]="ctlGroupMod.controls.userAgeDays.touched && ctlGroupMod.controls.userAgeDays.valid"
                                        [class.is-invalid]="ctlGroupMod.controls.userAgeDays.touched && ctlGroupMod.controls.userAgeDays.invalid">
                                 <!-- Invalid feedback -->
-                                <div class="invalid-feedback">
-                                    <ng-container i18n>Please enter a valid value.</ng-container>
-                                </div>
+                                <div class="invalid-feedback" i18n>Please enter a valid value.</div>
                             </div>
                             <!-- Comment contains link -->
                             <div class="form-check">
