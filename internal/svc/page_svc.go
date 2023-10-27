@@ -264,7 +264,11 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 				goqu.Or(
 					goqu.Ex{"du.is_owner": true},
 					goqu.Ex{"du.is_moderator": true},
-					goqu.L("exists (select from cm_comments where page_id=p.id)"),
+					goqu.Func(
+						"exists",
+						db.Dialect().
+							From(goqu.T("cm_comments").As("c")).
+							Where(goqu.Ex{"c.page_id": goqu.I("p.id"), "c.user_created": userID})),
 				))
 	}
 
