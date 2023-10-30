@@ -46,7 +46,7 @@ const children: Routes = [
             {path: 'edit',           component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain]},
             {path: 'clone',          component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain], data: {new: true}},
             {path: 'import',         component: DomainImportComponent,         canActivate: [ManageGuard.canManageDomain]},
-            {path: 'sso',            component: DomainSsoSecretComponent,      canActivate: [ManageGuard.canManageDomain]},
+            {path: 'sso',            component: DomainSsoSecretComponent,      canActivate: [ManageGuard.canManageDomainSso]},
 
             // Pages
             {path: 'pages',          component: DomainPageManagerComponent,    canActivate: [ManageGuard.isDomainSelected]},

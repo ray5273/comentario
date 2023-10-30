@@ -11,10 +11,11 @@ import { Paths } from '../../../_utils/consts';
 @Injectable()
 export class ManageGuard {
 
-    static readonly selectDomain:     CanActivateFn = (route) => inject(ManageGuard).selectDomain(route);
-    static readonly isDomainSelected: CanActivateFn = () => inject(ManageGuard).isDomainSelected();
-    static readonly canManageDomain:  CanActivateFn = () => inject(ManageGuard).canManageDomain();
-    static readonly isSuper:          CanActivateFn = () => inject(ManageGuard).isSuper();
+    static readonly selectDomain:       CanActivateFn = (route) => inject(ManageGuard).selectDomain(route);
+    static readonly isDomainSelected:   CanActivateFn = () => inject(ManageGuard).isDomainSelected();
+    static readonly canManageDomain:    CanActivateFn = () => inject(ManageGuard).canManageDomain();
+    static readonly canManageDomainSso: CanActivateFn = () => inject(ManageGuard).canManageDomainSso();
+    static readonly isSuper:            CanActivateFn = () => inject(ManageGuard).isSuper();
 
     constructor(
         private readonly router: Router,
@@ -51,6 +52,19 @@ export class ManageGuard {
             .pipe(
                 first(),
                 map(meta => meta.canManageDomain || this.router.parseUrl(Paths.manage.domains)));
+    }
+
+    /**
+     * Check if there's a selected domain, it has SSO enabled, and the current user is allowed to manage it, and return
+     * either true, or the domain properties/manager route.
+     */
+    canManageDomainSso(): Observable<boolean | UrlTree> {
+        return this.domainSelectorSvc.domainMeta
+            .pipe(
+                first(),
+                map(meta =>
+                    meta.canManageDomain && meta.domain?.authSso ||
+                    this.router.parseUrl(meta.domain ? `${Paths.manage.domains}/${meta.domain.id}` : Paths.manage.domains)));
     }
 
     /**

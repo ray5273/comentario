@@ -197,7 +197,7 @@ declare namespace Cypress {
          * @param user User to login as.
          * @param redirectPath Real redirect path. Defaults to `path`.
          */
-        verifyRedirectsAfterLogin(path: string, user: User, redirectPath?: string): Chainable<void>;
+        verifyRedirectsAfterLogin(path: string, user: User, redirectPath?: string | RegExp | IsAtObjectWithUnderscore): Chainable<void>;
 
         /**
          * Verify the application stays on the provided page after a reload.
@@ -256,11 +256,32 @@ declare namespace Cypress {
          */
         verifyPasswordInputValidation(options?: {required?: boolean, strong?: boolean}): Chainable<JQueryWithSelector>;
 
+        /***************************************************************************************************************
+          Test site
+        ***************************************************************************************************************/
+
         /**
          * Just like cy.visit(), but uses the test site URL as base.
          * @param path Path to visit.
          */
-        visitTestSite(path: string): Chainable<AUTWindow>;
+        testSiteVisit(path: string): Chainable<AUTWindow>;
+
+        /**
+         * Login into the embedded Comentario (test site) as provided user via the UI.
+         * @param user User to login with.
+         * NB: the required test site page must be open.
+         */
+        testSiteLogin(user: User): Chainable<void>;
+
+        /**
+         * Login into the embedded Comentario (test site) using SSO, via the UI.
+         * NB: the required test site page must be open.
+         */
+        testSiteSsoLogin(): Chainable<void>;
+
+        /***************************************************************************************************************
+          Backend
+         ***************************************************************************************************************/
 
         /**
          * Request the backend to reset the database and all the settings to test defaults.

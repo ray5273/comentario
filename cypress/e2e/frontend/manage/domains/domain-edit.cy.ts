@@ -162,7 +162,7 @@ context('Domain Edit page', () => {
 
             it('has all necessary controls', () => {
                 // Check page content
-                cy.get('@domainEdit').get('h1').should('have.text', 'Create domain');
+                cy.get('@domainEdit').find('h1').should('have.text', 'Create domain');
                 cy.get('@domainEdit').texts('li[ngbnavitem]')
                     .should('arrayMatch', ['General', 'Authentication' + '6', 'Moderation', 'Extensions']);
                 cy.get('@btnCancel').should('be.visible');
@@ -399,7 +399,7 @@ context('Domain Edit page', () => {
 
             it('has all necessary controls', () => {
                 // Check page content
-                cy.get('@domainEdit').get('h1').should('have.text', 'Edit domain');
+                cy.get('@domainEdit').find('h1').should('have.text', 'Edit domain');
                 cy.get('@domainEdit').texts('li[ngbnavitem]')
                     .should('arrayMatch', ['General', 'Authentication' + '8', 'Moderation', 'Extensions']);
                 cy.get('@btnCancel').should('be.visible');
@@ -486,13 +486,13 @@ context('Domain Edit page', () => {
                 // -- Moderation
                 cy.get('@tabModeration').click();
                 makeModerationAliases();
-                cy.get('@modAnonymous')          .clickLabel();
-                cy.get('@modAuthenticated')      .clickLabel();
-                cy.get('@modNumCommentsOn')      .clickLabel();
-                cy.get('@modUserAgeDaysOn')      .clickLabel();
-                cy.get('@modLinks')              .clickLabel();
-                cy.get('@modImages')             .clickLabel();
-                cy.get('@modNotifyPolicyAll')   .clickLabel();
+                cy.get('@modAnonymous')      .clickLabel();
+                cy.get('@modAuthenticated')  .clickLabel();
+                cy.get('@modNumCommentsOn')  .clickLabel();
+                cy.get('@modUserAgeDaysOn')  .clickLabel();
+                cy.get('@modLinks')          .clickLabel();
+                cy.get('@modImages')         .clickLabel();
+                cy.get('@modNotifyPolicyAll').clickLabel();
                 cy.get('app-domain-edit #mod-num-comments') .setValue('15');
                 cy.get('app-domain-edit #mod-user-age-days').setValue('672');
                 // -- Extensions

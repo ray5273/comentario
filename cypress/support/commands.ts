@@ -311,7 +311,7 @@ Cypress.Commands.add(
 Cypress.Commands.add(
     'verifyRedirectsAfterLogin',
     {prevSubject: false},
-    (path: string, user: Cypress.User, redirectPath?: string) => {
+    (path: string, user: Cypress.User, redirectPath?: string | RegExp | Cypress.IsAtObjectWithUnderscore) => {
         // Try to visit the path
         cy.visit(path);
 
@@ -473,9 +473,45 @@ Cypress.Commands.add(
     });
 
 Cypress.Commands.add(
-    'visitTestSite',
+    'testSiteVisit',
     {prevSubject: false},
     (path: string) => cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
+
+Cypress.Commands.add(
+    'testSiteLogin',
+    {prevSubject: false},
+    (user: Cypress.User) => {
+        // Verify it's a local user
+        if (!user.password) {
+            throw new Error(`User ${user.email} has no password`);
+        }
+
+        // Click on Login: a popup dialog appears
+        cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
+        cy.get('.comentario-root .comentario-dialog').should('be.visible');
+
+        // Fill out the login form and submit
+        cy.get('.comentario-root .comentario-dialog form').find('input[name=email]')   .setValue(user.email);
+        cy.get('.comentario-root .comentario-dialog form').find('input[name=password]').setValue(user.password).type('{enter}');
+
+        // Verify user name in the profile bar
+        cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', user.name);
+    });
+
+Cypress.Commands.add(
+    'testSiteSsoLogin',
+    {prevSubject: false},
+    () => {
+        // Click on Login: a popup dialog appears
+        cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
+        cy.get('.comentario-root .comentario-dialog').should('be.visible');
+
+        // Click on the SSO login button: the process runs in the background
+        cy.contains('.comentario-root .comentario-dialog form button', 'Single Sign-On').click();
+
+        // Verify user name in the profile bar
+        cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', 'John Doe');
+    });
 
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));

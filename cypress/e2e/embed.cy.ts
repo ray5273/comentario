@@ -86,45 +86,24 @@ context('Embed', () => {
     const commentOptionButton = (id: string, title: string) =>
         cy.get('@mainArea').find(`#comentario-${id} .comentario-option-button[title="${title}"]`);
 
-    /**
-     * Log the given user in on the embed page.
-     * @param user User to log in.
-     */
-    const embedLogin = (user: Cypress.User) => {
-        // Verify it's a local user
-        if (!user.password) {
-            throw new Error(`User ${user.email} has no password`);
-        }
-
-        cy.get('.comentario-root').as('root')
-            .contains('.comentario-profile-bar button', 'Login').click();
-        cy.get('@root').find('.comentario-dialog').should('be.visible')
-            .find('form').as('form');
-        cy.get('@form').find('input[name=email]')   .setValue(user.email);
-        cy.get('@form').find('input[name=password]').setValue(user.password).type('{enter}');
-
-        // Verify user name in the profile bar
-        cy.get('@root').find('.comentario-profile-bar .comentario-name').should('have.text', user.name);
-    };
-
     // Iterate all non-banned users + anonymous
     Object.entries(USERS)
         .filter(([, user]) => !user.isBanned && (user.isAnonymous || user.password))
         .forEach(([userKey, user]) => context(`user "${userKey}"`, () => {
 
             beforeEach(() => {
-                cy.visitTestSite(TEST_PATHS.home);
+                cy.testSiteVisit(TEST_PATHS.home);
 
                 // Log the user in, if they have a password
                 if (user.password) {
-                    embedLogin(user);
+                    cy.testSiteLogin(user);
                 }
             });
 
             context('displays comments', () => {
 
                 it('on home page', () => {
-                    cy.visitTestSite(TEST_PATHS.home);
+                    cy.testSiteVisit(TEST_PATHS.home);
 
                     // Verify layout
                     checkLayout({
@@ -217,7 +196,7 @@ context('Embed', () => {
                 });
 
                 it('on page with a comment', () => {
-                    cy.visitTestSite(TEST_PATHS.comments);
+                    cy.testSiteVisit(TEST_PATHS.comments);
 
                     // Verify layout
                     checkLayout({
@@ -240,7 +219,7 @@ context('Embed', () => {
                 });
 
                 it('on page without comments', () => {
-                    cy.visitTestSite(TEST_PATHS.noComment);
+                    cy.testSiteVisit(TEST_PATHS.noComment);
 
                     // Verify layout
                     checkLayout({
@@ -253,7 +232,7 @@ context('Embed', () => {
                 });
 
                 it('on page with double Comentario', () => {
-                    cy.visitTestSite(TEST_PATHS.double);
+                    cy.testSiteVisit(TEST_PATHS.double);
 
                     // Verify layout
                     checkLayout({
@@ -285,7 +264,7 @@ context('Embed', () => {
                 });
 
                 it('on page with dynamic Comentario', () => {
-                    cy.visitTestSite(TEST_PATHS.dynamic);
+                    cy.testSiteVisit(TEST_PATHS.dynamic);
 
                     // No Comentario initially
                     cy.get('comentario-comments').should('not.exist');
@@ -319,7 +298,7 @@ context('Embed', () => {
                 });
 
                 it('on readonly page', () => {
-                    cy.visitTestSite(TEST_PATHS.readonly);
+                    cy.testSiteVisit(TEST_PATHS.readonly);
 
                     // Verify layout
                     checkLayout({
@@ -336,7 +315,7 @@ context('Embed', () => {
                 context('with tag attributes', () => {
 
                     it('auto-init=false', () => {
-                        cy.visitTestSite(TEST_PATHS.attr.autoInit);
+                        cy.testSiteVisit(TEST_PATHS.attr.autoInit);
 
                         // There's comments tag but Comentario isn't running
                         cy.get('comentario-comments .comentario-root').as('root').should('exist');
@@ -375,7 +354,7 @@ context('Embed', () => {
                     });
 
                     it('no-fonts=true', () => {
-                        cy.visitTestSite(TEST_PATHS.attr.noFonts);
+                        cy.testSiteVisit(TEST_PATHS.attr.noFonts);
 
                         // Verify layout
                         checkLayout({
@@ -405,7 +384,7 @@ context('Embed', () => {
                     });
 
                     it('css-override', () => {
-                        cy.visitTestSite(TEST_PATHS.attr.cssOverride);
+                        cy.testSiteVisit(TEST_PATHS.attr.cssOverride);
 
                         // Verify layout
                         checkLayout({
@@ -438,7 +417,7 @@ context('Embed', () => {
                     });
 
                     it('css-override=false', () => {
-                        cy.visitTestSite(TEST_PATHS.attr.cssOverrideFalse);
+                        cy.testSiteVisit(TEST_PATHS.attr.cssOverrideFalse);
 
                         // Verify layout
                         checkLayout({
@@ -471,7 +450,7 @@ context('Embed', () => {
                     });
 
                     it('page-id', () => {
-                        cy.visitTestSite(TEST_PATHS.attr.pageId);
+                        cy.testSiteVisit(TEST_PATHS.attr.pageId);
 
                         // Verify layout
                         checkLayout({
@@ -506,7 +485,7 @@ context('Embed', () => {
 
         beforeEach(() => {
             // Go to the Comments page
-            cy.visitTestSite(TEST_PATHS.comments);
+            cy.testSiteVisit(TEST_PATHS.comments);
 
             // Verify layout / create aliases
             checkLayout({
