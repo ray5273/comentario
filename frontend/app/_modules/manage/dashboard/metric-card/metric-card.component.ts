@@ -24,4 +24,10 @@ export class MetricCardComponent {
      */
     @Input({required: true})
     value?: number;
+
+    /**
+     * Whether the card should use the full parent height.
+     */
+    @Input()
+    fullHeight = false;
 }

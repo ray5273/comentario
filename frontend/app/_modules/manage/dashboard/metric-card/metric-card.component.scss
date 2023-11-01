@@ -1,4 +1,12 @@
+.card {
+    --bs-card-spacer-y: 0.5rem;
+    --bs-card-spacer-x: 0.5rem;
+    --bs-card-title-spacer-y: 0;
+    --bs-body-line-height: 0.95;
+}
+
 .metric-label {
+    font-size: 0.925em;
     font-weight: bold;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -14,9 +22,9 @@
 }
 
 .metric-value {
-    font-size: 2.5rem;
+    font-size: 2rem;
 
     &.metric-value-1m {
-        font-size: 1.25rem;
+        font-size: 1rem;
     }
 }

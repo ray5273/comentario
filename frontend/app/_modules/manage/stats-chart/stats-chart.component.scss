@@ -1,7 +1,13 @@
+@import '../../../../scss/vars';
+
 .chart-container {
     display: inline-block;
     position: relative;
-    width: 50rem;
-    max-width: 100%;
-    height: 40vh;
+    width: 100%;
+    min-height: 12rem;
+    height: 12rem;
+
+    @include media-breakpoint-up(lg) {
+        height: 20rem;
+    }
 }

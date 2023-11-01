@@ -1,6 +1,6 @@
-<div class="col h-100">
-    <div class="card h-100">
-        <div class="card-body text-center text-nowrap">
+<div [class.h-100]="fullHeight" class="col">
+    <div [class.h-100]="fullHeight" class="card shadow-none border-0">
+        <div class="card-body text-nowrap">
             <div class="card-title">
                 <div class="metric-label">{{ label }}</div>
                 <div *ngIf="sublabel" class="metric-sublabel">{{ sublabel }}</div>

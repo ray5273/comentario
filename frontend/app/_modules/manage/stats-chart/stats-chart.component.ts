@@ -28,12 +28,36 @@ export class StatsChartComponent {
         },
         scales: {
             y: {
-                min: 0, // We expect no negative values
+                // We expect no negative values
+                min: 0,
             },
+            x: {
+                ticks: {
+                    // Only draw one tick per week
+                    callback: (_, index) => (this.chartLabels.length - index) % 7 === 1 ? this.chartLabels[index] : null,
+                }
+            }
         },
     };
-    chartLabels: string[] = [];
-    chartData: ChartDataset[] = [];
+    readonly chartLabels:       string[] = [];
+    readonly chartDataViews:    ChartDataset[] = [{
+        label:                $localize`Views`,
+        data:                 [],
+        borderColor:          '#339b11',
+        backgroundColor:      '#339b1120',
+        pointBackgroundColor: '#339b11',
+        tension:              0.5,
+        fill:                 true,
+    }];
+    readonly chartDataComments: ChartDataset[] = [{
+        label:                $localize`Comments`,
+        data:                 [],
+        borderColor:          '#376daf',
+        backgroundColor:      '#376daf20',
+        pointBackgroundColor: '#376daf',
+        tension:              0.5,
+        fill:                 true,
+    }];
 
     private _domainId?: string;
     private _numberOfDays = 30;
@@ -66,11 +90,16 @@ export class StatsChartComponent {
         this.reload$.next();
     }
 
+    private resetChart() {
+        this.chartLabels.splice(0);
+        this.chartDataViews[0].data.splice(0);
+        this.chartDataComments[0].data.splice(0);
+    }
+
     private reload() {
         // Undefined domain means it's uninitialised yet
         if (this._domainId === undefined) {
-            this.chartLabels = [];
-            this.chartData = [];
+            this.resetChart();
             return;
         }
 
@@ -78,40 +107,21 @@ export class StatsChartComponent {
         (this._domainId ? this.api.domainDailyStats(this._domainId, this._numberOfDays) : this.api.dashboardDailyStats(this._numberOfDays))
             .pipe(this.loading.processing())
             .subscribe(r => {
+                // Reset the chart
+                this.resetChart();
+
                 // Fetch the number of days
                 this.countDays = r.commentCounts?.length || 0;
-
-                // No data available
                 if (!this.countDays) {
-                    this.chartLabels = [];
-                    this.chartData = [];
                     return;
                 }
 
-                // Data available
-                this.chartData = [
-                    {
-                        label:                $localize`Views`,
-                        data:                 r.viewCounts!,
-                        borderColor:          '#339b11',
-                        backgroundColor:      '#339b1120',
-                        pointBackgroundColor: '#339b11',
-                        tension:              0.5,
-                        fill:                 true,
-                    },
-                    {
-                        label:                $localize`Comments`,
-                        data:                 r.commentCounts!,
-                        borderColor:          '#376daf',
-                        backgroundColor:      '#376daf20',
-                        pointBackgroundColor: '#376daf',
-                        tension:              0.5,
-                        fill:                 true,
-                    },
-                ];
+                // Generate labels
+                this.chartLabels.push(...this.getDates(this.countDays));
 
-                // Generate 30 last dates
-                this.chartLabels = this.getDates(this.countDays);
+                // Add chart data
+                this.chartDataViews[0].data.push(...r.viewCounts!);
+                this.chartDataComments[0].data.push(...r.commentCounts!);
 
                 // Count totals
                 this.countViews    = r.viewCounts!.reduce((acc, n) => acc + n, 0);
