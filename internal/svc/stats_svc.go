@@ -18,8 +18,10 @@ var TheStatsService StatsService = &statsService{}
 type StatsService interface {
 	// GetDailyCommentCounts collects and returns a daily statistics for comments
 	GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
-	// GetDailyPageCounts collects and returns a daily statistics for pages
-	GetDailyPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
+	// GetDailyDomainPageCounts collects and returns a daily statistics for domain pages
+	GetDailyDomainPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
+	// GetDailyDomainUserCounts collects and returns a daily statistics for domain users
+	GetDailyDomainUserCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
 	// GetDailyViewCounts collects and returns a daily statistics for views
 	GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
 	// GetTotals collects and returns total figures for all domains accessible to the specified user
@@ -64,8 +66,40 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 	return svc.queryStats(q, start, numDays)
 }
 
-func (svc *statsService) GetDailyPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
-	logger.Debugf("statsService.GetDailyPageCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
+func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
+	logger.Debugf("statsService.GetDailyDomainUserCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
+
+	// Calculate the start date
+	numDays, start := getStatsStartDate(numDays)
+
+	// Prepare a query for comment counts, grouped by day
+	date := goqu.L("date_trunc('day', u.ts_created)")
+	q := db.Dialect().
+		From(goqu.T("cm_domains_users").As("u")).
+		Select(goqu.COUNT("*"), date).
+		// Filter by domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("u.domain_id")})).
+		// Select only last N days
+		Where(goqu.I("u.ts_created").Gte(start)).
+		GroupBy(date).
+		Order(date.Asc())
+
+	// Filter by domain, if any
+	if domainID != nil {
+		q = q.Where(goqu.Ex{"d.id": domainID})
+	}
+
+	// If the user isn't a superuser, filter by owned domains
+	if !isSuperuser {
+		q = addStatsOwnedDomainFilter(q, userID)
+	}
+
+	// Query data
+	return svc.queryStats(q, start, numDays)
+}
+
+func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
+	logger.Debugf("statsService.GetDailyDomainPageCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
 
 	// Calculate the start date
 	numDays, start := getStatsStartDate(numDays)

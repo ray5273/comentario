@@ -2,7 +2,7 @@
     <div [class.h-100]="fullHeight" class="card shadow-none border-0 position-relative">
         <!-- Chart -->
         <div *ngIf="chartData as d" class="metric-chart">
-            <canvas baseChart type="line" [options]="chartOptions" [data]="d"></canvas>
+            <canvas baseChart type="bar" [options]="chartOptions" [data]="d"></canvas>
         </div>
 
         <!-- Card body -->

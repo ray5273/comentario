@@ -22,7 +22,7 @@ describe('DashboardComponent', () => {
                     ApiGeneralService,
                     {
                         dashboardTotals: () => of({}) as any,
-                        dashboardDailyStatsPages: () => of([]) as any,
+                        dashboardDailyStats: () => of([]) as any,
                     }),
                 MockProvider(AuthService, {principal: of(null)}),
             ],

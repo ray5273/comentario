@@ -25,13 +25,13 @@
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
 
             <!-- Pages -->
-            <app-metric-card *ngIf="totals.countPagesModerated as c" [value]="c" [chartCounts]="pageCounts"
-                             [fullHeight]="true" label="Pages" sublabel="you moderate"
+            <app-metric-card *ngIf="totals.countPagesModerated as c" [value]="c" [chartCounts]="domainPageCounts"
+                             [fullHeight]="true" label="Pages" sublabel="you moderate" chartColour="#fd4f8850"
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
 
             <!-- Domain users -->
-            <app-metric-card *ngIf="totals.countDomainUsers as c" [value]="c"
-                             [fullHeight]="true" label="Domain users" sublabel="you manage"
+            <app-metric-card *ngIf="totals.countDomainUsers as c" [value]="c" [chartCounts]="domainUserCounts"
+                             [fullHeight]="true" label="Domain users" sublabel="you manage" chartColour="#e3a41c50"
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
 
             <!-- Comments -->

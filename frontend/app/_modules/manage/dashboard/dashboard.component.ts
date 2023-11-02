@@ -3,6 +3,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Principal, StatsTotals } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { AuthService } from '../../../_services/auth.service';
+import { concatMap, tap } from 'rxjs';
 
 @UntilDestroy()
 @Component({
@@ -13,7 +14,8 @@ export class DashboardComponent implements OnInit {
 
     principal?: Principal;
     totals?: StatsTotals;
-    pageCounts?: number[];
+    domainPageCounts?: number[];
+    domainUserCounts?: number[];
 
     readonly loading = new ProcessingStatus();
 
@@ -28,12 +30,22 @@ export class DashboardComponent implements OnInit {
             .pipe(untilDestroyed(this))
             .subscribe(p => this.principal = p ?? undefined);
 
-        // Fetch the totals from the backend
+        // Fetch the totals from the backend. Serialise data fetching to unburden the backend
         this.api.dashboardTotals()
-            .pipe(this.loading.processing())
-            .subscribe(t => this.totals = t);
-
-        // Fetch page counts
-        this.api.dashboardDailyStatsPages(30).subscribe(c => this.pageCounts = c);
+            .pipe(
+                this.loading.processing(),
+                concatMap(t => {
+                    this.totals = t;
+                    // Fetch domain page stats
+                    return this.api.dashboardDailyStats('domainPages');
+                }),
+                concatMap(p => {
+                    this.domainPageCounts = p;
+                    // Fetch domain user stats
+                    return this.api.dashboardDailyStats('domainUsers');
+                }),
+                tap(u => this.domainUserCounts = u),
+            )
+            .subscribe();
     }
 }

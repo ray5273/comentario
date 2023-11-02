@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { ChartData, ChartOptions } from 'chart.js';
 
 @Component({
     selector: 'app-metric-card',
@@ -32,27 +32,19 @@ export class MetricCardComponent {
     @Input()
     fullHeight = false;
 
-    chartData?: ChartConfiguration['data'];
+    chartData?: ChartData<'bar'>;
 
     private _chartClr: string | null | undefined;
 
-    readonly chartOptions: ChartOptions = {
+    readonly chartOptions: ChartOptions<'bar'> = {
         maintainAspectRatio: false,
         backgroundColor: '#00000000',
         plugins: {
             legend: {display: false},
         },
         scales: {
-            x: {
-                display: false,
-                grid: {display: false},
-                ticks: {display: false},
-            },
-            y: {
-                display: false,
-                grid: {display: false},
-                ticks: {display: false},
-            },
+            x: {display: false},
+            y: {display: false},
         }
     };
 
@@ -65,7 +57,7 @@ export class MetricCardComponent {
 
         // Also update the existing chart data, if any
         if (this.chartData) {
-            this.chartData.datasets[0].borderColor = c || '#fd4f8850';
+            this.chartData.datasets[0].backgroundColor = this.barColour;
         }
     }
 
@@ -76,11 +68,14 @@ export class MetricCardComponent {
     set chartCounts(c: number[] | null | undefined) {
         this.chartData = {
             datasets: [{
-                data:        c ?? [],
-                borderColor: this._chartClr || '#fd4f8850',
-                pointStyle: false,
+                data:            c ?? [],
+                backgroundColor: this.barColour,
             }],
-            labels: Array(c?.length).fill(''),
+            labels: Array(c?.length).fill('z'),
         };
+    }
+
+    get barColour(): string {
+        return this._chartClr || '#48484855';
     }
 }

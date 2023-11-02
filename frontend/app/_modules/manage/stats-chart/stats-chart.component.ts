@@ -28,7 +28,7 @@ export class StatsChartComponent {
     readonly loadingViews    = new ProcessingStatus();
 
     private _domainId?: string;
-    private _numberOfDays = 30;
+    private _numberOfDays?: number;
     private reload$ = new Subject<void>();
 
     constructor(
@@ -67,7 +67,7 @@ export class StatsChartComponent {
         }
 
         // Fetch view counts
-        this.api.dashboardDailyStatsViews(this._numberOfDays, this._domainId || undefined)
+        this.api.dashboardDailyStats('views', this._numberOfDays, this._domainId || undefined)
             .pipe(this.loadingViews.processing())
             .subscribe(counts => {
                 // Fetch the number of days
@@ -82,7 +82,7 @@ export class StatsChartComponent {
             });
 
         // Fetch comment counts
-        this.api.dashboardDailyStatsComments(this._numberOfDays, this._domainId || undefined)
+        this.api.dashboardDailyStats('comments', this._numberOfDays, this._domainId || undefined)
             .pipe(this.loadingComments.processing())
             .subscribe(counts => {
                 // Generate data

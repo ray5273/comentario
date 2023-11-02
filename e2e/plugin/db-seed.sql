@@ -134,38 +134,38 @@ values
 
 insert into cm_domains_users (domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
 values
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866edc4867', true,  true,  true,  true, true, '2023-01-17 17:55:47.008851'),
-    ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '2af9ecd2-a32a-4332-8717-396e9af28639', true,  true,  true,  true, true, '2022-02-22 17:55:47.008851'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, true,  true,  true, true, '2023-01-17 17:55:47.008851'),
-    ('0272e06c-1568-46c6-b973-e2f1dd5bf3cc', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true,  true, true, '2023-01-17 18:01:00.001231'),
-    ('6fcb3173-3a00-4aa5-8113-e39767b469a7', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, false, true, true, '2023-01-18 18:01:00.001231'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, true,  true,  true, true, '2023-01-17 17:55:47.008851'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, true,  true,  true, true, '2023-01-17 17:55:47.008851'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true,  true, true, '2023-01-18 16:52:04.541982');
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866edc4867', true,  true,  true,  true, true, current_timestamp - interval '10 days'),
+    ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '2af9ecd2-a32a-4332-8717-396e9af28639', true,  true,  true,  true, true, current_timestamp - interval '3 days'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, true,  true,  true, true, current_timestamp - interval '3 days'),
+    ('0272e06c-1568-46c6-b973-e2f1dd5bf3cc', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true,  true, true, current_timestamp - interval '3 days'),
+    ('6fcb3173-3a00-4aa5-8113-e39767b469a7', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, false, true, true, current_timestamp - interval '2 days'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, true,  true,  true, true, current_timestamp - interval '1 days'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, true,  true,  true, true, current_timestamp - interval '1 days'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true,  true, true, current_timestamp - interval '1 days');
 
 insert into cm_domain_pages (id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
 values
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', 'Home', false, '2023-06-23 17:21:53', 17, 10),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c6', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/comments/', 'Comments', false, '2023-06-24 11:11:42', 0, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/nocomment/', 'No comment', false, '2023-07-01 21:51:14', 0, 2),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/readonly/', 'Readonly page', true, '2023-06-24 11:15:42', 0, 42),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865', '', false, '2023-07-02 21:51:15', 0, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480cb', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/double/', 'Double Comentario', false, '2023-07-07 12:21:22', 2, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480cc', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/dynamic/', 'Dynamic insertion', false, '2023-07-08 09:17:11', 1, 4),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', 'Home', false, current_timestamp - interval '21 days', 17, 10),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c6', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/comments/', 'Comments', false, current_timestamp - interval '21 days', 0, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/nocomment/', 'No comment', false, current_timestamp - interval '21 days', 0, 2),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/readonly/', 'Readonly page', true, current_timestamp - interval '18 days', 0, 42),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865', '', false, current_timestamp - interval '18 days', 0, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480cb', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/double/', 'Double Comentario', false, current_timestamp - interval '18 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480cc', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/dynamic/', 'Dynamic insertion', false, current_timestamp - interval '17 days', 1, 4),
     -- Attributes
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a000', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/auto-init/', 'Attribute: auto-init=false', false, '2023-07-03 00:01:00', 2, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a001', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/no-fonts/', 'Attribute: no-fonts=true', false, '2023-07-03 00:01:01', 2, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a002', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/css-override/', 'Attribute: css-override', false, '2023-07-03 00:01:02', 2, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a003', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/css-override-false/', 'Attribute: css-override=false', false, '2023-07-03 00:01:03', 2, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a004', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/different-page/123', 'Attribute: page-id', false, '2023-07-03 00:01:04', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a000', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/auto-init/', 'Attribute: auto-init=false', false, current_timestamp - interval '18 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a001', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/no-fonts/', 'Attribute: no-fonts=true', false, current_timestamp - interval '16 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a002', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/css-override/', 'Attribute: css-override', false, current_timestamp - interval '15 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a003', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/css-override-false/', 'Attribute: css-override=false', false, current_timestamp - interval '14 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a004', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/different-page/123', 'Attribute: page-id', false, current_timestamp - interval '13 days', 2, 0),
 
     -- Frozen domain
-    ('f8a735d9-e9bb-468f-9d00-72849842cc15', '4d7affab-4db7-4521-aea2-9451e158d642', '/frozen/', 'Frozen', false, '2023-07-02 21:51:15', 0, 0),
+    ('f8a735d9-e9bb-468f-9d00-72849842cc15', '4d7affab-4db7-4521-aea2-9451e158d642', '/frozen/', 'Frozen', false, current_timestamp - interval '12 days', 0, 0),
 
     -- Another domain
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac48010', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0014', 'On the subject of drunken jokes', false, '2017-01-12 22:12:11', 6, 15),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac48011', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0067', 'Does patience ever pay off?', false, '2017-03-08 07:02:43', 0, 76182),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac48012', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0215', 'Very boring post about something with such a long title that it will hardly ever be entirely visible', false, '2020-07-11 15:02:43', 0, 2);
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac48010', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0014', 'On the subject of drunken jokes', false, current_timestamp - interval '10 days', 6, 15),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac48011', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0067', 'Does patience ever pay off?', false, current_timestamp - interval '6 days', 0, 76182),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac48012', '6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '/blog/post/0215', 'Very boring post about something with such a long title that it will hardly ever be entirely visible', false, current_timestamp - interval '2 days', 0, 2);
 
 insert into cm_comments (id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, ts_moderated, ts_deleted, user_created, user_moderated, user_deleted, pending_reason)
 values

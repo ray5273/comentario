@@ -1003,6 +1003,18 @@ parameters:
       - twitter
       - sso  # SSO is a special case of federated authentication, which requires additional configuration for a specific domain
 
+  pathDailyMetric:
+    name: metric
+    in: path
+    required: true
+    description: Metric for returning daily stats on
+    type: string
+    enum:
+      - comments
+      - domainUsers
+      - domainPages
+      - views
+
   pathImportSource:
     name: source
     in: path
@@ -2016,43 +2028,14 @@ paths:
           schema:
             $ref: "#/definitions/statsTotals"
 
-  /dashboard/stats/daily/comments:
+  /dashboard/stats/daily/{metric}:
     get:
-      operationId: DashboardDailyStatsComments
-      summary: Get daily comment statistics for the user and, optionally, specified domain
+      operationId: DashboardDailyStats
+      summary: Get daily statistics for the given metric and the current user and, optionally, specified domain
       tags:
         - ApiGeneral
       parameters:
-        - $ref: "#/parameters/queryStatsDays"
-        - $ref: "#/parameters/queryOptionalDomain"
-      responses:
-        200:
-          description: Daily statistical data
-          schema:
-            $ref: "#/definitions/statsDailyCounts"
-
-  /dashboard/stats/daily/pages:
-    get:
-      operationId: DashboardDailyStatsPages
-      summary: Get daily page statistics for the user and, optionally, specified domain
-      tags:
-        - ApiGeneral
-      parameters:
-        - $ref: "#/parameters/queryStatsDays"
-        - $ref: "#/parameters/queryOptionalDomain"
-      responses:
-        200:
-          description: Daily statistical data
-          schema:
-            $ref: "#/definitions/statsDailyCounts"
-
-  /dashboard/stats/daily/views:
-    get:
-      operationId: DashboardDailyStatsViews
-      summary: Get daily view statistics for the user and, optionally, specified domain
-      tags:
-        - ApiGeneral
-      parameters:
+        - $ref: "#/parameters/pathDailyMetric"
         - $ref: "#/parameters/queryStatsDays"
         - $ref: "#/parameters/queryOptionalDomain"
       responses:
