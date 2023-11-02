@@ -87,8 +87,8 @@ func domainUserGet(domainID, userID strfmt.UUID, curUser *data.User) (*data.User
 		return nil, nil, r
 
 		// Parse user ID
-	} else if uID, err := data.DecodeUUID(userID); err != nil {
-		return nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(userID)))
+	} else if uID, r := parseUUID(userID); r != nil {
+		return nil, nil, r
 
 		// Find the domain user
 	} else if u, du, err := svc.TheUserService.FindDomainUserByID(uID, &domain.ID); err != nil {

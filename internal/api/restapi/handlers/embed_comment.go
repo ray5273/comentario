@@ -174,8 +174,8 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	// Parse the parent ID
 	var parentID uuid.NullUUID
 	if params.Body.ParentID != "" {
-		if pid, err := data.DecodeUUID(params.Body.ParentID); err != nil {
-			return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Body.ParentID)))
+		if pid, r := parseUUID(params.Body.ParentID); r != nil {
+			return r
 		} else {
 			parentID.UUID = *pid
 			parentID.Valid = true
@@ -343,8 +343,8 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 	}
 
 	// Parse comment ID
-	if commentID, err := data.DecodeUUID(params.UUID); err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
+	if commentID, r := parseUUID(params.UUID); r != nil {
+		return r
 
 		// Find the comment
 	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {

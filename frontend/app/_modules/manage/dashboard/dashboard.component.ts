@@ -13,6 +13,7 @@ export class DashboardComponent implements OnInit {
 
     principal?: Principal;
     totals?: StatsTotals;
+    pageCounts?: number[];
 
     readonly loading = new ProcessingStatus();
 
@@ -27,9 +28,12 @@ export class DashboardComponent implements OnInit {
             .pipe(untilDestroyed(this))
             .subscribe(p => this.principal = p ?? undefined);
 
-        // Fetch the data from the backend
+        // Fetch the totals from the backend
         this.api.dashboardTotals()
             .pipe(this.loading.processing())
             .subscribe(t => this.totals = t);
+
+        // Fetch page counts
+        this.api.dashboardDailyStatsPages(30).subscribe(c => this.pageCounts = c);
     }
 }

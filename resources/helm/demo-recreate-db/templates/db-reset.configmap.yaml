@@ -160,7 +160,7 @@ data:
     delete from cm_domain_pages where id != 'f88fffb2-c354-494b-94f4-aae1a84653c3';
     insert into cm_domain_pages(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
         values
-            ('f88fffb2-c354-494b-94f4-aae1a84653c3', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/', 'Comentario Demo', false, '2023-06-23 17:21:53.002826', 3, 0)
+            ('f88fffb2-c354-494b-94f4-aae1a84653c3', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/', 'Comentario Demo', false, current_timestamp, 3, 0)
         on conflict (id) do update
             set
                 domain_id   = excluded.domain_id,

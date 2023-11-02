@@ -25,7 +25,7 @@
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
 
             <!-- Pages -->
-            <app-metric-card *ngIf="totals.countPagesModerated as c" [value]="c"
+            <app-metric-card *ngIf="totals.countPagesModerated as c" [value]="c" [chartCounts]="pageCounts"
                              [fullHeight]="true" label="Pages" sublabel="you moderate"
                              i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
 

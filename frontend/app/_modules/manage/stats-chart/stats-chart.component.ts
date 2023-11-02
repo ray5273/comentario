@@ -1,7 +1,7 @@
 import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { debounceTime, Subject } from 'rxjs';
-import { ChartDataset, ChartOptions } from 'chart.js';
+import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 
@@ -19,45 +19,13 @@ export class StatsChartComponent {
     /** Total number of comments over the returned stats period. */
     countComments?: number;
 
-    readonly loading = new ProcessingStatus();
-    readonly chartOptions: ChartOptions = {
-        maintainAspectRatio: false,
-        backgroundColor: '#00000000',
-        plugins: {
-            legend: {display: false},
-        },
-        scales: {
-            y: {
-                // We expect no negative values
-                min: 0,
-            },
-            x: {
-                ticks: {
-                    // Only draw one tick per week
-                    callback: (_, index) => (this.chartLabels.length - index) % 7 === 1 ? this.chartLabels[index] : null,
-                }
-            }
-        },
-    };
-    readonly chartLabels:       string[] = [];
-    readonly chartDataViews:    ChartDataset[] = [{
-        label:                $localize`Views`,
-        data:                 [],
-        borderColor:          '#339b11',
-        backgroundColor:      '#339b1120',
-        pointBackgroundColor: '#339b11',
-        tension:              0.5,
-        fill:                 true,
-    }];
-    readonly chartDataComments: ChartDataset[] = [{
-        label:                $localize`Comments`,
-        data:                 [],
-        borderColor:          '#376daf',
-        backgroundColor:      '#376daf20',
-        pointBackgroundColor: '#376daf',
-        tension:              0.5,
-        fill:                 true,
-    }];
+    chartDataViews?: ChartConfiguration['data'];
+    chartDataComments?: ChartConfiguration['data'];
+    chartOptionsViews?: ChartOptions;
+    chartOptionsComments?: ChartOptions;
+
+    readonly loadingComments = new ProcessingStatus();
+    readonly loadingViews    = new ProcessingStatus();
 
     private _domainId?: string;
     private _numberOfDays = 30;
@@ -90,43 +58,77 @@ export class StatsChartComponent {
         this.reload$.next();
     }
 
-    private resetChart() {
-        this.chartLabels.splice(0);
-        this.chartDataViews[0].data.splice(0);
-        this.chartDataComments[0].data.splice(0);
-    }
-
     private reload() {
         // Undefined domain means it's uninitialised yet
         if (this._domainId === undefined) {
-            this.resetChart();
+            this.chartDataViews = undefined;
+            this.chartDataComments = undefined;
             return;
         }
 
-        // Request data from the backend
-        (this._domainId ? this.api.domainDailyStats(this._domainId, this._numberOfDays) : this.api.dashboardDailyStats(this._numberOfDays))
-            .pipe(this.loading.processing())
-            .subscribe(r => {
-                // Reset the chart
-                this.resetChart();
-
+        // Fetch view counts
+        this.api.dashboardDailyStatsViews(this._numberOfDays, this._domainId || undefined)
+            .pipe(this.loadingViews.processing())
+            .subscribe(counts => {
                 // Fetch the number of days
-                this.countDays = r.commentCounts?.length || 0;
-                if (!this.countDays) {
-                    return;
-                }
+                this.countDays = counts.length;
 
-                // Generate labels
-                this.chartLabels.push(...this.getDates(this.countDays));
-
-                // Add chart data
-                this.chartDataViews[0].data.push(...r.viewCounts!);
-                this.chartDataComments[0].data.push(...r.commentCounts!);
+                // Generate data
+                this.chartDataViews = this.getChartConfig(counts, '#339b11');
+                this.chartOptionsViews = this.getChartOptions(this.chartDataViews.labels as string[]);
 
                 // Count totals
-                this.countViews    = r.viewCounts!.reduce((acc, n) => acc + n, 0);
-                this.countComments = r.commentCounts!.reduce((acc, n) => acc + n, 0);
+                this.countViews = counts!.reduce((acc, n) => acc + n, 0);
             });
+
+        // Fetch comment counts
+        this.api.dashboardDailyStatsComments(this._numberOfDays, this._domainId || undefined)
+            .pipe(this.loadingComments.processing())
+            .subscribe(counts => {
+                // Generate data
+                this.chartDataComments = this.getChartConfig(counts, '#376daf');
+                this.chartOptionsComments = this.getChartOptions(this.chartDataComments.labels as string[]);
+
+                // Count totals
+                this.countComments = counts!.reduce((acc, n) => acc + n, 0);
+            });
+    }
+
+    private getChartConfig(counts: number[], colour: string): ChartConfiguration['data'] {
+        return {
+            datasets: [{
+                label:                $localize`Views`,
+                data:                 counts,
+                borderColor:          colour,
+                backgroundColor:      `${colour}20`,
+                pointBackgroundColor: colour,
+                tension:              0.5,
+                fill:                 true,
+            }],
+            labels: this.getDates(counts.length),
+        };
+    }
+
+    private getChartOptions(labels: string[]): ChartOptions {
+        return {
+            maintainAspectRatio: false,
+            backgroundColor: '#00000000',
+            plugins: {
+                legend: {display: false},
+            },
+            scales: {
+                y: {
+                    // We expect no negative values
+                    min: 0,
+                },
+                x: {
+                    // Only draw one tick per week
+                    ticks: {
+                        callback: (_, index) => (labels.length - index) % 7 === 1 ? labels[index] : null,
+                    },
+                },
+            },
+        };
     }
 
     private getDates(count: number): string[] {

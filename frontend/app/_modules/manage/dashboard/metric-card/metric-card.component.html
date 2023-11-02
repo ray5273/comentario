@@ -1,13 +1,21 @@
 <div [class.h-100]="fullHeight" class="col">
-    <div [class.h-100]="fullHeight" class="card shadow-none border-0">
-        <div class="card-body text-nowrap">
+    <div [class.h-100]="fullHeight" class="card shadow-none border-0 position-relative">
+        <!-- Chart -->
+        <div *ngIf="chartData as d" class="metric-chart">
+            <canvas baseChart type="line" [options]="chartOptions" [data]="d"></canvas>
+        </div>
+
+        <!-- Card body -->
+        <div class="card-body text-nowrap metric-card-body">
             <div class="card-title">
                 <div class="metric-label">{{ label }}</div>
                 <div *ngIf="sublabel" class="metric-sublabel">{{ sublabel }}</div>
             </div>
             <div class="card-text">
+                <!-- Metric value -->
                 <div *ngIf="value !== undefined else noValue" [class.metric-value-1m]="value >= 1000000"
                      class="metric-value">{{ value | number }}</div>
+                <!-- Spinner in case the value is not yet known -->
                 <ng-template #noValue>
                     <div class="spinner-grow spinner-grow-sm" role="status"></div>
                 </ng-template>

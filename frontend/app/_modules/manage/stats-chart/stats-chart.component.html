@@ -1,35 +1,29 @@
-<div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="countDays">
-        <!-- Info text -->
-        <p i18n>Last {{ countDays }} days.</p>
+<!-- Info text -->
+<p *ngIf="countDays" i18n>Last {{ countDays }} days.</p>
 
-        <div class="row row-cols-1 row-cols-lg-2 g-2">
-            <!-- Views -->
-            <div class="col">
-                <!-- Numbers of views -->
-                <app-metric-card [value]="countViews" label="Views" i18n-label="metric-label|"/>
+<div class="row row-cols-1 row-cols-lg-2 g-2">
+    <!-- Views -->
+    <div [appSpinner]="loadingViews.active" spinnerSize="lg" class="col">
+        <!-- Numbers of views -->
+        <app-metric-card [value]="countViews" label="Views" i18n-label="metric-label|"/>
 
-                <!-- Chart -->
-                <div class="chart-container">
-                    <canvas baseChart type="line"
-                            [options]="chartOptions" [labels]="chartLabels" [datasets]="chartDataViews"></canvas>
-                </div>
-            </div>
-
-            <!-- Comments -->
-            <div class="col">
-                <!-- Numbers of comments -->
-                <app-metric-card [value]="countComments" label="Comments" i18n-label="metric-label|"/>
-
-                <!-- Chart -->
-                <div class="chart-container">
-                    <canvas baseChart type="line"
-                            [options]="chartOptions" [labels]="chartLabels" [datasets]="chartDataComments"></canvas>
-                </div>
-            </div>
+        <!-- Chart -->
+        <div *ngIf="chartDataViews as d" class="chart-container">
+            <canvas baseChart type="line" [options]="chartOptionsViews" [data]="d"></canvas>
         </div>
-    </ng-container>
+    </div>
 
-    <!-- Placeholder when no data -->
-    <app-no-data *ngIf="!countDays"></app-no-data>
+    <!-- Comments -->
+    <div [appSpinner]="loadingComments.active" spinnerSize="lg" class="col">
+        <!-- Numbers of comments -->
+        <app-metric-card [value]="countComments" label="Comments" i18n-label="metric-label|"/>
+
+        <!-- Chart -->
+        <div *ngIf="chartDataComments as d" class="chart-container">
+            <canvas baseChart type="line" [options]="chartOptionsComments" [data]="d"></canvas>
+        </div>
+    </div>
 </div>
+
+<!-- Placeholder when no data -->
+<app-no-data *ngIf="!countDays"></app-no-data>

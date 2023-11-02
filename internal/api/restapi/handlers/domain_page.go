@@ -27,9 +27,9 @@ func DomainPageGet(params api_general.DomainPageGetParams, user *data.User) midd
 
 func DomainPageList(params api_general.DomainPageListParams, user *data.User) middleware.Responder {
 	// Extract domain ID
-	domainID, err := data.DecodeUUID(params.Domain)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
+	domainID, r := parseUUID(params.Domain)
+	if r != nil {
+		return r
 	}
 
 	// Fetch pages the user has access to
@@ -103,9 +103,9 @@ func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user 
 // the domain user exists
 func domainPageGetDomainUser(pageID strfmt.UUID, user *data.User) (*data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
 	// Extract domain page ID
-	pageUUID, err := data.DecodeUUID(pageID)
-	if err != nil {
-		return nil, nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(pageID)))
+	pageUUID, r := parseUUID(pageID)
+	if r != nil {
+		return nil, nil, nil, r
 	}
 
 	// Fetch page

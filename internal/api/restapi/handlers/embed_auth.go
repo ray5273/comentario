@@ -137,8 +137,12 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 
 	// Parse page ID
 	var du *data.DomainUser
-	if pageID, err := data.DecodeUUID(*params.Body.PageID); err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.Body.PageID)))
+	if pageID, r := parseUUIDPtr(params.Body.PageID); r != nil {
+		return r
+
+		// If there's no page
+	} else if pageID == nil {
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("pageId"))
 
 		// Find the page
 	} else if page, err := svc.ThePageService.FindByID(pageID); err != nil {

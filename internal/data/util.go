@@ -18,6 +18,14 @@ func DecodeUUID(sid strfmt.UUID) (*uuid.UUID, error) {
 	}
 }
 
+// DecodeUUIDPtr converts a *strfmt.UUID into a binary UUID. Returns nil if the pointer is nil
+func DecodeUUIDPtr(pid *strfmt.UUID) (*uuid.UUID, error) {
+	if pid == nil {
+		return nil, nil
+	}
+	return DecodeUUID(*pid)
+}
+
 // EmailPtrToString converts a value of *strfmt.Email into a string
 func EmailPtrToString(email *strfmt.Email) string {
 	return TrimmedString((*string)(email))

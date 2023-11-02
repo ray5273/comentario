@@ -4,10 +4,14 @@ import (
 	"errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/strfmt/conv"
+	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -101,6 +105,24 @@ func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
 		SameSite: util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode),
 	}
 	return r
+}
+
+// parseUUID parses a strfmt.UUID and returns a *uuid.UUID or an error responder
+func parseUUID(sid strfmt.UUID) (*uuid.UUID, middleware.Responder) {
+	u, err := data.DecodeUUID(sid)
+	if err != nil {
+		return nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(sid)))
+	}
+	return u, nil
+}
+
+// parseUUIDPtr parses a nillable *strfmt.UUID and returns a (nillable) *uuid.UUID or an error responder
+func parseUUIDPtr(pid *strfmt.UUID) (*uuid.UUID, middleware.Responder) {
+	u, err := data.DecodeUUIDPtr(pid)
+	if err != nil {
+		return nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(conv.UUIDValue(pid))))
+	}
+	return u, nil
 }
 
 // respBadRequest returns a responder that responds with HTTP Bad Request error

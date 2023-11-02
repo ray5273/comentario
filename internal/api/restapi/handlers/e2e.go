@@ -133,9 +133,9 @@ func E2eMailsGet(api_e2e.E2eMailsGetParams) middleware.Responder {
 
 func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) middleware.Responder {
 	// Parse domain ID
-	domainID, err := data.DecodeUUID(params.UUID)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
+	domainID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
 	}
 
 	// Find the domain

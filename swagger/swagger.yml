@@ -764,23 +764,13 @@ definitions:
         description: Colour hash, number based on the user's ID
         x-omitempty: false
 
-  statsDailyViewsComments:
-    description: Daily statistical data on views and comments
-    type: object
+  statsDailyCounts:
+    description: Daily statistical data, one value per day
+    type: array
     readOnly: true
-    properties:
-      viewCounts:
-        type: array
-        items:
-          type: integer
-          format: uint
-        description: Numbers of views, one value per day
-      commentCounts:
-        type: array
-        items:
-          type: integer
-          format: uint
-        description: Numbers of comments, one value per day
+    items:
+      type: integer
+      format: uint
 
   statsTotals:
     description: Total statistical figures for Comentario dashboard
@@ -1057,6 +1047,14 @@ parameters:
     description: Optional substring to filter the result by
     type: string
     maxLength: 100
+
+  queryOptionalDomain:
+    name: domain
+    in: query
+    required: false
+    description: Optional domain query parameter
+    type: string
+    format: uuid
 
   queryOptionalHost:
     name: host
@@ -2018,19 +2016,50 @@ paths:
           schema:
             $ref: "#/definitions/statsTotals"
 
-  /dashboard/stats/daily:
+  /dashboard/stats/daily/comments:
     get:
-      operationId: DashboardDailyStats
-      summary: Get daily comment and view statistics for the user
+      operationId: DashboardDailyStatsComments
+      summary: Get daily comment statistics for the user and, optionally, specified domain
       tags:
         - ApiGeneral
       parameters:
         - $ref: "#/parameters/queryStatsDays"
+        - $ref: "#/parameters/queryOptionalDomain"
       responses:
         200:
-          description: Statistical data on comments and views for the current user
+          description: Daily statistical data
           schema:
-            $ref: "#/definitions/statsDailyViewsComments"
+            $ref: "#/definitions/statsDailyCounts"
+
+  /dashboard/stats/daily/pages:
+    get:
+      operationId: DashboardDailyStatsPages
+      summary: Get daily page statistics for the user and, optionally, specified domain
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryStatsDays"
+        - $ref: "#/parameters/queryOptionalDomain"
+      responses:
+        200:
+          description: Daily statistical data
+          schema:
+            $ref: "#/definitions/statsDailyCounts"
+
+  /dashboard/stats/daily/views:
+    get:
+      operationId: DashboardDailyStatsViews
+      summary: Get daily view statistics for the user and, optionally, specified domain
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryStatsDays"
+        - $ref: "#/parameters/queryOptionalDomain"
+      responses:
+        200:
+          description: Daily statistical data
+          schema:
+            $ref: "#/definitions/statsDailyCounts"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domains
@@ -2297,21 +2326,6 @@ paths:
             properties:
               ssoSecret:
                 type: string
-
-  /domains/{uuid}/stats:
-    get:
-      operationId: DomainDailyStats
-      summary: Get comment and view statistics for specified domain
-      tags:
-        - ApiGeneral
-      parameters:
-        - $ref: "#/parameters/pathUuid"
-        - $ref: "#/parameters/queryStatsDays"
-      responses:
-        200:
-          description: Statistical data on comments and views for the domain
-          schema:
-            $ref: "#/definitions/statsDailyViewsComments"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domain pages

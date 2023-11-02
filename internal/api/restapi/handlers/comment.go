@@ -14,25 +14,21 @@ import (
 
 func CommentCount(params api_general.CommentCountParams, user *data.User) middleware.Responder {
 	// Extract domain ID
-	domainID, err := data.DecodeUUID(params.Domain)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
+	domainID, r := parseUUID(params.Domain)
+	if r != nil {
+		return r
 	}
 
 	// Extract page ID
-	var pageID *uuid.UUID
-	if params.PageID != nil {
-		if pageID, err = data.DecodeUUID(*params.PageID); err != nil {
-			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.PageID)))
-		}
+	pageID, r := parseUUIDPtr(params.PageID)
+	if r != nil {
+		return r
 	}
 
 	// Extract user ID
-	var userID *uuid.UUID
-	if params.UserID != nil {
-		if userID, err = data.DecodeUUID(*params.UserID); err != nil {
-			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.UserID)))
-		}
+	userID, r := parseUUIDPtr(params.UserID)
+	if r != nil {
+		return r
 	}
 
 	// Find the domain user, if any
@@ -103,25 +99,21 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 
 func CommentList(params api_general.CommentListParams, user *data.User) middleware.Responder {
 	// Extract domain ID
-	domainID, err := data.DecodeUUID(params.Domain)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
+	domainID, r := parseUUID(params.Domain)
+	if r != nil {
+		return r
 	}
 
 	// Extract page ID
-	var pageID *uuid.UUID
-	if params.PageID != nil {
-		if pageID, err = data.DecodeUUID(*params.PageID); err != nil {
-			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.PageID)))
-		}
+	pageID, r := parseUUIDPtr(params.PageID)
+	if r != nil {
+		return r
 	}
 
 	// Extract user ID
-	var userID *uuid.UUID
-	if params.UserID != nil {
-		if userID, err = data.DecodeUUID(*params.UserID); err != nil {
-			return respBadRequest(ErrorInvalidUUID.WithDetails(string(*params.UserID)))
-		}
+	userID, r := parseUUIDPtr(params.UserID)
+	if r != nil {
+		return r
 	}
 
 	// Find the domain user, if any
@@ -212,8 +204,8 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 // ID
 func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse comment ID
-	if commentID, err := data.DecodeUUID(commentUUID); err != nil {
-		return nil, nil, nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(commentUUID)))
+	if commentID, r := parseUUID(commentUUID); r != nil {
+		return nil, nil, nil, nil, r
 
 		// Find the comment
 	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {

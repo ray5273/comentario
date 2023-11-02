@@ -18,7 +18,12 @@ describe('DashboardComponent', () => {
             declarations: [DashboardComponent, MockComponents(MetricCardComponent, StatsChartComponent)],
             imports: [ToolsModule],
             providers: [
-                MockProvider(ApiGeneralService, {dashboardTotals: () => of({}) as any}),
+                MockProvider(
+                    ApiGeneralService,
+                    {
+                        dashboardTotals: () => of({}) as any,
+                        dashboardDailyStatsPages: () => of([]) as any,
+                    }),
                 MockProvider(AuthService, {principal: of(null)}),
             ],
         })

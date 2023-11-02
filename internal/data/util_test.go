@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"reflect"
@@ -33,6 +34,36 @@ func TestDecodeUUID(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("DecodeUUID() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDecodeUUIDPtr(t *testing.T) {
+	v := uuid.MustParse("4eaf7fc2-a6ce-88c9-4150-59e2201ab8cc")
+	tests := []struct {
+		name    string
+		id      *strfmt.UUID
+		want    *uuid.UUID
+		wantErr bool
+	}{
+		{"nil            ", nil, nil, false},
+		{"empty          ", (*strfmt.UUID)(swag.String("")), nil, true},
+		{"invalid UUID   ", (*strfmt.UUID)(swag.String("4gaf7fc2a6ce88c9415059e2201ab8cc")), nil, true},
+		{"too short      ", (*strfmt.UUID)(swag.String("41af7fc2a6ce88c9415059e2201ab8c")), nil, true},
+		{"too long       ", (*strfmt.UUID)(swag.String("41af7fc2a6ce88c9415059e2201ab8cca")), nil, true},
+		{"valid solid    ", (*strfmt.UUID)(swag.String("4eaf7fc2a6ce88c9415059e2201ab8cc")), &v, false},
+		{"valid separated", (*strfmt.UUID)(swag.String("4eaf7fc2-a6ce-88c9-4150-59e2201ab8cc")), &v, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DecodeUUIDPtr(tt.id)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DecodeUUIDPtr() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DecodeUUIDPtr() got = %v, want %v", got, tt.want)
 			}
 		})
 	}

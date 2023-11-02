@@ -4,6 +4,7 @@ import { StatsChartComponent } from './stats-chart.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
 import { NoDataComponent } from '../../tools/no-data/no-data.component';
+import { MetricCardComponent } from '../dashboard/metric-card/metric-card.component';
 
 describe('StatsChartComponent', () => {
 
@@ -12,7 +13,7 @@ describe('StatsChartComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [StatsChartComponent, MockComponents(NoDataComponent)],
+            declarations: [StatsChartComponent, MockComponents(NoDataComponent, MetricCardComponent)],
             providers: [
                 MockProvider(ApiGeneralService),
             ],

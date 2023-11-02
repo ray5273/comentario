@@ -16,9 +16,12 @@ var TheStatsService StatsService = &statsService{}
 
 // StatsService is a service interface for dealing with stats
 type StatsService interface {
-	// GetDailyStats collects and returns daily comment and views statistics for the given domain and number of days. If
-	// domainID is nil, statistics is collected for all domains owned by the user
-	GetDailyStats(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error)
+	// GetDailyCommentCounts collects and returns a daily statistics for comments
+	GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
+	// GetDailyPageCounts collects and returns a daily statistics for pages
+	GetDailyPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
+	// GetDailyViewCounts collects and returns a daily statistics for views
+	GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
 	// GetTotals collects and returns total figures for all domains accessible to the specified user
 	GetTotals(curUser *data.User) (*StatsTotals, error)
 }
@@ -28,77 +31,102 @@ type StatsService interface {
 // statsService is a blueprint StatsService implementation
 type statsService struct{}
 
-func (svc *statsService) GetDailyStats(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) (comments, views []uint64, err error) {
-	logger.Debugf("statsService.GetDailyStats(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
+func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
+	logger.Debugf("statsService.GetDailyCommentCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
 
-	// Correct the number of days if needed
-	if numDays > util.MaxNumberStatsDays {
-		numDays = util.MaxNumberStatsDays
-	}
-
-	// Start date is now minus (numDays-1)
-	start := time.Now().UTC().Truncate(util.OneDay).AddDate(0, 0, -numDays+1)
-
-	// Prepare a filter
-	domainJoinOn := goqu.Ex{"d.id": goqu.I("p.domain_id")}
-	if domainID != nil {
-		domainJoinOn["d.id"] = domainID
-	}
+	// Calculate the start date
+	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	cDate := goqu.L("date_trunc('day', c.ts_created)")
-	cQuery := db.Dialect().
+	date := goqu.L("date_trunc('day', c.ts_created)")
+	q := db.Dialect().
 		From(goqu.T("cm_comments").As("c")).
-		Select(goqu.COUNT("*"), cDate).
+		Select(goqu.COUNT("*"), date).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Filter by domain
-		Join(goqu.T("cm_domains").As("d"), goqu.On(domainJoinOn)).
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		// Select only last N days
 		Where(goqu.I("c.ts_created").Gte(start)).
-		GroupBy(cDate).
-		Order(cDate.Asc())
+		GroupBy(date).
+		Order(date.Asc())
+
+	// Filter by domain, if any
+	if domainID != nil {
+		q = q.Where(goqu.Ex{"d.id": domainID})
+	}
 
 	// If the user isn't a superuser, filter by owned domains
 	if !isSuperuser {
-		cQuery = cQuery.
-			Join(
-				goqu.T("cm_domains_users").As("du"),
-				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID, "du.is_owner": true}))
+		q = addStatsOwnedDomainFilter(q, userID)
 	}
 
-	// Query comment data
-	if comments, err = svc.queryStats(cQuery, start, numDays); err != nil {
-		return nil, nil, translateDBErrors(err)
+	// Query data
+	return svc.queryStats(q, start, numDays)
+}
+
+func (svc *statsService) GetDailyPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
+	logger.Debugf("statsService.GetDailyPageCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
+
+	// Calculate the start date
+	numDays, start := getStatsStartDate(numDays)
+
+	// Prepare a query for comment counts, grouped by day
+	date := goqu.L("date_trunc('day', p.ts_created)")
+	q := db.Dialect().
+		From(goqu.T("cm_domain_pages").As("p")).
+		Select(goqu.COUNT("*"), date).
+		// Filter by domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
+		// Select only last N days
+		Where(goqu.I("p.ts_created").Gte(start)).
+		GroupBy(date).
+		Order(date.Asc())
+
+	// Filter by domain, if any
+	if domainID != nil {
+		q = q.Where(goqu.Ex{"d.id": domainID})
 	}
+
+	// If the user isn't a superuser, filter by owned domains
+	if !isSuperuser {
+		q = addStatsOwnedDomainFilter(q, userID)
+	}
+
+	// Query data
+	return svc.queryStats(q, start, numDays)
+}
+
+func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
+	logger.Debugf("statsService.GetDailyViewCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
+
+	// Calculate the start date
+	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for view counts, grouped by day
-	vDate := goqu.L("date_trunc('day', v.ts_created)")
-	vQuery := db.Dialect().
+	date := goqu.L("date_trunc('day', v.ts_created)")
+	q := db.Dialect().
 		From(goqu.T("cm_domain_page_views").As("v")).
-		Select(goqu.COUNT("*"), vDate).
+		Select(goqu.COUNT("*"), date).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("v.page_id")})).
 		// Filter by domain
-		Join(goqu.T("cm_domains").As("d"), goqu.On(domainJoinOn)).
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		// Select only last N days
 		Where(goqu.I("v.ts_created").Gte(start)).
-		GroupBy(vDate).
-		Order(vDate.Asc())
+		GroupBy(date).
+		Order(date.Asc())
+
+	// Filter by domain, if any
+	if domainID != nil {
+		q = q.Where(goqu.Ex{"d.id": domainID})
+	}
 
 	// If the user isn't a superuser, filter by owned domains
 	if !isSuperuser {
-		vQuery = vQuery.
-			Join(
-				goqu.T("cm_domains_users").As("du"),
-				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID, "du.is_owner": true}))
+		q = addStatsOwnedDomainFilter(q, userID)
 	}
 
 	// Query view data
-	if views, err = svc.queryStats(vQuery, start, numDays); err != nil {
-		return nil, nil, translateDBErrors(err)
-	}
-
-	// Succeeded
-	return
+	return svc.queryStats(q, start, numDays)
 }
 
 func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
@@ -284,7 +312,7 @@ func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num in
 	rows, err := db.Select(e)
 	if err != nil {
 		logger.Errorf("statsService.queryStats: Select() failed: %v", err)
-		return nil, err
+		return nil, translateDBErrors(err)
 	}
 	defer rows.Close()
 
@@ -295,8 +323,8 @@ func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num in
 		var i uint64
 		var t time.Time
 		if err := rows.Scan(&i, &t); err != nil {
-			logger.Errorf("statsService.fetchStats: rs.Scan() failed: %v", err)
-			return nil, err
+			logger.Errorf("statsService.queryStats: rs.Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
 		}
 
 		// UTC-ise the time, just in case it's in a different timezone
@@ -315,7 +343,7 @@ func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num in
 
 	// Check that Next() didn't error
 	if err := rows.Err(); err != nil {
-		return nil, err
+		return nil, translateDBErrors(err)
 	}
 
 	// Add missing rows up to the requested number (fill any gap at the end)
@@ -325,6 +353,24 @@ func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num in
 
 	// Succeeded
 	return res, nil
+}
+
+// addStatsOwnedDomainFilter adds a join condition for domains owned by the given user, to the given query
+func addStatsOwnedDomainFilter(q *goqu.SelectDataset, userID *uuid.UUID) *goqu.SelectDataset {
+	return q.Join(
+		goqu.T("cm_domains_users").As("du"),
+		goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID, "du.is_owner": true}))
+}
+
+// getStatsStartDate returns a corrected number of stats days and the corresponding start date
+func getStatsStartDate(numDays int) (int, time.Time) {
+	// Correct the number of days if needed
+	if numDays > util.MaxNumberStatsDays {
+		numDays = util.MaxNumberStatsDays
+	}
+
+	// Start date is today minus (numDays-1)
+	return numDays, time.Now().UTC().Truncate(util.OneDay).AddDate(0, 0, -numDays+1)
 }
 
 //----------------------------------------------------------------------------------------------------------------------

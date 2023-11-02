@@ -218,24 +218,6 @@ func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.
 	}
 }
 
-func DomainDailyStats(params api_general.DomainDailyStatsParams, user *data.User) middleware.Responder {
-	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
-		return r
-
-		// Collect comment/view stats
-	} else if comments, views, err := svc.TheStatsService.GetDailyStats(user.IsSuperuser, &user.ID, &d.ID, int(swag.Uint64Value(params.Days))); err != nil {
-		return respServiceError(err)
-
-	} else {
-		// Succeeded
-		return api_general.NewDashboardDailyStatsOK().WithPayload(&models.StatsDailyViewsComments{
-			CommentCounts: comments,
-			ViewCounts:    views,
-		})
-	}
-}
-
 // DomainReadonly sets the domain's readonly state
 func DomainReadonly(params api_general.DomainReadonlyParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
@@ -330,8 +312,8 @@ func domainConvertExtensions(exIn []*models.DomainExtension) ([]*data.DomainExte
 // are allowed to manage the domain
 func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, checkCanManage bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse domain ID
-	if domainID, err := data.DecodeUUID(domainUUID); err != nil {
-		return nil, nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(domainUUID)))
+	if domainID, r := parseUUID(domainUUID); r != nil {
+		return nil, nil, r
 
 		// Find the domain and domain user
 	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID); err != nil {

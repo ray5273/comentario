@@ -11,21 +11,21 @@ import (
 
 func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Responder {
 	// Parse user ID
-	uID, err := data.DecodeUUID(params.User)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.User)))
+	uID, r := parseUUID(params.User)
+	if r != nil {
+		return r
 	}
 
 	// Parse domain ID
-	dID, err := data.DecodeUUID(params.Domain)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Domain)))
+	dID, r := parseUUID(params.Domain)
+	if r != nil {
+		return r
 	}
 
 	// Parse secret token
-	secret, err := data.DecodeUUID(params.Secret)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.Secret)))
+	secret, r := parseUUID(params.Secret)
+	if r != nil {
+		return r
 	}
 
 	// Find the domain user

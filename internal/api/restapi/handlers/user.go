@@ -16,8 +16,8 @@ import (
 
 func UserAvatarGet(params api_general.UserAvatarGetParams) middleware.Responder {
 	// Parse the UUID
-	if id, err := data.DecodeUUID(params.UUID); err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
+	if id, r := parseUUID(params.UUID); r != nil {
+		return r
 
 		// Find the user avatar by their ID
 	} else if ua, err := svc.TheAvatarService.GetByUserID(id); err != nil {
@@ -79,9 +79,9 @@ func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware
 	}
 
 	// Extract user ID
-	userID, err := data.DecodeUUID(params.UUID)
-	if err != nil {
-		return respBadRequest(ErrorInvalidUUID.WithDetails(string(params.UUID)))
+	userID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
 	}
 
 	// Make sure the user isn't deleting themselves
@@ -209,9 +209,9 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 // userGet parses a string UUID and fetches the corresponding user
 func userGet(id strfmt.UUID) (*data.User, middleware.Responder) {
 	// Extract user ID
-	userID, err := data.DecodeUUID(id)
-	if err != nil {
-		return nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(id)))
+	userID, r := parseUUID(id)
+	if r != nil {
+		return nil, r
 	}
 
 	// Fetch the user
