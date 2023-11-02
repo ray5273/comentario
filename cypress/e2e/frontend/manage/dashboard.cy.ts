@@ -10,7 +10,7 @@ interface DashboardMetric {
 context('Dashboard', () => {
 
     // Collect metric cards and return their texts as an array
-    const dashboardCardTexts = (): Cypress.Chainable<DashboardMetric[]> => cy.get('app-dashboard app-metric-card')
+    const dashboardCardTexts = (): Cypress.Chainable<DashboardMetric[]> => cy.get('#dashboard-totals app-metric-card')
         .then(cards =>
             cards.map((_, card) =>
                 {
