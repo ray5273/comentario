@@ -27,7 +27,7 @@ An important thing to consider, however, is the round-trip time to the PostgreSQ
 
 ### Supported PostgreSQL versions
 
-At the time of writing, comentario supports all PostgreSQL versions from **9.6** up, with **15.x** being the latest available.
+At the time of writing, comentario supports all PostgreSQL versions from **10** up, with **16.x** being the latest available.
 
 Please note, however, that it's usually a good idea to use the latest available software version because of security updates and bug fixes; or, at least, the *latest minor version* of a major version, for the same reason.
 
