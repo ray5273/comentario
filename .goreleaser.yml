@@ -1,12 +1,5 @@
 project_name: comentario
 
-before:
-  hooks:
-    - go generate
-    - go mod download
-    - yarn install --frozen-lockfile --no-progress
-    - yarn run build:prod
-
 builds:
   - id: comentario
     binary: comentario

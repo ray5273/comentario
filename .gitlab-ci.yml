@@ -12,6 +12,7 @@ workflow:
 
 stages:
   - build
+  - test
   - package
   - deploy
   - post-deploy
@@ -29,6 +30,78 @@ variables:
 build:
   stage: build
   image: registry.gitlab.com/comentario/comentario-ci-tools/builder:$CI_TOOLS_VERSION
+  artifacts:
+    when: always
+    name: comentario
+    expire_in: 1 days  # Only keep the last batch
+    paths:
+      - build/
+      - build-e2e/
+      - dist/
+  variables:
+    # We want to store downloaded packages under the project dir, so we can cache them
+    GOPATH: $CI_PROJECT_DIR/.go
+  cache:
+    key:
+      files:
+        # Backend
+        - go.mod
+        # Frontend
+        - yarn.lock
+    paths:
+      # Backend
+      - .go/pkg/mod/
+      # Frontend
+      - .yarn-cache/
+  before_script:
+    # Create the required dirs
+    - mkdir -p build build-e2e .go
+  script:
+    # Backend build
+    - go generate               # Generate code
+    - go mod download           # Fetch the dependencies explicitly (not exactly necessary, but makes it easier to spot problems)
+    - test -z "$(go fmt ./...)" # Make sure there are no formatting issues
+    - go test -v ./...          # Run unit tests
+
+    # End-2-end: build the backend, e2e plugin and relay
+    - go build -v 
+        -o "./build-e2e/comentario" 
+        -ldflags "-X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
+    - go build -buildmode=plugin -o "./build-e2e/comentario-e2e.so" "./e2e/plugin/"
+    - go build -v -o "./build-e2e/comentario-relay" "./e2e/relay/"
+
+    # Production backend build: disable CGO to statically link the executable so that we can run that in Alpine
+    - CGO_ENABLED=0 go build -a -v
+      -o "./build/comentario"
+      -ldflags "-w -s -X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
+
+    # Copy static assets
+    - cp -r db/ templates/ build/
+
+    # Frontend build
+    - yarn install 
+        --frozen-lockfile 
+        --no-progress 
+        --cache-folder .yarn-cache    # Fetch the dependencies
+    - yarn run lint                   # Lint
+    - yarn run test:ci                # Run unit tests
+    - yarn run build:prod             # Build
+
+    # Debug output
+    - git status -v
+
+    # Build source and binary packages using goreleaser
+    - goreleaser_opts='--clean --skip=publish'
+    - if [[ -z "$CI_COMMIT_TAG" ]]; then
+    -     goreleaser_opts="$goreleaser_opts --snapshot"
+    - fi
+    - goreleaser release $goreleaser_opts
+
+e2e:
+  stage: test
+  rules:
+    - if: $SKIP_TESTS != 'true'
+  image: registry.gitlab.com/comentario/comentario-ci-tools/builder:$CI_TOOLS_VERSION
   parallel:
     # Test against all supported PostgreSQL versions
     matrix:
@@ -45,8 +118,6 @@ build:
     name: comentario
     expire_in: 1 days  # Only keep the last batch
     paths:
-      - build/
-      - dist/
       - cypress/screenshots
       - cypress/videos
       - tmp/logs
@@ -62,59 +133,28 @@ build:
     # The test-site service. Its URL (mentioned in CYPRESS_TEST_SITE_URL) must match the host (alias)
     - name: registry.gitlab.com/comentario/comentario-ci-tools/test-site:$CI_TOOLS_VERSION
       alias: comentario-test-site
-  cache:
-    key:
-      files:
-        # Backend
-        - go.mod
-        # Frontend
-        - yarn.lock
-    paths:
-      # Backend
-      - .go/pkg/mod/
-      # Frontend
-      - .yarn-cache/
+  dependencies:
+    - build
   before_script:
     # Create the required dirs
-    - mkdir -p .go tmp/logs
+    - mkdir -p tmp/logs
   script:
-    # Backend: generate code
-    - go generate
+    # Wait for HTTP server using the given URL
+    - |
+      waitFor() {
+          i=0
+          while ((i++ < 30)); do
+              curl --max-time 2 -vs "$1" >/dev/null && break
+              sleep 1
+          done
+          if [[ $i -gte 30 ]]; then
+              echo "ERROR: $1 is not reachable after $i seconds, failing"
+              exit 1
+          fi 
+      }
 
-    # Backend: fetch the dependencies explicitly (not exactly necessary, but it's easier to spot problems if we do)
-    - go mod download
-
-    # Backend: make sure there are no formatting issues
-    - test -z "$(go fmt ./...)"
-
-    # Backend: run unit tests
-    - go test -v ./...
-
-    # Frontend: fetch the dependencies
-    - yarn install --frozen-lockfile --no-progress --cache-folder .yarn-cache
-
-    # Frontend: build
-    - yarn run build:prod
-
-    # Copy static assets
-    - cp -r db/ templates/ build/
-
-    # Run frontend linting and tests if enabled
-    - if [[ "$SKIP_TESTS" != "true" ]]; then
-
-        # Frontend: lint
-    -   yarn run lint
-
-        # Frontend: unit tests
-    -   yarn run test:ci
-
-        # Build the backend, e2e plugin and relay
-    -   go build -v -o "./build/comentario" -ldflags "-X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
-    -   go build -buildmode=plugin -o "./build/comentario-e2e.so" "./e2e/plugin/"
-    -   go build -v -o "./build/comentario-relay" "./e2e/relay/"
-
-        # Start the backend
-    -   ./build/comentario -vv
+    # Start the e2e backend
+    - ./build-e2e/comentario -vv
           --e2e
           --port=8080
           --static-path=build/frontend
@@ -124,47 +164,18 @@ build:
           --base-docs-url="https://edge.docs.comentario.app"
           --home-content-url="https://edge.docs.comentario.app/en/embed/front-page/"
           &> ./tmp/logs/comentario-server.log &
+    - waitFor http://localhost:8080/en/
 
-        # Wait for the backend server to come online
-    -   i=0
-    -   while ((i++ < 30)); do
-    -      curl --max-time 2 -vs http://localhost:8080/en/ >/dev/null && break
-    -      sleep 1
-    -   done
-
-        # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
-    -   ./build/comentario-relay 
+    # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
+    - ./build-e2e/comentario-relay 
           -listen 127.0.0.1:8000
           -target http://comentario-test-site
           &> ./tmp/logs/comentario-relay.log &
+    - waitFor http://localhost:8000/comments/
 
-        # Wait for the relay to come online
-    -   i=0
-    -   while ((i++ < 30)); do
-    -      curl --max-time 2 -vs http://localhost:8000/comments/ >/dev/null && break
-    -      sleep 1
-    -   done
-
-        # Run e2e tests
-    -   npx cypress install
-    -   npx cypress run
-    - fi
-
-    # Debug output
-    - git status -v
-
-     # Build source and binary packages
-    - goreleaser_opts='--clean --skip=publish'
-    - if [[ -z "$CI_COMMIT_TAG" ]]; then
-    -     goreleaser_opts="$goreleaser_opts --snapshot"
-    - fi
-    - goreleaser release $goreleaser_opts
-
-    # Rebuild the backend in the production mode. Disable CGO to statically link the executable so that we can run that
-    # in Alpine
-    - CGO_ENABLED=0 go build -a -v 
-        -o "./build/comentario"
-        -ldflags "-w -s -X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
+     # Run e2e tests
+    - npx cypress install
+    - npx cypress run
 
 docker-image:
   stage: package
