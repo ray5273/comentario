@@ -5,7 +5,6 @@ context('Domain Manager', () => {
     const noData = 'You have no connected domains.';
     const makeDMAliases = (canAdd: boolean, hasItems: boolean, canLoadMore: boolean = false) => {
         cy.get('app-domain-manager')                    .as('domainManager');
-        cy.get('@domainManager').find('#sortByDropdown').as('sortDropdown');
         cy.get('@domainManager').find('#filter-string') .as('filterString');
 
         if (canAdd) {
@@ -34,6 +33,7 @@ context('Domain Manager', () => {
     it('shows domain list for user without domains', () => {
         // Login with default config (no new owners allowed)
         cy.loginViaApi(USERS.commenterOne, PATHS.manage.domains._);
+        cy.get('app-domain-manager h1').should('have.text', 'Domains').and('be.visible');
         cy.contains('app-domain-manager button', 'New domain').should('not.exist');
         cy.verifyListFooter(0, false, noData)
             .contains('a', 'Add domain').should('not.exist');

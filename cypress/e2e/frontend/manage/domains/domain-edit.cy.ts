@@ -379,8 +379,8 @@ context('Domain Edit page', () => {
         it('stays on the page after reload', () => cy.verifyStayOnReload(pagePath, USERS.ace));
 
         [
-            {name: 'owner',     user: USERS.ace,          dest: 'back',       redir: undefined},
-            {name: 'superuser', user: USERS.root,         dest: 'back',       redir: undefined},
+            {name: 'superuser', user: USERS.root,         dest: 'back'},
+            {name: 'owner',     user: USERS.ace,          dest: 'back'},
             {name: 'moderator', user: USERS.king,         dest: 'to Domains', redir: PATHS.manage.domains._},
             {name: 'commenter', user: USERS.commenterTwo, dest: 'to Domains', redir: PATHS.manage.domains._},
             {name: 'readonly',  user: USERS.commenterOne, dest: 'to Domains', redir: PATHS.manage.domains._},

@@ -28,8 +28,8 @@ context('Domain SSO Secret page', () => {
     it('stays on the page after reload', () => cy.verifyStayOnReload(localhostPath, USERS.ace));
 
     [
-        {name: 'owner',      user: USERS.ace,          dest: 'back',                 redir: undefined},
-        {name: 'superuser',  user: USERS.root,         dest: 'back',                 redir: undefined},
+        {name: 'superuser',  user: USERS.root,         dest: 'back'},
+        {name: 'owner',      user: USERS.ace,          dest: 'back'},
         {name: 'moderator',  user: USERS.king,         dest: 'to Domain Properties', redir: PATHS.manage.domains.id(DOMAINS.localhost.id).props},
         {name: 'commenter',  user: USERS.commenterTwo, dest: 'to Domain Properties', redir: PATHS.manage.domains.id(DOMAINS.localhost.id).props},
         {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager',    redir: PATHS.manage.domains},

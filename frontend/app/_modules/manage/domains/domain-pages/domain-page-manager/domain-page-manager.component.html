@@ -49,13 +49,13 @@
                 <div class="col overflow-hidden">
                     <div style="word-break: break-word">
                         <!-- Domain host (sm+) -->
-                        <span class="text-black-50 d-none d-sm-inline">{{ domainMeta?.domain?.host }}</span>
+                        <span class="text-black-50 d-none d-sm-inline domain-page-domain">{{ domainMeta?.domain?.host }}</span>
                         <!-- Page path -->
-                        <span class="fw-bold">{{ p.path }}</span>
+                        <span class="fw-bold domain-page-path">{{ p.path }}</span>
                         <!-- Readonly badge -->
                         <span *ngIf="p.isReadonly" class="badge rounded-pill bg-light-subtle text-danger border border-danger ms-2" i18n>Read-only</span>
                     </div>
-                    <div *ngIf="p.title">{{ p.title }}</div>
+                    <div *ngIf="p.title" class="domain-page-title">{{ p.title }}</div>
                     <!-- Comment/view counts (up to sm) -->
                     <div *ngIf="p.countComments! >= 0 && p.countViews! >= 0" class="d-sm-none small text-muted">
                         <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
@@ -71,12 +71,12 @@
                     </a>
                 </div>
                 <!-- Comment count (sm+) -->
-                <div *ngIf="p.countComments! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                <div *ngIf="p.countComments! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-comments">
                     <div class="lead">{{ p.countComments | number }}</div>
                     <div class="small" i18n>comments</div>
                 </div>
                 <!-- View count (sm+) -->
-                <div *ngIf="p.countViews! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted">
+                <div *ngIf="p.countViews! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-views">
                     <div class="lead">{{ p.countViews | number }}</div>
                     <div class="small" i18n>views</div>
                 </div>

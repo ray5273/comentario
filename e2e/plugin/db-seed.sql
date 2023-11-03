@@ -145,15 +145,15 @@ values
 
 insert into cm_domain_pages (id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
 values
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', 'Home', false, current_timestamp - interval '21 days', 17, 10),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c6', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/comments/', 'Comments', false, current_timestamp - interval '21 days', 0, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/nocomment/', 'No comment', false, current_timestamp - interval '21 days', 0, 2),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/readonly/', 'Readonly page', true, current_timestamp - interval '18 days', 0, 42),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865', '', false, current_timestamp - interval '18 days', 0, 0),
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac480cb', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/double/', 'Double Comentario', false, current_timestamp - interval '18 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/', 'Home', false, current_timestamp - interval '21 days 150 seconds', 17, 10),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c6', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/comments/', 'Comments', false, current_timestamp - interval '21 days 200 seconds', 0, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c9', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/nocomment/', 'No comment', false, current_timestamp - interval '21 days 100 seconds', 0, 2),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480c8', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/readonly/', 'Readonly page', true, current_timestamp - interval '18 days 200 seconds', 0, 42),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480ca', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865', '', false, current_timestamp - interval '18 days 100 seconds', 0, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac480cb', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/double/', 'Double Comentario', false, current_timestamp - interval '18 days 50 seconds', 2, 0),
     ('0ebb8a1b-12f6-421e-b1bb-75867ac480cc', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/dynamic/', 'Dynamic insertion', false, current_timestamp - interval '17 days', 1, 4),
     -- Attributes
-    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a000', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/auto-init/', 'Attribute: auto-init=false', false, current_timestamp - interval '18 days', 2, 0),
+    ('0ebb8a1b-12f6-421e-b1bb-75867ac4a000', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/auto-init/', 'Attribute: auto-init=false', false, current_timestamp - interval '18 days 30 seconds', 2, 0),
     ('0ebb8a1b-12f6-421e-b1bb-75867ac4a001', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/no-fonts/', 'Attribute: no-fonts=true', false, current_timestamp - interval '16 days', 2, 0),
     ('0ebb8a1b-12f6-421e-b1bb-75867ac4a002', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/css-override/', 'Attribute: css-override', false, current_timestamp - interval '15 days', 2, 0),
     ('0ebb8a1b-12f6-421e-b1bb-75867ac4a003', '3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '/attr/css-override-false/', 'Attribute: css-override=false', false, current_timestamp - interval '14 days', 2, 0),
