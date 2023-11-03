@@ -38,6 +38,7 @@ build:
       - build/
       - build-e2e/
       - dist/
+      - node_modules/
   variables:
     # We want to store downloaded packages under the project dir, so we can cache them
     GOPATH: $CI_PROJECT_DIR/.go
