@@ -32,6 +32,7 @@ type Database struct {
 	debug    bool      // Whether debug logging is enabled
 	db       *sql.DB   // Internal SQL database instance
 	doneConn chan bool // Receives a true when the connection process has been finished (successfully or not)
+	Version  string    // Actual database server version
 }
 
 // InitDB establishes a database connection
@@ -333,7 +334,14 @@ func (db *Database) connect() error {
 
 	// Configure the database
 	db.db.SetMaxIdleConns(config.CLIFlags.DBIdleConns)
-	logger.Info("Connected to database")
+
+	// Fetch database version
+	if err := db.db.QueryRow("select version()").Scan(&db.Version); err != nil {
+		db.Version = fmt.Sprintf("(failed to retrieve: %v)", err)
+	}
+
+	// Succeeded
+	logger.Infof("Connected to database: %s", db.Version)
 	return nil
 }
 

@@ -121,6 +121,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 				BaseDocsURL:    config.CLIFlags.BaseDocsURL,
 				BaseURL:        config.BaseURL.String(),
 				BuildDate:      strfmt.DateTime(config.BuildDate),
+				DbVersion:      svc.TheServiceManager.DBVersion(),
 				DefaultLangID:  util.UIDefaultLangID,
 				FederatedIdps:  idps,
 				HomeContentURL: strfmt.URI(config.CLIFlags.HomeContentURL),

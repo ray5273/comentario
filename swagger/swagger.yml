@@ -570,6 +570,7 @@ definitions:
       - baseDocsUrl
       - version
       - buildDate
+      - dbVersion
       - defaultLangId
       - resultPageSize
     properties:
@@ -590,6 +591,10 @@ definitions:
         format: date-time
         x-isnullable: false
         description: Server build date
+      dbVersion:
+        type: string
+        x-isnullable: false
+        description: Database version
       defaultLangId:
         type: string
         x-isnullable: false
