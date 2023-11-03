@@ -5266,6 +5266,11 @@ eslint-plugin-jsdoc@^46.8.2:
     semver "^7.5.4"
     spdx-expression-parse "^3.0.1"
 
+eslint-plugin-no-only-or-skip-tests@^2.6.2:
+  version "2.6.2"
+  resolved "https://registry.yarnpkg.com/eslint-plugin-no-only-or-skip-tests/-/eslint-plugin-no-only-or-skip-tests-2.6.2.tgz#7da51ba180d9b5b64ad691b0413226a2794446b6"
+  integrity sha512-Kmqekk+J1MUcRo4vzmz8fN/JmTU13HWL+pzBGSGFGbTQQrgz7DYzLTlt0fhdQWJ5hy9/e8994tdsKsOilIrOlw==
+
 eslint-plugin-prefer-arrow@^1.2.3:
   version "1.2.3"
   resolved "https://registry.npmjs.org/eslint-plugin-prefer-arrow/-/eslint-plugin-prefer-arrow-1.2.3.tgz"

@@ -119,9 +119,13 @@ overrides:
   - files: cypress/**/*.ts
     extends:
       - 'plugin:cypress/recommended'
+    plugins:
+      - no-only-or-skip-tests
     rules:
       semi:
         - error
         - always
       cypress/no-unnecessary-waiting: off
       cypress/unsafe-to-chain-command: off
+      no-only-or-skip-tests/no-only-tests: error
+      no-only-or-skip-tests/no-skip-tests: error
