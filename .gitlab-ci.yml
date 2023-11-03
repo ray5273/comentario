@@ -147,7 +147,7 @@ e2e:
               curl --max-time 2 -vs "$1" >/dev/null && break
               sleep 1
           done
-          if [[ $i -gte 30 ]]; then
+          if [[ $i -ge 30 ]]; then
               echo "ERROR: $1 is not reachable after $i seconds, failing"
               exit 1
           fi 
