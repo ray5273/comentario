@@ -74,7 +74,8 @@ drop table if exists cm_comment_votes          cascade;
 ------------------------------------------------------------------------------------------------------------------------
 -- Extension to support UUID v4
 ------------------------------------------------------------------------------------------------------------------------
-create extension if not exists "uuid-ossp";
+create extension if not exists "pgcrypto";  -- PostgreSQL 12-
+create extension if not exists "uuid-ossp"; -- PostgreSQL 13+
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Migrations
