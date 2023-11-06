@@ -67,13 +67,13 @@ context('Dashboard', () => {
               value:    12
             - label:    Domain users
               sublabel: you manage
-              value:    5
+              value:    6
             - label:    Comments
               sublabel: total
               value:    30
             - label:    Commenters
               sublabel: total
-              value:    6
+              value:    7
             `);
     });
 
@@ -105,7 +105,7 @@ context('Dashboard', () => {
               value:    30
             - label:    Commenters
               sublabel: total
-              value:    6
+              value:    7
             `);
     });
 
@@ -116,7 +116,7 @@ context('Dashboard', () => {
             `
             - label:    Users
               sublabel: total
-              value:    15
+              value:    16
             - label:    Domains
               sublabel: you're commenter on
               value:    0
@@ -125,13 +125,13 @@ context('Dashboard', () => {
               value:    16
             - label:    Domain users
               sublabel: you manage
-              value:    8
+              value:    9
             - label:    Comments
               sublabel: total
               value:    31
             - label:    Commenters
               sublabel: total
-              value:    6
+              value:    7
             `);
     });
 });

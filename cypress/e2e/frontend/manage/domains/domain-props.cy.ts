@@ -4,6 +4,8 @@ context('Domain Properties page', () => {
 
     beforeEach(cy.backendReset);
 
+    const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).props;
+
     const checkNoInstallSection = () => {
         cy.contains('h2', 'Installation').should('not.exist');
         cy.get('#install-snippet').should('not.exist');
@@ -19,7 +21,7 @@ context('Domain Properties page', () => {
 
         // Click on Cancel and go back
         cy.contains('app-domain-edit form a', 'Cancel').click();
-        cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
+        cy.isAt(localhostPagePath);
 
         // Click on "SSO secret" and land on the SSO secret page
         cy.contains('app-domain-detail a', 'SSO secret').click();
@@ -54,6 +56,20 @@ context('Domain Properties page', () => {
         ]);
     };
 
+    [
+        {name: 'superuser',  user: USERS.root,         dest: 'back'},
+        {name: 'owner',      user: USERS.ace,          dest: 'back'},
+        {name: 'moderator',  user: USERS.king,         dest: 'back'},
+        {name: 'commenter',  user: USERS.commenterTwo, dest: 'back'},
+        {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager', redir: PATHS.manage.domains},
+    ]
+        .forEach(test =>
+            it(`redirects ${test.name} user to login and ${test.dest}`, () =>
+                cy.verifyRedirectsAfterLogin(localhostPagePath, test.user, test.redir)));
+
+    it('stays on the page after reload', () =>
+        cy.verifyStayOnReload(localhostPagePath, USERS.commenterTwo));
+
     it('shows properties for readonly user', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.spirit.id).props);
         checkNoInstallSection();
@@ -79,7 +95,7 @@ context('Domain Properties page', () => {
     });
 
     it('shows properties for moderator user', () => {
-        cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.localhost.id).props);
+        cy.loginViaApi(USERS.king, localhostPagePath);
         checkNoInstallSection();
         checkNoEditButtons();
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
@@ -104,7 +120,7 @@ context('Domain Properties page', () => {
     });
 
     it('shows properties for owner user', () => {
-        cy.loginViaApi(USERS.ace, PATHS.manage.domains.id(DOMAINS.localhost.id).props, Util.stubWriteText);
+        cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
 
         // Check the Installation section
         const html = Util.installSnippet();
@@ -123,7 +139,7 @@ context('Domain Properties page', () => {
     });
 
     it('shows properties for superuser', () => {
-        cy.loginViaApi(USERS.root, PATHS.manage.domains.id(DOMAINS.localhost.id).props);
+        cy.loginViaApi(USERS.root, localhostPagePath);
         checkNoInstallSection();
         checkAllProperties();
         checkEditButtons();

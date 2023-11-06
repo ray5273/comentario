@@ -345,7 +345,7 @@ context('Embed', () => {
                                           sticky: true
                                           children:
                                           - id: cbbaf220-6cc4-4160-af43-9fdd6f2ec6fe
-                                            author: Anonymous
+                                            author: Commenter Three
                                             html: <p>Auto-init child</p>
                                             score: 0
                                             sticky: false
