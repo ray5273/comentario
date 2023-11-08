@@ -308,11 +308,12 @@ deploy-dev:
         --from=cronjob/comentario-demo-recreate-db-cronjob
         comentario-demo-recreate-db-cronjob-$(date +%s)
 
-# Deploy any tag, except those containing "rc" (release candidate), to production
+# Allow manual deployment of any tag to production
 deploy-tag:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /rc/i
+    - if: $CI_COMMIT_TAG
+      when: manual
   image: $DEPLOYER_IMAGE
   environment:
     name: comentario.app
