@@ -95,10 +95,10 @@ context('Comment Manager', () => {
                 cy.get('@commentList').verifyListFooter(4, false);
                 cy.get('@commentList').texts('.comment-text')
                     .should('arrayMatch', [
-                        'CSS override with crazy colours',
-                        'CSS override child',
-                        'CSS override disabled',
                         'CSS override disabled child',
+                        'CSS override disabled',
+                        'CSS override child',
+                        'CSS override with crazy colours',
                     ]);
 
                 // Test filtering by commenter name

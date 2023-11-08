@@ -372,7 +372,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	}
 	q = q.Order(
 		dir.ToOrderedExpression(sortIdent),
-		goqu.I("p.id").Asc(), // Always add ID for stable ordering
+		goqu.I("c.id").Asc(), // Always add ID for stable ordering
 	)
 
 	// Paginate if required
