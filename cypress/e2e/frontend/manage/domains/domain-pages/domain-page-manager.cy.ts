@@ -25,11 +25,11 @@ context('Domain Page Manager', () => {
     const pagesByCntComments = pages.slice().sort((a, b) => a.cntComments - b.cntComments) .map(p => `${p.cntComments}\ncomments`);
     const pagesByCntViews    = pages.slice().sort((a, b) => a.cntViews - b.cntViews)       .map(p => `${p.cntViews}\nviews`);
 
-    const makeAliases = (hasPages: boolean) => {
+    const makeAliases = (hasItems: boolean) => {
         cy.get('app-domain-page-manager')             .as('pageManager');
         cy.get('@pageManager').find('#sortByDropdown').as('sortDropdown');
         cy.get('@pageManager').find('#filter-string') .as('filterString').should('have.value', '');
-        if (hasPages) {
+        if (hasItems) {
             cy.get('@pageManager').find('#page-list').as('pageList').should('be.visible');
         }
     };
@@ -58,7 +58,7 @@ context('Domain Page Manager', () => {
 
         it('shows page list', () => {
             // Check heading
-            cy.get('@pageManager').find(' h1').should('have.text', 'Domain pages').and('be.visible');
+            cy.get('@pageManager').find('h1').should('have.text', 'Domain pages').and('be.visible');
 
             // Check page list
             cy.get('@pageList').verifyListFooter(pages.length, false);

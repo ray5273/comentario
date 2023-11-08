@@ -35,7 +35,7 @@ context('Sidebar', () => {
         {label: 'Domains',      path: PATHS.manage.domains._},
         {label: domain.host,    path: PATHS.manage.domains.id(domain.id).props, partial: true},
         {label: 'Pages',        path: PATHS.manage.domains.id(domain.id).pages},
-        {label: 'Comments',     path: PATHS.manage.domains.id(domain.id).comments},
+        {label: 'Comments',     path: PATHS.manage.domains.id(domain.id).comments, partial: true /* There's 1 pending comment */},
         {label: 'Domain users', path: PATHS.manage.domains.id(domain.id).users},
         {label: 'Statistics',   path: PATHS.manage.domains.id(domain.id).stats},
         {label: 'Operations',   path: PATHS.manage.domains.id(domain.id).operations},

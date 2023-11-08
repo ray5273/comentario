@@ -70,7 +70,7 @@ context('Dashboard', () => {
               value:    6
             - label:    Comments
               sublabel: total
-              value:    30
+              value:    33
             - label:    Commenters
               sublabel: total
               value:    7
@@ -102,7 +102,7 @@ context('Dashboard', () => {
               value:    1
             - label:    Comments
               sublabel: total
-              value:    30
+              value:    33
             - label:    Commenters
               sublabel: total
               value:    7
@@ -128,7 +128,7 @@ context('Dashboard', () => {
               value:    9
             - label:    Comments
               sublabel: total
-              value:    31
+              value:    34
             - label:    Commenters
               sublabel: total
               value:    7

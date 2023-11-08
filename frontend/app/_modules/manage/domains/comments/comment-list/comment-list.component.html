@@ -14,10 +14,11 @@
             <!-- Placeholder to push other items to the right -->
             <div class="col-12 col-md">
                 <!-- Quick filters: moderator+ -->
-                <div *ngIf="domainMeta?.canModerateDomain" class="d-flex align-items-center">
+                <div *ngIf="domainMeta?.canModerateDomain" class="d-flex align-items-center" id="comments-quick-filter">
                     <span class="small" i18n>Quick filters:</span>
-                    <button type="button" class="btn btn-link btn-sm" (click)="filterAll()"     i18n>All</button>
-                    <button type="button" class="btn btn-link btn-sm" (click)="filterPending()" i18n>Pending</button>
+                    <button type="button" class="btn btn-link btn-sm" (click)="filterUndeleted()" i18n>Undeleted</button>
+                    <button type="button" class="btn btn-link btn-sm" (click)="filterAll()"       i18n>All</button>
+                    <button type="button" class="btn btn-link btn-sm" (click)="filterPending()"   i18n>Pending</button>
                 </div>
             </div>
 
@@ -31,23 +32,23 @@
                 <!-- Status filter buttons: moderator+ -->
                 <div *ngIf="domainMeta?.canModerateDomain" class="btn-group ms-2" role="group">
                     <!-- Show approved -->
-                    <input formControlName="approved" type="checkbox" class="btn-check" id="filterShowApproved" autocomplete="off">
-                    <label for="filterShowApproved" class="btn btn-outline-secondary" title="Show approved" i18n-title>
+                    <input formControlName="approved" type="checkbox" class="btn-check" id="comments-filter-approved" autocomplete="off">
+                    <label for="comments-filter-approved" class="btn btn-outline-secondary" title="Show approved" i18n-title>
                         <fa-icon [icon]="faCheck"></fa-icon>
                     </label>
                     <!-- Show pending -->
-                    <input formControlName="pending" type="checkbox" class="btn-check" id="filterShowPending" autocomplete="off">
-                    <label for="filterShowPending" class="btn btn-outline-secondary" title="Show pending" i18n-title>
+                    <input formControlName="pending" type="checkbox" class="btn-check" id="comments-filter-pending" autocomplete="off">
+                    <label for="comments-filter-pending" class="btn btn-outline-secondary" title="Show pending" i18n-title>
                         <fa-icon [icon]="faQuestion"></fa-icon>
                     </label>
                     <!-- Show rejected -->
-                    <input formControlName="rejected" type="checkbox" class="btn-check" id="filterShowRejected" autocomplete="off">
-                    <label for="filterShowRejected" class="btn btn-outline-secondary" title="Show rejected" i18n-title>
+                    <input formControlName="rejected" type="checkbox" class="btn-check" id="comments-filter-rejected" autocomplete="off">
+                    <label for="comments-filter-rejected" class="btn btn-outline-secondary" title="Show rejected" i18n-title>
                         <fa-icon [icon]="faXmark"></fa-icon>
                     </label>
                     <!-- Show deleted -->
-                    <input formControlName="deleted" type="checkbox" class="btn-check" id="filterShowDeleted" autocomplete="off">
-                    <label for="filterShowDeleted" class="btn btn-outline-secondary" title="Show deleted" i18n-title>
+                    <input formControlName="deleted" type="checkbox" class="btn-check" id="comments-filter-deleted" autocomplete="off">
+                    <label for="comments-filter-deleted" class="btn btn-outline-secondary" title="Show deleted" i18n-title>
                         <fa-icon [icon]="faTrashAlt"></fa-icon>
                     </label>
                 </div>
@@ -114,7 +115,7 @@
             <div class="row align-items-start my-3">
                 <!-- Comment text -->
                 <div *ngIf="!c.isDeleted else deleted" [innerHTML]="c.html" class="col comment-text"></div>
-                <ng-template #deleted><div class="col" i18n>(deleted)</div></ng-template>
+                <ng-template #deleted><div class="col comment-deleted" i18n>(deleted)</div></ng-template>
 
                 <!-- Action buttons: non-deleted, moderators or own comments only -->
                 <div *ngIf="!c.isDeleted && (domainMeta?.canModerateDomain || c.userCreated === domainMeta?.principal?.id)"

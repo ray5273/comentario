@@ -86,16 +86,22 @@ context('Embed', () => {
     const commentOptionButton = (id: string, title: string) =>
         cy.get('@mainArea').find(`#comentario-${id} .comentario-option-button[title="${title}"]`);
 
-    // Iterate all non-banned users + anonymous
-    Object.entries(USERS)
-        .filter(([, user]) => !user.isBanned && (user.isAnonymous || user.password))
-        .forEach(([userKey, user]) => context(`user "${userKey}"`, () => {
+    [
+        {name: 'superuser',  user: USERS.root,           isMod: true},
+        {name: 'owner',      user: USERS.ace,            isMod: true},
+        {name: 'moderator',  user: USERS.king,           isMod: true},
+        {name: 'commenter',  user: USERS.commenterTwo,   isMod: false},
+        {name: 'read-only',  user: USERS.commenterThree, isMod: false},
+        {name: 'non-domain', user: USERS.commenterOne,   isMod: false},
+        {name: 'anonymous',  user: USERS.anonymous,      isMod: false},
+    ]
+        .forEach(({name, user, isMod}) => context(`${name} user${isMod ? ' (moderator)' : ''}`, () => {
 
             beforeEach(() => {
                 cy.testSiteVisit(TEST_PATHS.home);
 
                 // Log the user in, if they have a password
-                if (user.password) {
+                if (!user.isAnonymous) {
                     cy.testSiteLogin(user);
                 }
             });
@@ -286,7 +292,22 @@ context('Embed', () => {
                             cy.get(selector).commentTree('id', 'html', 'author', 'score', 'sticky')
                             .should(
                                 'yamlMatch',
+                                // This page contains a pending comment so its appearance differs for a moderator
                                 // language=yaml
+                                isMod ?
+                                `
+                                - id: 7a803058-8a80-4e64-96f3-bb1e881597c4
+                                  author: Captain Ace
+                                  html: <p>I am dynamic 🚀</p>
+                                  score: 65
+                                  sticky: true
+                                  children:
+                                  - id: 5c3ed3a3-d1a9-484c-b2c5-b81904700b86
+                                    author: Anonymous
+                                    html: <p>Phishy reply</p>
+                                    score: 0
+                                    sticky: false
+                                ` :
                                 `
                                 - id: 7a803058-8a80-4e64-96f3-bb1e881597c4
                                   author: Captain Ace

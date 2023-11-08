@@ -216,4 +216,14 @@ export class CommentListComponent implements OnInit, OnChanges {
             filter:   '',
         });
     }
+
+    filterUndeleted() {
+        this.filterForm.setValue({
+            approved: true,
+            pending:  true,
+            rejected: true,
+            deleted:  false,
+            filter:   '',
+        });
+    }
 }

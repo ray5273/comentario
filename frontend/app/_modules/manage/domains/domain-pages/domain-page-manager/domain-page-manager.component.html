@@ -64,7 +64,7 @@
                 </div>
                 <!-- Open page in new tab button -->
                 <div class="col-auto">
-                    <a class="btn btn-sm btn-outline-secondary" [href]="'http://'+domainMeta?.domain?.host+p.path"
+                    <a class="btn btn-sm btn-outline-secondary" [href]="domainMeta?.domain?.rootUrl! + p.path"
                        (click)="$event.stopPropagation()"
                        target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
                         <fa-icon [icon]="faUpRightFromSquare"></fa-icon>
