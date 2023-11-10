@@ -44,7 +44,7 @@ export class DomainUserPropertiesComponent implements OnInit {
 
     ngOnInit(): void {
         // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(
                 untilDestroyed(this),
                 // Nothing can be loaded unless there's a domain

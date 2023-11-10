@@ -53,7 +53,7 @@ export class DomainPageManagerComponent implements OnInit {
     ngOnInit(): void {
         merge(
                 // Subscribe to domain changes. This will also trigger an initial load
-                this.domainSelectorSvc.domainMeta
+                this.domainSelectorSvc.domainMeta(true)
                     .pipe(
                         untilDestroyed(this),
                         tap(meta => this.domainMeta = meta)),

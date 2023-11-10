@@ -40,7 +40,7 @@ export class DomainImportComponent implements OnInit {
     ) {}
 
     ngOnInit(): void {
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(untilDestroyed(this))
             .subscribe(meta => this.domain = meta.domain);
     }

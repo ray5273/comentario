@@ -47,7 +47,7 @@ export class DomainPagePropertiesComponent implements OnInit {
 
     ngOnInit(): void {
         // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(untilDestroyed(this))
             .subscribe(meta => this.domainMeta = meta);
     }

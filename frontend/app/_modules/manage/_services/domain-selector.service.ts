@@ -68,13 +68,11 @@ export class DomainMeta {
 @Injectable()
 export class DomainSelectorService {
 
-    /** Observable to get notifications about selected domain and current user changes. */
-    readonly domainMeta: Observable<DomainMeta> = new ReplaySubject<DomainMeta>(1);
-
     private lastId?: string;
     private lastPrincipal?: Principal;
     private principal?: Principal;
     private readonly reload$ = new BehaviorSubject<void>(undefined);
+    private readonly domainMeta$ = new ReplaySubject<DomainMeta>(1);
 
     constructor(
         private readonly authSvc: AuthService,
@@ -98,6 +96,23 @@ export class DomainSelectorService {
             // If the user is not logged in, reset any selection. Ignore any occurring errors as this is an induced
             // change
             .subscribe(([p]) => this.setDomainId(p ? this.lastId : undefined, true, false));
+    }
+
+    /**
+     * Observable to get combined notifications about selected domain and/or current user changes.
+     * @param requirePrincipal When true, the observable will error if the current user is not authenticated (important
+     * for observables that trigger downstream HTTP requests, which can lead to principal updates after a 401 error and
+     * thus to infinite loops). When false, emits meta.principal === undefined in that case.
+     */
+    domainMeta(requirePrincipal: boolean): Observable<DomainMeta> {
+        const o = this.domainMeta$.asObservable();
+        return requirePrincipal ?
+            o.pipe(tap(meta => {
+                if (!meta.principal) {
+                    throw new Error('Not authenticated');
+                }
+            })) :
+            o;
     }
 
     /**
@@ -148,8 +163,7 @@ export class DomainSelectorService {
      */
     private setDomain(v: DomainGet200Response | undefined) {
         // Notify the subscribers
-        (this.domainMeta as ReplaySubject<DomainMeta>)
-            .next(new DomainMeta(v?.domain, v?.domainUser, v?.federatedIdpIds, v?.extensions, this.principal));
+        this.domainMeta$.next(new DomainMeta(v?.domain, v?.domainUser, v?.federatedIdpIds, v?.extensions, this.principal));
 
         // Store the last used domainId
         this.localSettingSvc.storeValue<DomainSelectorSettings>('domainSelector', {domainId: v?.domain?.id});

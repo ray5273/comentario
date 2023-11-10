@@ -85,19 +85,20 @@ export class CommentListComponent implements OnInit, OnChanges {
     ngOnInit(): void {
         merge(
                 // Subscribe to domain changes. This will also trigger an initial load
-                this.domainSelectorSvc.domainMeta.pipe(
-                    untilDestroyed(this),
-                    // Store the domain and the user
-                    tap(meta => {
-                        this.domainMeta = meta;
-                        // If the user is not a moderator, disable the status filter
-                        Utils.enableControls(
-                            this.domainMeta?.canModerateDomain,
-                            this.filterForm.controls.approved,
-                            this.filterForm.controls.pending,
-                            this.filterForm.controls.rejected,
-                            this.filterForm.controls.deleted);
-                    })),
+                this.domainSelectorSvc.domainMeta(true)
+                    .pipe(
+                        untilDestroyed(this),
+                        // Store the domain and the user
+                        tap(meta => {
+                            this.domainMeta = meta;
+                            // If the user is not a moderator, disable the status filter
+                            Utils.enableControls(
+                                this.domainMeta?.canModerateDomain,
+                                this.filterForm.controls.approved,
+                                this.filterForm.controls.pending,
+                                this.filterForm.controls.rejected,
+                                this.filterForm.controls.deleted);
+                        })),
                 // Subscribe to sort changes
                 this.sort.changes.pipe(untilDestroyed(this)),
                 // Subscribe to filter changes

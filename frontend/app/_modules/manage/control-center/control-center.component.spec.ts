@@ -21,7 +21,7 @@ describe('ControlCenterComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 MockProvider(AuthService, {principal: of(null)}),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
                 MockProvider(CommentService, {countPending: of(0)}),
             ],
         })

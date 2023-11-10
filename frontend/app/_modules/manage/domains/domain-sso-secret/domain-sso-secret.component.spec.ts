@@ -20,7 +20,7 @@ describe('DomainSsoSecretComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         });
         fixture = TestBed.createComponent(DomainSsoSecretComponent);

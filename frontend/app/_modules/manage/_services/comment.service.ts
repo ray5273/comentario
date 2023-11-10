@@ -12,7 +12,7 @@ export class CommentService {
     private readonly refresh$ = new BehaviorSubject<void>(undefined);
 
     /** Number of comments pending moderation for the current domain. */
-    readonly countPending: Observable<number> = this.domainSelectorService.domainMeta
+    readonly countPending: Observable<number> = this.domainSelectorService.domainMeta(true)
         .pipe(
             // Trigger a reload on request
             combineLatestWith(this.refresh$),

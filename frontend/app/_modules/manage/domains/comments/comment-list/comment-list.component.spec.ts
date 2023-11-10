@@ -23,7 +23,7 @@ describe('CommentListComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ConfigService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         });
         fixture = TestBed.createComponent(CommentListComponent);

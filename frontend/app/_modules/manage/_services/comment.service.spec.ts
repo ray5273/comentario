@@ -13,7 +13,7 @@ describe('CommentService', () => {
         TestBed.configureTestingModule({
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         });
         service = TestBed.inject(CommentService);

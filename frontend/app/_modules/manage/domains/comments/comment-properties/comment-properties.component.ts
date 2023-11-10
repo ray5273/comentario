@@ -70,7 +70,7 @@ export class CommentPropertiesComponent implements OnInit {
         this.action = this.route.snapshot.queryParamMap.get('action') ?? undefined;
 
         // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(
                 untilDestroyed(this),
                 // Nothing can be loaded unless there's a domain

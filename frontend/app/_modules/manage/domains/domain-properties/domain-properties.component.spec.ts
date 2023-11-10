@@ -26,7 +26,7 @@ describe('DomainPropertiesComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig, extensions: of(undefined)}),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         })
             .compileComponents();

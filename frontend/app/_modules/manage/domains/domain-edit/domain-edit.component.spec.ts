@@ -35,7 +35,7 @@ describe('DomainEditComponent', () => {
                 MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                 MockProvider(ToastService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         })
             .compileComponents();

@@ -19,7 +19,7 @@ describe('DomainPagePropertiesComponent', () => {
             imports: [RouterTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ]
         });
         fixture = TestBed.createComponent(DomainPagePropertiesComponent);

@@ -19,7 +19,7 @@ describe('DomainUserPropertiesComponent', () => {
             imports: [FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         });
         fixture = TestBed.createComponent(DomainUserPropertiesComponent);

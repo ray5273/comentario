@@ -23,7 +23,7 @@ describe('DomainPageManagerComponent', () => {
             imports: [RouterTestingModule, ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
                 MockProvider(ConfigService),
             ],
         });

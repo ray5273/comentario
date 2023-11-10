@@ -38,7 +38,7 @@ export class ManageGuard {
      * Check if there's a selected domain and return either true, or the domain manager route.
      */
     isDomainSelected(): Observable<boolean | UrlTree> {
-        return this.domainSelectorSvc.domainMeta.pipe(
+        return this.domainSelectorSvc.domainMeta(false).pipe(
             first(),
             map(meta => meta.domain ? true : this.router.parseUrl(Paths.manage.domains)));
     }
@@ -48,7 +48,7 @@ export class ManageGuard {
      * domain manager route.
      */
     canManageDomain(): Observable<boolean | UrlTree> {
-        return this.domainSelectorSvc.domainMeta
+        return this.domainSelectorSvc.domainMeta(false)
             .pipe(
                 first(),
                 map(meta => meta.canManageDomain || this.router.parseUrl(Paths.manage.domains)));
@@ -59,7 +59,7 @@ export class ManageGuard {
      * either true, or the domain properties/manager route.
      */
     canManageDomainSso(): Observable<boolean | UrlTree> {
-        return this.domainSelectorSvc.domainMeta
+        return this.domainSelectorSvc.domainMeta(false)
             .pipe(
                 first(),
                 map(meta =>
@@ -71,7 +71,7 @@ export class ManageGuard {
      * Check if the current user is a superuser, and return either true, or the domain manager route.
      */
     isSuper(): Observable<boolean | UrlTree> {
-        return this.domainSelectorSvc.domainMeta
+        return this.domainSelectorSvc.domainMeta(false)
             .pipe(
                 first(),
                 map(meta => meta.principal?.isSuperuser || this.router.parseUrl(Paths.manage.domains)));

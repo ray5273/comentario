@@ -58,7 +58,7 @@ export class DomainManagerComponent implements OnInit {
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
     ) {
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(
                 untilDestroyed(this),
                 tap(meta => this.domainMeta = meta),

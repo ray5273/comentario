@@ -120,7 +120,7 @@ export class DomainEditComponent implements OnInit {
                 switchMap(() =>
                     this.route.snapshot.data.clean ?
                         of(undefined) :
-                        this.domainSelectorSvc.domainMeta.pipe(this.loading.processing(), first())))
+                        this.domainSelectorSvc.domainMeta(true).pipe(this.loading.processing(), first())))
             .subscribe(meta => {
                 this.domainMeta = meta;
                 const d = this.domainMeta?.domain;

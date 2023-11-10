@@ -23,7 +23,7 @@ describe('ManageGuard', () => {
             providers: [
                 // Need to explicitly declare as provider because it's scoped to the module
                 ManageGuard,
-                MockProvider(DomainSelectorService, {domainMeta: domainEmitter}),
+                MockProvider(DomainSelectorService, {domainMeta: () => domainEmitter}),
             ],
         });
     });

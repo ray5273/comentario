@@ -15,7 +15,7 @@ describe('DomainStatsComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [DomainStatsComponent, MockComponents(StatsChartComponent, DomainBadgeComponent)],
             providers: [
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         })
             .compileComponents();

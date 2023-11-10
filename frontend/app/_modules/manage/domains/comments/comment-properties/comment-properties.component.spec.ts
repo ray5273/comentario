@@ -21,7 +21,7 @@ describe('CommentPropertiesComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule, NgbModalModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         });
         fixture = TestBed.createComponent(CommentPropertiesComponent);

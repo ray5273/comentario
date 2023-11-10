@@ -23,7 +23,7 @@ describe('DomainOperationsComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),
-                MockProvider(DomainSelectorService, {domainMeta: of(new DomainMeta())}),
+                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
             ],
         })
             .compileComponents();

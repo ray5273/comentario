@@ -76,7 +76,7 @@ export class ControlCenterComponent implements OnInit {
             .subscribe(() => this.expanded = false);
 
         // Monitor selected domain/user changes
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(untilDestroyed(this))
             .subscribe(meta => this.domainMeta = meta);
     }

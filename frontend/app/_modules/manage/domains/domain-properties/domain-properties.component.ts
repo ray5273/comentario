@@ -55,7 +55,7 @@ export class DomainPropertiesComponent implements OnInit {
 
     ngOnInit(): void {
         // Subscribe to domain changes to obtain domain and IdP data
-        this.domainSelectorSvc.domainMeta
+        this.domainSelectorSvc.domainMeta(true)
             .pipe(
                 untilDestroyed(this),
                 combineLatestWith(this.cfgSvc.extensions.pipe(first())))
