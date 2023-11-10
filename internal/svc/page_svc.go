@@ -43,8 +43,9 @@ type PageService interface {
 	// UpdateReadonly updates the page's readonly status by its ID
 	UpdateReadonly(page *data.DomainPage) error
 	// UpsertByDomainPath queries a page, inserting a new page database record if necessary, optionally registering a
-	// new pageview (if req is not nil), returning whether the page was added
-	UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, bool, error)
+	// new pageview (if req is not nil), returning whether the page was added. title is an optional page title, if not
+	// provided, it will be fetched from the URL in the background
+	UpsertByDomainPath(domain *data.Domain, path, title string, req *http.Request) (*data.DomainPage, bool, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -352,8 +353,8 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 	return nil
 }
 
-func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req *http.Request) (*data.DomainPage, bool, error) {
-	logger.Debugf("pageService.UpsertByDomainPath(%#v, '%s', ...)", domain, path)
+func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path, title string, req *http.Request) (*data.DomainPage, bool, error) {
+	logger.Debugf("pageService.UpsertByDomainPath(%#v, %q, %q, ...)", domain, path, title)
 
 	// Prepare a new UUID
 	id := uuid.New()
@@ -367,7 +368,7 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req
 				"id":             &id,
 				"domain_id":      &domain.ID,
 				"path":           path,
-				"title":          "",
+				"title":          util.TruncateStr(title, data.MaxPageTitleLength), // Make sure the title doesn't exceed the size of the database field
 				"is_readonly":    false,
 				"ts_created":     time.Now().UTC(),
 				"count_comments": 0,
@@ -383,11 +384,15 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path string, req
 		return nil, false, translateDBErrors(err)
 	}
 
-	// If the page was added, fetch its title in the background
+	// If the page was added
 	added := p.ID == id
 	if added {
 		logger.Debug("pageService.UpsertByDomainPath: page didn't exist, created a new one with ID=%s", &id)
-		go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
+
+		// If no title was provided, fetch it in the background, ignoring possible errors
+		if title == "" {
+			go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
+		}
 	}
 
 	// Also register visit details in the background, if required

@@ -141,7 +141,7 @@ type disqusThread struct {
 	XMLName xml.Name `xml:"thread"`
 	Id      string   `xml:"http://disqus.com/disqus-internals id,attr"`
 	URL     string   `xml:"link"`
-	Name    string   `xml:"name"`
+	Title   string   `xml:"title"`
 }
 
 type disqusAuthor struct {
@@ -353,7 +353,8 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 
 		// Extract the path from thread URL
 		var pageID uuid.UUID
-		if u, err := util.ParseAbsoluteURL(threads[post.ThreadId.Id].URL, true, false); err != nil {
+		thread := threads[post.ThreadId.Id]
+		if u, err := util.ParseAbsoluteURL(thread.URL, true, false); err != nil {
 			return result.WithError(err)
 
 			// Find the page for that path
@@ -361,7 +362,7 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 			pageID = id
 
 			// Page doesn't exist. Find or insert a page with this path
-		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, u.Path, nil); err != nil {
+		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, u.Path, thread.Title, nil); err != nil {
 			return result.WithError(err)
 
 		} else {
@@ -552,7 +553,7 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 			pageID = id
 
 			// Page doesn't exist. Find or insert a page with this path
-		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, pagePath, nil); err != nil {
+		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, pagePath, "", nil); err != nil {
 			return result.WithError(err)
 
 		} else {
@@ -708,7 +709,7 @@ func (svc *importExportService) importV3(curUser *data.User, domain *data.Domain
 		result.PagesTotal++
 
 		// Find the page for the comment based on path
-		p, added, err := ThePageService.UpsertByDomainPath(domain, string(page.Path), nil)
+		p, added, err := ThePageService.UpsertByDomainPath(domain, string(page.Path), page.Title, nil)
 		if err != nil {
 			return result.WithError(err)
 
