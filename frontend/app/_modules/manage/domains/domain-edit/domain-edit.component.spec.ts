@@ -9,10 +9,10 @@ import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generate
 import { ConfigService } from '../../../../_services/config.service';
 import { ToolsModule } from '../../../tools/tools.module';
 import { ToastService } from '../../../../_services/toast.service';
-import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from '../../_pipes/comment-sort.pipe';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
+import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainEditComponent', () => {
 
@@ -35,7 +35,7 @@ describe('DomainEditComponent', () => {
                 MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                 MockProvider(ToastService),
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
             ],
         })
             .compileComponents();

@@ -40,6 +40,7 @@ export class DomainManagerComponent implements OnInit {
 
     readonly sort = new Sort('host');
     readonly domainsLoading = new ProcessingStatus();
+    readonly domainLoading = this.domainSelectorSvc.domainLoading;
     readonly Paths = Paths;
 
     readonly filterForm = this.fb.nonNullable.group({

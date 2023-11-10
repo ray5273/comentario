@@ -1,18 +1,13 @@
 import { Injectable } from '@angular/core';
 import { HttpContext } from '@angular/common/http';
-import { BehaviorSubject, combineLatestWith, Observable, of, ReplaySubject, Subject, tap } from 'rxjs';
+import { BehaviorSubject, combineLatestWith, Observable, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import {
-    ApiGeneralService,
-    Domain,
-    DomainExtension, DomainGet200Response,
-    DomainUser,
-    FederatedIdpId,
-    Principal,
-} from '../../../../generated-api';
+import { ApiGeneralService, Domain, DomainExtension, DomainGet200Response, DomainUser, FederatedIdpId, Principal } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
+import { filter } from 'rxjs/operators';
+import { ProcessingStatus } from '../../../_utils/processing-status';
 
 interface DomainSelectorSettings {
     domainId?: string;
@@ -68,11 +63,14 @@ export class DomainMeta {
 @Injectable()
 export class DomainSelectorService {
 
+    /** Domain loading status. */
+    readonly domainLoading = new ProcessingStatus();
+
     private lastId?: string;
     private lastPrincipal?: Principal;
     private principal?: Principal;
     private readonly reload$ = new BehaviorSubject<void>(undefined);
-    private readonly domainMeta$ = new ReplaySubject<DomainMeta>(1);
+    private readonly domainMeta$ = new BehaviorSubject<DomainMeta | undefined>(undefined);
 
     constructor(
         private readonly authSvc: AuthService,
@@ -105,14 +103,16 @@ export class DomainSelectorService {
      * thus to infinite loops). When false, emits meta.principal === undefined in that case.
      */
     domainMeta(requirePrincipal: boolean): Observable<DomainMeta> {
-        const o = this.domainMeta$.asObservable();
-        return requirePrincipal ?
-            o.pipe(tap(meta => {
-                if (!meta.principal) {
-                    throw new Error('Not authenticated');
-                }
-            })) :
-            o;
+        return this.domainMeta$
+            .pipe(
+                // Withhold undefined (=indeterminate) values
+                filter((meta): meta is DomainMeta => meta !== undefined),
+                // Enforce the principal if needed
+                tap(meta => {
+                    if (requirePrincipal && !meta.principal) {
+                        throw new Error('Not authenticated');
+                    }
+                }));
     }
 
     /**
@@ -127,34 +127,33 @@ export class DomainSelectorService {
      * @param id UUID of the domain to activate, or undefined to remove selection.
      * @param force Whether to force-update the domain even if ID didn't change.
      * @param errorHandling Whether to engage standard HTTP error handling.
-     * @return An Observable that completes when the domain is updated, specifying whether the selection was successful.
      */
-    setDomainId(id: string | undefined, force = false, errorHandling = true): Observable<boolean> {
+    setDomainId(id: string | undefined, force = false, errorHandling = true): void {
         // Don't bother if the ID/principal aren't changing, unless force is true
         if (!force && this.lastId === id && this.lastPrincipal === this.principal) {
-            return of(true);
+            return;
         }
+
+        // Store the last used values
         this.lastId = id;
         this.lastPrincipal = this.principal;
 
         // Remove any selection if there's no ID
         if (!id) {
             this.setDomain(undefined);
-            return of(true);
+            return;
         }
 
+        // Put the current metadata into an indeterminate state
+        this.domainMeta$.next(undefined);
+
         // Load domain and IdPs from the backend. Silently ignore possible errors during domain fetching
-        const result = new Subject<boolean>();
         this.api.domainGet(id, undefined, undefined, {context: new HttpContext().set(HTTP_ERROR_HANDLING, errorHandling)})
-            .pipe(tap({
+            .pipe(this.domainLoading.processing())
+            .subscribe({
                 next:  r => this.setDomain(r),
                 error: () => this.setDomain(undefined),
-            }))
-            .subscribe({
-                next:  () => result.next(true),
-                error: () => result.next(false),
             });
-        return result;
     }
 
 

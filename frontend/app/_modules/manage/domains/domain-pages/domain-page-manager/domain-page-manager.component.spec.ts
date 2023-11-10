@@ -8,9 +8,9 @@ import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component'
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
-import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ConfigService } from '../../../../../_services/config.service';
 import { ToolsModule } from '../../../../tools/tools.module';
+import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainPageManagerComponent', () => {
 
@@ -23,7 +23,7 @@ describe('DomainPageManagerComponent', () => {
             imports: [RouterTestingModule, ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
                 MockProvider(ConfigService),
             ],
         });

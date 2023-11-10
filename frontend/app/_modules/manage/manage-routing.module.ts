@@ -39,33 +39,33 @@ const children: Routes = [
     {path: 'domains',        component: DomainManagerComponent},
     {path: 'domains/create', component: DomainEditComponent, data: {new: true, clean: true}},
     {
-        path: 'domains/:id',
+        path: 'domains/:domainId',
         component: DomainDetailComponent,
         children: [
-            {path: '',               component: DomainPropertiesComponent,     pathMatch: 'full'},
-            {path: 'edit',           component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain]},
-            {path: 'clone',          component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain], data: {new: true}},
-            {path: 'import',         component: DomainImportComponent,         canActivate: [ManageGuard.canManageDomain]},
-            {path: 'sso',            component: DomainSsoSecretComponent,      canActivate: [ManageGuard.canManageDomainSso]},
+            {path: '', pathMatch: 'full', component: DomainPropertiesComponent,     canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'edit',                component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain]},
+            {path: 'clone',               component: DomainEditComponent,           canActivate: [ManageGuard.canManageDomain], data: {new: true}},
+            {path: 'import',              component: DomainImportComponent,         canActivate: [ManageGuard.canManageDomain]},
+            {path: 'sso',                 component: DomainSsoSecretComponent,      canActivate: [ManageGuard.canManageDomainSso]},
 
             // Pages
-            {path: 'pages',          component: DomainPageManagerComponent,    canActivate: [ManageGuard.isDomainSelected]},
-            {path: 'pages/:id',      component: DomainPagePropertiesComponent, canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'pages',               component: DomainPageManagerComponent,    canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'pages/:id',           component: DomainPagePropertiesComponent, canActivate: [ManageGuard.isDomainSelected]},
 
             // Comments
-            {path: 'comments',       component: CommentManagerComponent,       canActivate: [ManageGuard.isDomainSelected]},
-            {path: 'comments/:id',   component: CommentPropertiesComponent,    canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'comments',            component: CommentManagerComponent,       canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'comments/:id',        component: CommentPropertiesComponent,    canActivate: [ManageGuard.isDomainSelected]},
 
             // Domain users
-            {path: 'users',          component: DomainUserManagerComponent,    canActivate: [ManageGuard.canManageDomain]},
-            {path: 'users/:id',      component: DomainUserPropertiesComponent, canActivate: [ManageGuard.canManageDomain]},
-            {path: 'users/:id/edit', component: DomainUserEditComponent,       canActivate: [ManageGuard.canManageDomain]},
+            {path: 'users',               component: DomainUserManagerComponent,    canActivate: [ManageGuard.canManageDomain]},
+            {path: 'users/:id',           component: DomainUserPropertiesComponent, canActivate: [ManageGuard.canManageDomain]},
+            {path: 'users/:id/edit',      component: DomainUserEditComponent,       canActivate: [ManageGuard.canManageDomain]},
 
             // Stats
-            {path: 'stats',          component: DomainStatsComponent,          canActivate: [ManageGuard.canManageDomain]},
+            {path: 'stats',               component: DomainStatsComponent,          canActivate: [ManageGuard.canManageDomain]},
 
             // Operations
-            {path: 'operations',     component: DomainOperationsComponent,     canActivate: [ManageGuard.canManageDomain]},
+            {path: 'operations',          component: DomainOperationsComponent,     canActivate: [ManageGuard.canManageDomain]},
 
         ],
         canActivate: [ManageGuard.selectDomain],

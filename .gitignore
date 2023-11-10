@@ -20,7 +20,7 @@ node_modules/
 # Test artifacts
 /cypress/downloads
 /cypress/screenshots
-/cypress/video
+/cypress/videos
 
 # IDE
 /.idea/

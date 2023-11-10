@@ -1,9 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
-import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
-import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { DomainUserManagerComponent } from './domain-user-manager.component';
 import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
@@ -12,6 +10,7 @@ import { SortSelectorComponent } from '../../../sort-selector/sort-selector.comp
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ToolsModule } from '../../../../tools/tools.module';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
+import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainUserManagerComponent', () => {
 
@@ -27,7 +26,7 @@ describe('DomainUserManagerComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ConfigService),
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
             ],
         });
         fixture = TestBed.createComponent(DomainUserManagerComponent);

@@ -26,12 +26,8 @@ export class ManageGuard {
      * Try to select the domain given in the ID route parameter and return either true, or the domain manager route.
      */
     selectDomain(route: ActivatedRouteSnapshot): false | Observable<boolean | UrlTree> {
-        const id = route.paramMap.get('id');
-        if (id) {
-            return this.domainSelectorSvc.setDomainId(id)
-                .pipe(map(ok => ok || this.router.parseUrl(Paths.manage.domains)));
-        }
-        return false;
+        this.domainSelectorSvc.setDomainId(route.paramMap.get('domainId') || undefined);
+        return this.isDomainSelected();
     }
 
     /**

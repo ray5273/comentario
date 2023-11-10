@@ -24,6 +24,7 @@ export class DomainPropertiesComponent implements OnInit {
     /** List of extensions enabled in the domain. */
     extensions?: DomainExtension[];
 
+    readonly domainLoading = this.domainSelectorSvc.domainLoading;
     readonly Paths = Paths;
     readonly snippet =
         `<script defer src="${Utils.joinUrl(this.cfgSvc.staticConfig.baseUrl, 'comentario.js')}"></script>\n` +

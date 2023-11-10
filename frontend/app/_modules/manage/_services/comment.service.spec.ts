@@ -1,9 +1,8 @@
 import { TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { CommentService } from './comment.service';
 import { ApiGeneralService } from '../../../../generated-api';
-import { DomainMeta, DomainSelectorService } from './domain-selector.service';
+import { mockDomainSelector } from '../../../_utils/_mocks.spec';
 
 describe('CommentService', () => {
 
@@ -13,7 +12,7 @@ describe('CommentService', () => {
         TestBed.configureTestingModule({
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
             ],
         });
         service = TestBed.inject(CommentService);

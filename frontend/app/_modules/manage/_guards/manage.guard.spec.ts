@@ -2,10 +2,10 @@ import { TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
 import { CanActivateFn, UrlTree } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
-import { MockProvider } from 'ng-mocks';
 import { ManageGuard } from './manage.guard';
-import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
+import { DomainMeta } from '../_services/domain-selector.service';
 import { Domain } from '../../../../generated-api';
+import { mockDomainSelector } from '../../../_utils/_mocks.spec';
 
 describe('ManageGuard', () => {
 
@@ -23,7 +23,7 @@ describe('ManageGuard', () => {
             providers: [
                 // Need to explicitly declare as provider because it's scoped to the module
                 ManageGuard,
-                MockProvider(DomainSelectorService, {domainMeta: () => domainEmitter}),
+                mockDomainSelector(domainEmitter),
             ],
         });
     });

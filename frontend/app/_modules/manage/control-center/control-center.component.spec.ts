@@ -6,9 +6,9 @@ import { MockComponents, MockDirective, MockProvider } from 'ng-mocks';
 import { AuthService } from '../../../_services/auth.service';
 import { ControlCenterComponent } from './control-center.component';
 import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
-import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 import { CommentService } from '../_services/comment.service';
 import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
+import { mockDomainSelector } from '../../../_utils/_mocks.spec';
 
 describe('ControlCenterComponent', () => {
 
@@ -21,7 +21,7 @@ describe('ControlCenterComponent', () => {
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
                 MockProvider(AuthService, {principal: of(null)}),
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
                 MockProvider(CommentService, {countPending: of(0)}),
             ],
         })

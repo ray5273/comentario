@@ -1,7 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MockProvider } from 'ng-mocks';
 import { DomainBadgeComponent } from './domain-badge.component';
-import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainBadgeComponent', () => {
 
@@ -12,7 +11,7 @@ describe('DomainBadgeComponent', () => {
         TestBed.configureTestingModule({
             declarations: [DomainBadgeComponent],
             providers: [
-                MockProvider(DomainSelectorService),
+                mockDomainSelector(),
             ],
         });
         fixture = TestBed.createComponent(DomainBadgeComponent);

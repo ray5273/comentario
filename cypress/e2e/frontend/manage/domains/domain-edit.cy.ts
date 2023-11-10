@@ -237,7 +237,7 @@ context('Domain Edit page', () => {
                 cy.toastCheckAndClose('host-already-exists');
             });
 
-            it('allows to add domains', () => {
+            it('allows to add domain with only host', () => {
                 // Intercept the HTTP request to detect the new domain's ID
                 cy.intercept('POST', '/api/domains').as('postDomain');
 
@@ -253,10 +253,11 @@ context('Domain Edit page', () => {
                 });
 
                 // Verify properties
+                cy.contains('app-domain-properties header app-domain-badge', 'google.com');
                 cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                    ['Host',                                      'google.com'],
-                    ['Read-only',                                 ''],
-                    ['Default comment sort',                      'Newest first'],
+                    ['Host',                 'google.com'],
+                    ['Read-only',            ''],
+                    ['Default comment sort', 'Newest first'],
                     ['Authentication',
                         [
                             'Local (password-based)',
@@ -274,10 +275,10 @@ context('Domain Edit page', () => {
                             'Comment contains image',
                         ],
                     ],
-                    ['Email moderators',                         'For comments pending moderation'],
-                    ['Created',                                  REGEXES.datetime],
-                    ['Number of comments',                       '0'],
-                    ['Number of views',                          '0'],
+                    ['Email moderators',   'For comments pending moderation'],
+                    ['Created',            REGEXES.datetime],
+                    ['Number of comments', '0'],
+                    ['Number of views',    '0'],
                 ]);
 
                 // Go to the domain list and verify there's a new domain
@@ -285,14 +286,14 @@ context('Domain Edit page', () => {
                 cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['google.com', DOMAINS.localhost.host]);
                 cy.texts('#domain-list .domain-name')         .should('arrayMatch', [DOMAINS.localhost.name]);
                 cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner']);
+            });
 
-                // Add another domain, this time with a port number and different settings
-                cy.contains('app-domain-manager button', 'New domain').click();
-                cy.isAt(PATHS.manage.domains.create);
-                cy.get('app-domain-edit #host').setValue('facebook.com:4551');
-                cy.get('app-domain-edit #name').setValue('Face Book');
-                cy.get('app-domain-edit #sort-sd').clickLabel();
-                // -- Auth
+            it('allows to add domain with custom settings', () => {
+                cy.get('@host').setValue('facebook.com:4551');
+                cy.get('@name').setValue('Face Book');
+                cy.get('@sortSD').clickLabel();
+
+                // Auth
                 cy.get('@tabAuth').click();
                 makeAuthAliases(false);
                 cy.get('@authAnonymous').clickLabel();
@@ -305,7 +306,8 @@ context('Domain Edit page', () => {
                 cy.get('@authSso')      .clickLabel();
                 cy.get('app-domain-edit #sso-url')            .setValue('https://sso.facebook.com');
                 cy.get('app-domain-edit #sso-non-interactive').clickLabel();
-                // -- Moderation
+
+                // Moderation
                 cy.get('@tabModeration').click();
                 makeModerationAliases();
                 cy.get('@modAnonymous')          .clickLabel();
@@ -317,7 +319,8 @@ context('Domain Edit page', () => {
                 cy.get('@modNotifyPolicyNone')   .clickLabel();
                 cy.get('app-domain-edit #mod-num-comments') .setValue('42');
                 cy.get('app-domain-edit #mod-user-age-days').setValue('47');
-                // -- Extensions
+
+                // Extensions
                 cy.get('@tabExtensions').click();
                 makeExtensionsAliases();
                 cy.get('@extAkismetEnabled')                                    .clickLabel();
@@ -326,16 +329,19 @@ context('Domain Edit page', () => {
                 cy.get('app-domain-edit #extension-apiLayer-spamChecker-config').setValue('name=apiLayer-spamChecker\nbaz=42');
                 cy.get('@extPerspectiveEnabled')                                .clickLabel();
                 cy.get('app-domain-edit #extension-perspective-config')         .setValue('name=perspective\nabc=xyz');
+
+                // Save the new domain
                 cy.get('app-domain-edit button[type=submit]').click();
                 cy.toastCheckAndClose('data-saved');
                 cy.isAt(PATHS.manage.domains.anyId.props);
 
                 // Verify properties
+                cy.contains('app-domain-properties header app-domain-badge', 'facebook.com:4551');
                 cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                    ['Host',                                      'facebook.com:4551'],
-                    ['Name',                                      'Face Book'],
-                    ['Read-only',                                 ''],
-                    ['Default comment sort',                      'Most upvoted first'],
+                    ['Host',                 'facebook.com:4551'],
+                    ['Name',                 'Face Book'],
+                    ['Read-only',            ''],
+                    ['Default comment sort', 'Most upvoted first'],
                     ['Authentication',
                         [
                             'Anonymous comments',
@@ -350,7 +356,7 @@ context('Domain Edit page', () => {
                             'Author is registered less than 47 days ago',
                         ],
                     ],
-                    ['Email moderators',                         'Don\'t email'],
+                    ['Email moderators',     'Don\'t email'],
                     ['Extensions',
                         [
                             'Akismet',
@@ -358,16 +364,16 @@ context('Domain Edit page', () => {
                             'Perspective',
                         ],
                     ],
-                    ['Created',                                  REGEXES.datetime],
-                    ['Number of comments',                       '0'],
-                    ['Number of views',                          '0'],
+                    ['Created',              REGEXES.datetime],
+                    ['Number of comments',   '0'],
+                    ['Number of views',      '0'],
                 ]);
 
                 // Go to the domain list and verify there's a new domain
                 cy.sidebarClick('Domains', PATHS.manage.domains);
-                cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['facebook.com:4551', 'google.com', DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['facebook.com:4551', DOMAINS.localhost.host]);
                 cy.texts('#domain-list .domain-name')         .should('arrayMatch', ['Face Book', DOMAINS.localhost.name]);
-                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner', 'Owner']);
+                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner']);
             });
         });
     });

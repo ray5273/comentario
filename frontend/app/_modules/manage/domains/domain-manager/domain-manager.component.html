@@ -11,7 +11,7 @@
     <ng-container i18n>Select a domain to see its properties, pages, and comments.</ng-container>
 </app-info-block>
 
-<div [appSpinner]="!domains && domainsLoading.active" spinnerSize="lg">
+<div [appSpinner]="(!domains && domainsLoading.active) || domainLoading.active" spinnerSize="lg">
     <!-- Toolbar. Hide when no domains are available and none can be added -->
     <div *ngIf="canAdd || domains?.length || filterActive" class="mb-3">
         <div class="row g-2 flex-grow-1">

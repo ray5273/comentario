@@ -1,10 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
-import { MockComponents, MockProvider } from 'ng-mocks';
+import { MockComponents } from 'ng-mocks';
 import { DomainStatsComponent } from './domain-stats.component';
 import { StatsChartComponent } from '../../stats-chart/stats-chart.component';
-import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
+import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainStatsComponent', () => {
 
@@ -15,7 +14,7 @@ describe('DomainStatsComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [DomainStatsComponent, MockComponents(StatsChartComponent, DomainBadgeComponent)],
             providers: [
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
             ],
         })
             .compileComponents();

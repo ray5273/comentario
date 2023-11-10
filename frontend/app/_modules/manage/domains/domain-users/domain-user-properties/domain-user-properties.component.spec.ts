@@ -1,12 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainUserPropertiesComponent } from './domain-user-properties.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
-import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ToolsModule } from '../../../../tools/tools.module';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
+import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainUserPropertiesComponent', () => {
 
@@ -19,7 +18,7 @@ describe('DomainUserPropertiesComponent', () => {
             imports: [FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(DomainSelectorService, {domainMeta: () => of(new DomainMeta())}),
+                mockDomainSelector(),
             ],
         });
         fixture = TestBed.createComponent(DomainUserPropertiesComponent);
