@@ -279,7 +279,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		}
 
 		// Parse the SSO URL
-		ssoURL, err := util.ParseAbsoluteURL(domain.SSOURL, true)
+		ssoURL, err := util.ParseAbsoluteURL(domain.SSOURL, true, false)
 		if err != nil {
 			return oauthFailure(err)
 		}

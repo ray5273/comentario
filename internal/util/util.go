@@ -276,7 +276,7 @@ func IsValidPort(s string) bool {
 
 // IsValidURL returns whether the passed string is a valid absolute URL. If allowHTTP == false, HTTPS URLs are enforced
 func IsValidURL(s string, allowHTTP bool) bool {
-	_, err := ParseAbsoluteURL(s, allowHTTP)
+	_, err := ParseAbsoluteURL(s, allowHTTP, false)
 	return err == nil
 }
 
@@ -346,8 +346,9 @@ func MD5ToHex(checksum *[16]byte) string {
 }
 
 // ParseAbsoluteURL parses and returns the passed string as an absolute URL. If allowHTTP == false, HTTPS URLs are
-// enforced
-func ParseAbsoluteURL(s string, allowHTTP bool) (*url.URL, error) {
+// enforced. If trimTrailingSlash == true, any trailing slash is removed except when the path consists of a single
+// slash
+func ParseAbsoluteURL(s string, allowHTTP, trimTrailingSlash bool) (*url.URL, error) {
 	// Parse the base URL
 	var u *url.URL
 	var err error
@@ -373,7 +374,7 @@ func ParseAbsoluteURL(s string, allowHTTP bool) (*url.URL, error) {
 	} else if !strings.HasPrefix(u.Path, "/") {
 		return nil, fmt.Errorf("invalid URL path (must begin with '/'): '%s'", u.Path)
 
-	} else if len(u.Path) > 1 {
+	} else if len(u.Path) > 1 && trimTrailingSlash {
 		// Remove any trailing slash from the base path, except when it's a root
 		u.Path = strings.TrimSuffix(u.Path, "/")
 	}

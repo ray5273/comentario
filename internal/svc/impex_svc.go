@@ -353,7 +353,7 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 
 		// Extract the path from thread URL
 		var pageID uuid.UUID
-		if u, err := util.ParseAbsoluteURL(threads[post.ThreadId.Id].URL, true); err != nil {
+		if u, err := util.ParseAbsoluteURL(threads[post.ThreadId.Id].URL, true, false); err != nil {
 			return result.WithError(err)
 
 			// Find the page for that path
