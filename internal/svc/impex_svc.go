@@ -303,72 +303,10 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 
 	result := &ImportResult{}
 
-	// Map Disqus emails to user IDs (if not available, create a new one with an empty password that can be reset later)
-	userIDMap := map[string]uuid.UUID{}
-	for _, post := range exp.Posts {
-		result.CommentsTotal++
-		if post.IsDeleted || post.IsSpam {
-			result.CommentsSkipped++
-			continue
-		}
-
-		// Skip authors whose email has already been processed
-		email := fmt.Sprintf("%s@disqus.com", post.Author.Username)
-		if _, ok := userIDMap[email]; ok {
-			continue
-		}
-
-		// Try to find an existing user with this email
-		var user *data.User
-		if u, err := TheUserService.FindUserByEmail(email, false); err == nil {
-			// User already exists
-			user = u
-
-			// Check if domain user exists, too
-			if _, _, err := TheDomainService.FindDomainUserByID(&domain.ID, &u.ID); err == nil {
-				// Save the user's ID in the map
-				userIDMap[email] = user.ID
-
-				// Proceed to the next record
-				continue
-
-			} else if !errors.Is(err, ErrNotFound) {
-				// Any other error than "not found"
-				return result.WithError(err)
-			}
-
-		} else if !errors.Is(err, ErrNotFound) {
-			// Any other error than "not found"
-			return result.WithError(err)
-		}
-
-		// Persist a new user instance, if not already exists
-		if user == nil {
-			user = data.NewUser(email, post.Author.Name)
-			user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
-			user.WithRemarks("Imported from Disqus")
-			if err := TheUserService.Create(user); err != nil {
-				return result.WithError(err)
-			}
-			result.UsersAdded++
-		}
-
-		// Save the new user's ID in the map
-		userIDMap[email] = user.ID
-
-		// Add a domain user as well
-		du := &data.DomainUser{
-			DomainID:        domain.ID,
-			UserID:          user.ID,
-			IsCommenter:     true,
-			NotifyReplies:   true,
-			NotifyModerator: true,
-			CreatedTime:     post.CreationDate,
-		}
-		if err := TheDomainService.UserAdd(du); err != nil {
-			return result.WithError(err)
-		}
-		result.DomainUsersAdded++
+	// Map Disqus emails to user IDs
+	var userIDMap map[string]uuid.UUID
+	if userIDMap, result.UsersAdded, result.DomainUsersAdded, err = disqusMakeUserMap(&curUser.ID, &domain.ID, exp); err != nil {
+		return result.WithError(err)
 	}
 
 	// Total number of users involved
@@ -388,8 +326,11 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 
 	// Iterate over Disqus posts
 	for _, post := range exp.Posts {
+		result.CommentsTotal++
+
 		// Skip over deleted and spam posts
 		if post.IsDeleted || post.IsSpam {
+			result.CommentsSkipped++
 			continue
 		}
 
@@ -403,8 +344,9 @@ func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Do
 
 		// Find the user ID by their email
 		uid := data.AnonymousUser.ID
-		if !post.Author.IsAnonymous {
-			if id, ok := userIDMap[fmt.Sprintf("%s@disqus.com", post.Author.Username)]; ok {
+		email := disqusAuthorEmail(&post.Author)
+		if email != "" {
+			if id, ok := userIDMap[email]; ok {
 				uid = id
 			}
 		}
@@ -901,5 +843,98 @@ func (svc *importExportService) insertCommentsForParent(parentID uuid.UUID, comm
 		countImported += cci
 		countNonDeleted += ccnd
 	}
+	return
+}
+
+// disqusAuthorEmail comes up with a (fake) email address for a Disqus Author
+func disqusAuthorEmail(a *disqusAuthor) string {
+	// If there's a username, use that
+	if s := strings.TrimSpace(a.Username); s != "" {
+		return fmt.Sprintf("%s@disqus-user", s)
+	}
+
+	// If there's a name, use that
+	if s := strings.TrimSpace(a.Name); s != "" {
+		return fmt.Sprintf("%s@disqus-anonymous-user", s)
+	}
+
+	// The user is anonymous
+	return ""
+}
+
+// disqusMakeUserMap creates users/domain users from the provided Disqus import dump, and returns that as a map {email: userID}
+func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userMap map[string]uuid.UUID, usersAdded, domainUsersAdded int, err error) {
+	userMap = map[string]uuid.UUID{}
+
+	// Iterate over the posts
+	for _, post := range exp.Posts {
+		// Skip over deleted and spam posts
+		if post.IsDeleted || post.IsSpam {
+			continue
+		}
+
+		// Skip anonymous
+		email := disqusAuthorEmail(&post.Author)
+		if email == "" {
+			continue
+		}
+
+		// Skip authors whose email has already been processed
+		if _, ok := userMap[email]; ok {
+			continue
+		}
+
+		// Try to find an existing user with this email
+		var user, u *data.User
+		if u, err = TheUserService.FindUserByEmail(email, false); err == nil {
+			// User already exists
+			user = u
+
+			// Check if domain user exists, too
+			if _, _, err = TheDomainService.FindDomainUserByID(domainID, &u.ID); err == nil {
+				// Save the user's ID in the map
+				userMap[email] = user.ID
+
+				// Proceed to the next record
+				continue
+			}
+		}
+
+		if err != nil && !errors.Is(err, ErrNotFound) {
+			// Any other error than "not found"
+			return
+		}
+
+		// Persist a new user instance, if not already exists
+		if user == nil {
+			user = data.NewUser(email, post.Author.Name)
+			user.UserCreated = uuid.NullUUID{UUID: *curUserID, Valid: true}
+			user.WithRemarks("Imported from Disqus")
+			if err = TheUserService.Create(user); err != nil {
+				return
+			}
+			usersAdded++
+		}
+
+		// Save the new user's ID in the map
+		userMap[email] = user.ID
+
+		// Add a domain user as well
+		du := &data.DomainUser{
+			DomainID:        *domainID,
+			UserID:          user.ID,
+			IsCommenter:     true,
+			NotifyReplies:   true,
+			NotifyModerator: true,
+			CreatedTime:     post.CreationDate,
+		}
+		if err = TheDomainService.UserAdd(du); err != nil {
+			return
+		}
+		domainUsersAdded++
+	}
+
+	// Succeeded
+	err = nil
 	return
 }
