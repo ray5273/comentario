@@ -272,9 +272,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                                 this.eModeratorBadge),
                                         // Subtitle
                                         UIToolkit.div('subtitle')
-                                            // Time ago
-                                            .inner(Utils.timeAgo(ctx.curTimeMs, ms))
-                                            .attr({title: this._comment.createdTime}))),
+                                            .append(
+                                                // Permalink and the comment creation time
+                                                Wrap.new('a')
+                                                    .attr({
+                                                        href:  `#${Wrap.idPrefix}${id}`,
+                                                        title: `${this._comment.createdTime} — Permalink`})
+                                                    .inner(Utils.timeAgo(ctx.curTimeMs, ms))))),
                         // Card body
                         this.eBody = UIToolkit.div('card-body'),
                         // Options toolbar

@@ -50,6 +50,10 @@
     .comentario-subtitle {
         color: $gray-5;
         font-size: 12px;
+
+        a {
+            color: $gray-5 !important;
+        }
     }
 
     .comentario-options {
