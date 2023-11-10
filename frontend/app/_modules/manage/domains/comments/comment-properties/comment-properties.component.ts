@@ -99,7 +99,7 @@ export class CommentPropertiesComponent implements OnInit {
         const mr = this.modal.open(ConfirmDialogComponent);
         const dlg = (mr.componentInstance as ConfirmDialogComponent);
         dlg.content     = $localize`Are you sure you want to delete this comment?`;
-        dlg.actionLabel = $localize`Delete`;
+        dlg.actionLabel = $localize`Delete comment`;
 
         // Run the dialog
         from(mr.result)

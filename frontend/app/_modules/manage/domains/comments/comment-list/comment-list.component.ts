@@ -72,6 +72,8 @@ export class CommentListComponent implements OnInit, OnChanges {
     readonly faTrashAlt = faTrashAlt;
     readonly faXmark    = faXmark;
 
+    readonly trackById = (_: number, comment: Comment) => comment.id!;
+
     private loadedPageNum = 0;
 
     constructor(
@@ -159,11 +161,18 @@ export class CommentListComponent implements OnInit, OnChanges {
         // Delete the comment
         this.api.commentDelete(c.id!)
             .pipe(this.commentUpdating.processing())
-            // Remove the comment from the list
             .subscribe(() => {
-                const i = this.comments?.indexOf(c);
-                if (i && i >= 0) {
-                    this.comments?.splice(i, 1);
+                // If deleted comments are to be shown, mark comment deleted
+                if (!this.domainMeta?.canModerateDomain || this.filterForm.controls.deleted.value) {
+                    c.isDeleted = true;
+                    c.html = '';
+
+                // Remove the comment from the list otherwise
+                } else {
+                    const i = this.comments?.findIndex(item => item.id === c.id);
+                    if (i && i >= 0) {
+                        this.comments!.splice(i, 1);
+                    }
                 }
 
                 // Poke the comment service

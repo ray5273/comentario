@@ -38,6 +38,14 @@ context('Comment Manager', () => {
         cy.wait(600);
     };
 
+    const deleteComment = (index: number) => {
+        cy.get('@commentList').find('.list-group-item').eq(index).find('button[title="Delete"]').click();
+        cy.confirmationDialog('Are you sure you want to delete this comment?').dlgButtonClick('Delete comment');
+    };
+
+    const checkDeletedFlags = (expected: boolean[]) =>
+        cy.get('@commentList').find('.list-group-item').hasClass('list-group-item-deleted').should('arrayMatch', expected);
+
     beforeEach(cy.backendReset);
 
     [
@@ -74,7 +82,7 @@ context('Comment Manager', () => {
                 cy.get('@loadMore').click();
                 cy.get('@commentList').verifyListFooter(32, false);
 
-                // TODO
+                // TODO ordering, sorting, pagination
             });
 
             it('filters comments', () => {
@@ -142,8 +150,25 @@ context('Comment Manager', () => {
                 cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Rejected reply']);
             });
 
-            it('allows to moderate/delete comments', () => {
+            it('allows to moderate comments', () => {
                 // TODO
+            });
+
+            it('allows to delete comments', () => {
+                // Test deletion when deleted are hidden
+                deleteComment(14);
+                cy.get('@commentList').verifyListFooter(24, true);
+                checkDeletedFlags(Array(24).fill(false));
+
+                // Show deleted
+                cy.get('@filterDeletedBtn').clickLabel();
+                cy.get('@commentList').verifyListFooter(25, true);
+                checkDeletedFlags([...Array(14).fill(false), true, ...Array(10).fill(false)]);
+
+                // Delete another comment: item doesn't disappear but is rather marked as deleted
+                deleteComment(3);
+                cy.get('@commentList').verifyListFooter(25, true);
+                checkDeletedFlags([false, false, false, true, ...Array(10).fill(false), true, ...Array(10).fill(false)]);
             });
         }));
 
@@ -162,7 +187,9 @@ context('Comment Manager', () => {
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Children double, too']);
 
         // Test deleting comment
-        // TODO
+        deleteComment(0);
+        cy.get('@commentList').verifyListFooter(1, false);
+        checkDeletedFlags([true]);
     });
 
     it('shows page list for readonly user', () => {
@@ -172,6 +199,8 @@ context('Comment Manager', () => {
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Auto-init child']);
 
         // Test deleting comment
-        // TODO
+        deleteComment(0);
+        cy.get('@commentList').verifyListFooter(1, false);
+        checkDeletedFlags([true]);
     });
 });
