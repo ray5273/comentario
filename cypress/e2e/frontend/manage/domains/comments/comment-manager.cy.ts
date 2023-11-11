@@ -4,6 +4,44 @@ context('Comment Manager', () => {
 
     const pagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).comments;
 
+    /** Localhost comments, in reverse chronological order. */
+    const comments = [
+        {author: USERS.commenterTwo,   score:  4, text: 'Captain, I\'ve plotted our course, and I suggest we take the eastern route. It\'ll take us a bit longer, but we\'ll avoid any bad weather.'},
+        {author: USERS.queen,          score:  6, text: 'I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣'},
+        {author: USERS.jack,           score: -2, text: 'Captain, one more thing. We\'ll be passing through some pirate-infested waters soon. Should we be concerned?'},
+        {author: USERS.queen,          score:  4, text: 'We\'ve got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It\'ll help us avoid scurvy.'},
+        {author: USERS.ace,            score:  2, text: 'Alright, engineer. Let\'s schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.'},
+        {author: USERS.ace,            score:  0, text: 'Let\'s hope it doesn\'t come to that, cook. But it\'s good to know we have you on our side.\n\nAlright, everyone, let\'s get to work. We\'ve got a long journey ahead of us!'},
+        {author: USERS.ace,            score:  0, text: 'Good point, navigator. I\'ll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.'},
+        {author: USERS.king,           score:  0, text: 'Captain, I\'ve been noticing some strange vibrations in the engine room. It\'s nothing too serious, but I\'d like to take a look at it just to be safe.'},
+        {author: USERS.ace,            score:  0, text: 'Now, is there anything else anyone wants to bring up?'},
+        {author: USERS.ace,            score:  0, text: 'Absolutely, cook. I\'ll make a note of it.'},
+        {author: USERS.ace,            score:  0, text: 'What about supplies, cook?'},
+        {author: USERS.ace,            score:  0, text: 'Good work, navigator. That\'s what I was thinking too.'},
+        {author: USERS.king,           score:  0, text: 'Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.'},
+        {author: USERS.ace,            score:  0, text: 'First off, we need to make sure the engine is in good working order. Any issues we need to address, engineer?'},
+        {author: USERS.king,           score:  0, text: 'What\'s on the agenda, captain?'},
+        {author: USERS.anonymous,      score:  0, text: 'Path override child'},
+        {author: USERS.ace,            score:  0, text: 'The path of this page is set to /different-page/123'},
+        {author: USERS.anonymous,      score:  0, text: 'CSS override disabled child'},
+        {author: USERS.ace,            score:  0, text: 'CSS override disabled'},
+        {author: USERS.anonymous,      score:  0, text: 'CSS override child'},
+        {author: USERS.ace,            score:  0, text: 'CSS override with crazy colours'},
+        {author: USERS.anonymous,      score:  0, text: 'No root font child'},
+        {author: USERS.ace,            score:  0, text: 'No root font for comments'},
+        {author: USERS.commenterThree, score:  0, text: 'Auto-init child'},
+        {author: USERS.ace,            score:  3, text: 'Auto-init OK'},
+        {author: USERS.anonymous,      score:  0, text: ''},
+        {author: USERS.anonymous,      score:  0, text: 'Rejected reply'},
+        {author: USERS.anonymous,      score:  0, text: 'Phishy reply'},
+        {author: USERS.ace,            score: 65, text: 'I am dynamic 🚀'},
+        {author: USERS.commenterTwo,   score:  2, text: 'Children double, too'},
+        {author: USERS.ace,            score:  1, text: 'Doubling down'},
+        {author: USERS.anonymous,      score:  0, text: 'This is a root, sticky comment'},
+        {author: USERS.ace,            score:  8, text: 'Alright crew, let\'s gather around for a quick meeting. We\'ve got a long voyage ahead of us, and I want to make sure everyone is on the same page.'},
+    ];
+    const undeletedComments = comments.filter(c => c.text);
+
     const makeAliases = (hasItems: boolean, canLoadMore: boolean, hasFilterButtons: boolean) => {
         cy.get('app-comment-manager')                     .as('commentManager');
         cy.get('@commentManager').find('#sortByDropdown') .as('sortDropdown');
@@ -38,13 +76,18 @@ context('Comment Manager', () => {
         cy.wait(600);
     };
 
-    const deleteComment = (index: number) => {
-        cy.get('@commentList').find('.list-group-item').eq(index).find('button[title="Delete"]').click();
-        cy.confirmationDialog('Are you sure you want to delete this comment?').dlgButtonClick('Delete comment');
+    /** Run the specified comment action on a comment at the specified index. */
+    const commentAction = (action: 'Approve' | 'Reject' | 'Delete', index: number) => {
+        cy.get('@commentList').find('.list-group-item').eq(index).find(`button[title="${action}"]`).click();
+        // Delete action shows a confirmation dialog
+        if (action === 'Delete') {
+            cy.confirmationDialog('Are you sure you want to delete this comment?').dlgButtonClick('Delete comment');
+        }
     };
 
-    const checkDeletedFlags = (expected: boolean[]) =>
-        cy.get('@commentList').find('.list-group-item').hasClass('list-group-item-deleted').should('arrayMatch', expected);
+    /** Check the specified comment flags against a boolean array. */
+    const checkFlags = (flag: 'deleted' | 'pending' | 'rejected', expected: boolean[]) =>
+        cy.get('@commentList').find('.list-group-item').hasClass(`list-group-item-${flag}`).should('arrayMatch', expected);
 
     beforeEach(cy.backendReset);
 
@@ -73,16 +116,53 @@ context('Comment Manager', () => {
                 makeAliases(true, true, true);
             });
 
-            it('shows page list', () => {
+            it('shows comment list', () => {
                 // Check heading
                 cy.get('@commentManager').find('h1').should('have.text', 'Comments').and('be.visible');
 
-                // Check page list
+                // Check page list: initial sorting is Created DESC
                 cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.text));
+                // Add more
                 cy.get('@loadMore').click();
                 cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.map(c => c.text));
 
-                // TODO ordering, sorting, pagination
+                // Sort by Created ASC
+                cy.get('@commentManager').changeListSort('Created', 'asc');
+                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(7, 32).reverse().map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(7, 32).reverse().map(c => c.text));
+                // Add more
+                cy.get('@loadMore').click();
+                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice().reverse().map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice().reverse().map(c => c.text));
+
+                // Sort by Score ASC
+                const commentsScore = undeletedComments.slice().sort((a, b) => a.score - b.score).map(c => c.score.toString());
+                cy.get('@commentManager').changeListSort('Score', 'asc');
+                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(0, 25));
+                // Add more
+                cy.get('@loadMore').click();
+                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice());
+
+                // Sort by Score DESC
+                cy.get('@commentManager').changeListSort('Score', 'desc');
+                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(7, 32).reverse());
+                // Add more
+                cy.get('@loadMore').click();
+                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice().reverse());
+
+                // Click on a comment body and land in comment properties
+                cy.get('@commentList').find('.comment-body').eq(7).click();
+                cy.isAt(pagePath + '/f08639de-ab7b-4032-bdce-a021bf07e596');
             });
 
             it('filters comments', () => {
@@ -151,28 +231,61 @@ context('Comment Manager', () => {
             });
 
             it('allows to moderate comments', () => {
-                // TODO
+                // All comments are initially approved
+                const false25 = Array(25).fill(false);
+                checkFlags('deleted',  false25);
+                checkFlags('pending',  false25);
+                checkFlags('rejected', false25);
+
+                // Unapprove a comment
+                commentAction('Approve', 0);
+                checkFlags('deleted',  false25);
+                checkFlags('pending',  [true, ...false25.slice(1)]);
+                checkFlags('rejected', false25);
+
+                // Reject another comment
+                commentAction('Reject', 1);
+                checkFlags('deleted',  false25);
+                checkFlags('pending',  [true, ...false25.slice(1)]);
+                checkFlags('rejected', [false, true, ...false25.slice(2)]);
+
+                // Show pending only
+                cy.get('@quickFilterPending').click();
+                cy.get('@commentList').verifyListFooter(2, false);
+                checkFlags('deleted',  [false, false]);
+                checkFlags('pending',  [true, true]);
+                checkFlags('rejected', [false, false]);
+                cy.get('@commentList').texts('.comment-pending-reason').should('arrayMatch', [
+                    'Pending moderation' + `Set to pending by ${user.name} <${user.email}>`,
+                    'Pending moderation' + 'Something is fishy here',
+                ]);
+
+                // Approve the first comment
+                commentAction('Approve', 0);
+                checkFlags('deleted',  [false, false]);
+                checkFlags('pending',  [false, true]);
+                checkFlags('rejected', [false, false]);
             });
 
             it('allows to delete comments', () => {
                 // Test deletion when deleted are hidden
-                deleteComment(14);
+                commentAction('Delete', 14);
                 cy.get('@commentList').verifyListFooter(24, true);
-                checkDeletedFlags(Array(24).fill(false));
+                checkFlags('deleted', Array(24).fill(false));
 
                 // Show deleted
                 cy.get('@filterDeletedBtn').clickLabel();
                 cy.get('@commentList').verifyListFooter(25, true);
-                checkDeletedFlags([...Array(14).fill(false), true, ...Array(10).fill(false)]);
+                checkFlags('deleted', [...Array(14).fill(false), true, ...Array(10).fill(false)]);
 
                 // Delete another comment: item doesn't disappear but is rather marked as deleted
-                deleteComment(3);
+                commentAction('Delete', 3);
                 cy.get('@commentList').verifyListFooter(25, true);
-                checkDeletedFlags([false, false, false, true, ...Array(10).fill(false), true, ...Array(10).fill(false)]);
+                checkFlags('deleted', [false, false, false, true, ...Array(10).fill(false), true, ...Array(10).fill(false)]);
             });
         }));
 
-    it('shows page list for commenter user', () => {
+    it('shows comment list for commenter user', () => {
         cy.loginViaApi(USERS.commenterTwo, pagePath);
         makeAliases(true, false, false);
         cy.get('@commentList').verifyListFooter(2, false);
@@ -187,20 +300,28 @@ context('Comment Manager', () => {
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Children double, too']);
 
         // Test deleting comment
-        deleteComment(0);
+        commentAction('Delete', 0);
         cy.get('@commentList').verifyListFooter(1, false);
-        checkDeletedFlags([true]);
+        checkFlags('deleted', [true]);
+
+        // Click on comment body and land in comment properties
+        cy.get('@commentList').find('.comment-body').click();
+        cy.isAt(pagePath + '/f08639de-ab7b-4032-bdce-a021bf07e596');
     });
 
-    it('shows page list for readonly user', () => {
+    it('shows comment list for readonly user', () => {
         cy.loginViaApi(USERS.commenterThree, pagePath);
         makeAliases(true, false, false);
         cy.get('@commentList').verifyListFooter(1, false);
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Auto-init child']);
 
         // Test deleting comment
-        deleteComment(0);
+        commentAction('Delete', 0);
         cy.get('@commentList').verifyListFooter(1, false);
-        checkDeletedFlags([true]);
+        checkFlags('deleted', [true]);
+
+        // Click on comment body and land in comment properties
+        cy.get('@commentList').find('.comment-body').click();
+        cy.isAt(pagePath + '/cbbaf220-6cc4-4160-af43-9fdd6f2ec6fe');
     });
 });

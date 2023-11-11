@@ -82,8 +82,8 @@
                         <!-- User link (non-anonymous and for superuser/owner) or name -->
                         <a *ngIf="cr.id !== anonUserId && domainMeta?.canManageDomain else userNameText"
                            [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'users', cr.id]"
-                           class="ms-2 fw-bold text-truncate">{{ cr.name }}</a>
-                        <ng-template #userNameText><div class="ms-2 fw-bold text-truncate">{{ cr.name }}</div></ng-template>
+                           class="ms-2 fw-bold text-truncate comment-author-name">{{ cr.name }}</a>
+                        <ng-template #userNameText><div class="ms-2 fw-bold text-truncate comment-author-name">{{ cr.name }}</div></ng-template>
                     </ng-container>
 
                     <!-- Author doesn't exist anymore -->
@@ -99,7 +99,7 @@
                     <span [class.text-muted]="!c.score"
                           [class.text-danger]="c.score! < 0"
                           [class.text-success]="c.score! > 0"
-                          title="Score" class="fw-bold small" i18n-title>{{ c.score }}</span>
+                          title="Score" class="fw-bold small comment-score" i18n-title>{{ c.score }}</span>
                     <!-- Comment creation time and permalink -->
                     <a [href]="c.url" (click)="$event.stopPropagation()"
                        class="ms-3 external-link" title="Permalink" target="_blank" rel="noopener noreferrer" i18n-title>
@@ -107,12 +107,12 @@
                     </a>
                 </div>
                 <!-- Reason for pending status -->
-                <div *ngIf="c.isPending && c.pendingReason" class="w-100 py-1 px-0 small text-warning">
+                <div *ngIf="c.isPending && c.pendingReason" class="w-100 py-1 px-0 small text-warning comment-pending-reason">
                     <span class="colon me-2" i18n>Pending moderation</span>
                     <ng-container>{{ c.pendingReason }}</ng-container>
                 </div>
             </div>
-            <div class="row align-items-start my-3">
+            <div class="comment-body row align-items-start my-3">
                 <!-- Comment text -->
                 <div *ngIf="!c.isDeleted else deleted" [innerHTML]="c.html" class="col comment-text"></div>
                 <ng-template #deleted><div class="col comment-deleted" i18n>(deleted)</div></ng-template>
