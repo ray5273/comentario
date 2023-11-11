@@ -27,16 +27,19 @@ context('Domain SSO Secret page', () => {
 
     it('stays on the page after reload', () => cy.verifyStayOnReload(localhostPath, USERS.ace));
 
-    [
-        {name: 'superuser',  user: USERS.root,         dest: 'back'},
-        {name: 'owner',      user: USERS.ace,          dest: 'back'},
-        {name: 'moderator',  user: USERS.king,         dest: 'to Domain Properties', redir: PATHS.manage.domains.id(DOMAINS.localhost.id).props},
-        {name: 'commenter',  user: USERS.commenterTwo, dest: 'to Domain Properties', redir: PATHS.manage.domains.id(DOMAINS.localhost.id).props},
-        {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager',    redir: PATHS.manage.domains},
-    ]
-        .forEach(test =>
-            it(`redirects ${test.name} user to login and ${test.dest}`, () =>
-                cy.verifyRedirectsAfterLogin(localhostPath, test.user, test.redir)));
+    context('unauthenticated user', () => {
+
+        [
+            {name: 'superuser',  user: USERS.root,         dest: 'back'},
+            {name: 'owner',      user: USERS.ace,          dest: 'back'},
+            {name: 'moderator',  user: USERS.king,         dest: 'to Domain Properties', redir: PATHS.manage.domains.id(DOMAINS.localhost.id).props},
+            {name: 'commenter',  user: USERS.commenterTwo, dest: 'to Domain Properties', redir: PATHS.manage.domains.id(DOMAINS.localhost.id).props},
+            {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager',    redir: PATHS.manage.domains},
+        ]
+            .forEach(test =>
+                it(`redirects ${test.name} user to login and ${test.dest}`, () =>
+                    cy.verifyRedirectsAfterLogin(localhostPath, test.user, test.redir)));
+    });
 
     it('allows to generate secret', () => {
         cy.loginViaApi(USERS.root, PATHS.manage.domains.id(DOMAINS.health.id).sso, Util.stubWriteText);

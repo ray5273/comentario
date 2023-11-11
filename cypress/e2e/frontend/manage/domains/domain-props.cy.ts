@@ -56,16 +56,19 @@ context('Domain Properties page', () => {
         ]);
     };
 
-    [
-        {name: 'superuser',  user: USERS.root,         dest: 'back'},
-        {name: 'owner',      user: USERS.ace,          dest: 'back'},
-        {name: 'moderator',  user: USERS.king,         dest: 'back'},
-        {name: 'commenter',  user: USERS.commenterTwo, dest: 'back'},
-        {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager', redir: PATHS.manage.domains},
-    ]
-        .forEach(test =>
-            it(`redirects ${test.name} user to login and ${test.dest}`, () =>
-                cy.verifyRedirectsAfterLogin(localhostPagePath, test.user, test.redir)));
+    context('unauthenticated user', () => {
+
+        [
+            {name: 'superuser',  user: USERS.root,         dest: 'back'},
+            {name: 'owner',      user: USERS.ace,          dest: 'back'},
+            {name: 'moderator',  user: USERS.king,         dest: 'back'},
+            {name: 'commenter',  user: USERS.commenterTwo, dest: 'back'},
+            {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager', redir: PATHS.manage.domains},
+        ]
+            .forEach(test =>
+                it(`redirects ${test.name} user to login and ${test.dest}`, () =>
+                    cy.verifyRedirectsAfterLogin(localhostPagePath, test.user, test.redir)));
+    });
 
     it('stays on the page after reload', () =>
         cy.verifyStayOnReload(localhostPagePath, USERS.commenterTwo));
