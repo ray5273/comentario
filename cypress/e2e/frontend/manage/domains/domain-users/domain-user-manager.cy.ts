@@ -1,11 +1,12 @@
-import { DOMAINS, PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
+const { $ } = Cypress;
 
 context('Domain User Manager', () => {
 
     const pagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).users;
 
     /** Users ordered by creation time. */
-    const users = [USERS.ace, USERS.king, USERS.queen, USERS.jack, USERS.commenterTwo, USERS.commenterThree];
+    const users = [USERS.ace, USERS.king, USERS.queen, USERS.jack, USERS.commenterTwo, USERS.commenterThree, USERS.johnDoeSso];
     /** Users ordered by name. */
     const usersByName = users.slice().sort((a, b) => a.name.localeCompare(b.name));
     /** Users ordered by email. */
@@ -59,6 +60,11 @@ context('Domain User Manager', () => {
         .forEach(({name, user}) => context(`for ${name} user`, () => {
 
             beforeEach(() => {
+                // Login with an SSO user to add it to the domain
+                cy.testSiteVisit(TEST_PATHS.home);
+                cy.testSiteSsoLogin();
+
+                // Now login as the test user
                 cy.loginViaApi(user, pagePath);
                 makeAliases(true, false);
             });
@@ -68,6 +74,21 @@ context('Domain User Manager', () => {
                 cy.get('@domainUserList').verifyListFooter(usersByEmail.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', usersByEmail.map(u => u.name));
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', usersByEmail.map(u => u.email));
+
+                // Check user badges
+                cy.get('@domainUserList').find('.list-group-item')
+                    .should(items =>
+                        // For each item, collect all badge texts into a string[], then collect those arrays into string[][]
+                        expect(items.map((_, item) => [$(item).find('.badge').map((_, badge) => $(badge).text()).get()]).get())
+                            .to.matrixMatch([
+                            name === 'superuser' ? ['Owner'] : ['Owner', 'You'],
+                            ['Moderator'],
+                            ['Commenter', 'SSO'],
+                            ['Moderator'],
+                            ['Moderator'],
+                            ['Read-only'],
+                            ['Commenter'],
+                        ]));
 
                 // Sort by email DESC
                 cy.get('@domainUserManager').changeListSort('Email', 'desc');
@@ -119,7 +140,7 @@ context('Domain User Manager', () => {
 
             it('allows to open user properties', () => {
                 cy.get('@domainUserList').find('.list-group-item').eq(3).click();
-                cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).users + '/' + USERS.queen.id);
+                cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).users + '/' + USERS.king.id);
             });
         }));
 });

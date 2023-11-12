@@ -131,7 +131,7 @@ context('Dashboard', () => {
                 user: USERS.king,
                 hasChart: true,
                 metrics:
-                // language=yaml
+                    // language=yaml
                     `
                     - label:    Domains
                       sublabel: you own
