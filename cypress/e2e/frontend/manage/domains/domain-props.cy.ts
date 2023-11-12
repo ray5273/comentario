@@ -2,31 +2,47 @@ import { DOMAINS, PATHS, REGEXES, USERS, Util } from '../../../../support/cy-uti
 
 context('Domain Properties page', () => {
 
-    beforeEach(cy.backendReset);
-
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).props;
 
-    const checkNoInstallSection = () => {
-        cy.contains('h2', 'Installation').should('not.exist');
-        cy.get('#install-snippet').should('not.exist');
+    const makeAliases = (host: string, installSection: boolean, buttons: boolean, sso: boolean) => {
+        cy.get('app-domain-properties').as('domainProps');
+
+        // Heading
+        cy.contains('h1', 'Domain').should('be.visible');
+        cy.get('@domainProps').find('header app-domain-badge').should('have.text', host);
+
+        // Install section
+        if (installSection) {
+            cy.get('@domainProps').contains('h2', 'Installation').should('be.visible').and('have.text', 'Installation');
+            cy.get('@domainProps').find('#install-snippet').as('installSnippet').should('be.visible');
+        } else {
+            cy.get('@domainProps').contains('h2', 'Installation').should('not.exist');
+            cy.get('@domainProps').find('#install-snippet').should('not.exist');
+        }
+
+        // Buttons
+        if (buttons) {
+            cy.get('@domainProps').contains('a', 'Edit settings').as('btnEditSettings').should('be.visible').and('not.have.class', 'disabled');
+            cy.get('@domainProps').contains('a', 'SSO secret')   .as('btnSSOSecret')   .should('be.visible').and(sso ? 'not.have.class' : 'have.class', 'disabled');
+        }
     };
-    const checkNoEditButtons = () => {
-        cy.contains('app-domain-detail a', 'Edit settings').should('not.exist');
-        cy.contains('app-domain-detail a', 'SSO secret')   .should('not.exist');
-    };
-    const checkEditButtons = () => {
+
+    const checkEditButtons = (domainId: string, sso: boolean) => {
         // Click on "Edit settings" and land on the edit page
         cy.contains('app-domain-detail a', 'Edit settings').click();
-        cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).edit);
+        cy.isAt(PATHS.manage.domains.id(domainId).edit);
 
         // Click on Cancel and go back
         cy.contains('app-domain-edit form a', 'Cancel').click();
-        cy.isAt(localhostPagePath);
+        cy.isAt(PATHS.manage.domains.id(domainId).props);
 
-        // Click on "SSO secret" and land on the SSO secret page
-        cy.contains('app-domain-detail a', 'SSO secret').click();
-        cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).sso);
+        if (sso) {
+            // Click on "SSO secret" and land on the SSO secret page
+            cy.contains('app-domain-detail a', 'SSO secret').click();
+            cy.isAt(PATHS.manage.domains.id(domainId).sso);
+        }
     };
+
     const checkAllProperties = () => {
         cy.contains('h2', 'Properties').should('be.visible');
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
@@ -56,6 +72,10 @@ context('Domain Properties page', () => {
         ]);
     };
 
+    //------------------------------------------------------------------------------------------------------------------
+
+    beforeEach(cy.backendReset);
+
     context('unauthenticated user', () => {
 
         [
@@ -75,8 +95,7 @@ context('Domain Properties page', () => {
 
     it('shows properties for readonly user', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.spirit.id).props);
-        checkNoInstallSection();
-        checkNoEditButtons();
+        makeAliases(DOMAINS.spirit.host, false, false, false);
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
             ['Host',                 DOMAINS.spirit.host],
             ['Read-only',            ''],
@@ -87,8 +106,7 @@ context('Domain Properties page', () => {
 
     it('shows properties for commenter user', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.market.id).props);
-        checkNoInstallSection();
-        checkNoEditButtons();
+        makeAliases(DOMAINS.market.host, false, false, false);
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
             ['Host',                 DOMAINS.market.host],
             ['Read-only',            '✔'],
@@ -99,8 +117,7 @@ context('Domain Properties page', () => {
 
     it('shows properties for moderator user', () => {
         cy.loginViaApi(USERS.king, localhostPagePath);
-        checkNoInstallSection();
-        checkNoEditButtons();
+        makeAliases(DOMAINS.localhost.host, false, false, false);
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
             ['Host',                 DOMAINS.localhost.host],
             ['Read-only',            ''],
@@ -122,29 +139,38 @@ context('Domain Properties page', () => {
         ]);
     });
 
-    it('shows properties for owner user', () => {
-        cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
+    context('for owner user', () => {
 
-        // Check the Installation section
-        const html = Util.installSnippet();
-        cy.contains('h2', 'Installation').should('be.visible');
-        cy.get('#install-snippet pre').should('have.text', html);
+        it('shows properties for SSO-enabled domain', () => {
+            cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
+            makeAliases(DOMAINS.localhost.host, true, true, true);
 
-        // Test copying the snippet to the clipboard
-        cy.contains('#install-snippet button', 'Copy').click();
-        cy.get('@writeText').should('be.calledWithExactly', html);
+            // Check the Installation section
+            const html = Util.installSnippet();
+            cy.get('@installSnippet').find('pre').should('have.text', html);
 
-        // Check domain properties table
-        checkAllProperties();
+            // Test copying the snippet to the clipboard
+            cy.get('@installSnippet').contains('button', 'Copy').click();
+            cy.get('@writeText').should('be.calledWithExactly', html);
 
-        // Check buttons
-        checkEditButtons();
+            // Check domain properties table
+            checkAllProperties();
+
+            // Check buttons
+            checkEditButtons(DOMAINS.localhost.id, true);
+        });
+
+        it('shows properties for non-SSO-enabled domain', () => {
+            cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.factor.id).props);
+            makeAliases(DOMAINS.factor.host, true, true, false);
+            checkEditButtons(DOMAINS.factor.id, false);
+        });
     });
 
     it('shows properties for superuser', () => {
         cy.loginViaApi(USERS.root, localhostPagePath);
-        checkNoInstallSection();
+        makeAliases(DOMAINS.localhost.host, false, true, true);
         checkAllProperties();
-        checkEditButtons();
+        checkEditButtons(DOMAINS.localhost.id, true);
     });
 });

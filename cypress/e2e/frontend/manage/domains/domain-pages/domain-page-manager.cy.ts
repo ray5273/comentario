@@ -26,7 +26,13 @@ context('Domain Page Manager', () => {
     const pagesByCntViews    = pages.slice().sort((a, b) => a.cntViews - b.cntViews)       .map(p => `${p.cntViews}\nviews`);
 
     const makeAliases = (hasItems: boolean) => {
-        cy.get('app-domain-page-manager')             .as('pageManager');
+        cy.get('app-domain-page-manager').as('pageManager');
+
+        // Check heading
+        cy.get('@pageManager').find('h1').should('have.text', 'Domain pages').and('be.visible');
+        cy.get('@pageManager').find('header app-domain-badge').should('have.text', DOMAINS.localhost.host);
+
+        // Filter
         cy.get('@pageManager').find('#sortByDropdown').as('sortDropdown');
         cy.get('@pageManager').find('#filter-string') .as('filterString').should('have.value', '');
         if (hasItems) {
@@ -34,16 +40,19 @@ context('Domain Page Manager', () => {
         }
     };
 
+    //------------------------------------------------------------------------------------------------------------------
+
     beforeEach(cy.backendReset);
 
     context('unauthenticated user', () => {
 
         [
-            {name: 'superuser',  user: USERS.root,         dest: 'back'},
-            {name: 'owner',      user: USERS.ace,          dest: 'back'},
-            {name: 'moderator',  user: USERS.king,         dest: 'back'},
-            {name: 'commenter',  user: USERS.commenterTwo, dest: 'back'},
-            {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager', redir: PATHS.manage.domains},
+            {name: 'superuser',  user: USERS.root,           dest: 'back'},
+            {name: 'owner',      user: USERS.ace,            dest: 'back'},
+            {name: 'moderator',  user: USERS.king,           dest: 'back'},
+            {name: 'commenter',  user: USERS.commenterTwo,   dest: 'back'},
+            {name: 'readonly',   user: USERS.commenterThree, dest: 'back'},
+            {name: 'non-domain', user: USERS.commenterOne,   dest: 'to Domain Manager', redir: PATHS.manage.domains},
         ]
             .forEach(test =>
                 it(`redirects ${test.name} user to login and ${test.dest}`, () =>
@@ -60,9 +69,6 @@ context('Domain Page Manager', () => {
         });
 
         it('shows page list', () => {
-            // Check heading
-            cy.get('@pageManager').find('h1').should('have.text', 'Domain pages').and('be.visible');
-
             // Check page list
             cy.get('@pageList').verifyListFooter(pages.length, false);
 
@@ -117,8 +123,6 @@ context('Domain Page Manager', () => {
                 cy.wait(600);
             };
 
-            cy.get('@filterString').should('have.value', '');
-
             // Test filtering by path
             filterOn('tr/');
             cy.get('@pageList').verifyListFooter(4, false);
@@ -153,8 +157,8 @@ context('Domain Page Manager', () => {
     });
 
     it('shows page list for readonly user', () => {
-        cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.spirit.id).pages);
+        cy.loginViaApi(USERS.commenterThree, pagePath);
         makeAliases(false);
-        cy.get('@pageManager').verifyListFooter(0, false);
+        cy.get('@pageManager').verifyListFooter(1, false);
     });
 });

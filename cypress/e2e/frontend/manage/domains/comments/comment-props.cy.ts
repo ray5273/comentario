@@ -6,15 +6,26 @@ context('Comment Properties page', () => {
     const commentText = 'Captain, I\'ve plotted our course, and I suggest we take the eastern route. It\'ll take us a bit longer, but we\'ll avoid any bad weather.';
 
     const makeAliases = (buttons: boolean) => {
-        cy.get('app-comment-properties')                     .as('commentProps');
+        cy.get('app-comment-properties').as('commentProps');
+
+        // Heading
+        cy.get('@commentProps').find('h1').should('have.text', 'Comment properties').and('be.visible');
+
+        // Details
         cy.get('@commentProps').find('#comment-detail-table').as('commentDetails');
-        cy.get('@commentProps').find('.comment-text')        .as('commentText');
+
+        // Text
+        cy.get('@commentProps').find('.comment-text').as('commentText');
+
+        // Buttons
         if (buttons) {
             cy.get('@commentProps').contains('button', 'Approve').as('btnApprove').should('be.visible').and('be.enabled');
             cy.get('@commentProps').contains('button', 'Reject') .as('btnReject') .should('be.visible').and('be.enabled');
             cy.get('@commentProps').contains('button', 'Delete') .as('btnDelete') .should('be.visible').and('be.enabled');
         }
     };
+
+    //------------------------------------------------------------------------------------------------------------------
 
     beforeEach(cy.backendReset);
 

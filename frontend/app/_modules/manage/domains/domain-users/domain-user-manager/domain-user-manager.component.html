@@ -1,6 +1,6 @@
 <!-- Header with the badge -->
 <header class="d-flex flex-wrap align-items-center">
-    <h1 class="mb-0 me-2" i18n="heading">Domain</h1>
+    <h1 class="mb-0 me-2" i18n="heading">Domain users</h1>
     <app-domain-badge></app-domain-badge>
 </header>
 
@@ -50,7 +50,7 @@
                     <!-- Name and badges -->
                     <div>
                         <!-- Name -->
-                        <span class="fw-bold">{{ u.name }}</span>
+                        <span class="fw-bold domain-user-name">{{ u.name }}</span>
                         <!-- Domain user badge -->
                         <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
                         <!-- Superuser badge -->
@@ -67,7 +67,7 @@
                     <div>
                         <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
                         <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                        <ng-container>{{ u.email }}</ng-container>
+                        <span class="domain-user-email">{{ u.email }}</span>
                     </div>
                 </div>
             </ng-container>

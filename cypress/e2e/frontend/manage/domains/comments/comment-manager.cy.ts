@@ -43,15 +43,15 @@ context('Comment Manager', () => {
     const undeletedComments = comments.filter(c => c.text);
 
     const makeAliases = (hasItems: boolean, canLoadMore: boolean, hasFilterButtons: boolean) => {
-        cy.get('app-comment-manager')                     .as('commentManager');
+        cy.get('app-comment-manager').as('commentManager');
+
+        // Check heading
+        cy.get('@commentManager').find('h1').should('have.text', 'Comments').and('be.visible');
+        cy.get('@commentManager').find('header app-domain-badge').should('have.text', DOMAINS.localhost.host);
+
+        // Filter
         cy.get('@commentManager').find('#sortByDropdown') .as('sortDropdown');
         cy.get('@commentManager').find('#filter-string')  .as('filterString').should('have.value', '');
-        if (hasItems) {
-            cy.get('@commentManager').find('#comment-list').as('commentList').should('be.visible');
-            if (canLoadMore) {
-                cy.get('@commentManager').contains('app-list-footer button', 'Load more').as('loadMore');
-            }
-        }
         if (hasFilterButtons) {
             cy.get('@commentManager').find('#comments-quick-filter')   .as('quickFilter')         .should('be.visible');
             cy.get('@quickFilter').contains('button', 'Undeleted')     .as('quickFilterUndeleted').should('be.visible');
@@ -67,6 +67,14 @@ context('Comment Manager', () => {
             cy.get('@commentManager').find('#comments-filter-pending') .should('not.exist');
             cy.get('@commentManager').find('#comments-filter-rejected').should('not.exist');
             cy.get('@commentManager').find('#comments-filter-deleted') .should('not.exist');
+        }
+
+        // Comments
+        if (hasItems) {
+            cy.get('@commentManager').find('#comment-list').as('commentList').should('be.visible');
+            if (canLoadMore) {
+                cy.get('@commentManager').contains('app-list-footer button', 'Load more').as('loadMore');
+            }
         }
     };
 
@@ -89,16 +97,19 @@ context('Comment Manager', () => {
     const checkFlags = (flag: 'deleted' | 'pending' | 'rejected', expected: boolean[]) =>
         cy.get('@commentList').find('.list-group-item').hasClass(`list-group-item-${flag}`).should('arrayMatch', expected);
 
+    //------------------------------------------------------------------------------------------------------------------
+
     beforeEach(cy.backendReset);
 
     context('unauthenticated user', () => {
 
         [
-            {name: 'superuser',  user: USERS.root,         dest: 'back'},
-            {name: 'owner',      user: USERS.ace,          dest: 'back'},
-            {name: 'moderator',  user: USERS.king,         dest: 'back'},
-            {name: 'commenter',  user: USERS.commenterTwo, dest: 'back'},
-            {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager', redir: PATHS.manage.domains},
+            {name: 'superuser',  user: USERS.root,           dest: 'back'},
+            {name: 'owner',      user: USERS.ace,            dest: 'back'},
+            {name: 'moderator',  user: USERS.king,           dest: 'back'},
+            {name: 'commenter',  user: USERS.commenterTwo,   dest: 'back'},
+            {name: 'readonly',   user: USERS.commenterThree, dest: 'back'},
+            {name: 'non-domain', user: USERS.commenterOne,   dest: 'to Domain Manager', redir: PATHS.manage.domains},
         ]
             .forEach(test =>
                 it(`redirects ${test.name} user to login and ${test.dest}`, () =>
@@ -120,9 +131,6 @@ context('Comment Manager', () => {
             });
 
             it('shows comment list', () => {
-                // Check heading
-                cy.get('@commentManager').find('h1').should('have.text', 'Comments').and('be.visible');
-
                 // Check page list: initial sorting is Created DESC
                 cy.get('@commentList').verifyListFooter(25, true);
                 cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.author.name));

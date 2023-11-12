@@ -2,8 +2,9 @@ import { DOMAINS, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Domain Edit page', () => {
 
-    const makeAliases = () => {
+    const makeAliases = (edit: boolean) => {
         cy.get('app-domain-edit').as('domainEdit');
+        cy.get('@domainEdit').find('h1').should('have.text', edit ? 'Edit domain' : 'Create domain');
         cy.get('@domainEdit').contains('li[ngbnavitem]', 'General')       .as('tabGeneral');
         cy.get('@domainEdit').contains('li[ngbnavitem]', 'Authentication').as('tabAuth');
         cy.get('@domainEdit').contains('li[ngbnavitem]', 'Moderation')    .as('tabModeration');
@@ -11,6 +12,7 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').contains('.form-footer a', 'Cancel')        .as('btnCancel');
         cy.get('@domainEdit').find('.form-footer button[type=submit]')    .as('btnSubmit');
     };
+
     const makeGeneralAliases = () => {
         cy.get('@domainEdit').find('#scheme').as('scheme')
             .next().should('have.class', 'dropdown-menu').as('schemeMenu');
@@ -22,6 +24,7 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#sort-sa').as('sortSA');
         cy.get('@domainEdit').find('#sort-sd').as('sortSD');
     };
+
     const makeAuthAliases = (sso: boolean) => {
         cy.get('@domainEdit').find('#auth-anonymous').as('authAnonymous');
         cy.get('@domainEdit').find('#auth-local')    .as('authLocal');
@@ -36,6 +39,7 @@ context('Domain Edit page', () => {
             cy.get('@domainEdit').find('#sso-non-interactive').as('authSsoNonInt');
         }
     };
+
     const makeModerationAliases = () => {
         // Moderation policy
         cy.get('@domainEdit').find('#mod-anonymous')            .as('modAnonymous');
@@ -49,6 +53,7 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#mod-notify-policy-pending').as('modNotifyPolicyPending');
         cy.get('@domainEdit').find('#mod-notify-policy-all')    .as('modNotifyPolicyAll');
     };
+
     const makeExtensionsAliases = () => {
         cy.get('@domainEdit').find('#extension-akismet-enabled')             .as('extAkismetEnabled');
         cy.get('@domainEdit').find('#extension-apiLayer-spamChecker-enabled').as('extApiLayerEnabled');
@@ -144,6 +149,8 @@ context('Domain Edit page', () => {
         checkInvalidTabs([true, true, true, false]);
     };
 
+    //------------------------------------------------------------------------------------------------------------------
+
     beforeEach(cy.backendReset);
 
     context('for creating new domain', () => {
@@ -156,13 +163,12 @@ context('Domain Edit page', () => {
 
             beforeEach(() => {
                 cy.loginViaApi(USERS.ace, PATHS.manage.domains.create);
-                makeAliases();
+                makeAliases(false);
                 makeGeneralAliases(); // The General tab is already active
             });
 
             it('has all necessary controls', () => {
                 // Check page content
-                cy.get('@domainEdit').find('h1').should('have.text', 'Create domain');
                 cy.get('@domainEdit').texts('li[ngbnavitem]')
                     .should('arrayMatch', ['General', 'Authentication' + '6', 'Moderation', 'Extensions']);
                 cy.get('@btnCancel').should('be.visible');
@@ -402,13 +408,12 @@ context('Domain Edit page', () => {
 
             beforeEach(() => {
                 cy.loginViaApi(USERS.ace, pagePath);
-                makeAliases();
+                makeAliases(true);
                 makeGeneralAliases(); // The General tab is already active
             });
 
             it('has all necessary controls', () => {
                 // Check page content
-                cy.get('@domainEdit').find('h1').should('have.text', 'Edit domain');
                 cy.get('@domainEdit').texts('li[ngbnavitem]')
                     .should('arrayMatch', ['General', 'Authentication' + '8', 'Moderation', 'Extensions']);
                 cy.get('@btnCancel').should('be.visible');

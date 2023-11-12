@@ -2,24 +2,33 @@ import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../suppo
 
 context('Domain Page Properties page', () => {
 
-    beforeEach(cy.backendReset);
-
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + '/0ebb8a1b-12f6-421e-b1bb-75867ac480c7';
     const readonlyInfo = 'When a page is read-only, users cannot add comments to it.';
+
     const makeAliases = (hasReadOnly: boolean, hasUpdateTitle: boolean) => {
-        cy.get('app-domain-page-properties')           .as('pageProps');
+        cy.get('app-domain-page-properties').as('pageProps');
+
+        // Header
+        cy.get('@pageProps').find('h1').should('have.text', 'Domain page properties').and('be.visible');
+
+        // Page details
         cy.get('@pageProps').find('#page-detail-table').as('pageDetails');
         if (hasReadOnly) {
             cy.get('@pageProps').find('#page-readonly-switch').as('pageReadonly')
                 .should('be.visible').and('be.enabled').and('not.be.checked');
         }
+
+        // Buttons
         if (hasUpdateTitle) {
             cy.get('@pageProps').contains('button', 'Update title').as('btnUpdateTitle').should('be.visible').and('be.enabled');
         } else {
             cy.get('@pageProps').contains('button', 'Update title').should('not.exist');
         }
+
+        // Comments
         cy.get('@pageProps').find('app-comment-list').as('commentList').should('be.visible');
     };
+
     const checkReadOnly = () => {
         cy.get('@pageReadonly').clickLabel().should('be.checked');
 
@@ -39,14 +48,19 @@ context('Domain Page Properties page', () => {
         cy.get('comentario-comments .comentario-add-comment-host')      .should('exist');
     };
 
+    //------------------------------------------------------------------------------------------------------------------
+
+    beforeEach(cy.backendReset);
+
     context('unauthenticated user', () => {
 
         [
-            {name: 'superuser',  user: USERS.root,         dest: 'back'},
-            {name: 'owner',      user: USERS.ace,          dest: 'back'},
-            {name: 'moderator',  user: USERS.king,         dest: 'back'},
-            {name: 'commenter',  user: USERS.commenterTwo, dest: 'back'},
-            {name: 'non-domain', user: USERS.commenterOne, dest: 'to Domain Manager', redir: PATHS.manage.domains},
+            {name: 'superuser',  user: USERS.root,           dest: 'back'},
+            {name: 'owner',      user: USERS.ace,            dest: 'back'},
+            {name: 'moderator',  user: USERS.king,           dest: 'back'},
+            {name: 'commenter',  user: USERS.commenterTwo,   dest: 'back'},
+            {name: 'read-only',  user: USERS.commenterThree, dest: 'back'},
+            {name: 'non-domain', user: USERS.commenterOne,   dest: 'to Domain Manager', redir: PATHS.manage.domains},
         ]
             .forEach(test =>
                 it(`redirects ${test.name} user to login and ${test.dest}`, () =>
@@ -64,7 +78,6 @@ context('Domain Page Properties page', () => {
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
                 makeAliases(false, false);
-                cy.get('@pageProps').find('h1').should('have.text', 'Domain page properties');
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',    DOMAINS.localhost.host],
                     ['Path',      '/'],
@@ -80,7 +93,6 @@ context('Domain Page Properties page', () => {
     it('shows properties for moderator user', () => {
         cy.loginViaApi(USERS.king, localhostPagePath);
         makeAliases(true, false);
-        cy.get('@pageProps').find('h1').should('have.text', 'Domain page properties');
         cy.get('@pageDetails').dlTexts().should('matrixMatch', [
             ['Domain',    DOMAINS.localhost.host],
             ['Path',      '/'],
@@ -103,7 +115,6 @@ context('Domain Page Properties page', () => {
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
                 makeAliases(true, true);
-                cy.get('@pageProps').find('h1').should('have.text', 'Domain page properties');
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',             DOMAINS.localhost.host],
                     ['Path',               '/'],

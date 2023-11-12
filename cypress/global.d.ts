@@ -309,3 +309,15 @@ declare namespace Cypress {
         ): Chainable<Subject>;
     }
 }
+
+
+declare namespace Chai {
+    // Implemented in assertions.ts
+    // noinspection JSUnusedGlobalSymbols
+    interface Assertion {
+        arrayMatch(expected: (string | string[] | RegExp)[], options?: {trim: boolean}): void;
+        matrixMatch(expected: (string | string[] | RegExp)[][]): void;
+        yamlMatch(expected: string): void;
+        anchor(expectedUrl: string | RegExp, options?: {newTab?: boolean; noOpener?: boolean; noReferrer?: boolean; noFollow?: boolean}): void;
+    }
+}
