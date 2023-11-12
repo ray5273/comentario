@@ -13,24 +13,9 @@ Markdown is a lightweight markup language that allows you to format plain text i
 
 Markdown provides a set of syntax rules that you can use to format your text. Below are some basic examples of Markdown formatting.
 
-## Headings
-
-```md
-# Heading 1
-## Heading 2
-### Heading 3
-```
-
-Result:
-
-{{< alert "secondary" >}}
-# Heading 1
-## Heading 2
-### Heading 3
-{{< /alert >}}
-
-
 ## Emphasis
+
+Put asterisks around text to make it bold or italic:
 
 ```md
 *Italic text*
@@ -47,6 +32,8 @@ Result:
 
 ## Strikethrough
 
+Put two tildes on both sides of text to make it stricken out:
+
 ```md
 ~~I really mean that~~
 ```
@@ -59,6 +46,8 @@ Result:
 
 
 ## Lists
+
+Use asterisks or numbers ending with a dot to make a list:
 
 ```md
 * First item
@@ -90,6 +79,7 @@ Result:
 
 ## Links
 
+You can simply insert a plain URL to turn it into a clickable link. If you want to use custom link text, format the link as follows:
 
 ```md
 [Link text](https://www.example.com)
@@ -160,5 +150,23 @@ Result:
 |----------|----------|
 | Cell A   | Cell B   |
 {{< /alert >}}
+
+## Headings
+
+```md
+# Heading 1
+## Heading 2
+### Heading 3
+```
+
+Result:
+
+{{< alert "secondary" >}}
+# Heading 1
+## Heading 2
+### Heading 3
+{{< /alert >}}
+
+---
 
 These are just a few examples of Markdown syntax. Markdown is highly versatile and supports many other formatting options. It's a great way to write and format text without the need for complex HTML or other markup languages.
