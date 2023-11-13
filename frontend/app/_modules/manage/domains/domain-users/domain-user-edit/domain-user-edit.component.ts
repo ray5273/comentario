@@ -90,7 +90,7 @@ export class DomainUserEditComponent implements OnInit {
                 .pipe(this.saving.processing())
                 .subscribe(() => {
                     // Add a success toast
-                    this.toastSvc.success('data-saved');
+                    this.toastSvc.success('data-saved').keepOnRouteChange();
                     // Go back to the domain user properties
                     this.router.navigate([Paths.manage.domains, this.domainUser!.domainId!, 'users', this.domainUser!.userId]);
                 });
