@@ -1,6 +1,7 @@
 /** Canned regular expressions. */
 export const REGEXES = {
-    datetime: /^\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)$/,
+    datetime:      /^\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)$/,
+    checkDatetime: /^✔\s*\(\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)\)$/,
 };
 
 /** Paths in the administration UI. */

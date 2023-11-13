@@ -69,7 +69,7 @@ context('Domain User Manager', () => {
                 makeAliases(true, false);
             });
 
-            it('shows domain user list list', () => {
+            it('shows domain user list', () => {
                 // Check items: default sort is email ASC
                 cy.get('@domainUserList').verifyListFooter(usersByEmail.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', usersByEmail.map(u => u.name));
