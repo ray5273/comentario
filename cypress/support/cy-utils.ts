@@ -29,6 +29,7 @@ export const PATHS = {
                 users:      `${PATHS.manage.domains._}/${id}/users`,
                 stats:      `${PATHS.manage.domains._}/${id}/stats`,
                 operations: `${PATHS.manage.domains._}/${id}/operations`,
+                clone:      `${PATHS.manage.domains._}/${id}/clone`,
             }),
             anyId: {
                 props:      /^\/en\/manage\/domains\/[-a-f\d]{36}$/,
