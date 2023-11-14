@@ -18,7 +18,8 @@ var TheDomainService DomainService = &domainService{}
 
 // DomainService is a service interface for dealing with domains
 type DomainService interface {
-	// ClearByID removes all dependent objects (users, pages, comments, votes etc.) for the specified domain by its ID
+	// ClearByID removes most dependent objects (pages, comments, votes, views, but not users) for the specified domain
+	// by its ID
 	ClearByID(id *uuid.UUID) error
 	// CountForUser returns the number of domains the specified user has access to, with specific roles
 	//  - owner indicates whether to only include domains owned by the user (ignored if moderator == true)

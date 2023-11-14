@@ -57,7 +57,7 @@
                 [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion" (confirmed)="toggleFrozen()"
                 class="btn btn-secondary w-100">
             <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
-            {{ freezeAction }}
+            <ng-container>{{ freezeAction }}</ng-container>
         </button>
     </div>
 </div>
@@ -68,23 +68,23 @@
     <div class="text-center">
         <button [class.collapsed]="isDangerZoneCollapsed" [attr.aria-expanded]="!isDangerZoneCollapsed"
                 (click)="collapse.toggle()"
-                type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="dangerZoneContainer">
+                type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="danger-zone-container">
             <span class="me-2" i18n>Danger zone</span>
             <fa-icon [icon]="faAngleDown"></fa-icon>
         </button>
     </div>
 
     <!-- Danger zone content -->
-    <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="dangerZoneContainer">
-        <!-- Clear comments -->
+    <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="danger-zone-container">
+        <!-- Clear domain -->
         <div class="row border-bottom py-3 pb-sm-0">
             <div class="col-sm-9">
-                <div class="fw-bold text-danger" i18n>Clear comments</div>
-                <p i18n>This will permanently delete all comments without affecting your settings. This may be useful if you want to clear all comments after testing Comentario.</p>
+                <div class="fw-bold text-danger" i18n>Clear domain</div>
+                <p i18n>This will permanently delete all comments, domain pages, votes, and view statistics, without affecting your settings. This may be useful if you want to clean up after testing Comentario.</p>
             </div>
             <div class="col-sm-3 d-flex align-items-center">
-                <button [disable]="!domain" [appSpinner]="clearing.active" [appConfirm]="clearCommentsDlg"
-                        confirmAction="Clear comments" (confirmed)="clearComments()" class="btn btn-danger w-100"
+                <button [disable]="!domain" [appSpinner]="clearing.active" [appConfirm]="clearDomainDlg"
+                        confirmAction="Clear domain" (confirmed)="clearDomain()" class="btn btn-danger w-100"
                         i18n-confirmAction>
                     <fa-icon [icon]="faCalendarXmark" class="me-1"></fa-icon>
                     <ng-container i18n="action">Clear</ng-container>
@@ -96,7 +96,7 @@
         <div class="row border-bottom py-3 pb-sm-0">
             <div class="col-sm-9">
                 <div class="fw-bold text-danger" i18n>Delete domain</div>
-                <p i18n>This will permanently delete all comments and all data associated with your domain.</p>
+                <p i18n>This will permanently delete all comments and other data associated with your domain.</p>
             </div>
             <div class="col-sm-3 d-flex align-items-center">
                 <button [disable]="!domain" [appSpinner]="deleting.active" [appConfirm]="deleteDlg"
@@ -115,9 +115,9 @@
     <p *ngIf="!domain?.isReadonly" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
 </ng-template>
 
-<!-- Clear comments confirmation dialog content template -->
-<ng-template #clearCommentsDlg>
-    <p i18n>Are you absolutely sure you want to remove all comments from the domain <code>{{ domain?.host }}</code>?</p>
+<!-- Clear domain confirmation dialog content template -->
+<ng-template #clearDomainDlg>
+    <p i18n>Are you absolutely sure you want to remove all comments and pages from the domain <code>{{ domain?.host }}</code>?</p>
     <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>
 

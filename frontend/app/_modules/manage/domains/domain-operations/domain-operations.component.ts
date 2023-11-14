@@ -71,10 +71,12 @@ export class DomainOperationsComponent implements OnInit {
         this.api.domainExport(this.domain!.id!)
             .pipe(this.downloading.processing())
             .subscribe(b => {
+                const filename = `${this.domain!.host}-${new Date().toISOString()}.json.gz`.replaceAll(':', '');
+
                 // Create a link element
                 const a = this.doc.createElement('a');
                 a.href = URL.createObjectURL(b);
-                a.download = `${this.domain!.host}-${new Date().toISOString()}.json.gz`;
+                a.download = filename;
 
                 // "Click" the link: this should cause a file download
                 a.click();
@@ -83,7 +85,7 @@ export class DomainOperationsComponent implements OnInit {
                 URL.revokeObjectURL(a.href);
 
                 // Add a toast
-                this.toastSvc.success('file-downloaded');
+                this.toastSvc.success('file-downloaded', undefined, filename);
             });
     }
 
@@ -101,7 +103,7 @@ export class DomainOperationsComponent implements OnInit {
             });
     }
 
-    clearComments() {
+    clearDomain() {
         // Run cleaning with the API
         this.api.domainClear(this.domain!.id!)
             .pipe(this.clearing.processing())

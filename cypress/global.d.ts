@@ -38,6 +38,12 @@ declare namespace Cypress {
         children?: Comment[];
     }
 
+    interface MetricCardContent {
+        label:     string;
+        sublabel?: string;
+        value:     number;
+    }
+
     interface LoginOptions {
         /** Whether to go to the login page before trying to login. Defaults to true. */
         goTo?: boolean;
@@ -99,6 +105,11 @@ declare namespace Cypress {
         dlTexts(): Chainable<string[][]>;
 
         /**
+         * Collect metric cards and return them in an array. Must be chained off an element that contains cards.
+         */
+        metricCards(): Chainable<MetricCardContent[]>;
+
+        /**
          * Verify the passed element has no invalid feedback.
          */
         isValid(): Chainable<JQueryWithSelector>;
@@ -142,7 +153,8 @@ declare namespace Cypress {
         noToast(): Chainable<Element>;
 
         /**
-         * Verify the topmost toast has the given ID, and, optionally, details text, then close it with the Close button.
+         * Verify the topmost toast has the given ID, and, optionally, details text, then close it with the Close
+         * button.
          */
         toastCheckAndClose(id: string, details?: string): Chainable<Element>;
 

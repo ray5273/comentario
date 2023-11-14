@@ -2225,7 +2225,7 @@ paths:
   /domains/{uuid}/clear:
     delete:
       operationId: DomainClear
-      summary: Clear all domain's pages/comments/votes
+      summary: Clear all domain's pages/comments/votes/views
       tags:
         - ApiGeneral
       parameters:

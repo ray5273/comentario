@@ -43,9 +43,7 @@ context('Domain Statistics page', () => {
 
                     // Check chart
                     cy.get('@domainStats').find('.stats-chart-info').should('have.text', 'Last 30 days.').and('be.visible');
-                    cy.get('@domainStats').find('app-stats-chart app-metric-card').as('dailyStatsCards');
-                    cy.get('@dailyStatsCards').texts('.card-title')  .should('arrayMatch', ['Views', 'Comments']);
-                    cy.get('@dailyStatsCards').texts('.metric-value').should('arrayMatch', ['217', '33']);
+                    cy.get('@domainStats').metricCards().should('yamlMatch', '[{label: Views, value: 217}, {label: Comments, value: 33}]');
 
                     // View a page and wait for the comments to be loaded
                     cy.testSiteVisit(TEST_PATHS.home);
@@ -53,7 +51,7 @@ context('Domain Statistics page', () => {
 
                     // Back to the stats page
                     cy.visit(pagePath);
-                    cy.texts('app-stats-chart app-metric-card .metric-value').should('arrayMatch', ['218', '33']);
+                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 218}, {label: Comments, value: 33}]');
 
                     // Visit another page and leave a comment
                     cy.testSiteVisit(TEST_PATHS.noComment);
@@ -65,7 +63,7 @@ context('Domain Statistics page', () => {
 
                     // Back to the stats page
                     cy.visit(pagePath);
-                    cy.texts('app-stats-chart app-metric-card .metric-value').should('arrayMatch', ['219', '34']);
+                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 219}, {label: Comments, value: 34}]');
                 }));
     });
 });

@@ -30,6 +30,7 @@ export const PATHS = {
                 stats:      `${PATHS.manage.domains._}/${id}/stats`,
                 operations: `${PATHS.manage.domains._}/${id}/operations`,
                 clone:      `${PATHS.manage.domains._}/${id}/clone`,
+                import:     `${PATHS.manage.domains._}/${id}/import`,
             }),
             anyId: {
                 props:      /^\/en\/manage\/domains\/[-a-f\d]{36}$/,

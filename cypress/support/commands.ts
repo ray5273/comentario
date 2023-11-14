@@ -136,8 +136,25 @@ Cypress.Commands.addQuery(
     'dlTexts',
     function dlTexts() {
         return (element: JQueryWithSelector) => element.find('dt')
-                .map((_, dt) => [[dt.innerText, (dt.nextSibling as HTMLElement).innerText]])
-                .get();
+            .map((_, dt) => [[dt.innerText, (dt.nextSibling as HTMLElement).innerText]])
+            .get();
+    });
+
+Cypress.Commands.addQuery(
+    'metricCards',
+    function metricCards() {
+        return (element: JQueryWithSelector) => element.find('app-metric-card')
+            .map((_, card) => {
+                const c = $(card);
+                const sublabel = c.find('.metric-sublabel').text();
+                return {
+                    label: c.find('.metric-label').text(),
+                    value: Number(c.find('.metric-value').text()),
+                    // Sublabel is optional
+                    ...(sublabel ? {sublabel} : undefined),
+                };
+            })
+            .get();
     });
 
 Cypress.Commands.add(

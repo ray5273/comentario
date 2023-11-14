@@ -1,5 +1,4 @@
 import { PATHS, USERS } from '../../../support/cy-utils';
-const { $ } = Cypress;
 
 context('Dashboard', () => {
 
@@ -9,37 +8,18 @@ context('Dashboard', () => {
         // Check heading
         cy.get('@dashboard').find('h1').should('have.text', 'Dashboard').and('be.visible');
 
-        // Cards
+        // Totals
         cy.get('@dashboard').find('#dashboard-totals').as('totals');
-        cy.get('@totals').find('app-metric-card').as('cards');
 
         // Daily stats chart
         if (chart) {
             cy.get('@dashboard').find('#dashboard-daily-stats').as('dailyStats');
             cy.get('@dailyStats').find('h2').should('have.text', 'Daily statistics').and('be.visible');
             cy.get('@dailyStats').find('.stats-chart-info').should('have.text', 'Last 30 days.').and('be.visible');
-            cy.get('@dailyStats').find('app-stats-chart app-metric-card').as('dailyStatsCards');
         } else {
             cy.get('@dashboard').find('#dashboard-daily-stats').should('not.exist');
         }
     };
-
-    /** Collect metric cards and verify them against the expectation provided as a YAML string/ */
-    const checkCardTexts = (alias: string, expected: string) => cy.get(alias)
-        .should(cards => {
-            const actual = cards
-                .map((_, card) => {
-                    const c = $(card);
-                    return {
-                        label:    c.find('.metric-label').text(),
-                        sublabel: c.find('.metric-sublabel').text(),
-                        value:    Number(c.find('.metric-value').text()),
-                    };
-                })
-                .get();
-            // Wrap the check in the same should() to allow re-querying
-            expect(actual).to.yamlMatch(expected);
-        });
 
     //------------------------------------------------------------------------------------------------------------------
 
@@ -119,10 +99,8 @@ context('Dashboard', () => {
                     // language=yaml
                     `
                     - label:    Views
-                      sublabel: ''
                       value:    217
                     - label:    Comments
-                      sublabel: ''
                       value:    33
                     `,
             },
@@ -162,10 +140,8 @@ context('Dashboard', () => {
                     // language=yaml
                     `
                     - label:    Views
-                      sublabel: ''
                       value:    0
                     - label:    Comments
-                      sublabel: ''
                       value:    0
                     `,
             },
@@ -199,10 +175,8 @@ context('Dashboard', () => {
                     // language=yaml
                     `
                     - label:    Views
-                      sublabel: ''
                       value:    217
                     - label:    Comments
-                      sublabel: ''
                       value:    34
                     `,
             },
@@ -211,9 +185,9 @@ context('Dashboard', () => {
                 it(`for ${test.name}`, () => {
                     cy.loginViaApi(test.user, PATHS.manage.dashboard);
                     makeAliases(test.hasChart);
-                    checkCardTexts('@cards', test.metrics);
+                    cy.get('@totals').metricCards().should('yamlMatch', test.metrics);
                     if (test.hasChart) {
-                        checkCardTexts('@dailyStatsCards', test.dailyMetrics);
+                        cy.get('@dailyStats').metricCards().should('yamlMatch', test.dailyMetrics);
                     }
                 }));
     });
