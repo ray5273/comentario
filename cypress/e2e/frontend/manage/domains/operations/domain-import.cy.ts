@@ -1,0 +1,205 @@
+import { DOMAINS, PATHS, USERS } from '../../../../../support/cy-utils';
+
+context('Domain Import page', () => {
+
+    const pagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).import;
+
+    const zeroResults = [
+        ['Total users',          '0'],
+        ['Added users',          '0'],
+        ['Added domain users',   '0'],
+        ['Total domain pages',   '0'],
+        ['Added domain pages',   '0'],
+        ['Total comments',       '0'],
+        ['Imported comments',    '0'],
+        ['Skipped comments',     '0'],
+        ['Non-deleted comments', '0'],
+    ];
+
+    const makeAliases = () => {
+        // Check heading
+        cy.get('@domainImport').find('h1').should('have.text', 'Import data').and('be.visible');
+
+        // Form controls
+        cy.get('@domainImport').find('#import-comentario') .as('importComentario');
+        cy.get('@domainImport').find('#import-disqus')     .as('importDisqus');
+        cy.get('@domainImport').find('#import-file-select').as('importFileSelect');
+
+        // Buttons
+        cy.get('@domainImport').contains('.form-footer a', 'Cancel')    .as('btnCancel');
+        cy.get('@domainImport').find('.form-footer button[type=submit]').as('btnSubmit')
+            .should('have.text', 'Import').and('be.enabled');
+
+        // Results
+        cy.get('@domainImport').find('#import-complete').should('not.exist');
+    };
+
+    const checkResults = (warning: string | null, expected: string[][]) => {
+        cy.get('@domainImport').find('#import-complete').as('importComplete').should('be.visible');
+
+        // Alert message
+        if (warning) {
+            cy.get('@importComplete').contains('.alert-warning', 'Import finished with a warning:')
+                .as('importWarning').should('be.visible').and('contain', warning);
+        } else {
+            cy.get('@importComplete').contains('.alert-success', 'Import finished successfully.').should('be.visible');
+        }
+
+        // Result table
+        cy.get('@importComplete').find('#import-results-table').dlTexts().should('matrixMatch', expected);
+
+        // Buttons
+        cy.get('@importComplete').contains('a', 'Comments')         .as('btnComments')        .should('be.visible');
+        cy.get('@importComplete').contains('a', 'Pages')            .as('btnPages')           .should('be.visible');
+        cy.get('@importComplete').contains('a', 'Domain properties').as('btnDomainProperties').should('be.visible');
+    };
+
+    //------------------------------------------------------------------------------------------------------------------
+
+    beforeEach(cy.backendReset);
+
+    context('unauthenticated user', () => {
+
+        [
+            {name: 'superuser',  user: USERS.root,           dest: 'back'},
+            {name: 'owner',      user: USERS.ace,            dest: 'back'},
+            {name: 'moderator',  user: USERS.king,           dest: 'to Domain Manager', redir: PATHS.manage.domains},
+            {name: 'commenter',  user: USERS.commenterTwo,   dest: 'to Domain Manager', redir: PATHS.manage.domains},
+            {name: 'readonly',   user: USERS.commenterThree, dest: 'to Domain Manager', redir: PATHS.manage.domains},
+            {name: 'non-domain', user: USERS.commenterOne,   dest: 'to Domain Manager', redir: PATHS.manage.domains},
+        ]
+            .forEach(test =>
+                it(`redirects ${test.name} user to login and ${test.dest}`, () =>
+                    cy.verifyRedirectsAfterLogin(pagePath, test.user, test.redir)));
+    });
+
+    it('stays on the page after reload', () => cy.verifyStayOnReload(pagePath, USERS.ace));
+
+    [
+        {name: 'superuser', user: USERS.root},
+        {name: 'owner',     user: USERS.ace},
+    ]
+        .forEach(({name, user}) => context(`for ${name} user`, () => {
+
+            beforeEach(() => {
+                cy.loginViaApi(user, pagePath);
+                cy.get('app-domain-import').as('domainImport');
+                makeAliases();
+            });
+
+            it('cancels', () => {
+                cy.get('@btnCancel').click();
+                cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).operations);
+                cy.noToast();
+            });
+
+            it('validates input', () => {
+                // Verify initial state
+                cy.get('@importComentario').should('be.checked');
+                cy.get('@importDisqus')    .should('not.be.checked');
+                cy.get('@importFileSelect').should('have.value', '');
+
+                // Click on Import and get error feedback
+                cy.get('@btnSubmit').click();
+                cy.get('@importFileSelect').isInvalid('Please select a file.');
+                cy.noToast();
+                cy.isAt(pagePath);
+            });
+
+            context('Comentario import', () => {
+
+                [
+                    {file: 'comentario-ok-empty-v1.json.gz',  count: 0},
+                    {file: 'comentario-ok-empty-v3.json.gz',  count: 0},
+                    {file: 'comentario-ok-single-v1.json.gz', count: 1},
+                    {file: 'comentario-ok-single-v3.json.gz', count: 1},
+                ]
+                    .forEach(({file, count}) =>
+                        it(`handles valid file ${file}`, () => {
+                            cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
+                            cy.get('@btnSubmit').click();
+                            const countStr = count.toString();
+                            checkResults(null, [
+                                ['Total users',          countStr],
+                                ['Added users',          countStr],
+                                ['Added domain users',   countStr],
+                                ['Total domain pages',   countStr],
+                                ['Added domain pages',   '0'],
+                                ['Total comments',       countStr],
+                                ['Imported comments',    countStr],
+                                ['Skipped comments',     '0'],
+                                ['Non-deleted comments', countStr],
+                            ]);
+
+                            // Click on Comments
+                            cy.get('@btnComments').click();
+                            cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
+                            cy.get('app-comment-list #filter-string').setValue('yay');
+                            cy.get('app-comment-list').verifyListFooter(count, false);
+                            if (count) {
+                                cy.get('app-comment-list #comment-list').texts('.comment-author-name').should('arrayMatch', ['Bugs Bunny']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')       .should('arrayMatch', ['Yay, imported']);
+                            }
+                        }));
+
+                [
+                    {file: 'comentario-bad-format.json.gz',  warning: 'invalid character \'A\''},
+                    {file: 'comentario-bad-version.json.gz', warning: 'invalid Comentario export version (481)'},
+                ]
+                    .forEach(({file, warning}) =>
+                        it(`handles invalid file ${file}`, () => {
+                            cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
+                            cy.get('@btnSubmit').click();
+                            checkResults(warning, zeroResults);
+                        }));
+            });
+
+            context('Disqus import', () => {
+
+                beforeEach(() => cy.get('@importDisqus').click());
+
+
+                [
+                    {file: 'disqus-ok-empty.xml.gz',  count: 0},
+                    {file: 'disqus-ok-single.xml.gz', count: 1},
+                ]
+                    .forEach(({file, count}) =>
+                        it(`handles valid file ${file}`, () => {
+                            cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
+                            cy.get('@btnSubmit').click();
+                            const countStr = count.toString();
+                            checkResults(null, [
+                                ['Total users',          countStr],
+                                ['Added users',          countStr],
+                                ['Added domain users',   countStr],
+                                ['Total domain pages',   countStr],
+                                ['Added domain pages',   '0'],
+                                ['Total comments',       countStr],
+                                ['Imported comments',    countStr],
+                                ['Skipped comments',     '0'],
+                                ['Non-deleted comments', countStr],
+                            ]);
+
+                            // Click on Comments
+                            cy.get('@btnComments').click();
+                            cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
+                            cy.get('app-comment-list #filter-string').setValue('yay');
+                            cy.get('app-comment-list').verifyListFooter(count, false);
+                            if (count) {
+                                cy.get('app-comment-list #comment-list').texts('.comment-author-name').should('arrayMatch', ['Bugs Bunny']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')       .should('arrayMatch', ['Yay, imported']);
+                            }
+                        }));
+
+                [
+                    {file: 'disqus-bad-format.xml.gz', warning: 'XML syntax error'},
+                ]
+                    .forEach(({file, warning}) =>
+                        it(`handles invalid file ${file}`, () => {
+                            cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
+                            cy.get('@btnSubmit').click();
+                            checkResults(warning, zeroResults);
+                        }));
+            });
+        }));
+});

@@ -925,8 +925,8 @@ func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userMap m
 			DomainID:        *domainID,
 			UserID:          user.ID,
 			IsCommenter:     true,
-			NotifyReplies:   true,
-			NotifyModerator: true,
+			NotifyReplies:   false, // Notifications make no sense since the email address is made up
+			NotifyModerator: false, // Idem
 			CreatedTime:     post.CreationDate,
 		}
 		if err = TheDomainService.UserAdd(du); err != nil {

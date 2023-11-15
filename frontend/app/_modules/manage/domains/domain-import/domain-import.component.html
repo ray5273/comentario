@@ -22,16 +22,16 @@
             <div class="col-sm-9">
                 <!-- Commento/Comentario -->
                 <div class="form-check mb-3">
-                    <input formControlName="source" class="form-check-input" type="radio" id="sourceComentario" value="comentario">
-                    <label class="form-check-label" for="sourceComentario">Commento/Comentario</label>
+                    <input formControlName="source" class="form-check-input" type="radio" id="import-comentario" value="comentario">
+                    <label class="form-check-label" for="import-comentario">Commento/Comentario</label>
                     <div class="form-text">
                         <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
                     </div>
                 </div>
                 <!-- Disqus -->
                 <div class="form-check">
-                    <input formControlName="source" class="form-check-input" type="radio" id="sourceDisqus" value="disqus">
-                    <label class="form-check-label" for="sourceDisqus">Disqus</label>
+                    <input formControlName="source" class="form-check-input" type="radio" id="import-disqus" value="disqus">
+                    <label class="form-check-label" for="import-disqus">Disqus</label>
                     <div class="form-text">
                         <ng-container i18n>If you're currently using Disqus, you can import all comments into Comentario:</ng-container>
                         <ul>
@@ -46,12 +46,12 @@
 
         <!-- File input -->
         <div class="mb-3 row">
-            <label for="fileSelect" class="col-sm-3 col-form-label colon" i18n>Data file</label>
+            <label for="import-file-select" class="col-sm-3 col-form-label colon" i18n>Data file</label>
             <div class="col-sm-9">
                 <input (change)="onFileSelected($event)"
                        [class.is-valid]="form.controls.file.touched && form.controls.file.valid"
                        [class.is-invalid]="form.controls.file.touched && form.controls.file.invalid"
-                       id="fileSelect" type="file" class="form-control">
+                       id="import-file-select" type="file" class="form-control">
                 <!-- Invalid feedback -->
                 <div class="invalid-feedback">
                     <ng-container i18n>Please select a file.</ng-container>
@@ -95,46 +95,44 @@
 
     <!-- Result counts -->
     <h2 i18n>Import results</h2>
-    <table class="table table-narrow">
-    <tbody>
-        <tr>
-            <th scope="row" i18n>Total users</th>
-            <td class="text-end">{{ result.usersTotal || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Added users</th>
-            <td class="text-end">{{ result.usersAdded || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Added domain users</th>
-            <td class="text-end">{{ result.domainUsersAdded || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Total domain pages</th>
-            <td class="text-end">{{ result.pagesTotal || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Added domain pages</th>
-            <td class="text-end">{{ result.pagesAdded || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Total comments</th>
-            <td class="text-end">{{ result.commentsTotal || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Imported comments</th>
-            <td class="text-end">{{ result.commentsImported || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Skipped comments</th>
-            <td class="text-end">{{ result.commentsSkipped || 0 | number }}</td>
-        </tr>
-        <tr>
-            <th scope="row" i18n>Non-deleted comments</th>
-            <td class="text-end">{{ result.commentsNonDeleted || 0 | number }}</td>
-        </tr>
-    </tbody>
-    </table>
+    <dl class="detail-table" id="import-results-table">
+        <div>
+            <dt i18n>Total users</dt>
+            <dd>{{ result.usersTotal || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Added users</dt>
+            <dd>{{ result.usersAdded || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Added domain users</dt>
+            <dd>{{ result.domainUsersAdded || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Total domain pages</dt>
+            <dd>{{ result.pagesTotal || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Added domain pages</dt>
+            <dd>{{ result.pagesAdded || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Total comments</dt>
+            <dd>{{ result.commentsTotal || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Imported comments</dt>
+            <dd>{{ result.commentsImported || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Skipped comments</dt>
+            <dd>{{ result.commentsSkipped || 0 | number }}</dd>
+        </div>
+        <div>
+            <dt i18n>Non-deleted comments</dt>
+            <dd>{{ result.commentsNonDeleted || 0 | number }}</dd>
+        </div>
+    </dl>
 
     <!-- Buttons -->
     <div class="my-3">
