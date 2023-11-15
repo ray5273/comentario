@@ -64,12 +64,12 @@ export class ManageGuard {
     }
 
     /**
-     * Check if the current user is a superuser, and return either true, or the domain manager route.
+     * Check if the current user is a superuser, and return either true, or the dashboard route.
      */
     isSuper(): Observable<boolean | UrlTree> {
         return this.domainSelectorSvc.domainMeta(false)
             .pipe(
                 first(),
-                map(meta => meta.principal?.isSuperuser || this.router.parseUrl(Paths.manage.domains)));
+                map(meta => meta.principal?.isSuperuser || this.router.parseUrl(Paths.manage.dashboard)));
     }
 }

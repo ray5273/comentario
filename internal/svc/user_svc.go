@@ -434,8 +434,8 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	switch sortBy {
 	case "name":
 		sortIdent = "u.name"
-	case "signupCountry":
-		sortIdent = "u.signup_country"
+	case "created":
+		sortIdent = "u.ts_created"
 	case "federatedIdP":
 		sortIdent = "u.federated_idp"
 	}

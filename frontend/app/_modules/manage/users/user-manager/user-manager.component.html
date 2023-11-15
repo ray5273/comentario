@@ -14,10 +14,10 @@
             <!-- Sort -->
             <div class="col-auto">
                 <app-sort-selector [sort]="sort">
-                    <app-sort-property by="email"         label="Email"          i18n-label></app-sort-property>
-                    <app-sort-property by="name"          label="Name"           i18n-label></app-sort-property>
-                    <app-sort-property by="signupCountry" label="Signup country" i18n-label></app-sort-property>
-                    <app-sort-property by="federatedIdP"  label="Federated IdP"  i18n-label></app-sort-property>
+                    <app-sort-property by="email"        label="Email"         i18n-label></app-sort-property>
+                    <app-sort-property by="name"         label="Name"          i18n-label></app-sort-property>
+                    <app-sort-property by="created"      label="Created"       i18n-label></app-sort-property>
+                    <app-sort-property by="federatedIdP" label="Federated IdP" i18n-label></app-sort-property>
                 </app-sort-selector>
             </div>
 
@@ -44,7 +44,7 @@
                 <!-- Name and badge -->
                 <div>
                     <!-- Name -->
-                    <span class="fw-bold">{{ u.name }}</span>
+                    <span class="fw-bold user-name">{{ u.name }}</span>
                     <!-- System account badge -->
                     <span *ngIf="u.systemAccount" class="badge rounded-pill bg-secondary ms-2">
                             <fa-icon [icon]="faLock" class="me-1"></fa-icon>
@@ -64,7 +64,7 @@
                 <div>
                     <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
                     <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                    <ng-container>{{ u.email }}</ng-container>
+                    <span class="user-email">{{ u.email }}</span>
                 </div>
             </div>
         </a>

@@ -43,7 +43,13 @@ export const PATHS = {
                 operations: /^\/en\/manage\/domains\/[-a-f\d]{36}\/operations$/,
             },
         },
-        users:          '/en/manage/users',
+        users: {
+            _: '/en/manage/users',
+            id:  (id: string) => ({
+                props: `${PATHS.manage.users._}/${id}`,
+                edit: `${PATHS.manage.users._}/${id}/edit`,
+            }),
+        },
         config: {
             static:     '/en/manage/config/static',
             dynamic:    '/en/manage/config/dynamic',
