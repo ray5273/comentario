@@ -159,6 +159,11 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 		return r
 	}
 
+	// Verify the user being updated is not a system account
+	if r := Verifier.UserIsNotSystem(u); r != nil {
+		return r
+	}
+
 	// Email, name, password can only be updated for a local user (email and name are mandatory)
 	dto := params.Body.User
 	email := data.EmailToString(dto.Email)
@@ -188,6 +193,15 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 		}
 		if password != "" {
 			return respBadRequest(ErrorImmutableProperty.WithDetails("password"))
+		}
+	}
+
+	// A user cannot revoke their own superuser or confirmed status
+	if user.ID == u.ID {
+		if !dto.IsSuperuser {
+			return respBadRequest(ErrorSelfOperation.WithDetails("revoke superuser"))
+		} else if !dto.Confirmed {
+			return respBadRequest(ErrorSelfOperation.WithDetails("remove confirmed status"))
 		}
 	}
 

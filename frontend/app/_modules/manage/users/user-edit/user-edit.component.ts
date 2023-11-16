@@ -1,19 +1,25 @@
-import { Component, Input } from '@angular/core';
+import { Component, Input, OnInit } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ApiGeneralService, User } from '../../../../../generated-api';
+import { ApiGeneralService, Principal, User } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Paths } from '../../../../_utils/consts';
+import { AuthService } from '../../../../_services/auth.service';
+import { Utils } from '../../../../_utils/utils';
+import { XtraValidators } from '../../../../_utils/xtra-validators';
 
 @Component({
     selector: 'app-user-edit',
     templateUrl: './user-edit.component.html',
 })
-export class UserEditComponent {
+export class UserEditComponent implements OnInit {
 
     /** User being edited. */
     user?: User;
+
+    /** Currently authenticated principal. */
+    principal?: Principal;
 
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
@@ -22,7 +28,7 @@ export class UserEditComponent {
         name:       ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
         email:      ['', [Validators.required, Validators.email, Validators.minLength(6), Validators.maxLength(254)]],
         password:   '',
-        websiteUrl: ['', [Validators.maxLength(2083)]],
+        websiteUrl: ['', [XtraValidators.url(false)]],
         remarks:    ['', [Validators.maxLength(4096)]],
         confirmed:  false,
         superuser:  false,
@@ -32,6 +38,7 @@ export class UserEditComponent {
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly api: ApiGeneralService,
+        private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
     ) {}
 
@@ -53,14 +60,16 @@ export class UserEditComponent {
                     confirmed:  !!this.user!.confirmed,
                     superuser:  !!this.user!.isSuperuser,
                 });
-
-                // If the user is a federated one, disable irrelevant controls
-                if (this.user!.federatedIdP || this.user!.federatedSso) {
-                    this.form.controls.name    .disable();
-                    this.form.controls.email   .disable();
-                    this.form.controls.password.disable();
-                }
+                this.enableControls();
             });
+    }
+
+    ngOnInit(): void {
+        // Monitor principal changes
+        this.authSvc.principal.subscribe(p => {
+            this.principal = p ?? undefined;
+            this.enableControls();
+        });
     }
 
     submit(): void {
@@ -69,6 +78,7 @@ export class UserEditComponent {
 
         // Submit the form if it's valid
         if (this.user && this.form.valid) {
+            const selfEdit = this.principal!.id === this.user.id;
             const vals = this.form.value;
             const dto: User = {
                 name:        vals.name,
@@ -76,8 +86,8 @@ export class UserEditComponent {
                 password:    vals.password,
                 remarks:     vals.remarks,
                 websiteUrl:  vals.websiteUrl,
-                confirmed:   vals.confirmed,
-                isSuperuser: vals.superuser,
+                confirmed:   selfEdit || vals.confirmed,
+                isSuperuser: selfEdit || vals.superuser,
             };
             this.api.userUpdate(this.user.id!, {user: dto})
                 .pipe(this.saving.processing())
@@ -88,5 +98,17 @@ export class UserEditComponent {
                     return this.router.navigate([Paths.manage.users, r.user!.id]);
                 });
         }
+    }
+
+    private enableControls() {
+        // If the user is a federated one, disable irrelevant controls
+        if (this.user!.federatedIdP || this.user!.federatedSso) {
+            this.form.controls.name    .disable();
+            this.form.controls.email   .disable();
+            this.form.controls.password.disable();
+        }
+
+        // Disable checkboxes when the user edits themselves
+        Utils.enableControls(this.principal?.id !== this.user?.id, this.form.controls.confirmed, this.form.controls.superuser);
     }
 }

@@ -51,6 +51,8 @@ type VerifierService interface {
 	UserIsAuthenticated(user *data.User) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
 	UserIsLocal(user *data.User) middleware.Responder
+	// UserIsNotSystem verifies the user isn't a system account
+	UserIsNotSystem(user *data.User) middleware.Responder
 	// UserIsSuperuser verifies the given user is a superuser
 	UserIsSuperuser(user *data.User) middleware.Responder
 }
@@ -248,6 +250,13 @@ func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {
 func (v *verifier) UserIsLocal(user *data.User) middleware.Responder {
 	if !user.IsLocal() {
 		return respBadRequest(ErrorNoLocalUser)
+	}
+	return nil
+}
+
+func (v *verifier) UserIsNotSystem(user *data.User) middleware.Responder {
+	if user.SystemAccount {
+		return respBadRequest(ErrorImmutableAccount)
 	}
 	return nil
 }

@@ -5,7 +5,7 @@ context('User Properties page', () => {
     const pagePathKing = PATHS.manage.users.id(USERS.king.id).props;
     const pagePathAce  = PATHS.manage.users.id(USERS.ace.id).props;
 
-    const makeAliases = (canBan: boolean, canDelete: boolean, isBanned: boolean) => {
+    const makeAliases = (canEdit: boolean, canBan: boolean, canDelete: boolean, isBanned: boolean) => {
         cy.get('app-user-properties').as('userProps');
 
         // Check heading
@@ -15,7 +15,9 @@ context('User Properties page', () => {
         cy.get('@userProps').find('#user-details .detail-table').as('userDetails').should('be.visible');
 
         // Buttons
-        cy.get('@userProps').contains('a', 'Edit user').as('btnEdit').should('be.visible');
+        cy.get('@userProps').contains('a', 'Edit user').as('btnEdit')
+            .should('be.visible')
+            .and(canEdit ? 'not.have.class' : 'have.class', 'disabled');
         cy.get('@userProps').contains('button', isBanned ? 'Unban user' : 'Ban user').as('btnBan')
             .should('be.visible')
             .and(canBan   ? 'be.enabled' : 'be.disabled')
@@ -46,9 +48,24 @@ context('User Properties page', () => {
 
     context('shows properties', () => {
 
+        it('of Anonymous user', () => {
+            cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.anonymous.id).props);
+            makeAliases(false, false, false, false);
+
+            // Verify user details
+            cy.get('@userDetails').dlTexts().should('matrixMatch', [
+                ['ID',             USERS.anonymous.id],
+                ['Name',           USERS.anonymous.name],
+                ['System account', '✔'],
+            ]);
+
+            // Verify domain roles
+            cy.get('@domainRoles').verifyListFooter(0, false);
+        });
+
         it('of self-user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.root.id).props);
-            makeAliases(false, false, false);
+            makeAliases(true, false, false, false);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -72,7 +89,7 @@ context('User Properties page', () => {
 
         it('of other user', () => {
             cy.loginViaApi(USERS.root, pagePathKing);
-            makeAliases(true, true, false);
+            makeAliases(true, true, true, false);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -103,7 +120,7 @@ context('User Properties page', () => {
 
         it('of banned user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.banned.id).props);
-            makeAliases(true, true, true);
+            makeAliases(true, true, true, true);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -120,7 +137,7 @@ context('User Properties page', () => {
 
     it('allows to delete user', () => {
         cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, false);
+        makeAliases(true, true, true, false);
 
         // Click on Delete user and confirm
         cy.get('@btnDelete').click();
@@ -156,7 +173,7 @@ context('User Properties page', () => {
 
     it('allows to ban and unban user', () => {
         cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, false);
+        makeAliases(true, true, true, false);
 
         // Click on Delete user and confirm
         cy.get('@btnBan').click();
@@ -189,7 +206,7 @@ context('User Properties page', () => {
 
         // Relogin as root and unban the user
         cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, true);
+        makeAliases(true, true, true, true);
         cy.get('@btnBan').click();
         cy.confirmationDialog('Are you sure you want to unban this user?').dlgButtonClick('Proceed');
 
@@ -204,7 +221,7 @@ context('User Properties page', () => {
 
         // Relogin as root and ban the user, deleting their comments
         cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, false);
+        makeAliases(true, true, true, false);
 
         // Click on Delete user and confirm
         cy.get('@btnBan').click();

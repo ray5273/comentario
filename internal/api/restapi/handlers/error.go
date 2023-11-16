@@ -13,6 +13,7 @@ var (
 	ErrorHostAlreadyExists     = &exmodels.Error{ID: "host-already-exists", Message: "This host is already registered"}
 	ErrorIdPUnconfigured       = &exmodels.Error{ID: "idp-unconfigured", Message: "Identity provider isn't configured"}
 	ErrorIdPUnknown            = &exmodels.Error{ID: "idp-unknown", Message: "Unknown identity provider"}
+	ErrorImmutableAccount      = &exmodels.Error{ID: "immutable-account", Message: "Account cannot be updated"}
 	ErrorImmutableProperty     = &exmodels.Error{ID: "immutable-property", Message: "Property cannot be updated"}
 	ErrorInvalidCredentials    = &exmodels.Error{ID: "invalid-credentials", Message: "Wrong password or user doesn't exist"}
 	ErrorInvalidPropertyValue  = &exmodels.Error{ID: "invalid-prop-value", Message: "Value of the property is invalid"}
