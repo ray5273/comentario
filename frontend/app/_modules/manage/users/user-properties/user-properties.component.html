@@ -34,12 +34,12 @@
 
             <!-- Details -->
             <div class="col-sm">
-                <app-user-details [user]="user" id="userDetails"></app-user-details>
+                <app-user-details [user]="user" id="user-details"></app-user-details>
             </div>
         </div>
 
         <!-- Domain roles -->
-        <section>
+        <section id="user-domain-roles">
             <!-- Heading -->
             <h2 i18n>Domain roles</h2>
 
@@ -50,10 +50,10 @@
                        class="list-group-item list-group-item-action">
                         <!-- Domain name/host -->
                         <div>
-                            <span class="fw-bold">{{ d.host }}</span>
+                            <span class="fw-bold domain-host">{{ d.host }}</span>
                             <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
                         </div>
-                        <div *ngIf="d.name">{{ d.name }}</div>
+                        <div *ngIf="d.name" class="domain-name">{{ d.name }}</div>
                     </a>
                 </ng-container>
             </div>
