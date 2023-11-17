@@ -46,7 +46,12 @@ func UserBan(params api_general.UserBanParams, user *data.User) middleware.Respo
 		return r
 	}
 
-	// Make sure the user isn't updating themselves
+	// Verify the user being banned is not a system account
+	if r := Verifier.UserIsNotSystem(u); r != nil {
+		return r
+	}
+
+	// Make sure the user isn't banning themselves
 	if r := Verifier.IsAnotherUser(&user.ID, &u.ID); r != nil {
 		return r
 	}
@@ -78,19 +83,24 @@ func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware
 		return r
 	}
 
-	// Extract user ID
-	userID, r := parseUUID(params.UUID)
+	// Fetch the user
+	u, r := userGet(params.UUID)
 	if r != nil {
 		return r
 	}
 
+	// Verify the user being deleted is not a system account
+	if r := Verifier.UserIsNotSystem(u); r != nil {
+		return r
+	}
+
 	// Make sure the user isn't deleting themselves
-	if r := Verifier.IsAnotherUser(&user.ID, userID); r != nil {
+	if r := Verifier.IsAnotherUser(&user.ID, &u.ID); r != nil {
 		return r
 	}
 
 	// Delete the user
-	if err := svc.TheUserService.DeleteUserByID(userID); err != nil {
+	if err := svc.TheUserService.DeleteUserByID(&u.ID); err != nil {
 		return respServiceError(err)
 	}
 

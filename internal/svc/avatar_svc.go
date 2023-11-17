@@ -58,6 +58,11 @@ func (svc *avatarService) DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL
 func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error) {
 	logger.Debugf("avatarService.GetByUserID(%s)", userID)
 
+	// Anonymous has no avatar
+	if *userID == data.AnonymousUser.ID {
+		return nil, nil
+	}
+
 	// Query the database
 	q := db.Dialect().
 		Select("ts_updated", "is_custom", "avatar_s", "avatar_m", "avatar_l").
