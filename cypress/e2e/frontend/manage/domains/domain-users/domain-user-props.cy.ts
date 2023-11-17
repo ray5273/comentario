@@ -86,8 +86,8 @@ context('Domain User Properties', () => {
                     cy.get('@relatedUserDetails').dlTexts().should('matrixMatch', expectRUP);
 
                     // Check comments
-                    cy.get('@commentList').verifyListFooter(3, false);
-                    cy.get('@commentList').texts('.list-group-item .comment-author-name').should('arrayMatch', Array(3).fill(USERS.king.name));
+                    cy.get('@commentList').verifyListFooter(4, false);
+                    cy.get('@commentList').texts('.list-group-item .comment-author-name').should('arrayMatch', Array(4).fill(USERS.king.name));
 
                     // Click on Edit and land on the Edit user page
                     cy.get('@btnEdit').click();

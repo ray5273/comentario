@@ -1,26 +1,8 @@
-import {
-    ANONYMOUS_ID,
-    Comment,
-    CommenterMap,
-    CommentsGroupedById,
-    CommentSort,
-    DefaultInstanceConfig,
-    ErrorMessage,
-    Message,
-    OkMessage,
-    PageInfo,
-    Principal,
-    SignupData,
-    SsoLoginResponse,
-    StringBooleanMap,
-    User,
-    UserSettings,
-    UUID,
-} from './models';
+import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, CommentSort, DefaultInstanceConfig, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { CommentCard, CommentRenderingContext, CommentTree } from './comment-card';
+import { CommentCard, CommentRenderingContext } from './comment-card';
 import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
@@ -104,6 +86,9 @@ export class Comentario extends HTMLElement {
 
     /** Whether to automatically initialise the Comentario engine on the current page. */
     private readonly autoInit = this.getAttribute('auto-init') !== 'false';
+
+    /** Maximum visual nesting level for comments. */
+    private readonly maxLevel = Number(this.getAttribute('max-level')) || 10;
 
     constructor() {
         super();
@@ -272,7 +257,7 @@ export class Comentario extends HTMLElement {
     private renderComments() {
         this.commentsArea!
             .html('')
-            .append(...new CommentTree().render(this.makeCommentRenderingContext()));
+            .append(...CommentCard.renderChildComments(this.makeCommentRenderingContext(), 1));
     }
 
     /**
@@ -771,6 +756,7 @@ export class Comentario extends HTMLElement {
             commentSort: this.commentSort,
             isReadonly:  this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
             curTimeMs:   new Date().getTime(),
+            maxLevel:    this.maxLevel,
             onGetAvatar: user => this.createAvatarElement(user),
             onModerate:  (card, approve) => this.moderateComment(card, approve),
             onDelete:    card => this.deleteComment(card),

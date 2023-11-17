@@ -39,6 +39,8 @@ export interface CommentRenderingContext {
     readonly isReadonly: boolean;
     /** Current time in milliseconds. */
     readonly curTimeMs: number;
+    /** Max comment nesting level. */
+    readonly maxLevel: number;
 
     // Events
     readonly onGetAvatar: CommentCardGetAvatarHandler;
@@ -48,38 +50,6 @@ export interface CommentRenderingContext {
     readonly onReply:     CommentCardEventHandler;
     readonly onSticky:    CommentCardEventHandler;
     readonly onVote:      CommentCardVoteEventHandler;
-}
-
-/**
- * A tree structure of comment cards.
- */
-export class CommentTree {
-
-    /**
-     * Render a branch of comments that all relate to the same given parent.
-     */
-    render(ctx: CommentRenderingContext, parentId?: UUID): CommentCard[] {
-        // Fetch comments that have the given parent (or no parent, i.e. root comments, if parentId is undefined)
-        const comments = ctx.parentMap[parentId ?? ''] || [];
-
-        // Apply the chosen sorting, always keeping the sticky comment on top
-        comments.sort((a, b) => {
-            // Make sticky, non-deleted comment go first
-            const ai = !a.isDeleted && a.isSticky ? -999999999 : 0;
-            const bi = !b.isDeleted && b.isSticky ? -999999999 : 0;
-            let i = ai-bi;
-
-            // If both are (non)sticky, apply the standard sort
-            if (i === 0) {
-                i = sortingProps[ctx.commentSort].comparator(a, b);
-            }
-            return i;
-        });
-
-        // Render child comments, if any
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
-        return comments.map(c => new CommentCard(c, ctx));
-    }
 }
 
 /**
@@ -112,6 +82,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     constructor(
         private _comment: Comment,
         ctx: CommentRenderingContext,
+        private readonly level: number,
     ) {
         super(UIToolkit.div().element);
 
@@ -121,6 +92,32 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Update the card controls/text
         this.update();
         this.updateText();
+    }
+
+    /**
+     * Render a branch of comments that all relate to the same given parent.
+     */
+    static renderChildComments(ctx: CommentRenderingContext, level: number, parentId?: UUID): CommentCard[] {
+        // Fetch comments that have the given parent (or no parent, i.e. root comments, if parentId is undefined)
+        const comments = ctx.parentMap[parentId ?? ''] || [];
+
+        // Apply the chosen sorting, always keeping the sticky comment on top
+        comments.sort((a, b) => {
+            // Make sticky, non-deleted comment go first
+            const ai = !a.isDeleted && a.isSticky ? -999999999 : 0;
+            const bi = !b.isDeleted && b.isSticky ? -999999999 : 0;
+            let i = ai-bi;
+
+            // If both are (non)sticky, apply the standard sort
+            if (i === 0) {
+                i = sortingProps[ctx.commentSort].comparator(a, b);
+            }
+            return i;
+        });
+
+        // Render child comments, if any
+        // eslint-disable-next-line @typescript-eslint/no-use-before-define
+        return comments.map(c => new CommentCard(c, ctx, level));
     }
 
     get comment(): Comment {
@@ -239,7 +236,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         }
 
         // Render children
-        this.children = UIToolkit.div('card-children').append(...new CommentTree().render(ctx, id));
+        this.children = UIToolkit.div('card-children', this.level >= ctx.maxLevel && 'card-children-unnest')
+            .append(...CommentCard.renderChildComments(ctx, this.level + 1, id));
 
         // Convert comment creation time to milliseconds
         const ms = new Date(this._comment.createdTime).getTime();

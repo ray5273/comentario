@@ -9,7 +9,7 @@ export class UIToolkit {
      * Create and return a new div element.
      * @param classes Classes to add to the div.
      */
-    static div(...classes: string[]): Wrap<HTMLDivElement> {
+    static div(...classes: (false | null | undefined | string)[]): Wrap<HTMLDivElement> {
         return Wrap.new('div').classes(...classes);
     }
 
@@ -18,7 +18,7 @@ export class UIToolkit {
      * @param text Badge text
      * @param classes Classes to add to the div.
      */
-    static badge(text: string, ...classes: string[]): Wrap<HTMLDivElement> {
+    static badge(text: string, ...classes: (false | null | undefined | string)[]): Wrap<HTMLDivElement> {
         return UIToolkit.div('badge').classes(...classes).inner(text);
     }
 

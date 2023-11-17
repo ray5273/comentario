@@ -19,6 +19,7 @@ context('Domain Page Manager', () => {
         {path: '/attr/css-override/',       title: 'Attribute: css-override',       cntComments: 2,  cntViews: 0},
         {path: '/attr/css-override-false/', title: 'Attribute: css-override=false', cntComments: 2,  cntViews: 0},
         {path: '/different-page/123',       title: 'Attribute: page-id',            cntComments: 2,  cntViews: 0},
+        {path: '/attr/max-level/',          title: 'Attribute: max-level=2',        cntComments: 6,  cntViews: 0},
     ];
     const pagesByPath        = pages.slice().sort((a, b) => a.path.localeCompare(b.path))  .map(p => p.path);
     const pagesByTitle       = pages.slice().sort((a, b) => a.title.localeCompare(b.title)).map(p => p.title).filter(s => s);
@@ -125,9 +126,9 @@ context('Domain Page Manager', () => {
 
             // Test filtering by path
             filterOn('tr/');
-            cy.get('@pageList').verifyListFooter(4, false);
+            cy.get('@pageList').verifyListFooter(5, false);
             cy.get('@pageList').texts('.domain-page-path')
-                .should('arrayMatch', ['/attr/auto-init/', '/attr/css-override-false/', '/attr/css-override/', '/attr/no-fonts/']);
+                .should('arrayMatch', ['/attr/auto-init/', '/attr/css-override-false/', '/attr/css-override/', '/attr/max-level/', '/attr/no-fonts/']);
 
             // Test filtering by title
             filterOn('cOmEnT');
@@ -146,10 +147,10 @@ context('Domain Page Manager', () => {
         cy.loginViaApi(USERS.commenterTwo, pagePath);
         makeAliases(true);
 
-        cy.get('@pageList').verifyListFooter(2, false);
-        cy.get('@pageList').texts('.domain-page-domain').should('arrayMatch', Array(2).fill(DOMAINS.localhost.host));
-        cy.get('@pageList').texts('.domain-page-path')  .should('arrayMatch', ['/', '/double/']);
-        cy.get('@pageList').texts('.domain-page-title') .should('arrayMatch', ['Home', 'Double Comentario']);
+        cy.get('@pageList').verifyListFooter(3, false);
+        cy.get('@pageList').texts('.domain-page-domain').should('arrayMatch', Array(3).fill(DOMAINS.localhost.host));
+        cy.get('@pageList').texts('.domain-page-path')  .should('arrayMatch', ['/', '/attr/max-level/', '/double/']);
+        cy.get('@pageList').texts('.domain-page-title') .should('arrayMatch', ['Home', 'Attribute: max-level=2', 'Double Comentario']);
 
         // No comment or view count
         cy.get('@pageList').find('.domain-page-cnt-comments').should('not.exist');

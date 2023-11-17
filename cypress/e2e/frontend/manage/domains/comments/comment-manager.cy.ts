@@ -21,6 +21,12 @@ context('Comment Manager', () => {
         {author: USERS.king,           score:  0, text: 'Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.'},
         {author: USERS.ace,            score:  0, text: 'First off, we need to make sure the engine is in good working order. Any issues we need to address, engineer?'},
         {author: USERS.king,           score:  0, text: 'What\'s on the agenda, captain?'},
+        {author: USERS.commenterTwo,   score:  0, text: '6th level comment'},
+        {author: USERS.anonymous,      score:  0, text: '5th level comment'},
+        {author: USERS.jack,           score:  0, text: '4th level comment'},
+        {author: USERS.queen,          score:  0, text: '3rd level comment'},
+        {author: USERS.king,           score:  0, text: '2nd level comment'},
+        {author: USERS.ace,            score:  0, text: 'Root level comment'},
         {author: USERS.anonymous,      score:  0, text: 'Path override child'},
         {author: USERS.ace,            score:  0, text: 'The path of this page is set to /different-page/123'},
         {author: USERS.anonymous,      score:  0, text: 'CSS override disabled child'},
@@ -137,18 +143,18 @@ context('Comment Manager', () => {
                 cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.text));
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').verifyListFooter(38, false);
                 cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.map(c => c.author.name));
                 cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.map(c => c.text));
 
                 // Sort by Created ASC
                 cy.get('@commentManager').changeListSort('Created', 'asc');
                 cy.get('@commentList').verifyListFooter(25, true);
-                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(7, 32).reverse().map(c => c.author.name));
-                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(7, 32).reverse().map(c => c.text));
+                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.text));
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').verifyListFooter(38, false);
                 cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice().reverse().map(c => c.author.name));
                 cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice().reverse().map(c => c.text));
 
@@ -159,16 +165,16 @@ context('Comment Manager', () => {
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(0, 25));
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').verifyListFooter(38, false);
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice());
 
                 // Sort by Score DESC
                 cy.get('@commentManager').changeListSort('Score', 'desc');
                 cy.get('@commentList').verifyListFooter(25, true);
-                cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(7, 32).reverse());
+                cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(13, 38).reverse());
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').verifyListFooter(38, false);
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice().reverse());
 
                 // Click on a comment body and land in comment properties
@@ -202,7 +208,7 @@ context('Comment Manager', () => {
 
                 // Test filtering by commenter name
                 filterOn('apTaiN aCe');
-                cy.get('@commentList').verifyListFooter(16, false);
+                cy.get('@commentList').verifyListFooter(17, false);
 
                 // Test quick filters
                 // -- All
@@ -210,7 +216,7 @@ context('Comment Manager', () => {
                 checkFilter(true, true, true, true);
                 cy.get('@commentList').verifyListFooter(25, true);
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(33, false);
+                cy.get('@commentList').verifyListFooter(39, false);
                 // -- Pending
                 cy.get('@quickFilterPending').click();
                 checkFilter(false, true, false, false);
@@ -220,7 +226,7 @@ context('Comment Manager', () => {
                 checkFilter(true, true, true, false);
                 cy.get('@commentList').verifyListFooter(25, true);
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(32, false);
+                cy.get('@commentList').verifyListFooter(38, false);
 
                 // Enable Deleted, switch off Approved
                 cy.get('@filterApprovedBtn').clickLabel();
@@ -299,9 +305,10 @@ context('Comment Manager', () => {
     it('shows comment list for commenter user', () => {
         cy.loginViaApi(USERS.commenterTwo, pagePath);
         makeAliases(true, false, false);
-        cy.get('@commentList').verifyListFooter(2, false);
+        cy.get('@commentList').verifyListFooter(3, false);
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', [
             'Captain, I\'ve plotted our course, and I suggest we take the eastern route. It\'ll take us a bit longer, but we\'ll avoid any bad weather.',
+            '6th level comment',
             'Children double, too',
         ]);
 

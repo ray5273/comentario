@@ -15,6 +15,11 @@
 
     .comentario-card-children {
         padding-left: 12px;
+
+        &.comentario-card-children-unnest {
+            padding-left: 0;
+            margin-left: -2px; // To compensate for the left border width
+        }
     }
 
     .comentario-card-header {

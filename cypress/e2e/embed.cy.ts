@@ -97,19 +97,18 @@ context('Embed', () => {
     ]
         .forEach(({name, user, isMod}) => context(`${name} user${isMod ? ' (moderator)' : ''}`, () => {
 
-            beforeEach(() => {
-                cy.testSiteVisit(TEST_PATHS.home);
-
-                // Log the user in, if they have a password
+            /** Visit the given test site page and log in, if necessary. */
+            const visitAndLogin = (path: string) => {
+                cy.testSiteVisit(path);
                 if (!user.isAnonymous) {
                     cy.testSiteLogin(user);
                 }
-            });
+            };
 
             context('displays comments', () => {
 
                 it('on home page', () => {
-                    cy.testSiteVisit(TEST_PATHS.home);
+                    visitAndLogin(TEST_PATHS.home);
 
                     // Verify layout
                     checkLayout({
@@ -202,7 +201,7 @@ context('Embed', () => {
                 });
 
                 it('on page with a comment', () => {
-                    cy.testSiteVisit(TEST_PATHS.comments);
+                    visitAndLogin(TEST_PATHS.comments);
 
                     // Verify layout
                     checkLayout({
@@ -225,7 +224,7 @@ context('Embed', () => {
                 });
 
                 it('on page without comments', () => {
-                    cy.testSiteVisit(TEST_PATHS.noComment);
+                    visitAndLogin(TEST_PATHS.noComment);
 
                     // Verify layout
                     checkLayout({
@@ -238,6 +237,7 @@ context('Embed', () => {
                 });
 
                 it('on page with double Comentario', () => {
+                    visitAndLogin(TEST_PATHS.home); // Cannot properly login on the page because of 2 Comentario instances (one of which stays unauthenticated)
                     cy.testSiteVisit(TEST_PATHS.double);
 
                     // Verify layout
@@ -270,6 +270,7 @@ context('Embed', () => {
                 });
 
                 it('on page with dynamic Comentario', () => {
+                    visitAndLogin(TEST_PATHS.home); // Cannot login on the page until Comentario is inserted
                     cy.testSiteVisit(TEST_PATHS.dynamic);
 
                     // No Comentario initially
@@ -319,7 +320,7 @@ context('Embed', () => {
                 });
 
                 it('on readonly page', () => {
-                    cy.testSiteVisit(TEST_PATHS.readonly);
+                    visitAndLogin(TEST_PATHS.readonly);
 
                     // Verify layout
                     checkLayout({
@@ -336,6 +337,7 @@ context('Embed', () => {
                 context('with tag attributes', () => {
 
                     it('auto-init=false', () => {
+                        visitAndLogin(TEST_PATHS.home); // Cannot login on the page until Comentario is loaded
                         cy.testSiteVisit(TEST_PATHS.attr.autoInit);
 
                         // There's comments tag but Comentario isn't running
@@ -375,7 +377,7 @@ context('Embed', () => {
                     });
 
                     it('no-fonts=true', () => {
-                        cy.testSiteVisit(TEST_PATHS.attr.noFonts);
+                        visitAndLogin(TEST_PATHS.attr.noFonts);
 
                         // Verify layout
                         checkLayout({
@@ -405,7 +407,7 @@ context('Embed', () => {
                     });
 
                     it('css-override', () => {
-                        cy.testSiteVisit(TEST_PATHS.attr.cssOverride);
+                        visitAndLogin(TEST_PATHS.attr.cssOverride);
 
                         // Verify layout
                         checkLayout({
@@ -438,6 +440,7 @@ context('Embed', () => {
                     });
 
                     it('css-override=false', () => {
+                        visitAndLogin(TEST_PATHS.home); // Cannot login on the page because of dysfunctional popup (due to missing styles)
                         cy.testSiteVisit(TEST_PATHS.attr.cssOverrideFalse);
 
                         // Verify layout
@@ -471,7 +474,7 @@ context('Embed', () => {
                     });
 
                     it('page-id', () => {
-                        cy.testSiteVisit(TEST_PATHS.attr.pageId);
+                        visitAndLogin(TEST_PATHS.attr.pageId);
 
                         // Verify layout
                         checkLayout({
@@ -497,6 +500,20 @@ context('Embed', () => {
                                     score: 0
                                     sticky: false
                               `);
+                    });
+
+                    it('max-level', () => {
+                        visitAndLogin(TEST_PATHS.attr.maxLevel);
+
+                        // Verify layout
+                        checkLayout({
+                            heading:   'Attribute: max-level=2',
+                            anonymous: user.isAnonymous,
+                        });
+
+                        // Verify comment styles: they must be "unnested" starting from the 2nd level
+                        cy.get('comentario-comments .comentario-comments .comentario-card .comentario-card-children')
+                            .hasClass('comentario-card-children-unnest').should('arrayMatch', [false, true, true, true, true, true]);
                     });
                 });
             });
