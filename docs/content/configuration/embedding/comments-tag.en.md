@@ -30,6 +30,7 @@ You can further customise Comentario by adding attributes to the `<comentario-co
 |----------------|--------------------------------------------------------------------------------|---------------|
 | `auto-init`    | Whether to automatically initialise Comentario                                 | `true`        |
 | `css-override` | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |               |
+| `max-level`    | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`          |
 | `no-fonts`     | Set to `true` to avoid applying default Comentario fonts                       | `false`       |
 | `page-id`      | Overrides the path (URL) of the current page                                   |               |
 {{< /table >}}
