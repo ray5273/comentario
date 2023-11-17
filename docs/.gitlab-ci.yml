@@ -6,9 +6,7 @@ stages:
   - build
 
 variables:
-  CI_TOOLS_VERSION: "v4"
-  # Namespace to deploy Kubernetes objects into
-  NAMESPACE: ys-comentario
+  CI_TOOLS_VERSION: "v20"
 
 build:
   stage: build
