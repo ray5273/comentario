@@ -1,5 +1,46 @@
 # Comentario changelog
 
+## v3.0.0
+
+This release introduces an almost complete end-2-end test coverage of the available functionality, which resulted in numerous fixes in the process.
+
+It also drops support for PostgreSQL prior to 10, but introduces support for PostgreSQL 16.
+
+### ❗ IMPORTANT ❗
+
+* This release brings an extensive code change as compared to Comentario 2.x (or Commento). You're strongly encouraged to **back up your database** before upgrading. Please read the [Migration docs section](https://docs.comentario.app/en/installation/migration/comentario-2.x/) carefully before upgrade!
+
+### Changes
+
+* Disallow banning/deleting of a system account (d559080)
+* Helm chart: get rid of "beta" API for autoscaler (7268d68)
+* Fix daily stats collection and display (c0c68a6)
+* Fix stats for superuser (5fd0c8a)
+* Embed: fix button layout and colours (5478728)
+* Streamline external links, copyable properties (b4de284)
+* Domain editor: add schema dropdown (46d3d53)
+* Fix domain creation/updating (46d3d53)
+* Fix page querying for commenters page list (6b8479f)
+* Profile: allow changing website URL (7c09df6)
+* Restyle Dashboard, add page and user "backdrop chart" (eb4d0be, 1d83e16, d637185)
+* Drop PostgreSQL 9.6, add 16 (38a4b36)
+* Fix migration script (38a4b36)
+* Static config: add DB version (4878290), server time (184c12c)
+* Domain import: fix Cancel link (f15c981)
+* Fix nullable IdP ID (5577c3a)
+* Fix comment sort (2d0a7e2)
+* Import from Disqus: allow import of "named anonymous" users (#28)
+* Fix handling of URLs ending with '/' (fixes issues with Disqus comment import, SSO config, #28)
+* Fix endless Observable loop when authentication is lost halfway (a4f8dbe)
+* Embed: render "time ago" as a permalink for the comment (#31)
+* Embed: remove Markdown popup in favour of docs link (fc1c42d)
+* Import: use provided page/thread title instead of fetching it every time (f87b7c9)
+* Add spinner when selecting domain (80b5553)
+* More robust domain selector (80b5553)
+* Fix comment list display when deleting a comment (80b5553)
+* Skip fetching avatar for Anonymous (80b5553)
+* End-2-end testing with every major PostgreSQL version (10 through 16; a6fa6f6, 38a4b36)
+
 ## v3.0.0-rc2
 
 **Changes:**
