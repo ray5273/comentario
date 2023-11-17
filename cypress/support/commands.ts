@@ -246,7 +246,8 @@ Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
 Cypress.Commands.add(
     'clickLabel',
     {prevSubject: 'element'},
-    (element: JQueryWithSelector, position?: Cypress.PositionType) => cy.get(`label[for=${element.attr('id')}]`).click(position).wrap(element));
+    (element: JQueryWithSelector, position?: Cypress.PositionType) =>
+        cy.get(`label[for="${element.attr('id')}"]`).eq(0).click(position).wrap(element));
 
 Cypress.Commands.add(
     'sidebarClick',

@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/text/language/display"
 	"sort"
+	"time"
 )
 
 func ConfigDynamicReset(_ api_general.ConfigDynamicResetParams, user *data.User) middleware.Responder {
@@ -126,6 +127,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 				FederatedIdps:  idps,
 				HomeContentURL: strfmt.URI(config.CLIFlags.HomeContentURL),
 				ResultPageSize: util.ResultPageSize,
+				ServerTime:     strfmt.DateTime(time.Now().UTC()),
 				UILanguages:    langs,
 				Version:        config.AppVersion,
 			},

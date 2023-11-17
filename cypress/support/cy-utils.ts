@@ -51,8 +51,12 @@ export const PATHS = {
             }),
         },
         config: {
+            _:          '/en/manage/config',
             static:     '/en/manage/config/static',
-            dynamic:    '/en/manage/config/dynamic',
+            dynamic:{
+                _:      '/en/manage/config/dynamic',
+                edit:   '/en/manage/config/dynamic/edit',
+            },
         },
         account: {
             profile:    '/en/manage/account/profile',

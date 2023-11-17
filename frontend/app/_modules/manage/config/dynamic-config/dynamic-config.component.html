@@ -23,7 +23,7 @@
 
     <!-- Config items -->
     <div class="col-sm">
-        <dl class="detail-table">
+        <dl class="detail-table" id="dynamic-config-items">
             <div *ngFor="let item of items">
                 <dt>{{ item.description }}</dt>
                 <dd [ngSwitch]="item.datatype">

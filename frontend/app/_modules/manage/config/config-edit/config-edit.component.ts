@@ -7,10 +7,11 @@ import { ApiGeneralService, InstanceDynamicConfigItem } from '../../../../../gen
 import { ConfigService } from '../../../../_services/config.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
+import { ToastService } from '../../../../_services/toast.service';
 
 @UntilDestroy()
 @Component({
-    selector: 'app-dynamic-config-param-edit',
+    selector: 'app-config-edit',
     templateUrl: './config-edit.component.html',
 })
 export class ConfigEditComponent implements OnInit {
@@ -29,6 +30,7 @@ export class ConfigEditComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly configSvc: ConfigService,
         private readonly api: ApiGeneralService,
+        private readonly toastSvc: ToastService,
     ) {}
 
     ngOnInit(): void {
@@ -60,6 +62,8 @@ export class ConfigEditComponent implements OnInit {
             .subscribe(() => {
                 // Reload the config
                 this.configSvc.dynamicReload();
+                // Add a success toast
+                this.toastSvc.success('data-saved').keepOnRouteChange();
                 // Go back to the list
                 this.router.navigate([Paths.manage.config.dynamic]);
             });

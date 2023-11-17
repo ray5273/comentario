@@ -35,6 +35,8 @@ export interface InstanceStaticConfig {
     readonly version: string;
     /** Server build date */
     readonly buildDate: string;
+    /** Current server date and time */
+    readonly serverTime: string;
     /** Default interface language ID */
     readonly defaultLangId: string;
     /** URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for  unauthenticated user) or dashboard (for authenticated) */
@@ -80,6 +82,7 @@ export const DefaultInstanceConfig: InstanceConfig = {
         baseDocsUrl:    'https://docs.comentario.app',
         version:        '',
         buildDate:      '',
+        serverTime:     '',
         defaultLangId:  'en',
         homeContentUrl: 'https://docs.comentario.app/en/embed/front-page/',
         resultPageSize: 25,

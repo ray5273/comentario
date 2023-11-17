@@ -1,6 +1,6 @@
 <app-info-block class="mb-3" i18n>These parameters are either immutable or can only be changed at server startup.</app-info-block>
 
-<dl class="detail-table">
+<dl class="detail-table" id="static-config-items">
     <!-- Base Comentario URL -->
     <div>
         <dt i18n>Base Comentario URL</dt>
@@ -20,6 +20,11 @@
     <div>
         <dt i18n>Build date</dt>
         <dd>{{ cfg.buildDate | datetime }}</dd>
+    </div>
+    <!-- Current server time -->
+    <div>
+        <dt i18n>Current server time</dt>
+        <dd>{{ cfg.serverTime | datetime }}</dd>
     </div>
     <!-- Database version -->
     <div>

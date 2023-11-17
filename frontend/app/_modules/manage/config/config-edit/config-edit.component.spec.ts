@@ -6,6 +6,7 @@ import { ConfigEditComponent } from './config-edit.component';
 import { ConfigService } from '../../../../_services/config.service';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
+import { ToastService } from '../../../../_services/toast.service';
 
 describe('ConfigEditComponent', () => {
 
@@ -19,6 +20,7 @@ describe('ConfigEditComponent', () => {
             providers: [
                 MockProvider(ConfigService, {dynamicConfig: of({}) as any}),
                 MockProvider(ApiGeneralService),
+                MockProvider(ToastService),
             ],
         });
         fixture = TestBed.createComponent(ConfigEditComponent);
