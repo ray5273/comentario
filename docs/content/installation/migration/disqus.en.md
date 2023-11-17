@@ -39,7 +39,7 @@ Download the data dump archive using the link from the previous step.
 4. Select `Disqus` as the source format.
 5. Select the file you downloaded in the previous step.
 6. Click `Import`.
-7. Once th import is complete, you'll get an overview with numbers of imported, skipped and failed items.
+7. Once the import is complete, you'll get an overview with numbers of imported, skipped and failed items.
 
 ### 5. Update your code snippet
 
