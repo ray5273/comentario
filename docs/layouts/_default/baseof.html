@@ -33,11 +33,13 @@
 
 <!-- Main page content -->
 <section id="content" class="container">
-    <!-- TODO remove before 3.x release -->
+    <!-- Next version alert -->
+    {{- if in (print $.Site.BaseURL) "edge" }}
     <div class="alert alert-warning">
-        <p>This documentation site is about the <strong>upcoming Comentario 3.x version.</strong></p>
+        <p>This documentation site is about the <strong>unstable</strong> (upcoming) Comentario version.</p>
         <div><a href="https://docs.comentario.app/">Switch to the stable version »</a></div>
     </div>
+    {{- end }}
 
     <!-- Heading -->
     {{- block "heading" . }}

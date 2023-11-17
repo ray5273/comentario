@@ -63,7 +63,7 @@ If you migrated from an existing Comentario install, you'd probably already have
 
 Comentario 3 is embedded on a web page as a [web component](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), and not via a `<div>` tag as before.
 
-In practice, it only means updating the code snippet you place on your web pages, replacing the `<div>` with `<comentario-comments>`. You can look the snippet up in the Administration console, under **Domain properties** ⇒ **Installation**, and it looks like this:
+In practice, it only means updating the code snippet you place on your web pages, replacing the `<div>` with `<comentario-comments>`. You can look the snippet up in the Administration console, under `Domain properties` ⇒ `Installation`, and it looks like this:
 
 ```html
 <script defer src="https://example.com/comentario.js"></script>
