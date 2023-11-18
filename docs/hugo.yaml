@@ -1,0 +1,57 @@
+baseURL: https://docs.comentario.app/
+languageCode: en
+title: 'Comentario Documentation'
+googleAnalytics: 'G-E2705JHXPL'
+
+disableKinds:
+  - RSS
+  - sitemap
+
+outputs:
+  home:
+    - HTML
+    - JSON
+
+defaultContentLanguage: en
+defaultContentLanguageInSubdir: true
+languages:
+  en:
+    weight: 1
+  ru:
+    weight: 2
+
+module:
+  hugoVersion:
+    extended: true
+    min: "v0.110"
+  mounts:
+    - source: node_modules
+      target: assets/node_modules
+    - source: assets
+      target: assets
+    - source: node_modules/@fortawesome/fontawesome-free/webfonts
+      target: static/webfonts
+    - source: static
+      target: static
+
+markup:
+  goldmark:
+    renderer:
+      unsafe: true
+  highlight:
+    style: monokailight
+
+sectionPagesMenu: sidebar
+
+params:
+  description: 'Documentation for Comentario, the powerful commenting tool for web pages.'
+  contactAction: 'https://formspree.io/f/mjvqwoaa'
+  # Will replace googleAnalytics for a dev (edge) build
+  googleAnalyticsDev: 'G-03C68PL4NZ'
+
+menu:
+  # Will be lowercased in the template
+  extNavbar:
+    - identifier: demo
+      url: 'https://demo.comentario.app'
+      weight: 10

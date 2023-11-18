@@ -1,0 +1,8 @@
+{{- with .Params.tags }}
+<div class="page-tags">
+    {{- T "tags" }}:
+    {{- range $idx, $tag := sort . }}
+    {{- if $idx }}, {{ else }} {{ end }}<a href="{{ printf `/tags/%s/` (urlize .) | relLangURL }}" rel="tag">{{ . }}</a>
+    {{- end }}
+</div>
+{{- end }}

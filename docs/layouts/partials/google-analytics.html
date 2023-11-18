@@ -1,0 +1,14 @@
+<!-- Google Analytics (do not add the code when running locally) -->
+{{- if not (in (print $.Site.BaseURL) "localhost") }}
+
+<!-- Determine the GA site ID to use: dev builds use a different one -->
+{{- $siteId := .Site.GoogleAnalytics}}
+{{- if in (print $.Site.BaseURL) "edge" }}{{ $siteId = $.Site.Params.GoogleAnalyticsDev }}{{ end }}
+<script async src="https://www.googletagmanager.com/gtag/js?id={{ $siteId }}"></script>
+<script>
+    window.dataLayer = window.dataLayer || [];
+    function gtag(){dataLayer.push(arguments);}
+    gtag('js', new Date());
+    gtag('config', '{{ $siteId }}');
+</script>
+{{- end }}

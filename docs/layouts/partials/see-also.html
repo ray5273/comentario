@@ -1,0 +1,10 @@
+{{- with .Params.seeAlso }}
+    <h2 id="see-also">{{ T "seeAlso" }}</h2>
+
+    <ul>
+        {{- range . | sort }}
+            {{- $page := $.Page.GetPage . }}
+            <li><a href="{{ $page.RelPermalink }}" class="internal">{{ $page.Title }}</a></li>
+        {{- end }}
+    </ul>
+{{- end }}

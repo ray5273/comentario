@@ -1,0 +1,26 @@
+{{ define "main" }}
+<main>
+    <!-- Main content -->
+    {{ .Content }}
+
+    <!-- If there are child pages, list them -->
+    {{- range .Pages }}
+        <!-- Child page heading -->
+        <p class="mt-3 mb-1 lead fw-bold" id="{{ .Title | anchorize }}"><a href="{{ .RelPermalink }}">
+            <i class="fas fa-file-alt me-1"></i>
+            {{ .Title | markdownify }}
+        </a></p>
+
+        <!-- Child page description -->
+        <div class="ms-5 mb-4">
+            {{ .Summary }}
+        </div>
+    {{- end }}
+
+    <!-- See also -->
+    {{- partial "see-also" . }}
+
+    <!-- Tag list -->
+    {{- partial "tags" . }}
+</main>
+{{ end }}

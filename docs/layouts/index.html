@@ -1,0 +1,14 @@
+{{- define "main" }}
+<main class="container" id="doc-homepage">
+    <!-- Hero area -->
+    <div class="my-3 py-4 text-center">
+        <div><img src="/img/comentario.svg" width="128" alt=""></div>
+        <div class="h4 text-uppercase">{{ .Title }}</div>
+    </div>
+
+    <!-- Content -->
+    <div>
+        {{ .Content }}
+    </div>
+</main>
+{{- end }}

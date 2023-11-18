@@ -1,0 +1,49 @@
+{{- define "html" -}}
+<div class="container-lg text-center">
+    <!-- Hero area -->
+    <div class="py-5 mt-5">
+        <!-- Slogan -->
+        <div class="display-4 fw-bold">
+            <span class="fade-in-1s" style="text-shadow: #898eff -1px -2px 30px, #ffce84 -1px -2px 63px">{{ T "slogan1" }}</span>
+            <span class="fade-in-2s" style="text-shadow: #9e59ff 1px  -2px 30px, #ffb9f8 1px  -2px 63px">{{ T "slogan2" }}</span>
+        </div>
+
+        <!-- Subslogan -->
+        <div class="lead fade-in-3s">{{ T "sloganSub" }}</div>
+
+        <!-- Buttons -->
+        <div class="mt-3 d-grid d-sm-block gap-2">
+            <!-- View Demo -->
+            <a href="https://demo.comentario.app/" class="btn btn-primary" target="_blank" rel="noopener"
+               style="box-shadow: #898eff -1px -2px 30px, #ffce84 -1px -2px 63px">
+                <span class="me-1">{{ T "viewDemo" }}</span>
+                <svg role="img" aria-hidden="true" focusable="false" xmlns="http://www.w3.org/2000/svg"
+                     viewBox="0 0 512 512" width="1em" class="d-inline-block" style="vertical-align: -0.125em">
+                    <path fill="currentColor"
+                          d="M320 0c-17.7 0-32 14.3-32 32s14.3 32 32 32h82.7L201.4 265.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L448 109.3V192c0 17.7 14.3 32 32 32s32-14.3 32-32V32c0-17.7-14.3-32-32-32H320zM80 32C35.8 32 0 67.8 0 112V432c0 44.2 35.8 80 80 80H400c44.2 0 80-35.8 80-80V320c0-17.7-14.3-32-32-32s-32 14.3-32 32V432c0 8.8-7.2 16-16 16H80c-8.8 0-16-7.2-16-16V112c0-8.8 7.2-16 16-16H192c17.7 0 32-14.3 32-32s-14.3-32-32-32H80z"></path>
+                </svg>
+            </a>
+            <!-- Get Started -->
+            <a href="{{ `/getting-started/` | absLangURL }}" class="btn btn-cta" target="_blank" rel="noopener"
+               style="box-shadow: #ffc04b 1px  -2px 30px, #ffb9f8 1px  -2px 63px">
+                {{ T "getStarted" }}
+            </a>
+            <!-- Sign up, when not logged in -->
+            <a href="auth/signup" class="btn btn-outline-success hide-authenticated"
+               style="box-shadow: #8dff02 1px  -2px 30px, #fff14d 1px  -2px 63px">
+                {{ T "signUp" }}
+            </a>
+            <!-- Dashboard, when logged in -->
+            <a href="manage/dashboard" class="btn btn-outline-primary hide-unauthenticated"
+               style="box-shadow: #16d9d9 1px  -2px 30px, #f8ff85 1px  -2px 63px">
+                {{ T "dashboard" }}
+            </a>
+        </div>
+    </div>
+
+    <!-- Page content -->
+    <div class="fade-in mb-5">
+        {{ .Content }}
+    </div>
+</div>
+{{- end -}}

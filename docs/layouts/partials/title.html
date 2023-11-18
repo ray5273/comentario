@@ -1,0 +1,4 @@
+<title>
+    {{- if not .IsHome }}{{ .Title | markdownify | plainify }} | {{ end -}}
+    {{- .Site.Title -}}
+</title>

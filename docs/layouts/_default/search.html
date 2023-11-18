@@ -1,0 +1,17 @@
+{{ define "main" }}
+<section>
+    <!-- Search form -->
+    <form onsubmit="return false;">
+        <div class="mb-3">
+            <label class="d-none" for="search-query">{{ T `search` }}</label>
+            <input type="search" class="form-control" name="q" id="search-query" placeholder="{{ T `typeSomething` }}…" required autofocus>
+        </div>
+    </form>
+
+    <!-- Results -->
+    <div id="search-results" class="d-none"></div>
+
+    <!-- No results -->
+    <div id="no-search-results" class="d-none text-muted">{{ T "noResults" }}</div>
+</section>
+{{ end }}

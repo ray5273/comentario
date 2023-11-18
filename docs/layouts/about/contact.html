@@ -1,0 +1,35 @@
+{{ define "main" }}
+<!-- Main content -->
+<section id="contact-main-content">
+    {{ .Content }}
+</section>
+
+<!-- Contact form -->
+<section id="contact-form-container">
+    <form id="contact-form" class="contact-form" method="POST" action="{{ .Site.Params.contactAction }}" novalidate>
+        <input type="hidden" name="_language" value="{{ .Site.Language.Lang }}" />
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" name="name" id="contactform-name" placeholder="{{ T `yourName` }}" required>
+            <label class="control-label" for="contactform-name">{{ T `yourName` }}</label>
+            <div class="invalid-feedback">{{ T "errorNameReq" }}</div>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="email" class="form-control" name="email" id="contactform-email" placeholder="{{ T `yourEmail` }}" required>
+            <label class="control-label" for="contactform-email">{{ T `yourEmail` }}</label>
+            <div class="invalid-feedback">{{ T `errorEmailReq` }}</div>
+        </div>
+        <div class="form-floating mb-3">
+            <input type="text" class="form-control" name="subject" id="contactform-subject" placeholder="{{ T `messageSubject` }}">
+            <label class="control-label" for="contactform-subject">{{ T `messageSubject` }}</label>
+        </div>
+        <div class="form-floating mb-3">
+            <textarea rows="6" class="form-control" name="message" id="contactform-message" placeholder="{{ T `messageBody` }}" required></textarea>
+            <label class="control-label" for="contactform-message">{{ T `messageBody` }}</label>
+            <div class="invalid-feedback">{{ T `errorMessageReq` }}</div>
+        </div>
+        <div id="cf-submit">
+            <input type="submit" id="contact-submit-button" class="btn btn-primary" value="{{ T `submit` }}">
+        </div>
+    </form>
+</section>
+{{ end }}

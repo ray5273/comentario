@@ -1,0 +1,486 @@
+@import url('https://fonts.googleapis.com/css2?family=Volkhov:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+// Fonts
+$font-family-sans-serif: Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+$headings-font-family:   Volkhov, serif;
+
+// Theme palette
+$primary:   #4950d8;
+$secondary: adjust-color($primary, $saturation: -25%, $lightness: +16%);
+$success:   #198754;
+$info:      #6610f2;
+$warning:   #ffc107;
+$danger:    #dc3545;
+$light:     #ffffff;
+$dark:      #212529;
+// -- Theme palette custom extensions
+$cta:       #ec8100;
+
+// Extend the (default) theme color with the cta color
+$theme-colors: (
+    "primary":   $primary,
+    "secondary": $secondary,
+    "success":   $success,
+    "info":      $info,
+    "warning":   $warning,
+    "danger":    $danger,
+    "light":     $light,
+    "dark":      $dark,
+
+    // Custom colours
+    "cta":       $cta
+);
+
+// Remove underlining from all links
+$link-decoration: none;
+
+// Remove <mark> padding
+$mark-padding: 0;
+
+// Configuration
+@import "node_modules/bootstrap/scss/functions";
+@import "node_modules/bootstrap/scss/variables";
+@import "node_modules/bootstrap/scss/variables-dark";
+@import "node_modules/bootstrap/scss/maps";
+@import "node_modules/bootstrap/scss/mixins";
+@import "node_modules/bootstrap/scss/utilities";
+
+// Layout & components
+@import "node_modules/bootstrap/scss/root";
+@import "node_modules/bootstrap/scss/reboot";
+@import "node_modules/bootstrap/scss/type";
+@import "node_modules/bootstrap/scss/images";
+@import "node_modules/bootstrap/scss/containers";
+@import "node_modules/bootstrap/scss/grid";
+@import "node_modules/bootstrap/scss/tables";
+@import "node_modules/bootstrap/scss/forms";
+@import "node_modules/bootstrap/scss/buttons";
+@import "node_modules/bootstrap/scss/transitions";
+@import "node_modules/bootstrap/scss/dropdown";
+// @import "node_modules/bootstrap/scss/button-group";
+@import "node_modules/bootstrap/scss/nav";
+@import "node_modules/bootstrap/scss/navbar";
+@import "node_modules/bootstrap/scss/card";
+// @import "node_modules/bootstrap/scss/accordion";
+// @import "node_modules/bootstrap/scss/breadcrumb";
+// @import "node_modules/bootstrap/scss/pagination";
+// @import "node_modules/bootstrap/scss/badge";
+@import "node_modules/bootstrap/scss/alert";
+// @import "node_modules/bootstrap/scss/progress";
+// @import "node_modules/bootstrap/scss/list-group";
+// @import "node_modules/bootstrap/scss/close";
+// @import "node_modules/bootstrap/scss/toasts";
+// @import "node_modules/bootstrap/scss/modal";
+// @import "node_modules/bootstrap/scss/tooltip";
+// @import "node_modules/bootstrap/scss/popover";
+// @import "node_modules/bootstrap/scss/carousel";
+// @import "node_modules/bootstrap/scss/spinners";
+// @import "node_modules/bootstrap/scss/offcanvas";
+// @import "node_modules/bootstrap/scss/placeholders";
+
+// Helpers
+@import "node_modules/bootstrap/scss/helpers";
+
+// Utilities
+@import "node_modules/bootstrap/scss/utilities/api";
+
+// Font Awesome
+@import "node_modules/@fortawesome/fontawesome-free/scss/fontawesome";
+@import "node_modules/@fortawesome/fontawesome-free/scss/solid";
+@import "node_modules/@fortawesome/fontawesome-free/scss/brands";
+
+$sidebar-color: adjust-color($primary, $saturation: -33%, $lightness: +28%);
+$footer-color:  adjust-color($primary, $saturation: -33%, $lightness: 0%);
+
+// Give all root elements full height so that we can position the footer at the bottom of the screen
+html {
+    height: 100%;
+}
+body {
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+}
+
+section {
+    margin-bottom: 2rem;
+}
+
+// Anchors
+a {
+    &.internal {
+        border-bottom: 1px dashed transparentize($primary, 0.5);
+    }
+}
+
+// Permalink icons appearing when hovering over headings
+.heading-link {
+    margin-left: 0.5rem;
+    visibility: hidden;
+
+    &:after {
+        content: "\f0c1"; // fa-link
+        color: transparentize($primary, 0.75);
+        font-family: $fa-style-family;
+    }
+}
+
+// Make permalink icons appear when hovering over headings
+@for $h from 1 through 6 {
+    h#{$h}:hover,h#{$h}:focus {
+        .heading-link {
+            visibility: visible;
+        }
+    }
+}
+
+// Scroll-to-top button
+#btn-scroll-to-top {
+    bottom: -50px;
+    right: -50px;
+    opacity: 0;
+    visibility: hidden;
+
+    &.show {
+        opacity: 0.9;
+        visibility: visible;
+    }
+}
+
+// Sidebar
+#sidebar-toggler {
+    bottom: -50px;
+    left: -50px;
+    text-align: right;
+
+    @include media-breakpoint-up(md) {
+        opacity: 0;
+        visibility: hidden;
+    }
+}
+
+.sidebar-container {
+
+    .sidebar-backdrop {
+        position: fixed;
+        z-index: 109;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        width: 100%;
+        background-color: transparentize($dark, 0.6);
+        backdrop-filter: blur(3px);
+       // opacity: 0.2;
+        transition: opacity 0.6s ease;
+
+        @include media-breakpoint-up(md) {
+            opacity: 0;
+            width: 0;
+        }
+    }
+
+    .sidebar {
+        background-color: $sidebar-color;
+        display: block;
+        position: fixed;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        z-index: 110;
+        padding-left: 0;
+        padding-right: 0;
+        width: 280px;
+        box-shadow: 4px 0 10px #33333340;
+        transition: left 0.3s ease;
+        overflow-y: auto;
+
+        @include media-breakpoint-up(md) {
+            left: 0;
+            z-index: 10;
+            box-shadow: none;
+        }
+
+        .nav {
+            flex-direction: column;
+
+            // All items
+            .nav-item {
+                padding-left: 0.5rem;
+            }
+
+            // All links
+            .nav-link {
+                --bs-nav-link-padding-x: 0.5rem;
+                --bs-nav-link-padding-y: 0.25rem;
+                --bs-nav-link-font-weight: bold;
+
+                display: inline-block;
+                border-radius: 0.25rem;
+
+                &.active {
+                    color: $light;
+                    background-color: $primary;
+                }
+
+                // Placeholder in case the item has no children
+                &:before {
+                    content: '';
+                    display: inline-block;
+                    width: 1em;
+                    height: 1em;
+                    background: transparent no-repeat;
+                }
+
+                &.has-children{
+                    // angle-right icon
+                    &:before {
+                        vertical-align: top;
+                        margin-top: (1.5 - 1em) * 0.5;
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M246.6 233.4c12.5 12.5 12.5 32.8 0 45.3l-160 160c-12.5 12.5-32.8 12.5-45.3 0s-12.5-32.8 0-45.3L178.7 256 41.4 118.6c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0l160 160z'/%3E%3C/svg%3E");
+                    }
+
+                    // angle-down icon
+                    &.is-expanded:before {
+                        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Cpath d='M169.4 342.6c12.5 12.5 32.8 12.5 45.3 0l160-160c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 274.7 54.6 137.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3l160 160z'/%3E%3C/svg%3E");
+                    }
+                }
+
+                &:not(.has-children){
+                    &.active:before {
+                        content: "•";
+                    }
+                }
+            }
+
+            // Second+ level links
+            ul {
+                .nav-item {
+                    padding-left: 1rem;
+                }
+
+                .nav-link {
+                    --bs-nav-link-font-weight: null;
+                }
+            }
+        }
+    }
+
+    &.collapsed {
+        .sidebar-backdrop {
+            opacity: 0;
+            width: 0;
+        }
+
+        .sidebar {
+            left: -281px;
+            box-shadow: none;
+
+            @include media-breakpoint-up(md) {
+                left: 0;
+            }
+        }
+    }
+
+}
+.sidebar-logo-container {
+    margin-top: 20px;
+    margin-bottom: 10px;
+    text-align: center;
+}
+.sidebar-logo {
+    text-decoration: none;
+}
+.sidebar-icon {
+    min-width: 20px;
+}
+.lang-menu .nav-link.active {
+    font-weight: $font-weight-bold;
+    background-color: rgba(0, 0, 0, 0.06);
+}
+
+.hero-area {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: start;
+    align-content: center;
+    padding-top: 4rem;
+    padding-bottom: 4rem;
+
+    @include media-breakpoint-up(md) {
+        min-height: 75vh;
+    }
+}
+
+footer {
+    position: relative;
+    background-color: $footer-color;
+    color: #ced1e1;
+    padding-top: 2rem;
+    padding-bottom: 2rem;
+    font-size: $font-size-sm;
+    z-index: 20;
+
+    a {
+        color: inherit;
+        transition: color 0.1s linear;
+
+        &:hover, &:active {
+            color: $light;
+        }
+    }
+    .active {
+        font-weight: $font-weight-bold;
+    }
+}
+
+// Main content
+#content {
+    width: 100%;
+    flex: 0 0 100%;
+    max-width: 100%;
+    padding: 1rem 2rem;
+
+    @include media-breakpoint-up(md) {
+        display: block;
+        padding-left: 300px;
+    }
+}
+
+// Tables
+.table-narrow {
+    width: auto;
+}
+
+// Figure
+.imgfig {
+    display: block;
+    margin: 0 auto;
+    text-align: center;
+
+    .figure-img {
+        max-width: 100%;
+        height: auto;
+        max-height: 800px;
+    }
+
+    .figure-caption {
+        margin-bottom: 1rem;
+    }
+}
+
+// Code highlight
+.highlight {
+    pre {
+        padding: 1rem;
+    }
+}
+
+// Override Bootstrap classes
+.btn-primary, .btn-secondary, .btn-cta {
+    --bs-btn-color:        #fff;
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+.btn-outline-primary, .btn-outline-secondary, .btn-outline-cta {
+    --bs-btn-hover-color:  #fff;
+    --bs-btn-active-color: #fff;
+}
+
+// Subheading, the page's description under the main heading
+.subheading {
+    color: $gray-600;
+    margin-top: -0.66rem;
+    margin-bottom: 2rem;
+    font-size: 90%;
+}
+
+.float-button {
+    position: fixed;
+    width: 100px;
+    height: 100px;
+    padding: 20px;
+    border-radius: 50%;
+    background-color: $sidebar-color;
+    color: $light;
+
+    transition: all .5s ease-in-out;
+    visibility: visible;
+    z-index: 1000;
+    font-size: 1.5em;
+
+    &:hover, &:focus, &:active {
+        background-color: lighten($sidebar-color, 0.2);
+        color: $light;
+    }
+}
+
+.page-tags {
+    margin-top: 2rem;
+    padding: 1rem 0;
+    border-top: 1px solid $border-color;
+    font-size: $font-size-sm;
+    color: $text-muted;
+}
+
+// Tags
+.tag-cloud {
+    text-align: center;
+
+    li a {
+        padding: 0.2rem 0.4rem;
+        margin: 0.4rem 0;
+        text-align: center;
+        vertical-align: middle;
+        line-height: 2rem;
+        border-radius: 6px;
+    }
+    .tag {
+        white-space: nowrap;
+    }
+    .tag-size-1 {
+        font-size: 80%;
+        opacity: .8;
+    }
+    .tag-size-2 {
+        font-size: 100%;
+        opacity: .9;
+    }
+    .tag-size-3 {
+        font-size: 115%;
+    }
+    .tag-size-4 {
+        font-size: 130%;
+    }
+    .tag-size-5 {
+        font-size: 150%;
+        font-weight: bold;
+    }
+    .tag-size-6 {
+        font-size: 180%;
+        font-weight: bold;
+    }
+    .tag-size-7 {
+        font-size: 220%;
+        font-weight: bold;
+    }
+}
+
+// Animations
+.fade-in-1s {
+    animation: fade-in-animation 1s ease forwards 1;
+}
+.fade-in-3s {
+    animation: fade-in-animation 3s ease forwards 1;
+}
+@keyframes fade-in-animation {
+    0%   { opacity: 0; }
+    50%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+// Cards
+.card-img-container {
+    overflow: hidden;
+    max-height: 200px;
+}

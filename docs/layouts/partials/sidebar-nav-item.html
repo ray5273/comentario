@@ -1,0 +1,31 @@
+<!----------------------------------------------------------------------------------------------------------------------
+    Render an item with menu for subpages (if any) of the given section page.
+    Context is a dictionary containing the following key-value pairs:
+        page:   Page the menu is being rendered for
+        curURL: URL of the current page (to determine whether the item is active)
+        item:   Optional menu item being rendered
+----------------------------------------------------------------------------------------------------------------------->
+{{- if not .page.Params.skipSidebar }}
+{{- $url        := .page.Permalink }}{{ with .item }}{{ $url = absLangURL .URL }}{{ end }}
+{{- $isExpanded := hasPrefix .curURL $url }}
+{{- $isCurrent  := eq .curURL $url }}
+{{- $isSection  := eq .page.Kind "section" }}
+{{- $children   := .page.Pages }}
+<li class="nav-item">
+    <!-- Link to the section page -->
+    <a class="nav-link{{ if $isCurrent }} active{{ end }}{{ if and $isSection $children }} has-children{{ end }}{{ if $isExpanded }} is-expanded{{ end }}"
+       href="{{ $url }}"
+       {{ if $isCurrent }}aria-current="page"{{ end }}>
+        {{- with .item }}{{ .Title }}{{ else }}{{ .page.Title }}{{ end -}}
+    </a>
+
+    <!-- If the item is an "expanded" section, render its children (if any) -->
+    {{- if and $isSection $isExpanded }}
+    {{- with $children }}
+    <ul class="nav">
+        {{- range . }}{{ partial "sidebar-nav-item" (dict "page" . "curURL" $.curURL) }}{{ end }}
+    </ul>
+    {{- end }}
+    {{- end }}
+</li>
+{{- end }}

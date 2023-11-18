@@ -1,0 +1,19 @@
+<!-- Render a card with an image and some text. Parameters:
+       image: image URL
+       title: card title
+ -->
+<div class="col">
+    <div class="card h-100">
+        {{- with .Get "image" }}
+        <div class="card-img-container">
+            <img src="{{ . }}" class="card-img-top" alt="">
+        </div>
+        {{- end }}
+        <div class="card-body">
+            <h5 class="card-title">{{ .Get "title" }}</h5>
+            <div class="card-text">
+                {{ page.RenderString .Inner }}
+            </div>
+        </div>
+    </div>
+</div>

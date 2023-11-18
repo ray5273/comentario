@@ -1,0 +1,26 @@
+- {id: about,             translation: About}
+- {id: copyright,         translation: Copyright ©2023 Comentario.}
+- {id: dashboard,         translation: Dashboard}
+- {id: demo,              translation: Demo}
+- {id: documentation,     translation: Documentation}
+- {id: errorMessageReq,   translation: Message is required.}
+- {id: getStarted,        translation: Get Started}
+- {id: numPages,          translation: {one: 'One page', other: '{{ .Count }} pages'}}
+- {id: search,            translation: Search}
+- {id: tag,               translation: Tag}
+- {id: tags,              translation: Tags}
+- {id: viewDemo,          translation: View Demo}
+- {id: yourName,          translation: Your name}
+- {id: errorNameReq,      translation: Name is required.}
+- {id: yourEmail,         translation: Your email}
+- {id: errorEmailReq,     translation: Email is required.}
+- {id: messageSubject,    translation: Subject}
+- {id: messageBody,       translation: Your message}
+- {id: noResults,         translation: No matches found.}
+- {id: seeAlso,           translation: See also}
+- {id: signUp,            translation: Sign Up}
+- {id: slogan1,           translation: Comments.}
+- {id: slogan2,           translation: Easy.}
+- {id: sloganSub,         translation: Add comments to your web page or blog in a matter of minutes.}
+- {id: submit,            translation: Submit}
+- {id: typeSomething,     translation: Type something}

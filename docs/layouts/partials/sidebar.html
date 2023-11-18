@@ -1,0 +1,26 @@
+<!-- Logo -->
+<div class="sidebar-logo-container">
+    <a class="sidebar-logo" href="{{ absLangURL `/` }}" title="{{ T `home` }}"><img src="/img/docs-logo.png" alt="Logo"></a>
+</div>
+
+<!-- Language switcher -->
+<!-- DISABLE for now -->
+{{- if false }}
+<ul class="nav justify-content-center border-top lang-menu">
+    {{ range .AllTranslations }}
+    <li class="nav-item">
+        <a class="nav-link{{ if eq $.Lang .Lang }} active{{ end }}" href="{{ .Permalink }}"
+           title="{{ .Language.LanguageName }}">{{ .Language.Lang | upper }}</a>
+    </li>
+    {{ end }}
+</ul>
+{{- end }}
+
+<!-- Main sidebar menu -->
+<ul class="nav mt-2 pt-2 border-top">
+    <!-- List all top-level sections (added automatically to the "sidebar" menu thanks to the sectionPagesMenu config
+         entry) -->
+    {{- range .Site.Menus.sidebar }}
+    {{- partial "sidebar-nav-item" (dict "page" .Page "curURL" $.Permalink "item" .) }}
+    {{- end }}
+</ul>

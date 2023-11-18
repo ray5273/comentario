@@ -1,0 +1,12 @@
+{{ define "main" }}
+<main>
+    <!-- Main content -->
+    {{ .Content }}
+
+    <!-- See also -->
+    {{- partial "see-also" . }}
+
+    <!-- Tag list -->
+    {{- partial "tags" . }}
+</main>
+{{ end }}
