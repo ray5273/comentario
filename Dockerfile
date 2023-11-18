@@ -4,7 +4,10 @@ FROM alpine:3
 RUN apk add --no-cache --update ca-certificates
 
 # Copy the previously built artifacts
-COPY build /comentario/
+COPY build/db         /comentario/db
+COPY build/frontend   /comentario/frontend
+COPY build/templates  /comentario/templates
+COPY build/comentario /comentario/
 
 # Make sure files were built and are available
 RUN test -x /comentario/comentario && \

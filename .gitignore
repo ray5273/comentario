@@ -16,6 +16,7 @@ node_modules/
 
 # Caches
 .angular/
+/docs/resources/
 
 # Test artifacts
 /cypress/downloads
@@ -30,3 +31,6 @@ node_modules/
 
 # Locally kept files
 ~*
+
+# Misc
+.hugo_build.lock

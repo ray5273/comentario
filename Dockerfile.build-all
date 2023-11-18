@@ -42,12 +42,18 @@ RUN \
     CGO_ENABLED=0 go build -a -v -o 'comentario' -ldflags "-w -s -X main.version=$v -X main.date=$d"
 
 # Frontend and embed build
-FROM node:18-alpine AS frontend-build
+FROM node:20-alpine AS frontend-build
 RUN apk add --no-cache --update openjdk17-jre-headless
 
 COPY . /comentario
 WORKDIR /comentario
-RUN rm -rf build && yarn install --frozen-lockfile && yarn run build:prod
+RUN rm -rf build && \
+    # Install dependencies
+    yarn install --frozen-lockfile && \
+    # Build frontend
+    cd /comentario/frontend && yarn run build:prod && \
+    # Build embed
+    cd /comentario/embed && yarn run build:prod
 
 # Final image
 FROM alpine:3.17

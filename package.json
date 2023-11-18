@@ -1,13 +1,13 @@
 {
     "name": "comentario",
-    "version": "2.0.0",
+    "version": "3.0.0",
     "repository": "git@gitlab.com:comentario/comentario.git",
     "author": "Dmitry Kann, Adhityaa Chandrasekar, Anton Linevych",
     "license": "MIT",
     "private": true,
     "scripts": {
-        "build": "npm run -w frontend build && npm run -w embed build",
-        "build:prod": "npm run -w frontend build:prod && npm run -w embed build:prod",
+        "build": "npm run -w frontend build && npm run -w embed build && npm run -w docs build",
+        "build:prod": "npm run -w frontend build:prod && npm run -w embed build:prod && npm run -w docs build:prod",
         "cy": "cypress open --e2e --browser chrome",
         "cy:ci": "cypress run --config video=false",
         "generate": "npm run -w frontend generate",
@@ -19,7 +19,8 @@
     },
     "workspaces": [
         "embed",
-        "frontend"
+        "frontend",
+        "docs"
     ],
     "devDependencies": {
         "@typescript-eslint/eslint-plugin": "^6.8.0",

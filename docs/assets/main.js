@@ -1,14 +1,14 @@
-$(document).ready(function () {
+$(function () {
 
     /**
      * Initialise the scroll-to-top button
      */
     const btnScrollToTop = $('#btn-scroll-to-top');
-    $(window).scroll(() => btnScrollToTop.toggleClass('show', $(window).scrollTop() > 300));
+    $(window).on('scroll', () => btnScrollToTop.toggleClass('show', $(window).scrollTop() > 300));
 
     btnScrollToTop.on('click', e => {
         e.preventDefault();
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        window.scrollTo({top: 0, behavior: 'smooth'});
     });
 
     /**

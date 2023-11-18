@@ -3,6 +3,8 @@ languageCode: en
 title: 'Comentario Documentation'
 googleAnalytics: 'G-E2705JHXPL'
 
+publishDir: ../build/docs
+
 disableKinds:
   - RSS
   - sitemap
@@ -17,19 +19,17 @@ defaultContentLanguageInSubdir: true
 languages:
   en:
     weight: 1
-  ru:
-    weight: 2
 
 module:
   hugoVersion:
     extended: true
-    min: "v0.110"
+    min: "v0.120.4"
   mounts:
-    - source: node_modules
+    - source: ../node_modules
       target: assets/node_modules
     - source: assets
       target: assets
-    - source: node_modules/@fortawesome/fontawesome-free/webfonts
+    - source: ../node_modules/@fortawesome/fontawesome-free/webfonts
       target: static/webfonts
     - source: static
       target: static
