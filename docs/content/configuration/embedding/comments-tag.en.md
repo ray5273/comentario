@@ -39,7 +39,8 @@ Example of a customised `<comentario-comments>` tag:
 
 ```html
 <comentario-comments auto-init="false" 
-                     css-override="https://example.com/custom.css" 
+                     css-override="https://example.com/custom.css"
+                     max-level="5"
                      no-fonts="true" 
                      page-id="/blog/post/123"></comentario-comments>
 ```
