@@ -1,12 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { combineLatestWith, first } from 'rxjs';
-import { faCopy, faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { DomainExtension, FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { Paths } from '../../../../_utils/consts';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
-import { Utils } from '../../../../_utils/utils';
 
 @UntilDestroy()
 @Component({
@@ -26,12 +25,8 @@ export class DomainPropertiesComponent implements OnInit {
 
     readonly domainLoading = this.domainSelectorSvc.domainLoading;
     readonly Paths = Paths;
-    readonly snippet =
-        `<script defer src="${Utils.joinUrl(this.cfgSvc.staticConfig.baseUrl, 'comentario.js')}"></script>\n` +
-        `<comentario-comments></comentario-comments>`;
 
     // Icons
-    readonly faCopy   = faCopy;
     readonly faEdit   = faEdit;
     readonly faTicket = faTicket;
 

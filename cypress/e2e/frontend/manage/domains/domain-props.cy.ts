@@ -141,22 +141,87 @@ context('Domain Properties page', () => {
 
     context('for owner user', () => {
 
-        it('shows properties for SSO-enabled domain', () => {
-            cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
-            makeAliases(DOMAINS.localhost.host, true, true, true);
+        const checkSnippet = (opts: string) => {
+            const html = `<script defer src="${Cypress.config().baseUrl}/comentario.js"></script>\n` +
+                `<comentario-comments${opts}></comentario-comments>`;
 
-            // Check the Installation section
-            const html = Util.installSnippet();
+            // Check the HTML
             cy.get('@installSnippet').find('pre').should('have.text', html);
 
             // Test copying the snippet to the clipboard
             cy.get('@installSnippet').contains('button', 'Copy').click();
             cy.get('@writeText').should('be.calledWithExactly', html);
+        };
 
-            // Check domain properties table
+        it('shows install snippet', () => {
+            cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
+            makeAliases(DOMAINS.localhost.host, true, true, true);
+
+            // No options visible by default
+            cy.get('#install-snippet-options').should('not.be.visible');
+
+            // Check the default snippet
+            checkSnippet('');
+
+            // Expand options
+            cy.get('@installSnippet').contains('button', 'Options').click();
+            cy.get('#install-snippet-options').should('be.visible');
+
+            // Check option defaults
+            cy.get('#opt-auto-init')   .as('optAutoInit')   .should('be.visible').and('be.checked');
+            cy.get('#opt-no-fonts')    .as('optNoFonts')    .should('be.visible').and('not.be.checked');
+            cy.get('#opt-no-css')      .as('optNoCss')      .should('be.visible').and('not.be.checked');
+            cy.get('#opt-css-override').as('optCssOverride').should('be.visible').and('have.value', '').and('be.enabled');
+            cy.get('#opt-max-level')   .as('optMaxLevel')   .should('be.visible').and('have.value', '10');
+            cy.get('#opt-page-id')     .as('optPageId')     .should('be.visible').and('have.value', '');
+
+            // Change options
+            // -- auto-init
+            cy.get('@optAutoInit').clickLabel().should('not.be.checked');
+            checkSnippet(' auto-init="false"');
+            cy.get('@optAutoInit').clickLabel();
+            checkSnippet('');
+            // -- no-fonts
+            cy.get('@optNoFonts').clickLabel().should('be.checked');
+            checkSnippet(' no-fonts="true"');
+            cy.get('@optNoFonts').clickLabel();
+            checkSnippet('');
+            // -- no-css
+            cy.get('@optNoCss').clickLabel().should('be.checked');
+            cy.get('@optCssOverride').should('be.disabled');
+            checkSnippet(' css-override="false"');
+            cy.get('@optNoCss').clickLabel();
+            cy.get('@optCssOverride').should('be.enabled');
+            checkSnippet('');
+            // -- css-override
+            cy.get('@optCssOverride').setValue('https://example.com/test.css');
+            checkSnippet(' css-override="https://example.com/test.css"');
+            cy.get('@optCssOverride').clear();
+            checkSnippet('');
+            // -- max-level
+            cy.get('@optMaxLevel').setValue('5');
+            checkSnippet(' max-level="5"');
+            cy.get('@optMaxLevel').setValue('10');
+            checkSnippet('');
+            // -- page-id
+            cy.get('@optPageId').setValue('/test-page');
+            checkSnippet(' page-id="/test-page"');
+            cy.get('@optPageId').clear();
+            checkSnippet('');
+
+            // Multiple options as once
+            cy.get('@optAutoInit').clickLabel();
+            cy.get('@optNoFonts').clickLabel();
+            cy.get('@optCssOverride').setValue('https://whatever.org/x.css');
+            cy.get('@optMaxLevel').setValue('42');
+            cy.get('@optPageId').setValue('/path/1');
+            checkSnippet(' auto-init="false" no-fonts="true" css-override="https://whatever.org/x.css" max-level="42" page-id="/path/1"');
+        });
+
+        it('shows properties for SSO-enabled domain', () => {
+            cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
+            makeAliases(DOMAINS.localhost.host, true, true, true);
             checkAllProperties();
-
-            // Check buttons
             checkEditButtons(DOMAINS.localhost.id, true);
         });
 

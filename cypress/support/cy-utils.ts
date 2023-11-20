@@ -254,11 +254,4 @@ export class Util {
             cy.stub(win.navigator.clipboard, 'writeText').as('writeText').resolves('');
         },
     };
-
-    /**
-     * Return the installation HTML snippet for the given domain host.
-     */
-    static readonly installSnippet = () =>
-        `<script defer src="${Cypress.config().baseUrl}/comentario.js"></script>\n` +
-        '<comentario-comments></comentario-comments>';
 }

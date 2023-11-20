@@ -22,7 +22,9 @@ After Comentario engine is initialised, the comments will appear inside the corr
 
 ## Customising the comments
 
-You can further customise Comentario by adding attributes to the `<comentario-comments>` tag:
+You can further customise Comentario by adding attributes to the `<comentario-comments>` tag. You can use the `Options` button next to the snippet to open the option editor.
+
+Comentario recognises the following tag attributes:
 
 {{< table "table table-narrow table-striped" >}}
 

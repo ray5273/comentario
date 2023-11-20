@@ -1,0 +1,93 @@
+<p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
+<div id="install-snippet-container" class="border p-3 mb-3">
+    <div id="install-snippet"
+         class="d-flex flex-wrap flex-md-nowrap justify-content-center justify-content-md-between align-items-center">
+        <!-- Code snippet -->
+        <code class="overflow-hidden m-2"><pre class="mb-0">{{ snippet }}</pre></code>
+        <!-- Buttons -->
+        <div class="d-flex align-items-center">
+            <!-- Copy -->
+            <button [appCopyText]="snippet" type="button" class="btn btn-secondary" ngbTooltip="">
+                <fa-icon [icon]="faCopy" class="me-1"></fa-icon>
+                <ng-container i18n>Copy</ng-container>
+            </button>
+            <!-- Options toggler -->
+            <button (click)="collapseSnippetOptions = !collapseSnippetOptions" [attr.aria-expanded]="!collapseSnippetOptions"
+                    [class.collapsed]="collapseSnippetOptions"
+                    type="button" class="btn btn-outline-secondary ms-2 collapse-toggler" aria-controls="install-snippet-options">
+                <ng-container i18n>Options</ng-container>
+                <fa-icon [icon]="faChevronDown" class="ms-1"></fa-icon>
+            </button>
+        </div>
+    </div>
+
+    <!-- Snippet options -->
+    <div [(ngbCollapse)]="collapseSnippetOptions" id="install-snippet-options">
+        <!-- Info block -->
+        <app-info-block class="mt-3">
+            <ng-container i18n>These options allow you to customise Comentario behaviour on a specific page.</ng-container>
+            <app-info-icon docLink="configuration/embedding/comments-tag/" class="ms-2"></app-info-icon>
+        </app-info-block>
+
+        <!-- Snippet options form -->
+        <form [formGroup]="form" id="install-snippet-options-form">
+            <!-- Checkboxes -->
+            <div class="row mb-3">
+                <div class="col-sm-9 offset-sm-3">
+                    <!-- Initialise Comentario automatically -->
+                    <div class="form-check">
+                        <input formControlName="autoInit" class="form-check-input" type="checkbox" id="opt-auto-init">
+                        <label class="form-check-label" for="opt-auto-init">Initialise Comentario automatically</label>
+                    </div>
+                    <!-- Disable standard fonts -->
+                    <div class="form-check">
+                        <input formControlName="noFonts" class="form-check-input" type="checkbox" id="opt-no-fonts">
+                        <label class="form-check-label" for="opt-no-fonts">Disable standard fonts</label>
+                    </div>
+                    <!-- Disable all Comentario styles -->
+                    <div class="form-check">
+                        <input formControlName="noCss" class="form-check-input" type="checkbox" id="opt-no-css">
+                        <label class="form-check-label" for="opt-no-css">Disable all Comentario styles</label>
+                    </div>
+                </div>
+            </div>
+            <!-- CSS override URL -->
+            <div class="row mb-3">
+                <label for="opt-css-override" class="col-form-label col-sm-3 colon" i18n>CSS override URL</label>
+                <div class="col-sm-9">
+                    <input formControlName="cssOverride" type="url" class="form-control" id="opt-css-override"
+                           [class.is-invalid]="form.controls.cssOverride.invalid"
+                           placeholder="https://example.com/my-stylesheet.css">
+                </div>
+            </div>
+            <!-- Maximum visual nesting level -->
+            <div class="row mb-3">
+                <label for="opt-max-level" class="col-form-label col-sm-3 colon" i18n>Max. visual nesting level</label>
+                <div class="col-sm-9">
+                    <input formControlName="maxLevel" type="number" class="form-control" id="opt-max-level"
+                           [class.is-invalid]="form.controls.maxLevel.invalid"
+                           min="1" max="99" maxlength="2">
+                </div>
+            </div>
+            <!-- Page ID -->
+            <div class="row mb-3">
+                <label for="opt-page-id" class="col-form-label col-sm-3 colon" i18n>Page ID</label>
+                <div class="col-sm-9">
+                    <input formControlName="pageId" type="text" class="form-control" id="opt-page-id"
+                           [class.is-invalid]="form.controls.pageId.invalid"
+                           maxlength="2076" placeholder="/another/path/to/page" aria-describedby="opt-page-id-help">
+                    <div id="opt-page-id-help" class="form-text">
+                        <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                        <ng-container i18n>This value must be different for every page.</ng-container>
+                    </div>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Info text -->
+<p>
+    <ng-container i18n>That's all! Comentario will automatically load and render comments for every page based on its URL.</ng-container>
+    <app-info-icon docLink="configuration/embedding/" class="ms-2"></app-info-icon>
+</p>

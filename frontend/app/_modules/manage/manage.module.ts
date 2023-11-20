@@ -48,6 +48,7 @@ import { ConfigManagerComponent } from './config/config-manager/config-manager.c
 import { StaticConfigComponent } from './config/static-config/static-config.component';
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 import { ConfigEditComponent } from './config/config-edit/config-edit.component';
+import { DomainInstallComponent } from './domains/domain-properties/domain-install/domain-install.component';
 
 @NgModule({
     declarations: [
@@ -89,6 +90,7 @@ import { ConfigEditComponent } from './config/config-edit/config-edit.component'
         UserEditComponent,
         UserManagerComponent,
         UserPropertiesComponent,
+        DomainInstallComponent,
     ],
     imports: [
         CommonModule,

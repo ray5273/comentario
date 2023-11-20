@@ -8,22 +8,7 @@
 <section *ngIf="domainMeta?.domainUser?.isOwner">
     <!-- Heading -->
     <h2 i18n>Installation</h2>
-
-    <p i18n>Insert the following piece of HTML code into every page you want to load Comentario on:</p>
-    <div id="install-snippet"
-         class="border d-flex flex-wrap flex-md-nowrap justify-content-center justify-content-md-between align-items-center p-3 mb-3">
-        <!-- Code snippet -->
-        <code class="overflow-hidden m-2"><pre class="mb-0">{{ snippet }}</pre></code>
-        <!-- Copy button -->
-        <button [appCopyText]="snippet" type="button" class="btn btn-secondary" ngbTooltip="">
-            <fa-icon [icon]="faCopy" class="me-1"></fa-icon>
-            <ng-container i18n>Copy</ng-container>
-        </button>
-    </div>
-    <p>
-        <ng-container i18n>That's all! Comentario will automatically load and render comments for every page based on its URL.</ng-container>
-        <app-info-icon docLink="configuration/embedding/" class="ms-2"></app-info-icon>
-    </p>
+    <app-domain-install></app-domain-install>
 </section>
 
 <!-- Properties -->

@@ -18,6 +18,19 @@ export class Utils {
     }
 
     /**
+     * Escape all special characters in an attribute value.
+     * @param v Value to escape. If null or undefined, returns an empty string.
+     */
+    static escapeAttrValue(v: string | null | undefined): string {
+        return v
+            ?.replaceAll('&',  '&amp;')
+            .replaceAll('"',  '&quot;')
+            .replaceAll('\'', '&#39;')
+            .replaceAll('<',  '&lt;')
+            .replaceAll('>',  '&gt;') ?? '';
+    }
+
+    /**
      * Whether the passed value is a 64-hex-digit token.
      */
     static isHexToken(v: any): boolean {
