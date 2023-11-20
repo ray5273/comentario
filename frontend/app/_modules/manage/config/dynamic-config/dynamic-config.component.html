@@ -13,7 +13,7 @@
             <!-- Reset button -->
             <button [appSpinner]="resetting.active" (confirmed)="reset()"
                     appConfirm="Are you sure you want to reset the configuration to defaults?"
-                    confirmAction="Reset configuration"
+                    confirmAction="Reset configuration" confirmActionType="warning"
                     type="button" class="btn btn-outline-warning w-100 mb-2" i18n-appConfirm i18n-confirmAction>
                 <fa-icon [icon]="faUndo" class="me-1"></fa-icon>
                 <ng-container i18n>Reset to defaults</ng-container>

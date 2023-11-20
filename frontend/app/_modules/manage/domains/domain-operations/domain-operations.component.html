@@ -54,8 +54,8 @@
     </div>
     <div class="col-sm-3 d-flex align-items-center">
         <button [disable]="!domain" [appSpinner]="freezing.active" [appConfirm]="freezeDlg"
-                [confirmAction]="freezeAction" [confirmIcon]="faCircleQuestion" (confirmed)="toggleFrozen()"
-                class="btn btn-secondary w-100">
+                [confirmAction]="freezeAction" confirmActionType="warning" [confirmIcon]="faCircleQuestion"
+                (confirmed)="toggleFrozen()" class="btn btn-secondary w-100">
             <fa-icon [icon]="faSnowflake" class="me-1"></fa-icon>
             <ng-container>{{ freezeAction }}</ng-container>
         </button>
@@ -76,6 +76,22 @@
 
     <!-- Danger zone content -->
     <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="danger-zone-container">
+        <!-- Purge deleted comments -->
+        <div class="row border-bottom py-3 pb-sm-0">
+            <div class="col-sm-9">
+                <div class="fw-bold text-danger" i18n>Purge comments</div>
+                <p i18n>This will definitively delete all comments on the domain that are marked as deleted.</p>
+            </div>
+            <div class="col-sm-3 d-flex align-items-center">
+                <button [disable]="!domain" [appSpinner]="purging.active" [appConfirm]="purgeDomainDlg"
+                        confirmAction="Purge comments" (confirmed)="purgeDomain()" class="btn btn-danger w-100"
+                        i18n-confirmAction>
+                    <fa-icon [icon]="faEraser" class="me-1"></fa-icon>
+                    <ng-container i18n="action">Purge</ng-container>
+                </button>
+            </div>
+        </div>
+
         <!-- Clear domain -->
         <div class="row border-bottom py-3 pb-sm-0">
             <div class="col-sm-9">
@@ -113,6 +129,13 @@
 <ng-template #freezeDlg>
     <p *ngIf="domain?.isReadonly"  i18n>Are you sure you want to unfreeze the domain? This will enable adding comments on it.</p>
     <p *ngIf="!domain?.isReadonly" i18n>Are you sure you want to freeze the domain? This will make the domain read-only, disabling adding comments.</p>
+</ng-template>
+
+<!-- Clear domain confirmation dialog content template -->
+<ng-template #purgeDomainDlg>
+    <p i18n>Are you sure you want to remove all comments marked for deletion from the domain <code>{{ domain?.host }}</code>?</p>
+    <p i18n>This will also remove all child comments of the deleted comments.</p>
+    <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>
 
 <!-- Clear domain confirmation dialog content template -->

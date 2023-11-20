@@ -21,6 +21,9 @@ export class ConfirmDirective {
     /** Action button label in the confirmation dialog. */
     @Input() confirmAction = 'OK';
 
+    /** Action button type in the confirmation dialog. */
+    @Input() confirmActionType: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' = 'danger';
+
     /** Name of the icon in the confirmation dialog. */
     @Input() confirmIcon: IconDefinition = faExclamationTriangle;
 
@@ -64,6 +67,7 @@ export class ConfirmDirective {
         const dlg = mr.componentInstance;
         dlg.title         = this.confirmTitle;
         dlg.content       = this.appConfirm;
+        dlg.actionType    = this.confirmActionType;
         dlg.actionLabel   = this.confirmAction;
         dlg.actionEnabled = this._enableAction;
         dlg.icon          = this.confirmIcon;

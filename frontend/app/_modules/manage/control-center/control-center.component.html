@@ -174,8 +174,9 @@
                     <h2 class="cc-hide-collapsed" i18n>Logout</h2>
                 </li>
                 <li class="nav-item">
-                    <a appConfirm="Are you sure you want to logout?" confirmAction="Logout" [confirmIcon]="faQuestionCircle"
-                       (confirmed)="logout()" role="button" class="cc-link" i18n-appConfirm i18n-confirmAction>
+                    <a appConfirm="Are you sure you want to logout?" confirmAction="Logout" confirmActionType="primary"
+                       [confirmIcon]="faQuestionCircle" (confirmed)="logout()" role="button" class="cc-link"
+                       i18n-appConfirm i18n-confirmAction>
                         <fa-icon class="cc-icon" [icon]="faSignOutAlt"></fa-icon>
                         <span class="cc-hide-collapsed" i18n>Logout</span>
                     </a>

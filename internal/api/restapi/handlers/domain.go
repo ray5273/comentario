@@ -203,6 +203,20 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 	return api_general.NewDomainNewOK().WithPayload(d.ToDTO())
 }
 
+func DomainPurge(params api_general.DomainPurgeParams, user *data.User) middleware.Responder {
+	// Find the domain and verify the user's privileges
+	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+		return r
+
+		// Purge all deleted comments
+	} else if err := svc.TheDomainService.PurgeByID(&d.ID); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDomainPurgeNoContent()
+}
+
 func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
 	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {

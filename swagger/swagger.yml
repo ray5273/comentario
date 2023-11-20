@@ -2240,6 +2240,18 @@ paths:
         204:
           description: Domain has been cleared
 
+  /domains/{uuid}/purge:
+    delete:
+      operationId: DomainPurge
+      summary: Definitively remove all deleted domain's comments
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+      responses:
+        204:
+          description: Domain has been purged
+
   /domains/{uuid}/readonly:
     put:
       operationId: DomainReadonly

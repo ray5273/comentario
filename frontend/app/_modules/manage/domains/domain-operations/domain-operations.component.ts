@@ -6,7 +6,7 @@ import {
     faAngleDown,
     faCalendarXmark,
     faCircleQuestion,
-    faClone,
+    faClone, faEraser,
     faFileExport,
     faFileImport,
     faSnowflake,
@@ -32,6 +32,7 @@ export class DomainOperationsComponent implements OnInit {
 
     readonly downloading = new ProcessingStatus();
     readonly freezing    = new ProcessingStatus();
+    readonly purging     = new ProcessingStatus();
     readonly clearing    = new ProcessingStatus();
     readonly deleting    = new ProcessingStatus();
 
@@ -42,6 +43,7 @@ export class DomainOperationsComponent implements OnInit {
     readonly faCalendarXmark   = faCalendarXmark;
     readonly faCircleQuestion  = faCircleQuestion;
     readonly faClone           = faClone;
+    readonly faEraser          = faEraser;
     readonly faFileExport      = faFileExport;
     readonly faFileImport      = faFileImport;
     readonly faSnowflake       = faSnowflake;
@@ -101,6 +103,14 @@ export class DomainOperationsComponent implements OnInit {
                 // Navigate to the domain list page
                 this.router.navigate([Paths.manage.domains]);
             });
+    }
+
+    purgeDomain() {
+        // Run purging with the API
+        this.api.domainPurge(this.domain!.id!)
+            .pipe(this.purging.processing())
+            // Add a toast
+            .subscribe(() => this.toastSvc.success('domain-cleared'));
     }
 
     clearDomain() {

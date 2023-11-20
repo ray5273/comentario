@@ -5,8 +5,8 @@
 
 <!-- Modal body -->
 <div class="modal-body d-flex">
-    <div class="text-warning"><fa-icon [icon]="icon" size="4x"></fa-icon></div>
-    <div class="ms-3">
+    <div [class]="'text-'+actionType"><fa-icon [icon]="icon" size="4x"></fa-icon></div>
+    <div class="ms-3 d-flex flex-column justify-content-center">
         <ng-container [ngTemplateOutlet]="template"></ng-container>
     </div>
 </div>
@@ -14,7 +14,7 @@
 <!-- Modal footer -->
 <div class="modal-footer">
     <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()" i18n>Cancel</button>
-    <button type="button" [disabled]="!actionEnabled" [class]="actionClass"
+    <button type="button" [disabled]="!actionEnabled" class="btn" [class]="'btn-'+actionType"
             (click)="activeModal.close()">{{ actionLabel }}</button>
 </div>
 

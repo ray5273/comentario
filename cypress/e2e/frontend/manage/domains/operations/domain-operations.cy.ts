@@ -97,6 +97,17 @@ context('Domain Operations page', () => {
                     cy.get('@domainOperations').find('#danger-zone-container').should('be.visible');
                 });
 
+                it('allows to purge domain', () => {
+                    cy.get('@domainOperations').contains('button', 'Purge').click();
+                    cy.confirmationDialog(/Are you sure you want to remove all comments marked for deletion/)
+                        .dlgButtonClick('Purge comments');
+                    cy.toastCheckAndClose('domain-cleared');
+
+                    // Verify the numbers in stats
+                    cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).stats);
+                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 217}, {label: Comments, value: 38}]');
+                });
+
                 it('allows to clear domain', () => {
                     cy.get('@domainOperations').contains('button', 'Clear').click();
                     cy.confirmationDialog(/Are you absolutely sure you want to remove all comments and pages from the domain/)

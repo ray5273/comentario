@@ -22,7 +22,7 @@ export class ConfirmDialogComponent {
     @Input() actionEnabled = true;
 
     /** The class of the action button. */
-    @Input() actionClass = 'btn btn-danger';
+    @Input() actionType: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' = 'danger';
 
     /** Name of the icon. */
     @Input() icon: IconDefinition = faExclamationTriangle;
