@@ -90,7 +90,7 @@ context('Dashboard', () => {
                       value:    6
                     - label:    Comments
                       sublabel: total
-                      value:    39
+                      value:    38
                     - label:    Commenters
                       sublabel: total
                       value:    7
@@ -101,7 +101,7 @@ context('Dashboard', () => {
                     - label:    Views
                       value:    217
                     - label:    Comments
-                      value:    39
+                      value:    38
                     `,
             },
             {
@@ -131,7 +131,7 @@ context('Dashboard', () => {
                       value:    1
                     - label:    Comments
                       sublabel: total
-                      value:    39
+                      value:    38
                     - label:    Commenters
                       sublabel: total
                       value:    7
@@ -166,7 +166,7 @@ context('Dashboard', () => {
                       value:    9
                     - label:    Comments
                       sublabel: total
-                      value:    40
+                      value:    39
                     - label:    Commenters
                       sublabel: total
                       value:    7
@@ -177,7 +177,7 @@ context('Dashboard', () => {
                     - label:    Views
                       value:    217
                     - label:    Comments
-                      value:    40
+                      value:    39
                     `,
             },
         ]

@@ -47,8 +47,8 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
-		// Select only last N days
-		Where(goqu.I("c.ts_created").Gte(start)).
+		// Select only last N days, and exclude deleted
+		Where(goqu.I("c.ts_created").Gte(start), goqu.I("c.is_deleted").IsFalse()).
 		GroupBy(date).
 		Order(date.Asc())
 
@@ -194,7 +194,9 @@ func (svc *statsService) fillCommentCommenterStats(curUser *data.User, totals *S
 	q := db.Dialect().
 		From(goqu.T("cm_comments").As("c")).
 		Select(goqu.COUNT(goqu.I("c.id")), goqu.COUNT(goqu.I("c.user_created").Distinct())).
-		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")}))
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
+		// Exclude deleted comments
+		Where(goqu.I("c.is_deleted").IsFalse())
 
 	// If the user isn't a superuser, filter by the domains they can moderate
 	if !curUser.IsSuperuser {

@@ -103,9 +103,14 @@ context('Domain Operations page', () => {
                         .dlgButtonClick('Purge comments');
                     cy.toastCheckAndClose('domain-cleared');
 
-                    // Verify the numbers in stats
-                    cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).stats);
-                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 217}, {label: Comments, value: 38}]');
+                    // Verify no deleted comment
+                    cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
+                    cy.get('app-comment-manager #comments-filter-approved').clickLabel().should('not.be.checked');
+                    cy.get('app-comment-manager #comments-filter-pending') .clickLabel().should('not.be.checked');
+                    cy.get('app-comment-manager #comments-filter-rejected')             .should('be.checked');
+                    cy.get('app-comment-manager #comments-filter-deleted') .clickLabel().should('be.checked');
+                    // Only 1 rejected comment is shown
+                    cy.get('app-comment-manager #comment-list').verifyListFooter(1, false);
                 });
 
                 it('allows to clear domain', () => {
