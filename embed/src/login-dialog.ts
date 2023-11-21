@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { InstanceConfig, PageInfo } from './models';
+import { InstanceConfig, InstanceDynamicConfigKey, PageInfo } from './models';
 
 export class LoginDialog extends Dialog {
 
@@ -105,7 +105,7 @@ export class LoginDialog extends Dialog {
                             .inner('Forgot your password?')
                             .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})),
                 // Switch to signup link, if signup is enabled
-                this.config.dynamicConfig.get('auth.signup.enabled')?.value === 'true' &&
+                this.config.dynamicConfig.get(InstanceDynamicConfigKey.authSignupEnabled)?.value === 'true' &&
                     UIToolkit.div('dialog-centered')
                         .append(
                             Wrap.new('span').inner('Don\'t have an account? '),

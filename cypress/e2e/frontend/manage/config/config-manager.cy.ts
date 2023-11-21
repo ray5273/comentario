@@ -1,4 +1,4 @@
-import { PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import { DYN_CONFIG_ITEMS, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Config Manager', () => {
 
@@ -95,11 +95,12 @@ context('Config Manager', () => {
             // Check the items
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch', [
                 ['New commenters must confirm their email', ''],
-                ['New users must confirm their email', '✔'],
-                ['Enable registration of new users', '✔'],
-                ['Enable images in comments', '✔'],
-                ['Enable links in comments', '✔'],
-                ['Non-owner users can add domains', ''],
+                ['New users must confirm their email',      '✔'],
+                ['Enable registration of new users',        '✔'],
+                ['Show deleted comments',                   '✔'],
+                ['Enable images in comments',               '✔'],
+                ['Enable links in comments',                '✔'],
+                ['Non-owner users can add domains',         ''],
             ]);
 
             // Click on Edit
@@ -113,12 +114,13 @@ context('Config Manager', () => {
             // Edit again and toggle config items
             cy.contains('app-dynamic-config a', 'Edit').click();
             cy.get('app-config-edit').as('configEdit');
-            cy.get('@configEdit').find('#auth_signup_confirm_commenter').should('not.be.checked').clickLabel().should('be.checked');
-            cy.get('@configEdit').find('#auth_signup_confirm_user')     .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#auth_signup_enabled')          .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#markdown_images_enabled')      .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#markdown_links_enabled')       .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#operation_newOwner_enabled')   .should('not.be.checked').clickLabel().should('be.checked');
+            cy.get('@configEdit').find('#auth_signup_confirm_commenter')       .should('not.be.checked').clickLabel().should('be.checked');
+            cy.get('@configEdit').find('#auth_signup_confirm_user')            .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#auth_signup_enabled')                 .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_comments_showDeleted').should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#markdown_images_enabled')             .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#markdown_links_enabled')              .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#operation_newOwner_enabled')          .should('not.be.checked').clickLabel().should('be.checked');
 
             // Submit and get a success toast
             cy.get('@configEdit').find('button[type=submit]').should('have.text', 'Save').click();
@@ -130,6 +132,7 @@ context('Config Manager', () => {
                 ['New commenters must confirm their email', '✔'],
                 ['New users must confirm their email',      ''],
                 ['Enable registration of new users',        ''],
+                ['Show deleted comments',                   ''],
                 ['Enable images in comments',               ''],
                 ['Enable links in comments',                ''],
                 ['Non-owner users can add domains',         '✔'],
@@ -143,23 +146,26 @@ context('Config Manager', () => {
                 ['New commenters must confirm their email', '✔'],
                 ['New users must confirm their email',      '✔'],
                 ['Enable registration of new users',        '✔'],
+                ['Show deleted comments',                   '✔'],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                '✔'],
                 ['Non-owner users can add domains',         ''],
             ]);
 
             // Tweak the config using backend calls
-            cy.backendSetDynConfigItem('auth.signup.confirm.commenter', 'false');
-            cy.backendSetDynConfigItem('auth.signup.confirm.user',      'false');
-            cy.backendSetDynConfigItem('auth.signup.enabled',           'false');
-            cy.backendSetDynConfigItem('markdown.images.enabled',       'true');
-            cy.backendSetDynConfigItem('markdown.links.enabled',        'false');
-            cy.backendSetDynConfigItem('operation.newOwner.enabled',    'true');
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupConfirmCommenter,        false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupConfirmUser,             false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupEnabled,                 false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsShowDeletedComments, false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled,             true);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled,              false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.operationNewOwnerEnabled,          true);
             cy.reload();
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
                 ['New commenters must confirm their email', ''],
                 ['New users must confirm their email',      ''],
                 ['Enable registration of new users',        ''],
+                ['Show deleted comments',                   ''],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                ''],
                 ['Non-owner users can add domains',         '✔'],

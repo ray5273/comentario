@@ -100,7 +100,8 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		true,
 		true,
 		false, // Don't include rejected: no one's interested in spam
-		true,  // We need to always include deleted, otherwise all child comments of a deleted comment will disappear
+		svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsShowDeletedComments, true),
+		true, // Filter out orphans (they won't show up on the client anyway)
 		"",
 		"",
 		data.SortAsc,

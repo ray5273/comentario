@@ -49,13 +49,25 @@ export interface InstanceStaticConfig {
     readonly uiLanguages?: UILanguage[];
 }
 
+/** Dynamic configuration keys. */
+export enum InstanceDynamicConfigKey {
+    authSignupConfirmCommenter        = 'auth.signup.confirm.commenter',
+    authSignupConfirmUser             = 'auth.signup.confirm.user',
+    authSignupEnabled                 = 'auth.signup.enabled',
+    domainDefaultsShowDeletedComments = 'domain.defaults.comments.showDeleted',
+    markdownImagesEnabled             = 'markdown.images.enabled',
+    markdownLinksEnabled              = 'markdown.links.enabled',
+    operationNewOwnerEnabled          = 'operation.newOwner.enabled',
+}
+
+
 /** Dynamic instance configuration item datatype. */
 export type InstanceDynamicConfigItemDatatype = 'boolean';
 
 /** Dynamic instance configuration item. */
 export interface InstanceDynamicConfigItem {
     /** Item key */
-    readonly key: string;
+    readonly key: InstanceDynamicConfigKey;
     /** Item value */
     readonly value: string;
     /** Item description */
@@ -73,7 +85,7 @@ export interface InstanceDynamicConfigItem {
 /** Instance configuration. */
 export interface InstanceConfig {
     staticConfig:  InstanceStaticConfig;
-    dynamicConfig: Map<string, InstanceDynamicConfigItem>;
+    dynamicConfig: Map<InstanceDynamicConfigKey, InstanceDynamicConfigItem>;
 }
 
 export const DefaultInstanceConfig: InstanceConfig = {

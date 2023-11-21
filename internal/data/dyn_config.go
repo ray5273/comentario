@@ -52,20 +52,22 @@ const (
 )
 
 const (
-	ConfigKeyAuthSignupEnabled          DynInstanceConfigItemKey = "auth.signup.enabled"
-	ConfigKeyAuthSignupConfirmCommenter DynInstanceConfigItemKey = "auth.signup.confirm.commenter"
-	ConfigKeyAuthSignupConfirmUser      DynInstanceConfigItemKey = "auth.signup.confirm.user"
-	ConfigKeyOperationNewOwnerEnabled   DynInstanceConfigItemKey = "operation.newOwner.enabled"
-	ConfigKeyMarkdownLinksEnabled       DynInstanceConfigItemKey = "markdown.links.enabled"
-	ConfigKeyMarkdownImagesEnabled      DynInstanceConfigItemKey = "markdown.images.enabled"
+	ConfigKeyAuthSignupConfirmCommenter        DynInstanceConfigItemKey = "auth.signup.confirm.commenter"
+	ConfigKeyAuthSignupConfirmUser             DynInstanceConfigItemKey = "auth.signup.confirm.user"
+	ConfigKeyAuthSignupEnabled                 DynInstanceConfigItemKey = "auth.signup.enabled"
+	ConfigKeyDomainDefaultsShowDeletedComments DynInstanceConfigItemKey = "domain.defaults.comments.showDeleted"
+	ConfigKeyMarkdownImagesEnabled             DynInstanceConfigItemKey = "markdown.images.enabled"
+	ConfigKeyMarkdownLinksEnabled              DynInstanceConfigItemKey = "markdown.links.enabled"
+	ConfigKeyOperationNewOwnerEnabled          DynInstanceConfigItemKey = "operation.newOwner.enabled"
 )
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
 var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigItem{
-	ConfigKeyAuthSignupEnabled:          {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable registration of new users"},
-	ConfigKeyAuthSignupConfirmUser:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New users must confirm their email"},
-	ConfigKeyAuthSignupConfirmCommenter: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
-	ConfigKeyOperationNewOwnerEnabled:   {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
-	ConfigKeyMarkdownLinksEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable links in comments"},
-	ConfigKeyMarkdownImagesEnabled:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},
+	ConfigKeyAuthSignupConfirmCommenter:        {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
+	ConfigKeyAuthSignupConfirmUser:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New users must confirm their email"},
+	ConfigKeyAuthSignupEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable registration of new users"},
+	ConfigKeyDomainDefaultsShowDeletedComments: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Show deleted comments"},
+	ConfigKeyMarkdownImagesEnabled:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},
+	ConfigKeyMarkdownLinksEnabled:              {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable links in comments"},
+	ConfigKeyOperationNewOwnerEnabled:          {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
 }

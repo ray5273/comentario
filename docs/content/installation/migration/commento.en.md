@@ -85,3 +85,5 @@ If you used [`data-*` attributes](/configuration/embedding#comments-tag), you'll
 
 * Firstly, they now have to be put on the `<comentario-comments>` tag (not on the `<script>`).
 * Secondly, the `data-` prefix should be removed.
+
+There's one exception to the data attributes: `data-hide-deleted`, which Commento used to hide deleted comments, isn't supported by Comentario on the page level. Instead, you can switch off the `Show deleted comments` [configuration parameter](/configuration/backend/dynamic). 

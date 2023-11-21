@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
+	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -48,13 +49,16 @@ type CommentService interface {
 	//   - inclPending indicates whether to include comments pending moderation.
 	//   - inclRejected indicates whether to include rejected comments.
 	//   - inclDeleted indicates whether to include deleted comments.
+	//   - removeOrphans indicates whether to filter out non-root comments not having a parent comment on the same list,
+	//     recursively, ensuring a coherent tree structure. NB: should be used with care in conjunction with a positive
+	//     pageIndex or filter string (as they limit the result set).
 	//   - filter is an optional substring to filter the result by.
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListWithCommentersByDomainPage(
 		curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,
-		inclApproved, inclPending, inclRejected, inclDeleted bool, filter, sortBy string, dir data.SortDirection,
+		inclApproved, inclPending, inclRejected, inclDeleted, removeOrphans bool, filter, sortBy string, dir data.SortDirection,
 		pageIndex int) ([]*models.Comment, []*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
@@ -273,13 +277,13 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 }
 
 func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser,
-	domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted bool,
+	domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted, removeOrphans bool,
 	filter, sortBy string, dir data.SortDirection, pageIndex int,
 ) ([]*models.Comment, []*models.Commenter, error) {
 	logger.Debugf(
-		"commentService.ListWithCommentersByDomainPage(%s, %#v, %s, %s, %s, %v, %v, %v, %v, '%s', '%s', %s, %d)",
-		&curUser.ID, curDomainUser, domainID, pageID, userID, inclApproved, inclPending,
-		inclRejected, inclDeleted, filter, sortBy, dir, pageIndex)
+		"commentService.ListWithCommentersByDomainPage(%s, %#v, %s, %s, %s, %v, %v, %v, %v, %v, %q, '%s', %s, %d)",
+		&curUser.ID, curDomainUser, domainID, pageID, userID, inclApproved, inclPending, inclRejected, inclDeleted,
+		removeOrphans, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
 	q := db.Dialect().
@@ -393,6 +397,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 
 	// Iterate result rows
 	var comments []*models.Comment
+	commentMap := make(map[strfmt.UUID]bool)
 	for rows.Next() {
 		// Fetch the comment and the related commenter
 		c := data.Comment{}
@@ -480,8 +485,9 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			}
 		}
 
-		// Append the comment to the list
+		// Append the comment to the list and a flag to the map
 		comments = append(comments, cm)
+		commentMap[cm.ID] = true
 	}
 
 	// Check that Next() didn't error
@@ -489,10 +495,46 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		return nil, nil, err
 	}
 
+	// Remove orphaned comments, if requested. Also clean up "unused" commenters
+	if removeOrphans {
+		// Loop until there's no single deletion occurred
+		dels := true
+		for dels {
+			dels = false
+			for _, cm := range comments {
+				// Skip root comments, already removed comments and those having a parent
+				if cm.ParentID != "" && commentMap[cm.ID] && !commentMap[cm.ParentID] {
+					delete(commentMap, cm.ID)
+					dels = true
+				}
+			}
+		}
+
+		// Copy over what's left, and compile a map of used commenters
+		var filteredComments []*models.Comment
+		usedCommenters := make(map[strfmt.UUID]bool)
+		for _, cm := range comments {
+			if commentMap[cm.ID] {
+				filteredComments = append(filteredComments, cm)
+				usedCommenters[cm.UserCreated] = true
+			}
+		}
+
+		// Swap out the comments for the filtered list
+		comments = filteredComments
+
+		// Remove unused commenters from the map
+		for id, cr := range commenterMap {
+			if !usedCommenters[cr.ID] {
+				delete(commenterMap, id)
+			}
+		}
+	}
+
 	// Convert commenter map into a slice
 	var commenters []*models.Commenter
-	for _, commenter := range commenterMap {
-		commenters = append(commenters, commenter)
+	for _, cr := range commenterMap {
+		commenters = append(commenters, cr)
 	}
 
 	// Succeeded

@@ -133,6 +133,7 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 		swag.BoolValue(params.Pending),
 		swag.BoolValue(params.Rejected),
 		swag.BoolValue(params.Deleted),
+		false,
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),

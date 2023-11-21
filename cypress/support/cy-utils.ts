@@ -129,12 +129,13 @@ export const USERS = {
 };
 
 export enum DYN_CONFIG_ITEMS {
-    authSignupEnabled          = 'auth.signup.enabled',
-    authSignupConfirmCommenter = 'auth.signup.confirm.commenter',
-    authSignupConfirmUser      = 'auth.signup.confirm.user',
-    operationNewOwnerEnabled   = 'operation.newOwner.enabled',
-    markdownLinksEnabled       = 'markdown.links.enabled',
-    markdownImagesEnabled      = 'markdown.images.enabled',
+    authSignupConfirmCommenter        = 'auth.signup.confirm.commenter',
+    authSignupConfirmUser             = 'auth.signup.confirm.user',
+    authSignupEnabled                 = 'auth.signup.enabled',
+    domainDefaultsShowDeletedComments = 'domain.defaults.comments.showDeleted',
+    markdownImagesEnabled             = 'markdown.images.enabled',
+    markdownLinksEnabled              = 'markdown.links.enabled',
+    operationNewOwnerEnabled          = 'operation.newOwner.enabled',
 }
 
 /** Predefined domains, declared in "creation order", i.e. ordered by ts_created. */

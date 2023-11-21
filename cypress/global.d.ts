@@ -303,7 +303,7 @@ declare namespace Cypress {
         /**
          * Request the backend to update the given dynamic config item.
          */
-        backendSetDynConfigItem(key: string, value: string): void;
+        backendSetDynConfigItem(key: string, value: string | number | boolean): void;
 
         /**
          * Obtain and return all sent emails from the backend.

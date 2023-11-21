@@ -2,7 +2,7 @@ import {
     Comment,
     Commenter,
     InstanceConfig,
-    InstanceDynamicConfigItem,
+    InstanceDynamicConfigItem, InstanceDynamicConfigKey,
     InstanceStaticConfig,
     PageInfo,
     Principal,
@@ -255,7 +255,7 @@ export class ApiService {
         // Convert the dynamic config into a map
         return {
             staticConfig:  r.staticConfig,
-            dynamicConfig: new Map<string, InstanceDynamicConfigItem>(r.dynamicConfig?.map(i => [i.key, i])),
+            dynamicConfig: new Map<InstanceDynamicConfigKey, InstanceDynamicConfigItem>(r.dynamicConfig?.map(i => [i.key, i])),
         };
     }
 

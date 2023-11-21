@@ -534,8 +534,8 @@ Cypress.Commands.add(
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));
 
-Cypress.Commands.add('backendSetDynConfigItem', (key: string, value: string) =>
-    cy.request('PUT', '/api/e2e/config/dynamic', {key, value}).its('status').should('eq', 204));
+Cypress.Commands.add('backendSetDynConfigItem', (key: string, value: string | number | boolean) =>
+    cy.request('PUT', '/api/e2e/config/dynamic', {key, value: String(value)}).its('status').should('eq', 204));
 
 Cypress.Commands.add('backendGetSentEmails', () =>
     cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body'));

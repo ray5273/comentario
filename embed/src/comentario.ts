@@ -1,4 +1,4 @@
-import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, CommentSort, DefaultInstanceConfig, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
+import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, CommentSort, DefaultInstanceConfig, ErrorMessage, InstanceDynamicConfigKey, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
@@ -689,8 +689,24 @@ export class Comentario extends HTMLElement {
         // Run deletion with the backend
         await this.apiService.commentDelete(card.comment.id);
 
-        // Update the comment and the card
-        card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '', html: ''});
+        // If deleted comments are to be shown
+        if (this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsShowDeletedComments)?.value === 'true') {
+            // Update the comment, marking it as deleted, and then the card
+            card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '', html: ''});
+        } else {
+            // Delete the comment from the parentMap
+            delete this.parentIdMap![card.comment.id];
+
+            // Delete the comment itself from the parentMap's list
+            const pl = this.parentIdMap![card.comment.parentId ?? ''];
+            const idx = pl.indexOf(card.comment);
+            if (idx >= 0) {
+                pl.splice(idx, 1);
+            }
+
+            // Delete the card, it'll also delete all its children
+            card.remove();
+        }
     }
 
     /**
