@@ -115,7 +115,7 @@ Cypress.Commands.add(
 
 Cypress.Commands.addQuery(
     'hasClass',
-    function hasClass(className?: string) {
+    function hasClass(className: string) {
         return (elements: JQueryWithSelector) => elements.map((_, e) => e.classList.contains(className)).get();
     });
 
