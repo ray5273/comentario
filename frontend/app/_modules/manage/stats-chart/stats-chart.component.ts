@@ -74,7 +74,7 @@ export class StatsChartComponent {
                 this.countDays = counts.length;
 
                 // Generate data
-                this.chartDataViews = this.getChartConfig(counts, '#339b11');
+                this.chartDataViews = this.getChartConfig(counts, $localize`Views`, '#339b11');
                 this.chartOptionsViews = this.getChartOptions(this.chartDataViews.labels as string[]);
 
                 // Count totals
@@ -86,7 +86,7 @@ export class StatsChartComponent {
             .pipe(this.loadingComments.processing())
             .subscribe(counts => {
                 // Generate data
-                this.chartDataComments = this.getChartConfig(counts, '#376daf');
+                this.chartDataComments = this.getChartConfig(counts, $localize`Comments`, '#376daf');
                 this.chartOptionsComments = this.getChartOptions(this.chartDataComments.labels as string[]);
 
                 // Count totals
@@ -94,18 +94,18 @@ export class StatsChartComponent {
             });
     }
 
-    private getChartConfig(counts: number[], colour: string): ChartConfiguration['data'] {
+    private getChartConfig(data: number[], label: string, colour: string): ChartConfiguration['data'] {
         return {
             datasets: [{
-                label:                $localize`Views`,
-                data:                 counts,
+                label,
+                data,
                 borderColor:          colour,
                 backgroundColor:      `${colour}20`,
                 pointBackgroundColor: colour,
                 tension:              0.5,
                 fill:                 true,
             }],
-            labels: this.getDates(counts.length),
+            labels: this.getDates(data.length),
         };
     }
 
