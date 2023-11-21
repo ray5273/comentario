@@ -13,7 +13,7 @@ require (
 	github.com/go-openapi/spec v0.20.9
 	github.com/go-openapi/strfmt v0.21.7
 	github.com/go-openapi/swag v0.22.4
-	github.com/go-openapi/validate v0.22.2
+	github.com/go-openapi/validate v0.22.1
 	github.com/google/uuid v1.4.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/jessevdk/go-flags v1.5.0
@@ -50,6 +50,7 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
+	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	go.mongodb.org/mongo-driver v1.13.0 // indirect
 	golang.org/x/image v0.14.0 // indirect
 	golang.org/x/oauth2 v0.14.0 // indirect
