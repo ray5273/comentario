@@ -1,6 +1,7 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
 import { Router } from '@angular/router';
+import { FormBuilder } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import {
     faAngleDown,
@@ -38,6 +39,11 @@ export class DomainOperationsComponent implements OnInit {
 
     readonly Paths = Paths;
 
+    readonly purgeForm = this.fb.nonNullable.group({
+        markedDeleted:      true,
+        userCreatedDeleted: false,
+    });
+
     // Icons
     readonly faAngleDown       = faAngleDown;
     readonly faCalendarXmark   = faCalendarXmark;
@@ -52,6 +58,7 @@ export class DomainOperationsComponent implements OnInit {
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
         private readonly router: Router,
+        private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
@@ -107,10 +114,10 @@ export class DomainOperationsComponent implements OnInit {
 
     purgeDomain() {
         // Run purging with the API
-        this.api.domainPurge(this.domain!.id!)
+        this.api.domainPurge(this.domain!.id!, this.purgeForm.value)
             .pipe(this.purging.processing())
             // Add a toast
-            .subscribe(() => this.toastSvc.success('domain-cleared'));
+            .subscribe(r => this.toastSvc.success('domain-cleared', undefined, $localize`Removed ${r.commentCount} comment(s)`));
     }
 
     clearDomain() {

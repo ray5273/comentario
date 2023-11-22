@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/postgres"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -62,8 +63,11 @@ type DomainService interface {
 	// ListDomainFederatedIdPs fetches and returns a list of federated identity providers enabled for the domain with
 	// the given ID
 	ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models.FederatedIdpID, error)
-	// PurgeByID definitively removes all deleted comments for the specified domain by its ID
-	PurgeByID(id *uuid.UUID) error
+	// PurgeByID permanently removes specified comments for the specified domain by its ID.
+	//   - deleted indicates whether to remove comments marked as deleted
+	//   - userDeleted indicates whether to remove comments created by now deleted users
+	// Returns number of deleted comments
+	PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (int64, error)
 	// SetReadonly sets the readonly status for the given domain
 	SetReadonly(domainID *uuid.UUID, readonly bool) error
 	// Update updates an existing domain record in the database
@@ -548,24 +552,42 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 	return res, nil
 }
 
-func (svc *domainService) PurgeByID(id *uuid.UUID) error {
-	logger.Debugf("domainService.PurgeByID(%s)", id)
+func (svc *domainService) PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (int64, error) {
+	logger.Debugf("domainService.PurgeByID(%s, %v, %v)", id, deleted, userDeleted)
+
+	// Sanity check
+	if !deleted && !userDeleted {
+		return 0, nil
+	}
+
+	// Prepare filter
+	var filter []exp.Expression
+	if deleted {
+		filter = append(filter, goqu.I("is_deleted").IsTrue())
+	}
+	if userDeleted {
+		filter = append(filter, goqu.I("user_created").IsNull())
+	}
 
 	// Delete all comments for the domain that are marked for deletion
-	q := db.Dialect().
-		Delete("cm_comments").
-		Where(goqu.And(
-			goqu.I("is_deleted").IsTrue(),
-			goqu.I("page_id").
-				Eq(goqu.Any(db.Dialect().From("cm_domain_pages").Select("id").Where(goqu.Ex{"domain_id": id}))),
-		))
-	if err := db.Execute(q); err != nil {
-		logger.Errorf("domainService.PurgeByID: Execute() failed: %v", err)
-		return translateDBErrors(err)
+	var cnt int64
+	if res, err := db.ExecuteRes(
+		db.Dialect().
+			Delete("cm_comments").
+			Where(
+				goqu.I("page_id").
+					Eq(goqu.Any(db.Dialect().From("cm_domain_pages").Select("id").Where(goqu.Ex{"domain_id": id}))),
+				goqu.Or(filter...)),
+	); err != nil {
+		logger.Errorf("domainService.PurgeByID: ExecuteRes() failed: %v", err)
+		return 0, translateDBErrors(err)
+	} else if cnt, err = res.RowsAffected(); err != nil {
+		logger.Errorf("domainService.PurgeByID: RowsAffected() failed: %v", err)
+		return 0, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return nil
+	return cnt, nil
 }
 
 func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error {

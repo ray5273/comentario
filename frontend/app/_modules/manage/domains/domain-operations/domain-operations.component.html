@@ -84,6 +84,7 @@
             </div>
             <div class="col-sm-3 d-flex align-items-center">
                 <button [disable]="!domain" [appSpinner]="purging.active" [appConfirm]="purgeDomainDlg"
+                        [confirmActionEnabled]="purgeForm.controls.markedDeleted.value || purgeForm.controls.userCreatedDeleted.value"
                         confirmAction="Purge comments" (confirmed)="purgeDomain()" class="btn btn-danger w-100"
                         i18n-confirmAction>
                     <fa-icon [icon]="faEraser" class="me-1"></fa-icon>
@@ -133,7 +134,19 @@
 
 <!-- Clear domain confirmation dialog content template -->
 <ng-template #purgeDomainDlg>
-    <p i18n>Are you sure you want to remove all comments marked for deletion from the domain <code>{{ domain?.host }}</code>?</p>
+    <div i18n>Permanently remove from domain <code>{{ domain?.host }}</code>:</div>
+    <form [formGroup]="purgeForm" class="mb-3 ps-2">
+        <!-- Marked as deleted -->
+        <div class="form-check">
+            <input formControlName="markedDeleted" type="checkbox" class="form-check-input" id="purge-marked-deleted">
+            <label class="form-check-label" for="purge-marked-deleted" i18n>Comments marked as deleted</label>
+        </div>
+        <!-- By deleted users -->
+        <div class="form-check">
+            <input formControlName="userCreatedDeleted" type="checkbox" class="form-check-input" id="purge-user-created-deleted">
+            <label class="form-check-label" for="purge-user-created-deleted" i18n>Comments created by now deleted users</label>
+        </div>
+    </form>
     <p i18n>This will also remove all child comments of the deleted comments.</p>
     <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>

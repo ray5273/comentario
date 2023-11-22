@@ -2243,14 +2243,35 @@ paths:
   /domains/{uuid}/purge:
     delete:
       operationId: DomainPurge
-      summary: Definitively remove all deleted domain's comments
+      summary: Permanently remove all deleted domain's comments and/or comments by deleted users
       tags:
         - ApiGeneral
       parameters:
         - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              markedDeleted:
+                type: boolean
+                description: Whether to remove comments marked as deleted
+              userCreatedDeleted:
+                type: boolean
+                description: Whether to remove comments written by users who are now deleted
       responses:
-        204:
+        200:
           description: Domain has been purged
+          schema:
+            type: object
+            required:
+              - commentCount
+            properties:
+              commentCount:
+                type: integer
+                description: Total number of deleted comments
+                x-isnullable: false
 
   /domains/{uuid}/readonly:
     put:

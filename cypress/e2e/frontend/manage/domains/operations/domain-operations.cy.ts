@@ -97,20 +97,65 @@ context('Domain Operations page', () => {
                     cy.get('@domainOperations').find('#danger-zone-container').should('be.visible');
                 });
 
-                it('allows to purge domain', () => {
-                    cy.get('@domainOperations').contains('button', 'Purge').click();
-                    cy.confirmationDialog(/Are you sure you want to remove all comments marked for deletion/)
-                        .dlgButtonClick('Purge comments');
-                    cy.toastCheckAndClose('domain-cleared');
+                context('Purge domain operation', () => {
 
-                    // Verify no deleted comment
-                    cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
-                    cy.get('app-comment-manager #comments-filter-approved').clickLabel().should('not.be.checked');
-                    cy.get('app-comment-manager #comments-filter-pending') .clickLabel().should('not.be.checked');
-                    cy.get('app-comment-manager #comments-filter-rejected')             .should('be.checked');
-                    cy.get('app-comment-manager #comments-filter-deleted') .clickLabel().should('be.checked');
-                    // Only 1 rejected comment is shown
-                    cy.get('app-comment-manager #comment-list').verifyListFooter(1, false);
+                    const makeDlgAliases = () => {
+                        cy.confirmationDialog(/Permanently remove from domain/).as('dlg');
+                        cy.get('@dlg').find('#purge-marked-deleted')      .as('delMarked').should('be.checked');
+                        cy.get('@dlg').find('#purge-user-created-deleted').as('delNoUser').should('not.be.checked');
+                        cy.get('@dlg').contains('button', 'Purge comments').as('btnPurge').should('be.enabled');
+                    };
+
+                    it('allows to purge deleted comments', () => {
+                        cy.get('@domainOperations').contains('button', 'Purge').click();
+                        makeDlgAliases();
+
+                        // Check the confirmation dialog. The action button only gets enabled when at least one checkbox
+                        // is checked
+                        cy.get('@delMarked').clickLabel().should('not.be.checked');
+                        cy.get('@btnPurge').should('be.disabled');
+                        cy.get('@delNoUser').clickLabel().should('be.checked');
+                        cy.get('@btnPurge').should('be.enabled');
+                        cy.get('@delMarked').clickLabel().should('be.checked');
+                        cy.get('@btnPurge').should('be.enabled');
+
+                        // Purge marked as deleted only: expect 1 removed comment
+                        cy.get('@delNoUser').clickLabel();
+                        cy.get('@btnPurge').click();
+                        cy.toastCheckAndClose('domain-cleared', '(Removed 1 comment(s))');
+
+                        // Verify no deleted comment
+                        cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
+                        cy.get('app-comment-manager #comments-filter-approved').clickLabel().should('not.be.checked');
+                        cy.get('app-comment-manager #comments-filter-pending') .clickLabel().should('not.be.checked');
+                        cy.get('app-comment-manager #comments-filter-rejected')             .should('be.checked');
+                        cy.get('app-comment-manager #comments-filter-deleted') .clickLabel().should('be.checked');
+                        // Only 1 rejected comment is shown
+                        cy.get('app-comment-manager #comment-list').verifyListFooter(1, false);
+                    });
+
+                    it('allows to purge comments by deleted users', () => {
+                        // Login as superuser and delete user King
+                        cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.king.id).props);
+                        cy.contains('app-user-properties button', 'Delete user').click();
+                        cy.confirmationDialog(/Are you sure you want to delete this user/).dlgButtonClick('Delete user');
+
+                        // Go to domain operations
+                        cy.loginViaApi(user, pagePath);
+                        cy.contains('app-domain-operations button', 'Danger zone').click();
+                        cy.contains('app-domain-operations button', 'Purge').click();
+                        makeDlgAliases();
+
+                        // Enable "Comments by deleted users" only
+                        cy.get('@delMarked').clickLabel();
+                        cy.get('@delNoUser').clickLabel();
+                        cy.get('@btnPurge').click();
+                        cy.toastCheckAndClose('domain-cleared', '(Removed 4 comment(s))');
+
+                        // Verify comments left
+                        cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
+                        cy.get('app-comment-manager #comment-list').verifyListFooter(23, false);
+                    });
                 });
 
                 it('allows to clear domain', () => {

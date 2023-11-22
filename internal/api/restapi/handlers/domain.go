@@ -208,13 +208,14 @@ func DomainPurge(params api_general.DomainPurgeParams, user *data.User) middlewa
 	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
 		return r
 
-		// Purge all deleted comments
-	} else if err := svc.TheDomainService.PurgeByID(&d.ID); err != nil {
+		// Purge comments
+	} else if cnt, err := svc.TheDomainService.PurgeByID(&d.ID, params.Body.MarkedDeleted, params.Body.UserCreatedDeleted); err != nil {
 		return respServiceError(err)
-	}
 
-	// Succeeded
-	return api_general.NewDomainPurgeNoContent()
+	} else {
+		// Succeeded
+		return api_general.NewDomainPurgeOK().WithPayload(&api_general.DomainPurgeOKBody{CommentCount: cnt})
+	}
 }
 
 func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
