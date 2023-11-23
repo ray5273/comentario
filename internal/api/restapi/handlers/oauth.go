@@ -209,16 +209,15 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		}
 	}
 
-	// If there's an avatar URL and the avatar isn't customised, fetch and update the avatar, in the background (ignore
-	// any errors)
+	// If there's an avatar URL and the avatar isn't customised, fetch and update the avatar
 	if fedUser.AvatarURL != "" {
-		//goland:noinspection GoUnhandledErrorResult
-		go svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL, false)
+		// Give the process a while to complete, and proceed if it times out
+		util.GoTimeout(util.AvatarFetchTimeout, func() { _ = svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL, false) })
 
 		// Otherwise, try to fetch an image from Gravatar, if enabled
 	} else if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
-		//goland:noinspection GoUnhandledErrorResult
-		go svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false)
+		// Give the process a while to complete, and proceed if it times out
+		util.GoTimeout(util.AvatarFetchTimeout, func() { _ = svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false) })
 	}
 
 	// Update the token by binding it to the authenticated user

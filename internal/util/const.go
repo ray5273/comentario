@@ -29,6 +29,7 @@ const (
 	UserConfirmEmailDuration = 3 * OneDay                 // How long the token in the confirmation email stays valid
 	UserPwdResetDuration     = 12 * time.Hour             // How long the token in the password-reset email stays valid
 	PageViewRetentionPeriod  = 45 * OneDay                // How long a page view stats record is retained
+	AvatarFetchTimeout       = 5 * time.Second            // Timeout for fetching external avatars
 )
 
 var (

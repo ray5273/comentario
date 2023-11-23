@@ -147,6 +147,22 @@ func FormatVersion(v *uasurfer.Version) string {
 	return fmt.Sprintf("%d.%d.%d", v.Major, v.Minor, v.Patch)
 }
 
+// GoTimeout executes the given function in a goroutine, blocking up to the given timeout duration
+func GoTimeout(timeout time.Duration, f func()) {
+	// Let the function run in a goroutine
+	cReady := make(chan bool)
+	go func() {
+		f()
+		cReady <- true
+	}()
+
+	// Wait for it to finish, or to time out: whatever comes first
+	select {
+	case <-cReady:
+	case <-time.After(timeout):
+	}
+}
+
 // HMACSign signs the given data with the given secret, using HMAC with SHA256
 func HMACSign(b, secret []byte) []byte {
 	h := hmac.New(sha256.New, secret)

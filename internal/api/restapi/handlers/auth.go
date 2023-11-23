@@ -441,8 +441,8 @@ func loginUser(user *data.User, host string, req *http.Request) (*data.UserSessi
 
 	// If Gravatar is enabled, try to fetch the user's avatar, in the background
 	if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
-		//goland:noinspection GoUnhandledErrorResult
-		go svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false)
+		// Give the process a while to complete, and proceed if it times out
+		util.GoTimeout(util.AvatarFetchTimeout, func() { _ = svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false) })
 	}
 
 	// Succeeded
@@ -464,7 +464,8 @@ func signupUser(user *data.User) middleware.Responder {
 	// If Gravatar is enabled, try to fetch the user's avatar, ignoring any error. Do that synchronously to let the user
 	// see their avatar right away
 	if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
-		_ = svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false)
+		// Give the process a while to complete, and proceed if it times out
+		util.GoTimeout(util.AvatarFetchTimeout, func() { _ = svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false) })
 	}
 
 	// Succeeded
