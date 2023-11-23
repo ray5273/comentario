@@ -162,14 +162,12 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	}
 
 	// Try to find an existing user by email
-	isSignup := false
 	var user *data.User
 	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); errors.Is(err, svc.ErrNotFound) {
 		// No such email/user: it's a signup. Verify that signing up is allowed
 		if r := Verifier.SignupEnabled(); r != nil {
 			return r
 		}
-		isSignup = true
 
 		// Insert a new user
 		user = data.NewUser(fedUser.Email, fedUser.Name).
@@ -217,10 +215,10 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		//goland:noinspection GoUnhandledErrorResult
 		go svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL, false)
 
-		// If it's a signup, try to fetch an image from Gravatar, if enabled
-	} else if isSignup && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+		// Otherwise, try to fetch an image from Gravatar, if enabled
+	} else if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
 		//goland:noinspection GoUnhandledErrorResult
-		go svc.TheAvatarService.DownloadAndUpdateFromGravatar(user)
+		go svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, false)
 	}
 
 	// Update the token by binding it to the authenticated user

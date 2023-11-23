@@ -26,8 +26,9 @@ type AvatarService interface {
 	// DownloadAndUpdateByUserID downloads an avatar from the specified URL and updates the given user. isCustom
 	// indicates whether the avatar is customised by the user
 	DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string, isCustom bool) error
-	// DownloadAndUpdateFromGravatar tries to download an avatar from Gravatar and, if successful, updates the user
-	DownloadAndUpdateFromGravatar(user *data.User) error
+	// DownloadAndUpdateFromGravatar tries to download an avatar from Gravatar and, if successful, updates the user.
+	// isCustom indicates whether the avatar update was explicitly initiated by the user
+	DownloadAndUpdateFromGravatar(user *data.User, isCustom bool) error
 	// GetByUserID finds and returns an avatar for the given user. Returns (nil, nil) if no avatar exists
 	GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error)
 	// UpdateByUserID updates the given user's avatar in the database. r can be nil to remove the avatar, or otherwise
@@ -59,15 +60,15 @@ func (svc *avatarService) DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL
 	return svc.UpdateByUserID(userID, lr, isCustom)
 }
 
-func (svc *avatarService) DownloadAndUpdateFromGravatar(user *data.User) error {
-	logger.Debugf("avatarService.DownloadAndUpdateFromGravatar(%v)", user)
+func (svc *avatarService) DownloadAndUpdateFromGravatar(user *data.User, isCustom bool) error {
+	logger.Debugf("avatarService.DownloadAndUpdateFromGravatar(%v, %v)", user, isCustom)
 	return svc.DownloadAndUpdateByUserID(
 		&user.ID,
 		fmt.Sprintf(
 			"https://www.gravatar.com/avatar/%x?s=%d&d=404",
 			sha256.Sum256([]byte(user.Email)),
 			data.UserAvatarSizes[data.UserAvatarSizeL]),
-		false)
+		isCustom)
 }
 
 func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error) {

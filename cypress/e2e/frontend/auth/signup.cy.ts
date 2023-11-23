@@ -2,12 +2,7 @@ import { DYN_CONFIG_ITEMS, PATHS, USERS } from '../../../support/cy-utils';
 
 context('Signup', () => {
 
-    beforeEach(() => {
-        cy.backendReset();
-
-        // Disable Gravatar to speed up tests and safeguard against external service issues
-        cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsUseGravatar, false);
-    });
+    beforeEach(cy.backendReset);
 
     it('is unavailable when disabled in configuration', () => {
         // Disable registrations and visit the page

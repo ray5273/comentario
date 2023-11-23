@@ -1,5 +1,7 @@
 insert into cm_configuration(key, value, ts_updated)
-values  ('auth.signup.confirm.commenter', 'false', '2023-01-17 17:55:47.008851');
+values
+    ('auth.signup.confirm.commenter', 'false', '2023-01-17 17:55:47.008851'),
+    ('domain.defaults.useGravatar',   'false', '2023-01-17 17:55:47.008851'); -- We don't want to involve Gravatar during e2e tests
 
 insert into cm_users (id, email, name, lang_id, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, federated_idp, federated_sso, federated_id, website_url, secret_token)
 values

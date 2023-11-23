@@ -38,7 +38,7 @@ Show deleted comments
 : When set to `On`, deleting a comment in the embedded Comentario will only *mark it as deleted*, but it will still be visible. If set to `Off`, deleted comments will be hidden in the comment tree immediately, as well as all its child comments. Doesn't affect comment display in the Administration UI (it has a separate switch for hiding deleted comments).
 
 Use Gravatar for user avatars
-: When enabled, Comentario will try to fetch an avatar image from [Gravatar](https://www.gravatar.com) for each newly registered user. For federated users (those registering via Google, Facebook etc.), the identity provider avatar will be tried first.
+: When enabled, Comentario will try to fetch an avatar image from [Gravatar](https://www.gravatar.com) for each newly registered or logging-in user. For federated users (those registering via Google, Facebook etc.), the identity provider avatar will be tried first.
 
 Enable images in comments
 : If set to `Off`, commenters won't be able to insert [images](/kb/markdown#images) in comments. Only applies to newly written comments.
