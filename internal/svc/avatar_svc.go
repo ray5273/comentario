@@ -64,7 +64,7 @@ func (svc *avatarService) DownloadAndUpdateFromGravatar(user *data.User) error {
 	return svc.DownloadAndUpdateByUserID(
 		&user.ID,
 		fmt.Sprintf(
-			"https://www.gravatar.com/avatar/%x?s=%d",
+			"https://www.gravatar.com/avatar/%x?s=%d&d=404",
 			sha256.Sum256([]byte(user.Email)),
 			data.UserAvatarSizes[data.UserAvatarSizeL]),
 		false)
