@@ -171,19 +171,6 @@ Cypress.Commands.add(
             .should(fb => text && expect(fb.text()).eq(text))
             .wrap(element));
 
-Cypress.Commands.add('signup', (user: {email: string; name: string, password: string}, options?: {goTo?: boolean}) => {
-    if (options?.goTo ?? true) {
-        cy.visit(PATHS.auth.signup);
-        cy.isAt(PATHS.auth.signup);
-    }
-
-    // Fill out the form
-    cy.get('#email')         .setValue(user.email)   .isValid();
-    cy.get('#password input').setValue(user.password).isValid();
-    cy.get('#name')          .setValue(user.name)    .isValid();
-    cy.get('button[type=submit]').click();
-});
-
 Cypress.Commands.add('login', (creds: Cypress.Credentials, options?: Cypress.LoginOptions) => {
     // Go to the login page and verify, if needed
     if (options?.goTo ?? true) {

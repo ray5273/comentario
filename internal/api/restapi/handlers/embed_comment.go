@@ -100,7 +100,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 		true,
 		true,
 		false, // Don't include rejected: no one's interested in spam
-		svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsShowDeletedComments, true),
+		svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsShowDeletedComments),
 		true, // Filter out orphans (they won't show up on the client anyway)
 		"",
 		"",
@@ -203,8 +203,8 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	}
 	comment.HTML = util.MarkdownToHTML(
 		comment.Markdown,
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled, false),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled, false))
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled))
 
 	// Determine comment state
 	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
@@ -315,8 +315,8 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	comment.Markdown = strings.TrimSpace(params.Body.Markdown)
 	comment.HTML = util.MarkdownToHTML(
 		comment.Markdown,
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled, false),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled, false))
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled))
 
 	// Persist the edits in the database
 	if err := svc.TheCommentService.UpdateText(&comment.ID, comment.Markdown, comment.HTML); err != nil {

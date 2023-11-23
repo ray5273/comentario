@@ -2,8 +2,10 @@ package svc
 
 import (
 	"bytes"
+	"crypto/sha256"
 	"database/sql"
 	"errors"
+	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
@@ -24,6 +26,8 @@ type AvatarService interface {
 	// DownloadAndUpdateByUserID downloads an avatar from the specified URL and updates the given user. isCustom
 	// indicates whether the avatar is customised by the user
 	DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string, isCustom bool) error
+	// DownloadAndUpdateFromGravatar tries to download an avatar from Gravatar and, if successful, updates the user
+	DownloadAndUpdateFromGravatar(user *data.User) error
 	// GetByUserID finds and returns an avatar for the given user. Returns (nil, nil) if no avatar exists
 	GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error)
 	// UpdateByUserID updates the given user's avatar in the database. r can be nil to remove the avatar, or otherwise
@@ -53,6 +57,17 @@ func (svc *avatarService) DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL
 
 	// Update the avatar
 	return svc.UpdateByUserID(userID, lr, isCustom)
+}
+
+func (svc *avatarService) DownloadAndUpdateFromGravatar(user *data.User) error {
+	logger.Debugf("avatarService.DownloadAndUpdateFromGravatar(%v)", user)
+	return svc.DownloadAndUpdateByUserID(
+		&user.ID,
+		fmt.Sprintf(
+			"https://www.gravatar.com/avatar/%x?s=%d",
+			sha256.Sum256([]byte(user.Email)),
+			data.UserAvatarSizes[data.UserAvatarSizeL]),
+		false)
 }
 
 func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error) {

@@ -149,7 +149,7 @@ func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
 	// If the user isn't a superuser
 	if !user.IsSuperuser {
 		// Check if new owners are allowed
-		if !svc.TheDynConfigService.GetBool(data.ConfigKeyOperationNewOwnerEnabled, false) {
+		if !svc.TheDynConfigService.GetBool(data.ConfigKeyOperationNewOwnerEnabled) {
 			// No new owners allowed: verify this user already owns at least one domain
 			if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
 				return respServiceError(err)

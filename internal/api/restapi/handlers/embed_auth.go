@@ -94,17 +94,12 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 	// If no operational mailer is configured, or confirmation is switched off in the config, mark the user confirmed
 	// right away
 	if !util.TheMailer.Operational() ||
-		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmCommenter, true) {
+		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmCommenter) {
 		user.WithConfirmed(true)
 	}
 
-	// Save the new user
-	if err := svc.TheUserService.Create(user); err != nil {
-		return respServiceError(err)
-	}
-
-	// Send a confirmation email if needed
-	if r := sendConfirmationEmail(user); r != nil {
+	// Sign-up the new user
+	if r := signupUser(user); r != nil {
 		return r
 	}
 

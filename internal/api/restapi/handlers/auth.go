@@ -271,17 +271,12 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		// If no operational mailer is configured, or confirmation is switched off in the config, mark the user
 		// confirmed right away
 	} else if !util.TheMailer.Operational() ||
-		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser, true) {
+		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser) {
 		user.WithConfirmed(true)
 	}
 
-	// Save the new user
-	if err := svc.TheUserService.Create(user); err != nil {
-		return respServiceError(err)
-	}
-
-	// Send a confirmation email if needed
-	if r := sendConfirmationEmail(user); r != nil {
+	// Sign-up the new user
+	if r := signupUser(user); r != nil {
 		return r
 	}
 
@@ -446,4 +441,26 @@ func loginUser(user *data.User, host string, req *http.Request) (*data.UserSessi
 
 	// Succeeded
 	return us, nil
+}
+
+// signupUser saves the given user and runs post-signup tasks
+func signupUser(user *data.User) middleware.Responder {
+	// Save the new user
+	if err := svc.TheUserService.Create(user); err != nil {
+		return respServiceError(err)
+	}
+
+	// Send a confirmation email if needed
+	if r := sendConfirmationEmail(user); r != nil {
+		return r
+	}
+
+	// If Gravatar is enabled, try to fetch the user's avatar, ignoring any error. Do that synchronously to let the user
+	// see their avatar right away
+	if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+		_ = svc.TheAvatarService.DownloadAndUpdateFromGravatar(user)
+	}
+
+	// Succeeded
+	return nil
 }

@@ -55,6 +55,7 @@ export enum InstanceDynamicConfigKey {
     authSignupConfirmUser             = 'auth.signup.confirm.user',
     authSignupEnabled                 = 'auth.signup.enabled',
     domainDefaultsShowDeletedComments = 'domain.defaults.comments.showDeleted',
+    domainDefaultsUseGravatar         = 'domain.defaults.useGravatar',
     markdownImagesEnabled             = 'markdown.images.enabled',
     markdownLinksEnabled              = 'markdown.links.enabled',
     operationNewOwnerEnabled          = 'operation.newOwner.enabled',

@@ -2,7 +2,12 @@ import { DYN_CONFIG_ITEMS, PATHS, USERS } from '../../../support/cy-utils';
 
 context('Signup', () => {
 
-    beforeEach(cy.backendReset);
+    beforeEach(() => {
+        cy.backendReset();
+
+        // Disable Gravatar to speed up tests and safeguard against external service issues
+        cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsUseGravatar, false);
+    });
 
     it('is unavailable when disabled in configuration', () => {
         // Disable registrations and visit the page
@@ -22,37 +27,42 @@ context('Signup', () => {
 
     it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.auth.signup));
 
+    it('redirects authenticated user to Dashboard', () => {
+        cy.loginViaApi(USERS.commenterOne, PATHS.auth.signup);
+        cy.isAt(PATHS.manage.dashboard);
+    });
+
     context('when enabled', () => {
+
+        /** Signup as provided user via the UI. */
+        const signup = (user: Partial<Cypress.User>) => {
+            cy.get('@email')   .setValue(user.email)   .isValid();
+            cy.get('@password').setValue(user.password).isValid();
+            cy.get('@name')    .setValue(user.name)    .isValid();
+            cy.get('@submit').click();
+        };
 
         beforeEach(() => {
             cy.visit(PATHS.auth.signup);
             cy.isAt(PATHS.auth.signup);
 
-            // Aliases
-            cy.get('#signup-form')       .as('form');
-            cy.get('#email')             .as('email');
-            cy.get('#password input')    .as('password');
-            cy.get('#name')              .as('name');
-            cy.get('button[type=submit]').as('submit');
-        });
+            // Check page content
+            cy.get('app-signup').as('signup');
+            cy.get('@signup').find('h1').should('have.text', 'Sign up').and('be.visible');
 
-        it('redirects authenticated user to Dashboard', () => {
-            cy.loginViaApi(USERS.commenterOne, PATHS.auth.signup);
-            cy.isAt(PATHS.manage.dashboard);
+            // Signup form
+            cy.get('@signup').find('#signup-form')     .as('form');
+            cy.get('@form').find('#email')             .as('email')   .should('be.visible').should('be.enabled').should('have.value', '');
+            cy.get('@form').find('#password input')    .as('password').should('be.visible').should('be.enabled').should('have.value', '');
+            cy.get('@form').find('#name')              .as('name')    .should('be.visible').should('be.enabled').should('have.value', '');
+            cy.get('@form').find('button[type=submit]').as('submit')  .should('be.visible').should('be.enabled').should('have.text',  'Sign up');
         });
 
         it('has all necessary controls', () => {
-            // Check page content
-            cy.get('h1').should('have.text', 'Sign up');
-
             // Check form content
             cy.get('@form').contains('label', 'Your email');
             cy.get('@form').contains('label', 'Password');
             cy.get('@form').contains('label', 'Your name');
-            cy.get('@email')   .should('be.visible').should('be.enabled').should('have.value', '');
-            cy.get('@password').should('be.visible').should('be.enabled').should('have.value', '');
-            cy.get('@name')    .should('be.visible').should('be.enabled').should('have.value', '');
-            cy.get('@submit')  .should('be.visible').should('be.enabled').should('have.text',  'Sign up');
 
             // Check consent
             cy.get('@form').contains('By signing up, you agree to our Terms of Service and Privacy Policy.').as('consent');
@@ -89,7 +99,7 @@ context('Signup', () => {
         it('allows user to sign up with confirmation', () => {
             // Sign up
             const user = {email: 'test@example', name: 'Imp', password: 'Passw0rd'};
-            cy.signup(user, {goTo: false});
+            signup(user);
 
             // We're still on the signup page
             cy.noToast();
@@ -133,7 +143,7 @@ context('Signup', () => {
 
             // Sign up
             const user = {email: 'test@example', name: 'Imp', password: 'Passw0rd'};
-            cy.signup(user, {goTo: false});
+            signup(user);
 
             // We're at the login page
             cy.isAt(PATHS.auth.login);

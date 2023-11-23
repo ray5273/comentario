@@ -98,6 +98,7 @@ context('Config Manager', () => {
                 ['New users must confirm their email',      '✔'],
                 ['Enable registration of new users',        '✔'],
                 ['Show deleted comments',                   '✔'],
+                ['Use Gravatar for user avatars',           '✔'],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                '✔'],
                 ['Non-owner users can add domains',         ''],
@@ -118,6 +119,7 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#auth_signup_confirm_user')            .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#auth_signup_enabled')                 .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_showDeleted').should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_useGravatar')         .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#markdown_images_enabled')             .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#markdown_links_enabled')              .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#operation_newOwner_enabled')          .should('not.be.checked').clickLabel().should('be.checked');
@@ -133,6 +135,7 @@ context('Config Manager', () => {
                 ['New users must confirm their email',      ''],
                 ['Enable registration of new users',        ''],
                 ['Show deleted comments',                   ''],
+                ['Use Gravatar for user avatars',           ''],
                 ['Enable images in comments',               ''],
                 ['Enable links in comments',                ''],
                 ['Non-owner users can add domains',         '✔'],
@@ -147,6 +150,7 @@ context('Config Manager', () => {
                 ['New users must confirm their email',      '✔'],
                 ['Enable registration of new users',        '✔'],
                 ['Show deleted comments',                   '✔'],
+                ['Use Gravatar for user avatars',           '✔'],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                '✔'],
                 ['Non-owner users can add domains',         ''],
@@ -157,6 +161,7 @@ context('Config Manager', () => {
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupConfirmUser,             false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupEnabled,                 false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsShowDeletedComments, false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsUseGravatar,         false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled,             true);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled,              false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.operationNewOwnerEnabled,          true);
@@ -166,6 +171,7 @@ context('Config Manager', () => {
                 ['New users must confirm their email',      ''],
                 ['Enable registration of new users',        ''],
                 ['Show deleted comments',                   ''],
+                ['Use Gravatar for user avatars',           ''],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                ''],
                 ['Non-owner users can add domains',         '✔'],

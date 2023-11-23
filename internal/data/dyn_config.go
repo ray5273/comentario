@@ -56,6 +56,7 @@ const (
 	ConfigKeyAuthSignupConfirmUser             DynInstanceConfigItemKey = "auth.signup.confirm.user"
 	ConfigKeyAuthSignupEnabled                 DynInstanceConfigItemKey = "auth.signup.enabled"
 	ConfigKeyDomainDefaultsShowDeletedComments DynInstanceConfigItemKey = "domain.defaults.comments.showDeleted"
+	ConfigKeyDomainDefaultsUseGravatar         DynInstanceConfigItemKey = "domain.defaults.useGravatar"
 	ConfigKeyMarkdownImagesEnabled             DynInstanceConfigItemKey = "markdown.images.enabled"
 	ConfigKeyMarkdownLinksEnabled              DynInstanceConfigItemKey = "markdown.links.enabled"
 	ConfigKeyOperationNewOwnerEnabled          DynInstanceConfigItemKey = "operation.newOwner.enabled"
@@ -67,6 +68,7 @@ var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigIt
 	ConfigKeyAuthSignupConfirmUser:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New users must confirm their email"},
 	ConfigKeyAuthSignupEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable registration of new users"},
 	ConfigKeyDomainDefaultsShowDeletedComments: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Show deleted comments"},
+	ConfigKeyDomainDefaultsUseGravatar:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Use Gravatar for user avatars"},
 	ConfigKeyMarkdownImagesEnabled:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},
 	ConfigKeyMarkdownLinksEnabled:              {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable links in comments"},
 	ConfigKeyOperationNewOwnerEnabled:          {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},

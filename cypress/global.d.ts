@@ -120,13 +120,6 @@ declare namespace Cypress {
         isInvalid(text?: string): Chainable<JQueryWithSelector>;
 
         /**
-         * Signup as provided user via the UI.
-         * @param user User to login as
-         * @param options Additional options, default to {goTo: true}
-         */
-        signup(user: Credentials & {name: string}, options?: {goTo?: boolean}): Chainable<void>;
-
-        /**
          * Login as provided user via the UI.
          * @param creds Credentials to login with
          * @param options Additional login options

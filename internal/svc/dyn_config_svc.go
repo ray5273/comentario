@@ -20,7 +20,7 @@ type DynConfigService interface {
 	// GetAll returns all available configuration items
 	GetAll() (map[data.DynInstanceConfigItemKey]*data.DynInstanceConfigItem, error)
 	// GetBool returns the bool value of a configuration item by its key, or the default value on error
-	GetBool(key data.DynInstanceConfigItemKey, defValue bool) bool
+	GetBool(key data.DynInstanceConfigItemKey) bool
 	// Load configuration data from the database
 	Load() error
 	// Reset resets all configuration data to its defaults
@@ -66,11 +66,19 @@ func (svc *dynConfigService) GetAll() (map[data.DynInstanceConfigItemKey]*data.D
 	return items, nil
 }
 
-func (svc *dynConfigService) GetBool(key data.DynInstanceConfigItemKey, defValue bool) bool {
+func (svc *dynConfigService) GetBool(key data.DynInstanceConfigItemKey) bool {
+	// First try to fetch the actual value
 	if i, err := svc.Get(key); err == nil {
 		return i.AsBool()
 	}
-	return defValue
+
+	// Fall back to the item's default value on error
+	if item, ok := data.DefaultDynInstanceConfig[key]; ok {
+		return item.DefaultValue == "true"
+	}
+
+	// Invalid key passed
+	return false
 }
 
 func (svc *dynConfigService) Load() error {
