@@ -10,10 +10,11 @@ import (
 var logger = logging.MustGetLogger("svc")
 
 var (
-	ErrBadToken  = errors.New("services: invalid token")
-	ErrDB        = errors.New("services: database error")
-	ErrEmailSend = errors.New("failed to send email")
-	ErrNotFound  = errors.New("services: object not found")
+	ErrBadToken      = errors.New("services: invalid token")
+	ErrDB            = errors.New("services: database error")
+	ErrEmailSend     = errors.New("services: failed to send email")
+	ErrNotFound      = errors.New("services: object not found")
+	ErrResourceFetch = errors.New("services: failed to fetch resource")
 )
 
 // checkErrors picks and returns the first non-nil error, or nil if there's none

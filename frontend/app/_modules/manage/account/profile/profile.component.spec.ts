@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { ProfileComponent } from './profile.component';
-import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService } from '../../../../../generated-api';
+import { mockAuthService } from '../../../../_utils/_mocks.spec';
 
 describe('ProfileComponent', () => {
 
@@ -15,7 +14,7 @@ describe('ProfileComponent', () => {
             declarations: [ProfileComponent],
             providers: [
                 MockProvider(ApiGeneralService),
-                MockProvider(AuthService, {principal: of(null)}),
+                mockAuthService(),
             ],
         })
             .compileComponents();

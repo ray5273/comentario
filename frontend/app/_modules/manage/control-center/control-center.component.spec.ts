@@ -3,12 +3,11 @@ import { RouterTestingModule } from '@angular/router/testing';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockDirective, MockProvider } from 'ng-mocks';
-import { AuthService } from '../../../_services/auth.service';
 import { ControlCenterComponent } from './control-center.component';
 import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
 import { CommentService } from '../_services/comment.service';
 import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
-import { mockDomainSelector } from '../../../_utils/_mocks.spec';
+import { mockAuthService, mockDomainSelector } from '../../../_utils/_mocks.spec';
 
 describe('ControlCenterComponent', () => {
 
@@ -20,7 +19,7 @@ describe('ControlCenterComponent', () => {
             declarations: [ControlCenterComponent, MockDirective(ConfirmDirective), MockComponents(UserAvatarComponent)],
             imports: [RouterTestingModule, FontAwesomeTestingModule],
             providers: [
-                MockProvider(AuthService, {principal: of(null)}),
+                mockAuthService(),
                 mockDomainSelector(),
                 MockProvider(CommentService, {countPending: of(0)}),
             ],

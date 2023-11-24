@@ -67,7 +67,7 @@ export class UserEditComponent implements OnInit {
     ngOnInit(): void {
         // Monitor principal changes
         this.authSvc.principal.subscribe(p => {
-            this.principal = p ?? undefined;
+            this.principal = p;
             this.enableControls();
         });
     }

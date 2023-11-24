@@ -158,7 +158,9 @@
                 <li class="nav-item">
                     <a [routerLink]="Paths.manage.account.profile" routerLinkActive="active" class="cc-link" id="sidebarProfile">
                         <!-- User's avatar -->
-                        <app-user-avatar [user]="domainMeta?.principal" size="S" class="cc-avatar"></app-user-avatar>
+                        <app-user-avatar [user]="domainMeta?.principal"
+                                         [updated]="domainMeta?.principalUpdated"
+                                         size="S" class="cc-avatar"/>
                         <div class="cc-hide-collapsed">
                             <!-- User's name -->
                             <div class="text-truncate" style="max-width: 200px">{{ domainMeta?.principal?.name }}</div>

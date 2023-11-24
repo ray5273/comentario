@@ -3,7 +3,6 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
-import { Principal } from '../../generated-api';
 import { ToastService } from '../_services/toast.service';
 import { ConfigService } from '../_services/config.service';
 
@@ -14,7 +13,7 @@ import { ConfigService } from '../_services/config.service';
 })
 export class HomeComponent implements OnInit {
 
-    principal?: Principal | null;
+    isAuthenticated = false;
 
     readonly Paths = Paths;
     readonly embedUrl = this.configSvc.staticConfig.homeContentUrl;
@@ -45,7 +44,7 @@ export class HomeComponent implements OnInit {
         this.authSvc.principal
             .pipe(untilDestroyed(this))
             .subscribe(p => {
-                this.principal = p;
+                this.isAuthenticated = !!p;
 
                 // Force change detection to run (influences the appearance of controls)
                 this.changeDetector.detectChanges();

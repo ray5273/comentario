@@ -93,22 +93,13 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error) {
 	logger.Debugf("pageService.FetchUpdatePageTitle([%s], %v)", &domain.ID, page)
 
+	// Try to fetch the title
 	var title string
 	var err error
-
-	// Try to fetch the title using HTTPS
 	u := &url.URL{Scheme: domain.Scheme(), Host: domain.Host, Path: page.Path}
 	if title, err = util.HTMLTitleFromURL(u); err != nil {
-		// If failed, retry using HTTP
-		if err != nil {
-			u.Scheme = "http"
-			if title, err = util.HTMLTitleFromURL(u); err != nil {
-				// If still failed, just use the URL as the title
-				if err != nil {
-					title = u.String()
-				}
-			}
-		}
+		// Failed, just use the URL as the title
+		title = u.String()
 	}
 
 	// Make sure the title doesn't exceed the size of the database field

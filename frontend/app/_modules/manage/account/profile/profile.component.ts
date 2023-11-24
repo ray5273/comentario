@@ -31,14 +31,18 @@ export class ProfileComponent implements OnInit {
     isDangerZoneCollapsed = true;
 
     /** Currently logged-in principal. */
-    principal?: Principal | null;
+    principal?: Principal;
+
+    /** Timestamp of the last principal update. */
+    principalUpdated?: number;
 
     /** Selected (but not yet uploaded) avatar image. */
     avatarFile?: File | null;
 
     /** Processing statuses. */
-    readonly saving = new ProcessingStatus();
-    readonly deleting = new ProcessingStatus();
+    readonly saving          = new ProcessingStatus();
+    readonly deleting        = new ProcessingStatus();
+    readonly settingGravatar = new ProcessingStatus();
 
     readonly userForm = this.fb.nonNullable.group({
         email:       {value: '', disabled: true},
@@ -70,6 +74,7 @@ export class ProfileComponent implements OnInit {
         // Monitor principal changes
         this.authSvc.principal.subscribe(p => {
             this.principal = p;
+            this.principalUpdated = this.authSvc.principalUpdated;
 
             // Update the form
             if (p) {
@@ -127,9 +132,7 @@ export class ProfileComponent implements OnInit {
                     this.userForm.markAsPristine();
 
                     // Reset avatar status
-                    this.avatarChanged = false;
-                    this.avatarFile = undefined;
-                    this.avatarFileInput!.nativeElement.value = '';
+                    this.clearAvatar(false, false);
 
                     // Update the logged-in principal
                     this.authSvc.update();
@@ -140,16 +143,24 @@ export class ProfileComponent implements OnInit {
             });
     }
 
-    changeAvatar() {
+    uploadAvatar() {
         this.avatarFileInput?.nativeElement.click();
     }
 
+    downloadGravatar() {
+        this.api.curUserSetAvatarFromGravatar()
+            .pipe(this.settingGravatar.processing())
+            .subscribe(() => {
+                // Reset avatar status
+                this.clearAvatar(false, false);
+
+                // Reload the principal with the new avatar
+                this.authSvc.update();
+            });
+    }
+
     removeAvatar() {
-        this.avatarFile = null;
-        this.avatarFileInput!.nativeElement.value = '';
-        if (this.principal?.hasAvatar) {
-            this.avatarChanged = true;
-        }
+        this.clearAvatar(true, !!this.principal?.hasAvatar);
     }
 
     avatarSelected() {
@@ -166,6 +177,16 @@ export class ProfileComponent implements OnInit {
             this.avatarFile = f;
             this.avatarChanged = true;
         }
+    }
+
+    /**
+     * Remove the current avatar, optionally marking it as changed
+     * @private
+     */
+    private clearAvatar(forceRemove: boolean, changed: boolean) {
+        this.avatarFile = forceRemove ? null : undefined;
+        this.avatarFileInput!.nativeElement.value = '';
+        this.avatarChanged = changed;
     }
 
     private saveAvatar(): Observable<void> {

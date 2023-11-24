@@ -89,6 +89,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralMailUnsubscribeHandler = api_general.MailUnsubscribeHandlerFunc(handlers.MailUnsubscribe)
 	// CurUser
 	api.APIGeneralCurUserGetHandler = api_general.CurUserGetHandlerFunc(handlers.CurUserGet)
+	api.APIGeneralCurUserSetAvatarFromGravatarHandler = api_general.CurUserSetAvatarFromGravatarHandlerFunc(handlers.CurUserSetAvatarFromGravatar)
 	api.APIGeneralCurUserSetAvatarHandler = api_general.CurUserSetAvatarHandlerFunc(handlers.CurUserSetAvatar)
 	api.APIGeneralCurUserUpdateHandler = api_general.CurUserUpdateHandlerFunc(handlers.CurUserUpdate)
 	// Dashboard

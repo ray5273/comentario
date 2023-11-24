@@ -28,7 +28,7 @@ export class DashboardComponent implements OnInit {
         // Subscribe to principal changes
         this.authSvc.principal
             .pipe(untilDestroyed(this))
-            .subscribe(p => this.principal = p ?? undefined);
+            .subscribe(p => this.principal = p);
 
         // Fetch the totals from the backend. Serialise data fetching to unburden the backend
         this.api.dashboardTotals()

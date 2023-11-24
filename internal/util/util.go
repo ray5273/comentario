@@ -310,7 +310,7 @@ func IsUILang(s string) bool {
 	return false
 }
 
-// LogError call a function that may return an error, and if it does, logs and discards it
+// LogError calls a function that may return an error, and if it does, logs and discards it
 func LogError(f func() error, details string) {
 	if err := f(); err != nil {
 		logger.Errorf("Error occurred in %s: %v", details, err)

@@ -51,7 +51,7 @@ RUN rm -rf build && \
     # Install dependencies
     yarn install --frozen-lockfile && \
     # Build frontend
-    cd /comentario/frontend && yarn run build:prod && \
+    cd /comentario/frontend && yarn run generate && yarn run build:prod && \
     # Build embed
     cd /comentario/embed && yarn run build:prod
 

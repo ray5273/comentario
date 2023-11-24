@@ -1181,7 +1181,7 @@ responses:
       $ref: "#/definitions/apiError"
 
   # 502
-  BasGateway:
+  BadGateway:
     description: Data relay or dependent service failure
     schema:
       $ref: "#/definitions/apiError"
@@ -1220,7 +1220,7 @@ paths:
         500:
           $ref: "#/responses/InternalError"
         502:
-          $ref: "#/responses/BasGateway"
+          $ref: "#/responses/BadGateway"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Mail
@@ -1545,6 +1545,16 @@ paths:
       responses:
         204:
           description: Avatar has been set
+
+  /user/avatar/gravatar:
+    post:
+      operationId: CurUserSetAvatarFromGravatar
+      summary: Download and set the current user's avatar from Gravatar
+      tags:
+        - ApiGeneral
+      responses:
+        204:
+          description: Avatar has been successfully updated
 
   #---------------------------------------------------------------------------------------------------------------------
   # Embed API

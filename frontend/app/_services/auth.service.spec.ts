@@ -1,7 +1,7 @@
 // noinspection DuplicatedCode
 
 import { TestBed } from '@angular/core/testing';
-import { of, skip, throwError } from 'rxjs';
+import { Observable, of, skip, throwError } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { AuthService } from './auth.service';
 import { ApiGeneralService, Principal } from '../../generated-api';
@@ -10,7 +10,7 @@ describe('AuthService', () => {
 
     let service: AuthService;
     let api: ApiGeneralService;
-    let principalResponse: any;
+    let principalResponse: Observable<Principal | undefined>;
 
     const principal1: Principal = {
         id: 'one',
@@ -26,11 +26,11 @@ describe('AuthService', () => {
             ],
         });
         api = TestBed.inject(ApiGeneralService);
-        spyOn(api, 'curUserGet').and.callFake(() => principalResponse);
+        spyOn(api, 'curUserGet').and.callFake(() => principalResponse as Observable<any>);
     });
 
     it('is created', () => {
-        principalResponse = of(null);
+        principalResponse = of(undefined);
         service = TestBed.inject(AuthService);
         expect(service).toBeTruthy();
     });
@@ -49,19 +49,19 @@ describe('AuthService', () => {
         });
     });
 
-    it('fetches null principal on creation when user not authenticated', (done) => {
+    it('emits undefined principal on creation when user not authenticated', (done) => {
         principalResponse = of(undefined);
 
         // Test
         service = TestBed.inject(AuthService);
         service.principal.subscribe(p => {
             // Verify
-            expect(p).toBeNull();
+            expect(p).toBeUndefined();
             done();
         });
     });
 
-    it('fetches null principal on creation on API error', (done) => {
+    it('emits undefined principal on creation on API error', (done) => {
         // Prepare
         principalResponse = throwError(() => 'ai-ai-ai');
 
@@ -69,7 +69,7 @@ describe('AuthService', () => {
         service = TestBed.inject(AuthService);
         service.principal.subscribe(p => {
             // Verify
-            expect(p).toBeNull();
+            expect(p).toBeUndefined();
             done();
         });
     });
@@ -107,21 +107,6 @@ describe('AuthService', () => {
                 done();
             });
         service.update(principal2);
-    });
-
-    it('returns last principal', (done) => {
-        // Prepare
-        principalResponse = of(principal1);
-
-        // Test
-        service = TestBed.inject(AuthService);
-        service.lastPrincipal.subscribe({
-            // Verify
-            next: p => expect(p!.id).toBe('one'),
-            error: fail,
-            // Expect the observable to complete after the first result
-            complete: done,
-        });
     });
 
     describe('login()', () => {

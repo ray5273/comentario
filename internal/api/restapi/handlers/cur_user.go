@@ -27,8 +27,7 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 
 func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User) middleware.Responder {
 	if params.Data != nil {
-		//goland:noinspection GoUnhandledErrorResult
-		defer params.Data.Close()
+		defer util.LogError(params.Data.Close, "CurUserSetAvatar, params.Data.Close()")
 	}
 
 	// Update the user's avatar, marking it as customised
@@ -38,6 +37,16 @@ func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User
 
 	// Succeeded: owner's logged in
 	return api_general.NewCurUserSetAvatarNoContent()
+}
+
+func CurUserSetAvatarFromGravatar(_ api_general.CurUserSetAvatarFromGravatarParams, user *data.User) middleware.Responder {
+	// Download and update the user's avatar, marking it as customised
+	if err := svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, true); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded: owner's logged in
+	return api_general.NewCurUserSetAvatarFromGravatarNoContent()
 }
 
 func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) middleware.Responder {

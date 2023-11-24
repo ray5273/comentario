@@ -63,16 +63,22 @@
                 <!-- Avatar -->
                 <div class="col-12" id="user-avatar">
                     <label for="user-avatar-picture" class="form-label colon" i18n>Avatar</label>
-                    <div class="d-flex flex-wrap align-items-center gap-2">
-                        <div class="p-2">
-                            <app-user-avatar [user]="principal" [avatarOverride]="avatarFile"
-                                             size="L" id="user-avatar-picture"></app-user-avatar>
+                    <div class="d-grid d-sm-flex flex-wrap align-items-center gap-2 mb-3">
+                        <!-- Avatar image -->
+                        <div class="px-2 text-center text-sm-start">
+                            <app-user-avatar [user]="principal" [updated]="principalUpdated"
+                                             [avatarOverride]="avatarFile" size="L" id="user-avatar-picture"/>
                         </div>
-                        <div>
-                            <div class="mb-2" i18n>Avatar image should be a JPEG or a PNG image up to 1 MB in size. A 128×128 pixel image is recommended.</div>
-                            <button type="button" class="btn btn-outline-primary me-2" (click)="changeAvatar()" i18n>Change</button>
-                            <button type="button" class="btn btn-outline-danger"       (click)="removeAvatar()" i18n>Remove</button>
-                        </div>
+                        <!-- Buttons -->
+                        <button (click)="uploadAvatar()" type="button" class="btn btn-outline-primary" i18n>Upload</button>
+                        <button (click)="removeAvatar()" type="button" class="btn btn-outline-danger" i18n>Remove</button>
+                        <button (click)="downloadGravatar()" [appSpinner]="settingGravatar.active" type="button" class="btn btn-outline-secondary" i18n>Download from Gravatar</button>
+                    </div>
+                    <!-- Avatar info -->
+                    <div class="form-text">
+                        <ng-container i18n>Avatar image should be a JPEG or a PNG image up to 1 MB in size.</ng-container>&ngsp;
+                        <ng-container i18n>A 128×128 pixel image is recommended.</ng-container>&ngsp;
+                        <ng-container i18n>You can also download your profile picture from <a href="https://gravatar.com/" target="_blank" rel="noopener noreferrer">Gravatar</a>.</ng-container>
                     </div>
                     <!-- Invisible avatar file input -->
                     <input #avatarFileInput (change)="avatarSelected()" class="d-none" type="file" id="user-avatar-file">

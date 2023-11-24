@@ -86,7 +86,7 @@
                             <!-- Domain user link if the current user is an owner+ -->
                             <a *ngIf="commenter && domainMeta!.canManageDomain else commenterName"
                                [routerLink]="[Paths.manage.domains, page.domainId, 'users', commenter.id]">
-                                <app-user-avatar [user]="commenter" size="S" class="me-1"></app-user-avatar>
+                                <app-user-avatar [user]="commenter" size="S" class="me-1"/>
                                 <ng-container>{{ commenter.name }}</ng-container>
                                 <ng-container *ngIf="commenter.email as e"> ({{ e }})</ng-container>
                             </a>
@@ -94,7 +94,7 @@
                             <ng-template #commenterName>
                                 <!-- Existing, non-anonymous commenter -->
                                 <ng-container *ngIf="commenter">
-                                    <app-user-avatar [user]="commenter" size="S" class="me-1"></app-user-avatar>
+                                    <app-user-avatar [user]="commenter" size="S" class="me-1"/>
                                     <ng-container>{{ commenter.name }}</ng-container>
                                 </ng-container>
                                 <!-- Anonymous commenter -->

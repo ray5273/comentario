@@ -13,24 +13,25 @@ context('Profile', () => {
             cy.isAt(PATHS.manage.account.profile);
 
             // Aliases
-            cy.get('#profile-form')                       .as('form');
-            cy.get('#current-user-id')                    .as('userId');
-            cy.get('#email')                              .as('email');
-            cy.get('#name')                               .as('name');
-            cy.get('#website-url')                        .as('websiteUrl');
-            cy.get('#cur-password input')                 .as('curPwd');
-            cy.get('#new-password input')                 .as('newPwd');
+            cy.get('#profile-form')      .as('form');
+            cy.get('#current-user-id')   .as('userId');
+            cy.get('#email')             .as('email');
+            cy.get('#name')              .as('name');
+            cy.get('#website-url')       .as('websiteUrl');
+            cy.get('#cur-password input').as('curPwd');
+            cy.get('#new-password input').as('newPwd');
             // -- Avatar
-            cy.get('#user-avatar')                        .as('avatar');
-            cy.get('#user-avatar-picture')                .as('avatarPic');
-            cy.get('#user-avatar-file')                   .as('avatarFile');
-            cy.get('@avatar').contains('button', 'Change').as('avatarChange');
-            cy.get('@avatar').contains('button', 'Remove').as('avatarRemove');
+            cy.get('#user-avatar')                                        .as('avatar');
+            cy.get('#user-avatar-picture')                                .as('avatarPic');
+            cy.get('#user-avatar-file')                                   .as('avatarFile');
+            cy.get('@avatar').contains('button', 'Upload')                .as('avatarUpload');
+            cy.get('@avatar').contains('button', 'Remove')                .as('avatarRemove');
+            cy.get('@avatar').contains('button', 'Download from Gravatar').as('avatarGravatar');
             // -- Submit
-            cy.get('button[type=submit]')                 .as('submit');
+            cy.get('button[type=submit]').as('submit');
             // -- Danger zone
-            cy.contains('button', 'Danger zone')          .as('dzToggle');
-            cy.get('#danger-zone-container')              .as('dzContainer');
+            cy.contains('button', 'Danger zone').as('dzToggle');
+            cy.get('#danger-zone-container')    .as('dzContainer');
         });
 
         it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.account.profile, USERS.commenterOne));
@@ -53,10 +54,11 @@ context('Profile', () => {
             cy.get('@curPwd')    .should('be.visible').and('be.enabled') .and('have.value', '').and('have.attr', 'placeholder', '(unchanged)');
             cy.get('@newPwd')    .should('be.visible').and('be.enabled') .and('have.value', '').and('have.attr', 'placeholder', '(unchanged)');
             // -- Avatar
-            cy.get('@avatarPic')   .should('be.visible').and('have.text', 'C');
-            cy.get('@avatarFile')  .should('exist')     .and('not.be.visible').and('be.enabled');
-            cy.get('@avatarChange').should('be.visible').and('be.enabled');
-            cy.get('@avatarRemove').should('be.visible').and('be.enabled');
+            cy.get('@avatarPic')     .should('be.visible').and('have.text', 'C');
+            cy.get('@avatarFile')    .should('exist')     .and('not.be.visible').and('be.enabled');
+            cy.get('@avatarUpload')  .should('be.visible').and('be.enabled');
+            cy.get('@avatarRemove')  .should('be.visible').and('be.enabled');
+            cy.get('@avatarGravatar').should('be.visible').and('be.enabled');
             // -- Submit button is disabled when no changes
             cy.get('@submit').should('be.visible').and('be.disabled').and('have.text', 'Save');
 
@@ -122,7 +124,7 @@ context('Profile', () => {
         it('allows to change avatar', () => {
             // Change avatar by uploading a PNG image
             cy.get('@avatarFile').selectFile('cypress/fixtures/avatar.png', {force: true});
-            cy.get('@avatarChange').click();
+            cy.get('@avatarUpload').click();
 
             // The avatar letter is replaced with a picture
             cy.get('@avatarPic').should('have.text', '');
@@ -140,6 +142,53 @@ context('Profile', () => {
             cy.get('@submit').click();
             cy.toastCheckAndClose('data-saved');
             cy.get('app-control-center #sidebarProfile').should('have.text', 'C' + 'Commenter One');
+        });
+
+        context('Gravatar picture download', () => {
+
+            it('allows to set avatar', () => {
+                // Mock the response as we don't want to depend on an external service
+                cy.intercept('POST', '/api/user/avatar/gravatar', {statusCode: 204}).as('apiGravatar');
+
+                // Imitate the user now having an avatar
+                cy.intercept('GET', '/api/user', req => req.continue(res => {
+                    res.body.hasAvatar = true;
+                }));
+
+                // Also mock the avatar response from the API
+                cy.intercept('GET', `/api/users/${USERS.commenterOne.id}/avatar?**`, {fixture: 'avatar.png'}).as('apiGetAvatar');
+
+                // Click on Download from Gravatar
+                cy.get('@avatarGravatar').click();
+                cy.wait('@apiGravatar');
+                cy.wait('@apiGetAvatar');
+
+                // No toast is shown
+                cy.noToast();
+
+                // Submit isn't available since there's no change
+                cy.get('@submit').should('be.disabled');
+
+                // The avatar letter is replaced with a picture, also in the sidebar
+                cy.get('@avatarPic').should('have.text', '');
+                cy.get('app-control-center #sidebarProfile').should('have.text', 'Commenter One');
+            });
+
+            it('handles Gravatar failure', () => {
+                // Imitate API failure
+                cy.intercept('POST', '/api/user/avatar/gravatar', {statusCode: 502, body: {id: 'resource-fetch-failed'}}).as('apiGravatar');
+
+                // Click on Download from Gravatar
+                cy.get('@avatarGravatar').click();
+                cy.wait('@apiGravatar');
+
+                // There's an error toast
+                cy.toastCheckAndClose('resource-fetch-failed');
+
+                // Avatar is unchanged
+                cy.get('@avatarPic').should('have.text', 'C');
+                cy.get('@submit').should('be.disabled');
+            });
         });
 
         it('allows to delete account', () => {

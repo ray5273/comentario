@@ -1,12 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpContext } from '@angular/common/http';
 import { BehaviorSubject, combineLatestWith, Observable, tap } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainExtension, DomainGet200Response, DomainUser, FederatedIdpId, Principal } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
-import { filter } from 'rxjs/operators';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 
 interface DomainSelectorSettings {
@@ -39,6 +39,8 @@ export class DomainMeta {
         readonly extensions?: DomainExtension[],
         /** Authenticated principal, if any. */
         readonly principal?: Principal,
+        /** Timestamp of the last time the principal was updated (fetched or reset). */
+        readonly principalUpdated?: number,
     ) {
         // Calculate additional properties
         if (principal) {
@@ -88,7 +90,7 @@ export class DomainSelectorService {
             .pipe(
                 untilDestroyed(this),
                 // Store the current principal
-                tap(p => this.principal = p ?? undefined),
+                tap(p => this.principal = p),
                 // Update whenever reload signal is emitted
                 combineLatestWith(this.reload$))
             // If the user is not logged in, reset any selection. Ignore any occurring errors as this is an induced
@@ -162,7 +164,13 @@ export class DomainSelectorService {
      */
     private setDomain(v: DomainGet200Response | undefined) {
         // Notify the subscribers
-        this.domainMeta$.next(new DomainMeta(v?.domain, v?.domainUser, v?.federatedIdpIds, v?.extensions, this.principal));
+        this.domainMeta$.next(new DomainMeta(
+            v?.domain,
+            v?.domainUser,
+            v?.federatedIdpIds,
+            v?.extensions,
+            this.principal,
+            this.authSvc.principalUpdated));
 
         // Store the last used domainId
         this.localSettingSvc.storeValue<DomainSelectorSettings>('domainSelector', {domainId: v?.domain?.id});

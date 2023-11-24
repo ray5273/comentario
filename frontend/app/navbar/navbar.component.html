@@ -18,7 +18,7 @@
             <li *ngIf="authSvc.principal | async as p else signin" class="nav-item">
                 <a [routerLink]="Paths.manage.dashboard" class="btn btn-outline-info d-flex align-items-center" id="user-nav-button">
                     <!-- User icon -->
-                    <app-user-avatar [user]="p" class="me-1"></app-user-avatar>
+                    <app-user-avatar [user]="p" [updated]="authSvc.principalUpdated" class="me-1"/>
                     <!-- User's name -->
                     <div class="text-truncate position-relative ms-1" style="max-width: 100px">
                         <ng-container>{{ p.name }}</ng-container>

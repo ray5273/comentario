@@ -28,6 +28,7 @@ var (
 	ErrorNotDomainOwner        = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator          = &exmodels.Error{ID: "not-moderator", Message: "User is not a moderator"}
 	ErrorPageReadonly          = &exmodels.Error{ID: "page-readonly", Message: "This page is read-only"}
+	ErrorResourceFetchFailed   = &exmodels.Error{ID: "resource-fetch-failed", Message: "Failed to fetch external resource"}
 	ErrorSelfOperation         = &exmodels.Error{ID: "self-operation", Message: "You cannot do this to yourself"}
 	ErrorSelfVote              = &exmodels.Error{ID: "self-vote", Message: "You cannot vote for your own comment"}
 	ErrorSignupsForbidden      = &exmodels.Error{ID: "signups-forbidden", Message: "New signups are forbidden"}

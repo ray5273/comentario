@@ -1,8 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { of } from 'rxjs';
-import { MockProvider } from 'ng-mocks';
 import { CurrentUserBadgeComponent } from './current-user-badge.component';
-import { AuthService } from '../../../_services/auth.service';
+import { mockAuthService } from '../../../_utils/_mocks.spec';
 
 describe('CurrentUserBadgeComponent', () => {
 
@@ -13,7 +11,7 @@ describe('CurrentUserBadgeComponent', () => {
         TestBed.configureTestingModule({
             declarations: [CurrentUserBadgeComponent],
             providers: [
-                MockProvider(AuthService, {principal: of(null)})
+                mockAuthService(),
             ],
         });
         fixture = TestBed.createComponent(CurrentUserBadgeComponent);

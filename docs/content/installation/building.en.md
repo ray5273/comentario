@@ -29,7 +29,8 @@ In order to build Comentario, you'll need a few tools:
 ## Building frontend
 
 1. Install dependencies: `yarn install`
-2. Build the app in:
+2. Generate the API client code: `yarn run generate`
+3. Build the app in:
      * develop mode (with source maps): `yarn run build`
      * production mode (minified): `yarn run build:prod`
 

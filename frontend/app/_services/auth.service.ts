@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
 import { merge, Observable, of, Subject, tap } from 'rxjs';
-import { catchError, map, shareReplay, switchMap, take } from 'rxjs/operators';
+import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import { ApiGeneralService, Principal } from '../../generated-api';
 
 @Injectable({
@@ -11,8 +11,11 @@ export class AuthService {
     /** Last set URL to redirect to after a successful login. */
     afterLoginRedirectUrl?: string;
 
-    /** Primary observable for obtaining the principals. If the user isn't logged in, null is emitted. */
-    readonly principal: Observable<Principal | null>;
+    /** Timestamp of the last time the principal was updated (fetched or reset). */
+    principalUpdated = 0;
+
+    /** Primary observable for obtaining the principals. If the user isn't logged in, undefined is emitted. */
+    readonly principal: Observable<Principal | undefined>;
 
     /** Observable that triggers a server re-fetch of the currently logged in principal */
     private readonly _update$ = new Subject<Principal | null | undefined>();
@@ -23,18 +26,14 @@ export class AuthService {
         this.principal = merge(
             // Initially fetch a user
             this.safeFetchPrincipal(),
-            // Mix-in any additional principals from other methods or fetch it from the server, if none provided
-            this._update$.pipe(switchMap(p => p === undefined ? this.safeFetchPrincipal() : of(p))),
+            // Mix-in any additional principals from other methods or fetch it from the server, if undefined is given
+            this._update$.pipe(switchMap(p => p === undefined ? this.safeFetchPrincipal() : of(p ?? undefined))),
         )
+        .pipe(
+            // Save the principal update timestamp
+            tap(() => this.principalUpdated = Date.now()),
             // Cache the last result
-        .pipe(shareReplay(1));
-    }
-
-    /**
-     * Observable for obtaining the last principal, which completes as soon as the principal is received.
-     */
-    get lastPrincipal(): Observable<Principal | null> {
-        return this.principal.pipe(take(1));
+            shareReplay(1));
     }
 
     /**
@@ -59,7 +58,8 @@ export class AuthService {
     }
 
     /**
-     * Update the current principal to the provided value, if any, otherwise trigger its reloading from the backend.
+     * Update the current principal to the provided value, if any. If null is provided, remove the current principal,
+     * if nothing (=undefined) is provided, trigger its reloading from the backend.
      */
     update(principal?: Principal | null): void {
         this._update$.next(principal);
@@ -68,12 +68,9 @@ export class AuthService {
     /**
      * An Observable that returns a Principal and never errors, returning a null instead.
      */
-    private safeFetchPrincipal(): Observable<Principal | null> {
+    private safeFetchPrincipal(): Observable<Principal | undefined> {
         return this.api.curUserGet()
-            .pipe(
-                // In case of error (shouldn't normally happen) we simply consider user isn't authenticated
-                catchError(() => of(null)),
-                // Map all falsy values to null, too
-                map(p => p || null));
+            // In case of error (shouldn't normally happen) we simply consider user isn't authenticated
+            .pipe(catchError(() => of(undefined)));
     }
 }

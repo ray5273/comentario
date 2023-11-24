@@ -84,6 +84,7 @@ build:
         --frozen-lockfile 
         --no-progress 
         --cache-folder .yarn-cache    # Fetch the dependencies
+    - yarn run generate               # Generate the API client
     - yarn run lint                   # Lint
     - yarn run test:ci                # Run unit tests
     - yarn run build:prod             # Build

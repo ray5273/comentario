@@ -78,7 +78,7 @@
                     <!-- If there's an existing author user -->
                     <ng-container *ngIf="commenters.get(c.userCreated!) as cr else delAuthor">
                         <!-- Avatar -->
-                        <app-user-avatar [user]="cr" size="S"></app-user-avatar>
+                        <app-user-avatar [user]="cr" size="S"/>
                         <!-- User link (non-anonymous and for superuser/owner) or name -->
                         <a *ngIf="cr.id !== anonUserId && domainMeta?.canManageDomain else userNameText"
                            [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'users', cr.id]"

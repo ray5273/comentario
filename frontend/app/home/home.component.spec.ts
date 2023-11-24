@@ -1,11 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterTestingModule } from '@angular/router/testing';
-import { of } from 'rxjs';
 import { MockDirectives, MockProvider } from 'ng-mocks';
 import { HomeComponent } from './home.component';
-import { AuthService } from '../_services/auth.service';
 import { DocEmbedDirective } from '../_directives/doc-embed.directive';
 import { ConfigService } from '../_services/config.service';
+import { mockAuthService } from '../_utils/_mocks.spec';
 
 describe('HomeComponent', () => {
 
@@ -17,7 +16,7 @@ describe('HomeComponent', () => {
             declarations: [HomeComponent, MockDirectives(DocEmbedDirective)],
             imports: [RouterTestingModule],
             providers: [
-                MockProvider(AuthService, {principal: of(null)}),
+                mockAuthService(),
                 MockProvider(ConfigService, {staticConfig: {homeContentUrl: ''} as any}),
             ],
         })

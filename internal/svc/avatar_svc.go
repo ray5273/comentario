@@ -10,6 +10,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
 	"image"
 	"image/color"
 	"image/draw"
@@ -48,10 +49,16 @@ func (svc *avatarService) DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL
 	// Download the image
 	resp, err := http.Get(avatarURL)
 	if err != nil {
-		return err
+		logger.Warningf("avatarService.DownloadAndUpdateByUserID: HTTP GET failed: %v", err)
+		return ErrResourceFetch
 	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer resp.Body.Close()
+	defer util.LogError(resp.Body.Close, "avatarService.DownloadAndUpdateByUserID, resp.Body.Close()")
+
+	// Make sure the HTTP status was successful
+	if resp.StatusCode < 200 || resp.StatusCode > 299 {
+		logger.Warningf("avatarService.DownloadAndUpdateByUserID: HTTP status %d: %s", resp.StatusCode, resp.Status)
+		return ErrResourceFetch
+	}
 
 	// Limit the size of the response to 1 MiB to prevent DoS attacks that exhaust memory
 	lr := &io.LimitedReader{R: resp.Body, N: 1024 * 1024}
@@ -65,7 +72,7 @@ func (svc *avatarService) DownloadAndUpdateFromGravatar(user *data.User, isCusto
 	return svc.DownloadAndUpdateByUserID(
 		&user.ID,
 		fmt.Sprintf(
-			"https://www.gravatar.com/avatar/%x?s=%d&d=404",
+			"https://gravatar.com/avatar/%x?s=%d&d=404",
 			sha256.Sum256([]byte(user.Email)),
 			data.UserAvatarSizes[data.UserAvatarSizeL]),
 		isCustom)

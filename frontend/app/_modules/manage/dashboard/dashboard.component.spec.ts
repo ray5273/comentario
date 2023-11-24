@@ -6,7 +6,7 @@ import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
 import { StatsChartComponent } from '../stats-chart/stats-chart.component';
 import { MetricCardComponent } from './metric-card/metric-card.component';
-import { AuthService } from '../../../_services/auth.service';
+import { mockAuthService } from '../../../_utils/_mocks.spec';
 
 describe('DashboardComponent', () => {
 
@@ -24,7 +24,7 @@ describe('DashboardComponent', () => {
                         dashboardTotals: () => of({}) as any,
                         dashboardDailyStats: () => of([]) as any,
                     }),
-                MockProvider(AuthService, {principal: of(null)}),
+                mockAuthService(),
             ],
         })
             .compileComponents();

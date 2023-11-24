@@ -1,7 +1,7 @@
 import { inject, Injectable } from '@angular/core';
 import { CanActivateFn, CanMatchFn, Router, UrlTree } from '@angular/router';
 import { Observable } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { map, take } from 'rxjs/operators';
 import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
 import { Utils } from "../_utils/utils";
@@ -44,8 +44,9 @@ export class AuthGuard {
      */
     isAuthenticated(url: string): Observable<boolean | UrlTree> {
         // Only allow if the user is authenticated
-        return this.authSvc.lastPrincipal
+        return this.authSvc.principal
             .pipe(
+                take(1),
                 map(p => {
                     // User authenticated
                     if (p) {
@@ -62,6 +63,9 @@ export class AuthGuard {
      * Check whether the user is not authenticated and return either true or the dashboard route.
      */
     isUnauthenticated(): Observable<boolean | UrlTree> {
-        return this.authSvc.lastPrincipal.pipe(map(p => p ? this.router.parseUrl(Paths.manage.dashboard) : true));
+        return this.authSvc.principal
+            .pipe(
+                take(1),
+                map(p => p ? this.router.parseUrl(Paths.manage.dashboard) : true));
     }
 }

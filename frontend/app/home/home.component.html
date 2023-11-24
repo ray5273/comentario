@@ -1,5 +1,5 @@
 <!-- Embed the doc front page -->
-<section id="front-page" [docEmbed]="embedUrl" [class.authenticated]="principal" [class.unauthenticated]="!principal">
+<section id="front-page" [docEmbed]="embedUrl" [class.authenticated]="isAuthenticated" [class.unauthenticated]="!isAuthenticated">
     <!-- Render placeholders while content is being loaded -->
     <div class="text-center placeholder-wave">
         <div class="py-5 mt-5">

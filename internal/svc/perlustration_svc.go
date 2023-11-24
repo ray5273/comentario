@@ -259,8 +259,7 @@ func (s *akismetScanner) Scan(config map[string]string, ctx *commentScanningCont
 	if err != nil {
 		return false, "", err
 	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer resp.Body.Close()
+	defer util.LogError(resp.Body.Close, "akismetScanner.Scan, resp.Body.Close()")
 
 	// Fetch the response
 	respBody, err := io.ReadAll(resp.Body)
@@ -372,13 +371,12 @@ func (s *perspectiveScanner) Scan(config map[string]string, ctx *commentScanning
 	rq.Header.Add("Content-Type", "application/json")
 
 	// Fetch the response
-	res, err := client.Do(rq)
+	resp, err := client.Do(rq)
 	if err != nil {
 		return false, "", err
 	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
+	defer util.LogError(resp.Body.Close, "perspectiveScanner.Scan, resp.Body.Close()")
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return false, "", err
 	}
@@ -454,13 +452,12 @@ func (s *apiLayerSpamCheckerScanner) Scan(config map[string]string, ctx *comment
 	rq.Header.Set("apikey", apiKey)
 
 	// Fetch the response
-	res, err := client.Do(rq)
+	resp, err := client.Do(rq)
 	if err != nil {
 		return false, "", err
 	}
-	//goland:noinspection GoUnhandledErrorResult
-	defer res.Body.Close()
-	body, err := io.ReadAll(res.Body)
+	defer util.LogError(resp.Body.Close, "apiLayerSpamCheckerScanner.Scan, resp.Body.Close()")
+	body, err := io.ReadAll(resp.Body)
 	if err != nil {
 		return false, "", err
 	}

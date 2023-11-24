@@ -13,12 +13,7 @@
         "copy-assets": "cp ../build/frontend/en/*.ico ../build/frontend/",
         "cleanup-assets": "rm -f ../build/frontend/*/*.ico",
         "postbuild": "npm run copy-assets && npm run cleanup-assets",
-        "postbuild:prod": "npm run copy-assets && npm run cleanup-assets",
-        "prebuild": "npm run generate",
-        "prebuild:prod": "npm run generate",
-        "prestart": "npm run generate",
-        "pretest": "npm run generate",
-        "pretest:ci": "npm run generate"
+        "postbuild:prod": "npm run copy-assets && npm run cleanup-assets"
     },
     "dependencies": {
         "@angular/animations": "^16.2.10",

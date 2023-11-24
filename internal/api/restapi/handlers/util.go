@@ -152,6 +152,8 @@ func respServiceError(err error) middleware.Responder {
 	switch {
 	case errors.Is(err, svc.ErrEmailSend):
 		return api_general.NewGenericBadGateway().WithPayload(ErrorEmailSendFailure)
+	case errors.Is(err, svc.ErrResourceFetch):
+		return api_general.NewGenericBadGateway().WithPayload(ErrorResourceFetchFailed)
 	case errors.Is(err, svc.ErrNotFound):
 		return api_general.NewGenericNotFound()
 	}

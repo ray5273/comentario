@@ -17,6 +17,10 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     @Input({required: true})
     user?: User | Principal | Commenter;
 
+    /** Optional timestamp to force-update the avatar. */
+    @Input()
+    updated?: number;
+
     _src?: SafeResourceUrl;
     urlOverride?: string | null;
 
@@ -66,9 +70,13 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
 
     private updateSrc() {
         this._src = this.urlOverride ?
+            // If there's an override, use that as the URL
             this.sanitizer.bypassSecurityTrustResourceUrl(this.urlOverride) :
+            // Otherwise, use the user's avatar, if any
             (this.urlOverride === undefined) && this.user?.hasAvatar && this.user?.id ?
-                this.sanitizer.bypassSecurityTrustResourceUrl(`${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.size}`) :
+                this.sanitizer.bypassSecurityTrustResourceUrl(
+                    `${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.size}` +
+                    (this.updated ? `&_ts=${this.updated}` : '')) :
                 undefined;
     }
 }
