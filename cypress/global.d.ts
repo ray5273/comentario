@@ -5,10 +5,13 @@ declare namespace Cypress {
         password: string;
     }
 
-    interface User extends Credentials {
+    type CredentialsWithName = Credentials & {
+        name: string;
+    }
+
+    interface User extends CredentialsWithName {
         isAnonymous: boolean;
         id:          string;
-        name:        string;
         isBanned?:   boolean;
     }
 
@@ -51,8 +54,17 @@ declare namespace Cypress {
         succeeds?: boolean;
         /** Path the user is redirected to after login. Only when succeeds is true. Defaults to the Dashboard path. */
         redirectPath?: string | RegExp | IsAtObjectWithUnderscore;
-        /** Error toast shown after login fails. Mandatory is succeeds is false, otherwise ignored. */
+        /** Error toast shown after login fails. Ignored unless succeeds is false, otherwise mandatory. */
         errToast?: string;
+    }
+
+    interface TestSiteLoginViaApiOptions {
+        /** Whether to verify the result (only works if the embedded Comentario is visible upon login). Defaults to true. */
+        verify?: boolean;
+        /** Whether login must succeed. Ignored when verify is false, otherwise defaults to true. */
+        succeeds?: boolean;
+        /** Error notification shown after login fails. Ignored unless succeeds is false, otherwise mandatory. */
+        errMessage?: string;
     }
 
     interface IsAtObjectWithUnderscore {
@@ -273,10 +285,18 @@ declare namespace Cypress {
 
         /**
          * Login into the embedded Comentario (test site) as provided user via the UI.
-         * @param user User to login with.
+         * @param creds Credentials to login with.
          * NB: the required test site page must be open.
          */
-        testSiteLogin(user: User): Chainable<void>;
+        testSiteLogin(creds: CredentialsWithName): Chainable<void>;
+
+        /**
+         * Login as provided user into embedded Comentario directly, via an API call.
+         * @param creds Credentials to login with
+         * @param path Path to go to after the login.
+         * @param options Optional login options.
+         */
+        testSiteLoginViaApi(creds: CredentialsWithName, path: string, options?: TestSiteLoginViaApiOptions): Chainable<void>;
 
         /**
          * Login into the embedded Comentario (test site) using SSO, via the UI.

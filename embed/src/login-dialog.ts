@@ -87,8 +87,8 @@ export class LoginDialog extends Dialog {
         // Local auth
         if (this.pageInfo.authLocal) {
             // Create inputs
-            this._email = UIToolkit.input('email',    'email',    'Email address', 'email',            true);
-            this._pwd   = UIToolkit.input('password', 'password', 'Password',      'current-password', true);
+            this._email = UIToolkit.input('email',    'email',    'Email address', 'email',            true).attr({maxlength: '254'});
+            this._pwd   = UIToolkit.input('password', 'password', 'Password',      'current-password', true).attr({maxlength: '63'});
 
             // Add the inputs to the dialog
             form.append(

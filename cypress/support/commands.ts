@@ -7,6 +7,7 @@ const baseUrl = config('baseUrl');
 
 /** The base URL for the test site. */
 const testSiteUrl = Cypress.env('TEST_SITE_URL') || 'http://localhost:8000/';
+const testSiteHost = new URL(testSiteUrl).host;
 
 const commentDeepMap = (c: Cypress.Comment, props: (keyof Cypress.Comment)[]) => {
     const x: any = {};
@@ -207,7 +208,7 @@ Cypress.Commands.add('logout', () => {
 
 Cypress.Commands.add('loginViaApi', (creds: Cypress.Credentials, targetUrl: string, visitOptions?: Partial<Cypress.VisitOptions>) => {
     cy.request('POST', '/api/auth/login', {email: creds.email, password: creds.password})
-        .should(resp => {
+        .then(resp => {
             expect(resp.status).to.eq(200);
             expect(resp.body.email).to.eq(creds.email);
         });
@@ -477,46 +478,74 @@ Cypress.Commands.add(
             .type('{backspace}').isValid(); // 63 is good enough
     });
 
-Cypress.Commands.add(
-    'testSiteVisit',
-    {prevSubject: false},
-    (path: string) => cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
+Cypress.Commands.add('testSiteVisit', {prevSubject: false}, (path: string) =>
+    cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
+
+Cypress.Commands.add('testSiteLogin', {prevSubject: false}, (creds: Cypress.CredentialsWithName) => {
+    // Verify it's a local user
+    if (!creds.password) {
+        throw new Error(`User ${creds.email} has no password`);
+    }
+
+    // Click on Login: a popup dialog appears
+    cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
+    cy.get('.comentario-root .comentario-dialog').should('be.visible');
+
+    // Fill out the login form and submit
+    cy.get('.comentario-root .comentario-dialog form').find('input[name=email]')   .setValue(creds.email);
+    cy.get('.comentario-root .comentario-dialog form').find('input[name=password]').setValue(creds.password).type('{enter}');
+
+    // Verify user name in the profile bar
+    cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', creds.name).and('be.visible');
+});
 
 Cypress.Commands.add(
-    'testSiteLogin',
+    'testSiteLoginViaApi',
     {prevSubject: false},
-    (user: Cypress.User) => {
-        // Verify it's a local user
-        if (!user.password) {
-            throw new Error(`User ${user.email} has no password`);
+    (creds: Cypress.CredentialsWithName, path: string, options?: Cypress.TestSiteLoginViaApiOptions) => {
+        cy.request<{sessionToken: string; principal: Cypress.CredentialsWithName}>(
+                'POST',
+                '/api/embed/auth/login',
+                {email: creds.email, password: creds.password, host: testSiteHost})
+            .then(resp => {
+                expect(resp.status).to.eq(200);
+                expect(resp.body.sessionToken).to.be.a('string');
+                expect(resp.body.principal.email).to.eq(creds.email);
+                expect(resp.body.principal.name).to.eq(creds.name);
+
+                // Store the session token in a cookie
+                cy.setCookie('comentario_auth_token', resp.body.sessionToken);
+            });
+
+        // Navigate to the page
+        cy.testSiteVisit(path);
+
+        // Verify the outcome
+        if (options?.verify ?? true) {
+            if (options?.succeeds ?? true) {
+                cy.get('comentario-comments .comentario-root .comentario-profile-bar .comentario-name').should('have.text', creds.name).and('be.visible');
+            } else if (!options?.errMessage) {
+                throw new Error('cy.testSiteLoginViaApi(): options.errMessage is not specified');
+            } else {
+                cy.get('comentario-comments .comentario-root .comentario-message-box')
+                    .should('have.class', 'comentario-error')
+                    .and('have.text', options.errMessage)
+                    .and('be.visible');
+            }
         }
-
-        // Click on Login: a popup dialog appears
-        cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
-        cy.get('.comentario-root .comentario-dialog').should('be.visible');
-
-        // Fill out the login form and submit
-        cy.get('.comentario-root .comentario-dialog form').find('input[name=email]')   .setValue(user.email);
-        cy.get('.comentario-root .comentario-dialog form').find('input[name=password]').setValue(user.password).type('{enter}');
-
-        // Verify user name in the profile bar
-        cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', user.name);
     });
 
-Cypress.Commands.add(
-    'testSiteSsoLogin',
-    {prevSubject: false},
-    () => {
-        // Click on Login: a popup dialog appears
-        cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
-        cy.get('.comentario-root .comentario-dialog').should('be.visible');
+Cypress.Commands.add('testSiteSsoLogin', {prevSubject: false}, () => {
+    // Click on Login: a popup dialog appears
+    cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
+    cy.get('.comentario-root .comentario-dialog').should('be.visible');
 
-        // Click on the SSO login button: the process runs in the background
-        cy.contains('.comentario-root .comentario-dialog form button', 'Single Sign-On').click();
+    // Click on the SSO login button: the process runs in the background
+    cy.contains('.comentario-root .comentario-dialog form button', 'Single Sign-On').click();
 
-        // Verify user name in the profile bar
-        cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', 'John Doe');
-    });
+    // Verify user name in the profile bar
+    cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', 'John Doe');
+});
 
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));
