@@ -165,9 +165,15 @@ dl.detail-table, dl.detail-table > div {
     flex: 1 1 50%;
 }
 
-// Remove the default margin from the bottom after the comment text
-.comment-text p:last-child {
-    margin-bottom: 0 !important;
+.comment-text {
+    // Remove the default margin from the bottom after the comment text
+    p:last-child {
+        margin-bottom: 0 !important;
+    }
+    // Do not allow Markdown-inserted images to be wider than the card
+    img {
+        max-width: 100%;
+    }
 }
 
 // Social buttons
