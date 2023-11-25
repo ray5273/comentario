@@ -204,7 +204,8 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 	comment.HTML = util.MarkdownToHTML(
 		comment.Markdown,
 		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled))
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
+		false)
 
 	// Determine comment state
 	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
@@ -316,7 +317,8 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	comment.HTML = util.MarkdownToHTML(
 		comment.Markdown,
 		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled))
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
+		false)
 
 	// Persist the edits in the database
 	if err := svc.TheCommentService.UpdateText(&comment.ID, comment.Markdown, comment.HTML); err != nil {

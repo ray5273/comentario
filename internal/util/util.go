@@ -13,7 +13,9 @@ import (
 	"github.com/microcosm-cc/bluemonday"
 	"github.com/op/go-logging"
 	"github.com/phuslu/iploc"
-	"github.com/russross/blackfriday"
+	"github.com/yuin/goldmark"
+	"github.com/yuin/goldmark/extension"
+	gmhtml "github.com/yuin/goldmark/renderer/html"
 	"golang.org/x/net/html"
 	"io"
 	"math/rand"
@@ -318,38 +320,60 @@ func LogError(f func() error, details string) {
 }
 
 // MarkdownToHTML renders the provided markdown string as HTML
-func MarkdownToHTML(markdown string, links, images bool) string {
-	policy := bluemonday.UGCPolicy()
-	policy.AddTargetBlankToFullyQualifiedLinks(true)
-	policy.RequireNoFollowOnFullyQualifiedLinks(true)
+func MarkdownToHTML(markdown string, links, images, tables bool) string {
+	// Create a new markdown parser/renderer
+	md := goldmark.New(
+		goldmark.WithExtensions(
+			extension.Strikethrough,
+			extension.DefinitionList),
+		goldmark.WithParserOptions(),
+		goldmark.WithRendererOptions(
+			gmhtml.WithHardWraps(),
+		),
+	)
 
-	extensions := 0 |
-		blackfriday.EXTENSION_STRIKETHROUGH
-
-	htmlFlags := 0 |
-		blackfriday.HTML_SKIP_HTML |
-		blackfriday.HTML_SKIP_STYLE |
-		blackfriday.HTML_SAFELINK |
-		blackfriday.HTML_NOFOLLOW_LINKS |
-		blackfriday.HTML_NOREFERRER_LINKS |
-		blackfriday.HTML_NOOPENER_LINKS |
-		blackfriday.HTML_HREF_TARGET_BLANK
+	// Create a sanitizer policy
+	p := bluemonday.StrictPolicy()
+	p.AllowStandardAttributes()
+	p.AllowStandardURLs()
+	p.AllowElements(
+		// Headings
+		"h1", "h2", "h3", "h4", "h5", "h6",
+		// Blocks and separators
+		"br", "div", "hr", "p", "span",
+		// Inline elements
+		"abbr", "acronym", "cite", "code", "dfn", "em", "mark", "s", "strong", "sub", "sup", "var", "b", "i", "pre",
+		"small", "strike", "tt", "u",
+	)
+	p.AllowLists()
+	p.AddTargetBlankToFullyQualifiedLinks(true)
+	p.RequireNoFollowOnFullyQualifiedLinks(true)
 
 	// Link processing
 	if links {
-		extensions |= blackfriday.EXTENSION_AUTOLINK
-	} else {
-		htmlFlags |= blackfriday.HTML_SKIP_LINKS
+		p.AllowAttrs("href").OnElements("a")
+		extension.NewLinkify(extension.WithLinkifyAllowedProtocols([][]byte{[]byte("http"), []byte("https")})).
+			Extend(md)
 	}
 
 	// Image processing
-	if !images {
-		htmlFlags |= blackfriday.HTML_SKIP_IMAGES
+	if images {
+		p.AllowImages()
 	}
 
-	renderer := blackfriday.HtmlRenderer(htmlFlags, "", "")
-	unsafe := blackfriday.Markdown([]byte(markdown), renderer, extensions)
-	return string(policy.SanitizeBytes(unsafe))
+	// Tables
+	if tables {
+		p.AllowTables()
+		extension.Table.Extend(md)
+	}
+
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(markdown), &buf); err != nil {
+		return fmt.Sprintf("[Error converting Markdown to HTML: %v]", err)
+	}
+
+	// Sanitize the HTML
+	return p.Sanitize(buf.String())
 }
 
 // MD5ToHex converts the given MD5 binary checksum into its string representation. If checksum is nil, return an empty

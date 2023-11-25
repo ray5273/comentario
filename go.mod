@@ -23,7 +23,7 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/phuslu/iploc v1.0.20231031
-	github.com/russross/blackfriday v1.6.0
+	github.com/yuin/goldmark v1.6.0
 	golang.org/x/crypto v0.15.0
 	golang.org/x/net v0.18.0
 	golang.org/x/text v0.14.0

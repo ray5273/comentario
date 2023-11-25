@@ -598,7 +598,8 @@ func (svc *importExportService) importV1(curUser *data.User, domain *data.Domain
 			c.HTML = util.MarkdownToHTML(
 				comment.Markdown,
 				TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-				TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled))
+				TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
+				false)
 		}
 
 		// File it under the appropriate parent ID
