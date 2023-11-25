@@ -119,6 +119,11 @@
             margin-top: 6px;
             margin-bottom: 6px;
         }
+
+        // Do not allow Markdown-inserted images to be wider than the card
+        img {
+            max-width: 100%;
+        }
     }
 
     .comentario-moderation-notice {
