@@ -10,6 +10,7 @@ import { ApiGeneralService, Principal } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
+import { Utils } from '../../../../_utils/utils';
 
 @UntilDestroy()
 @Component({
@@ -53,7 +54,9 @@ export class ProfileComponent implements OnInit {
     });
 
     readonly deleteConfirmationForm = this.fb.nonNullable.group({
-        agreed: false,
+        deleteComments: false,
+        purgeComments:  [{value: false, disabled: true}],
+        agreed:         false,
     });
 
     // Icons
@@ -68,7 +71,12 @@ export class ProfileComponent implements OnInit {
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
-    ) {}
+    ) {
+        // Disable Purge comments if Delete comments is off
+        this.deleteConfirmationForm.controls.deleteComments.valueChanges
+            .pipe(untilDestroyed(this))
+            .subscribe(b => Utils.enableControls(b, this.deleteConfirmationForm.controls.purgeComments));
+    }
 
     ngOnInit(): void {
         // Monitor principal changes
@@ -99,13 +107,18 @@ export class ProfileComponent implements OnInit {
 
     deleteAccount() {
         // Run deletion with the API
-        this.api.authDeleteProfile()
+        const vals = this.deleteConfirmationForm.value;
+        this.api.authDeleteProfile(vals)
             .pipe(this.deleting.processing())
-            .subscribe(() => {
+            .subscribe(r => {
                 // Reset the principal and update the authentication status
                 this.authSvc.update(null);
                 // Add a toast
-                this.toastSvc.success('account-deleted').keepOnRouteChange();
+                this.toastSvc.success(
+                    'account-deleted',
+                    undefined,
+                    vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
+                ).keepOnRouteChange();
                 // Navigate to the home page
                 this.router.navigate(['/']);
             });

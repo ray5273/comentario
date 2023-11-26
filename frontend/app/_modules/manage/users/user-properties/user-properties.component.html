@@ -68,14 +68,18 @@
 <!-- Template for the ban confirmation dialog -->
 <ng-template #banConfirm>
     <p i18n>Are you sure you want to ban this user?</p>
-    <p i18n>You can also opt to delete all comments created by this user by ticking off the checkbox below.</p>
     <form [formGroup]="banConfirmationForm">
         <div class="form-check">
             <input formControlName="deleteComments" type="checkbox" class="form-check-input" id="ban-delete-comments">
-            <label class="form-check-label text-danger" for="ban-delete-comments" i18n>Delete all user's comments</label>
-            <div class="form-text text-danger" i18n>Warning: comment removal cannot be undone</div>
+            <label class="form-check-label" for="ban-delete-comments" i18n>Delete all user's comments</label>
+        </div>
+        <div class="form-check ms-4">
+            <input formControlName="purgeComments" type="checkbox" class="form-check-input" id="ban-purge-comments">
+            <label class="form-check-label" for="ban-purge-comments" i18n>Permanently delete all comments, including replies</label>
         </div>
     </form>
+    <hr>
+    <p class="fw-bold" i18n>Please note: comment removal cannot be undone.</p>
 </ng-template>
 
 <!-- Template for the unban confirmation dialog -->
@@ -86,5 +90,16 @@
 <!-- Template for the delete user confirmation dialog -->
 <ng-template #deleteConfirm>
     <p i18n>Are you sure you want to delete this user?</p>
+    <form [formGroup]="deleteConfirmationForm">
+        <div class="form-check">
+            <input formControlName="deleteComments" type="checkbox" class="form-check-input" id="delete-del-comments">
+            <label class="form-check-label" for="delete-del-comments" i18n>Also delete all user's comments</label>
+        </div>
+        <div class="form-check ms-4">
+            <input formControlName="purgeComments" type="checkbox" class="form-check-input" id="delete-purge-comments">
+            <label class="form-check-label" for="delete-purge-comments" i18n>Permanently delete all comments, including replies</label>
+        </div>
+    </form>
+    <hr>
     <p class="fw-bold" i18n>Please note: this action cannot be undone.</p>
 </ng-template>

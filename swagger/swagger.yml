@@ -1381,9 +1381,29 @@ paths:
       summary: Delete the account of the current user
       tags:
         - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              deleteComments:
+                type: boolean
+                description: Whether to delete all comments created by the user
+              purgeComments:
+                type: boolean
+                description: Whether to permanently delete all comments, including replies. Ignored if deleteComments is false
       responses:
-        204:
+        200:
           description: Owner's account has been deleted
+          schema:
+            type: object
+            properties:
+              countDeletedComments:
+                type: integer
+                description: Number of deleted comments (if opted in for deletion)
+                x-omitempty: false
 
   /auth/password-reset:
     post:
@@ -2829,9 +2849,29 @@ paths:
       summary: Delete a user
       tags:
         - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            properties:
+              deleteComments:
+                type: boolean
+                description: Whether to delete all comments created by the user
+              purgeComments:
+                type: boolean
+                description: Whether to permanently delete all comments, including replies. Ignored if deleteComments is false
       responses:
-        204:
+        200:
           description: User has been deleted
+          schema:
+            type: object
+            properties:
+              countDeletedComments:
+                type: integer
+                description: Number of deleted comments (if opted in for deletion)
+                x-omitempty: false
 
   /users/{uuid}/ban:
     post:
@@ -2855,6 +2895,9 @@ paths:
               deleteComments:
                 type: boolean
                 description: Whether to remove all comments from the user (only applies if ban is true, otherwise ignored)
+              purgeComments:
+                type: boolean
+                description: Whether to permanently delete all comments, including replies. Ignored if ban or deleteComments is false
       responses:
         200:
           description: User has been (un)banned

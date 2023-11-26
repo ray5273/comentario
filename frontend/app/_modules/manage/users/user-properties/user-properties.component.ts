@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { BehaviorSubject, combineLatestWith, switchMap } from 'rxjs';
+import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faBan, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Domain, DomainUser, User } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -9,7 +10,9 @@ import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { AuthService } from '../../../../_services/auth.service';
 import { Animations } from '../../../../_utils/animations';
+import { Utils } from '../../../../_utils/utils';
 
+@UntilDestroy()
 @Component({
     selector: 'app-user-properties',
     templateUrl: './user-properties.component.html',
@@ -36,6 +39,12 @@ export class UserPropertiesComponent {
 
     readonly banConfirmationForm = this.fb.nonNullable.group({
         deleteComments: false,
+        purgeComments:  [{value: false, disabled: true}],
+    });
+
+    readonly deleteConfirmationForm = this.fb.nonNullable.group({
+        deleteComments: false,
+        purgeComments:  [{value: false, disabled: true}],
     });
 
     // Icons
@@ -51,7 +60,13 @@ export class UserPropertiesComponent {
         private readonly api: ApiGeneralService,
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
-    ) {}
+    ) {
+        // Ban and delete confirmation forms: disable Purge comments if Delete comments is off
+        [this.banConfirmationForm, this.deleteConfirmationForm]
+            .forEach(f => f.controls.deleteComments.valueChanges
+                .pipe(untilDestroyed(this))
+                .subscribe(b => Utils.enableControls(b, f.controls.purgeComments)));
+    }
 
     @Input()
     set id(id: string) {
@@ -74,15 +89,15 @@ export class UserPropertiesComponent {
 
     toggleBan() {
         const ban = !this.user!.banned;
-        const deleteComments = this.banConfirmationForm.value.deleteComments;
-        this.api.userBan(this.user!.id!, {ban, deleteComments})
+        const vals = this.banConfirmationForm.value;
+        this.api.userBan(this.user!.id!, {ban, deleteComments: vals.deleteComments, purgeComments: vals.purgeComments})
             .pipe(this.banning.processing())
             .subscribe(r => {
                 // Add a success toast
                 this.toastSvc.success(
                     ban ? 'user-is-banned' : 'user-is-unbanned',
                     undefined,
-                    ban && deleteComments ?
+                    ban && vals.deleteComments ?
                         $localize`${r.countDeletedComments} comments have been deleted` :
                         undefined,
                 );
@@ -92,11 +107,16 @@ export class UserPropertiesComponent {
     }
 
     delete() {
-        this.api.userDelete(this.user!.id!)
+        const vals = this.deleteConfirmationForm.value;
+        this.api.userDelete(this.user!.id!, vals)
             .pipe(this.deleting.processing())
-            .subscribe(() => {
+            .subscribe(r => {
                 // Add a success toast
-                this.toastSvc.success('user-is-deleted').keepOnRouteChange();
+                this.toastSvc.success(
+                    'user-is-deleted',
+                    undefined,
+                    vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
+                ).keepOnRouteChange();
                 // Navigate to the user list
                 this.router.navigate([Paths.manage.users]);
             });

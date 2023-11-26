@@ -32,8 +32,11 @@ type UserService interface {
 	Create(u *data.User) error
 	// CreateUserSession persists a new user session
 	CreateUserSession(s *data.UserSession) error
-	// DeleteUserByID removes a user by their ID
-	DeleteUserByID(id *uuid.UUID) error
+	// DeleteUserByID removes a user by their ID.
+	//   - delComments: if true, deletes all comments made by the user
+	//   - purgeComments: if true, permanently removes all comments and replies
+	// Returns number of deleted comments.
+	DeleteUserByID(id *uuid.UUID, delComments, purgeComments bool) (int64, error)
 	// DeleteUserSession removes a user session from the database
 	DeleteUserSession(id *uuid.UUID) error
 	// EnsureSuperuser ensures that the user with the given ID or email is a superuser
@@ -204,22 +207,42 @@ func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	return nil
 }
 
-func (svc *userService) DeleteUserByID(id *uuid.UUID) error {
-	logger.Debugf("userService.DeleteUserByID(%s)", id)
+func (svc *userService) DeleteUserByID(id *uuid.UUID, delComments, purgeComments bool) (int64, error) {
+	logger.Debugf("userService.DeleteUserByID(%s, %v, %v)", id, delComments, purgeComments)
 
 	// User cannot be anonymous
 	if *id == data.AnonymousUser.ID {
-		return ErrNotFound
+		return 0, ErrNotFound
+	}
+
+	// If comments are to be deleted
+	cntDel := int64(0)
+	if delComments {
+		var err error
+		// If comments need to be purged
+		if purgeComments {
+			// Purge all comments created by the user
+			if cntDel, err = TheCommentService.DeleteByUser(id); err != nil {
+				logger.Errorf("userService.DeleteUserByID: DeleteByUser() failed: %v", err)
+				return 0, err
+			}
+
+			// Mark all comments created by the user as deleted
+		} else if cntDel, err = TheCommentService.MarkDeletedByUser(id, id); err != nil {
+			logger.Errorf("userService.DeleteUserByID: MarkDeletedByUser() failed: %v", err)
+			return 0, err
+		}
+
 	}
 
 	// Delete the user
 	if err := db.ExecuteOne(db.Dialect().Delete("cm_users").Where(goqu.Ex{"id": id})); err != nil {
 		logger.Errorf("userService.DeleteUserByID: ExecuteOne() failed: %v", err)
-		return translateDBErrors(err)
+		return 0, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return nil
+	return cntDel, nil
 }
 
 func (svc *userService) DeleteUserSession(id *uuid.UUID) error {

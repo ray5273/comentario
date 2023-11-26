@@ -569,7 +569,7 @@ func (svc *domainService) PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (i
 		filter = append(filter, goqu.I("user_created").IsNull())
 	}
 
-	// Delete all comments for the domain that are marked for deletion
+	// Delete all comments for the domain that are marked for deletion and/or created by now deleted users
 	var cnt int64
 	if res, err := db.ExecuteRes(
 		db.Dialect().

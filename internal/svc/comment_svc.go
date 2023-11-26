@@ -33,6 +33,8 @@ type CommentService interface {
 		inclApproved, inclPending, inclRejected, inclDeleted bool) (int64, error)
 	// Create creates, persists, and returns a new comment
 	Create(comment *data.Comment) error
+	// DeleteByUser permanently deletes all comments by the specified user, returning the affected comment count
+	DeleteByUser(userID *uuid.UUID) (int64, error)
 	// FindByID finds and returns a comment with the given ID
 	FindByID(id *uuid.UUID) (*data.Comment, error)
 	// ListByDomain returns a list of comments for the given domain. No comment property filtering is applied, so
@@ -172,6 +174,22 @@ func (svc *commentService) Create(c *data.Comment) error {
 
 	// Succeeded
 	return nil
+}
+
+func (svc *commentService) DeleteByUser(userID *uuid.UUID) (int64, error) {
+	logger.Debugf("commentService.DeleteByUser(%s)", userID)
+
+	// Purge all comments created by the user. This will also remove all child comments thanks to the foreign key
+	if res, err := db.ExecuteRes(db.Dialect().Delete("cm_comments").Where(goqu.Ex{"user_created": userID})); err != nil {
+		logger.Errorf("userService.DeleteUserByID: ExecuteOne() failed for purging comments: %v", err)
+		return 0, err
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		logger.Errorf("userService.DeleteUserByID: RowsAffected() failed: %v", err)
+		return 0, err
+	} else {
+		// Succeeded
+		return cnt, nil
+	}
 }
 
 func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {

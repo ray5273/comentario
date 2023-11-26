@@ -135,8 +135,17 @@
     <p i18n>You will lose your access to Comentario.</p>
     <form [formGroup]="deleteConfirmationForm">
         <div class="form-check">
+            <input formControlName="deleteComments" type="checkbox" class="form-check-input" id="del-comments-del-account">
+            <label class="form-check-label" for="del-comments-del-account" i18n>Also delete all my comments</label>
+        </div>
+        <div class="form-check ms-4">
+            <input formControlName="purgeComments" type="checkbox" class="form-check-input" id="purge-comments-del-account">
+            <label class="form-check-label" for="purge-comments-del-account" i18n>Permanently delete all comments, including replies</label>
+        </div>
+        <hr>
+        <div class="form-check">
             <input formControlName="agreed" type="checkbox" class="form-check-input" id="agreed-del-account">
-            <label class="form-check-label text-danger" for="agreed-del-account" i18n>I have read the above and understand that this action cannot be undone</label>
+            <label class="form-check-label text-danger" for="agreed-del-account" i18n>I understand that this action cannot be undone</label>
         </div>
     </form>
 </ng-template>

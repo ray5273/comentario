@@ -64,17 +64,21 @@ func UserBan(params api_general.UserBanParams, user *data.User) middleware.Respo
 		}
 	}
 
-	// When banning the user, all user's comment can also be deleted
-	var cc int64
+	// When banning the user, all user's comments can also be deleted or purged
+	var cntDel int64
 	if ban && params.Body.DeleteComments {
 		var err error
-		if cc, err = svc.TheCommentService.MarkDeletedByUser(&user.ID, &u.ID); err != nil {
+		if params.Body.PurgeComments {
+			if cntDel, err = svc.TheCommentService.DeleteByUser(&u.ID); err != nil {
+				return respServiceError(err)
+			}
+		} else if cntDel, err = svc.TheCommentService.MarkDeletedByUser(&user.ID, &u.ID); err != nil {
 			return respServiceError(err)
 		}
 	}
 
 	// Succeeded
-	return api_general.NewUserBanOK().WithPayload(&api_general.UserBanOKBody{CountDeletedComments: cc})
+	return api_general.NewUserBanOK().WithPayload(&api_general.UserBanOKBody{CountDeletedComments: cntDel})
 }
 
 func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware.Responder {
@@ -99,13 +103,13 @@ func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware
 		return r
 	}
 
-	// Delete the user
-	if err := svc.TheUserService.DeleteUserByID(&u.ID); err != nil {
+	// Delete the user, optionally deleting their comments
+	if cntDel, err := svc.TheUserService.DeleteUserByID(&u.ID, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
 		return respServiceError(err)
+	} else {
+		// Succeeded
+		return api_general.NewUserDeleteOK().WithPayload(&api_general.UserDeleteOKBody{CountDeletedComments: cntDel})
 	}
-
-	// Succeeded
-	return api_general.NewUserDeleteNoContent()
 }
 
 func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
