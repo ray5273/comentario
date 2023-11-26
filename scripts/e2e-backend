@@ -109,6 +109,6 @@ echo "Starting $build_dir/comentario"
     --db-migration-path="$build_dir/db" \
     --template-path="$build_dir/templates" \
     --secrets="$secrets" \
-    --base-docs-url="https://edge.docs.comentario.app" \
+    --base-docs-url="http://localhost:1313" \
     --home-content-url="https://edge.docs.comentario.app/en/embed/front-page/" \
     "$@"

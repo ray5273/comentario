@@ -7,7 +7,10 @@
                 <!-- Add a local var for control name (also use it for switch ID) -->
                 <div *ngIf="ctlName(item.key) as k" [ngSwitch]="item.datatype" class="row">
                     <!-- Label -->
-                    <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">{{ item.description }}</label>
+                    <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">
+                        <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
+                        <ng-container>{{ item.description }}</ng-container>
+                    </label>
 
                     <!-- Boolean value -->
                     <div *ngSwitchCase="'boolean'" class="col-sm-6 form-check form-switch">

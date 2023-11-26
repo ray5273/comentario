@@ -1,0 +1,14 @@
+---
+title: Use Gravatar for user avatars
+description: domain.defaults.useGravatar
+tags:
+    - configuration
+    - dynamic configuration
+    - administration
+---
+
+This [dynamic configuration](/configuration/backend/dynamic) parameter configures the use of the [Gravatar](https://www.gravatar.com) service.
+
+<!--more-->
+
+When enabled, Comentario will try to fetch an avatar image from Gravatar for each registered or logging-in user. For federated users (those registering via Google, Facebook etc.), the identity provider avatar will be tried first.

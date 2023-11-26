@@ -25,7 +25,10 @@
     <div class="col-sm">
         <dl class="detail-table" id="dynamic-config-items">
             <div *ngFor="let item of items">
-                <dt>{{ item.description }}</dt>
+                <dt>
+                    <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
+                    <ng-container>{{ item.description }}</ng-container>
+                </dt>
                 <dd [ngSwitch]="item.datatype">
                     <app-checkmark *ngSwitchCase="'boolean'" [value]="item.value === 'true'"></app-checkmark>
                     <span *ngSwitchDefault>{{ item.value }}</span>
