@@ -160,6 +160,8 @@ declare namespace Cypress {
         /**
          * Verify the topmost toast has the given ID, and, optionally, details text, then close it with the Close
          * button.
+         * @param id ID of the toast to check.
+         * @param details If provided, the toast must contain this text. Empty string explicitly indicates no details.
          */
         toastCheckAndClose(id: string, details?: string): Chainable<Element>;
 

@@ -223,8 +223,8 @@ Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
     cy.get('#toast-0 .message-id').should('have.text', id);
 
     // Verify the toast's details text, if any
-    if (details) {
-        cy.get('#toast-0 .toast-details').should('have.text', details);
+    if (details !== undefined) {
+        cy.get('#toast-0 .toast-details').should(d => details === '' ? expect(d).not.exist : expect(d).to.have.text(details));
     }
 
     // Close the toast and verify it's gone
