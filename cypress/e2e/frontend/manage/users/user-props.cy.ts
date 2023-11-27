@@ -135,118 +135,328 @@ context('User Properties page', () => {
         });
     });
 
-    it('allows to delete user', () => {
-        cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, true, false);
+    context('allows to delete user', () => {
 
-        // Click on Delete user and confirm
-        cy.get('@btnDelete').click();
-        cy.confirmationDialog(/Are you sure you want to delete this user\?/).dlgButtonClick('Delete user');
+        const delUser = (delComments: boolean, purge: boolean, expectNumDeleted?: number) => {
+            cy.loginViaApi(USERS.root, pagePathAce);
+            makeAliases(true, true, true, false);
 
-        // We're back to the User Manager and there's a success toast
-        cy.isAt(PATHS.manage.users);
-        cy.toastCheckAndClose('user-is-deleted');
+            // Click on Delete user
+            cy.get('@btnDelete').click();
 
-        // One fewer on the list
-        cy.get('app-user-manager #user-list').verifyListFooter(16, false);
+            // Confirmation dialog appears
+            cy.confirmationDialog(/Are you sure you want to delete this user\?/).as('dlg');
+            cy.get('@dlg').find('#delete-del-comments')  .as('delComments')  .should('not.be.checked');
+            cy.get('@dlg').find('#delete-purge-comments').as('purgeComments').should('not.be.checked');
 
-        // The user is unable to log in
-        cy.logout();
-        cy.login(USERS.ace, {succeeds: false, errToast: 'invalid-credentials'});
+            // Tick off required checkboxes
+            if (delComments) {
+                cy.get('@delComments').clickLabel().should('be.checked');
+                if (purge) {
+                    cy.get('@purgeComments').clickLabel().should('be.checked');
+                }
+            }
 
-        // Verify comments are still visible, but the author is "Deleted User"
-        cy.testSiteVisit(TEST_PATHS.attr.noFonts);
-        cy.commentTree('id', 'html', 'author')
-            .should(
-                'yamlMatch',
+            // Confirm deletion
+            cy.get('@dlg').dlgButtonClick('Delete user');
+
+            // We're back to the User Manager and there's a success toast
+            cy.isAt(PATHS.manage.users);
+            cy.toastCheckAndClose(
+                'user-is-deleted',
+                expectNumDeleted === undefined ? '' : `(${expectNumDeleted} comments have been deleted)`);
+
+            // One fewer user on the list
+            cy.get('app-user-manager #user-list').verifyListFooter(16, false);
+
+            // The user is unable to log in
+            cy.logout();
+            cy.login(USERS.ace, {succeeds: false, errToast: 'invalid-credentials'});
+        };
+
+        it('keeping comments', () => {
+            delUser(false, false);
+
+            // Verify comments are still visible, but the author is "Deleted User"
+            cy.testSiteVisit(TEST_PATHS.home);
+            cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
                 `
-                - id: 69adf987-caec-4ad5-ae86-82c8f607d17a
-                  author: '[Deleted User]'
-                  html: <p>No root font for comments</p>
+                - author: '[Deleted User]'
+                  html: <p>Alright crew, let's gather around for a quick meeting. We've got a <b>long</b> voyage ahead of us, and I want to make sure everyone is on the same page.</p>
                   children:
-                  - id: 29f0a6d8-267e-4ac7-9dac-af0a39ceb1bd
-                    author: Anonymous
-                    html: <p>No root font child</p>
-              `);
+                  - author: Engineer King
+                    html: <p>What's on the agenda, captain?</p>
+                    children:
+                    - author: '[Deleted User]'
+                      html: <p>First off, we need to make sure the engine is in good working order. Any issues we need to address, <em>engineer</em>?</p>
+                      children:
+                      - author: Engineer King
+                        html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
+                      - author: Commenter Two
+                        html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
+                        children:
+                        - author: '[Deleted User]'
+                          html: <p>Good work, navigator. That's what I was thinking too.</p>
+                    - author: '[Deleted User]'
+                      html: <p>What about supplies, cook?</p>
+                      children:
+                      - author: Cook Queen
+                        html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
+                        children:
+                        - author: '[Deleted User]'
+                          html: <p>Absolutely, cook. I'll make a note of it.</p>
+                - author: '[Deleted User]'
+                  html: <p>Now, is there anything else anyone wants to bring up?</p>
+                  children:
+                  - author: Engineer King
+                    html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
+                    children:
+                    - author: '[Deleted User]'
+                      html: <p>Alright, engineer. Let's schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.</p>
+                  - author: Navigator Jack
+                    html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
+                    children:
+                    - author: '[Deleted User]'
+                      html: <p>Good point, navigator. I'll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.</p>
+                      children:
+                      - author: Cook Queen
+                        html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
+                        children:
+                        - author: '[Deleted User]'
+                          html: <p>Let's hope it doesn't come to that, cook. But it's good to know we have you on our side.</p><p>Alright, everyone, let's get to work. We've got a long journey ahead of us!</p>
+                `);
+        });
+
+        it('deleting comments', () => {
+            delUser(true, false, 17);
+
+            // Verify comments' text is deleted as well
+            cy.testSiteVisit(TEST_PATHS.home);
+            cy.commentTree('author', 'html').should('yamlMatch',
+                // language=yaml
+                `
+                - author: '[Deleted User]'
+                  html: '(deleted)'
+                  children:
+                  - author: Engineer King
+                    html: <p>What's on the agenda, captain?</p>
+                    children:
+                    - author: '[Deleted User]'
+                      html: '(deleted)'
+                      children:
+                      - author: Engineer King
+                        html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
+                      - author: Commenter Two
+                        html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
+                        children:
+                        - author: '[Deleted User]'
+                          html: '(deleted)'
+                    - author: '[Deleted User]'
+                      html: '(deleted)'
+                      children:
+                      - author: Cook Queen
+                        html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
+                        children:
+                        - author: '[Deleted User]'
+                          html: '(deleted)'
+                - author: '[Deleted User]'
+                  html: '(deleted)'
+                  children:
+                  - author: Engineer King
+                    html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
+                    children:
+                    - author: '[Deleted User]'
+                      html: '(deleted)'
+                  - author: Navigator Jack
+                    html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
+                    children:
+                    - author: '[Deleted User]'
+                      html: '(deleted)'
+                      children:
+                      - author: Cook Queen
+                        html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
+                        children:
+                        - author: '[Deleted User]'
+                          html: '(deleted)'
+                `);
+        });
+
+        it('purging comments', () => {
+            delUser(true, true, 17);
+
+            // Verify no comment at all as the root ones were by Ace
+            cy.testSiteVisit(TEST_PATHS.home);
+            cy.commentTree('author', 'html').should('be.empty');
+        });
     });
 
-    it('allows to ban and unban user', () => {
-        cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, true, false);
+    context('allows to ban and unban user', () => {
 
-        // Click on Delete user and confirm
-        cy.get('@btnBan').click();
-        cy.confirmationDialog(/Are you sure you want to ban this user\?/).dlgButtonClick('Proceed');
+        const banUser = (delComments: boolean, purge: boolean, expectNumDeleted?: number) => {
+            cy.loginViaApi(USERS.root, pagePathAce);
+            makeAliases(true, true, true, false);
 
-        // We're still in user properties and there's a success toast
-        cy.isAt(pagePathAce);
-        cy.toastCheckAndClose('user-is-banned');
-        cy.get('@userProps').contains('button', 'Unban user').should('have.class', 'active');
+            // Click on Ban user
+            cy.get('@btnBan').click();
 
-        // The user is unable to log in
-        cy.logout();
-        cy.login(USERS.ace, {succeeds: false, errToast: 'user-banned'});
+            // Confirmation dialog appears
+            cy.confirmationDialog(/Are you sure you want to ban this user\?/).as('dlg');
+            cy.get('@dlg').find('#ban-del-comments')  .as('delComments')  .should('not.be.checked');
+            cy.get('@dlg').find('#ban-purge-comments').as('purgeComments').should('not.be.checked');
 
-        // Verify comments are still visible
-        cy.testSiteVisit(TEST_PATHS.attr.noFonts);
-        cy.commentTree('id', 'html', 'author')
-            .should(
-                'yamlMatch',
+            // Tick off required checkboxes
+            if (delComments) {
+                cy.get('@delComments').clickLabel().should('be.checked');
+                if (purge) {
+                    cy.get('@purgeComments').clickLabel().should('be.checked');
+                }
+            }
+
+            // Confirm banning
+            cy.get('@dlg').dlgButtonClick('Proceed');
+
+            // We're still in user properties and there's a success toast
+            cy.isAt(pagePathAce);
+            cy.toastCheckAndClose(
+                'user-is-banned',
+                expectNumDeleted === undefined ? '' : `(${expectNumDeleted} comments have been deleted)`);
+            cy.get('@userProps').contains('button', 'Unban user').should('have.class', 'active');
+
+            // The user is unable to log in
+            cy.logout();
+            cy.login(USERS.ace, {succeeds: false, errToast: 'user-banned'});
+        };
+
+        it('keeping comments', () => {
+            banUser(false, false);
+
+            // Verify comments are still visible
+            cy.testSiteVisit(TEST_PATHS.home);
+            cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
                 `
-                - id: 69adf987-caec-4ad5-ae86-82c8f607d17a
-                  author: Captain Ace
-                  html: <p>No root font for comments</p>
+                - author: Captain Ace
+                  html: <p>Alright crew, let's gather around for a quick meeting. We've got a <b>long</b> voyage ahead of us, and I want to make sure everyone is on the same page.</p>
                   children:
-                  - id: 29f0a6d8-267e-4ac7-9dac-af0a39ceb1bd
-                    author: Anonymous
-                    html: <p>No root font child</p>
-              `);
+                  - author: Engineer King
+                    html: <p>What's on the agenda, captain?</p>
+                    children:
+                    - author: Captain Ace
+                      html: <p>First off, we need to make sure the engine is in good working order. Any issues we need to address, <em>engineer</em>?</p>
+                      children:
+                      - author: Engineer King
+                        html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
+                      - author: Commenter Two
+                        html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
+                        children:
+                        - author: Captain Ace
+                          html: <p>Good work, navigator. That's what I was thinking too.</p>
+                    - author: Captain Ace
+                      html: <p>What about supplies, cook?</p>
+                      children:
+                      - author: Cook Queen
+                        html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
+                        children:
+                        - author: Captain Ace
+                          html: <p>Absolutely, cook. I'll make a note of it.</p>
+                - author: Captain Ace
+                  html: <p>Now, is there anything else anyone wants to bring up?</p>
+                  children:
+                  - author: Engineer King
+                    html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
+                    children:
+                    - author: Captain Ace
+                      html: <p>Alright, engineer. Let's schedule a time for you to do a full inspection. I want to make sure everything is shipshape before we set sail.</p>
+                  - author: Navigator Jack
+                    html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
+                    children:
+                    - author: Captain Ace
+                      html: <p>Good point, navigator. I'll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.</p>
+                      children:
+                      - author: Cook Queen
+                        html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
+                        children:
+                        - author: Captain Ace
+                          html: <p>Let's hope it doesn't come to that, cook. But it's good to know we have you on our side.</p><p>Alright, everyone, let's get to work. We've got a long journey ahead of us!</p>
+                `);
 
-        // Relogin as root and unban the user
-        cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, true, true);
-        cy.get('@btnBan').click();
-        cy.confirmationDialog('Are you sure you want to unban this user?').dlgButtonClick('Proceed');
+            // Relogin as root and unban the user
+            cy.loginViaApi(USERS.root, pagePathAce);
+            makeAliases(true, true, true, true);
+            cy.get('@btnBan').click();
+            cy.confirmationDialog('Are you sure you want to unban this user?').dlgButtonClick('Proceed');
 
-        // We're still in user properties and there's a success toast
-        cy.isAt(pagePathAce);
-        cy.toastCheckAndClose('user-is-unbanned');
-        cy.get('@userProps').contains('button', 'Ban user').should('not.have.class', 'active');
+            // We're still in user properties and there's a success toast
+            cy.isAt(pagePathAce);
+            cy.toastCheckAndClose('user-is-unbanned');
+            cy.get('@userProps').contains('button', 'Ban user').should('not.have.class', 'active');
 
-        // User can log in again
-        cy.logout();
-        cy.login(USERS.ace);
+            // User can log in again
+            cy.logout();
+            cy.login(USERS.ace);
+        });
 
-        // Relogin as root and ban the user, deleting their comments
-        cy.loginViaApi(USERS.root, pagePathAce);
-        makeAliases(true, true, true, false);
+        it('deleting comments', () => {
+            banUser(true, false, 17);
 
-        // Click on Delete user and confirm
-        cy.get('@btnBan').click();
-        cy.confirmationDialog(/Are you sure you want to ban this user\?/).as('dlg');
-        cy.get('@dlg').find('#ban-delete-comments').clickLabel().should('be.checked');
-        cy.get('@dlg').dlgButtonClick('Proceed');
-
-        // The user can't log in
-        cy.logout();
-        cy.login(USERS.ace, {succeeds: false, errToast: 'user-banned'});
-
-        // Verify comments are gone
-        cy.testSiteVisit(TEST_PATHS.attr.noFonts);
-        cy.commentTree('id', 'html', 'author')
-            .should(
-                'yamlMatch',
+            // Verify comments text is gone
+            cy.testSiteVisit(TEST_PATHS.home);
+            cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
                 `
-                - id: 69adf987-caec-4ad5-ae86-82c8f607d17a
-                  author: Captain Ace
+                - author: Captain Ace
                   html: (deleted)
                   children:
-                  - id: 29f0a6d8-267e-4ac7-9dac-af0a39ceb1bd
-                    author: Anonymous
-                    html: <p>No root font child</p>
-              `);
+                  - author: Engineer King
+                    html: <p>What's on the agenda, captain?</p>
+                    children:
+                    - author: Captain Ace
+                      html: (deleted)
+                      children:
+                      - author: Engineer King
+                        html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
+                      - author: Commenter Two
+                        html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
+                        children:
+                        - author: Captain Ace
+                          html: (deleted)
+                    - author: Captain Ace
+                      html: (deleted)
+                      children:
+                      - author: Cook Queen
+                        html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
+                        children:
+                        - author: Captain Ace
+                          html: (deleted)
+                - author: Captain Ace
+                  html: (deleted)
+                  children:
+                  - author: Engineer King
+                    html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
+                    children:
+                    - author: Captain Ace
+                      html: (deleted)
+                  - author: Navigator Jack
+                    html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
+                    children:
+                    - author: Captain Ace
+                      html: (deleted)
+                      children:
+                      - author: Cook Queen
+                        html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
+                        children:
+                        - author: Captain Ace
+                          html: (deleted)
+                `);
+        });
+
+        it('purging comments', () => {
+            banUser(true, true, 17);
+
+            // Verify no comment at all as the root ones were by Ace
+            cy.testSiteVisit(TEST_PATHS.home);
+            cy.commentTree('author', 'html').should('be.empty');
+        });
     });
 });
