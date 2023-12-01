@@ -194,7 +194,7 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 
 		// Update password only if it's provided
 		if password != "" {
-			u.WithPassword(password)
+			u.WithPassword(string(password))
 		}
 
 	} else {

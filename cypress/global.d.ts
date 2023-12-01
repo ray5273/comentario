@@ -58,7 +58,7 @@ declare namespace Cypress {
         errToast?: string;
     }
 
-    interface TestSiteLoginViaApiOptions {
+    interface TestSiteLoginOptions {
         /** Whether to verify the result (only works if the embedded Comentario is visible upon login). Defaults to true. */
         verify?: boolean;
         /** Whether login must succeed. Ignored when verify is false, otherwise defaults to true. */
@@ -71,6 +71,13 @@ declare namespace Cypress {
         _: string | RegExp;
     }
 
+    interface IsAtOptions {
+        /** If true, the query string is ignored. */
+        ignoreQuery?: boolean;
+        /** Whether the path refers to the test site, rather than the front-end. */
+        testSite?: boolean;
+    }
+
     interface Chainable {
 
         /**
@@ -78,7 +85,7 @@ declare namespace Cypress {
          * @param expected Literal path or a regex to match the current path against
          * @param options Additional options
          */
-        isAt(expected: string | RegExp | IsAtObjectWithUnderscore, options?: {ignoreQuery?: boolean}): Chainable<string>;
+        isAt(expected: string | RegExp | IsAtObjectWithUnderscore, options?: IsAtOptions): Chainable<string>;
 
         /**
          * Assert the user is authenticated (or not).
@@ -286,11 +293,18 @@ declare namespace Cypress {
         testSiteVisit(path: string): Chainable<AUTWindow>;
 
         /**
+         * Verify the user is logged in on the test site.
+         * @param name Name of the user.
+         */
+        testSiteIsLoggedIn(name: string): Chainable<void>;
+
+        /**
          * Login into the embedded Comentario (test site) as provided user via the UI.
          * @param creds Credentials to login with.
          * NB: the required test site page must be open.
+         * @param options Optional login options.
          */
-        testSiteLogin(creds: CredentialsWithName): Chainable<void>;
+        testSiteLogin(creds: CredentialsWithName, options?: TestSiteLoginOptions): Chainable<void>;
 
         /**
          * Login as provided user into embedded Comentario directly, via an API call.
@@ -298,13 +312,20 @@ declare namespace Cypress {
          * @param path Path to go to after the login.
          * @param options Optional login options.
          */
-        testSiteLoginViaApi(creds: CredentialsWithName, path: string, options?: TestSiteLoginViaApiOptions): Chainable<void>;
+        testSiteLoginViaApi(creds: CredentialsWithName, path: string, options?: TestSiteLoginOptions): Chainable<void>;
 
         /**
          * Login into the embedded Comentario (test site) using SSO, via the UI.
          * NB: the required test site page must be open.
          */
         testSiteSsoLogin(): Chainable<void>;
+
+        /**
+         * Verify the text in the message box on the test site.
+         * @param message Expected message (partial) text.
+         * @param success Whether the message is a success message, defaults to false.
+         */
+        testSiteCheckMessage(message: string, success?: boolean): Chainable<void>;
 
         /***************************************************************************************************************
           Backend

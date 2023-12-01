@@ -903,7 +903,9 @@ definitions:
         description: User's interface language ID
       password:
         type: string
+        format: password
         description: Password (write-only). If empty, the password remains unchanged
+        maxLength: 63
       systemAccount:
         type: boolean
         readOnly: true
@@ -1361,14 +1363,14 @@ paths:
             properties:
               name:
                 type: string
-                minLength: 1
+                minLength: 2
                 maxLength: 63
               email:
                 type: string
                 format: email
               password:
                 type: string
-                minLength: 1
+                format: password
                 maxLength: 63
       responses:
         200:
@@ -1446,8 +1448,8 @@ paths:
             properties:
               password:
                 type: string
+                format: password
                 description: New password to set
-                minLength: 1
                 maxLength: 63
       responses:
         204:
@@ -1536,7 +1538,7 @@ paths:
                 description: Current password of the user. Required if newPassword is given, otherwise ignored
               newPassword:
                 type: string
-                minLength: 1
+                format: password
                 maxLength: 63
                 description: New password to set for the user. Optional, if not provided, the password remains unchanged
               websiteUrl:
@@ -1607,6 +1609,7 @@ paths:
               password:
                 type: string
                 minLength: 1
+                maxLength: 63
                 description: Commenter's password
               host:
                 $ref: "#/definitions/host"
@@ -1699,7 +1702,7 @@ paths:
                 description: User's full name
               password:
                 type: string
-                minLength: 1
+                format: password
                 maxLength: 63
                 description: User's password
               websiteUrl:

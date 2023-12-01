@@ -221,7 +221,7 @@ func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.
 	}
 
 	// Update the user's password
-	if err := svc.TheUserService.Update(user.WithPassword(swag.StringValue(params.Body.Password))); err != nil {
+	if err := svc.TheUserService.Update(user.WithPassword(data.PasswordPtrToString(params.Body.Password))); err != nil {
 		return respServiceError(err)
 	}
 
@@ -270,7 +270,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 
 	// Create a new user
 	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
-		WithPassword(swag.StringValue(params.Body.Password)).
+		WithPassword(data.PasswordPtrToString(params.Body.Password)).
 		WithSignup(params.HTTPRequest, "")
 
 	// If it's the first registered LOCAL user, make them a superuser

@@ -3,6 +3,7 @@ package data
 import (
 	"database/sql"
 	"github.com/go-openapi/strfmt"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"strings"
@@ -58,6 +59,11 @@ func NullUUIDStr(u *uuid.NullUUID) strfmt.UUID {
 		return ""
 	}
 	return strfmt.UUID(u.UUID.String())
+}
+
+// PasswordPtrToString converts a value of *strfmt.Password into a string
+func PasswordPtrToString(pwd *strfmt.Password) string {
+	return swag.StringValue((*string)(pwd))
 }
 
 // PathToString converts a value of models.Path into a string

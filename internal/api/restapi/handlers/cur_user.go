@@ -62,7 +62,7 @@ func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) midd
 			time.Sleep(util.WrongAuthDelayMax)
 			return respBadRequest(ErrorWrongCurPassword)
 		}
-		user.WithPassword(params.Body.NewPassword)
+		user.WithPassword(string(params.Body.NewPassword))
 	}
 
 	// Update the user

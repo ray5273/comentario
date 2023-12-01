@@ -58,6 +58,13 @@ var (
 	reEmailAddress   = regexp.MustCompile(`^[^<>()[\]\\.,;:\s@"%]+(\.[^<>()[\]\\.,;:\s@"%]+)*@`) // Only the part up to the '@'
 	rePortInHostname = regexp.MustCompile(`:\d+$`)
 
+	// Classes of chars that a 'strong' password must have
+	passwordCharClasses = []string{
+		"0123456789`~!@#$%^&*()_-+=[]{};:'\"|\\<,>.?/",
+		"abcdefghijklmnopqrstuvwxyz",
+		"ABCDEFGHIJKLMNOPQRSTUVWXYZ",
+	}
+
 	// TheMailer is a Mailer implementation available application-wide. Defaults to a mailer that doesn't do anything
 	TheMailer Mailer = &noOpMailer{}
 )
@@ -239,6 +246,22 @@ func IndexOfString(s string, slice []string) int {
 		}
 	}
 	return -1
+}
+
+// IsStrongPassword checks whether the provided password is a 'strong' one
+func IsStrongPassword(s string) bool {
+	// Check length
+	if len(s) < 8 {
+		return false
+	}
+
+	// Check it has at least one character from each class
+	for _, chars := range passwordCharClasses {
+		if !strings.ContainsAny(s, chars) {
+			return false
+		}
+	}
+	return true
 }
 
 // IsValidEmail returns whether the passed string is a valid email address

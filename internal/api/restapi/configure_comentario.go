@@ -40,11 +40,15 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.HTMLProducer = runtime.TextProducer()
 
 	// Use a more strict email validator than the default, RFC5322-compliant one
-	eml := strfmt.Email("")
+	var eml strfmt.Email
 	api.Formats().Add("email", &eml, util.IsValidEmail)
 
+	// Format "password" means a strong password
+	var pwd strfmt.Password
+	api.Formats().Add("password", &pwd, util.IsStrongPassword)
+
 	// Validate URI as an absolute URL (HTTP is allowed in general)
-	uri := strfmt.URI("")
+	var uri strfmt.URI
 	api.Formats().Add("uri", &uri, func(s string) bool { return util.IsValidURL(s, true) })
 
 	// Update the config based on the CLI flags

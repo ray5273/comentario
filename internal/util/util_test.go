@@ -329,6 +329,29 @@ func TestIndexOfString(t *testing.T) {
 	}
 }
 
+func TestIsStrongPassword(t *testing.T) {
+	tests := []struct {
+		name string
+		str  string
+		want bool
+	}{
+		{"empty", "", false},
+		{"short", "n3oa$2W", false},
+		{"lowercase alpha", "pwdissecret", false},
+		{"mixed case alpha", "pWdiSSEcret", false},
+		{"alphanumeric", "pW323diSsEcret", true},
+		{"alpha + symbol", "pW323d-iSsEcret", true},
+		{"alphanumeric + symbol", "No1+kNows", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := IsStrongPassword(tt.str); got != tt.want {
+				t.Errorf("IsStrongPassword() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsValidEmail(t *testing.T) {
 	tests := []struct {
 		s    string

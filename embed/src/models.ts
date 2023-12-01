@@ -271,6 +271,9 @@ export class ErrorMessage implements Message {
                 // Not a known error ID
                 default:
                     text = resp?.message || err.message || text;
+                    if (resp?.details) {
+                        text += ` (${resp.details})`;
+                    }
             }
         }
 

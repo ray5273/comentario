@@ -1,5 +1,5 @@
-import { TEST_PATHS, USERS } from '../../support/cy-utils';
-import { EmbedUtils } from '../../support/cy-embed-utils';
+import { TEST_PATHS, USERS } from '../../../support/cy-utils';
+import { EmbedUtils } from '../../../support/cy-embed-utils';
 
 context('Login Popup', () => {
 
@@ -71,29 +71,53 @@ context('Login Popup', () => {
         cy.get('@root').contains('.comentario-dialog .comentario-dialog-header', 'Create an account').should('be.visible');
     });
 
-    context('login', () => {
+    it('allows to login via SSO', () => {
+        cy.get('@btnSso').click();
+        cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+    });
 
-        it('allows to login via SSO', () => {
-            cy.get('@btnSso').click();
-            cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', USERS.johnDoeSso.name);
+    context('authentication with email/password', () => {
+
+        context('allows to login', () => {
+
+            [
+                {name: 'superuser',  user: USERS.root,           isModerator: true},
+                {name: 'owner',      user: USERS.ace,            isModerator: true},
+                {name: 'moderator',  user: USERS.king,           isModerator: true},
+                {name: 'commenter',  user: USERS.commenterTwo,   isModerator: false},
+                {name: 'read-only',  user: USERS.commenterThree, isModerator: false},
+                {name: 'non-domain', user: USERS.commenterOne,   isModerator: false},
+            ]
+                .forEach(test => it(`for ${test.name} user`, () => {
+                    cy.get('@email')   .setValue(test.user.email);
+                    cy.get('@password').setValue(test.user.password).type('{enter}');
+                    cy.get('@loginDialog').should('not.exist');
+
+                    // Verify user name in the profile bar
+                    cy.testSiteIsLoggedIn(test.user.name);
+                }));
         });
 
-        [
-            {name: 'superuser',  user: USERS.root,           isModerator: true},
-            {name: 'owner',      user: USERS.ace,            isModerator: true},
-            {name: 'moderator',  user: USERS.king,           isModerator: true},
-            {name: 'commenter',  user: USERS.commenterTwo,   isModerator: false},
-            {name: 'read-only',  user: USERS.commenterThree, isModerator: false},
-            {name: 'non-domain', user: USERS.commenterOne,   isModerator: false},
-        ]
-            .forEach(test => it(`allows ${test.name} user to login with email and password`, () => {
-                cy.get('@email')   .setValue(test.user.email);
-                cy.get('@password').setValue(test.user.password).type('{enter}');
-                cy.get('@loginDialog').should('not.exist');
+        context('refuses to login', () => {
 
-                // Verify user name in the profile bar
-                cy.get('.comentario-root .comentario-profile-bar .comentario-name')
-                    .should('have.text', test.user.name).and('be.visible');
-            }));
+            beforeEach(() => {
+                // Disable Cypress' rejected promise handling
+                Cypress.on('uncaught:exception', () => false);
+            });
+
+            [
+                {name: 'banned user',         user: USERS.banned,                         err: 'User is banned'},
+                {name: 'nonexistent user',    user: {email: 'a@b.com',    password: 'x'}, err: 'Wrong password or user doesn\'t exist'},
+                {name: 'with wrong password', user: {...USERS.ace,        password: 'x'}, err: 'Wrong password or user doesn\'t exist'},
+                {name: 'federated user',      user: {...USERS.githubUser, password: 'x'}, err: 'Wrong password or user doesn\'t exist'},
+                {name: 'SSO user',            user: {...USERS.ssoUser,    password: 'x'}, err: 'Wrong password or user doesn\'t exist'},
+            ]
+                .forEach(({name, user, err}) => it(name, () => {
+                    cy.get('@email')   .setValue(user.email);
+                    cy.get('@password').setValue(user.password);
+                    cy.get('@submit').click();
+                    cy.testSiteCheckMessage(err);
+                }));
+        });
     });
 });

@@ -151,6 +151,25 @@ func TestNullUUIDStr(t *testing.T) {
 	}
 }
 
+func TestPasswordPtrToString(t *testing.T) {
+	p := strfmt.Password("s3cr3t")
+	tests := []struct {
+		name string
+		v    *strfmt.Password
+		want string
+	}{
+		{"nil  ", nil, ""},
+		{"value", &p, "s3cr3t"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PasswordPtrToString(tt.v); got != tt.want {
+				t.Errorf("PasswordPtrToString() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 type testX struct {
 	x int
 }

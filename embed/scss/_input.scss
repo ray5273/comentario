@@ -162,6 +162,12 @@ textarea {
     }
 }
 
+.comentario-form-text {
+    margin: 2px 8px;
+    font-size: 13px;
+    color: $gray-6;
+}
+
 .comentario-round-check {
     input[type="radio"],
     input[type="checkbox"] {
