@@ -25,7 +25,7 @@ export class DomainImportComponent implements OnInit {
     readonly Paths = Paths;
     readonly importing = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
-        source: ['comentario' as 'comentario' | 'disqus', [Validators.required]],
+        source: ['comentario' as 'comentario' | 'disqus' | 'wordpress', [Validators.required]],
         file:   [undefined as any, [Validators.required]],
     });
 

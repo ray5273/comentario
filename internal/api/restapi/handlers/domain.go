@@ -119,6 +119,9 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	case "disqus":
 		res = svc.TheImportExportService.ImportDisqus(user, domain, params.Data)
 
+	case "wordpress":
+		res = svc.TheImportExportService.ImportWordPress(user, domain, params.Data)
+
 	default:
 		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
 	}

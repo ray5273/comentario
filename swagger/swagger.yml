@@ -1037,6 +1037,7 @@ parameters:
     enum:
       - comentario
       - disqus
+      - wordpress
 
   pathHost:
     name: host

@@ -58,9 +58,12 @@ type ImportExportService interface {
 	// Import performs data import in the native Comentario (or legacy Commento v1/Comentario v2) format from the
 	// provided data reader. Returns the number of imported comments: total and non-deleted
 	Import(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
-	// ImportDisqus performs data import from Disqus from the provided data reader. Returns the number of imported
+	// ImportDisqus performs data import in Disqus format from the provided data reader. Returns the number of imported
 	// comments
 	ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
+	// ImportWordPress performs data import in WordPress format from the provided data reader. Returns the number of imported
+	// comments
+	ImportWordPress(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -86,6 +89,11 @@ func (svc *importExportService) Import(curUser *data.User, domain *data.Domain, 
 func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
 	logger.Debugf("importExportService.ImportDisqus(%#v, %#v, ...)", curUser, domain)
 	return disqusImport(curUser, domain, reader)
+}
+
+func (svc *importExportService) ImportWordPress(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
+	logger.Debugf("importExportService.ImportWordPress(%#v, %#v, ...)", curUser, domain)
+	return wordpressImport(curUser, domain, reader)
 }
 
 // insertCommentsForParent inserts those comments from the map that have the specified parent ID, returning the number
