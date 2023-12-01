@@ -1,0 +1,307 @@
+package svc
+
+import (
+	"database/sql"
+	"encoding/xml"
+	"errors"
+	"fmt"
+	md "github.com/JohannesKaufmann/html-to-markdown"
+	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
+	"io"
+	"regexp"
+	"strings"
+	"time"
+)
+
+type disqusThread struct {
+	XMLName xml.Name `xml:"thread"`
+	Id      string   `xml:"http://disqus.com/disqus-internals id,attr"`
+	URL     string   `xml:"link"`
+	Title   string   `xml:"title"`
+}
+
+type disqusAuthor struct {
+	XMLName     xml.Name `xml:"author"`
+	Name        string   `xml:"name"`
+	IsAnonymous bool     `xml:"isAnonymous"`
+	Username    string   `xml:"username"`
+}
+
+type disqusThreadId struct {
+	XMLName xml.Name `xml:"thread"`
+	Id      string   `xml:"http://disqus.com/disqus-internals id,attr"`
+}
+
+type disqusParentId struct {
+	XMLName xml.Name `xml:"parent"`
+	Id      string   `xml:"http://disqus.com/disqus-internals id,attr"`
+}
+
+type disqusPost struct {
+	XMLName      xml.Name       `xml:"post"`
+	Id           string         `xml:"http://disqus.com/disqus-internals id,attr"`
+	ThreadId     disqusThreadId `xml:"thread"`
+	ParentId     disqusParentId `xml:"parent"`
+	Message      string         `xml:"message"`
+	CreationDate time.Time      `xml:"createdAt"`
+	IsDeleted    bool           `xml:"isDeleted"`
+	IsSpam       bool           `xml:"isSpam"`
+	Author       disqusAuthor   `xml:"author"`
+}
+
+type disqusXML struct {
+	XMLName xml.Name       `xml:"disqus"`
+	Threads []disqusThread `xml:"thread"`
+	Posts   []disqusPost   `xml:"post"`
+}
+
+func disqusImport(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
+	// Fetch and decompress the export tarball
+	d, err := util.DecompressGzip(reader)
+	if err != nil {
+		logger.Errorf("disqusImport: DecompressGzip() failed: %v", err)
+		return importError(err)
+	}
+
+	// Unmarshal the XML data
+	exp := disqusXML{}
+	err = xml.Unmarshal(d, &exp)
+	if err != nil {
+		logger.Errorf("disqusImport: xml.Unmarshal() failed: %v", err)
+		return importError(err)
+	}
+
+	// Map Disqus thread IDs to threads
+	threads := map[string]disqusThread{}
+	for _, thread := range exp.Threads {
+		threads[thread.Id] = thread
+	}
+
+	result := &ImportResult{}
+
+	// Map Disqus emails to user IDs
+	var userIDMap map[string]uuid.UUID
+	if userIDMap, result.UsersAdded, result.DomainUsersAdded, err = disqusMakeUserMap(&curUser.ID, &domain.ID, exp); err != nil {
+		return result.WithError(err)
+	}
+
+	// Total number of users involved
+	result.UsersTotal = len(userIDMap)
+
+	// Prepare a map of Disqus Post ID -> Comment ID (randomly generated)
+	postToCommentIDMap := make(map[string]uuid.UUID, len(exp.Posts))
+	for _, post := range exp.Posts {
+		postToCommentIDMap[post.Id] = uuid.New()
+	}
+
+	// Instantiate an HTML-to-Markdown converter
+	hmConv := md.NewConverter("", true, nil)
+	reHTMLTags := regexp.MustCompile(`<[^>]+>`)
+	commentParentIDMap := map[uuid.UUID][]*data.Comment{} // Groups comment lists by their parent ID
+	pageIDMap := map[string]uuid.UUID{}
+
+	// Iterate over Disqus posts
+	for _, post := range exp.Posts {
+		result.CommentsTotal++
+
+		// Skip over deleted and spam posts
+		if post.IsDeleted || post.IsSpam {
+			result.CommentsSkipped++
+			continue
+		}
+
+		// Find the comment ID (it must exist at this point)
+		commentID, ok := postToCommentIDMap[post.Id]
+		if !ok {
+			err := fmt.Errorf("failed to map disqus post ID (%s) to comment ID", post.Id)
+			logger.Errorf("disqusImport: %v", err)
+			return result.WithError(err)
+		}
+
+		// Find the user ID by their email
+		uid := data.AnonymousUser.ID
+		email := disqusAuthorEmail(&post.Author)
+		if email != "" {
+			if id, ok := userIDMap[email]; ok {
+				uid = id
+			}
+		}
+
+		// Extract the path from thread URL
+		var pageID uuid.UUID
+		thread := threads[post.ThreadId.Id]
+		if u, err := util.ParseAbsoluteURL(thread.URL, true, false); err != nil {
+			return result.WithError(err)
+
+			// Find the page for that path
+		} else if id, ok := pageIDMap[u.Path]; ok {
+			pageID = id
+
+			// Page doesn't exist. Find or insert a page with this path
+		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, u.Path, thread.Title, nil); err != nil {
+			return result.WithError(err)
+
+		} else {
+			pageID = page.ID
+			pageIDMap[u.Path] = pageID
+
+			// If the page was added, increment the page count
+			if added {
+				result.PagesAdded++
+			}
+		}
+
+		// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID. It will
+		// also be the fallback, should parent ID not exist in the map
+		parentCommentID := uuid.NullUUID{}
+		pzID := uuid.UUID{}
+		if id, ok := postToCommentIDMap[post.ParentId.Id]; ok {
+			parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
+			pzID = id
+		}
+
+		// "Reverse-convert" comment text to Markdown
+		markdown, err := hmConv.ConvertString(post.Message)
+		if err != nil {
+			// Just strip all tags on error
+			markdown = reHTMLTags.ReplaceAllString(post.Message, "")
+		}
+
+		// Create a new comment instance
+		c := &data.Comment{
+			ID:            commentID,
+			ParentID:      parentCommentID,
+			PageID:        pageID,
+			Markdown:      markdown,
+			HTML:          post.Message,
+			IsApproved:    true,
+			CreatedTime:   post.CreationDate,
+			ModeratedTime: sql.NullTime{Time: post.CreationDate, Valid: true},
+			UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
+			UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+		}
+
+		// File it under the appropriate parent ID
+		if l, ok := commentParentIDMap[pzID]; ok {
+			commentParentIDMap[pzID] = append(l, c)
+		} else {
+			commentParentIDMap[pzID] = []*data.Comment{c}
+		}
+	}
+
+	// Total number of pages involved
+	result.PagesTotal = len(pageIDMap)
+
+	// Recurse the comment tree (map) to insert them in the right order (parents-to-children), starting with the root
+	// (= zero UUID)
+	countsPerPage := map[uuid.UUID]int{}
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+
+	// Increase comment count on the domain, ignoring errors
+	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+
+	// Increase comment counts on all pages
+	for pageID, pc := range countsPerPage {
+		if pc > 0 {
+			_ = ThePageService.IncrementCounts(&pageID, pc, 0)
+		}
+	}
+
+	// Done
+	return result
+}
+
+// disqusAuthorEmail comes up with a (fake) email address for a Disqus Author
+func disqusAuthorEmail(a *disqusAuthor) string {
+	// If there's a username, use that
+	if s := strings.TrimSpace(a.Username); s != "" {
+		return fmt.Sprintf("%s@disqus-user", s)
+	}
+
+	// If there's a name, use that
+	if s := strings.TrimSpace(a.Name); s != "" {
+		return fmt.Sprintf("%s@disqus-anonymous-user", s)
+	}
+
+	// The user is anonymous
+	return ""
+}
+
+// disqusMakeUserMap creates users/domain users from the provided Disqus import dump, and returns that as a map {email: userID}
+func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userMap map[string]uuid.UUID, usersAdded, domainUsersAdded int, err error) {
+	userMap = map[string]uuid.UUID{}
+
+	// Iterate over the posts
+	for _, post := range exp.Posts {
+		// Skip over deleted and spam posts
+		if post.IsDeleted || post.IsSpam {
+			continue
+		}
+
+		// Skip anonymous
+		email := disqusAuthorEmail(&post.Author)
+		if email == "" {
+			continue
+		}
+
+		// Skip authors whose email has already been processed
+		if _, ok := userMap[email]; ok {
+			continue
+		}
+
+		// Try to find an existing user with this email
+		var user, u *data.User
+		if u, err = TheUserService.FindUserByEmail(email, false); err == nil {
+			// User already exists
+			user = u
+
+			// Check if domain user exists, too
+			if _, _, err = TheDomainService.FindDomainUserByID(domainID, &u.ID); err == nil {
+				// Save the user's ID in the map
+				userMap[email] = user.ID
+
+				// Proceed to the next record
+				continue
+			}
+		}
+
+		if err != nil && !errors.Is(err, ErrNotFound) {
+			// Any other error than "not found"
+			return
+		}
+
+		// Persist a new user instance, if not already exists
+		if user == nil {
+			user = data.NewUser(email, post.Author.Name)
+			user.UserCreated = uuid.NullUUID{UUID: *curUserID, Valid: true}
+			user.WithRemarks("Imported from Disqus")
+			if err = TheUserService.Create(user); err != nil {
+				return
+			}
+			usersAdded++
+		}
+
+		// Save the new user's ID in the map
+		userMap[email] = user.ID
+
+		// Add a domain user as well
+		du := &data.DomainUser{
+			DomainID:        *domainID,
+			UserID:          user.ID,
+			IsCommenter:     true,
+			NotifyReplies:   false, // Notifications make no sense since the email address is made up
+			NotifyModerator: false, // Idem
+			CreatedTime:     post.CreationDate,
+		}
+		if err = TheDomainService.UserAdd(du); err != nil {
+			return
+		}
+		domainUsersAdded++
+	}
+
+	// Succeeded
+	err = nil
+	return
+}
