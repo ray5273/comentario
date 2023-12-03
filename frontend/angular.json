@@ -38,7 +38,7 @@
                                 "output": "fonts"
                             },
                             {
-                                "glob": "*",
+                                "glob": "**",
                                 "input": "assets/images",
                                 "output": "images"
                             }

@@ -3,14 +3,12 @@ package svc
 import (
 	"database/sql"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"io"
 	"strings"
 	"time"
 )
@@ -123,14 +121,7 @@ func comentarioExport(domainID *uuid.UUID) ([]byte, error) {
 	return gzippedData, nil
 }
 
-func comentarioImport(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
-	// Fetch and decompress the export tarball
-	buf, err := util.DecompressGzip(reader)
-	if err != nil {
-		logger.Errorf("comentarioImport: DecompressGzip() failed: %v", err)
-		return importError(err)
-	}
-
+func comentarioImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
 	// Unmarshal the metadata to determine the format version
 	var exp comentarioExportMeta
 	if err := json.Unmarshal(buf, &exp); err != nil {
@@ -172,61 +163,33 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	for _, commenter := range exp.Commenters {
 		result.UsersTotal++
 
-		// Try to find an existing user with the same email
+		// Import the user and domain user
 		var user *data.User
-		if u, err := TheUserService.FindUserByEmail(commenter.Email, false); err == nil {
-			// User already exists
+		if u, userAdded, domainUserAdded, err := importUserByEmail(
+			commenter.Email,
+			"", // Local auth only
+			commenter.Name,
+			commenter.WebsiteURL,
+			"Imported from Commento/Comentario",
+			&curUser.ID,
+			&domain.ID,
+			commenter.JoinDate,
+		); err != nil {
+			return result.WithError(err)
+		} else {
 			user = u
 
-			// Check if domain user exists, too
-			if _, _, err := TheDomainService.FindDomainUserByID(&domain.ID, &u.ID); err == nil {
-				// Add the commenter's hex-to-ID mapping
-				commenterIDMap[commenter.CommenterHex] = user.ID
-
-				// Proceed to the next record
-				continue
-
-			} else if !errors.Is(err, ErrNotFound) {
-				// Any other error than "not found"
-				return result.WithError(err)
+			// Increment user counters
+			if userAdded {
+				result.UsersAdded++
 			}
-
-		} else if !errors.Is(err, ErrNotFound) {
-			// Any other error than "not found"
-			return result.WithError(err)
-		}
-
-		// Persist a new user instance, if it doesn't exist
-		if user == nil {
-			user = data.NewUser(commenter.Email, commenter.Name)
-			user.CreatedTime = commenter.JoinDate
-			user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
-			user.
-				WithWebsiteURL(commenter.WebsiteURL).
-				WithRemarks("Imported from Commento/Comentario")
-			if err := TheUserService.Create(user); err != nil {
-				return result.WithError(err)
+			if domainUserAdded {
+				result.DomainUsersAdded++
 			}
-			result.UsersAdded++
 		}
 
 		// Add the commenter's hex-to-ID mapping
 		commenterIDMap[commenter.CommenterHex] = user.ID
-
-		// Add a domain user as well
-		du := &data.DomainUser{
-			DomainID:        domain.ID,
-			UserID:          user.ID,
-			IsModerator:     commenter.IsModerator,
-			IsCommenter:     true,
-			NotifyReplies:   true,
-			NotifyModerator: true,
-			CreatedTime:     commenter.JoinDate,
-		}
-		if err := TheDomainService.UserAdd(du); err != nil {
-			return result.WithError(err)
-		}
-		result.DomainUsersAdded++
 	}
 
 	// Prepare a map of comment HexID -> Comment ID (randomly generated)
@@ -365,62 +328,33 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	for _, commenter := range exp.Commenters {
 		result.UsersTotal++
 
-		// Try to find an existing user with the same email
+		// Import the user and domain user
 		var user *data.User
-		if u, err := TheUserService.FindUserByEmail(string(commenter.Email), false); err == nil {
-			// User already exists
+		if u, userAdded, domainUserAdded, err := importUserByEmail(
+			string(commenter.Email),
+			string(commenter.FederatedIDP),
+			commenter.Name,
+			string(commenter.WebsiteURL),
+			"Imported from Comentario V3",
+			&curUser.ID,
+			&domain.ID,
+			time.Time(commenter.CreatedTime),
+		); err != nil {
+			return result.WithError(err)
+		} else {
 			user = u
 
-			// Check if domain user exists, too
-			if _, _, err := TheDomainService.FindDomainUserByID(&domain.ID, &u.ID); err == nil {
-				// Add an ID mapping
-				commenterIDMap[commenter.ID] = user.ID
-
-				// Proceed to the next record
-				continue
-
-			} else if !errors.Is(err, ErrNotFound) {
-				// Any other error than "not found"
-				return result.WithError(err)
+			// Increment user counters
+			if userAdded {
+				result.UsersAdded++
 			}
-
-		} else if !errors.Is(err, ErrNotFound) {
-			// Any other error than "not found"
-			return result.WithError(err)
+			if domainUserAdded {
+				result.DomainUsersAdded++
+			}
 		}
 
-		// Persist a new user instance, if it doesn't exist
-		if user == nil {
-			user = data.NewUser(string(commenter.Email), commenter.Name)
-			user.CreatedTime = time.Time(commenter.CreatedTime)
-			user.UserCreated = uuid.NullUUID{UUID: curUser.ID, Valid: true}
-			user.
-				WithFederated("", string(commenter.FederatedIDP)).
-				WithWebsiteURL(string(commenter.WebsiteURL)).
-				WithRemarks("Imported from Comentario V3")
-			if err := TheUserService.Create(user); err != nil {
-				return result.WithError(err)
-			}
-			result.UsersAdded++
-		}
-
-		// Add an ID mapping
+		// Add the commenter's hex-to-ID mapping
 		commenterIDMap[commenter.ID] = user.ID
-
-		// Add a domain user as well
-		du := &data.DomainUser{
-			DomainID:        domain.ID,
-			UserID:          user.ID,
-			IsModerator:     commenter.IsModerator,
-			IsCommenter:     true,
-			NotifyReplies:   true,
-			NotifyModerator: true,
-			CreatedTime:     time.Time(commenter.CreatedTime),
-		}
-		if err := TheDomainService.UserAdd(du); err != nil {
-			return result.WithError(err)
-		}
-		result.DomainUsersAdded++
 	}
 
 	// Create a map of page IDs

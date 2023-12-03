@@ -3,13 +3,11 @@ package svc
 import (
 	"database/sql"
 	"encoding/xml"
-	"errors"
 	"fmt"
 	md "github.com/JohannesKaufmann/html-to-markdown"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"io"
 	"regexp"
 	"strings"
 	"time"
@@ -57,18 +55,10 @@ type disqusXML struct {
 	Posts   []disqusPost   `xml:"post"`
 }
 
-func disqusImport(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
-	// Fetch and decompress the export tarball
-	d, err := util.DecompressGzip(reader)
-	if err != nil {
-		logger.Errorf("disqusImport: DecompressGzip() failed: %v", err)
-		return importError(err)
-	}
-
+func disqusImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
 	// Unmarshal the XML data
 	exp := disqusXML{}
-	err = xml.Unmarshal(d, &exp)
-	if err != nil {
+	if err := xml.Unmarshal(buf, &exp); err != nil {
 		logger.Errorf("disqusImport: xml.Unmarshal() failed: %v", err)
 		return importError(err)
 	}
@@ -83,6 +73,7 @@ func disqusImport(curUser *data.User, domain *data.Domain, reader io.Reader) *Im
 
 	// Map Disqus emails to user IDs
 	var userIDMap map[string]uuid.UUID
+	var err error
 	if userIDMap, result.UsersAdded, result.DomainUsersAdded, err = disqusMakeUserMap(&curUser.ID, &domain.ID, exp); err != nil {
 		return result.WithError(err)
 	}
@@ -115,7 +106,7 @@ func disqusImport(curUser *data.User, domain *data.Domain, reader io.Reader) *Im
 		// Find the comment ID (it must exist at this point)
 		commentID, ok := postToCommentIDMap[post.Id]
 		if !ok {
-			err := fmt.Errorf("failed to map disqus post ID (%s) to comment ID", post.Id)
+			err := fmt.Errorf("failed to map Disqus post ID (%s) to comment ID", post.Id)
 			logger.Errorf("disqusImport: %v", err)
 			return result.WithError(err)
 		}
@@ -230,8 +221,8 @@ func disqusAuthorEmail(a *disqusAuthor) string {
 }
 
 // disqusMakeUserMap creates users/domain users from the provided Disqus import dump, and returns that as a map {email: userID}
-func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userMap map[string]uuid.UUID, usersAdded, domainUsersAdded int, err error) {
-	userMap = map[string]uuid.UUID{}
+func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userIDMap map[string]uuid.UUID, usersAdded, domainUsersAdded int, err error) {
+	userIDMap = map[string]uuid.UUID{}
 
 	// Iterate over the posts
 	for _, post := range exp.Posts {
@@ -247,61 +238,38 @@ func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userMap m
 		}
 
 		// Skip authors whose email has already been processed
-		if _, ok := userMap[email]; ok {
+		if _, ok := userIDMap[email]; ok {
 			continue
 		}
 
-		// Try to find an existing user with this email
-		var user, u *data.User
-		if u, err = TheUserService.FindUserByEmail(email, false); err == nil {
-			// User already exists
-			user = u
-
-			// Check if domain user exists, too
-			if _, _, err = TheDomainService.FindDomainUserByID(domainID, &u.ID); err == nil {
-				// Save the user's ID in the map
-				userMap[email] = user.ID
-
-				// Proceed to the next record
-				continue
-			}
-		}
-
-		if err != nil && !errors.Is(err, ErrNotFound) {
-			// Any other error than "not found"
+		// Import the user and domain user
+		var user *data.User
+		var userAdded, domainUserAdded bool
+		if user, userAdded, domainUserAdded, err = importUserByEmail(
+			email,
+			"", // Local auth only
+			post.Author.Name,
+			"", // Website URL isn't available
+			"Imported from Disqus",
+			curUserID,
+			domainID,
+			post.CreationDate,
+		); err != nil {
 			return
 		}
 
-		// Persist a new user instance, if not already exists
-		if user == nil {
-			user = data.NewUser(email, post.Author.Name)
-			user.UserCreated = uuid.NullUUID{UUID: *curUserID, Valid: true}
-			user.WithRemarks("Imported from Disqus")
-			if err = TheUserService.Create(user); err != nil {
-				return
-			}
+		// Increment user counters
+		if userAdded {
 			usersAdded++
 		}
-
-		// Save the new user's ID in the map
-		userMap[email] = user.ID
-
-		// Add a domain user as well
-		du := &data.DomainUser{
-			DomainID:        *domainID,
-			UserID:          user.ID,
-			IsCommenter:     true,
-			NotifyReplies:   false, // Notifications make no sense since the email address is made up
-			NotifyModerator: false, // Idem
-			CreatedTime:     post.CreationDate,
+		if domainUserAdded {
+			domainUsersAdded++
 		}
-		if err = TheDomainService.UserAdd(du); err != nil {
-			return
-		}
-		domainUsersAdded++
+
+		// Add the user's email-to-ID mapping
+		userIDMap[email] = user.ID
 	}
 
 	// Succeeded
-	err = nil
-	return
+	return userIDMap, usersAdded, domainUsersAdded, nil
 }

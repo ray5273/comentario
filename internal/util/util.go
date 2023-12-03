@@ -1,6 +1,7 @@
 package util
 
 import (
+	"archive/zip"
 	"bytes"
 	"compress/gzip"
 	"crypto/hmac"
@@ -132,13 +133,35 @@ func CountryByIP(ip string) string {
 }
 
 // DecompressGzip reads and decompresses a gzip-compressed archive from the given data buffer
-func DecompressGzip(rc io.Reader) ([]byte, error) {
-	if r, err := gzip.NewReader(rc); err != nil {
+func DecompressGzip(data []byte) ([]byte, error) {
+	if r, err := gzip.NewReader(bytes.NewReader(data)); err != nil {
 		return nil, err
 	} else if b, err := io.ReadAll(r); err != nil {
 		return nil, err
 	} else {
 		return b, nil
+	}
+}
+
+// DecompressZip reads and decompresses a single zip-compressed archive from the given data buffer
+func DecompressZip(data []byte) ([]byte, error) {
+	// Decompress the data
+	if zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data))); err != nil {
+		return nil, err
+
+		// There must be exactly one file
+	} else if len(zr.File) != 1 {
+		return nil, fmt.Errorf("expected exactly one file in zip archive, got %d", len(zr.File))
+
+		// Open the only file
+	} else if f, err := zr.File[0].Open(); err != nil {
+		return nil, err
+
+	} else {
+		// Read the entire file
+		//goland:noinspection GoUnhandledErrorResult
+		defer f.Close()
+		return io.ReadAll(f)
 	}
 }
 

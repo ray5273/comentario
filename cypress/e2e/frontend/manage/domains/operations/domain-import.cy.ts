@@ -21,8 +21,9 @@ context('Domain Import page', () => {
         cy.get('@domainImport').find('h1').should('have.text', 'Import data').and('be.visible');
 
         // Form controls
-        cy.get('@domainImport').find('#import-comentario') .as('importComentario');
-        cy.get('@domainImport').find('#import-disqus')     .as('importDisqus');
+        cy.get('@domainImport').find('#source-comentario') .as('sourceComentario');
+        cy.get('@domainImport').find('#source-disqus')     .as('sourceDisqus');
+        cy.get('@domainImport').find('#source-wordpress')  .as('sourceWordPress');
         cy.get('@domainImport').find('#import-file-select').as('importFileSelect');
 
         // Buttons
@@ -95,8 +96,9 @@ context('Domain Import page', () => {
 
             it('validates input', () => {
                 // Verify initial state
-                cy.get('@importComentario').should('be.checked');
-                cy.get('@importDisqus')    .should('not.be.checked');
+                cy.get('@sourceComentario').should('have.class',     'selected');
+                cy.get('@sourceDisqus')    .should('not.have.class', 'selected');
+                cy.get('@sourceWordPress') .should('not.have.class', 'selected');
                 cy.get('@importFileSelect').should('have.value', '');
 
                 // Click on Import and get error feedback
@@ -156,7 +158,7 @@ context('Domain Import page', () => {
 
             context('Disqus import', () => {
 
-                beforeEach(() => cy.get('@importDisqus').click());
+                beforeEach(() => cy.get('@sourceDisqus').click().should('have.class', 'selected'));
 
 
                 [
@@ -199,6 +201,60 @@ context('Domain Import page', () => {
                             cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
                             cy.get('@btnSubmit').click();
                             checkResults(warning, zeroResults);
+                        }));
+            });
+
+            context('WordPress import', () => {
+
+                beforeEach(() => cy.get('@sourceWordPress').click().should('have.class', 'selected'));
+
+
+                [
+                    {file: 'wordpress-ok-empty.zip',  count: 0},
+                    {file: 'wordpress-ok-single.zip', count: 1},
+                ]
+                    .forEach(({file, count}) =>
+                        it(`handles valid file ${file}`, () => {
+                            cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
+                            cy.get('@btnSubmit').click();
+                            const countStr = count.toString();
+                            checkResults(null, [
+                                ['Total users',          countStr],
+                                ['Added users',          countStr],
+                                ['Added domain users',   countStr],
+                                ['Total domain pages',   countStr],
+                                ['Added domain pages',   '0'],
+                                ['Total comments',       countStr],
+                                ['Imported comments',    countStr],
+                                ['Skipped comments',     '0'],
+                                ['Non-deleted comments', countStr],
+                            ]);
+
+                            // Click on Comments
+                            cy.get('@btnComments').click();
+                            cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
+                            cy.get('app-comment-list #filter-string').setValue('yay');
+                            cy.get('app-comment-list').verifyListFooter(count, false);
+                            if (count) {
+                                cy.get('app-comment-list #comment-list').texts('.comment-author-name').should('arrayMatch', ['Luke Skywalker']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')       .should('arrayMatch', ['Yay, imported']);
+                            }
+                        }));
+
+                [
+                    {file: 'wordpress-bad-format.zip',    warning: 'XML syntax error'},
+                    {file: 'wordpress-bad-no-files.zip',  toast: 'invalid-input-data', details: '(unsupported binary data format)'},
+                    {file: 'wordpress-bad-two-files.zip', toast: 'invalid-input-data', details: '(decompression failed)'},
+                ]
+                    .forEach(test =>
+                        it(`handles invalid file ${test.file}`, () => {
+                            cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${test.file}`);
+                            cy.get('@btnSubmit').click();
+                            if (test.toast) {
+                                cy.toastCheckAndClose(test.toast, test.details);
+                            } else {
+                                checkResults(test.warning, zeroResults);
+                            }
                         }));
             });
         }));

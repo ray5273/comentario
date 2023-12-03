@@ -1,12 +1,13 @@
 package svc
 
 import (
+	"database/sql"
 	"encoding/xml"
 	"errors"
+	"fmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"io"
 	"time"
 )
 
@@ -42,18 +43,10 @@ type wordpressComment struct {
 	Parent      string   `xml:"http://wordpress.org/export/1.2/ comment_parent"`
 }
 
-func wordpressImport(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
-	// Fetch and decompress the export tarball
-	d, err := util.DecompressGzip(reader)
-	if err != nil {
-		logger.Errorf("wordpressImport: DecompressGzip() failed: %v", err)
-		return importError(err)
-	}
-
+func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
 	// Unmarshal the XML data
 	exp := rssXML{}
-	err = xml.Unmarshal(d, &exp)
-	if err != nil {
+	if err := xml.Unmarshal(buf, &exp); err != nil {
 		logger.Errorf("wordpressImport: xml.Unmarshal() failed: %v", err)
 		return importError(err)
 	}
@@ -67,6 +60,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, reader io.Reader) 
 
 	// Create/map commenters: email -> ID
 	var userIDMap map[string]uuid.UUID
+	var err error
 	if userIDMap, result.UsersAdded, result.DomainUsersAdded, err = wordpressMakeUserMap(&curUser.ID, &domain.ID, exp); err != nil {
 		return result.WithError(err)
 	}
@@ -74,10 +68,126 @@ func wordpressImport(curUser *data.User, domain *data.Domain, reader io.Reader) 
 	// Total number of users
 	result.UsersTotal = len(userIDMap)
 
-	// TODO map pages
+	// Iterate all posts
+	pageIDMap := map[string]uuid.UUID{}
+	commentParentIDMap := map[uuid.UUID][]*data.Comment{} // Groups comment lists by their parent ID
+	for _, channel := range exp.Channels {
+		for _, post := range channel.Items {
+			result.PagesTotal++
 
-	// TODO map and add comments
+			// Extract the path from link URL
+			var pageID uuid.UUID
+			if u, err := util.ParseAbsoluteURL(post.Link, true, false); err != nil {
+				return result.WithError(err)
 
+				// Find the page for that path
+			} else if id, ok := pageIDMap[u.Path]; ok {
+				pageID = id
+
+				// Page doesn't exist. Find or insert a page with this path
+			} else if page, added, err := ThePageService.UpsertByDomainPath(domain, u.Path, post.Title, nil); err != nil {
+				return result.WithError(err)
+
+			} else {
+				pageID = page.ID
+				pageIDMap[u.Path] = pageID
+
+				// If the page was added, increment the page count
+				if added {
+					result.PagesAdded++
+				}
+			}
+
+			// Make a map of comment IDs
+			commentIDMap := map[string]uuid.UUID{}
+			for _, comment := range post.Comments {
+				// Only keep approved comments
+				if comment.Type != "comment" || comment.Approved != "1" {
+					continue
+				}
+				// Allocate a new, random comment ID
+				commentIDMap[comment.ID] = uuid.New()
+			}
+
+			// Iterate post's comments, once again
+			for _, comment := range post.Comments {
+				result.CommentsTotal++
+
+				// Only keep approved comments
+				if comment.Type != "comment" || comment.Approved != "1" {
+					result.CommentsSkipped++
+					continue
+				}
+
+				// Find the comment ID (it must exist at this point)
+				commentID, ok := commentIDMap[comment.ID]
+				if !ok {
+					err := fmt.Errorf("failed to map WordPress comment ID (%s)", comment.ID)
+					logger.Errorf("wordpressImport: %v", err)
+					return result.WithError(err)
+				}
+
+				// Find the user ID by their email
+				uid := data.AnonymousUser.ID
+				if comment.AuthorEmail != "" {
+					if id, ok := userIDMap[comment.AuthorEmail]; ok {
+						uid = id
+					}
+				}
+
+				// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID.
+				// It will also be the fallback, should parent ID not exist in the map
+				parentCommentID := uuid.NullUUID{}
+				pzID := uuid.UUID{}
+				if id, ok := commentIDMap[comment.Parent]; ok {
+					parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
+					pzID = id
+				}
+
+				// Create a new comment instance
+				t := wordpressParseDate(comment.Date)
+				c := &data.Comment{
+					ID:            commentID,
+					ParentID:      parentCommentID,
+					PageID:        pageID,
+					Markdown:      comment.Content,
+					IsApproved:    true,
+					CreatedTime:   t,
+					ModeratedTime: sql.NullTime{Time: t, Valid: true},
+					UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
+					UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+					HTML: util.MarkdownToHTML(comment.Content,
+						TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
+						TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
+						false),
+				}
+
+				// File it under the appropriate parent ID
+				if l, ok := commentParentIDMap[pzID]; ok {
+					commentParentIDMap[pzID] = append(l, c)
+				} else {
+					commentParentIDMap[pzID] = []*data.Comment{c}
+				}
+			}
+		}
+	}
+
+	// Recurse the comment tree (map) to insert them in the right order (parents-to-children), starting with the root
+	// (= zero UUID)
+	countsPerPage := map[uuid.UUID]int{}
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+
+	// Increase comment count on the domain, ignoring errors
+	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+
+	// Increase comment counts on all pages
+	for pageID, pc := range countsPerPage {
+		if pc > 0 {
+			_ = ThePageService.IncrementCounts(&pageID, pc, 0)
+		}
+	}
+
+	// Done
 	return result
 }
 
@@ -87,8 +197,8 @@ func wordpressMakeUserMap(curUserID, domainID *uuid.UUID, exp rssXML) (userMap m
 	for _, channel := range exp.Channels {
 		for _, post := range channel.Items {
 			for _, comment := range post.Comments {
-				// Only keep comments and skip users without name or email
-				if comment.Type != "comment" || comment.Author == "" || comment.AuthorEmail == "" {
+				// Only keep approved comments and skip users without name or email
+				if comment.Type != "comment" || comment.Approved != "1" || comment.Author == "" || comment.AuthorEmail == "" {
 					continue
 				}
 
@@ -97,61 +207,32 @@ func wordpressMakeUserMap(curUserID, domainID *uuid.UUID, exp rssXML) (userMap m
 					continue
 				}
 
-				// Try to find an existing user with the same email
-				var user, u *data.User
-				if u, err = TheUserService.FindUserByEmail(comment.AuthorEmail, false); err == nil {
-					// User already exists
-					user = u
-
-					// Check if domain user exists, too
-					if _, _, err = TheDomainService.FindDomainUserByID(domainID, &u.ID); err == nil {
-						// Add the user mapping
-						userIDMap[comment.AuthorEmail] = user.ID
-
-						// Proceed to the next record
-						continue
-
-					} else if !errors.Is(err, ErrNotFound) {
-						// Any other error than "not found"
-						return
-					}
-
-				} else if !errors.Is(err, ErrNotFound) {
-					// Any other error than "not found"
+				// Import the user and domain user
+				var user *data.User
+				var userAdded, domainUserAdded bool
+				if user, userAdded, domainUserAdded, err = importUserByEmail(
+					comment.AuthorEmail,
+					"", // Local auth only
+					comment.Author,
+					comment.AuthorURL,
+					"Imported from WordPress",
+					curUserID,
+					domainID,
+					wordpressParseDate(comment.Date),
+				); err != nil {
 					return
 				}
 
-				// Persist a new user instance, if it doesn't exist
-				commentTime := wordpressParseDate(comment.Date)
-				if user == nil {
-					user = data.NewUser(comment.AuthorEmail, comment.Author)
-					user.CreatedTime = commentTime
-					user.UserCreated = uuid.NullUUID{UUID: *curUserID, Valid: true}
-					user.
-						WithWebsiteURL(comment.AuthorURL).
-						WithRemarks("Imported from WordPress")
-					if err = TheUserService.Create(user); err != nil {
-						return
-					}
+				// Increment user counters
+				if userAdded {
 					usersAdded++
 				}
+				if domainUserAdded {
+					domainUsersAdded++
+				}
 
-				// Add the user's hex-to-ID mapping
+				// Add the user's email-to-ID mapping
 				userIDMap[comment.AuthorEmail] = user.ID
-
-				// Add a domain user as well
-				du := &data.DomainUser{
-					DomainID:        *domainID,
-					UserID:          user.ID,
-					IsCommenter:     true,
-					NotifyReplies:   true,
-					NotifyModerator: true,
-					CreatedTime:     commentTime,
-				}
-				if err = TheDomainService.UserAdd(du); err != nil {
-					return
-				}
-				domainUsersAdded++
 			}
 		}
 	}

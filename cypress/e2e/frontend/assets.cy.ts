@@ -30,8 +30,10 @@ context('Static assets', () => {
         {path: '/en/fonts/source-sans-700-vietnamese.woff2',   dir: 'frontend/assets/fonts', encoding: 'binary', ctype: 'font/woff2'},
 
         // Images
-        {path: '/en/images/icon.svg',   dir: 'frontend/assets/images', encoding: 'binary', ctype: 'image/svg+xml'},
-        {path: '/en/images/logo.svg',   dir: 'frontend/assets/images', encoding: 'binary', ctype: 'image/svg+xml'},
+        {path: '/en/images/icon.svg',            dir: 'frontend/assets/images',       encoding: 'binary', ctype: 'image/svg+xml'},
+        {path: '/en/images/logo.svg',            dir: 'frontend/assets/images',       encoding: 'binary', ctype: 'image/svg+xml'},
+        {path: '/en/images/icons/disqus.svg',    dir: 'frontend/assets/images/icons', encoding: 'binary', ctype: 'image/svg+xml'},
+        {path: '/en/images/icons/wordpress.svg', dir: 'frontend/assets/images/icons', encoding: 'binary', ctype: 'image/svg+xml'},
     ]
         .forEach(asset => {
             it(`asset ${asset.path} is served correctly`, () => {

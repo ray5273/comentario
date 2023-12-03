@@ -16,6 +16,7 @@ var (
 	ErrorImmutableAccount      = &exmodels.Error{ID: "immutable-account", Message: "Account cannot be updated"}
 	ErrorImmutableProperty     = &exmodels.Error{ID: "immutable-property", Message: "Property cannot be updated"}
 	ErrorInvalidCredentials    = &exmodels.Error{ID: "invalid-credentials", Message: "Wrong password or user doesn't exist"}
+	ErrorInvalidInputData      = &exmodels.Error{ID: "invalid-input-data", Message: "Invalid input data provided"}
 	ErrorInvalidPropertyValue  = &exmodels.Error{ID: "invalid-prop-value", Message: "Value of the property is invalid"}
 	ErrorInvalidUUID           = &exmodels.Error{ID: "invalid-uuid", Message: "Invalid UUID value"}
 	ErrorLoginLocally          = &exmodels.Error{ID: "login-locally", Message: "Login with your email and password instead"}

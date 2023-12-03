@@ -1563,7 +1563,7 @@ paths:
           name: data
           type: file
           required: false
-          maxLength: 1048576 # 1 MB
+          maxLength: 1048576 # 1 MiB
           description: Avatar image file, if omitted, the current user's avatar will be removed
       responses:
         204:
@@ -2352,7 +2352,7 @@ paths:
   /domains/{uuid}/import/{source}:
     post:
       operationId: DomainImport
-      summary: Import comments and commenters into specified domain from exported data, downloaded from certain URL
+      summary: Import domain data (commenters, pages, comments) from a data dump
       tags:
         - ApiGeneral
       consumes:
@@ -2363,6 +2363,7 @@ paths:
         - in: formData
           name: data
           type: file
+          maxLength: 10485760 # 10 MiB
           required: true
           description: Import data file
       responses:

@@ -373,6 +373,13 @@ func (u *User) WithConfirmed(b bool) *User {
 	return u
 }
 
+// WithCreated sets the CreatedTime/UserCreated values
+func (u *User) WithCreated(t time.Time, createdUserID *uuid.UUID) *User {
+	u.CreatedTime = t
+	u.UserCreated = uuid.NullUUID{UUID: *createdUserID, Valid: true}
+	return u
+}
+
 // WithEmail sets the Email value
 func (u *User) WithEmail(s string) *User {
 	u.Email = s

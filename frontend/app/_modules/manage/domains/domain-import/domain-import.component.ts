@@ -12,6 +12,7 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 @Component({
     selector: 'app-domain-import',
     templateUrl: './domain-import.component.html',
+    styleUrls: ['./domain-import.component.scss'],
     animations: [Animations.fadeInOut('slow')],
 })
 export class DomainImportComponent implements OnInit {
@@ -38,6 +39,14 @@ export class DomainImportComponent implements OnInit {
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
+
+    get source() {
+        return this.form.controls.source.value;
+    }
+
+    set source(source: 'comentario' | 'disqus' | 'wordpress') {
+        this.form.controls.source.setValue(source);
+    }
 
     ngOnInit(): void {
         this.domainSelectorSvc.domainMeta(true)

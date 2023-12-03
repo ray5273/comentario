@@ -13,6 +13,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
+	"net/http"
 	"strings"
 	"time"
 )
@@ -104,6 +105,28 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 func DomainImport(params api_general.DomainImportParams, user *data.User) middleware.Responder {
 	defer util.LogError(params.Data.Close, "DomainImport, defer Data.Close()")
 
+	// Read the entire data buffer into memory
+	expData, err := io.ReadAll(params.Data)
+	if err != nil {
+		logger.Warningf("DomainImport(): failed to read data buffer: %v", err)
+		return respInternalError(nil)
+	}
+
+	// Detect data content type and decompress if needed
+	ct := http.DetectContentType(expData)
+	switch ct {
+	case "application/x-gzip":
+		expData, err = util.DecompressGzip(expData)
+	case "application/zip":
+		expData, err = util.DecompressZip(expData)
+	case "application/octet-stream":
+		return respBadRequest(ErrorInvalidInputData.WithDetails("unsupported binary data format"))
+	}
+	if err != nil {
+		logger.Warningf("DomainImport(): failed to decompress data: %v", err)
+		return respBadRequest(ErrorInvalidInputData.WithDetails("decompression failed"))
+	}
+
 	// Find the domain and verify the user's privileges
 	domain, _, r := domainGetWithUser(params.UUID, user, true)
 	if r != nil {
@@ -114,13 +137,13 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	var res *svc.ImportResult
 	switch params.Source {
 	case "comentario":
-		res = svc.TheImportExportService.Import(user, domain, params.Data)
+		res = svc.TheImportExportService.Import(user, domain, expData)
 
 	case "disqus":
-		res = svc.TheImportExportService.ImportDisqus(user, domain, params.Data)
+		res = svc.TheImportExportService.ImportDisqus(user, domain, expData)
 
 	case "wordpress":
-		res = svc.TheImportExportService.ImportWordPress(user, domain, params.Data)
+		res = svc.TheImportExportService.ImportWordPress(user, domain, expData)
 
 	default:
 		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))

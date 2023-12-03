@@ -1,10 +1,11 @@
 package svc
 
 import (
+	"errors"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
-	"io"
+	"time"
 )
 
 // ImportResult is the result of a comment import
@@ -56,14 +57,14 @@ type ImportExportService interface {
 	// Export exports the data for the specified domain, returning gzip-compressed binary data
 	Export(domainID *uuid.UUID) ([]byte, error)
 	// Import performs data import in the native Comentario (or legacy Commento v1/Comentario v2) format from the
-	// provided data reader. Returns the number of imported comments: total and non-deleted
-	Import(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
-	// ImportDisqus performs data import in Disqus format from the provided data reader. Returns the number of imported
+	// provided data. Returns the number of imported comments: total and non-deleted
+	Import(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult
+	// ImportDisqus performs data import in Disqus format from the provided data. Returns the number of imported
 	// comments
-	ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
-	// ImportWordPress performs data import in WordPress format from the provided data reader. Returns the number of imported
+	ImportDisqus(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult
+	// ImportWordPress performs data import in WordPress format from the provided data. Returns the number of imported
 	// comments
-	ImportWordPress(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult
+	ImportWordPress(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -81,19 +82,19 @@ func (svc *importExportService) Export(domainID *uuid.UUID) ([]byte, error) {
 	return comentarioExport(domainID)
 }
 
-func (svc *importExportService) Import(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
-	logger.Debugf("importExportService.Import(%#v, %#v, ...)", curUser, domain)
-	return comentarioImport(curUser, domain, reader)
+func (svc *importExportService) Import(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
+	logger.Debugf("importExportService.Import(%#v, %#v, [%d bytes])", curUser, domain, len(buf))
+	return comentarioImport(curUser, domain, buf)
 }
 
-func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
-	logger.Debugf("importExportService.ImportDisqus(%#v, %#v, ...)", curUser, domain)
-	return disqusImport(curUser, domain, reader)
+func (svc *importExportService) ImportDisqus(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
+	logger.Debugf("importExportService.ImportDisqus(%#v, %#v, [%d bytes])", curUser, domain, len(buf))
+	return disqusImport(curUser, domain, buf)
 }
 
-func (svc *importExportService) ImportWordPress(curUser *data.User, domain *data.Domain, reader io.Reader) *ImportResult {
-	logger.Debugf("importExportService.ImportWordPress(%#v, %#v, ...)", curUser, domain)
-	return wordpressImport(curUser, domain, reader)
+func (svc *importExportService) ImportWordPress(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
+	logger.Debugf("importExportService.ImportWordPress(%#v, %#v, [%d bytes])", curUser, domain, len(buf))
+	return wordpressImport(curUser, domain, buf)
 }
 
 // insertCommentsForParent inserts those comments from the map that have the specified parent ID, returning the number
@@ -119,4 +120,57 @@ func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID]
 		countNonDeleted += ccnd
 	}
 	return
+}
+
+// importUserByEmail adds the specified user/domain user, returning the user and whether user and domain user were added
+func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
+	// Try to find an existing user with the same email
+	var user *data.User
+	if u, err := TheUserService.FindUserByEmail(email, false); err == nil {
+		// User already exists
+		user = u
+
+		// Check if domain user exists, too
+		if _, _, err := TheDomainService.FindDomainUserByID(domainID, &u.ID); err == nil {
+			return user, false, false, nil
+
+		} else if !errors.Is(err, ErrNotFound) {
+			// Any other error than "not found"
+			return nil, false, false, err
+		}
+
+	} else if !errors.Is(err, ErrNotFound) {
+		// Any other error than "not found"
+		return nil, false, false, err
+	}
+
+	// Persist a new user instance, if it doesn't exist
+	var userAdded bool
+	if user == nil {
+		user = data.NewUser(email, name).
+			WithCreated(creationTime, curUserID).
+			WithFederated("", federatedIdpID).
+			WithWebsiteURL(websiteURL).
+			WithRemarks(remarks)
+		if err := TheUserService.Create(user); err != nil {
+			return nil, false, false, err
+		}
+		userAdded = true
+	}
+
+	// Add a domain user as well
+	du := &data.DomainUser{
+		DomainID:        *domainID,
+		UserID:          user.ID,
+		IsCommenter:     true,
+		NotifyReplies:   true,
+		NotifyModerator: true,
+		CreatedTime:     creationTime,
+	}
+	if err := TheDomainService.UserAdd(du); err != nil {
+		return user, userAdded, false, err
+	}
+
+	// Both user and domain user were added
+	return user, userAdded, true, nil
 }

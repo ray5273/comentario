@@ -20,33 +20,55 @@
         <div class="mb-3 row">
             <div class="col-sm-3 col-form-label colon" i18n>Source format</div>
             <div class="col-sm-9">
-                <!-- Commento/Comentario -->
-                <div class="form-check mb-3">
-                    <input formControlName="source" class="form-check-input" type="radio" id="import-comentario" value="comentario">
-                    <label class="form-check-label" for="import-comentario">Commento/Comentario</label>
-                    <div class="form-text">
-                        <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
+                <div class="list-group">
+                    <!-- Commento/Comentario -->
+                    <div [class.selected]="source === 'comentario'"
+                         (click)="source = 'comentario'" (keydown.enter)="source = 'comentario'"
+                         class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-comentario">
+                        <div class="fw-bold mb-2">
+                            <img ngSrc="images/icon.svg" width="32" height="32" class="me-3" alt="Comentario">
+                            <ng-container>Commento/Comentario</ng-container>
+                        </div>
+                        <div class="text-muted">
+                            <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
+                        </div>
                     </div>
-                </div>
-                <!-- Disqus -->
-                <div class="form-check">
-                    <input formControlName="source" class="form-check-input" type="radio" id="import-disqus" value="disqus">
-                    <label class="form-check-label" for="import-disqus">Disqus</label>
-                    <div class="form-text">
-                        <ng-container i18n>If you're currently using Disqus, you can import all comments into Comentario:</ng-container>
-                        <ul>
-                            <li i18n>Go to the <a href="https://disqus.com/admin/discussions/export/" target="_blank" rel="nofollow noopener noreferrer">admin export section</a> in Disqus and click <strong>Export Comments</strong>. This should start the process of exporting your comments in the background.</li>
-                            <li i18n>You'll receive an email from Disqus with a link to a compressed archive of all comments and associated data.</li>
-                            <li i18n>Download the file and select it in the field below.</li>
-                        </ul>
+                    <!-- Disqus -->
+                    <div [class.selected]="source === 'disqus'"
+                         (click)="source = 'disqus'" (keydown.enter)="source = 'disqus'"
+                         class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-disqus">
+                        <div class="me-3">
+                        </div>
+                        <div>
+                            <div class="fw-bold mb-2">
+                                <img ngSrc="images/icons/disqus.svg" width="32" height="32" class="me-3" alt="Disqus">
+                                <ng-container>Disqus</ng-container>
+                            </div>
+                            <div class="text-muted">
+                                <ng-container i18n>If you're currently using Disqus, you can import all comments into Comentario:</ng-container>
+                                <ul class="mb-0">
+                                    <li i18n>Go to the <a href="https://disqus.com/admin/discussions/export/" target="_blank" rel="nofollow noopener noreferrer">admin export section</a> in Disqus and click <strong>Export Comments</strong>. This should start the process of exporting your comments in the background.</li>
+                                    <li i18n>You'll receive an email from Disqus with a link to a compressed archive of all comments and associated data.</li>
+                                    <li i18n>Download the file and select it in the field below.</li>
+                                </ul>
+                            </div>
+                        </div>
                     </div>
-                </div>
-                <!-- WordPress -->
-                <div class="form-check">
-                    <input formControlName="source" class="form-check-input" type="radio" id="import-wordpress" value="wordpress">
-                    <label class="form-check-label" for="import-wordpress">WordPress</label>
-                    <div class="form-text">
-                        <ng-container i18n>If you're on WordPress, you can import all comments into Comentario by providing its RSS feed export.</ng-container>
+                    <!-- WordPress -->
+                    <div [class.selected]="source === 'wordpress'"
+                         (click)="source = 'wordpress'" (keydown.enter)="source = 'wordpress'"
+                         class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-wordpress">
+                        <div class="me-3">
+                        </div>
+                        <div>
+                            <div class="fw-bold mb-2">
+                                <img ngSrc="images/icons/wordpress.svg" width="32" height="32" class="me-3" alt="WordPress">
+                                <ng-container>WordPress</ng-container>
+                            </div>
+                            <div class="text-muted">
+                                <ng-container i18n>If you're on WordPress, you can import all comments into Comentario by providing its RSS feed export.</ng-container>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -64,6 +86,8 @@
                 <div class="invalid-feedback">
                     <ng-container i18n>Please select a file.</ng-container>
                 </div>
+                <!-- Info -->
+                <div class="form-text" i18n>Comentario supports .zip and .gz archives, as well as uncompressed files, up to 10 MB in size.</div>
             </div>
         </div>
 

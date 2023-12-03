@@ -2,11 +2,21 @@ package util
 
 import (
 	"bytes"
+	"encoding/hex"
 	"github.com/go-openapi/strfmt"
 	"reflect"
 	"strings"
 	"testing"
 )
+
+// mustDecode decodes the given hex string into a byte slice, panicking if it fails
+func mustHexDecode(s string) []byte {
+	if b, err := hex.DecodeString(s); err != nil {
+		panic(err)
+	} else {
+		return b
+	}
+}
 
 func TestCompressGzip(t *testing.T) {
 	tests := []struct {
@@ -18,29 +28,19 @@ func TestCompressGzip(t *testing.T) {
 		{
 			"nil",
 			nil,
-			[]byte{
-				0x1f, 0x8b, 0x8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x1, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			},
+			mustHexDecode("1f8b08000000000000ff010000ffff0000000000000000"),
 			false,
 		},
 		{
 			"empty",
 			[]byte{},
-			[]byte{
-				0x1f, 0x8b, 0x8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x1, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00,
-				0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
-			},
+			mustHexDecode("1f8b08000000000000ff010000ffff0000000000000000"),
 			false,
 		},
 		{
 			"data",
 			[]byte(`{"version":1}`),
-			[]byte{
-				0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xaa, 0x56, 0x2a, 0x4b, 0x2d, 0x2a, 0xce,
-				0xcc, 0xcf, 0x53, 0xb2, 0x32, 0xac, 0x05, 0x04, 0x00, 0x00, 0xff, 0xff, 0x33, 0x9a, 0x30, 0x71, 0x0d,
-				0x00, 0x00, 0x00,
-			},
+			mustHexDecode("1f8b08000000000000ffaa562a4b2d2acecccf53b232ac05040000ffff339a30710d000000"),
 			false,
 		},
 	}
@@ -52,7 +52,7 @@ func TestCompressGzip(t *testing.T) {
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("CompressGzip() got = %#v, want %v", got, tt.want)
+				t.Errorf("CompressGzip() got = %x, want %x", got, tt.want)
 			}
 		})
 	}
@@ -90,31 +90,78 @@ func TestDecompressGzip(t *testing.T) {
 		{"faulty", []byte{0xff, 0xff, 0x00}, nil, true},
 		{
 			"empty",
-			[]byte{0x1f, 0x8b, 0x8, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0x1, 0x00, 0x00, 0xff, 0xff, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00},
+			mustHexDecode("1f8b08000000000000ff010000ffff0000000000000000"),
 			[]byte{},
 			false,
 		},
 		{
 			"data",
-			[]byte{
-				0x1f, 0x8b, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0xff, 0xaa, 0x56, 0x2a, 0x4b, 0x2d, 0x2a, 0xce,
-				0xcc, 0xcf, 0x53, 0xb2, 0x32, 0xac, 0x05, 0x04, 0x00, 0x00, 0xff, 0xff, 0x33, 0x9a, 0x30, 0x71, 0x0d,
-				0x00, 0x00, 0x00,
-			},
+			mustHexDecode("1f8b08000000000000ffaa562a4b2d2acecccf53b232ac05040000ffff339a30710d000000"),
 			[]byte(`{"version":1}`),
 			false,
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			r := bytes.NewReader(tt.input)
-			got, err := DecompressGzip(r)
+			got, err := DecompressGzip(tt.input)
 			if (err != nil) != tt.wantErr {
 				t.Errorf("DecompressGzip() error = %v, wantErr %v", err, tt.wantErr)
 				return
 			}
 			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("DecompressGzip() got = %#v, want %v", got, tt.want)
+				t.Errorf("DecompressGzip() got = %x, want %x", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDecompressZip(t *testing.T) {
+	tests := []struct {
+		name    string
+		input   []byte
+		want    []byte
+		wantErr bool
+	}{
+		{"nil", nil, nil, true},
+		{"faulty", []byte{0xff, 0xff, 0x00}, nil, true},
+		{"zero files", mustHexDecode("504b0506000000000000000000000000000000000000"), nil, true},
+		{
+			"one empty file",
+			mustHexDecode(
+				"504b03040a00000800008e6683570000000000000000000000000100000065504b010214030a00000800008e668357000000" +
+					"000000000000000000010000000000000000000000b4810000000065504b050600000000010001002f0000001f0000000000"),
+			[]byte{},
+			false,
+		},
+		{
+			"one file",
+			mustHexDecode(
+				"504b03040a0002080000a4658357d263488803000000030000000100000061313233504b010214030a0002080000a4658357" +
+					"d26348880300000003000000010000000000000000000000b4810000000061504b050600000000010001002f000000220000" +
+					"000000"),
+			[]byte(`123`),
+			false,
+		},
+		{
+			"two files",
+			mustHexDecode(
+				"504b03040a00000800008e6683570000000000000000000000000100000065504b03040a00000800008e6683570000000000" +
+					"000000000000000100000066504b010214030a00000800008e66835700000000000000000000000001000000000000000000" +
+					"0000b4810000000065504b010214030a00000800008e668357000000000000000000000000010000000000000000000000b6" +
+					"811f00000066504b050600000000020002005e0000003e0000000000"),
+			nil,
+			true,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got, err := DecompressZip(tt.input)
+			if (err != nil) != tt.wantErr {
+				t.Errorf("DecompressZip() error = %v, wantErr %v", err, tt.wantErr)
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("DecompressZip() got = %x, want %x", got, tt.want)
 			}
 		})
 	}
