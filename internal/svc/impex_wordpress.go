@@ -30,17 +30,25 @@ type wordpressItem struct {
 }
 
 type wordpressComment struct {
-	XMLName     xml.Name `xml:"http://wordpress.org/export/1.2/ comment"`
-	ID          string   `xml:"http://wordpress.org/export/1.2/ comment_id"`
-	Author      string   `xml:"http://wordpress.org/export/1.2/ comment_author"`
-	AuthorEmail string   `xml:"http://wordpress.org/export/1.2/ comment_author_email"`
-	AuthorURL   string   `xml:"http://wordpress.org/export/1.2/ comment_author_url"`
-	AuthorIP    string   `xml:"http://wordpress.org/export/1.2/ comment_author_IP"`
-	Date        string   `xml:"http://wordpress.org/export/1.2/ comment_date_gmt"`
-	Content     string   `xml:"http://wordpress.org/export/1.2/ comment_content"`
-	Approved    string   `xml:"http://wordpress.org/export/1.2/ comment_approved"`
-	Type        string   `xml:"http://wordpress.org/export/1.2/ comment_type"`
-	Parent      string   `xml:"http://wordpress.org/export/1.2/ comment_parent"`
+	XMLName     xml.Name             `xml:"http://wordpress.org/export/1.2/ comment"`
+	ID          string               `xml:"http://wordpress.org/export/1.2/ comment_id"`
+	Author      string               `xml:"http://wordpress.org/export/1.2/ comment_author"`
+	AuthorEmail string               `xml:"http://wordpress.org/export/1.2/ comment_author_email"`
+	AuthorURL   string               `xml:"http://wordpress.org/export/1.2/ comment_author_url"`
+	AuthorIP    string               `xml:"http://wordpress.org/export/1.2/ comment_author_IP"`
+	Date        string               `xml:"http://wordpress.org/export/1.2/ comment_date_gmt"`
+	Content     string               `xml:"http://wordpress.org/export/1.2/ comment_content"`
+	Approved    string               `xml:"http://wordpress.org/export/1.2/ comment_approved"`
+	Type        wordpressCommentType `xml:"http://wordpress.org/export/1.2/ comment_type"`
+	Parent      string               `xml:"http://wordpress.org/export/1.2/ comment_parent"`
+}
+
+type wordpressCommentType string
+
+// IsRegular reports whether comment is a regular comment
+func (ct wordpressCommentType) IsRegular() bool {
+	// WordPress uses both "comment" and an empty string for regular comments
+	return ct == "" || ct == "comment"
 }
 
 func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportResult {
@@ -102,7 +110,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 			commentIDMap := map[string]uuid.UUID{}
 			for _, comment := range post.Comments {
 				// Only keep approved comments
-				if comment.Type != "comment" || comment.Approved != "1" {
+				if !comment.Type.IsRegular() || comment.Approved != "1" {
 					continue
 				}
 				// Allocate a new, random comment ID
@@ -114,7 +122,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 				result.CommentsTotal++
 
 				// Only keep approved comments
-				if comment.Type != "comment" || comment.Approved != "1" {
+				if !comment.Type.IsRegular() || comment.Approved != "1" {
 					result.CommentsSkipped++
 					continue
 				}
@@ -198,7 +206,7 @@ func wordpressMakeUserMap(curUserID, domainID *uuid.UUID, exp rssXML) (userMap m
 		for _, post := range channel.Items {
 			for _, comment := range post.Comments {
 				// Only keep approved comments and skip users without name or email
-				if comment.Type != "comment" || comment.Approved != "1" || comment.Author == "" || comment.AuthorEmail == "" {
+				if !comment.Type.IsRegular() || comment.Approved != "1" || comment.Author == "" || comment.AuthorEmail == "" {
 					continue
 				}
 

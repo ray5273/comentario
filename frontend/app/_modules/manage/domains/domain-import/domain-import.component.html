@@ -18,19 +18,20 @@
     <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
         <!-- Source format -->
         <div class="mb-3 row">
-            <div class="col-sm-3 col-form-label colon" i18n>Source format</div>
-            <div class="col-sm-9">
+            <div class="col-sm-2 col-form-label colon" i18n>Source format</div>
+            <div class="col-sm-10">
                 <div class="list-group">
                     <!-- Commento/Comentario -->
                     <div [class.selected]="source === 'comentario'"
                          (click)="source = 'comentario'" (keydown.enter)="source = 'comentario'"
                          class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-comentario">
                         <div class="fw-bold mb-2">
-                            <img ngSrc="images/icon.svg" width="32" height="32" class="me-3" alt="Comentario">
+                            <img ngSrc="images/icons/commento.svg" width="32" height="32" class="me-3" alt="Comentario">
                             <ng-container>Commento/Comentario</ng-container>
                         </div>
                         <div class="text-muted">
                             <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
+                            <app-info-icon docLink="/installation/migration/commento/" class="ms-2"></app-info-icon>
                         </div>
                     </div>
                     <!-- Disqus -->
@@ -45,12 +46,8 @@
                                 <ng-container>Disqus</ng-container>
                             </div>
                             <div class="text-muted">
-                                <ng-container i18n>If you're currently using Disqus, you can import all comments into Comentario:</ng-container>
-                                <ul class="mb-0">
-                                    <li i18n>Go to the <a href="https://disqus.com/admin/discussions/export/" target="_blank" rel="nofollow noopener noreferrer">admin export section</a> in Disqus and click <strong>Export Comments</strong>. This should start the process of exporting your comments in the background.</li>
-                                    <li i18n>You'll receive an email from Disqus with a link to a compressed archive of all comments and associated data.</li>
-                                    <li i18n>Download the file and select it in the field below.</li>
-                                </ul>
+                                <ng-container i18n>If you're currently using Disqus, you can import all comments by requesting a data export.</ng-container>
+                                <app-info-icon docLink="/installation/migration/disqus/" class="ms-2"></app-info-icon>
                             </div>
                         </div>
                     </div>
@@ -66,7 +63,8 @@
                                 <ng-container>WordPress</ng-container>
                             </div>
                             <div class="text-muted">
-                                <ng-container i18n>If you're on WordPress, you can import all comments into Comentario by providing its RSS feed export.</ng-container>
+                                <ng-container i18n>WordPress comments can be imported by providing a WXR (WordPress eXtended RSS) data file.</ng-container>
+                                <app-info-icon docLink="/installation/migration/wordpress/" class="ms-2"></app-info-icon>
                             </div>
                         </div>
                     </div>
@@ -76,8 +74,8 @@
 
         <!-- File input -->
         <div class="mb-3 row">
-            <label for="import-file-select" class="col-sm-3 col-form-label colon" i18n>Data file</label>
-            <div class="col-sm-9">
+            <label for="import-file-select" class="col-sm-2 col-form-label colon" i18n>Data file</label>
+            <div class="col-sm-10">
                 <input (change)="onFileSelected($event)"
                        [class.is-valid]="form.controls.file.touched && form.controls.file.valid"
                        [class.is-invalid]="form.controls.file.touched && form.controls.file.invalid"
@@ -88,7 +86,7 @@
                     <div *ngIf="form.controls.file.errors?.maxSize"  i18n>File size must not exceed 10 MB.</div>
                 </div>
                 <!-- Info -->
-                <div class="form-text" i18n>Comentario supports .zip and .gz archives, as well as uncompressed files.</div>
+                <div class="form-text" i18n>Comentario supports importing from .zip and .gz archives, as well as uncompressed files.</div>
             </div>
         </div>
 

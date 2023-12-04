@@ -143,25 +143,40 @@ func DecompressGzip(data []byte) ([]byte, error) {
 	}
 }
 
-// DecompressZip reads and decompresses a single zip-compressed archive from the given data buffer
+// DecompressZip reads and decompresses a single file in a zip-compressed archive from the given data buffer. The
+// archive can contain multiple directories (but only a single file)
 func DecompressZip(data []byte) ([]byte, error) {
 	// Decompress the data
-	if zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data))); err != nil {
+	zr, err := zip.NewReader(bytes.NewReader(data), int64(len(data)))
+	if err != nil {
 		return nil, err
+	}
 
-		// There must be exactly one file
-	} else if len(zr.File) != 1 {
-		return nil, fmt.Errorf("expected exactly one file in zip archive, got %d", len(zr.File))
+	// Verify there's exactly one file in the archive
+	var first *zip.File
+	for _, f := range zr.File {
+		if !f.FileInfo().IsDir() {
+			if first != nil {
+				return nil, errors.New("expected exactly one file in zip archive, found many")
+			}
+			first = f
+		}
+	}
 
-		// Open the only file
-	} else if f, err := zr.File[0].Open(); err != nil {
+	// If there's no file found
+	if first == nil {
+		return nil, fmt.Errorf("no files in zip archive")
+	}
+
+	// Open the file
+	if rc, err := first.Open(); err != nil {
 		return nil, err
 
 	} else {
 		// Read the entire file
 		//goland:noinspection GoUnhandledErrorResult
-		defer f.Close()
-		return io.ReadAll(f)
+		defer rc.Close()
+		return io.ReadAll(rc)
 	}
 }
 

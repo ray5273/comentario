@@ -23,8 +23,9 @@ If you will import into a new domain, you can skip this step because you can sim
 
 ### 2. Perform data export from WordPress
 
-[//]: # (TODO)
-
+1. In WordPress, navigate to `Tools` ⇒ `Export`.
+2. Select `Posts` as the content type.
+3. Click `Export`. Once the process finished, you'll be able to download the (compressed) XML export file.
 
 ### 3. Import the data into Comentario
 
