@@ -2,6 +2,7 @@ package svc
 
 import (
 	"bytes"
+	"container/list"
 	"crypto/sha256"
 	"database/sql"
 	"errors"
@@ -16,6 +17,7 @@ import (
 	"image/draw"
 	"io"
 	"net/http"
+	"sync"
 	"time"
 )
 
@@ -27,19 +29,33 @@ type AvatarService interface {
 	// DownloadAndUpdateByUserID downloads an avatar from the specified URL and updates the given user. isCustom
 	// indicates whether the avatar is customised by the user
 	DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string, isCustom bool) error
-	// DownloadAndUpdateFromGravatar tries to download an avatar from Gravatar and, if successful, updates the user.
-	// isCustom indicates whether the avatar update was explicitly initiated by the user
-	DownloadAndUpdateFromGravatar(user *data.User, isCustom bool) error
 	// GetByUserID finds and returns an avatar for the given user. Returns (nil, nil) if no avatar exists
 	GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error)
+	// SetFromGravatar tries to download an avatar from Gravatar and, if successful, updates the user. isCustom
+	// indicates whether the avatar update was explicitly initiated by the user
+	SetFromGravatar(userID *uuid.UUID, userEmail string, isCustom bool) error
+	// SetFromGravatarAsync tries to download an avatar from Gravatar, blocking up until the standard timeout period,
+	// and proceeds in the background if didn't complete in that time. Swallows any error
+	SetFromGravatarAsync(userID *uuid.UUID, userEmail string, isCustom bool)
+	// QueueGravatarUpdate queues a Gravatar update for the given user, to be updated in the background
+	QueueGravatarUpdate(userID *uuid.UUID, userEmail string)
 	// UpdateByUserID updates the given user's avatar in the database. r can be nil to remove the avatar, or otherwise
 	// point to PNG or JPG data reader. isCustom indicates whether the avatar is customised by the user; ignored if r is
 	// nil
 	UpdateByUserID(userID *uuid.UUID, r io.Reader, isCustom bool) error
 }
 
+// gravatarRequest represents user metadata for fetching an avatar from Gravatar
+type gravatarRequest struct {
+	userID    *uuid.UUID
+	userEmail string
+}
+
 // avatarService is a blueprint AvatarService implementation
-type avatarService struct{}
+type avatarService struct {
+	gravatarProc   *gravatarProcessor
+	gravatarProcMU sync.Mutex
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 
@@ -67,15 +83,33 @@ func (svc *avatarService) DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL
 	return svc.UpdateByUserID(userID, lr, isCustom)
 }
 
-func (svc *avatarService) DownloadAndUpdateFromGravatar(user *data.User, isCustom bool) error {
-	logger.Debugf("avatarService.DownloadAndUpdateFromGravatar(%v, %v)", user, isCustom)
+func (svc *avatarService) SetFromGravatar(userID *uuid.UUID, userEmail string, isCustom bool) error {
+	logger.Debugf("avatarService.SetFromGravatar(%s, %q, %v)", userID, userEmail, isCustom)
 	return svc.DownloadAndUpdateByUserID(
-		&user.ID,
+		userID,
 		fmt.Sprintf(
 			"https://gravatar.com/avatar/%x?s=%d&d=404",
-			sha256.Sum256([]byte(user.Email)),
+			sha256.Sum256([]byte(userEmail)),
 			data.UserAvatarSizes[data.UserAvatarSizeL]),
 		isCustom)
+}
+
+func (svc *avatarService) SetFromGravatarAsync(userID *uuid.UUID, userEmail string, isCustom bool) {
+	util.GoTimeout(
+		util.AvatarFetchTimeout,
+		func() { _ = svc.SetFromGravatar(userID, userEmail, isCustom) })
+}
+
+func (svc *avatarService) QueueGravatarUpdate(userID *uuid.UUID, userEmail string) {
+	logger.Debugf("avatarService.QueueGravatarUpdate(%s, %q)", userID, userEmail)
+
+	// Instantiate a Gravatar processor, if none yet exists
+	svc.gravatarProcMU.Lock()
+	defer svc.gravatarProcMU.Unlock()
+	svc.gravatarProc = newGravatarProcessor()
+
+	// Enqueue the request
+	svc.gravatarProc.enqueue(&gravatarRequest{userID: userID, userEmail: userEmail})
 }
 
 func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, error) {
@@ -229,4 +263,64 @@ func (svc *avatarService) readImage(r io.Reader, ua *data.UserAvatar) error {
 
 	// Succeeded
 	return nil
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// newGravatarProcessor creates a new Gravatar processor instance
+func newGravatarProcessor() *gravatarProcessor {
+	p := &gravatarProcessor{
+		incoming: make(chan bool),
+	}
+	go p.run()
+	return p
+}
+
+// gravatarProcessor is a background Gravatar processor
+type gravatarProcessor struct {
+	mu       sync.Mutex
+	queue    list.List
+	incoming chan bool
+}
+
+// enqueue adds a request to the queue
+func (p *gravatarProcessor) enqueue(req *gravatarRequest) {
+	// Enqueue the request
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.queue.PushBack(req)
+
+	// Ping the gravatar fetcher, non-blocking
+	select {
+	case p.incoming <- true:
+	default:
+	}
+}
+
+// run continuously processes the queue
+func (p *gravatarProcessor) run() {
+	// Loop until there are no more requests
+	for {
+		// Fetch the first request
+		var req *gravatarRequest
+		p.mu.Lock()
+		if el := p.queue.Front(); el != nil {
+			req = p.queue.Remove(el).(*gravatarRequest)
+		} else {
+			// The queue is empty, clear the incoming flag, non-blocking
+			select {
+			case <-p.incoming:
+			default:
+			}
+		}
+		p.mu.Unlock()
+
+		// If there's anything to process, execute an avatar update
+		if req != nil {
+			_ = TheAvatarService.SetFromGravatar(req.userID, req.userEmail, false)
+		} else {
+			// The queue was empty, pause until we get an incoming request
+			<-p.incoming
+		}
+	}
 }

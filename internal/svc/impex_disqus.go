@@ -251,6 +251,7 @@ func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userIDMap
 			post.Author.Name,
 			"", // Website URL isn't available
 			"Imported from Disqus",
+			false, // The email is a fake one
 			curUserID,
 			domainID,
 			post.CreationDate,

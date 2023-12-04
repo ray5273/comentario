@@ -41,7 +41,7 @@ func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User
 
 func CurUserSetAvatarFromGravatar(_ api_general.CurUserSetAvatarFromGravatarParams, user *data.User) middleware.Responder {
 	// Download and update the user's avatar, marking it as customised
-	if err := svc.TheAvatarService.DownloadAndUpdateFromGravatar(user, true); err != nil {
+	if err := svc.TheAvatarService.SetFromGravatar(&user.ID, user.Email, true); err != nil {
 		return respServiceError(err)
 	}
 

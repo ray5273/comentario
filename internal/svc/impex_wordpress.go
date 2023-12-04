@@ -216,6 +216,7 @@ func wordpressMakeUserMap(curUserID, domainID *uuid.UUID, exp rssXML) (userMap m
 					comment.Author,
 					comment.AuthorURL,
 					"Imported from WordPress",
+					true,
 					curUserID,
 					domainID,
 					wordpressParseDate(comment.Date),

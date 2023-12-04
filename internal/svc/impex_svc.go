@@ -123,7 +123,7 @@ func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID]
 }
 
 // importUserByEmail adds the specified user/domain user, returning the user and whether user and domain user were added
-func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
+func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, realEmail bool, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
 	// Try to find an existing user with the same email
 	var user *data.User
 	if u, err := TheUserService.FindUserByEmail(email, false); err == nil {
@@ -154,6 +154,11 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 			WithRemarks(remarks)
 		if err := TheUserService.Create(user); err != nil {
 			return nil, false, false, err
+		}
+
+		// If the email is real and Gravatar is enabled, enqueue a fetching operation
+		if realEmail && TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+			TheAvatarService.QueueGravatarUpdate(&user.ID, user.Email)
 		}
 		userAdded = true
 	}
