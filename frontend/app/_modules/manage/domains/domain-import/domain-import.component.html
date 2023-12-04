@@ -84,10 +84,11 @@
                        id="import-file-select" type="file" class="form-control">
                 <!-- Invalid feedback -->
                 <div class="invalid-feedback">
-                    <ng-container i18n>Please select a file.</ng-container>
+                    <div *ngIf="form.controls.file.errors?.required" i18n>Please select a file.</div>
+                    <div *ngIf="form.controls.file.errors?.maxSize"  i18n>File size must not exceed 10 MB.</div>
                 </div>
                 <!-- Info -->
-                <div class="form-text" i18n>Comentario supports .zip and .gz archives, as well as uncompressed files, up to 10 MB in size.</div>
+                <div class="form-text" i18n>Comentario supports .zip and .gz archives, as well as uncompressed files.</div>
             </div>
         </div>
 

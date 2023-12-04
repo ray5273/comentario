@@ -1,4 +1,4 @@
-import { ValidatorFn, Validators } from '@angular/forms';
+import { AbstractControl, ValidatorFn, Validators } from '@angular/forms';
 
 /**
  * Additional custom validators.
@@ -10,6 +10,14 @@ export class XtraValidators {
      */
     static get host(): ValidatorFn {
         return Validators.pattern(/^([a-z\d]|[a-z\d][-a-z\d]{0,61}[a-z\d])(\.([a-z\d]|[a-z\d][-a-z\d]{0,61}[a-z\d]))*(:\d{1,5})?$/);
+    }
+
+    /**
+     * Return a validator for limiting the maximum (file) size.
+     * @param n Maximum size in bytes
+     */
+    static maxSize(n: number): ValidatorFn {
+        return (control: AbstractControl) => control.value?.size > n ? {maxSize: true} : null;
     }
 
     /**

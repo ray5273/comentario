@@ -81,6 +81,30 @@ describe('XtraValidators', () => {
                 () => expect(XtraValidators.host(new FormControl(t.in))).toEqual(t.ok ? null : jasmine.truthy())));
     });
 
+    describe('maxSize', () => {
+
+        [
+            // Good
+            {ok, max: 42, in: undefined},
+            {ok, max: 42, in: null},
+            {ok, max: 42, in: false},
+            {ok, max: 42, in: true},
+            {ok, max: 42, in: {}},
+            {ok, max: 42, in: 'x'},
+            {ok, max: 42, in: NaN},
+            {ok, max: 42, in: 0},
+            {ok, max: 42, in: 41},
+            {ok, max: 42, in: 42},
+
+            // Bad
+            {max: 42, in: 43},
+            {max: 42, in: 999999999},
+        ]
+            .forEach(t => it(
+                `given size ${t.in}, validates to ${t.ok ?? false}`,
+                () => expect(XtraValidators.maxSize(t.max)(new FormControl({size: t.in}))).toEqual(t.ok ? null : jasmine.truthy())));
+    });
+
     describe('url', () => {
 
         [

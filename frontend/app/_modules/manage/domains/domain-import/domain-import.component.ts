@@ -7,6 +7,7 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Animations } from '../../../../_utils/animations';
 import { Paths } from '../../../../_utils/consts';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { XtraValidators } from '../../../../_utils/xtra-validators';
 
 @UntilDestroy()
 @Component({
@@ -27,7 +28,7 @@ export class DomainImportComponent implements OnInit {
     readonly importing = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
         source: ['comentario' as 'comentario' | 'disqus' | 'wordpress', [Validators.required]],
-        file:   [undefined as any, [Validators.required]],
+        file:   [undefined as any, [Validators.required, XtraValidators.maxSize(10 * 1024 * 1024)]],
     });
 
     // Icons
