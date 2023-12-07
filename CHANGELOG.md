@@ -1,5 +1,26 @@
 # Comentario changelog
 
+## v3.1.0
+
+This release brings Gravatar avatars support, import from WordPress, Markdown improvements, and better control over deleted comments.
+
+### Changes
+
+* Show user avatar in User details, when present - eec2120
+* Implement WordPress import (#29) - 390dd9a, e5041fe, a513919, a4471ae, fc9718a
+* Add support for Gravatar (#33, #35, #36) - 5ffebde, 7fb2ca6, 44456e2, 60b09ae, 11e2cc7, fe31420
+* Enforce strong passwords - 059f864
+* Add comment deletion and purging options in Profile, Ban user, and Delete user dialogs (#27) - 1c7e168
+* Documentation improvements - bb9cc18
+* Fix comment image sizing (the image shouldn't be wider than the comment item) - 3656e8b, c54a90e
+* Markdown: support hard line breaks (#38); switch to goldmark for Markdown parsing markdown; initial support for tables (#37) - 0fe6642
+* Domain operations: add `Purge comments` operation - 7dcc69c, 7e8d083
+* Add dynamic config parameter: `domain.defaults.comments.showDeleted` (#30) - 98ed3dc
+* Stats: exclude deleted comments from totals and charts - a7e7d91
+* Domain properties: add visual attribute editor - e2124b7
+* Add support for max. nesting level setting (#32) - 1fe0a75, e614844
+* Merge docs into this repository - 591429b
+
 ## v3.0.0
 
 This release introduces an almost complete end-2-end test coverage of the available functionality, which resulted in numerous fixes in the process.
