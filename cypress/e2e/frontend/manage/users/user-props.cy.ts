@@ -5,11 +5,14 @@ context('User Properties page', () => {
     const pagePathKing = PATHS.manage.users.id(USERS.king.id).props;
     const pagePathAce  = PATHS.manage.users.id(USERS.ace.id).props;
 
-    const makeAliases = (canEdit: boolean, canBan: boolean, canDelete: boolean, isBanned: boolean) => {
+    const makeAliases = (canEdit: boolean, canBan: boolean, canDelete: boolean, isBanned: boolean, hasAvatar: boolean) => {
         cy.get('app-user-properties').as('userProps');
 
         // Check heading
         cy.get('@userProps').find('h1').should('have.text', 'User properties').and('be.visible');
+
+        // Avatar
+        cy.get('@userProps').find('app-user-avatar').should( hasAvatar ? 'be.visible' : 'not.exist');
 
         // User details
         cy.get('@userProps').find('#user-details .detail-table').as('userDetails').should('be.visible');
@@ -50,7 +53,7 @@ context('User Properties page', () => {
 
         it('of Anonymous user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.anonymous.id).props);
-            makeAliases(false, false, false, false);
+            makeAliases(false, false, false, false, false);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -65,7 +68,7 @@ context('User Properties page', () => {
 
         it('of self-user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.root.id).props);
-            makeAliases(true, false, false, false);
+            makeAliases(true, false, false, false, false);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -89,7 +92,7 @@ context('User Properties page', () => {
 
         it('of other user', () => {
             cy.loginViaApi(USERS.root, pagePathKing);
-            makeAliases(true, true, true, false);
+            makeAliases(true, true, true, false, false);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -120,7 +123,7 @@ context('User Properties page', () => {
 
         it('of banned user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.banned.id).props);
-            makeAliases(true, true, true, true);
+            makeAliases(true, true, true, true, false);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -139,7 +142,7 @@ context('User Properties page', () => {
 
         const delUser = (delComments: boolean, purge: boolean, expectNumDeleted?: number) => {
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, false);
+            makeAliases(true, true, true, false, true);
 
             // Click on Delete user
             cy.get('@btnDelete').click();
@@ -295,7 +298,7 @@ context('User Properties page', () => {
 
         const banUser = (delComments: boolean, purge: boolean, expectNumDeleted?: number) => {
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, false);
+            makeAliases(true, true, true, false, true);
 
             // Click on Ban user
             cy.get('@btnBan').click();
@@ -383,7 +386,7 @@ context('User Properties page', () => {
 
             // Relogin as root and unban the user
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, true);
+            makeAliases(true, true, true, true, true);
             cy.get('@btnBan').click();
             cy.confirmationDialog('Are you sure you want to unban this user?').dlgButtonClick('Proceed');
 

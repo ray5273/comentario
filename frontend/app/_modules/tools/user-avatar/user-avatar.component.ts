@@ -9,7 +9,7 @@ import { Commenter, Configuration, Principal, User } from '../../../../generated
 })
 export class UserAvatarComponent implements OnChanges, OnDestroy {
 
-    /** Avatar size. */
+    /** Avatar size. Defaults to 'S'. */
     @Input()
     size: 'S' | 'M' | 'L' = 'S';
 

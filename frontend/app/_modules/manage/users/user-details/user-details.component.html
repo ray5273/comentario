@@ -1,3 +1,9 @@
+<!-- User avatar, only when there's one -->
+<div *ngIf="user?.hasAvatar">
+    <app-user-avatar [user]="user" size="L"></app-user-avatar>
+</div>
+
+<!-- User details -->
 <dl *ngIf="user" class="detail-table">
     <!-- ID -->
     <div>
