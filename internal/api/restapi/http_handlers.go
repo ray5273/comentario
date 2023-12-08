@@ -306,10 +306,10 @@ func xsrfProtectHandler(next http.Handler) http.Handler {
 // xsrfCookieHandler returns a middleware that adds an XSRF cookie to the response
 func xsrfCookieHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the authentication
-		// status (= principal object) is requested
+		// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the config is
+		// requested
 		_, err := r.Cookie(util.CookieNameXSRFSession)
-		if err != nil || r.URL.Path == "/"+util.APIPath+"user" {
+		if err != nil || r.URL.Path == "/"+util.APIPath+"config" {
 			http.SetCookie(w, &http.Cookie{
 				Name:     util.CookieNameXSRFToken,
 				Value:    csrf.Token(r),
