@@ -291,9 +291,9 @@ release:
       done
 
     # Extract the release text from CHANGELOG.md
-    - awk "/^##\s*$VERSION/{flag=1; next} /^##/{flag=0} flag" CHANGELOG.md > release-text
+    - awk "/^##\s+$VERSION/{flag=1; next} /^##\s+/{flag=0} flag" CHANGELOG.md > release-text
     - |
-      if [ ! -s release-text ]; then
+      if [[ ! -s release-text ]]; then
         echo "Failed to extract release text for $VERSION from CHANGELOG.md"
         exit 1
       fi
