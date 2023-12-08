@@ -59,6 +59,7 @@ const (
 	ConfigKeyDomainDefaultsUseGravatar         DynInstanceConfigItemKey = "domain.defaults.useGravatar"
 	ConfigKeyMarkdownImagesEnabled             DynInstanceConfigItemKey = "markdown.images.enabled"
 	ConfigKeyMarkdownLinksEnabled              DynInstanceConfigItemKey = "markdown.links.enabled"
+	ConfigKeyMarkdownTablesEnabled             DynInstanceConfigItemKey = "markdown.tables.enabled"
 	ConfigKeyOperationNewOwnerEnabled          DynInstanceConfigItemKey = "operation.newOwner.enabled"
 )
 
@@ -71,5 +72,6 @@ var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigIt
 	ConfigKeyDomainDefaultsUseGravatar:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Use Gravatar for user avatars"},
 	ConfigKeyMarkdownImagesEnabled:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},
 	ConfigKeyMarkdownLinksEnabled:              {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable links in comments"},
+	ConfigKeyMarkdownTablesEnabled:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable tables in comments"},
 	ConfigKeyOperationNewOwnerEnabled:          {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
 }

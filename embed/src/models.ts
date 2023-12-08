@@ -58,6 +58,7 @@ export enum InstanceDynamicConfigKey {
     domainDefaultsUseGravatar         = 'domain.defaults.useGravatar',
     markdownImagesEnabled             = 'markdown.images.enabled',
     markdownLinksEnabled              = 'markdown.links.enabled',
+    markdownTablesEnabled             = 'markdown.tables.enabled',
     operationNewOwnerEnabled          = 'operation.newOwner.enabled',
 }
 

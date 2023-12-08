@@ -1,16 +1,30 @@
 # Comentario
 
-[Homepage](https://comentario.app/) · [Demo](https://demo.comentario.app) · [Docs](https://docs.comentario.app/) · [Author's Blog](https://yktoo.com/)
+[Homepage](https://comentario.app/) · [Live Demo](https://demo.comentario.app) · [Docs](https://docs.comentario.app/) · [Author's Blog](https://yktoo.com/)
 
 ---
 
 **[Comentario](https://comentario.app)** is a platform that you can embed in your website to allow your readers to add comments. It's lightweight and fast.
 
-Comentario supports Markdown syntax, import from Disqus, comment voting, automated spam and toxicity detection, moderation tools, sticky comments, thread locking, OAuth login, email notifications, user roles, single sign-on, and more.
+Available features:
 
-**Comentario** 2.x was a fork of [Commento](https://gitlab.com/commento/commento) by Adhityaa Chandrasekar, now discontinued.
-
-As of **Comentario 3**, the whole codebase and the data model have been rewritten, so any resemblance to Commento is mostly cosmetic.
+* **Privacy by design**: no tracking scripts, ads etc.
+* Multiple **login options**:
+    * Local auth (with email and password)
+    * Social: via Google, Twitter/X, Facebook, GitHub, GitLab
+    * Single Sign-On (including non-interactive)
+    * Anonymous comments
+* Comment **replies** and nested comments
+* **Markdown formatting**, supporting links, images, tables etc.
+* **Sticky** comments
+* Comment **editing** and **deletion**
+* **Voting** on a comment
+* Custom **user avatars**: uploaded or from Gravatar
+* **Email notifications** about replies or comments pending moderation
+* **Multiple domains** in a single Administration UI
+* Flexible **moderation** settings
+* External comment **content checkers** (extensions)
+* View and comment **statistics**, per-domain and overall
 
 ## FAQ
 

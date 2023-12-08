@@ -170,9 +170,28 @@ dl.detail-table, dl.detail-table > div {
     p:last-child {
         margin-bottom: 0 !important;
     }
+
     // Do not allow Markdown-inserted images to be wider than the card
     img {
         max-width: 100%;
+    }
+
+    // Properly style inserted tables
+    table {
+        margin-bottom: 1rem;
+        vertical-align: top;
+        border-color: #{$table-border-color};
+        caption-side: bottom;
+        border-collapse: collapse;
+
+        tbody > tr:nth-of-type(odd) > * {
+            background-color: rgba($black, .05);
+        }
+
+        td, th {
+            padding: 0.35rem 0.5rem;
+            border: 1px solid #{$table-border-color};
+        }
     }
 }
 
@@ -367,7 +386,7 @@ dl.detail-table, dl.detail-table > div {
 .card {
     // Add a drop-shadow to cards
     box-shadow: $btn-box-shadow;
-    // Colorise card title
+    // Colourise card title
     --bs-card-title-color: #{$info};
 }
 

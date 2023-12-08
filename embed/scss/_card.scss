@@ -124,6 +124,24 @@
         img {
             max-width: 100%;
         }
+
+        // Properly style inserted tables
+        table {
+            margin-bottom: 12px;
+            vertical-align: top;
+            border-color: $gray-3;
+            caption-side: bottom;
+            border-collapse: collapse;
+
+            tbody > tr:nth-of-type(odd) > * {
+                background-color: rgba($black, .05);
+            }
+
+            td, th {
+                padding: 6px 9px;
+                border: 1px solid $gray-3;
+            }
+        }
     }
 
     .comentario-moderation-notice {

@@ -101,6 +101,7 @@ context('Config Manager', () => {
                 ['Use Gravatar for user avatars',           ''],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                '✔'],
+                ['Enable tables in comments',               '✔'],
                 ['Non-owner users can add domains',         ''],
             ]);
 
@@ -122,6 +123,7 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#domain_defaults_useGravatar')         .should('not.be.checked').clickLabel().should('be.checked');
             cy.get('@configEdit').find('#markdown_images_enabled')             .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#markdown_links_enabled')              .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#markdown_tables_enabled')             .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#operation_newOwner_enabled')          .should('not.be.checked').clickLabel().should('be.checked');
 
             // Submit and get a success toast
@@ -138,6 +140,7 @@ context('Config Manager', () => {
                 ['Use Gravatar for user avatars',           '✔'],
                 ['Enable images in comments',               ''],
                 ['Enable links in comments',                ''],
+                ['Enable tables in comments',               ''],
                 ['Non-owner users can add domains',         '✔'],
             ]);
 
@@ -153,6 +156,7 @@ context('Config Manager', () => {
                 ['Use Gravatar for user avatars',           '✔'],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                '✔'],
+                ['Enable tables in comments',               '✔'],
                 ['Non-owner users can add domains',         ''],
             ]);
 
@@ -164,6 +168,7 @@ context('Config Manager', () => {
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsUseGravatar,         false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled,             true);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled,              false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled,             false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.operationNewOwnerEnabled,          true);
             cy.reload();
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
@@ -174,6 +179,7 @@ context('Config Manager', () => {
                 ['Use Gravatar for user avatars',           ''],
                 ['Enable images in comments',               '✔'],
                 ['Enable links in comments',                ''],
+                ['Enable tables in comments',               ''],
                 ['Non-owner users can add domains',         '✔'],
             ]);
         });

@@ -167,7 +167,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 					HTML: util.MarkdownToHTML(comment.Content,
 						TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
 						TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-						false),
+						TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled)),
 				}
 
 				// File it under the appropriate parent ID

@@ -282,7 +282,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 				comment.Markdown,
 				TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
 				TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-				false)
+				TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled))
 		}
 
 		// File it under the appropriate parent ID
