@@ -10,6 +10,9 @@ type End2EndApp interface {
 	// SetMailer sets the global Mailer instance to be used by the app
 	SetMailer(mailer util.Mailer)
 
+	// XSRFSafePaths returns a path registry for the paths excluded from XSRF protection
+	XSRFSafePaths() util.PathRegistry
+
 	// LogInfo outputs a record of level info to the log
 	LogInfo(fmt string, args ...any)
 	// LogWarning outputs a record of level warning to the log

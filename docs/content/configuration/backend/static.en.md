@@ -56,6 +56,7 @@ Below is a list of available command-line options, with their environment equiva
 | `--cdn-url=VALUE`           | Static file CDN URL                                                   | `$CDN_URL`           | The base URL                  |
 | `--email-from=VALUE`        | 'From' address in sent emails                                         | `$EMAIL_FROM`        | `noreply@localhost`           |
 | `--db-idle-conns=VALUE`     | Max. number of idle DB connections                                    | `$DB_MAX_IDLE_CONNS` | `50`                          |
+| `--disable-xsrf`            | Disable XSRF protection (for development purposes only)               |                      |                               |
 | `--enable-swagger-ui`       | Enable Swagger UI at `/api/docs`                                      |                      |                               |
 | `--static-path=VALUE`       | Path to static files                                                  | `$STATIC_PATH`       | `.`                           |
 | `--db-migration-path=VALUE` | Path to DB migration files                                            | `$DB_MIGRATION_PATH` | `.`                           |

@@ -18,6 +18,51 @@ func mustHexDecode(s string) []byte {
 	}
 }
 
+func Test_pathRegistry_Add(t *testing.T) {
+	tests := []struct {
+		name    string
+		initial []string
+		path    []string
+		want    []string
+	}{
+		{"add one     ", nil, []string{"foo"}, []string{"foo"}},
+		{"add multiple", nil, []string{"bar", "baz", "foo"}, []string{"bar", "baz", "foo"}},
+		{"append      ", []string{"bar", "foo"}, []string{"baz", "foo"}, []string{"bar", "foo", "baz", "foo"}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &pathRegistry{r: tt.initial}
+			p.Add(tt.path...)
+			if !reflect.DeepEqual(p.r, tt.want) {
+				t.Errorf("pathRegistry.Add() got r = %v, want %v", p.r, tt.want)
+			}
+		})
+	}
+}
+
+func Test_pathRegistry_Has(t *testing.T) {
+	tests := []struct {
+		name    string
+		initial []string
+		path    string
+		want    bool
+	}{
+		{"none + empty", nil, "", false},
+		{"none + non-empty", nil, "/foo", false},
+		{"no match", []string{"/bar/path", "/baz/path"}, "/foo", false},
+		{"exact match", []string{"/bar/path", "/foo", "/baz/path"}, "/foo", true},
+		{"prefix match", []string{"/bar/path", "/foo", "/baz/path"}, "/baz/path/subpath?q=123", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			p := &pathRegistry{r: tt.initial}
+			if got := p.Has(tt.path); got != tt.want {
+				t.Errorf("pathRegistry.Has() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestCompressGzip(t *testing.T) {
 	tests := []struct {
 		name    string

@@ -50,6 +50,10 @@ func (a *e2eApp) RecreateDBSchema(seedSQL string) error {
 	return svc.TheServiceManager.E2eRecreateDBSchema(seedSQL)
 }
 
+func (a *e2eApp) XSRFSafePaths() util.PathRegistry {
+	return util.XSRFSafePaths
+}
+
 // E2eConfigure configures the app to run in the end-2-end testing mode
 func E2eConfigure(api *operations.ComentarioAPI) error {
 	// Get the plugin path

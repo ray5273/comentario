@@ -19,17 +19,31 @@ const (
 	ResultPageSize = 25 // Max number of database rows to return
 
 	MaxNumberStatsDays = 30 // Max number of days to get statistics for
+)
 
-	CookieNameUserSession    = "comentario_user_session"  // Cookie name to store the session of the authenticated user
-	UserSessionDuration      = 28 * OneDay                // How long a user session stays valid
-	CookieNameAuthSession    = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
-	AuthSessionDuration      = 15 * time.Minute           // How long auth session stays valid
-	LangCookieDuration       = 365 * OneDay               // How long the language cookie stays valid
-	HeaderUserSession        = "X-User-Session"           // Name of the header that contains the session of the authenticated user
-	UserConfirmEmailDuration = 3 * OneDay                 // How long the token in the confirmation email stays valid
-	UserPwdResetDuration     = 12 * time.Hour             // How long the token in the password-reset email stays valid
-	PageViewRetentionPeriod  = 45 * OneDay                // How long a page view stats record is retained
-	AvatarFetchTimeout       = 5 * time.Second            // Timeout for fetching external avatars
+// Cookie names
+const (
+	CookieNameUserSession = "comentario_user_session"  // Cookie name to store the session of the authenticated user
+	CookieNameAuthSession = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
+	CookieNameXSRFSession = "_xsrf_session"            // Cookie name where Gorilla CSRF must store its session
+	CookieNameXSRFToken   = "XSRF-TOKEN"               // Cookie name to store XSRF token #nosec G101
+)
+
+// Header names
+const (
+	HeaderUserSession = "X-User-Session" // Name of the header that contains the session of the authenticated user
+	HeaderXSRFToken   = "X-XSRF-Token"   // Header name that the request should provide the XSRF token in #nosec G101
+)
+
+// Durations
+const (
+	UserSessionDuration      = 28 * OneDay      // How long a user session stays valid
+	AuthSessionDuration      = 15 * time.Minute // How long auth session stays valid
+	LangCookieDuration       = 365 * OneDay     // How long the language cookie stays valid
+	UserConfirmEmailDuration = 3 * OneDay       // How long the token in the confirmation email stays valid
+	UserPwdResetDuration     = 12 * time.Hour   // How long the token in the password-reset email stays valid
+	PageViewRetentionPeriod  = 45 * OneDay      // How long a page view stats record is retained
+	AvatarFetchTimeout       = 5 * time.Second  // Timeout for fetching external avatars
 )
 
 var (
@@ -53,4 +67,14 @@ var (
 		"comentario.js":  true,
 		"comentario.css": true,
 	}
+
+	// XSRFSafePaths stores a list of path prefixes that should be excluded from XSRF protection
+	XSRFSafePaths = &pathRegistry{}
 )
+
+func init() {
+	XSRFSafePaths.Add(
+		"/api/embed/",           // To be removed in https://gitlab.com/comentario/comentario/-/issues/42
+		"/api/auth/login/token", // Mwah, eliminate this
+	)
+}

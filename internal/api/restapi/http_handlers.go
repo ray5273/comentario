@@ -3,8 +3,12 @@ package restapi
 import (
 	"fmt"
 	"github.com/go-openapi/errors"
+	"github.com/go-openapi/runtime"
+	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
 	"github.com/justinas/alice"
+	rh "gitlab.com/comentario/comentario/internal/api/restapi/handlers"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -44,7 +48,9 @@ func (w *notFoundBypassWriter) Write(p []byte) (int, error) {
 // corsHandler returns a middleware that adds CORS headers to responses
 func corsHandler(next http.Handler) http.Handler {
 	return handlers.CORS(
-		handlers.AllowedHeaders([]string{"Authorization", "Content-Type", "X-Requested-With", util.HeaderUserSession}),
+		handlers.AllowedHeaders([]string{
+			"Accept", "Accept-Encoding", "Accept-Language", "Authorization", "Content-Type", "Content-Length",
+			"X-Requested-With", util.HeaderUserSession, util.HeaderXSRFToken}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 	)(next)
 }
@@ -128,6 +134,21 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 		}
 
 		// Otherwise, hand over to the next handler
+		next.ServeHTTP(w, r)
+	})
+}
+
+// securityHeadersHandler returns a middleware that adds security-related headers to the response
+func securityHeadersHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Add the headers
+		h := w.Header()
+		h.Set("Strict-Transport-Security", "max-age=31536000")
+		h.Set("X-Frame-Options", "SAMEORIGIN")
+		h.Set("X-Content-Type-Options", "nosniff")
+		h.Set("Referrer-Policy", "origin")
+
+		// Hand over to the next handler
 		next.ServeHTTP(w, r)
 	})
 }
@@ -242,6 +263,64 @@ func staticHandler(next http.Handler) http.Handler {
 		}
 
 		// Pass on to the next handler otherwise
+		next.ServeHTTP(w, r)
+	})
+}
+
+// xsrfErrorHandler handles XSRF related errors
+func xsrfErrorHandler(w http.ResponseWriter, r *http.Request) {
+	// Respond with 403, with an XSRF error as a payload
+	w.Header().Set("Content-type", "application/json")
+	api_general.NewGenericForbidden().
+		WithPayload(rh.ErrorXSRFTokenInvalid.WithDetails(csrf.FailureReason(r).Error())).
+		WriteResponse(w, runtime.JSONProducer())
+}
+
+// xsrfProtectHandler returns a middleware that protects the application against XSRF attacks
+func xsrfProtectHandler(next http.Handler) http.Handler {
+	// Instantiate a CSRF handler (chained to the "next")
+	handler := csrf.Protect(
+		config.XSRFKey,
+		csrf.ErrorHandler(http.HandlerFunc(xsrfErrorHandler)),
+		// Since the presence of this cookie also controls the appearance of the "XSRF-TOKEN" cookie, they must share
+		// the same path
+		csrf.Path("/"),
+		csrf.Secure(config.UseHTTPS),
+		csrf.HttpOnly(true),
+		csrf.CookieName(util.CookieNameXSRFSession),
+		csrf.RequestHeader(util.HeaderXSRFToken))(next)
+
+	// Make a new handler that either calls XSRF of passes control on directly to "next"
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Bypass the XSRF handler if it's a known "safe" path
+		if util.XSRFSafePaths.Has(r.URL.Path) {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		// Protect any "unsafe" path
+		handler.ServeHTTP(w, r)
+	})
+}
+
+// xsrfCookieHandler returns a middleware that adds an XSRF cookie to the response
+func xsrfCookieHandler(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the authentication
+		// status (= principal object) is requested
+		_, err := r.Cookie(util.CookieNameXSRFSession)
+		if err != nil || r.URL.Path == "/"+util.APIPath+"user" {
+			http.SetCookie(w, &http.Cookie{
+				Name:     util.CookieNameXSRFToken,
+				Value:    csrf.Token(r),
+				Path:     "/",
+				MaxAge:   int(util.UserSessionDuration.Seconds()),
+				Secure:   config.UseHTTPS,
+				HttpOnly: false,
+			})
+		}
+
+		// Pass on to the next handler
 		next.ServeHTTP(w, r)
 	})
 }

@@ -31,6 +31,7 @@ var (
 		CDNURL          string `long:"cdn-url"           description:"Static file CDN URL (defaults to base URL)" default:""                            env:"CDN_URL"`
 		EmailFrom       string `long:"email-from"        description:"'From' address in sent emails, defaults to SMTP username"                         env:"EMAIL_FROM"`
 		DBIdleConns     int    `long:"db-idle-conns"     description:"Max. # of idle DB connections"              default:"50"                          env:"DB_MAX_IDLE_CONNS"`
+		DisableXSRF     bool   `long:"disable-xsrf"      description:"Disable XSRF protection (development purposes only)"`
 		EnableSwaggerUI bool   `long:"enable-swagger-ui" description:"Enable Swagger UI at /api/docs"`
 		StaticPath      string `long:"static-path"       description:"Path to static files"                       default:"./frontend"                  env:"STATIC_PATH"`
 		DBMigrationPath string `long:"db-migration-path" description:"Path to DB migration files"                 default:"./db"                        env:"DB_MIGRATION_PATH"`
@@ -49,6 +50,7 @@ var (
 	BaseURL  *url.URL // The parsed base URL
 	CDNURL   *url.URL // The parsed CDN URL
 	UseHTTPS bool     // Whether the base URL is an HTTPS one
+	XSRFKey  []byte   // The XSRF key for the server
 )
 
 // CLIParsed is a callback that signals the config the CLI flags have been parsed
@@ -79,6 +81,11 @@ func CLIParsed() error {
 
 	// Load secrets
 	if err := UnmarshalConfigFile(CLIFlags.SecretsFile, SecretsConfig); err != nil {
+		return err
+	}
+
+	// Generate a random XSRF key
+	if XSRFKey, err = util.RandomBytes(32); err != nil {
 		return err
 	}
 

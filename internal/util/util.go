@@ -50,6 +50,15 @@ type Mailer interface {
 	Mail(replyTo, recipient, subject, htmlMessage string, embedFiles ...string) error
 }
 
+// PathRegistry represents a list of paths. Each path entry assumes anything below it (i.e. starting with it) matches,
+// too
+type PathRegistry interface {
+	// Add adds paths to the list
+	Add(path ...string)
+	// Has returns true if the given path, or its starting path, is in the list
+	Has(path string) bool
+}
+
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("persistence")
 
@@ -103,6 +112,26 @@ func (m *noOpMailer) Operational() bool {
 func (m *noOpMailer) Mail(_, recipient, subject, _ string, _ ...string) error {
 	logger.Debugf("NoOpMailer: not sending email to '%s' (subject: '%s')", recipient, subject)
 	return nil
+}
+
+// ----------------------------------------------------------------------------------------------------------------------
+
+// pathRegistry is a PathRegistry implementation
+type pathRegistry struct {
+	r []string
+}
+
+func (p *pathRegistry) Add(path ...string) {
+	p.r = append(p.r, path...)
+}
+
+func (p *pathRegistry) Has(path string) bool {
+	for _, s := range p.r {
+		if strings.HasPrefix(path, s) {
+			return true
+		}
+	}
+	return false
 }
 
 // ----------------------------------------------------------------------------------------------------------------------

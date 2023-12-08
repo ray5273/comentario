@@ -173,6 +173,19 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	chain := alice.New(
 		redirectToLangRootHandler,
 		corsHandler,
+	)
+
+	// If XSRF protection isn't disabled, add an XSRF handler
+	if config.CLIFlags.DisableXSRF {
+		logger.Warning("XSRF protection is disabled")
+	} else {
+		chain = chain.Append(xsrfProtectHandler, xsrfCookieHandler)
+	}
+
+	// Add the security headers, the static handler (after the XSRF one, since with the UI also a corresponding cookie
+	// must be delivered), and the API handler
+	chain = chain.Append(
+		securityHeadersHandler,
 		staticHandler,
 		makeAPIHandler(api.Serve(nil)),
 	)

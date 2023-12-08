@@ -31,6 +31,14 @@ func (h *handler) HandleReset() error {
 func (h *handler) Init(app e2e.End2EndApp) error {
 	h.app = app
 
+	// Lift XSRF protection on management and login endpoints
+	h.app.XSRFSafePaths().Add(
+		"/api/e2e/",
+		"/api/auth/login",
+		"/api/embed/auth/login",
+	)
+
+	// Reset the plugin
 	if err := h.reset(); err != nil {
 		return err
 	}

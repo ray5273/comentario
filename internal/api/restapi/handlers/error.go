@@ -40,4 +40,5 @@ var (
 	ErrorUserBanned            = &exmodels.Error{ID: "user-banned", Message: "User is banned"}
 	ErrorUserReadonly          = &exmodels.Error{ID: "user-readonly", Message: "This user is read-only on this domain"}
 	ErrorWrongCurPassword      = &exmodels.Error{ID: "wrong-cur-password", Message: "Wrong current password"}
+	ErrorXSRFTokenInvalid      = &exmodels.Error{ID: "xsrf-token-invalid", Message: "XSRF token is missing or invalid"}
 )
