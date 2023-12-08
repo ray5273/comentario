@@ -21,23 +21,24 @@ Comentario's embedded comment engine allows to render a [comment thread (tree)](
 
 {{< imgfig "/img/comentario-embed-ui-elements.png" "Example of comment tree on a web page." "border shadow p-4" >}}
 
-There's a variety of login options available for commenters; there's also an option to write a comment anonymously, should the site owner enable it for this specific domain.
+* There's a variety of login options available for commenters; there's also an [option](/configuration/frontend/domain/authentication) to write a comment anonymously, should the site owner enable it for this specific domain.
+* Users can upload their own avatars, or opt to use [images from Gravatar](/configuration/backend/dynamic/domain.defaults.usegravatar).
 
 ## Administration UI
 
 The Administration UI is an extensive web application that allows users to perform all kinds of administrative tasks, moderate comments, view statistics, etc.
 
-There's also the Profile section, where users can edit their profile, change their password, or upload a custom avatar. It also allows users to [delete their account](/legal/account-removal).
+There's also the Profile section, where users can edit their profile, change their password, upload a custom avatar (or use a Gravatar). It also allows users to [delete their account](/legal/account-removal).
 
 The functionality available in the Administration UI depends on [user roles](/kb/permissions) and includes:
 
 * Managing domain settings:
-    * Authentication (anonymous comment, social login, SSO)
-    * Moderation (which comments are to be queued for moderation)
-    * Configuration (extensions for spam and toxicity detection)
+    * [Authentication](/configuration/frontend/domain/authentication) (anonymous comment, social login, [SSO](/configuration/frontend/domain/authentication/sso))
+    * [Moderation](/configuration/frontend/domain/moderation) (which comments are to be queued for moderation)
+    * [Extensions](/configuration/frontend/domain/extensions) capable of spam and toxicity detection
     * Domain user management
-    * Other properties (freeze or clean comments, etc.)
-* Import from Commento and Disqus
+* Import from [Commento](/installation/migration/commento), [Disqus](/installation/migration/disqus), [WordPress](/installation/migration/wordpress)
 * Comment moderation
 * Email notifications
 * View and comment statistics
+* Various domain operations (data export, comment removal, freezing, etc)

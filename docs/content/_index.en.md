@@ -42,7 +42,7 @@ Assign multiple moderators to manage comments.
 {{< /card >}}
 
 {{< card title="Easily migrate" image="/img/home/cd-migrate.jpg" >}}
-[Transfer comments](/installation/migration/) from another platform, such as Disqus or Commento, to Comentario.
+[Transfer comments](/installation/migration/) and the related users from another platform — Disqus, WordPress, Commento — to Comentario.
 {{< /card >}}
 
 </div>
