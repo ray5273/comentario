@@ -26,6 +26,7 @@ tags:
 * Flexible **moderation** settings
 * External comment **content checkers** (extensions)
 * View and comment **statistics**, per-domain and overall
+* Import from Disqus, WordPress, Commento.
 
 Let's now look into the available features in more detail.
 
@@ -59,7 +60,7 @@ The functionality available in the Administration UI depends on [user roles](/kb
     * [Moderation](/configuration/frontend/domain/moderation) (which comments are to be queued for moderation)
     * [Extensions](/configuration/frontend/domain/extensions) capable of spam and toxicity detection
     * Domain user management
-* Import from [Commento](/installation/migration/commento), [Disqus](/installation/migration/disqus), [WordPress](/installation/migration/wordpress)
+* Import from [Disqus](/installation/migration/disqus), [WordPress](/installation/migration/wordpress), [Commento](/installation/migration/commento)
 * Comment moderation
 * Email notifications
 * View and comment statistics

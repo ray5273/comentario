@@ -25,6 +25,7 @@ Available features:
 * Flexible **moderation** settings
 * External comment **content checkers** (extensions)
 * View and comment **statistics**, per-domain and overall
+* Import from Disqus, WordPress, Commento.
 
 ## FAQ
 
