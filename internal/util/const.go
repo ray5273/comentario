@@ -32,7 +32,7 @@ const (
 // Header names
 const (
 	HeaderUserSession = "X-User-Session" // Name of the header that contains the session of the authenticated user
-	HeaderXSRFToken   = "X-XSRF-Token"   // Header name that the request should provide the XSRF token in #nosec G101
+	HeaderXSRFToken   = "X-Xsrf-Token"   // Header name that the request should provide the XSRF token in #nosec G101
 )
 
 // Durations
@@ -71,10 +71,3 @@ var (
 	// XSRFSafePaths stores a list of path prefixes that should be excluded from XSRF protection
 	XSRFSafePaths = &pathRegistry{}
 )
-
-func init() {
-	XSRFSafePaths.Add(
-		"/api/embed/",           // To be removed in https://gitlab.com/comentario/comentario/-/issues/42
-		"/api/auth/login/token", // Mwah, eliminate this
-	)
-}

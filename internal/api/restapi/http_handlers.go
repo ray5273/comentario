@@ -48,9 +48,15 @@ func (w *notFoundBypassWriter) Write(p []byte) (int, error) {
 // corsHandler returns a middleware that adds CORS headers to responses
 func corsHandler(next http.Handler) http.Handler {
 	return handlers.CORS(
+		// Add a dummy origin validator, which will cause the Access-Control-Allow-Origin header to be the return
+		// origin. This is necessary because otherwise XMLHttpRequest having withCredentials == true (which is the case
+		// for the embed API client) won't work
+		handlers.AllowedOriginValidator(func(string) bool { return true }),
+		// This is also required to allow XHR with credentials
+		handlers.AllowCredentials(),
 		handlers.AllowedHeaders([]string{
-			"Accept", "Accept-Encoding", "Accept-Language", "Authorization", "Content-Type", "Content-Length",
-			"X-Requested-With", util.HeaderUserSession, util.HeaderXSRFToken}),
+			"Accept-Encoding", "Authorization", "Content-Type", "Content-Length", "X-Requested-With",
+			util.HeaderUserSession, util.HeaderXSRFToken}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 	)(next)
 }

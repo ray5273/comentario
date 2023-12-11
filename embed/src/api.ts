@@ -1,14 +1,6 @@
-import {
-    Comment,
-    Commenter,
-    InstanceConfig,
-    InstanceDynamicConfigItem, InstanceDynamicConfigKey,
-    InstanceStaticConfig,
-    PageInfo,
-    Principal,
-    UUID,
-} from './models';
+import { Comment, Commenter, InstanceConfig, InstanceDynamicConfigItem, InstanceDynamicConfigKey, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
 import { HttpClient } from './http-client';
+import { Utils } from './utils';
 
 export interface ApiErrorResponse {
     readonly id?:      string;
@@ -67,6 +59,9 @@ export class ApiService {
     /** Base64-encoded representation of a 32-byte zero-filled array (2 zero UUIDs). */
     static readonly AnonymousUserSessionToken = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 
+    /** Session token cookie name. */
+    static readonly SessionTokenCookieName = 'comentario_auth_token';
+
     /** User/session token to authenticate requests with. */
     private userSessionToken?: string;
 
@@ -78,7 +73,6 @@ export class ApiService {
 
     constructor(
         readonly basePath: string,
-        private readonly doc: Document,
         private readonly onBeforeRequest?: () => void,
         private readonly onError?: (error: any) => void,
     ) {}
@@ -138,7 +132,7 @@ export class ApiService {
 
         // If there's no session token, try to restore it from the cookie
         if (this.userSessionToken === undefined) {
-            this.userSessionToken = this.restoreSessionToken();
+            this.userSessionToken = Utils.getCookie(ApiService.SessionTokenCookieName);
         }
 
         // If only an anonymous session is available, resolve to undefined
@@ -274,34 +268,21 @@ export class ApiService {
      */
     private setUserSessionToken(t: string | undefined) {
         this.userSessionToken = t;
-        this.storeSessionToken();
 
-        // Reset any stored principal on token change
-        this.principal = undefined;
-    }
-
-    /**
-     * Retrieve a session token of the authenticated user, if any.
-     */
-    private restoreSessionToken(): UUID | undefined {
-        return `; ${this.doc.cookie}`.split('; comentario_auth_token=').pop()?.split(';').shift() || undefined;
-    }
-
-    /**
-     * Store or remove a session token of the authenticated user in a cookie.
-     */
-    private storeSessionToken() {
-        // If the value is provided, set the cookie expiration date one year in the future. Otherwise, expire the cookie
-        // right away
+        // If there's a value, set the cookie expiration date one year in the future. Otherwise, expire the cookie right
+        // away
         let exp = 'Thu, 01 Jan 1970 00:00:01 GMT';
-        if (this.userSessionToken) {
+        if (t) {
             const date = new Date();
             date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
             exp = date.toUTCString();
         }
 
         // Store the cookie
-        this.doc.cookie = `comentario_auth_token=${this.userSessionToken || ''}; expires=${exp}; path=/`;
+        Utils.setCookie(ApiService.SessionTokenCookieName, t, exp);
+
+        // Reset any stored principal on token change
+        this.principal = undefined;
     }
 
     /**

@@ -1,3 +1,5 @@
+import { Utils } from './utils';
+
 export class HttpClientError {
     constructor(
         readonly status: number,
@@ -81,6 +83,14 @@ export class HttpClient {
                     req.setRequestHeader('Content-type', 'application/json');
                 }
 
+                // POST, PUT, DELETE require an XSRF token provided in the cookie
+                if (['POST', 'PUT', 'DELETE'].includes(method)) {
+                    const token = Utils.getCookie('XSRF-TOKEN');
+                    if (token) {
+                        req.setRequestHeader('X-XSRF-TOKEN', token);
+                    }
+                }
+
                 // Add necessary headers
                 if (headers) {
                     Object.entries(headers).forEach(([k, v]) => req.setRequestHeader(k, v as string));
@@ -111,6 +121,9 @@ export class HttpClient {
                     }
                 };
                 req.onerror = handleError;
+
+                // Allow sending cookies along with the request
+                req.withCredentials = true;
 
                 // Run the request
                 req.send(body ? JSON.stringify(body) : undefined);

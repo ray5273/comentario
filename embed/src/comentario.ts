@@ -18,7 +18,6 @@ export class Comentario extends HTMLElement {
     /** Service handling API requests. */
     private readonly apiService = new ApiService(
         `${this.origin}/api`,
-        this.ownerDocument,
         () => this.setMessage(),
         err => this.setMessage(ErrorMessage.of(err)));
 
