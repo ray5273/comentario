@@ -71,3 +71,10 @@ var (
 	// XSRFSafePaths stores a list of path prefixes that should be excluded from XSRF protection
 	XSRFSafePaths = &pathRegistry{}
 )
+
+func init() {
+	XSRFSafePaths.Add(
+		"/api/embed/",           // Embed endpoints are cross-site by design because scripts are always loaded from a different origin
+		"/api/auth/login/token", // TODO eliminate this by splitting into embed and frontend endpoints
+	)
+}

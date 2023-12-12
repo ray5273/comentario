@@ -1,5 +1,3 @@
-import { Utils } from './utils';
-
 export class HttpClientError {
     constructor(
         readonly status: number,
@@ -81,14 +79,6 @@ export class HttpClient {
                 req.open(method, this.getEndpointUrl(path), true);
                 if (body) {
                     req.setRequestHeader('Content-type', 'application/json');
-                }
-
-                // POST, PUT, DELETE require an XSRF token provided in the cookie
-                if (['POST', 'PUT', 'DELETE'].includes(method)) {
-                    const token = Utils.getCookie('XSRF-TOKEN');
-                    if (token) {
-                        req.setRequestHeader('X-XSRF-TOKEN', token);
-                    }
                 }
 
                 // Add necessary headers
