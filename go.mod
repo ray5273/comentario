@@ -9,12 +9,12 @@ require (
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/go-openapi/errors v0.20.4
 	github.com/go-openapi/loads v0.21.2
-	github.com/go-openapi/runtime v0.26.0
-	github.com/go-openapi/spec v0.20.9
-	github.com/go-openapi/strfmt v0.21.7
+	github.com/go-openapi/runtime v0.26.2
+	github.com/go-openapi/spec v0.20.11
+	github.com/go-openapi/strfmt v0.21.9
 	github.com/go-openapi/swag v0.22.4
-	github.com/go-openapi/validate v0.22.1
-	github.com/google/uuid v1.4.0
+	github.com/go-openapi/validate v0.22.3
+	github.com/google/uuid v1.5.0
 	github.com/gorilla/csrf v1.7.2
 	github.com/gorilla/handlers v1.5.2
 	github.com/jessevdk/go-flags v1.5.0
@@ -23,7 +23,7 @@ require (
 	github.com/markbates/goth v1.78.0
 	github.com/microcosm-cc/bluemonday v1.0.26
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/phuslu/iploc v1.0.20231031
+	github.com/phuslu/iploc v1.0.20231130
 	github.com/yuin/goldmark v1.6.0
 	golang.org/x/crypto v0.16.0
 	golang.org/x/net v0.19.0
@@ -52,7 +52,6 @@ require (
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
-	github.com/rogpeppe/go-internal v1.11.0 // indirect
 	go.mongodb.org/mongo-driver v1.13.1 // indirect
 	golang.org/x/image v0.14.0 // indirect
 	golang.org/x/oauth2 v0.15.0 // indirect
