@@ -1,37 +1,47 @@
 <!-- Edit form -->
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <form *ngIf="form" [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
-        <fieldset [disabled]="loading.active || saving.active">
-            <!-- Create a control for each item -->
-            <ng-container *ngFor="let item of items">
-                <!-- Add a local var for control name (also use it for switch ID) -->
-                <div *ngIf="ctlName(item.key) as k" [ngSwitch]="item.datatype" class="row">
-                    <!-- Label -->
-                    <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">
-                        <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
-                        <ng-container>{{ item.description }}</ng-container>
-                    </label>
+    @if (form) {
+        <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
+            <fieldset [disabled]="loading.active || saving.active">
+                <!-- Create a control for each item -->
+                @for (item of items; track item.key) {
+                    <!-- Add a local var for control name (also use it for switch ID) -->
+                    @if (ctlName(item.key); as k) {
+                        <div class="row">
+                            <!-- Label -->
+                            <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">
+                                <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
+                                <ng-container>{{ item.description }}</ng-container>
+                            </label>
 
-                    <!-- Boolean value -->
-                    <div *ngSwitchCase="'boolean'" class="col-sm-6 form-check form-switch">
-                        <input [formControlName]="k" [id]="k" class="form-check-input" type="checkbox">
-                        <label [for]="k" class="form-check-label" i18n>On</label>
-                    </div>
+                            @switch (item.datatype) {
+                                <!-- Boolean value -->
+                                @case ('boolean') {
+                                    <div class="col-sm-6 form-check form-switch">
+                                        <input [formControlName]="k" [id]="k" class="form-check-input" type="checkbox">
+                                        <label [for]="k" class="form-check-label" i18n>On</label>
+                                    </div>
+                                }
 
-                    <!-- Any other (string) value -->
-                    <div *ngSwitchDefault class="col-sm-6">
-                        <input [formControlName]="k" type="text" class="form-control" [id]="k">
-                    </div>
+                                <!-- Any other (string) value -->
+                                @default {
+                                    <div class="col-sm-6">
+                                        <input [formControlName]="k" type="text" class="form-control" [id]="k">
+                                    </div>
+                                }
+                            }
+                        </div>
+                    }
+                }
+
+                <!-- Buttons -->
+                <div class="form-footer">
+                    <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
+                    <button [appSpinner]="saving.active" type="submit" class="btn btn-primary">
+                        <ng-container i18n="action">Save</ng-container>
+                    </button>
                 </div>
-            </ng-container>
-
-            <!-- Buttons -->
-            <div class="form-footer">
-                <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
-                <button [appSpinner]="saving.active" type="submit" class="btn btn-primary">
-                    <ng-container i18n="action">Save</ng-container>
-                </button>
-            </div>
-        </fieldset>
-    </form>
+            </fieldset>
+        </form>
+    }
 </div>

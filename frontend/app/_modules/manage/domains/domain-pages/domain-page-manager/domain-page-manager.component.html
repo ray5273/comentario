@@ -1,16 +1,28 @@
 <!-- Header with the badge -->
 <header class="d-flex flex-wrap align-items-center">
     <h1 class="mb-0 me-2" i18n="heading">Domain pages</h1>
-    <app-domain-badge></app-domain-badge>
+    <app-domain-badge/>
 </header>
 
 <!-- Info block -->
-<app-info-block *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind">
-    <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all pages of the domain, just like domain owners and moderators.</ng-container>
-    <ng-container *ngSwitchCase="'owner'"     i18n>As a domain owner, you see all pages of the domain, just like moderators do. Regular users only see pages they commented on.</ng-container>
-    <ng-container *ngSwitchCase="'moderator'" i18n>As a domain moderator, you see all pages of the domain. Regular users only see pages they commented on.</ng-container>
-    <ng-container *ngSwitchDefault            i18n>Below you see pages you wrote a comment on.</ng-container>
-</app-info-block>
+@if (domainMeta?.userKind) {
+    <app-info-block>
+        @switch (domainMeta!.userKind) {
+            @case ('superuser') {
+                <ng-container i18n>As a superuser, you see all pages of the domain, just like domain owners and moderators.</ng-container>
+            }
+            @case ('owner') {
+                <ng-container i18n>As a domain owner, you see all pages of the domain, just like moderators do. Regular users only see pages they commented on.</ng-container>
+            }
+            @case ('moderator') {
+                <ng-container i18n>As a domain moderator, you see all pages of the domain. Regular users only see pages they commented on.</ng-container>
+            }
+            @default {
+                <ng-container i18n>Below you see pages you wrote a comment on.</ng-container>
+            }
+        }
+    </app-info-block>
+}
 
 <div [appSpinner]="!pages && pagesLoading.active" spinnerSize="lg">
     <!-- Toolbar -->
@@ -22,11 +34,11 @@
             <!-- Sort -->
             <div class="col-auto">
                 <app-sort-selector [sort]="sort">
-                    <app-sort-property by="path"          label="Path"               i18n-label></app-sort-property>
-                    <app-sort-property by="title"         label="Title"              i18n-label></app-sort-property>
-                    <app-sort-property by="created"       label="Created"            i18n-label></app-sort-property>
-                    <app-sort-property by="countComments" label="Number of comments" i18n-label></app-sort-property>
-                    <app-sort-property by="countViews"    label="Number of views"    i18n-label></app-sort-property>
+                    <app-sort-property by="path"          label="Path"               i18n-label/>
+                    <app-sort-property by="title"         label="Title"              i18n-label/>
+                    <app-sort-property by="created"       label="Created"            i18n-label/>
+                    <app-sort-property by="countComments" label="Number of comments" i18n-label/>
+                    <app-sort-property by="countViews"    label="Number of views"    i18n-label/>
                 </app-sort-selector>
             </div>
 
@@ -42,47 +54,61 @@
     </div>
 
     <!-- Page list -->
-    <div *ngIf="pages?.length" class="list-group" id="page-list">
-        <a *ngFor="let p of pages" @fadeIn-slow [routerLink]="p.id" class="list-group-item list-group-item-action">
-            <div class="row flex-nowrap">
-                <!-- Host/path -->
-                <div class="col overflow-hidden">
-                    <div style="word-break: break-word">
-                        <!-- Domain host (sm+) -->
-                        <span class="text-black-50 d-none d-sm-inline domain-page-domain">{{ domainMeta?.domain?.host }}</span>
-                        <!-- Page path -->
-                        <span class="fw-bold domain-page-path">{{ p.path }}</span>
-                        <!-- Readonly badge -->
-                        <span *ngIf="p.isReadonly" class="badge rounded-pill bg-light-subtle text-danger border border-danger ms-2" i18n>Read-only</span>
+    @if (pages?.length) {
+        <div class="list-group" id="page-list">
+            @for (p of pages; track p.id) {
+                <a @fadeIn-slow [routerLink]="p.id" class="list-group-item list-group-item-action">
+                    <div class="row flex-nowrap">
+                        <!-- Host/path -->
+                        <div class="col overflow-hidden">
+                            <div style="word-break: break-word">
+                                <!-- Domain host (sm+) -->
+                                <span class="text-black-50 d-none d-sm-inline domain-page-domain">{{ domainMeta?.domain?.host }}</span>
+                                <!-- Page path -->
+                                <span class="fw-bold domain-page-path">{{ p.path }}</span>
+                                <!-- Readonly badge -->
+                                @if (p.isReadonly) {
+                                    <span class="badge rounded-pill bg-light-subtle text-danger border border-danger ms-2" i18n>Read-only</span>
+                                }
+                            </div>
+                            @if (p.title) {
+                                <div class="domain-page-title">{{ p.title }}</div>
+                            }
+                            <!-- Comment/view counts (up to sm) -->
+                            @if (p.countComments! >= 0 && p.countViews! >= 0) {
+                                <div class="d-sm-none small text-muted">
+                                    <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
+                                    <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
+                                </div>
+                            }
+                        </div>
+                        <!-- Open page in new tab button -->
+                        <div class="col-auto">
+                            <a class="btn btn-sm btn-outline-secondary" [href]="domainMeta?.domain?.rootUrl! + p.path"
+                               (click)="$event.stopPropagation()"
+                               target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
+                                <fa-icon [icon]="faUpRightFromSquare"/>
+                            </a>
+                        </div>
+                        <!-- Comment count (sm+) -->
+                        @if (p.countComments! >= 0) {
+                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-comments">
+                                <div class="lead">{{ p.countComments | number }}</div>
+                                <div class="small" i18n>comments</div>
+                            </div>
+                        }
+                        <!-- View count (sm+) -->
+                        @if (p.countViews! >= 0) {
+                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-views">
+                                <div class="lead">{{ p.countViews | number }}</div>
+                                <div class="small" i18n>views</div>
+                            </div>
+                        }
                     </div>
-                    <div *ngIf="p.title" class="domain-page-title">{{ p.title }}</div>
-                    <!-- Comment/view counts (up to sm) -->
-                    <div *ngIf="p.countComments! >= 0 && p.countViews! >= 0" class="d-sm-none small text-muted">
-                        <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
-                        <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
-                    </div>
-                </div>
-                <!-- Open page in new tab button -->
-                <div class="col-auto">
-                    <a class="btn btn-sm btn-outline-secondary" [href]="domainMeta?.domain?.rootUrl! + p.path"
-                       (click)="$event.stopPropagation()"
-                       target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
-                        <fa-icon [icon]="faUpRightFromSquare"></fa-icon>
-                    </a>
-                </div>
-                <!-- Comment count (sm+) -->
-                <div *ngIf="p.countComments! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-comments">
-                    <div class="lead">{{ p.countComments | number }}</div>
-                    <div class="small" i18n>comments</div>
-                </div>
-                <!-- View count (sm+) -->
-                <div *ngIf="p.countViews! >= 0" class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-views">
-                    <div class="lead">{{ p.countViews | number }}</div>
-                    <div class="small" i18n>views</div>
-                </div>
-            </div>
-        </a>
-    </div>
+                </a>
+            }
+        </div>
+    }
 
     <!-- List footer -->
     <app-list-footer [canLoadMore]="canLoadMore" [loading]="pagesLoading.active" [count]="pages?.length" (loadMore)="load.next(false)"/>

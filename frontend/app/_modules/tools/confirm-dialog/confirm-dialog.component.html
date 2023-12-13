@@ -1,11 +1,13 @@
 <!-- Modal header -->
-<div *ngIf="title" class="modal-header">
-    <h5>{{ title }}</h5>
-</div>
+@if (title) {
+    <div class="modal-header">
+        <h5>{{ title }}</h5>
+    </div>
+}
 
 <!-- Modal body -->
 <div class="modal-body d-flex">
-    <div [class]="'text-'+actionType"><fa-icon [icon]="icon" size="4x"></fa-icon></div>
+    <div [class]="'text-'+actionType"><fa-icon [icon]="icon" size="4x"/></div>
     <div class="ms-3 d-flex flex-column justify-content-center">
         <ng-container [ngTemplateOutlet]="template"></ng-container>
     </div>

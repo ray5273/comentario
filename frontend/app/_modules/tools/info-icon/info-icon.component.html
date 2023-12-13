@@ -1,14 +1,16 @@
-<a *ngIf="docUrl as url else iconOnly" [href]="url" target="_blank" rel="noopener">
-    <fa-icon [icon]="faInfoCircle" size="lg" [ngClass]="iconClasses" [ngbTooltip]="text"></fa-icon>
-</a>
-
-<!-- Template for a non-clickable icon -->
-<ng-template #iconOnly>
-    <fa-icon [icon]="faInfoCircle" size="lg" [ngClass]="iconClasses" [ngbTooltip]="tooltip"></fa-icon>
-</ng-template>
+@if (docUrl; as url) {
+    <a [href]="url" target="_blank" rel="noopener">
+        <fa-icon [icon]="faInfoCircle" size="lg" [ngClass]="iconClasses" [ngbTooltip]="text"/>
+    </a>
+} @else {
+    <!-- Non-clickable icon -->
+    <fa-icon [icon]="faInfoCircle" size="lg" [ngClass]="iconClasses" [ngbTooltip]="tooltip"/>
+}
 
 <!-- Template for a clickable icon's tooltip -->
 <ng-template #text>
     {{ tooltip }}
-    <div *ngIf="docLink" [class.mt-2]="tooltip" class="fw-bold" i18n>Click for more details</div>
+    @if (docLink) {
+        <div [class.mt-2]="tooltip" class="fw-bold" i18n>Click for more details</div>
+    }
 </ng-template>

@@ -2,45 +2,41 @@
 <h1 i18n="heading">Import data</h1>
 
 <!-- Import isn't performed yet -->
-<div *ngIf="!result">
-    <!-- Info -->
-    <p i18n>Use this option to import data previously exported from Comentario, Commento, or Disqus.</p>
-    <div class="alert alert-warning" role="alert">
-        <h5 class="alert-heading text-start">
-            <fa-icon [icon]="faExclamationTriangle" class="text-warning me-1"></fa-icon>
-            <ng-container i18n>Warning</ng-container>
-        </h5>
-        <div i18n>It is strongly recommended you perform an import only once. Importing multiple times may have unintended effects.</div>
-    </div>
-    <hr>
+@if (!result) {
+    <div>
+        <!-- Info -->
+        <p i18n>Use this option to import data previously exported from Comentario, Commento, or Disqus.</p>
+        <div class="alert alert-warning" role="alert">
+            <h5 class="alert-heading text-start">
+                <fa-icon [icon]="faExclamationTriangle" class="text-warning me-1"/>
+                <ng-container i18n>Warning</ng-container>
+            </h5>
+            <div i18n>It is strongly recommended you perform an import only once. Importing multiple times may have unintended effects.</div>
+        </div>
+        <hr>
 
-    <!-- Edit form -->
-    <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
-        <!-- Source format -->
-        <div class="mb-3 row">
-            <div class="col-sm-2 col-form-label colon" i18n>Source format</div>
-            <div class="col-sm-10">
-                <div class="list-group">
-                    <!-- Commento/Comentario -->
-                    <div [class.selected]="source === 'comentario'"
-                         (click)="source = 'comentario'" (keydown.enter)="source = 'comentario'"
-                         class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-comentario">
-                        <div class="fw-bold mb-2">
-                            <img ngSrc="images/icons/commento.svg" width="32" height="32" class="me-3" alt="Comentario">
-                            <ng-container>Commento/Comentario</ng-container>
+        <!-- Edit form -->
+        <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
+            <!-- Source format -->
+            <div class="mb-3 row">
+                <div class="col-sm-2 col-form-label colon" i18n>Source format</div>
+                <div class="col-sm-10">
+                    <div class="list-group">
+                        <!-- Commento/Comentario -->
+                        <div [class.selected]="source === 'comentario'" (click)="source = 'comentario'" (keydown.enter)="source = 'comentario'"
+                             class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-comentario">
+                            <div class="fw-bold mb-2">
+                                <img ngSrc="images/icons/commento.svg" width="32" height="32" class="me-3" alt="Comentario">
+                                <ng-container>Commento/Comentario</ng-container>
+                            </div>
+                            <div class="text-muted">
+                                <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
+                                <app-info-icon docLink="/installation/migration/commento/" class="ms-2"></app-info-icon>
+                            </div>
                         </div>
-                        <div class="text-muted">
-                            <ng-container i18n>If you've previously exported data from Comentario or Commento, you can restore it using this option.</ng-container>
-                            <app-info-icon docLink="/installation/migration/commento/" class="ms-2"></app-info-icon>
-                        </div>
-                    </div>
-                    <!-- Disqus -->
-                    <div [class.selected]="source === 'disqus'"
-                         (click)="source = 'disqus'" (keydown.enter)="source = 'disqus'"
-                         class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-disqus">
-                        <div class="me-3">
-                        </div>
-                        <div>
+                        <!-- Disqus -->
+                        <div [class.selected]="source === 'disqus'" (click)="source = 'disqus'" (keydown.enter)="source = 'disqus'"
+                             class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-disqus">
                             <div class="fw-bold mb-2">
                                 <img ngSrc="images/icons/disqus.svg" width="32" height="32" class="me-3" alt="Disqus">
                                 <ng-container>Disqus</ng-container>
@@ -50,14 +46,9 @@
                                 <app-info-icon docLink="/installation/migration/disqus/" class="ms-2"></app-info-icon>
                             </div>
                         </div>
-                    </div>
-                    <!-- WordPress -->
-                    <div [class.selected]="source === 'wordpress'"
-                         (click)="source = 'wordpress'" (keydown.enter)="source = 'wordpress'"
-                         class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-wordpress">
-                        <div class="me-3">
-                        </div>
-                        <div>
+                        <!-- WordPress -->
+                        <div [class.selected]="source === 'wordpress'" (click)="source = 'wordpress'" (keydown.enter)="source = 'wordpress'"
+                             class="list-group-item list-group-item-action" role="button" tabindex="0" id="source-wordpress">
                             <div class="fw-bold mb-2">
                                 <img ngSrc="images/icons/wordpress.svg" width="32" height="32" class="me-3" alt="WordPress">
                                 <ng-container>WordPress</ng-container>
@@ -70,108 +61,113 @@
                     </div>
                 </div>
             </div>
-        </div>
 
-        <!-- File input -->
-        <div class="mb-3 row">
-            <label for="import-file-select" class="col-sm-2 col-form-label colon" i18n>Data file</label>
-            <div class="col-sm-10">
-                <input (change)="onFileSelected($event)"
-                       [class.is-valid]="form.controls.file.touched && form.controls.file.valid"
-                       [class.is-invalid]="form.controls.file.touched && form.controls.file.invalid"
-                       id="import-file-select" type="file" class="form-control">
-                <!-- Invalid feedback -->
-                <div class="invalid-feedback">
-                    <div *ngIf="form.controls.file.errors?.required" i18n>Please select a file.</div>
-                    <div *ngIf="form.controls.file.errors?.maxSize"  i18n>File size must not exceed 10 MB.</div>
+            <!-- File input -->
+            <div class="mb-3 row">
+                <label for="import-file-select" class="col-sm-2 col-form-label colon" i18n>Data file</label>
+                <div class="col-sm-10">
+                    <input (change)="onFileSelected($event)"
+                           [class.is-valid]="form.controls.file.touched && form.controls.file.valid"
+                           [class.is-invalid]="form.controls.file.touched && form.controls.file.invalid"
+                           id="import-file-select" type="file" class="form-control">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback">
+                        @if (form.controls.file.errors?.required) { <div i18n>Please select a file.</div> }
+                        @if (form.controls.file.errors?.maxSize)  { <div i18n>File size must not exceed 10 MB.</div> }
+                    </div>
+                    <!-- Info -->
+                    <div class="form-text" i18n>Comentario supports importing from .zip and .gz archives, as well as uncompressed files.</div>
                 </div>
-                <!-- Info -->
-                <div class="form-text" i18n>Comentario supports importing from .zip and .gz archives, as well as uncompressed files.</div>
             </div>
-        </div>
 
-        <!-- Buttons -->
-        <div class="form-footer">
-            <a routerLink="../operations" class="btn btn-link" i18n="action">Cancel</a>
-            <button [appSpinner]="importing.active" type="submit" class="btn btn-primary">
-                <ng-container i18n="action">Import</ng-container>
-            </button>
-        </div>
-    </form>
-</div>
+            <!-- Buttons -->
+            <div class="form-footer">
+                <a routerLink="../operations" class="btn btn-link" i18n="action">Cancel</a>
+                <button [appSpinner]="importing.active" type="submit" class="btn btn-primary">
+                    <ng-container i18n="action">Import</ng-container>
+                </button>
+            </div>
+        </form>
+    </div>
 
 <!-- Import complete -->
-<div *ngIf="result" @fadeInOut-slow id="import-complete">
-    <!-- Import finished with warnings -->
-    <div *ngIf="result.error as err" class="alert alert-warning d-flex align-items-start mb-4" role="alert">
-        <!-- Icon -->
-        <div><fa-icon [icon]="faExclamationTriangle" size="3x" class="text-warning"></fa-icon></div>
-        <!-- Text -->
-        <div class="ms-3">
-            <p class="lead fw-bold" i18n>Import finished with a warning:</p>
-            <!-- Warning message -->
-            <div class="border rounded p-3 mb-3">
-                <code>{{ err }}</code>
+} @else {
+    <div @fadeInOut-slow id="import-complete">
+        <!-- Import finished with warnings -->
+        @if (result.error; as err) {
+            <div class="alert alert-warning d-flex align-items-start mb-4" role="alert">
+                <!-- Icon -->
+                <div><fa-icon [icon]="faExclamationTriangle" size="3x" class="text-warning"/></div>
+                <!-- Text -->
+                <div class="ms-3">
+                    <p class="lead fw-bold" i18n>Import finished with a warning:</p>
+                    <!-- Warning message -->
+                    <div class="border rounded p-3 mb-3">
+                        <code>{{ err }}</code>
+                    </div>
+                </div>
             </div>
+        }
+
+        <!-- Import finished without warnings -->
+        @if (!result.error) {
+            <div class="alert alert-success d-flex align-items-start mb-4" role="alert">
+                <!-- Icon -->
+                <div><fa-icon [icon]="faCheck" size="3x" class="text-success"/></div>
+                <!-- Text -->
+                <div class="ms-3 lead fw-bold" i18n>Import finished successfully.</div>
+            </div>
+        }
+
+        <!-- Result counts -->
+        <h2 i18n>Import results</h2>
+        <dl class="detail-table" id="import-results-table">
+            <div>
+                <dt i18n>Total users</dt>
+                <dd>{{ result.usersTotal || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Added users</dt>
+                <dd>{{ result.usersAdded || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Added domain users</dt>
+                <dd>{{ result.domainUsersAdded || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Total domain pages</dt>
+                <dd>{{ result.pagesTotal || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Added domain pages</dt>
+                <dd>{{ result.pagesAdded || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Total comments</dt>
+                <dd>{{ result.commentsTotal || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Imported comments</dt>
+                <dd>{{ result.commentsImported || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Skipped comments</dt>
+                <dd>{{ result.commentsSkipped || 0 | number }}</dd>
+            </div>
+            <div>
+                <dt i18n>Non-deleted comments</dt>
+                <dd>{{ result.commentsNonDeleted || 0 | number }}</dd>
+            </div>
+        </dl>
+
+        <!-- Notice -->
+        <p i18n>Please note that some processes (like user avatar fetching) may still continue to work in the background.</p>
+
+        <!-- Buttons -->
+        <div class="my-3">
+            <a [routerLink]="[Paths.manage.domains, domain!.id, 'comments']" class="btn btn-outline-primary" i18n>Comments</a>
+            <a [routerLink]="[Paths.manage.domains, domain!.id, 'pages']" class="btn btn-outline-primary ms-2" i18n>Pages</a>
+            <a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-outline-primary ms-2" i18n>Domain properties</a>
         </div>
     </div>
-
-    <!-- Import finished without warnings -->
-    <div *ngIf="!result.error" class="alert alert-success d-flex align-items-start mb-4" role="alert">
-        <!-- Icon -->
-        <div><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></div>
-        <!-- Text -->
-        <div class="ms-3 lead fw-bold" i18n>Import finished successfully.</div>
-    </div>
-
-    <!-- Result counts -->
-    <h2 i18n>Import results</h2>
-    <dl class="detail-table" id="import-results-table">
-        <div>
-            <dt i18n>Total users</dt>
-            <dd>{{ result.usersTotal || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Added users</dt>
-            <dd>{{ result.usersAdded || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Added domain users</dt>
-            <dd>{{ result.domainUsersAdded || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Total domain pages</dt>
-            <dd>{{ result.pagesTotal || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Added domain pages</dt>
-            <dd>{{ result.pagesAdded || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Total comments</dt>
-            <dd>{{ result.commentsTotal || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Imported comments</dt>
-            <dd>{{ result.commentsImported || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Skipped comments</dt>
-            <dd>{{ result.commentsSkipped || 0 | number }}</dd>
-        </div>
-        <div>
-            <dt i18n>Non-deleted comments</dt>
-            <dd>{{ result.commentsNonDeleted || 0 | number }}</dd>
-        </div>
-    </dl>
-
-    <!-- Notice -->
-    <p i18n>Please note that some processes (like user avatar fetching) may still continue to work in the background.</p>
-
-    <!-- Buttons -->
-    <div class="my-3">
-        <a [routerLink]="[Paths.manage.domains, domain!.id, 'comments']" class="btn btn-outline-primary"      i18n>Comments</a>
-        <a [routerLink]="[Paths.manage.domains, domain!.id, 'pages']"    class="btn btn-outline-primary ms-2" i18n>Pages</a>
-        <a [routerLink]="[Paths.manage.domains, domain!.id]"             class="btn btn-outline-primary ms-2" i18n>Domain properties</a>
-    </div>
-</div>
+}

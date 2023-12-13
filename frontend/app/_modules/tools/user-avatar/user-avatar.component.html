@@ -1,5 +1,7 @@
-<!-- User initial in case there's no avatar -->
-<span *ngIf="!_src">{{ user?.name?.substring(0, 1)?.toUpperCase() || '*' }}</span>
-
-<!-- User avatar image -->
-<img *ngIf="_src" [src]="_src" alt="">
+@if (_src) {
+    <!-- User avatar image -->
+    <img [src]="_src" alt="">
+} @else {
+    <!-- User initial in case there's no avatar -->
+    <span>{{ user?.name?.substring(0, 1)?.toUpperCase() || '*' }}</span>
+}

@@ -1,4 +1,4 @@
-<ng-container *ngIf="principal">
+@if (principal) {
     <!-- Heading -->
     <h1 i18n="heading">My profile</h1>
 
@@ -13,7 +13,7 @@
                         <input [value]="principal.id" type="text" class="form-control" id="current-user-id" disabled>
                         <button [appCopyText]="principal.id" ngbTooltip
                                 class="btn btn-outline-secondary" type="button" title="Copy" i18n-title>
-                            <fa-icon [icon]="faCopy"></fa-icon>
+                            <fa-icon [icon]="faCopy"/>
                         </button>
                     </div>
                 </div>
@@ -47,18 +47,22 @@
                 </div>
 
                 <!-- Current password -->
-                <div *ngIf="userForm.controls.curPassword.enabled" class="col-md-6">
-                    <label for="cur-password" class="form-label colon" i18n>Current password</label>
-                    <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
-                                        id="cur-password" placeholder="(unchanged)" i18n-placeholder></app-password-input>
-                </div>
+                @if (userForm.controls.curPassword.enabled) {
+                    <div class="col-md-6">
+                        <label for="cur-password" class="form-label colon" i18n>Current password</label>
+                        <app-password-input #curPassword formControlName="curPassword" autocomplete="current-password"
+                                            id="cur-password" placeholder="(unchanged)" i18n-placeholder/>
+                    </div>
+                }
 
                 <!-- New password -->
-                <div *ngIf="userForm.controls.newPassword.enabled" class="col-md-6">
-                    <label for="new-password" class="form-label colon" i18n>New password</label>
-                    <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
-                                        id="new-password" placeholder="(unchanged)" i18n-placeholder></app-password-input>
-                </div>
+                @if (userForm.controls.newPassword.enabled) {
+                    <div class="col-md-6">
+                        <label for="new-password" class="form-label colon" i18n>New password</label>
+                        <app-password-input formControlName="newPassword" [strong]="true" autocomplete="new-password"
+                                            id="new-password" placeholder="(unchanged)" i18n-placeholder/>
+                    </div>
+                }
 
                 <!-- Avatar -->
                 <div class="col-12" id="user-avatar">
@@ -99,7 +103,7 @@
                 (click)="collapse.toggle()"
                 type="button" class="btn btn-outline-danger collapse-toggler px-5 mb-2" aria-controls="danger-zone-container">
             <span class="me-2" i18n>Danger zone</span>
-            <fa-icon [icon]="faAngleDown"></fa-icon>
+            <fa-icon [icon]="faAngleDown"/>
         </button>
         <!-- Danger zone content -->
         <div #collapse="ngbCollapse" [(ngbCollapse)]="isDangerZoneCollapsed" id="danger-zone-container">
@@ -111,7 +115,9 @@
                 <p i18n>Here you can terminate your service account.</p>
 
                 <!-- Superuser-specific warning -->
-                <p *ngIf="principal.isSuperuser" i18n>Since you are a superuser, you must make sure there are other superuser(s) in the system before you can proceed with deleting your account.</p>
+                @if (principal.isSuperuser) {
+                    <p i18n>Since you are a superuser, you must make sure there are other superuser(s) in the system before you can proceed with deleting your account.</p>
+                }
 
                 <!-- Delete account button -->
                 <button [appConfirm]="deleteAccountDlg"
@@ -122,13 +128,13 @@
                         [appSpinner]="deleting.active" type="button" class="btn btn-danger"
                         (confirmed)="deleteAccount()"
                         i18n-confirmTitle i18n-confirmAction>
-                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+                    <fa-icon [icon]="faTrashAlt" class="me-1"/>
                     <ng-container i18n="action">Delete my account</ng-container>
                 </button>
             </section>
         </div>
     </section>
-</ng-container>
+}
 
 <!-- Delete account confirmation dialog content template -->
 <ng-template #deleteAccountDlg>

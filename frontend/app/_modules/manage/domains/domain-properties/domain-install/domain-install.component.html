@@ -8,7 +8,7 @@
         <div class="d-flex align-items-center">
             <!-- Copy -->
             <button [appCopyText]="snippet" type="button" class="btn btn-secondary" ngbTooltip="">
-                <fa-icon [icon]="faCopy" class="me-1"></fa-icon>
+                <fa-icon [icon]="faCopy" class="me-1"/>
                 <ng-container i18n>Copy</ng-container>
             </button>
             <!-- Options toggler -->
@@ -16,7 +16,7 @@
                     [class.collapsed]="collapseSnippetOptions"
                     type="button" class="btn btn-outline-secondary ms-2 collapse-toggler" aria-controls="install-snippet-options">
                 <ng-container i18n>Options</ng-container>
-                <fa-icon [icon]="faChevronDown" class="ms-1"></fa-icon>
+                <fa-icon [icon]="faChevronDown" class="ms-1"/>
             </button>
         </div>
     </div>
@@ -77,7 +77,7 @@
                            [class.is-invalid]="form.controls.pageId.invalid"
                            maxlength="2076" placeholder="/another/path/to/page" aria-describedby="opt-page-id-help">
                     <div id="opt-page-id-help" class="form-text">
-                        <fa-icon [icon]="faExclamationTriangle" class="me-1"></fa-icon>
+                        <fa-icon [icon]="faExclamationTriangle" class="me-1"/>
                         <ng-container i18n>This value must be different for every page.</ng-container>
                     </div>
                 </div>

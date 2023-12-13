@@ -3,23 +3,24 @@
     <h1 i18n="heading">Sign up</h1>
 
     <!-- Sign up closed -->
-    <div *ngIf="!signupAllowed else signupForm" class="text-center">
-        <!-- Alert -->
-        <div class="alert alert-secondary">
-            <h2 class="alert-heading" i18n>Sign-up closed</h2>
-            <hr>
-            <p><fa-icon [icon]="faBan" size="3x"></fa-icon></p>
-            <p i18n>Unfortunately, registration of new users is currently disabled.</p>
-            <p class="small" i18n>If you believe it's an error, please contact the site owner.</p>
+    @if (!signupAllowed) {
+        <div class="text-center">
+            <!-- Alert -->
+            <div class="alert alert-secondary">
+                <h2 class="alert-heading" i18n>Sign-up closed</h2>
+                <hr>
+                <p><fa-icon [icon]="faBan" size="3x"/></p>
+                <p i18n>Unfortunately, registration of new users is currently disabled.</p>
+                <p class="small" i18n>If you believe it's an error, please contact the site owner.</p>
+            </div>
+
+            <!-- Login prompt -->
+            <p><a [routerLink]="Paths.auth.login" i18n>Already have an account?</a></p>
         </div>
 
-        <!-- Login prompt -->
-        <p><a [routerLink]="Paths.auth.login" i18n>Already have an account?</a></p>
-    </div>
-
     <!-- Signup message and form -->
-    <ng-template #signupForm>
-        <div *ngIf="!isComplete else signupComplete" class="row justify-content-center">
+    } @else if (!isComplete) {
+        <div class="row justify-content-center">
             <!-- Sign-up form -->
             <div class="col-sm-6 col-lg-5 col-xl-4">
                 <form [formGroup]="form" (ngSubmit)="submit()" id="signup-form">
@@ -37,7 +38,7 @@
                     <div class="mb-3">
                         <label for="password" class="form-label colon" i18n>Password</label>
                         <app-password-input formControlName="password" [required]="true" [strong]="true"
-                                            autocomplete="new-password" id="password"></app-password-input>
+                                            autocomplete="new-password" id="password"/>
                     </div>
 
                     <!-- Name -->
@@ -72,15 +73,14 @@
                 <app-federated-login></app-federated-login>
             </div>
         </div>
-    </ng-template>
 
     <!-- Sign-up complete -->
-    <ng-template #signupComplete>
-        <div *ngIf="isComplete" @fadeInOut-slow class="text-center" id="signup-complete">
+    } @else if (isComplete) {
+        <div @fadeInOut-slow class="text-center" id="signup-complete">
             <p i18n>Your registration is almost complete!</p>
-            <p><fa-icon [icon]="faCheck" size="3x" class="text-success"></fa-icon></p>
+            <p><fa-icon [icon]="faCheck" size="3x" class="text-success"/></p>
             <p i18n>Please check your email and click the confirmation link in it.</p>
             <p i18n>If you don't see the email, check your Spam folder.</p>
         </div>
-    </ng-template>
+    }
 </section>

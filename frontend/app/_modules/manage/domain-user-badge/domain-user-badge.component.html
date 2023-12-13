@@ -1,8 +1,10 @@
-<span *ngIf="domainUser" class="badge rounded-pill" [ngClass]="userClass">
-    <ng-container [ngSwitch]="userClass">
-        <ng-container *ngSwitchCase="'user-owner'"     i18n>Owner</ng-container>
-        <ng-container *ngSwitchCase="'user-moderator'" i18n>Moderator</ng-container>
-        <ng-container *ngSwitchCase="'user-commenter'" i18n>Commenter</ng-container>
-        <ng-container *ngSwitchCase="'user-readonly'"  i18n>Read-only</ng-container>
-    </ng-container>
-</span>
+@if (domainUser) {
+    <span class="badge rounded-pill" [ngClass]="userClass">
+        @switch (userClass) {
+            @case ('user-owner')     {<ng-container i18n>Owner</ng-container>}
+            @case ('user-moderator') {<ng-container i18n>Moderator</ng-container>}
+            @case ('user-commenter') {<ng-container i18n>Commenter</ng-container>}
+            @case ('user-readonly')  {<ng-container i18n>Read-only</ng-container>}
+        }
+    </span>
+}

@@ -17,13 +17,13 @@
                 </a>
                 <!-- GitLab -->
                 <a href="https://gitlab.com/comentario/comentario" target="_blank" rel="noopener" class="me-3"
-                   title="GitLab"><fa-icon [icon]="faGitlab" size="2x"></fa-icon></a>
+                   title="GitLab"><fa-icon [icon]="faGitlab" size="2x"/></a>
                 <!-- Xwitter -->
                 <a href="https://twitter.com/ComentarioApp" target="_blank" rel="noopener" class="me-3"
-                   title="XXXXXXXwitter"><fa-icon [icon]="faXTwitter" size="2x"></fa-icon></a>
+                   title="Xwitter"><fa-icon [icon]="faXTwitter" size="2x"/></a>
                 <!-- LinkedIn -->
                 <a href="https://www.linkedin.com/company/comentario-app/" target="_blank" rel="noopener" class="me-3"
-                   title="LinkedIn"><fa-icon [icon]="faLinkedin" size="2x"></fa-icon></a>
+                   title="LinkedIn"><fa-icon [icon]="faLinkedin" size="2x"/></a>
             </div>
             <!-- Copyright -->
             <div class="footer-copyright" i18n>Copyright ©{{ year }} Comentario</div>
@@ -42,30 +42,22 @@
         </div>
 
         <div class="col-md">
-            <!-- Items for non-authenticated user -->
-            <ul *ngIf="!isAuthenticated" class="list-unstyled">
-                <li class="heading" i18n>Get started</li>
-                <li><a [routerLink]="Paths.auth.signup"
-                       routerLinkActive="active"
-                       ariaCurrentWhenActive="page" i18n>Sign up</a></li>
-                <li><a [routerLink]="Paths.auth.login"
-                       routerLinkActive="active"
-                       ariaCurrentWhenActive="page" i18n>Sign in</a></li>
-            </ul>
-
             <!-- Items for authenticated user -->
-            <ul *ngIf="isAuthenticated" class="list-unstyled">
-                <li class="heading" i18n>Manage</li>
-                <li><a [routerLink]="Paths.manage.dashboard"
-                       routerLinkActive="active"
-                       ariaCurrentWhenActive="page" i18n>Dashboard</a></li>
-                <li><a [routerLink]="Paths.manage.domains"
-                       routerLinkActive="active"
-                       ariaCurrentWhenActive="page" i18n>Domains</a></li>
-                <li><a [routerLink]="Paths.manage.account.profile"
-                       routerLinkActive="active"
-                       ariaCurrentWhenActive="page" i18n>Profile</a></li>
-            </ul>
+            @if (isAuthenticated) {
+                <ul class="list-unstyled">
+                    <li class="heading" i18n>Manage</li>
+                    <li><a [routerLink]="Paths.manage.dashboard"       routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Dashboard</a></li>
+                    <li><a [routerLink]="Paths.manage.domains"         routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Domains</a></li>
+                    <li><a [routerLink]="Paths.manage.account.profile" routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Profile</a></li>
+                </ul>
+            } @else {
+                <!-- Items for non-authenticated user -->
+                <ul class="list-unstyled">
+                    <li class="heading" i18n>Get started</li>
+                    <li><a [routerLink]="Paths.auth.signup" routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Sign up</a></li>
+                    <li><a [routerLink]="Paths.auth.login"  routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Sign in</a></li>
+                </ul>
+            }
         </div>
     </div>
 </footer>

@@ -15,20 +15,23 @@
 
         <ul class="navbar-nav">
             <!-- User button -->
-            <li *ngIf="authSvc.principal | async as p else signin" class="nav-item">
-                <a [routerLink]="Paths.manage.dashboard" class="btn btn-outline-info d-flex align-items-center" id="user-nav-button">
-                    <!-- User icon -->
-                    <app-user-avatar [user]="p" [updated]="authSvc.principalUpdated" class="me-1"/>
-                    <!-- User's name -->
-                    <div class="text-truncate position-relative ms-1" style="max-width: 100px">
-                        <ng-container>{{ p.name }}</ng-container>
-                    </div>
-                </a>
-            </li>
-            <!-- Sign in -->
-            <ng-template #signin>
-                <li class="nav-item"><a [routerLink]="Paths.auth.login" class="btn btn-primary" id="login-nav-button" i18n>Sign in</a></li>
-            </ng-template>
+            @if (authSvc.principal | async; as p) {
+                <li class="nav-item">
+                    <a [routerLink]="Paths.manage.dashboard" class="btn btn-outline-info d-flex align-items-center" id="user-nav-button">
+                        <!-- User icon -->
+                        <app-user-avatar [user]="p" [updated]="authSvc.principalUpdated" class="me-1"/>
+                        <!-- User's name -->
+                        <div class="text-truncate position-relative ms-1" style="max-width: 100px">
+                            <ng-container>{{ p.name }}</ng-container>
+                        </div>
+                    </a>
+                </li>
+            } @else {
+                <!-- Sign in -->
+                <li class="nav-item">
+                    <a [routerLink]="Paths.auth.login" class="btn btn-primary" id="login-nav-button" i18n>Sign in</a>
+                </li>
+            }
         </ul>
     </div>
 </nav>

@@ -1,39 +1,49 @@
 <!-- Info block -->
 <app-info-block i18n>These parameters can be changed on-the-fly.</app-info-block>
 
-<div *ngIf="items" class="row">
-    <!-- Buttons -->
-    <div class="col-sm-auto order-sm-last pb-3">
-        <div class="d-grid gap-2">
-            <!-- Edit button -->
-            <a routerLink="edit" class="btn btn-secondary">
-                <fa-icon [icon]="faPencil" class="me-1"></fa-icon>
-                <ng-container i18n>Edit</ng-container>
-            </a>
-            <!-- Reset button -->
-            <button [appSpinner]="resetting.active" (confirmed)="reset()"
-                    appConfirm="Are you sure you want to reset the configuration to defaults?"
-                    confirmAction="Reset configuration" confirmActionType="warning"
-                    type="button" class="btn btn-outline-warning w-100 mb-2" i18n-appConfirm i18n-confirmAction>
-                <fa-icon [icon]="faUndo" class="me-1"></fa-icon>
-                <ng-container i18n>Reset to defaults</ng-container>
-            </button>
+@if (items) {
+    <div class="row">
+        <!-- Buttons -->
+        <div class="col-sm-auto order-sm-last pb-3">
+            <div class="d-grid gap-2">
+                <!-- Edit button -->
+                <a routerLink="edit" class="btn btn-secondary">
+                    <fa-icon [icon]="faPencil" class="me-1"/>
+                    <ng-container i18n>Edit</ng-container>
+                </a>
+                <!-- Reset button -->
+                <button [appSpinner]="resetting.active" (confirmed)="reset()"
+                        appConfirm="Are you sure you want to reset the configuration to defaults?"
+                        confirmAction="Reset configuration" confirmActionType="warning"
+                        type="button" class="btn btn-outline-warning w-100 mb-2" i18n-appConfirm i18n-confirmAction>
+                    <fa-icon [icon]="faUndo" class="me-1"/>
+                    <ng-container i18n>Reset to defaults</ng-container>
+                </button>
+            </div>
+        </div>
+
+        <!-- Config items -->
+        <div class="col-sm">
+            <dl class="detail-table" id="dynamic-config-items">
+                @for (item of items; track item.key) {
+                    <div>
+                        <dt>
+                            <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
+                            <ng-container>{{ item.description }}</ng-container>
+                        </dt>
+                        <dd>
+                            @switch (item.datatype) {
+                                @case ('boolean') {
+                                    <app-checkmark [value]="item.value === 'true'"/>
+                                }
+                                @default {
+                                    <span>{{ item.value }}</span>
+                                }
+                            }
+                        </dd>
+                    </div>
+                }
+            </dl>
         </div>
     </div>
-
-    <!-- Config items -->
-    <div class="col-sm">
-        <dl class="detail-table" id="dynamic-config-items">
-            <div *ngFor="let item of items">
-                <dt>
-                    <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
-                    <ng-container>{{ item.description }}</ng-container>
-                </dt>
-                <dd [ngSwitch]="item.datatype">
-                    <app-checkmark *ngSwitchCase="'boolean'" [value]="item.value === 'true'"></app-checkmark>
-                    <span *ngSwitchDefault>{{ item.value }}</span>
-                </dd>
-            </div>
-        </dl>
-    </div>
-</div>
+}

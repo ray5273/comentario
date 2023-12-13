@@ -14,10 +14,10 @@
             <!-- Sort -->
             <div class="col-auto">
                 <app-sort-selector [sort]="sort">
-                    <app-sort-property by="email"        label="Email"         i18n-label></app-sort-property>
-                    <app-sort-property by="name"         label="Name"          i18n-label></app-sort-property>
-                    <app-sort-property by="created"      label="Created"       i18n-label></app-sort-property>
-                    <app-sort-property by="federatedIdP" label="Federated IdP" i18n-label></app-sort-property>
+                    <app-sort-property by="email"        label="Email"         i18n-label/>
+                    <app-sort-property by="name"         label="Name"          i18n-label/>
+                    <app-sort-property by="created"      label="Created"       i18n-label/>
+                    <app-sort-property by="federatedIdP" label="Federated IdP" i18n-label/>
                 </app-sort-selector>
             </div>
 
@@ -33,42 +33,53 @@
     </div>
 
     <!-- User list -->
-    <div *ngIf="users?.length" class="list-group" id="user-list">
-        <a *ngFor="let u of users" @fadeIn-slow [routerLink]="u.id" [class.text-muted]="u.banned"
-           class="list-group-item list-group-item-action d-flex">
-            <!-- Avatar -->
-            <div class="col-auto d-flex align-items-center pe-2">
-                <app-user-avatar [user]="u" size="M"/>
-            </div>
-            <div class="col">
-                <!-- Name and badge -->
-                <div>
-                    <!-- Name -->
-                    <span class="fw-bold user-name">{{ u.name }}</span>
-                    <!-- System account badge -->
-                    <span *ngIf="u.systemAccount" class="badge rounded-pill bg-secondary ms-2">
-                            <fa-icon [icon]="faLock" class="me-1"></fa-icon>
-                            <ng-container i18n>System</ng-container>
-                        </span>
-                    <!-- Superuser badge -->
-                    <span *ngIf="u.isSuperuser" class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
-                    <!-- Banned badge -->
-                    <span *ngIf="u.banned" class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
-                            <fa-icon [icon]="faBan" class="me-1"></fa-icon>
-                            <ng-container i18n>Banned</ng-container>
-                        </span>
-                    <!-- Current user badge -->
-                    <app-current-user-badge [userId]="u.id" class="ms-2"></app-current-user-badge>
-                </div>
-                <!-- Provider icon and email -->
-                <div>
-                    <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
-                    <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                    <span class="user-email">{{ u.email }}</span>
-                </div>
-            </div>
-        </a>
-    </div>
+    @if (users?.length) {
+        <div class="list-group" id="user-list">
+            @for (u of users; track u.id) {
+                <a @fadeIn-slow [routerLink]="u.id" [class.text-muted]="u.banned"
+                   class="list-group-item list-group-item-action d-flex">
+                    <!-- Avatar -->
+                    <div class="col-auto d-flex align-items-center pe-2"><app-user-avatar [user]="u" size="M"/></div>
+                    <div class="col">
+                        <!-- Name and badge -->
+                        <div>
+                            <!-- Name -->
+                            <span class="fw-bold user-name">{{ u.name }}</span>
+                            <!-- System account badge -->
+                            @if (u.systemAccount) {
+                                <span class="badge rounded-pill bg-secondary ms-2">
+                                    <fa-icon [icon]="faLock" class="me-1"/>
+                                    <ng-container i18n>System</ng-container>
+                                </span>
+                            }
+                            <!-- Superuser badge -->
+                            @if (u.isSuperuser) {
+                                <span class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
+                            }
+                            <!-- Banned badge -->
+                            @if (u.banned) {
+                                <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
+                                    <fa-icon [icon]="faBan" class="me-1"/>
+                                    <ng-container i18n>Banned</ng-container>
+                                </span>
+                            }
+                            <!-- Current user badge -->
+                            <app-current-user-badge [userId]="u.id" class="ms-2"/>
+                        </div>
+                        <!-- Provider icon and email -->
+                        <div>
+                            @if (u.federatedSso) {
+                                <span class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
+                            } @else if (u.federatedIdP) {
+                                <app-idp-icon [idpId]="u.federatedIdP" class="me-2"/>
+                            }
+                            <span class="user-email">{{ u.email }}</span>
+                        </div>
+                    </div>
+                </a>
+            }
+        </div>
+    }
 
     <!-- List footer -->
     <app-list-footer [canLoadMore]="canLoadMore" [loading]="usersLoading.active" [count]="users?.length" (loadMore)="load.next(false)"/>

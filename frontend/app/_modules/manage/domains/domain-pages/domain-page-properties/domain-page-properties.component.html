@@ -4,16 +4,18 @@
 </header>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="domainMeta?.domain && page">
+    @if (domainMeta?.domain && page) {
         <div class="row">
             <!-- Buttons: only for owner+ -->
-            <div *ngIf="domainMeta!.canManageDomain" class="col-sm-auto order-sm-last pb-3">
-                <!-- Update title button -->
-                <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
-                    <fa-icon [icon]="faRotate" class="me-1"></fa-icon>
-                    <ng-container i18n>Update title</ng-container>
-                </button>
-            </div>
+            @if (domainMeta!.canManageDomain) {
+                <div class="col-sm-auto order-sm-last pb-3">
+                    <!-- Update title button -->
+                    <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
+                        <fa-icon [icon]="faRotate" class="me-1"/>
+                        <ng-container i18n>Update title</ng-container>
+                    </button>
+                </div>
+            }
 
             <!-- Detail table -->
             <div class="col-sm">
@@ -36,45 +38,53 @@
                         </dd>
                     </div>
                     <!-- Title -->
-                    <div *ngIf="page.title as v">
-                        <dt i18n>Title</dt>
-                        <dd>{{ v }}</dd>
-                    </div>
+                    @if (page.title; as v) {
+                        <div>
+                            <dt i18n>Title</dt>
+                            <dd>{{ v }}</dd>
+                        </div>
+                    }
                     <!-- Read-only -->
                     <div>
                         <dt i18n>Read-only</dt>
                         <dd>
                             <!-- Switch: moderator+ -->
-                            <div *ngIf="domainMeta!.canModerateDomain else readonlyNonModerator"
-                                 [appSpinner]="updatingReadonly.active" class="d-flex ps-1">
-                                <div class="form-check form-switch">
-                                    <input [ngModel]="page.isReadonly" (ngModelChange)="toggleReadonly()"
-                                           class="form-check-input" type="checkbox" role="switch" id="page-readonly-switch">
-                                    <label class="form-check-label" for="page-readonly-switch" i18n>Read-only</label>
+                            @if (domainMeta!.canModerateDomain) {
+                                <div [appSpinner]="updatingReadonly.active" class="d-flex ps-1">
+                                    <div class="form-check form-switch">
+                                        <input [ngModel]="page.isReadonly" (ngModelChange)="toggleReadonly()"
+                                               class="form-check-input" type="checkbox" role="switch" id="page-readonly-switch">
+                                        <label class="form-check-label" for="page-readonly-switch" i18n>Read-only</label>
+                                    </div>
                                 </div>
-                            </div>
+                            } @else {
+                                <app-checkmark [value]="page.isReadonly"/>
+                            }
                             <!-- Checkmark: regular users -->
-                            <ng-template #readonlyNonModerator>
-                                <app-checkmark [value]="page.isReadonly"></app-checkmark>
-                            </ng-template>
                             <div class="form-text" i18n>When a page is read-only, users cannot add comments to it.</div>
                         </dd>
                     </div>
                     <!-- Created -->
-                    <div *ngIf="page.createdTime | datetime as v">
-                        <dt i18n>Created</dt>
-                        <dd>{{ v }}</dd>
-                    </div>
+                    @if (page.createdTime | datetime; as v) {
+                        <div>
+                            <dt i18n>Created</dt>
+                            <dd>{{ v }}</dd>
+                        </div>
+                    }
                     <!-- Number of comments -->
-                    <div *ngIf="page.countComments! >= 0">
-                        <dt i18n>Number of comments</dt>
-                        <dd>{{ page.countComments | number }}</dd>
-                    </div>
+                    @if (page.countComments! >= 0) {
+                        <div>
+                            <dt i18n>Number of comments</dt>
+                            <dd>{{ page.countComments | number }}</dd>
+                        </div>
+                    }
                     <!-- Number of views -->
-                    <div *ngIf="page.countViews! >= 0">
-                        <dt i18n>Number of views</dt>
-                        <dd>{{ page.countViews | number }}</dd>
-                    </div>
+                    @if (page.countViews! >= 0) {
+                        <div>
+                            <dt i18n>Number of views</dt>
+                            <dd>{{ page.countViews | number }}</dd>
+                        </div>
+                    }
                 </dl>
             </div>
         </div>
@@ -83,12 +93,11 @@
         <section>
             <!-- Heading -->
             <h2 i18n>Comments</h2>
-
             <!-- Comment list -->
-            <app-comment-list [pageId]="page.id"></app-comment-list>
+            <app-comment-list [pageId]="page.id"/>
         </section>
-    </ng-container>
+    }
 
     <!-- Placeholder when no data -->
-    <app-no-data *ngIf="!domainMeta?.domain || !page"></app-no-data>
+    @if (!domainMeta?.domain || !page) { <app-no-data/> }
 </div>

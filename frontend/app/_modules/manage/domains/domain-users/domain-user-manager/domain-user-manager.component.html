@@ -1,14 +1,22 @@
 <!-- Header with the badge -->
 <header class="d-flex flex-wrap align-items-center">
     <h1 class="mb-0 me-2" i18n="heading">Domain users</h1>
-    <app-domain-badge></app-domain-badge>
+    <app-domain-badge/>
 </header>
 
 <!-- Info block -->
-<app-info-block *ngIf="domainMeta?.userKind" [ngSwitch]="domainMeta!.userKind">
-    <ng-container *ngSwitchCase="'superuser'" i18n>As a superuser, you see all users registered on the domain, just like domain owners.</ng-container>
-    <ng-container *ngSwitchCase="'owner'"     i18n>As a domain owner, you see all users registered on the domain. Other types of users don't have access to this page.</ng-container>
-</app-info-block>
+@if (domainMeta?.userKind) {
+    <app-info-block>
+        @switch (domainMeta!.userKind) {
+            @case ('superuser') {
+                <ng-container i18n>As a superuser, you see all users registered on the domain, just like domain owners.</ng-container>
+            }
+            @case ('owner') {
+                <ng-container i18n>As a domain owner, you see all users registered on the domain. Other types of users don't have access to this page.</ng-container>
+            }
+        }
+    </app-info-block>
+}
 
 <div [appSpinner]="!domainUsers && loading.active" spinnerSize="lg">
     <!-- Toolbar -->
@@ -20,9 +28,9 @@
             <!-- Sort -->
             <div class="col-auto">
                 <app-sort-selector [sort]="sort">
-                    <app-sort-property by="email"   label="Email"   i18n-label></app-sort-property>
-                    <app-sort-property by="name"    label="Name"    i18n-label></app-sort-property>
-                    <app-sort-property by="created" label="Created" i18n-label></app-sort-property>
+                    <app-sort-property by="email"   label="Email"   i18n-label/>
+                    <app-sort-property by="name"    label="Name"    i18n-label/>
+                    <app-sort-property by="created" label="Created" i18n-label/>
                 </app-sort-selector>
             </div>
 
@@ -38,41 +46,52 @@
     </div>
 
     <!-- Page list -->
-    <div *ngIf="domainUsers?.length" class="list-group" id="domain-user-list">
-        <a *ngFor="let du of domainUsers" @fadeIn-slow [routerLink]="du.userId"
-           class="list-group-item list-group-item-action d-flex">
-            <ng-container *ngIf="userMap.get(du.userId!) as u">
-                <!-- Avatar -->
-                <div class="col-auto d-flex align-items-center pe-2">
-                    <app-user-avatar [user]="u" size="M"/>
-                </div>
-                <div class="col">
-                    <!-- Name and badges -->
-                    <div>
-                        <!-- Name -->
-                        <span class="fw-bold domain-user-name">{{ u.name }}</span>
-                        <!-- Domain user badge -->
-                        <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
-                        <!-- Superuser badge -->
-                        <span *ngIf="u.isSuperuser" class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
-                        <!-- Banned badge -->
-                        <span *ngIf="u.banned" class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
-                                <fa-icon [icon]="faBan" class="me-1"></fa-icon>
-                                <ng-container i18n>Banned</ng-container>
-                            </span>
-                        <!-- Current user badge -->
-                        <app-current-user-badge [userId]="u.id" class="ms-2"></app-current-user-badge>
-                    </div>
-                    <!-- Provider icon and email -->
-                    <div>
-                        <app-idp-icon *ngIf="!u.federatedSso && u.federatedIdP" [idpId]="u.federatedIdP" class="me-2"></app-idp-icon>
-                        <span *ngIf="u.federatedSso" class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                        <span class="domain-user-email">{{ u.email }}</span>
-                    </div>
-                </div>
-            </ng-container>
-        </a>
-    </div>
+    @if (domainUsers?.length) {
+        <div class="list-group" id="domain-user-list">
+            @for (du of domainUsers; track du.userId) {
+                <a @fadeIn-slow [routerLink]="du.userId" class="list-group-item list-group-item-action d-flex">
+                    @if (userMap.get(du.userId!); as u) {
+                        <!-- Avatar -->
+                        <div class="col-auto d-flex align-items-center pe-2">
+                            <app-user-avatar [user]="u" size="M"/>
+                        </div>
+                        <div class="col">
+                            <!-- Name and badges -->
+                            <div>
+                                <!-- Name -->
+                                <span class="fw-bold domain-user-name">{{ u.name }}</span>
+                                <!-- Domain user badge -->
+                                <app-domain-user-badge [domainUser]="du" class="ms-2"/>
+                                <!-- Superuser badge -->
+                                @if (u.isSuperuser) {
+                                    <span class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
+                                }
+                                <!-- Banned badge -->
+                                @if (u.banned) {
+                                    <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
+                                        <fa-icon [icon]="faBan" class="me-1"/>
+                                        <ng-container i18n>Banned</ng-container>
+                                    </span>
+                                }
+                                <!-- Current user badge -->
+                                <app-current-user-badge [userId]="u.id" class="ms-2"/>
+                            </div>
+                            <!-- Provider icon and email -->
+                            <div>
+                                @if (!u.federatedSso && u.federatedIdP) {
+                                    <app-idp-icon [idpId]="u.federatedIdP" class="me-2"/>
+                                }
+                                @if (u.federatedSso) {
+                                    <span class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
+                                }
+                                <span class="domain-user-email">{{ u.email }}</span>
+                            </div>
+                        </div>
+                    }
+                </a>
+            }
+        </div>
+    }
 
     <!-- List footer -->
     <app-list-footer [canLoadMore]="canLoadMore" [loading]="loading.active" [count]="domainUsers?.length" (loadMore)="load.next(false)"/>

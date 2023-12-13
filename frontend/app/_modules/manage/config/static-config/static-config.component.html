@@ -45,13 +45,18 @@
     <div>
         <dt i18n>Configured federated identity providers</dt>
         <dd>
-            <ul *ngIf="cfg.federatedIdps?.length else noIdps" class="list-unstyled">
-                <li *ngFor="let idp of cfg.federatedIdps">
-                    <app-idp-icon [idpId]="idp.id"></app-idp-icon>
-                    <span class="ms-1">{{ idp.name }}</span>
-                </li>
-            </ul>
-            <ng-template #noIdps><i i18n>(none)</i></ng-template>
+            @if (cfg.federatedIdps?.length) {
+                <ul class="list-unstyled">
+                    @for (idp of cfg.federatedIdps; track idp.id) {
+                        <li>
+                            <app-idp-icon [idpId]="idp.id"/>
+                            <span class="ms-1">{{ idp.name }}</span>
+                        </li>
+                    }
+                </ul>
+            } @else {
+                <i i18n>(none)</i>
+            }
         </dd>
     </div>
     <!-- Max. number of items per page -->
@@ -64,20 +69,26 @@
         <dt i18n>Available UI languages</dt>
         <dd>
             <ul class="list-unstyled">
-                <li *ngFor="let lang of cfg.uiLanguages">
-                    <code>{{ lang.id }}</code>
-                    <span class="ms-1">{{ lang.nameNative }} ({{ lang.nameEnglish }})</span>
-                </li>
+                @for (lang of cfg.uiLanguages; track lang.id) {
+                    <li>
+                        <code>{{ lang.id }}</code>
+                        <span class="ms-1">{{ lang.nameNative }} ({{ lang.nameEnglish }})</span>
+                    </li>
+                }
             </ul>
         </dd>
     </div>
     <!-- Enabled extensions -->
-    <div *ngIf="extensions?.length">
-        <dt i18n>Enabled extensions</dt>
-        <dd>
-            <ul class="ps-3 mb-0">
-                <li *ngFor="let ext of extensions">{{ ext.name }}</li>
-            </ul>
-        </dd>
-    </div>
+    @if (extensions?.length) {
+        <div>
+            <dt i18n>Enabled extensions</dt>
+            <dd>
+                <ul class="ps-3 mb-0">
+                    @for (ext of extensions; track ext.id) {
+                        <li>{{ ext.name }}</li>
+                    }
+                </ul>
+            </dd>
+        </div>
+    }
 </dl>

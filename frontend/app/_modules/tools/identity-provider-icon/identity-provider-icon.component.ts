@@ -5,7 +5,7 @@ import { FederatedIdpId } from '../../../../generated-api';
 
 @Component({
     selector: 'app-idp-icon',
-    template: '<fa-icon [icon]="icon"></fa-icon>',
+    template: '<fa-icon [icon]="icon"/>',
 })
 export class IdentityProviderIconComponent {
 

@@ -1,30 +1,38 @@
 <div class="py-2 text-center">
     <!-- Loading text -->
-    <span *ngIf="loading else notLoading" class="item-loading" i18n>Loading…</span>
+    @if (loading) {
+        <span class="item-loading" i18n>Loading…</span>
 
-    <!-- Not loading -->
-    <ng-template #notLoading>
-        <!-- Item count -->
-        <span *ngIf="count" class="item-count">
+    } @else if (count) {
+        <!-- Not loading. Item count -->
+        <span class="item-count">
             <!-- There are more items -->
-            <ng-container *ngIf="canLoadMore" i18n>{{ count }} items displayed.</ng-container>
-            <!-- No more items -->
-            <ng-container *ngIf="!canLoadMore" i18n>{ count, plural, =1 {The only item displayed.} other {All {{ count }} items displayed.}}</ng-container>
+            @if (canLoadMore) {
+                <ng-container i18n>{{ count }} items displayed.</ng-container>
+            } @else {
+                <!-- No more items -->
+                <ng-container i18n>{ count, plural, =1 {The only item displayed.} other {All {{ count }} items displayed.}}</ng-container>
+            }
         </span>
 
         <!-- No items -->
-        <ng-container *ngIf="!count">
-            <!-- Insert the component's content, if any -->
-            <div #content><ng-content/></div>
-            <!-- Use the default no-data component if there's no content -->
-            <app-no-data *ngIf="!content.children.length"></app-no-data>
-        </ng-container>
-    </ng-template>
+    } @else {
+        <!-- Insert the component's content, if any -->
+        <div #content>
+            <ng-content/>
+        </div>
+        <!-- Use the default no-data component if there's no content -->
+        @if (!content.children.length) {
+            <app-no-data/>
+        }
+    }
 
     <!-- Load more items button, only when there's something loaded already -->
-    <div class="pt-2" *ngIf="count && canLoadMore">
-        <button [appSpinner]="loading" (click)="loadMore.next()" type="button" class="btn btn-outline-secondary">
-            <ng-container i18n>Load more</ng-container>
-        </button>
-    </div>
+    @if (count && canLoadMore) {
+        <div class="pt-2">
+            <button [appSpinner]="loading" (click)="loadMore.next()" type="button" class="btn btn-outline-secondary">
+                <ng-container i18n>Load more</ng-container>
+            </button>
+        </div>
+    }
 </div>

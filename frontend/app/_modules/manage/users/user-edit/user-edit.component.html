@@ -28,14 +28,14 @@
         </div>
 
         <!-- Password, only when enabled -->
-        <div *ngIf="form.controls.password.enabled" class="mb-3 row">
-            <label for="password" class="col-sm-3 col-form-label colon fw-bold" i18n>Password</label>
-            <div class="col-sm-9">
-                <app-password-input formControlName="password" [strong]="true" placeholder="(unchanged)" id="password"
-                                    i18n-placeholder></app-password-input>
+        @if (form.controls.password.enabled) {
+            <div class="mb-3 row">
+                <label for="password" class="col-sm-3 col-form-label colon fw-bold" i18n>Password</label>
+                <div class="col-sm-9">
+                    <app-password-input formControlName="password" [strong]="true" placeholder="(unchanged)" id="password" i18n-placeholder/>
+                </div>
             </div>
-        </div>
-
+        }
         <!-- Website URL -->
         <div class="mb-3 row">
             <label for="website-url" class="col-sm-3 col-form-label colon fw-bold" i18n>Website URL</label>
@@ -53,8 +53,8 @@
             <label for="remarks" class="col-sm-3 col-form-label colon fw-bold" i18n>Remarks</label>
             <div class="col-sm-9">
                 <textarea formControlName="remarks" class="form-control" id="remarks" rows="4"
-                       [class.is-valid]="form.controls.remarks.touched && form.controls.remarks.valid"
-                       [class.is-invalid]="form.controls.remarks.touched && form.controls.remarks.invalid"></textarea>
+                          [class.is-valid]="form.controls.remarks.touched && form.controls.remarks.valid"
+                          [class.is-invalid]="form.controls.remarks.touched && form.controls.remarks.invalid"></textarea>
                 <div class="invalid-feedback" i18n>Please enter a valid value.</div>
             </div>
         </div>

@@ -2,13 +2,13 @@
 <h1 i18n="heading">User properties</h1>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="user">
+    @if (user) {
         <div class="row">
             <!-- Buttons -->
             <div class="col-sm-auto order-sm-last pb-3">
                 <!-- Edit user button -->
                 <a [class.disabled]="user.systemAccount" routerLink="edit" class="btn btn-secondary w-100 mb-2">
-                    <fa-icon [icon]="faEdit" class="me-1"></fa-icon>
+                    <fa-icon [icon]="faEdit" class="me-1"/>
                     <ng-container i18n>Edit user</ng-container>
                 </a>
                 <!-- Ban user button -->
@@ -17,15 +17,18 @@
                         [disable]="isSelf || user.systemAccount!" confirmAction="Proceed" confirmActionType="warning"
                         (confirmed)="toggleBan()"
                         type="button" class="btn btn-outline-warning w-100 mb-2" i18n-confirmAction>
-                    <fa-icon [icon]="faBan" class="me-1"></fa-icon>
-                    <ng-container *ngIf="!user.banned" i18n>Ban user</ng-container>
-                    <ng-container *ngIf="user.banned"  i18n>Unban user</ng-container>
+                    <fa-icon [icon]="faBan" class="me-1"/>
+                    @if (user.banned) {
+                        <ng-container i18n>Unban user</ng-container>
+                    } @else {
+                        <ng-container i18n>Ban user</ng-container>
+                    }
                 </button>
                 <!-- Delete user button -->
                 <button [appSpinner]="deleting.active" [appConfirm]="deleteConfirm" [disable]="isSelf || user.systemAccount!"
                         confirmAction="Delete user" (confirmed)="delete()" type="button"
                         class="btn btn-outline-danger w-100 mb-2" i18n-confirmAction>
-                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
+                    <fa-icon [icon]="faTrashAlt" class="me-1"/>
                     <ng-container i18n>Delete user</ng-container>
                 </button>
             </div>
@@ -42,27 +45,32 @@
             <h2 i18n>Domain roles</h2>
 
             <!-- Domain/role list -->
-            <div *ngIf="domainUsers" class="list-group">
-                <ng-container *ngFor="let du of domainUsers">
-                    <a *ngIf="domains.get(du.domainId!) as d" @fadeIn-slow [routerLink]="[Paths.manage.domains, d.id]"
-                       class="list-group-item list-group-item-action">
-                        <!-- Domain name/host -->
-                        <div>
-                            <span class="fw-bold domain-host">{{ d.host }}</span>
-                            <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
-                        </div>
-                        <div *ngIf="d.name" class="domain-name">{{ d.name }}</div>
-                    </a>
-                </ng-container>
-            </div>
+            @if (domainUsers) {
+                <div class="list-group">
+                    @for (du of domainUsers; track du.domainId) {
+                        @if (domains.get(du.domainId!); as d) {
+                            <a @fadeIn-slow [routerLink]="[Paths.manage.domains, d.id]"
+                               class="list-group-item list-group-item-action">
+                                <!-- Domain name/host -->
+                                <div>
+                                    <span class="fw-bold domain-host">{{ d.host }}</span>
+                                    <app-domain-user-badge [domainUser]="du" class="ms-2"></app-domain-user-badge>
+                                </div>
+                                @if (d.name) {
+                                    <div class="domain-name">{{ d.name }}</div>
+                                }
+                            </a>
+                        }
+                    }
+                </div>
+            }
 
             <!-- List footer -->
             <app-list-footer [count]="domainUsers?.length"/>
         </section>
-    </ng-container>
-
+    }
     <!-- Placeholder when no data -->
-    <app-no-data *ngIf="!user"></app-no-data>
+    @if (!user) { <app-no-data/> }
 </div>
 
 <!-- Template for the ban confirmation dialog -->

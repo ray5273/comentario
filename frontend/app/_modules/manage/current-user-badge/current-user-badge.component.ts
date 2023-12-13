@@ -7,7 +7,7 @@ import { AuthService } from '../../../_services/auth.service';
  */
 @Component({
     selector: 'app-current-user-badge',
-    template: '<span *ngIf="userId && userId === (principal | async)?.id" class="badge rounded-pill bg-light border border-success text-success text-uppercase" i18n>You</span>',
+    template: '@if (userId && userId === (principal | async)?.id) {<span class="badge rounded-pill bg-light border border-success text-success text-uppercase" i18n>You</span>}',
 })
 export class CurrentUserBadgeComponent {
 

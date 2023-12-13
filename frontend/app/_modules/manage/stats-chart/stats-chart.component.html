@@ -1,5 +1,7 @@
 <!-- Info text -->
-<p *ngIf="countDays" class="text-muted stats-chart-info" i18n>Last {{ countDays }} days.</p>
+@if (countDays) {
+    <p class="text-muted stats-chart-info" i18n>Last {{ countDays }} days.</p>
+}
 
 <div class="row row-cols-1 row-cols-lg-2 g-2">
     <!-- Views -->
@@ -8,9 +10,11 @@
         <app-metric-card [value]="countViews" label="Views" i18n-label="metric-label|"/>
 
         <!-- Chart -->
-        <div *ngIf="chartDataViews as d" class="chart-container">
-            <canvas baseChart type="line" [options]="chartOptionsViews" [data]="d"></canvas>
-        </div>
+        @if (chartDataViews; as d) {
+            <div class="chart-container">
+                <canvas baseChart type="line" [options]="chartOptionsViews" [data]="d"></canvas>
+            </div>
+        }
     </div>
 
     <!-- Comments -->
@@ -19,11 +23,13 @@
         <app-metric-card [value]="countComments" label="Comments" i18n-label="metric-label|"/>
 
         <!-- Chart -->
-        <div *ngIf="chartDataComments as d" class="chart-container">
-            <canvas baseChart type="line" [options]="chartOptionsComments" [data]="d"></canvas>
-        </div>
+        @if (chartDataComments; as d) {
+            <div class="chart-container">
+                <canvas baseChart type="line" [options]="chartOptionsComments" [data]="d"></canvas>
+            </div>
+        }
     </div>
 </div>
 
 <!-- Placeholder when no data -->
-<app-no-data *ngIf="!countDays"></app-no-data>
+@if (!countDays) { <app-no-data/> }

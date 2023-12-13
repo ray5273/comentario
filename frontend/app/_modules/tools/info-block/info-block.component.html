@@ -1,10 +1,12 @@
 <div class="info-block">
     <!-- Icon -->
     <div class="me-2 p-2 bg-info-subtle">
-        <fa-icon *ngIf="icon" [icon]="icon" class="text-info"></fa-icon>
+        @if (icon) {
+            <fa-icon [icon]="icon" class="text-info"/>
+        }
     </div>
     <!-- View content -->
     <div class="p-2">
-        <ng-content></ng-content>
+        <ng-content/>
     </div>
 </div>

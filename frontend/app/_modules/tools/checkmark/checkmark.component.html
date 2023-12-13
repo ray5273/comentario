@@ -1,4 +1,6 @@
-<ng-container *ngIf="value else nope">
-    <fa-icon [icon]="faCheck" aria-checked="true" class="text-primary"></fa-icon><span class="visually-hidden">✔</span>
-</ng-container>
-<ng-template #nope><span class="nope" aria-checked="false"></span></ng-template>
+@if (value) {
+    <fa-icon [icon]="faCheck" aria-checked="true" class="text-primary"/>
+    <span class="visually-hidden">✔</span>
+} @else {
+    <span class="nope" aria-checked="false"></span>
+}

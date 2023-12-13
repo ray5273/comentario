@@ -4,31 +4,33 @@
 </header>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    <ng-container *ngIf="domainMeta?.domain && comment">
+    @if (domainMeta?.domain && comment) {
         <div class="row">
             <!-- Buttons: only for moderator+ and if comment isn't deleted -->
-            <div *ngIf="!comment.isDeleted && domainMeta!.canModerateDomain" class="col-sm-auto order-sm-last pb-3">
-                <!-- Approve -->
-                <button [appSpinner]="updating.active" [class.active]="!comment.isPending && comment.isApproved"
-                        (click)="moderate(true)"
-                        type="button" class="btn btn-outline-success w-100 mb-2">
-                    <fa-icon [icon]="faCheck" class="me-1"></fa-icon>
-                    <ng-container i18n>Approve</ng-container>
-                </button>
-                <!-- Reject -->
-                <button [appSpinner]="updating.active" [class.active]="!comment.isPending && !comment.isApproved"
-                        (click)="moderate(false)"
-                        type="button" class="btn btn-outline-warning w-100 mb-2">
-                    <fa-icon [icon]="faXmark" class="me-1"></fa-icon>
-                    <ng-container i18n>Reject</ng-container>
-                </button>
-                <!-- Delete -->
-                <button [appSpinner]="deleting.active" (click)="delete()"
-                        type="button" class="btn btn-outline-danger w-100">
-                    <fa-icon [icon]="faTrashAlt" class="me-1"></fa-icon>
-                    <ng-container i18n>Delete</ng-container>
-                </button>
-            </div>
+            @if (!comment.isDeleted && domainMeta!.canModerateDomain) {
+                <div class="col-sm-auto order-sm-last pb-3">
+                    <!-- Approve -->
+                    <button [appSpinner]="updating.active" [class.active]="!comment.isPending && comment.isApproved"
+                            (click)="moderate(true)"
+                            type="button" class="btn btn-outline-success w-100 mb-2">
+                        <fa-icon [icon]="faCheck" class="me-1"/>
+                        <ng-container i18n>Approve</ng-container>
+                    </button>
+                    <!-- Reject -->
+                    <button [appSpinner]="updating.active" [class.active]="!comment.isPending && !comment.isApproved"
+                            (click)="moderate(false)"
+                            type="button" class="btn btn-outline-warning w-100 mb-2">
+                        <fa-icon [icon]="faXmark" class="me-1"/>
+                        <ng-container i18n>Reject</ng-container>
+                    </button>
+                    <!-- Delete -->
+                    <button [appSpinner]="deleting.active" (click)="delete()"
+                            type="button" class="btn btn-outline-danger w-100">
+                        <fa-icon [icon]="faTrashAlt" class="me-1"/>
+                        <ng-container i18n>Delete</ng-container>
+                    </button>
+                </div>
+            }
 
             <div class="col-sm">
                 <!-- Detail table -->
@@ -42,25 +44,31 @@
                         </dd>
                     </div>
                     <!-- Parent comment -->
-                    <div *ngIf="comment.parentId">
-                        <dt i18n>Parent comment</dt>
-                        <dd><a [routerLink]="['..', comment.parentId]">{{ comment.parentId }}</a></dd>
-                    </div>
+                    @if (comment.parentId) {
+                        <div>
+                            <dt i18n>Parent comment</dt>
+                            <dd><a [routerLink]="['..', comment.parentId]">{{ comment.parentId }}</a></dd>
+                        </div>
+                    }
                     <!-- Domain page -->
-                    <div *ngIf="page">
-                        <dt i18n>Domain page</dt>
-                        <dd><a [routerLink]="[Paths.manage.domains, page.domainId, 'pages', page.id]">{{ page.path }}</a></dd>
-                    </div>
+                    @if (page) {
+                        <div>
+                            <dt i18n>Domain page</dt>
+                            <dd><a [routerLink]="[Paths.manage.domains, page.domainId, 'pages', page.id]">{{ page.path }}</a></dd>
+                        </div>
+                    }
                     <!-- Status -->
                     <div>
                         <dt i18n>Status</dt>
                         <dd><app-comment-status-badge [comment]="comment"></app-comment-status-badge></dd>
                     </div>
                     <!-- Reason for pending status -->
-                    <div *ngIf="comment.isPending && comment.pendingReason">
-                        <dt i18n>Reason for pending status</dt>
-                        <dd>{{ comment.pendingReason }}</dd>
-                    </div>
+                    @if (comment.isPending && comment.pendingReason) {
+                        <div>
+                            <dt i18n>Reason for pending status</dt>
+                            <dd>{{ comment.pendingReason }}</dd>
+                        </div>
+                    }
                     <!-- Score -->
                     <div>
                         <dt i18n>Score</dt>
@@ -72,55 +80,62 @@
                     <!-- Sticky -->
                     <div>
                         <dt i18n>Sticky</dt>
-                        <dd><app-checkmark [value]="comment.isSticky"></app-checkmark></dd>
+                        <dd><app-checkmark [value]="comment.isSticky"/></dd>
                     </div>
                     <!-- Created -->
-                    <div *ngIf="comment.createdTime | datetime as v">
-                        <dt i18n>Created</dt>
-                        <dd>{{ v }}</dd>
-                    </div>
+                    @if (comment.createdTime | datetime; as v) {
+                        <div>
+                            <dt i18n>Created</dt>
+                            <dd>{{ v }}</dd>
+                        </div>
+                    }
                     <!-- Created by -->
-                    <div *ngIf="page">
-                        <dt i18n>Created by</dt>
-                        <dd>
-                            <!-- Domain user link if the current user is an owner+ -->
-                            <a *ngIf="commenter && domainMeta!.canManageDomain else commenterName"
-                               [routerLink]="[Paths.manage.domains, page.domainId, 'users', commenter.id]">
-                                <app-user-avatar [user]="commenter" size="S" class="me-1"/>
-                                <ng-container>{{ commenter.name }}</ng-container>
-                                <ng-container *ngIf="commenter.email as e"> ({{ e }})</ng-container>
-                            </a>
-                            <!-- Commenter name otherwise -->
-                            <ng-template #commenterName>
-                                <!-- Existing, non-anonymous commenter -->
-                                <ng-container *ngIf="commenter">
-                                    <app-user-avatar [user]="commenter" size="S" class="me-1"/>
-                                    <ng-container>{{ commenter.name }}</ng-container>
-                                </ng-container>
-                                <!-- Anonymous commenter -->
-                                <ng-container *ngIf="!commenter && comment.userCreated === anonUserId">
-                                    <i i18n>(anonymous user)</i>
-                                </ng-container>
-                                <!-- Deleted commenter -->
-                                <ng-container *ngIf="!commenter && comment.userCreated !== anonUserId">
-                                    <i class="text-muted" i18n>(deleted user)</i>
-                                </ng-container>
-                            </ng-template>
-                        </dd>
-                    </div>
+                    @if (page) {
+                        <div>
+                            <dt i18n>Created by</dt>
+                            <dd>
+                                <!-- Domain user link if the current user is an owner+ -->
+                                @if (commenter && domainMeta!.canManageDomain) {
+                                    <a [routerLink]="[Paths.manage.domains, page.domainId, 'users', commenter.id]">
+                                        <app-user-avatar [user]="commenter" size="S" class="me-1"/>
+                                        <ng-container>{{ commenter.name }}</ng-container>
+                                        @if (commenter.email) { ({{ commenter.email }}) }
+                                    </a>
+
+                                <!-- Commenter name otherwise -->
+                                } @else {
+                                    <!-- Existing, non-anonymous commenter -->
+                                    @if (commenter) {
+                                        <app-user-avatar [user]="commenter" size="S" class="me-1"/>
+                                        <ng-container>{{ commenter.name }}</ng-container>
+                                    }
+                                    <!-- Anonymous commenter -->
+                                    @if (!commenter && comment.userCreated === anonUserId) {
+                                        <i i18n>(anonymous user)</i>
+                                    }
+                                    <!-- Deleted commenter -->
+                                    @if (!commenter && comment.userCreated !== anonUserId) {
+                                        <i class="text-muted" i18n>(deleted user)</i>
+                                    }
+                                }
+                            </dd>
+                        </div>
+                    }
                 </dl>
             </div>
         </div>
 
         <!-- Comment text -->
-        <section *ngIf="comment.html as h">
-            <h3 i18n>Comment text</h3>
-            <div class="card">
-                <div class="card-body comment-text" [innerHTML]="h"></div>
-            </div>
-        </section>
-    </ng-container>
+        @if (comment.html) {
+            <section>
+                <h3 i18n>Comment text</h3>
+                <div class="card">
+                    <div class="card-body comment-text" [innerHTML]="comment.html"></div>
+                </div>
+            </section>
+        }
+    }
 
     <!-- Placeholder when no data -->
-    <app-no-data *ngIf="!domainMeta?.domain || !comment"></app-no-data>
+    @if (!domainMeta?.domain || !comment) { <app-no-data/> }
 </div>

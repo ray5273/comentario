@@ -72,8 +72,6 @@ export class CommentListComponent implements OnInit, OnChanges {
     readonly faTrashAlt = faTrashAlt;
     readonly faXmark    = faXmark;
 
-    readonly trackById = (_: number, comment: Comment) => comment.id!;
-
     private loadedPageNum = 0;
 
     constructor(

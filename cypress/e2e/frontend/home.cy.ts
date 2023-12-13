@@ -73,7 +73,7 @@ context('Home', () => {
             .should('be.anchor',
                 'https://twitter.com/ComentarioApp',
                 {newTab: true, noOpener: true, noReferrer: false, noFollow: false})
-            .should('have.attr', 'title', 'XXXXXXXwitter');
+            .should('have.attr', 'title', 'Xwitter');
         cy.get('@footer').find('a[href*="linkedin"]')
             .should('be.anchor',
                 'https://www.linkedin.com/company/comentario-app/',
