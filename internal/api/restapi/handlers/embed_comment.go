@@ -33,11 +33,6 @@ func EmbedCommentCount(params api_embed.EmbedCommentCountParams) middleware.Resp
 }
 
 func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Delete the comment
 	if r := commentDelete(params.UUID, user); r != nil {
 		return r
@@ -47,7 +42,14 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 	return api_embed.NewEmbedCommentDeleteNoContent()
 }
 
-func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) middleware.Responder {
+func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Responder {
+	// Try to authenticate the user
+	user, err := GetUserBySessionCookie(params.HTTPRequest)
+	if err != nil {
+		// Failed, consider the user to be anonymous
+		user = data.AnonymousUser
+	}
+
 	// Fetch the domain and the user (don't create one yet if there's none)
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
 	if errors.Is(err, svc.ErrNotFound) {
@@ -123,11 +125,6 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams, user *data.User) 
 }
 
 func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Find the comment and related objects
 	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
 	if r != nil {
@@ -148,7 +145,19 @@ func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *dat
 	return api_embed.NewEmbedCommentModerateNoContent()
 }
 
-func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) middleware.Responder {
+func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responder {
+	user := data.AnonymousUser
+
+	// If the comment is submitted as non-anonymous, try to authenticate the user
+	if !params.Body.Anonymous {
+		if u, err := GetUserBySessionCookie(params.HTTPRequest); err != nil {
+			return respUnauthorized(ErrorUnauthenticated)
+		} else {
+			// Successfully authenticated
+			user = u
+		}
+	}
+
 	// Fetch the domain and the user, creating one if necessary
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if errors.Is(err, svc.ErrNotFound) {
@@ -249,11 +258,6 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams, user *data.User) mi
 }
 
 func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Find the comment and related objects
 	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
 	if r != nil {
@@ -283,11 +287,6 @@ func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.Us
 }
 
 func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Find the comment and related objects
 	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
 	if r != nil {
@@ -340,11 +339,6 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 }
 
 func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Parse comment ID
 	if commentID, r := parseUUID(params.UUID); r != nil {
 		return r

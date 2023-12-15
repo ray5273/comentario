@@ -27,10 +27,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	}
 
 	// Succeeded
-	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
-		SessionToken: us.EncodeIDs(),
-		Principal:    user.ToPrincipal(du),
-	})
+	return authCreateUserSession(api_embed.NewEmbedAuthLoginOK(), user, us, du)
 }
 
 func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
@@ -48,29 +45,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 	}
 
 	// Succeeded
-	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
-		SessionToken: us.EncodeIDs(),
-		Principal:    user.ToPrincipal(du),
-	})
-}
-
-func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
-	// Extract session from the session header
-	_, sessionID, err := ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
-	if err != nil {
-		return respUnauthorized(nil)
-	}
-
-	// Delete the session token, ignoring any error
-	_ = svc.TheUserService.DeleteUserSession(sessionID)
-
-	// Regardless of whether the above was successful, return a success response
-	return api_embed.NewEmbedAuthLogoutNoContent()
+	return authCreateUserSession(api_embed.NewEmbedAuthLoginTokenRedeemOK(), user, us, du)
 }
 
 func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responder {
@@ -107,29 +82,7 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 	return api_embed.NewEmbedAuthSignupOK().WithPayload(&api_embed.EmbedAuthSignupOKBody{IsConfirmed: user.Confirmed})
 }
 
-func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.Responder {
-	// Fetch the session header value
-	if s := params.HTTPRequest.Header.Get(util.HeaderUserSession); s != "" {
-		// Try to fetch the user
-		if user, userSession, err := FetchUserBySessionHeader(s); err == nil && !user.IsAnonymous() && userSession != nil {
-			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
-			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
-				// Succeeded: user is authenticated
-				return api_embed.NewEmbedAuthCurUserGetOK().WithPayload(user.ToPrincipal(domainUser))
-			}
-		}
-	}
-
-	// Not logged in, bad header value, the user is anonymous or doesn't exist, or domain was deleted
-	return api_embed.NewEmbedAuthCurUserGetNoContent()
-}
-
 func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Parse page ID
 	var du *data.DomainUser
 	if pageID, r := parseUUIDPtr(params.Body.PageID); r != nil {

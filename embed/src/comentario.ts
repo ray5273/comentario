@@ -418,7 +418,7 @@ export class Comentario extends HTMLElement {
         // If we can proceed: user logged in or that wasn't required
         if (this.principal || !auth) {
             // Submit the comment to the backend
-            const r = await this.apiService.commentNew(this.location.host, this.pagePath, parentCard?.comment.id, markdown);
+            const r = await this.apiService.commentNew(this.location.host, this.pagePath, anonymous, parentCard?.comment.id, markdown);
 
             // Make sure parent map exists
             if (!this.parentIdMap) {

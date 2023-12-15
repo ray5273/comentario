@@ -64,7 +64,6 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 
 	// Set up auth handlers
 	api.TokenAuth = handlers.AuthBearerToken
-	api.UserSessionHeaderAuth = handlers.AuthUserBySessionHeader
 	api.UserCookieAuth = handlers.AuthUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
@@ -142,9 +141,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Auth
 	api.APIEmbedEmbedAuthLoginHandler = api_embed.EmbedAuthLoginHandlerFunc(handlers.EmbedAuthLogin)
 	api.APIEmbedEmbedAuthLoginTokenRedeemHandler = api_embed.EmbedAuthLoginTokenRedeemHandlerFunc(handlers.EmbedAuthLoginTokenRedeem)
-	api.APIEmbedEmbedAuthLogoutHandler = api_embed.EmbedAuthLogoutHandlerFunc(handlers.EmbedAuthLogout)
 	api.APIEmbedEmbedAuthSignupHandler = api_embed.EmbedAuthSignupHandlerFunc(handlers.EmbedAuthSignup)
-	api.APIEmbedEmbedAuthCurUserGetHandler = api_embed.EmbedAuthCurUserGetHandlerFunc(handlers.EmbedAuthCurUserGet)
 	api.APIEmbedEmbedAuthCurUserUpdateHandler = api_embed.EmbedAuthCurUserUpdateHandlerFunc(handlers.EmbedAuthCurUserUpdate)
 	// Comment
 	api.APIEmbedEmbedCommentCountHandler = api_embed.EmbedCommentCountHandlerFunc(handlers.EmbedCommentCount)

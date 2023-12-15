@@ -56,7 +56,7 @@ func corsHandler(next http.Handler) http.Handler {
 		handlers.AllowCredentials(),
 		handlers.AllowedHeaders([]string{
 			"Accept-Encoding", "Authorization", "Content-Type", "Content-Length", "X-Requested-With",
-			util.HeaderUserSession, util.HeaderXSRFToken}),
+			util.HeaderXSRFToken}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 	)(next)
 }

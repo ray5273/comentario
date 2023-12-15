@@ -1,6 +1,5 @@
 import { Comment, Commenter, InstanceConfig, InstanceDynamicConfigItem, InstanceDynamicConfigKey, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
 import { HttpClient } from './http-client';
-import { Utils } from './utils';
 
 export interface ApiErrorResponse {
     readonly id?:      string;
@@ -42,13 +41,6 @@ export interface ApiAuthSignupResponse {
     readonly isConfirmed: boolean;
 }
 
-export interface ApiAuthLoginResponse {
-    /** Session token to authenticate subsequent API requests with. */
-    readonly sessionToken: string;
-    /** Authenticated principal. */
-    readonly principal: Principal;
-}
-
 export interface ApiAuthLoginTokenNewResponse {
     /** New anonymous token. */
     readonly token: string;
@@ -56,17 +48,11 @@ export interface ApiAuthLoginTokenNewResponse {
 
 export class ApiService {
 
-    /** Base64-encoded representation of a 32-byte zero-filled array (2 zero UUIDs). */
-    static readonly AnonymousUserSessionToken = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
-
-    /** Session token cookie name. */
-    static readonly SessionTokenCookieName = 'comentario_auth_token';
-
-    /** User/session token to authenticate requests with. */
-    private userSessionToken?: string;
+    /** Whether authentication status is known. */
+    private _authStatusKnown = false;
 
     /** Authenticated principal, if any. */
-    private principal?: Principal;
+    private _principal?: Principal;
 
     /** HTTP client we'll use for API requests. */
     private readonly apiClient = new HttpClient(this.basePath, this.onBeforeRequest, this.onError);
@@ -77,6 +63,11 @@ export class ApiService {
         private readonly onError?: (error: any) => void,
     ) {}
 
+    set principal(p: Principal | undefined) {
+        this._principal = p;
+        this._authStatusKnown = true;
+    }
+
     /**
      * Sign a commenter in using local (password-based) authentication.
      * @param email Commenter's email.
@@ -84,9 +75,7 @@ export class ApiService {
      * @param host Host the commenter is signing in on.
      */
     async authLogin(email: string, password: string, host: string): Promise<void> {
-        const r = await this.apiClient.post<ApiAuthLoginResponse>('embed/auth/login', undefined, {email, password, host});
-        this.setUserSessionToken(r.sessionToken);
-        this.principal = r.principal;
+        this.principal = await this.apiClient.post<Principal>('embed/auth/login', {email, password, host});
     }
 
     /**
@@ -95,21 +84,15 @@ export class ApiService {
      * @param host Host the commenter is signing in on.
      */
     async authLoginToken(token: string, host: string): Promise<void> {
-        const r = await this.apiClient.put<ApiAuthLoginResponse>(
-            'embed/auth/login/token',
-            undefined,
-            {host},
-            {Authorization: `Bearer ${token}`});
-        this.setUserSessionToken(r.sessionToken);
-        this.principal = r.principal;
+        this.principal = await this.apiClient.put<Principal>('embed/auth/login/token', {host}, {Authorization: `Bearer ${token}`});
     }
 
     /**
      * Log the currently signed-in commenter out.
      */
     async authLogout(): Promise<void> {
-        await this.apiClient.post<void>('embed/auth/logout', this.userSessionToken);
-        this.setUserSessionToken(ApiService.AnonymousUserSessionToken);
+        await this.apiClient.post<void>('auth/logout');
+        this.principal = undefined;
     }
 
     /**
@@ -117,7 +100,7 @@ export class ApiService {
      * authentication.
      */
     async authNewLoginToken(): Promise<string> {
-        const r = await this.apiClient.post<ApiAuthLoginTokenNewResponse>('auth/login/token', undefined);
+        const r = await this.apiClient.post<ApiAuthLoginTokenNewResponse>('auth/login/token');
         return r.token;
     }
 
@@ -125,29 +108,11 @@ export class ApiService {
      * Return the currently authenticated principal or undefined if the user isn't authenticated.
      */
     async authPrincipal(): Promise<Principal | undefined> {
-        // If there's an authenticated principal, return it
-        if (this.principal) {
-            return this.principal;
+        // Retrieve the currently authenticated principal, if needed
+        if (!this._authStatusKnown) {
+            await this.updatePrincipal();
         }
-
-        // If there's no session token, try to restore it from the cookie
-        if (this.userSessionToken === undefined) {
-            this.userSessionToken = Utils.getCookie(ApiService.SessionTokenCookieName);
-        }
-
-        // If only an anonymous session is available, resolve to undefined
-        if (this.userSessionToken === ApiService.AnonymousUserSessionToken) {
-            return undefined;
-        }
-
-        // Retrieve the currently authenticated principal, if any
-        await this.updatePrincipal();
-
-        // User isn't authenticated
-        if (!this.principal) {
-            this.setUserSessionToken(ApiService.AnonymousUserSessionToken);
-        }
-        return this.principal;
+        return this._principal;
     }
 
     /**
@@ -157,7 +122,7 @@ export class ApiService {
      * @param notifyModerator Whether the user is to receive moderator notifications.
      */
     async authProfileUpdate(pageId: UUID, notifyReplies: boolean, notifyModerator: boolean): Promise<void> {
-        await this.apiClient.put<void>('embed/auth/user', this.userSessionToken, {pageId, notifyReplies, notifyModerator});
+        await this.apiClient.put<void>('embed/auth/user', {pageId, notifyReplies, notifyModerator});
 
         // Reload the principal to reflect the updates
         return this.updatePrincipal();
@@ -172,7 +137,7 @@ export class ApiService {
      * @param url URL the user signed up on.
      */
     async authSignup(email: string, name: string, password: string, websiteUrl: string | undefined, url: string): Promise<boolean> {
-        const r = await this.apiClient.post<ApiAuthSignupResponse>('embed/auth/signup', undefined, {email, name, password, websiteUrl, url});
+        const r = await this.apiClient.post<ApiAuthSignupResponse>('embed/auth/signup', {email, name, password, websiteUrl, url});
         return r.isConfirmed;
     }
 
@@ -181,7 +146,7 @@ export class ApiService {
      * @param id ID of the comment to delete.
      */
     async commentDelete(id: UUID): Promise<void> {
-        return this.apiClient.delete<void>(`embed/comments/${id}`, this.userSessionToken);
+        return this.apiClient.delete<void>(`embed/comments/${id}`);
     }
 
     /**
@@ -190,7 +155,7 @@ export class ApiService {
      * @param path Path of the page the comments reside on.
      */
     async commentList(host: string, path: string): Promise<ApiCommentListResponse> {
-        return this.apiClient.post<ApiCommentListResponse>('embed/comments', this.userSessionToken, {host, path});
+        return this.apiClient.post<ApiCommentListResponse>('embed/comments', {host, path});
     }
 
     /**
@@ -199,18 +164,19 @@ export class ApiService {
      * @param approve Whether to approve the comment.
      */
     async commentModerate(id: UUID, approve: boolean): Promise<void> {
-        return this.apiClient.post<void>(`embed/comments/${id}/moderate`, this.userSessionToken, {approve});
+        return this.apiClient.post<void>(`embed/comments/${id}/moderate`, {approve});
     }
 
     /**
      * Add a new comment.
      * @param host Host the page resides on.
      * @param path Path to the page to create a comment on.
+     * @param anonymous Whether the user chose to comment anonymously.
      * @param parentId Optional ID of the parent comment for the new one. If omitted, a root comment will be added.
      * @param markdown Comment text in the Markdown format.
      */
-    async commentNew(host: string, path: string, parentId: UUID | undefined, markdown: string): Promise<ApiCommentNewResponse> {
-        return this.apiClient.put<ApiCommentNewResponse>('embed/comments', this.userSessionToken, {host, path, parentId, markdown});
+    async commentNew(host: string, path: string, anonymous: boolean, parentId: UUID | undefined, markdown: string): Promise<ApiCommentNewResponse> {
+        return this.apiClient.put<ApiCommentNewResponse>('embed/comments', {host, path, anonymous, parentId, markdown});
     }
 
 
@@ -220,7 +186,7 @@ export class ApiService {
      * @param sticky Stickiness value.
      */
     async commentSticky(id: UUID, sticky: boolean): Promise<void> {
-        return this.apiClient.post<void>(`embed/comments/${id}/sticky`, this.userSessionToken, {sticky});
+        return this.apiClient.post<void>(`embed/comments/${id}/sticky`, {sticky});
     }
 
     /**
@@ -229,7 +195,7 @@ export class ApiService {
      * @param markdown Comment text in the Markdown format.
      */
     async commentUpdate(id: UUID, markdown: string): Promise<ApiCommentUpdateResponse> {
-        return this.apiClient.put<ApiCommentUpdateResponse>(`embed/comments/${id}`, this.userSessionToken, {markdown});
+        return this.apiClient.put<ApiCommentUpdateResponse>(`embed/comments/${id}`, {markdown});
     }
 
     /**
@@ -238,7 +204,7 @@ export class ApiService {
      * @param direction Vote direction.
      */
     async commentVote(id: UUID, direction: -1 | 0 | 1): Promise<ApiCommentVoteResponse> {
-        return this.apiClient.post<ApiCommentVoteResponse>(`embed/comments/${id}/vote`, this.userSessionToken, {direction});
+        return this.apiClient.post<ApiCommentVoteResponse>(`embed/comments/${id}/vote`, {direction});
     }
 
     /**
@@ -259,30 +225,7 @@ export class ApiService {
      * @param isReadonly Whether to set the page to readonly.
      */
     async pageUpdate(id: UUID, isReadonly: boolean): Promise<void> {
-        return this.apiClient.put<void>(`embed/page/${id}`, this.userSessionToken, {isReadonly});
-    }
-
-    /**
-     * Set the user session token and persist it in a cookie
-     * @param t Token to set
-     */
-    private setUserSessionToken(t: string | undefined) {
-        this.userSessionToken = t;
-
-        // If there's a value, set the cookie expiration date one year in the future. Otherwise, expire the cookie right
-        // away
-        let exp = 'Thu, 01 Jan 1970 00:00:01 GMT';
-        if (t) {
-            const date = new Date();
-            date.setTime(date.getTime() + (365 * 24 * 60 * 60 * 1000));
-            exp = date.toUTCString();
-        }
-
-        // Store the cookie
-        Utils.setCookie(ApiService.SessionTokenCookieName, t, exp);
-
-        // Reset any stored principal on token change
-        this.principal = undefined;
+        return this.apiClient.put<void>(`embed/page/${id}`, {isReadonly});
     }
 
     /**
@@ -290,7 +233,7 @@ export class ApiService {
      */
     private async updatePrincipal() {
         try {
-            this.principal = await this.apiClient.post<Principal | undefined>('embed/auth/user', this.userSessionToken);
+            this.principal = await this.apiClient.get<Principal | undefined>('user');
         } catch (e) {
             // On any error consider the user unauthenticated
             console.error(e);

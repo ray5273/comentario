@@ -57,7 +57,6 @@ context('Domain Statistics page', () => {
                     cy.testSiteVisit(TEST_PATHS.noComment);
                     cy.get('comentario-comments .comentario-add-comment-host').focus()
                         .find('form').as('editor');
-                    cy.get('@editor').contains('label', 'Comment anonymously').click();
                     cy.get('@editor').find('textarea').setValue('Hey there').type('{ctrl+Enter}');
                     cy.commentTree().should('have.length', 1);
 

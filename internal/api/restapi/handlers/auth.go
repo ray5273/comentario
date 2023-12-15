@@ -8,6 +8,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -21,6 +22,12 @@ var (
 	ErrUnauthorised  = oaerrors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 	ErrInternalError = oaerrors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
+
+// PrincipalResponder is an interface for a responder with the SetPayload method for returning a principal
+type PrincipalResponder interface {
+	middleware.Responder
+	SetPayload(*models.Principal)
+}
 
 // AuthBearerToken inspects the header and determines if the token is of one of the provided scopes
 func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
@@ -154,15 +161,7 @@ func AuthLogin(params api_general.AuthLoginParams) middleware.Responder {
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(
-		api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
-		WithCookie(
-			util.CookieNameUserSession,
-			us.EncodeIDs(),
-			"/",
-			util.UserSessionDuration,
-			true,
-			http.SameSiteLaxMode)
+	return authCreateUserSession(api_general.NewAuthLoginOK(), user, us, nil)
 }
 
 func AuthLoginTokenNew(_ api_general.AuthLoginTokenNewParams) middleware.Responder {
@@ -188,18 +187,9 @@ func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *d
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return NewCookieResponder(
-		api_general.NewAuthLoginOK().WithPayload(user.ToPrincipal(nil))).
-		WithCookie(
-			util.CookieNameUserSession,
-			us.EncodeIDs(),
-			"/",
-			util.UserSessionDuration,
-			true,
-			http.SameSiteLaxMode)
+	return authCreateUserSession(api_general.NewAuthLoginTokenRedeemOK(), user, us, nil)
 }
 
-// AuthLogout logs currently logged user out
 func AuthLogout(params api_general.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
 	_, sessionID, err := FetchUserSessionIDFromCookie(params.HTTPRequest)
@@ -315,17 +305,6 @@ func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
 	return u, nil
 }
 
-// AuthUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
-func AuthUserBySessionHeader(headerValue string) (*data.User, error) {
-	if user, _, err := FetchUserBySessionHeader(headerValue); err != nil {
-		// Authentication failed
-		return nil, ErrUnauthorised
-	} else {
-		// Succeeded
-		return user, nil
-	}
-}
-
 // ExtractUserSessionIDs parses and return the given string value that combines user and session ID
 func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 	// Decode the value from base64
@@ -347,31 +326,6 @@ func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 	} else {
 		// Succeeded
 		return &userID, &sessionID, nil
-	}
-}
-
-// FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
-// X-User-Session header. If the user is anonymous, returns AnonymousUser and a nil for session
-func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
-	// Extract session from the header value
-	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err != nil {
-		return nil, nil, err
-
-		// If it's an anonymous user
-	} else if *userID == data.AnonymousUser.ID {
-		return data.AnonymousUser, nil, nil
-
-		// Find the user and the session
-	} else if user, us, err := svc.TheUserService.FindUserBySession(userID, sessionID); err != nil {
-		return nil, nil, err
-
-		// Verify the user is allowed to authenticate
-	} else if errm, _ := Verifier.UserCanAuthenticate(user, true); errm != nil {
-		return nil, nil, errm.Error()
-
-	} else {
-		// Succeeded
-		return user, us, nil
 	}
 }
 
@@ -408,6 +362,24 @@ func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 
 	// Succeeded
 	return user, nil
+}
+
+// authCreateUserSession returns a responder that sets a session cookie for the given session and user. du is the
+// related domain user and is only required for a commenter (embedded) login
+func authCreateUserSession(resp PrincipalResponder, user *data.User, us *data.UserSession, du *data.DomainUser) middleware.Responder {
+	// Set the principal as the responder's payload
+	resp.SetPayload(user.ToPrincipal(du))
+
+	// Respond with the session cookie
+	return NewCookieResponder(resp).
+		WithCookie(
+			util.CookieNameUserSession,
+			us.EncodeIDs(),
+			"/",
+			util.UserSessionDuration,
+			true,
+			// Without HTTPS, will only work on the same origin
+			util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode))
 }
 
 // loginLocalUser tries to log a local user in using their email and password, returning the user and a new user

@@ -11,13 +11,6 @@ swagger: "2.0"
 basePath: /api
 
 securityDefinitions:
-  # Header authentication for commenters (used by the embed part). Apart from the delivery method, its difference from
-  # the userCookie security is that userSessionHeader allows to 'authenticate' as an anonymous user
-  userSessionHeader:
-    type: apiKey
-    in: header
-    name: X-User-Session
-
   # Cookie authentication for users (used by the frontend part). Uses the apiKey type for the lack of a proper
   # cookie-based authentication in Swagger 2
   userCookie:
@@ -1619,14 +1612,7 @@ paths:
         200:
           description: Logged in successfully
           schema:
-            type: object
-            properties:
-              sessionToken:
-                type: string
-                description: Session token to authenticate subsequent API requests with
-              principal:
-                $ref: "#/definitions/principal"
-                description: Authenticated principal
+            $ref: "#/definitions/principal"
 
   /embed/auth/login/token:
     put:
@@ -1652,26 +1638,7 @@ paths:
         200:
           description: Logged in successfully
           schema:
-            type: object
-            properties:
-              sessionToken:
-                type: string
-                description: Session token to authenticate subsequent API requests with
-              principal:
-                $ref: "#/definitions/principal"
-                description: Authenticated principal
-
-  /embed/auth/logout:
-    post:
-      operationId: EmbedAuthLogout
-      summary: Log the currently signed-in commenter out
-      tags:
-        - ApiEmbed
-      security:
-        - userSessionHeader: []
-      responses:
-        204:
-          description: Logged out successfully
+            $ref: "#/definitions/principal"
 
   /embed/auth/signup:
     post:
@@ -1725,27 +1692,11 @@ paths:
                 description: Whether the user has been immediately confirmed
                 x-omitempty: false
   /embed/auth/user:
-    post:
-      operationId: EmbedAuthCurUserGet
-      summary: Request commenter's sign-in status and, if the commenter's signed in, their details
-      tags:
-        - ApiEmbed
-      security: []
-      responses:
-        204:
-          description: User is not signed in
-        200:
-          description: User is authenticated, principal info returned
-          schema:
-            $ref: "#/definitions/principal"
-
     put:
       operationId: EmbedAuthCurUserUpdate
       summary: Update commenter details
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -1777,8 +1728,8 @@ paths:
       summary: Get a list of comments and commenters for the given host/path combination
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
+      # Security will be enforced directly on the endpoint
+      security: []
       parameters:
         - in: body
           name: body
@@ -1820,8 +1771,8 @@ paths:
       summary: Add a new comment
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
+      # Security will be enforced directly on the endpoint
+      security: []
       parameters:
         - in: body
           name: body
@@ -1839,6 +1790,9 @@ paths:
               path:
                 description: Path to the page to create a comment on
                 $ref: "#/definitions/path"
+              anonymous:
+                description: Whether the comment is submitted anonymously. If false, valid authentication must be provided with the request
+                type: boolean
               parentId:
                 description: Optional ID of the parent comment for the new one. If omitted, a root comment will be added
                 type: string
@@ -1905,8 +1859,6 @@ paths:
       summary: Delete specified comment
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       responses:
         204:
           description: Comment has been deleted
@@ -1916,8 +1868,6 @@ paths:
       summary: Update specified comment
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -1950,8 +1900,6 @@ paths:
       summary: Approve or reject the specified comment
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -1975,8 +1923,6 @@ paths:
       summary: Set the stickiness for specified comment
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -2000,8 +1946,6 @@ paths:
       summary: Vote for specified comment
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -2037,8 +1981,6 @@ paths:
       summary: Update specified page's properties
       tags:
         - ApiEmbed
-      security:
-        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body

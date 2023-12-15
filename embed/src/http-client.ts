@@ -20,12 +20,11 @@ export class HttpClient {
     /**
      * Run an HTTP DELETE request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
-     * @param sessionToken Optional session token to set in the request header.
      * @param body Optional request body.
      * @param headers Optional additional headers.
      */
-    delete<T>(path: string, sessionToken?: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
-        return this.request<T>('DELETE', path, body, sessionToken ? {'X-User-Session': sessionToken, ...headers} : headers);
+    delete<T>(path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        return this.request<T>('DELETE', path, body, headers);
     }
 
     /**
@@ -39,23 +38,21 @@ export class HttpClient {
     /**
      * Run an HTTP POST request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
-     * @param sessionToken Optional session token to set in the request header.
      * @param body Optional request body.
      * @param headers Optional additional headers.
      */
-    post<T>(path: string, sessionToken?: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
-        return this.request<T>('POST', path, body, sessionToken ? {'X-User-Session': sessionToken, ...headers} : headers);
+    post<T>(path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        return this.request<T>('POST', path, body, headers);
     }
 
     /**
      * Run an HTTP PUT request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
-     * @param sessionToken Optional session token to set in the request header.
      * @param body Optional request body.
      * @param headers Optional additional headers.
      */
-    put<T>(path: string, sessionToken?: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
-        return this.request<T>('PUT', path, body, sessionToken ? {'X-User-Session': sessionToken, ...headers} : headers);
+    put<T>(path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+        return this.request<T>('PUT', path, body, headers);
     }
 
     /**

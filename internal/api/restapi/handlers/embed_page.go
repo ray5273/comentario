@@ -9,11 +9,6 @@ import (
 )
 
 func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) middleware.Responder {
-	// Verify the user is authenticated
-	if r := Verifier.UserIsAuthenticated(user); r != nil {
-		return r
-	}
-
 	// Fetch the page and the domain user
 	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
 	if r != nil {

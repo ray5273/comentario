@@ -22,6 +22,7 @@ const (
 )
 
 // Cookie names
+
 const (
 	CookieNameUserSession = "comentario_user_session"  // Cookie name to store the session of the authenticated user
 	CookieNameAuthSession = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
@@ -30,12 +31,13 @@ const (
 )
 
 // Header names
+
 const (
-	HeaderUserSession = "X-User-Session" // Name of the header that contains the session of the authenticated user
-	HeaderXSRFToken   = "X-Xsrf-Token"   // Header name that the request should provide the XSRF token in #nosec G101
+	HeaderXSRFToken = "X-Xsrf-Token" // Header name that the request should provide the XSRF token in #nosec G101
 )
 
 // Durations
+
 const (
 	UserSessionDuration      = 28 * OneDay      // How long a user session stays valid
 	AuthSessionDuration      = 15 * time.Minute // How long auth session stays valid

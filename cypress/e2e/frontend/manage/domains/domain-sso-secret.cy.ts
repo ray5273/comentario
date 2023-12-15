@@ -73,6 +73,7 @@ context('Domain SSO Secret page', () => {
         testGenerate();
 
         // Verify SSO login works
+        cy.logout();
         cy.testSiteVisit(TEST_PATHS.home);
         cy.testSiteSsoLogin();
     });

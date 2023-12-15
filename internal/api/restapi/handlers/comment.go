@@ -175,7 +175,7 @@ func CommentModerate(params api_general.CommentModerateParams, user *data.User) 
 	return api_general.NewCommentModerateNoContent()
 }
 
-// commentDelete deletes a comment by its ID
+// commentDelete verifies the user is allowed to delete a comment (specified by its ID) and deletes it
 func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responder {
 	// Find the comment and related objects
 	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(commentUUID, &user.ID)
