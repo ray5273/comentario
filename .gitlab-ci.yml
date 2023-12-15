@@ -181,9 +181,9 @@ e2e:
 
 docker-image:
   stage: package
-  image: docker:24.0.5
+  image: docker:23
   services:
-    - docker:dind:24.0.5-dind
+    - docker:dind:23-dind
   dependencies:
     - build
   variables:
