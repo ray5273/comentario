@@ -224,72 +224,6 @@ func TestDecompressZip(t *testing.T) {
 	}
 }
 
-func TestDefault_String(t *testing.T) {
-	tests := []struct {
-		name         string
-		value        string
-		defaultValue string
-		want         string
-	}{
-		{"empty             ", "", "", ""},
-		{"nonempty          ", "bar", "", "bar"},
-		{"empty + default   ", "", "foo", "foo"},
-		{"nonempty + default", "bar", "foo", "bar"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Default(tt.value, tt.defaultValue); got != tt.want {
-				t.Errorf("Default() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestDefault_Int(t *testing.T) {
-	tests := []struct {
-		name         string
-		value        int
-		defaultValue int
-		want         int
-	}{
-		{"zero             ", 0, 0, 0},
-		{"nonzero          ", 17, 0, 17},
-		{"zero + default   ", 0, 42, 42},
-		{"nonzero + default", 17, 42, 17},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Default(tt.value, tt.defaultValue); got != tt.want {
-				t.Errorf("Default() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestDefault_Ptr(t *testing.T) {
-	type ps = *struct{}
-	val := &struct{}{}
-	def := &struct{}{}
-	tests := []struct {
-		name         string
-		value        ps
-		defaultValue ps
-		want         ps
-	}{
-		{"zero             ", nil, nil, nil},
-		{"nonzero          ", val, nil, val},
-		{"zero + default   ", nil, def, def},
-		{"nonzero + default", val, def, val},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := Default(tt.value, tt.defaultValue); got != tt.want {
-				t.Errorf("Default() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestHMACSign(t *testing.T) {
 	tests := []struct {
 		name   string
@@ -529,28 +463,6 @@ func TestIsValidEmail(t *testing.T) {
 		t.Run(tt.s, func(t *testing.T) {
 			if got := IsValidEmail(tt.s); got != tt.want {
 				t.Errorf("IsValidEmail() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestIsValidHexID(t *testing.T) {
-	tests := []struct {
-		name string
-		s    string
-		want bool
-	}{
-		{"empty string           ", "", false},
-		{"string of 63 digits    ", "012345678901234567890123456789012345678901234567890123456789012", false},
-		{"string of 64 bad chars ", "012345678901234567890123456789012345678901234567890123456789012g", false},
-		{"string of 65 digits    ", "01234567890123456789012345678901234567890123456789012345678901234", false},
-		{"string of 64 digits    ", "0123456789012345678901234567890123456789012345678901234567890123", true},
-		{"string of 64 hex digits", "1dae2342c9255a4ecc78f2f54380d90508aa49761f3471e94239f178a210bcba", true},
-	}
-	for _, tt := range tests {
-		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
-			if got := IsValidHexID(tt.s); got != tt.want {
-				t.Errorf("IsValidHexID() = %v, want %v", got, tt.want)
 			}
 		})
 	}

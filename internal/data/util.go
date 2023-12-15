@@ -37,14 +37,6 @@ func EmailToString(email strfmt.Email) string {
 	return strings.TrimSpace(string(email))
 }
 
-// NullBoolToPtr converts a nullable bool value into *bool
-func NullBoolToPtr(b sql.NullBool) *bool {
-	if !b.Valid {
-		return nil
-	}
-	return &b.Bool
-}
-
 // NullDateTime converts a nullable Time value into strfmt.DateTime
 func NullDateTime(t sql.NullTime) strfmt.DateTime {
 	if !t.Valid {
