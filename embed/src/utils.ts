@@ -2,6 +2,9 @@ export class Utils {
 
     static readonly reUuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/;
 
+    /** When running under Cypress, cookies are stored on the parent document. */
+    static readonly cookieSrc = (parent as any)['Cypress'] ? parent.document : document;
+
     /**
      * Return whether the passed value represents a valid UUID.
      * @param v Value to check.
@@ -93,5 +96,23 @@ export class Utils {
                 return `${a}/${b}`;
             },
             '');
+    }
+
+    /**
+     * Return the value of a document cookie with the given name.
+     * @param name Name of the cookie.
+     */
+    static getCookie(name: string): string | undefined {
+        return `; ${this.cookieSrc.cookie}`.split(`; ${name}=`).pop()?.split(';').shift() || undefined;
+    }
+
+    /**
+     * Set a document cookie with the given name and value.
+     * @param name Name of the cookie to set.
+     * @param value Value of the cookie.
+     * @param expires Expiry date of the cookie.
+     */
+    static setCookie(name: string, value: string | null | undefined, expires: string) {
+        this.cookieSrc.cookie = `${name}=${value || ''}; Expires=${expires}; Path=/; SameSite=Strict`;
     }
 }

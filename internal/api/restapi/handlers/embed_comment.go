@@ -44,9 +44,9 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 
 func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Responder {
 	// Try to authenticate the user
-	user, err := GetUserBySessionCookie(params.HTTPRequest)
+	user, _, err := GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
-		// Failed, consider the user to be anonymous
+		// Failed, consider the user anonymous
 		user = data.AnonymousUser
 	}
 
@@ -148,9 +148,9 @@ func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *dat
 func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responder {
 	user := data.AnonymousUser
 
-	// If the comment is submitted as non-anonymous, try to authenticate the user
+	// If the comment is submitted as non-anonymous, authenticate the user
 	if !params.Body.Anonymous {
-		if u, err := GetUserBySessionCookie(params.HTTPRequest); err != nil {
+		if u, _, err := GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
 			return respUnauthorized(ErrorUnauthenticated)
 		} else {
 			// Successfully authenticated

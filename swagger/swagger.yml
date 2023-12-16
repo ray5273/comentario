@@ -11,6 +11,12 @@ swagger: "2.0"
 basePath: /api
 
 securityDefinitions:
+  # Header authentication for commenters (used by the embed part)
+  userSessionHeader:
+    type: apiKey
+    in: header
+    name: X-User-Session
+
   # Cookie authentication for users (used by the frontend part). Uses the apiKey type for the lack of a proper
   # cookie-based authentication in Swagger 2
   userCookie:
@@ -1612,9 +1618,32 @@ paths:
         200:
           description: Logged in successfully
           schema:
-            $ref: "#/definitions/principal"
+            type: object
+            properties:
+              sessionToken:
+                type: string
+                description: Session token to authenticate subsequent API requests with
+              principal:
+                $ref: "#/definitions/principal"
+                description: Authenticated principal
 
   /embed/auth/login/token:
+    post:
+      operationId: EmbedAuthLoginTokenNew
+      summary: Request a new anonymous token with the "login" scope, which is to be used for subsequent federated authentication
+      tags:
+        - ApiEmbed
+      security: []
+      responses:
+        200:
+          description: New anonymous token is returned
+          schema:
+            type: object
+            properties:
+              token:
+                type: string
+                description: New anonymous token
+
     put:
       operationId: EmbedAuthLoginTokenRedeem
       summary: Log in using the provided, no longer anonymous, token
@@ -1638,7 +1667,26 @@ paths:
         200:
           description: Logged in successfully
           schema:
-            $ref: "#/definitions/principal"
+            type: object
+            properties:
+              sessionToken:
+                type: string
+                description: Session token to authenticate subsequent API requests with
+              principal:
+                $ref: "#/definitions/principal"
+                description: Authenticated principal
+
+  /embed/auth/logout:
+    post:
+      operationId: EmbedAuthLogout
+      summary: Log the currently signed-in commenter out
+      tags:
+        - ApiEmbed
+      security:
+        - userSessionHeader: []
+      responses:
+        204:
+          description: Logged out successfully
 
   /embed/auth/signup:
     post:
@@ -1692,11 +1740,27 @@ paths:
                 description: Whether the user has been immediately confirmed
                 x-omitempty: false
   /embed/auth/user:
+    post:
+      operationId: EmbedAuthCurUserGet
+      summary: Request commenter's sign-in status and, if the commenter's signed in, their details
+      tags:
+        - ApiEmbed
+      security: []
+      responses:
+        204:
+          description: User is not signed in
+        200:
+          description: User is authenticated, principal info returned
+          schema:
+            $ref: "#/definitions/principal"
+
     put:
       operationId: EmbedAuthCurUserUpdate
       summary: Update commenter details
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -1859,6 +1923,8 @@ paths:
       summary: Delete specified comment
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       responses:
         204:
           description: Comment has been deleted
@@ -1868,6 +1934,8 @@ paths:
       summary: Update specified comment
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       parameters:
         - in: body
           name: body
@@ -1900,6 +1968,8 @@ paths:
       summary: Approve or reject the specified comment
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -1923,6 +1993,8 @@ paths:
       summary: Set the stickiness for specified comment
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -1946,6 +2018,8 @@ paths:
       summary: Vote for specified comment
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body
@@ -1981,6 +2055,8 @@ paths:
       summary: Update specified page's properties
       tags:
         - ApiEmbed
+      security:
+        - userSessionHeader: []
       parameters:
         - $ref: "#/parameters/pathUuid"
         - in: body

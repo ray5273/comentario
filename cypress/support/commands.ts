@@ -522,7 +522,7 @@ Cypress.Commands.add(
     'testSiteLoginViaApi',
     {prevSubject: false},
     (creds: Cypress.CredentialsWithName, path: string, options?: Cypress.TestSiteLoginOptions) => {
-        cy.request<Cypress.CredentialsWithName>({
+        cy.request<{sessionToken: string; principal: Cypress.CredentialsWithName}>({
                 method:           'POST',
                 url:              '/api/embed/auth/login',
                 body:             {email: creds.email, password: creds.password, host: testSiteHost},
@@ -531,8 +531,12 @@ Cypress.Commands.add(
             .then(resp => {
                 if (options?.succeeds ?? true) {
                     expect(resp.status).to.eq(200);
-                    expect(resp.body.email).to.eq(creds.email);
-                    expect(resp.body.name).to.eq(creds.name);
+                    expect(resp.body.sessionToken).to.be.a('string');
+                    expect(resp.body.principal.email).to.eq(creds.email);
+                    expect(resp.body.principal.name).to.eq(creds.name);
+
+                    // Store the session token in a cookie
+                    cy.setCookie('comentario_user_session', resp.body.sessionToken);
                 }
             });
 

@@ -6,6 +6,8 @@ export class HttpClientError {
     ) {}
 }
 
+export type HttpHeaders = { [k: string]: string };
+
 export class HttpClient {
 
     constructor(
@@ -23,7 +25,7 @@ export class HttpClient {
      * @param body Optional request body.
      * @param headers Optional additional headers.
      */
-    delete<T>(path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+    delete<T>(path: string, body?: any, headers?: HttpHeaders): Promise<T> {
         return this.request<T>('DELETE', path, body, headers);
     }
 
@@ -41,7 +43,7 @@ export class HttpClient {
      * @param body Optional request body.
      * @param headers Optional additional headers.
      */
-    post<T>(path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+    post<T>(path: string, body?: any, headers?: HttpHeaders): Promise<T> {
         return this.request<T>('POST', path, body, headers);
     }
 
@@ -51,7 +53,7 @@ export class HttpClient {
      * @param body Optional request body.
      * @param headers Optional additional headers.
      */
-    put<T>(path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+    put<T>(path: string, body?: any, headers?: HttpHeaders): Promise<T> {
         return this.request<T>('PUT', path, body, headers);
     }
 
@@ -64,7 +66,7 @@ export class HttpClient {
         return this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/') + (path.startsWith('/') ? path.substring(1) : path);
     }
 
-    private request<T>(method: 'DELETE' | 'GET' | 'POST' | 'PUT', path: string, body?: any, headers?: { [k: string]: string }): Promise<T> {
+    private request<T>(method: 'DELETE' | 'GET' | 'POST' | 'PUT', path: string, body?: any, headers?: HttpHeaders): Promise<T> {
         // Run the before callback, if any
         this.onBeforeRequest?.();
 

@@ -33,7 +33,8 @@ const (
 // Header names
 
 const (
-	HeaderXSRFToken = "X-Xsrf-Token" // Header name that the request should provide the XSRF token in #nosec G101
+	HeaderUserSession = "X-User-Session" // Name of the header that contains the session of the authenticated user
+	HeaderXSRFToken   = "X-Xsrf-Token"   // Header name that the request should provide the XSRF token in #nosec G101
 )
 
 // Durations
@@ -76,7 +77,6 @@ var (
 
 func init() {
 	XSRFSafePaths.Add(
-		"/api/embed/",           // Embed endpoints are cross-site by design because scripts are always loaded from a different origin
-		"/api/auth/login/token", // TODO eliminate this by splitting into embed and frontend endpoints
+		"/api/embed/", // Embed endpoints are cross-site by design because scripts are always loaded from a different origin
 	)
 }

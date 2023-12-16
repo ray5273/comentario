@@ -165,18 +165,13 @@ func AuthLogin(params api_general.AuthLoginParams) middleware.Responder {
 }
 
 func AuthLoginTokenNew(_ api_general.AuthLoginTokenNewParams) middleware.Responder {
-	// Create a new, anonymous token
-	if t, err := data.NewToken(nil, data.TokenScopeLogin, util.AuthSessionDuration, false); err != nil {
-		return respInternalError(nil)
-
-		// Persist the token
-	} else if err := svc.TheTokenService.Create(t); err != nil {
+	t, err := authCreateLoginToken()
+	if err != nil {
 		return respServiceError(err)
-
-	} else {
-		// Succeeded
-		return api_general.NewAuthLoginTokenNewOK().WithPayload(&api_general.AuthLoginTokenNewOKBody{Token: t.String()})
 	}
+
+	// Succeeded
+	return api_general.NewAuthLoginTokenNewOK().WithPayload(&api_general.AuthLoginTokenNewOKBody{Token: t.String()})
 }
 
 func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
@@ -305,6 +300,17 @@ func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
 	return u, nil
 }
 
+// AuthUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
+func AuthUserBySessionHeader(headerValue string) (*data.User, error) {
+	if user, _, err := FetchUserBySessionHeader(headerValue); err != nil {
+		// Authentication failed
+		return nil, ErrUnauthorised
+	} else {
+		// Succeeded
+		return user, nil
+	}
+}
+
 // ExtractUserSessionIDs parses and return the given string value that combines user and session ID
 func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 	// Decode the value from base64
@@ -326,6 +332,27 @@ func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 	} else {
 		// Succeeded
 		return &userID, &sessionID, nil
+	}
+}
+
+// FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
+// X-User-Session header
+func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
+	// Extract session from the header value
+	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err != nil {
+		return nil, nil, err
+
+		// Find the user and the session
+	} else if user, us, err := svc.TheUserService.FindUserBySession(userID, sessionID); err != nil {
+		return nil, nil, err
+
+		// Verify the user is allowed to authenticate
+	} else if errm, _ := Verifier.UserCanAuthenticate(user, true); errm != nil {
+		return nil, nil, errm.Error()
+
+	} else {
+		// Succeeded
+		return user, us, nil
 	}
 }
 
@@ -364,6 +391,27 @@ func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 	return user, nil
 }
 
+// GetUserSessionBySessionHeader parses the session header contained in the given request and returns the corresponding user
+func GetUserSessionBySessionHeader(r *http.Request) (*data.User, *data.UserSession, error) {
+	return FetchUserBySessionHeader(r.Header.Get(util.HeaderUserSession))
+}
+
+// authCreateLoginToken creates and returns a new anonymous token with the "login" scope
+func authCreateLoginToken() (*data.Token, error) {
+	// Create a new, anonymous token
+	if t, err := data.NewToken(nil, data.TokenScopeLogin, util.AuthSessionDuration, false); err != nil {
+		return nil, err
+
+		// Persist the token
+	} else if err := svc.TheTokenService.Create(t); err != nil {
+		return nil, err
+
+	} else {
+		// Succeeded
+		return t, nil
+	}
+}
+
 // authCreateUserSession returns a responder that sets a session cookie for the given session and user. du is the
 // related domain user and is only required for a commenter (embedded) login
 func authCreateUserSession(resp PrincipalResponder, user *data.User, us *data.UserSession, du *data.DomainUser) middleware.Responder {
@@ -378,8 +426,7 @@ func authCreateUserSession(resp PrincipalResponder, user *data.User, us *data.Us
 			"/",
 			util.UserSessionDuration,
 			true,
-			// Without HTTPS, will only work on the same origin
-			util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode))
+			http.SameSiteLaxMode)
 }
 
 // loginLocalUser tries to log a local user in using their email and password, returning the user and a new user

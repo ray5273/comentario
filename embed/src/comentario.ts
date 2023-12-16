@@ -304,7 +304,7 @@ export class Comentario extends HTMLElement {
      * soon as the status becomes definite.
      */
     private async updateAuthStatus(): Promise<void> {
-        this.principal = await this.apiService.authPrincipal();
+        this.principal = await this.apiService.getPrincipal();
 
         // Update the profile bar
         this.profileBar!.principal = this.principal;

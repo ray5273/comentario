@@ -56,7 +56,7 @@ func corsHandler(next http.Handler) http.Handler {
 		handlers.AllowCredentials(),
 		handlers.AllowedHeaders([]string{
 			"Accept-Encoding", "Authorization", "Content-Type", "Content-Length", "X-Requested-With",
-			util.HeaderXSRFToken}),
+			util.HeaderUserSession, util.HeaderXSRFToken}),
 		handlers.AllowedMethods([]string{"GET", "HEAD", "POST", "PUT", "DELETE", "OPTIONS"}),
 	)(next)
 }
@@ -150,7 +150,6 @@ func securityHeadersHandler(next http.Handler) http.Handler {
 		// Add the headers
 		h := w.Header()
 		h.Set("Strict-Transport-Security", "max-age=31536000")
-		h.Set("X-Frame-Options", "SAMEORIGIN")
 		h.Set("X-Content-Type-Options", "nosniff")
 		h.Set("Referrer-Policy", "origin")
 
@@ -312,18 +311,21 @@ func xsrfProtectHandler(next http.Handler) http.Handler {
 // xsrfCookieHandler returns a middleware that adds an XSRF cookie to the response
 func xsrfCookieHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the config is
-		// requested
-		_, err := r.Cookie(util.CookieNameXSRFSession)
-		if err != nil || r.URL.Path == "/"+util.APIPath+"config" {
-			http.SetCookie(w, &http.Cookie{
-				Name:     util.CookieNameXSRFToken,
-				Value:    csrf.Token(r),
-				Path:     "/",
-				MaxAge:   int(util.UserSessionDuration.Seconds()),
-				Secure:   config.UseHTTPS,
-				HttpOnly: false,
-			})
+		// Don't bother if it's a known "XSRF-safe" path
+		if !util.XSRFSafePaths.Has(r.URL.Path) {
+			// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the auth status
+			// is requested
+			_, err := r.Cookie(util.CookieNameXSRFSession)
+			if err != nil || r.URL.Path == "/"+util.APIPath+"user" {
+				http.SetCookie(w, &http.Cookie{
+					Name:     util.CookieNameXSRFToken,
+					Value:    csrf.Token(r),
+					Path:     "/",
+					MaxAge:   int(util.UserSessionDuration.Seconds()),
+					Secure:   config.UseHTTPS,
+					HttpOnly: false,
+				})
+			}
 		}
 
 		// Pass on to the next handler
