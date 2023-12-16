@@ -61,10 +61,11 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 		// UI path for the comment properties page
 		commentPropPath := fmt.Sprintf("manage/domains/%s/comments/%s", &domain.ID, &comment.ID)
 
-		// Add moderation URLs only for pending comments
+		// Add moderation URLs and a reason only for pending comments
 		if comment.IsPending {
 			params["ApproveURL"] = config.URLForUI(recipient.LangID, commentPropPath, map[string]string{"action": "approve"})
 			params["RejectURL"] = config.URLForUI(recipient.LangID, commentPropPath, map[string]string{"action": "reject"})
+			params["PendingReason"] = comment.PendingReason
 		}
 
 		// Add delete URL
