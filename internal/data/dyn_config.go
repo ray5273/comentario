@@ -55,6 +55,7 @@ const (
 	ConfigKeyAuthSignupConfirmCommenter        DynInstanceConfigItemKey = "auth.signup.confirm.commenter"
 	ConfigKeyAuthSignupConfirmUser             DynInstanceConfigItemKey = "auth.signup.confirm.user"
 	ConfigKeyAuthSignupEnabled                 DynInstanceConfigItemKey = "auth.signup.enabled"
+	ConfigKeyDomainDefaultsEnableCommentVoting DynInstanceConfigItemKey = "domain.defaults.comments.enableVoting"
 	ConfigKeyDomainDefaultsShowDeletedComments DynInstanceConfigItemKey = "domain.defaults.comments.showDeleted"
 	ConfigKeyDomainDefaultsUseGravatar         DynInstanceConfigItemKey = "domain.defaults.useGravatar"
 	ConfigKeyMarkdownImagesEnabled             DynInstanceConfigItemKey = "markdown.images.enabled"
@@ -68,6 +69,7 @@ var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigIt
 	ConfigKeyAuthSignupConfirmCommenter:        {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
 	ConfigKeyAuthSignupConfirmUser:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New users must confirm their email"},
 	ConfigKeyAuthSignupEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable registration of new users"},
+	ConfigKeyDomainDefaultsEnableCommentVoting: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable voting on comments"},
 	ConfigKeyDomainDefaultsShowDeletedComments: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Show deleted comments"},
 	ConfigKeyDomainDefaultsUseGravatar:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Use Gravatar for user avatars"},
 	ConfigKeyMarkdownImagesEnabled:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},

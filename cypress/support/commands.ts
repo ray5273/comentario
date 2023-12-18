@@ -26,14 +26,15 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
         // Turn the card into a comment
         .map(c => $(c))
         .map($card => {
-            const $self     = $card.find('> .comentario-card-self');
-            const $header   = $self.find('> .comentario-card-header');
-            const $options  = $self.find('> .comentario-options');
+            const $self    = $card.find('> .comentario-card-self');
+            const $header  = $self.find('> .comentario-card-header');
+            const $options = $self.find('> .comentario-options');
+            const sc       = $options.find('.comentario-score').html();
             const c: Cypress.Comment = {
                 id:        $self.attr('id')?.replace('comentario-', ''),
                 html:      $self.find(' > .comentario-card-body').html(),
                 author:    $header.find('.comentario-name').html(),
-                score:     Number($options.find('.comentario-score').html()),
+                score:     sc ? Number(sc) : null,
                 upvoted:   $options.find('.comentario-button[title=Upvote]')  .hasClass('comentario-upvoted'),
                 downvoted: $options.find('.comentario-button[title=Downvote]').hasClass('comentario-downvoted'),
                 sticky:    !!$options.find('.comentario-is-sticky').length,

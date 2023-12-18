@@ -41,6 +41,8 @@ export interface CommentRenderingContext {
     readonly curTimeMs: number;
     /** Max comment nesting level. */
     readonly maxLevel: number;
+    /** Whether voting on comments is enabled. */
+    readonly enableVoting: boolean;
 
     // Events
     readonly onGetAvatar: CommentCardGetAvatarHandler;
@@ -301,12 +303,15 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         const right = UIToolkit.div('options-sub').appendTo(options);
 
         // Upvote / Downvote buttons and the score
-        left.append(
-            this.btnUpvote = this.getOptionButton('upvote', null, () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
-                .attr(ownComment && {disabled: 'true'}),
-            this.eScore = UIToolkit.div('score').attr({title: 'Comment score'}),
-            this.btnDownvote = this.getOptionButton('downvote', null, () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
-                .attr(ownComment && {disabled: 'true'}));
+        if (ctx.enableVoting) {
+            left.append(
+                this.btnUpvote = this.getOptionButton('upvote', null, () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
+                    .attr(ownComment && {disabled: 'true'}),
+                this.eScore = UIToolkit.div('score').attr({title: 'Comment score'}),
+                this.btnDownvote = this.getOptionButton('downvote', null, () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
+                    .attr(ownComment && {disabled: 'true'}));
+        }
+
         // Reply button
         if (!ctx.isReadonly) {
             this.btnReply = this.getOptionButton('reply', null, () => ctx.onReply(this)).appendTo(left);

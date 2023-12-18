@@ -343,6 +343,10 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 	if commentID, r := parseUUID(params.UUID); r != nil {
 		return r
 
+		// Make sure voting is enabled
+	} else if !svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsEnableCommentVoting) {
+		return respForbidden(ErrorFeatureDisabled.WithDetails("comment voting"))
+
 		// Find the comment
 	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
 		return respServiceError(err)

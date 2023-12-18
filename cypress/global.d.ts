@@ -33,7 +33,7 @@ declare namespace Cypress {
         id:        string;
         html:      string;
         author:    string;
-        score:     number;
+        score:     number | null;
         upvoted:   boolean;
         downvoted: boolean;
         sticky:    boolean;
