@@ -115,6 +115,7 @@ e2e:
           - postgres:12-alpine
           - postgres:11-alpine
           - postgres:10-alpine
+  retry: 1
   artifacts:
     when: always
     name: comentario
