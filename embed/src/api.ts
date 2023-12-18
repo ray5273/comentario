@@ -60,7 +60,7 @@ export class ApiService {
     static readonly AnonymousUserSessionToken = 'AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA';
 
     /** Session token cookie name. */
-    static readonly SessionTokenCookieName = 'comentario_user_session';
+    static readonly SessionTokenCookieName = 'comentario_commenter_session';
 
     /** Authenticated principal, undefined if unknown, null if unauthenticated. */
     private _principal: Principal | null | undefined;

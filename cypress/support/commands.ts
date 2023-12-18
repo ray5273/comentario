@@ -536,7 +536,7 @@ Cypress.Commands.add(
                     expect(resp.body.principal.name).to.eq(creds.name);
 
                     // Store the session token in a cookie
-                    cy.setCookie('comentario_user_session', resp.body.sessionToken);
+                    cy.setCookie('comentario_commenter_session', resp.body.sessionToken);
                 }
             });
 
