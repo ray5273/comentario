@@ -1,5 +1,18 @@
 # Comentario changelog
 
+## v3.2.0
+
+In this release we added configuration entries for enabling tables in Markdown and voting on comments. Also the Administration UI is now properly protected against CSRF attacks.
+
+### Changes
+
+* Make comment voting configurable (#26) - 254b701
+* Add reason to moderation notification email (#44) - b27d77e
+* Add support for tables in Markdown (#37) - a9ffbd4
+* CSRF-protect the frontend API (#42) - 25f8bcf, 546d293
+* Harden embed auth - af8d8ff, 325bade, 53b11f8, 898cd2f, dc0bd60
+* Upgrade frontend to Angular 17, backend to Go 1.21.5 - 58c1f96, 754897f, b584cc9
+
 ## v3.1.0
 
 This release brings Gravatar avatars support, import from WordPress, Markdown improvements, and better control over deleted comments.
