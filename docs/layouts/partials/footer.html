@@ -1,17 +1,22 @@
 <footer>
-    <div class="container ps-5">
-        <!-- Menu -->
-        <ul class="list-unstyled">
-            {{- range site.Menus.footer }}
-            <li>
-                <a class="{{ if $.IsMenuCurrent `footer` . }}active{{ end }}"
-                   {{ if $.IsMenuCurrent `footer` . }}aria-current="page"{{ end }}
-                   href="{{ .URL | absLangURL }}">{{ .Title }}</a>
-            </li>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Menu -->
+            <!-- Iterate over the column numbers in the range [1..ceil(numItems/3)] -->
+            {{- $itemsPerCol := 3.0 }}
+            {{- range $col := seq (math.Ceil (math.Div (len site.Menus.footer) $itemsPerCol)) }}
+                <div class="col-auto">
+                    <ul class="list-unstyled">
+                        <!-- Iterate over the subset of 3 items, starting from index ($col-1)*3 -->
+                        {{- range first $itemsPerCol (after (mul $itemsPerCol (sub $col 1)) site.Menus.footer) }}
+                            {{- partial "footer-item" (dict "item" . "page" $) }}
+                        {{- end }}
+                    </ul>
+                </div>
             {{- end }}
-        </ul>
+        </div>
 
         <!-- Copyright -->
-        <div>{{ T "copyright" }}</div>
+        <div class="small ms-5 ms-md-0">{{ T "copyright" }}</div>
     </div>
 </footer>

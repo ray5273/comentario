@@ -1,0 +1,7 @@
+<!-- Renders a banner about the unstable status on the edge.docs website -->
+{{- if in (print $.Site.BaseURL) "edge" -}}
+<div class="bg-warning-subtle p-3 small">
+    This documentation site is about the <strong>unstable</strong> (upcoming) Comentario version.
+    &nbsp;<a href="https://docs.comentario.app/">Switch to the stable version »</a>
+</div>
+{{- end -}}
