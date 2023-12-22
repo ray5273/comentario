@@ -1,5 +1,11 @@
 # Comentario changelog
 
+## v3.2.1
+
+This is a bugfix release:
+
+* Fix the "Failed to construct 'CustomElement': The result must not have children" error when the web component is reinserted on the page. This is often the case with an SPA.
+
 ## v3.2.0
 
 In this release we added configuration entries for enabling tables in Markdown and voting on comments. Also the Administration UI is now properly protected against CSRF attacks.

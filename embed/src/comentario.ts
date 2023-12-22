@@ -89,12 +89,25 @@ export class Comentario extends HTMLElement {
     /** Maximum visual nesting level for comments. */
     private readonly maxLevel = Number(this.getAttribute('max-level')) || 10;
 
-    constructor() {
-        super();
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Called by the browser when the element is added to the DOM.
+     */
+    connectedCallback() {
         // If automatic initialisation is activated (default), run Comentario
         if (this.autoInit) {
             this.main();
         }
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Called by the browser when the element is removed from the DOM.
+     */
+    disconnectedCallback() {
+        // Clean up
+        this.root.inner('');
     }
 
     /**
