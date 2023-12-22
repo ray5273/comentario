@@ -32,35 +32,32 @@
 </div>
 
 <!-- Main page content -->
-<section id="content" class="container">
+<section id="content">
     <!-- Next version alert -->
-    {{- if in (print $.Site.BaseURL) "edge" }}
-    <div class="alert alert-warning">
-        <p>This documentation site is about the <strong>unstable</strong> (upcoming) Comentario version.</p>
-        <div><a href="https://docs.comentario.app/">Switch to the stable version »</a></div>
+    {{- partial "unstable-alert" . }}
+
+    <div class="container py-3">
+        <!-- Heading -->
+        {{- block "heading" . }}
+            {{- if default true .Params.showHeading }}<h1 class="mt-3">{{ .Title | markdownify }}</h1>{{ end }}
+            {{- if default true .Params.showDescription }}
+                {{- with .Params.description -}}
+                    <p class="subheading"><i class="fas fa-chevron-right me-1"></i>{{ . | markdownify }}</p>
+                {{- end -}}
+            {{- end }}
+        {{- end }}
+
+        <!-- Main content -->
+        {{- block "main" . }}
+            {{- .Content }}
+        {{- end }}
     </div>
-    {{- end }}
-
-    <!-- Heading -->
-    {{- block "heading" . }}
-    {{- if default true .Params.showHeading }}<h1 class="mt-3">{{ .Title | markdownify }}</h1>{{ end }}
-    {{- if default true .Params.showDescription }}
-        {{- with .Params.description -}}
-            <p class="subheading"><i class="fas fa-chevron-right me-1"></i>{{ . | markdownify }}</p>
-        {{- end -}}
-    {{- end }}
-    {{- end }}
-
-    <!-- Main content -->
-    {{ block "main" . }}
-    {{ .Content }}
-    {{ end }}
 </section>
 
 <!-- Footer -->
-{{ block "footer" . }}
-{{ partial "footer" . }}
-{{ end }}
+{{- block "footer" . }}
+    {{- partial "footer" . }}
+{{- end }}
 
 <!-- Scripts -->
 {{- partial "scripts" . }}
