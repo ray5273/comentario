@@ -1,5 +1,9 @@
 # Comentario changelog
 
+## v3.2.2
+
+This is another bugfix release, finally fixing the "Failed to construct 'CustomElement'" error.
+
 ## v3.2.1
 
 This is a bugfix release:
