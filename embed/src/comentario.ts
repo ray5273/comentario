@@ -369,7 +369,8 @@ export class Comentario extends HTMLElement {
                     // Re-render comments using the new sort
                     this.renderComments();
                 },
-                this.commentSort));
+                this.commentSort,
+                this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsEnableCommentVoting)?.value === 'true'));
         }
 
         // Create a panel for comments

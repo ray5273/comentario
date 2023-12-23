@@ -5,8 +5,8 @@ import {
     CommenterMap,
     CommentsGroupedById,
     CommentSort,
+    CommentSortComparators,
     Principal,
-    sortingProps,
     User,
     UUID,
 } from './models';
@@ -112,7 +112,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
             // If both are (non)sticky, apply the standard sort
             if (i === 0) {
-                i = sortingProps[ctx.commentSort].comparator(a, b);
+                i = CommentSortComparators[ctx.commentSort](a, b);
             }
             return i;
         });

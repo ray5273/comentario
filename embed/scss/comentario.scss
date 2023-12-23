@@ -57,21 +57,21 @@
         color: $orange-8;
     }
 
-    .comentario-sort-policy-buttons-container {
+    .comentario-sort-buttons-container {
         padding: 12px 0;
         font-weight: 400;
 
-        .comentario-sort-policy-buttons {
+        .comentario-sort-buttons {
             float: right;
 
-            .comentario-sort-policy-button {
+            .comentario-sort-button {
                 color: $gray-6 !important;
                 font-size: 13px;
                 padding: 0 7px;
                 cursor: pointer;
             }
 
-            .comentario-sort-policy-button-selected {
+            .comentario-sort-button-selected {
                 color: $blue-8 !important;
                 font-weight: bold;
             }

@@ -42,7 +42,7 @@ export class EmbedUtils {
         }
 
         // Check sort buttons
-        cy.get('@mainArea').find('.comentario-sort-policy-buttons-container').should('be.visible');
+        cy.get('@mainArea').find('.comentario-sort-buttons-container').should('be.visible');
 
         // Check comments
         cy.get('@mainArea').find('.comentario-comments').as('comments').should('exist');

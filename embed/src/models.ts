@@ -185,11 +185,6 @@ export type ComparatorFunc<T> = (a: T, b: T) => number;
 /** Comment sorting. 1st letter defines the property, 2nd letter the direction. */
 export type CommentSort = 'ta' | 'td' | 'sa' | 'sd';
 
-export interface CommentSortProps {
-    readonly label:      string;
-    readonly comparator: ComparatorFunc<Comment>;
-}
-
 export interface SignupData {
     readonly email:       string;
     readonly name:        string;
@@ -204,11 +199,11 @@ export interface UserSettings {
 
 export const ANONYMOUS_ID: UUID = '00000000-0000-0000-0000-000000000000';
 
-export const sortingProps: { [k in CommentSort]: CommentSortProps } = {
-    sa: {label: '',        comparator: (a, b) => a.score - b.score},
-    sd: {label: 'Upvotes', comparator: (a, b) => b.score - a.score},
-    td: {label: 'Newest',  comparator: (a, b) => -a.createdTime.localeCompare(b.createdTime)},
-    ta: {label: 'Oldest',  comparator: (a, b) => a.createdTime.localeCompare(b.createdTime)},
+export const CommentSortComparators: { [k in CommentSort]: ComparatorFunc<Comment> } = {
+    sa: (a, b) => a.score - b.score,
+    sd: (a, b) => b.score - a.score,
+    td: (a, b) => b.createdTime.localeCompare(a.createdTime),
+    ta: (a, b) => a.createdTime.localeCompare(b.createdTime),
 };
 
 /** Generic message displayed to the user. */
