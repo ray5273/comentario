@@ -30,7 +30,7 @@ export class Comentario extends HTMLElement {
     private readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
 
     /** The root element of Comentario embed. */
-    private readonly root = UIToolkit.div('root').appendTo(new Wrap(this));
+    private root!: Wrap<HTMLDivElement>;
 
     /** Comentario config obtained from the backend. */
     private config = DefaultInstanceConfig;
@@ -95,6 +95,9 @@ export class Comentario extends HTMLElement {
      * Called by the browser when the element is added to the DOM.
      */
     connectedCallback() {
+        // Create a root DIV
+        this.root = UIToolkit.div('root').appendTo(new Wrap(this));
+
         // If automatic initialisation is activated (default), run Comentario
         if (this.autoInit) {
             this.main();
