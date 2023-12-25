@@ -348,6 +348,7 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		IsLocal:         u.IsLocal(),
 		IsModerator:     du.CanModerate(),
 		IsOwner:         du != nil && du.IsOwner,
+		IsSso:           u.FederatedSSO,
 		IsSuperuser:     u.IsSuperuser,
 		LangID:          u.LangID,
 		Name:            u.Name,

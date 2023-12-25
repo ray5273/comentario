@@ -740,6 +740,10 @@ definitions:
         type: boolean
         description: Whether the user is authenticated locally (as opposed to via a federated/SSO identity provider)
         x-omitempty: false
+      isSso:
+        type: boolean
+        description: Whether the user is authenticated via SSO
+        x-omitempty: false
       isConfirmed:
         type: boolean
         description: Whether the user has confirmed their email address

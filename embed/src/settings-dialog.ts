@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import {PageInfo, Principal, UserSettings} from './models';
+import { PageInfo, Principal, UserSettings } from './models';
 
 export class SettingsDialog extends Dialog {
 
@@ -9,10 +9,11 @@ export class SettingsDialog extends Dialog {
     private _cbNotifyReplies?: Wrap<HTMLInputElement>;
 
     private constructor(
-        parent: Wrap<any>, pos: DialogPositioning,
+        parent: Wrap<any>,
+        pos: DialogPositioning,
         private readonly baseUrl: string,
         private readonly principal: Principal,
-        private readonly pageInfo: PageInfo,
+        pageInfo: PageInfo,
     ) {
         super(parent, `User settings for ${pageInfo.domainName}`, pos);
     }
@@ -64,11 +65,12 @@ export class SettingsDialog extends Dialog {
                             Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner('Reply notifications'))),
                 // Submit button
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit('Save', false)),
-                // Edit profile link
-                Wrap.new('hr'),
-                UIToolkit.div('dialog-centered').append(
-                    Wrap.new('a')
-                        .inner('Edit Comentario profile')
-                        .attr({href: `${this.baseUrl}/en/manage/account/profile`, target: '_blank'})));
+                // Edit profile link (non-SSO only)
+                !this.principal.isSso && Wrap.new('hr'),
+                !this.principal.isSso &&
+                    UIToolkit.div('dialog-centered').append(
+                        Wrap.new('a')
+                            .inner('Edit Comentario profile')
+                            .attr({href: `${this.baseUrl}/en/manage/account/profile`, target: '_blank'})));
     }
 }

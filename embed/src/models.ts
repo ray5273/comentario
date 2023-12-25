@@ -119,8 +119,9 @@ export interface User {
 
 /** Authenticated or anonymous user. */
 export interface Principal extends User {
-    readonly isSuperuser:     boolean; // Whether the user is a "super user" (instance admin)
+    readonly isSuperuser:     boolean; // Whether the user is a "superuser" (instance admin)
     readonly isLocal:         boolean; // Whether the user is authenticated locally (as opposed to via a federated identity provider)
+    readonly isSso:           boolean; // Whether the user is authenticated via SSO
     readonly isConfirmed:     boolean; // Whether the user has confirmed their email address
     readonly isOwner:         boolean; // Whether the user is an owner of the domain
     readonly notifyReplies:   boolean; // Whether the user is to be notified about replies to their comments
