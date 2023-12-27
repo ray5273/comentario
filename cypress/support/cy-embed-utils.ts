@@ -28,8 +28,9 @@ export class EmbedUtils {
         cy.get('@root').find('.comentario-profile-bar').as('profileBar')
             .should('be.visible');
 
-        // Check login button
-        cy.get('@profileBar').contains('button', 'Login').should(settings?.anonymous ? 'be.visible' : 'not.exist');
+        // Check login/logout buttons
+        cy.get('@profileBar').contains('button', 'Login') .should(settings?.anonymous ? 'be.visible' : 'not.exist');
+        cy.get('@profileBar').contains('button', 'Logout').should(settings?.anonymous ? 'not.exist' : 'be.visible');
 
         // Check main area
         cy.get('@root').find('.comentario-main-area').as('mainArea')
@@ -77,7 +78,7 @@ export class EmbedUtils {
      * Add a root comment or reply on the current page.
      * @param parentId Parent comment ID. If undefined, a root comment is created.
      * @param markdown Markdown text of the comment.
-     * @param anonymous Whether to sibmit the comment anonymously.
+     * @param anonymous Whether to submit the comment anonymously.
      */
     static addComment(parentId: string | undefined, markdown: string, anonymous: boolean) {
         // Focus the add host or click the reply button
@@ -87,7 +88,7 @@ export class EmbedUtils {
             cy.get('.comentario-root .comentario-add-comment-host').focus();
         }
 
-        // Verify a editor is shown
+        // Verify the editor is shown
         cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
 
         // Enter comment text

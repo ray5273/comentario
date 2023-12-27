@@ -105,7 +105,7 @@ export class LoginDialog extends Dialog {
                             .inner('Forgot your password?')
                             .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})),
                 // Switch to signup link, if signup is enabled
-                this.config.dynamicConfig.get(InstanceDynamicConfigKey.authSignupEnabled)?.value === 'true' &&
+                this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsLocalSignupEnabled)?.value === 'true' &&
                     UIToolkit.div('dialog-centered')
                         .append(
                             Wrap.new('span').inner('Don\'t have an account? '),

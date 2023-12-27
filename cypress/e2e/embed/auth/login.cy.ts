@@ -1,11 +1,10 @@
-import { TEST_PATHS, USERS } from '../../../support/cy-utils';
+import { DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../../support/cy-utils';
 import { EmbedUtils } from '../../../support/cy-embed-utils';
 
 context('Login Popup', () => {
 
-    before(cy.backendReset);
-
     beforeEach(() => {
+        cy.backendReset();
         cy.testSiteVisit(TEST_PATHS.comments);
         EmbedUtils.makeAliases({anonymous: true});
 
@@ -71,9 +70,24 @@ context('Login Popup', () => {
         cy.get('@root').contains('.comentario-dialog .comentario-dialog-header', 'Create an account').should('be.visible');
     });
 
-    it('allows to login via SSO', () => {
-        cy.get('@btnSso').click();
-        cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+    context('allows to login via SSO', () => {
+
+        it('new user when SSO login is enabled', () => {
+            cy.get('@btnSso').click();
+            cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+        });
+
+        it('existing user when SSO login is disabled', () => {
+            // Login via SSO to register a new account
+            cy.get('@btnSso').click();
+            cy.testSiteLogout();
+
+            // Now disable SSO signups and login again
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsSsoSignupEnabled, false);
+            cy.get('@profileBar').contains('button', 'Login').click();
+            cy.get('@root').contains('.comentario-dialog button', 'Single Sign-On').click();
+            cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+        });
     });
 
     context('authentication with email/password', () => {
@@ -118,6 +132,12 @@ context('Login Popup', () => {
                     cy.get('@submit').click();
                     cy.testSiteCheckMessage(err);
                 }));
+
+            it('new SSO user when SSO signup is disabled', () => {
+                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsSsoSignupEnabled, false);
+                cy.get('@btnSso').click();
+                cy.testSiteCheckMessage('New signups are forbidden');
+            });
         });
     });
 });

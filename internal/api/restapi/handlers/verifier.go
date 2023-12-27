@@ -29,8 +29,8 @@ type VerifierService interface {
 	FederatedIdProviders(ids []models.FederatedIdpID) middleware.Responder
 	// IsAnotherUser checks if the given user is not the current user
 	IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Responder
-	// SignupEnabled checks if users are allowed to sign up
-	SignupEnabled() middleware.Responder
+	// LocalSignupEnabled checks if users are allowed to sign up locally. embed indicates whether it's about commenter sign-up
+	LocalSignupEnabled(embed bool) middleware.Responder
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
 	UserCanAddDomain(user *data.User) middleware.Responder
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
@@ -136,8 +136,8 @@ func (v *verifier) IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Respon
 	return nil
 }
 
-func (v *verifier) SignupEnabled() middleware.Responder {
-	if i, err := svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupEnabled); err != nil {
+func (v *verifier) LocalSignupEnabled(embed bool) middleware.Responder {
+	if i, err := svc.TheDynConfigService.Get(util.If(embed, data.ConfigKeyDomainDefaultsLocalSignupEnabled, data.ConfigKeyAuthSignupEnabled)); err != nil {
 		return respServiceError(err)
 	} else if !i.AsBool() {
 		return respForbidden(ErrorSignupsForbidden)

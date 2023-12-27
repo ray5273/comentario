@@ -569,6 +569,11 @@ Cypress.Commands.add('testSiteSsoLogin', {prevSubject: false}, () => {
 });
 
 Cypress.Commands.add(
+    'testSiteLogout',
+    {prevSubject: false},
+    () => void cy.contains('.comentario-root .comentario-profile-bar button', 'Logout').click());
+
+Cypress.Commands.add(
     'testSiteCheckMessage',
     {prevSubject: false},
     (message: string, success?: boolean) =>

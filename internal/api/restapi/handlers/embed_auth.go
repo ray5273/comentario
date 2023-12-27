@@ -80,7 +80,7 @@ func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, _ *data.User) middl
 
 func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responder {
 	// Verify new users are allowed
-	if r := Verifier.SignupEnabled(); r != nil {
+	if r := Verifier.LocalSignupEnabled(true); r != nil {
 		return r
 	}
 

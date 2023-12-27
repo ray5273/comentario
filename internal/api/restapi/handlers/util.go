@@ -1,7 +1,9 @@
 package handlers
 
 import (
+	"encoding/json"
 	"errors"
+	"fmt"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
@@ -26,10 +28,32 @@ func closeParentWindowResponse() middleware.Responder {
 	return NewHTMLResponder(http.StatusOK, "<html><script>window.parent.close();</script></html>")
 }
 
-// postSSOLoginResponse returns a responder that renders an HTML script posting a successful SSO login response to the
-// parent window
-func postSSOLoginResponse() middleware.Responder {
-	return NewHTMLResponder(http.StatusOK, "<html><script>window.parent.postMessage({type: 'auth.sso.result', success: true}, '*');</script></html>")
+// postNonInteractiveLoginResponse returns a responder that renders an HTML script posting an SSO login response to the
+// parent window. If err == nil, it's success response, otherwise an error
+func postNonInteractiveLoginResponse(err error) middleware.Responder {
+	// Prepare a response message payload
+	ssoResponse := struct {
+		Type    string `json:"type"`
+		Success bool   `json:"success"`
+		Error   string `json:"error,omitempty"`
+	}{
+		Type:    "auth.sso.result",
+		Success: err == nil,
+	}
+	if err != nil {
+		ssoResponse.Error = err.Error()
+	}
+
+	// Marshal the response object into a string
+	b, err := json.Marshal(ssoResponse)
+	if err != nil {
+		b = []byte(`{"success":"false","error":"JSON marshalling failed"}`)
+	}
+
+	// Send the response as a script wrapped in HTML
+	return NewHTMLResponder(
+		http.StatusOK,
+		fmt.Sprintf("<html><script>window.parent.postMessage(%s, '*');</script></html>", b))
 }
 
 //----------------------------------------------------------------------------------------------------------------------

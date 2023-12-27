@@ -7,7 +7,7 @@ import { SettingsDialog } from './settings-dialog';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 
-    private btnSettings?: Wrap<HTMLAnchorElement>;
+    private btnSettings?: Wrap<HTMLButtonElement>;
     private btnLogin?: Wrap<HTMLButtonElement>;
     private _principal?: Principal;
     private _pageInfo?: PageInfo;
@@ -151,24 +151,9 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 UIToolkit.div()
                     .append(
                         // Settings link
-                        this.btnSettings = Wrap.new('a')
-                            .classes('profile-link')
-                            .inner('Settings')
-                            .click((_, e) => {
-                                // Prevent the page from being reloaded because of the empty href
-                                e.preventDefault();
-                                return this.editSettings();
-                            }),
+                        this.btnSettings = UIToolkit.button('Settings', () => this.editSettings()),
                         // Logout link
-                        Wrap.new('a')
-                            .classes('profile-link')
-                            .inner('Logout')
-                            .attr({href: ''})
-                            .click((_, e) => {
-                                // Prevent the page from being reloaded because of the empty href
-                                e.preventDefault();
-                                this.onLogout();
-                            })));
+                        UIToolkit.button('Logout', () => this.onLogout())));
             return;
         }
 

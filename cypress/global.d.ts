@@ -321,6 +321,12 @@ declare namespace Cypress {
         testSiteSsoLogin(): Chainable<void>;
 
         /**
+         * Log out from the embedded Comentario (test site).
+         * NB: the required test site page must be open.
+         */
+        testSiteLogout(): Chainable<void>;
+
+        /**
          * Verify the text in the message box on the test site.
          * @param message Expected message (partial) text.
          * @param success Whether the message is a success message, defaults to false.

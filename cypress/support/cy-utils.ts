@@ -129,16 +129,19 @@ export const USERS = {
 };
 
 export enum DYN_CONFIG_ITEMS {
-    authSignupConfirmCommenter        = 'auth.signup.confirm.commenter',
-    authSignupConfirmUser             = 'auth.signup.confirm.user',
-    authSignupEnabled                 = 'auth.signup.enabled',
-    domainDefaultsEnableCommentVoting = 'domain.defaults.comments.enableVoting',
-    domainDefaultsShowDeletedComments = 'domain.defaults.comments.showDeleted',
-    domainDefaultsUseGravatar         = 'domain.defaults.useGravatar',
-    markdownImagesEnabled             = 'markdown.images.enabled',
-    markdownLinksEnabled              = 'markdown.links.enabled',
-    markdownTablesEnabled             = 'markdown.tables.enabled',
-    operationNewOwnerEnabled          = 'operation.newOwner.enabled',
+    authSignupConfirmCommenter           = 'auth.signup.confirm.commenter',
+    authSignupConfirmUser                = 'auth.signup.confirm.user',
+    authSignupEnabled                    = 'auth.signup.enabled',
+    domainDefaultsEnableCommentVoting    = 'domain.defaults.comments.enableVoting',
+    domainDefaultsShowDeletedComments    = 'domain.defaults.comments.showDeleted',
+    domainDefaultsLocalSignupEnabled     = 'domain.defaults.signup.enableLocal',
+    domainDefaultsFederatedSignupEnabled = 'domain.defaults.signup.enableFederated',
+    domainDefaultsSsoSignupEnabled       = 'domain.defaults.signup.enableSso',
+    domainDefaultsUseGravatar            = 'domain.defaults.useGravatar',
+    markdownImagesEnabled                = 'markdown.images.enabled',
+    markdownLinksEnabled                 = 'markdown.links.enabled',
+    markdownTablesEnabled                = 'markdown.tables.enabled',
+    operationNewOwnerEnabled             = 'operation.newOwner.enabled',
 }
 
 /** Predefined domains, declared in "creation order", i.e. ordered by ts_created. */

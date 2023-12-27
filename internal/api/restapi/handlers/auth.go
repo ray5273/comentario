@@ -243,7 +243,7 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 
 func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	// Verify new users are allowed
-	if r := Verifier.SignupEnabled(); r != nil {
+	if r := Verifier.LocalSignupEnabled(false); r != nil {
 		return r
 	}
 
