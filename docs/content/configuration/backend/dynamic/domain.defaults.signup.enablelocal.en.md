@@ -1,5 +1,5 @@
 ---
-title: Enable registration of new users
+title: Enable local commenter registration
 description: domain.defaults.signup.enableLocal
 tags:
     - configuration

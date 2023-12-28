@@ -1,5 +1,5 @@
 ---
-title: Enable registration of new users
+title: Enable commenter registration via external provider
 description: domain.defaults.signup.enableFederated
 tags:
     - configuration

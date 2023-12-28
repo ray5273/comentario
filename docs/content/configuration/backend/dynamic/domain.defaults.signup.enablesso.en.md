@@ -1,5 +1,5 @@
 ---
-title: Enable registration of new users
+title: Enable commenter registration via SSO
 description: domain.defaults.signup.enableSso
 tags:
     - configuration
