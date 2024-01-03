@@ -150,5 +150,43 @@ context('Comment Editor', () => {
                   pending: false
                 `);
         });
+
+        it('allows to preview comment text', () => {
+            // Visit the page as anonymous
+            cy.testSiteVisit(TEST_PATHS.comments);
+            EmbedUtils.makeAliases({anonymous: true});
+
+            // Open editor and add text
+            const text = '## Apples and oranges\n\n' +
+                '* Apples\n' +
+                '* Oranges\n\n' +
+                '```bash\n' +
+                'echo "I\'m a code block"\n' +
+                '```';
+            cy.get('.comentario-root .comentario-add-comment-host').focus();
+            cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+            cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(text);
+
+            // Click on "Preview"
+            cy.get('@editor').contains('.comentario-comment-editor-buttons button', 'Preview').as('previewBtn').click()
+                .should('have.class', 'comentario-button-active');
+
+            // The textarea is gone and a preview pane is visible
+            cy.get('@textarea').should('not.be.visible');
+            cy.get('@editor').find('.comentario-comment-editor-preview').as('preview')
+                .should('be.visible')
+                .invoke('html').should('eq',
+                    '<h2>Apples and oranges</h2>\n' +
+                    '<ul>\n' +
+                    '<li>Apples</li>\n' +
+                    '<li>Oranges</li>\n' +
+                    '</ul>\n' +
+                    '<pre><code>echo "I\'m a code block"\n</code></pre>\n');
+
+            // Deactivate the preview: the editor's back and the preview gone
+            cy.get('@previewBtn').click().should('not.have.class', 'comentario-button-active');
+            cy.get('@preview') .should('not.be.visible');
+            cy.get('@textarea').should('be.visible').and('be.focused').and('have.value', text);
+        });
     });
 });
