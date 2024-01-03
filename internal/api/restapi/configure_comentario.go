@@ -153,6 +153,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIEmbedEmbedCommentListHandler = api_embed.EmbedCommentListHandlerFunc(handlers.EmbedCommentList)
 	api.APIEmbedEmbedCommentModerateHandler = api_embed.EmbedCommentModerateHandlerFunc(handlers.EmbedCommentModerate)
 	api.APIEmbedEmbedCommentNewHandler = api_embed.EmbedCommentNewHandlerFunc(handlers.EmbedCommentNew)
+	api.APIEmbedEmbedCommentPreviewHandler = api_embed.EmbedCommentPreviewHandlerFunc(handlers.EmbedCommentPreview)
 	api.APIEmbedEmbedCommentStickyHandler = api_embed.EmbedCommentStickyHandlerFunc(handlers.EmbedCommentSticky)
 	api.APIEmbedEmbedCommentUpdateHandler = api_embed.EmbedCommentUpdateHandlerFunc(handlers.EmbedCommentUpdate)
 	api.APIEmbedEmbedCommentVoteHandler = api_embed.EmbedCommentVoteHandlerFunc(handlers.EmbedCommentVote)

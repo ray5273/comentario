@@ -118,7 +118,7 @@ export class UIToolkit {
         return Wrap.new('button')
             .classes('button', 'submit-button', glyph && 'submit-glyph')
             .inner(glyph ? '' : title)
-            .attr({type: 'submit', title});
+            .attr({type: 'submit', title: glyph ? title : undefined});
     }
 
     /**

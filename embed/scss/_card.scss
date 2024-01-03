@@ -1,4 +1,5 @@
 @import "colours";
+@import "mixins";
 
 .comentario-card {
     margin-top: 16px;
@@ -115,33 +116,7 @@
     }
 
     .comentario-card-body {
-        p {
-            margin-top: 6px;
-            margin-bottom: 6px;
-        }
-
-        // Do not allow Markdown-inserted images to be wider than the card
-        img {
-            max-width: 100%;
-        }
-
-        // Properly style inserted tables
-        table {
-            margin-bottom: 12px;
-            vertical-align: top;
-            border-color: $gray-3;
-            caption-side: bottom;
-            border-collapse: collapse;
-
-            tbody > tr:nth-of-type(odd) > * {
-                background-color: rgba($black, .05);
-            }
-
-            td, th {
-                padding: 6px 9px;
-                border: 1px solid $gray-3;
-            }
-        }
+        @include comment-text();
     }
 
     .comentario-moderation-notice {

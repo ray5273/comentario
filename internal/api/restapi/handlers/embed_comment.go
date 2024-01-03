@@ -257,6 +257,18 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	})
 }
 
+func EmbedCommentPreview(params api_embed.EmbedCommentPreviewParams) middleware.Responder {
+	// Render the passed markdown
+	html := util.MarkdownToHTML(
+		params.Body.Markdown,
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
+		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled))
+
+	// Succeeded
+	return api_embed.NewEmbedCommentPreviewOK().WithPayload(&api_embed.EmbedCommentPreviewOKBody{HTML: html})
+}
+
 func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.User) middleware.Responder {
 	// Find the comment and related objects
 	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)

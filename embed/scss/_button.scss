@@ -1,4 +1,5 @@
 @import "colours";
+@import "mixins";
 
 .comentario-button {
     // Vars
@@ -15,8 +16,8 @@
     align-items: center;
     text-align: center;
     cursor: pointer;
-    line-height: 24px;
-    padding: 6px 20px;
+    line-height: 20px;
+    padding: 6px 12px;
     border: 1px solid transparent;
     border-radius: 0.15rem;
     margin: 5px;
@@ -35,6 +36,11 @@
         cursor: not-allowed !important;
         opacity: 0.3 !important;
     }
+
+    &.comentario-button-active {
+        --comentario-btn-bgcolor:   #{darken($secondary, 10%)};
+        @include btn-active-shadow();
+    }
 }
 
 .comentario-submit-button {
@@ -50,9 +56,26 @@
         background-position: center;
         background-size: 50%;
         background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 128 115.25' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='m102.53 52.839c-0.82333 5.8731-5.7084 10.612-11.819 11.234h-39.52v-25.633l-51.193 38.404 51.193 38.404v-25.505h51.138v-0.14637c14.161-0.036593 25.596-11.362 25.651-25.541h0.0183v-64.055h-25.468z' fill='%23fff'/%3E%3C/svg%3E");
+        padding-left: 20px;
+        padding-right: 20px;
     }
 
     @include btn-shadow();
+}
+
+.comentario-secondary-button {
+    --comentario-btn-color:         #{$white};
+    --comentario-btn-hover-color:   #{$white};
+    --comentario-btn-bgcolor:       #{$secondary};
+    --comentario-btn-hover-bgcolor: #{lighten($secondary, 10%)};
+
+    &.comentario-button-active {
+        --comentario-btn-bgcolor:   #{darken($secondary, 10%)};
+    }
+
+    &:not(.comentario-button-active) {
+        @include btn-shadow();
+    }
 }
 
 .comentario-danger-button {

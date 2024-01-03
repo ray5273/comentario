@@ -5,7 +5,7 @@
 $white:     #ffffff;
 $black:     #000000;
 $primary:   #4950d8;
-$secondary: #839c8f;
+$secondary: adjust-color($primary, $saturation: -25%, $lightness: +16%);
 $cta:       #ec8100;
 
 // Grays
@@ -171,13 +171,3 @@ $orange-9: #d9480f;
 $root-color: $gray-8;
 $link-color: $blue-9;
 $link-hover-color: $blue-6;
-
-@mixin btn-shadow {
-    box-shadow: 0 0.25rem 0.375rem rgba(50, 50, 93, .11), 0 0.0625rem 0.1875rem rgba(0, 0, 0, .08);
-}
-
-@mixin media-breakpoint-up-sm {
-    @media (min-width: 576px) {
-        @content;
-    }
-}

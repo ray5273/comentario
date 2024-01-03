@@ -89,7 +89,6 @@ export class Comentario extends HTMLElement {
     /** Maximum visual nesting level for comments. */
     private readonly maxLevel = Number(this.getAttribute('max-level')) || 10;
 
-
     // noinspection JSUnusedGlobalSymbols
     /**
      * Called by the browser when the element is added to the DOM.
@@ -388,14 +387,14 @@ export class Comentario extends HTMLElement {
         // Create a new editor
         this.editor = new CommentEditor(
             parentCard?.children || this.addCommentHost!,
-            this.root,
             false,
             '',
             !!this.principal,
             this.config,
             this.pageInfo!,
             () => this.cancelCommentEdits(),
-            async editor => await this.submitNewComment(parentCard, editor.markdown, editor.anonymous));
+            async editor => await this.submitNewComment(parentCard, editor.markdown, editor.anonymous),
+            s => this.apiService.commentPreview(s));
     }
 
     /**
@@ -409,14 +408,14 @@ export class Comentario extends HTMLElement {
         // Create a new editor
         this.editor = new CommentEditor(
             card,
-            this.root,
             true,
             card.comment.markdown!,
             true,
             this.config,
             this.pageInfo!,
             () => this.cancelCommentEdits(),
-            async editor => await this.submitCommentEdits(card, editor.markdown));
+            async editor => await this.submitCommentEdits(card, editor.markdown),
+            s => this.apiService.commentPreview(s));
     }
 
     /**

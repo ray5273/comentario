@@ -1884,6 +1884,39 @@ paths:
                 description: Commenter that corresponds to the current user
                 $ref: "#/definitions/commenter"
 
+  /embed/comments/preview:
+    post:
+      operationId: EmbedCommentPreview
+      summary: Render the passed comment text in markdown and return as HTML
+      tags:
+        - ApiEmbed
+      # Can also be called anonymously
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - markdown
+            properties:
+              markdown:
+                description: Comment text in the markdown format
+                type: string
+                minLength: 1
+                maxLength: 4096
+                x-isnullable: false
+      responses:
+        200:
+          description: Rendered HTML is returned
+          schema:
+            type: object
+            properties:
+              html:
+                description: Rendered comment HTML
+                type: string
+
   /embed/comments/counts:
     post:
       operationId: EmbedCommentCount

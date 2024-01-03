@@ -4,16 +4,20 @@ import { InstanceConfig, PageInfo } from './models';
 import { Utils } from './utils';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
+export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
 
 export class CommentEditor extends Wrap<HTMLFormElement>{
 
     private readonly cbAnonymous?: Wrap<HTMLInputElement>;
-    private readonly textarea: Wrap<HTMLTextAreaElement>;
+    private readonly textarea:     Wrap<HTMLTextAreaElement>;
+    private readonly preview:      Wrap<HTMLDivElement>;
+    private readonly btnPreview:   Wrap<HTMLButtonElement>;
+    private readonly btnSubmit:    Wrap<HTMLButtonElement>;
+    private previewing = false;
 
     /**
      * Create a new editor for editing comment text.
      * @param parent Parent element to host the editor.
-     * @param root Root element (for the markdown help popup).
      * @param isEdit Whether it's adding a new comment (false) or editing an existing one (true).
      * @param initialText Initial text to insert into the editor.
      * @param isAuthenticated Whether the user is authenticated.
@@ -21,10 +25,10 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
      * @param pageInfo Page data.
      * @param onCancel Cancel callback.
      * @param onSubmit Submit callback.
+     * @param onPreview Preview callback.
      */
     constructor(
         private readonly parent: Wrap<any>,
-        root: Wrap<any>,
         isEdit: boolean,
         initialText: string,
         isAuthenticated: boolean,
@@ -32,6 +36,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         pageInfo: PageInfo,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,
+        private readonly onPreview: CommentEditorPreviewCallback,
     ) {
         super(UIToolkit.form(() => onSubmit(this), () => onCancel(this)).element);
 
@@ -53,7 +58,12 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         this.classes('comment-editor')
             .append(
                 // Textarea
-                this.textarea = UIToolkit.textarea(null, true, true).attr({maxlength: '4096'}).value(initialText),
+                this.textarea = UIToolkit.textarea(null, true, true)
+                    .attr({maxlength: '4096'})
+                    .value(initialText)
+                    .on('input', () => this.textChanged()),
+                // Preview
+                this.preview = UIToolkit.div('comment-editor-preview', 'hidden'),
                 // Textarea footer
                 UIToolkit.div('comment-editor-footer')
                     .append(
@@ -78,11 +88,17 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                                 anonContainer,
                                 // Cancel
                                 UIToolkit.button('Cancel', () => onCancel(this)),
+                                // Preview
+                                this.btnPreview = UIToolkit.button('Preview', () => this.togglePreview(), 'secondary-button'),
                                 // Submit
-                                UIToolkit.submit(isEdit ? 'Save Changes' : 'Add Comment', false))));
+                                this.btnSubmit = UIToolkit.submit(isEdit ? 'Save Changes' : 'Add Comment', false),
+                            )));
 
         // Update the parent
         this.parent.classes('editor-inserted').prepend(this);
+
+        // Update the buttons
+        this.textChanged();
 
         // Focus the textarea
         this.textarea.focus();
@@ -108,5 +124,40 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
     override remove(): CommentEditor {
         this.parent.noClasses('editor-inserted');
         return super.remove() as CommentEditor;
+    }
+
+    private async togglePreview() {
+        // Toggle the value
+        this.previewing = !this.previewing;
+
+        // Hide the textarea and show the preview in the preview mode
+        this.textarea.setClasses(this.previewing, 'hidden');
+        this.preview.setClasses(!this.previewing, 'hidden');
+
+        // Update the button
+        this.btnPreview.setClasses(this.previewing, 'button-active');
+
+        // Request a comment text rendering
+        let html = '';
+        if (this.previewing) {
+            try {
+                html = await this.onPreview(this.markdown);
+            } catch (e: any) {
+                html = `Preview failed: ${e.message || '(unknown error)'}`;
+            }
+        }
+        this.preview.html(html);
+
+        // Focus the editor after leaving the preview
+        if (!this.previewing) {
+            this.textarea.focus();
+        }
+    }
+
+    private textChanged() {
+        // Disable the preview/submit buttons if the text is empty
+        const attr = {disabled: this.markdown ? undefined : 'disabled'};
+        this.btnPreview.attr(attr);
+        this.btnSubmit.attr(attr);
     }
 }

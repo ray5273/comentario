@@ -24,6 +24,11 @@ export interface ApiCommentNewResponse {
     readonly commenter: Commenter;
 }
 
+export interface ApiCommentPreviewResponse {
+    /** Rendered comment HTML. */
+    readonly html: string;
+}
+
 export interface ApiCommentUpdateResponse {
     readonly comment: Comment;
 }
@@ -221,6 +226,14 @@ export class ApiService {
         return this.httpClient.put<ApiCommentNewResponse>('embed/comments', {host, path, anonymous, parentId, markdown}, this.addAuth());
     }
 
+    /**
+     * Render comment text into HTML.
+     * @param markdown Comment text in the Markdown format.
+     */
+    async commentPreview(markdown: string): Promise<string> {
+        const r = await this.httpClient.post<ApiCommentPreviewResponse>('embed/comments/preview', {markdown});
+        return r.html;
+    }
 
     /**
      * Set sticky value for specified comment.
