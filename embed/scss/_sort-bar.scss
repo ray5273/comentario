@@ -1,0 +1,30 @@
+@import "colours";
+
+.comentario-sort-bar {
+
+    // Clearfix
+    &::after {
+        display: block;
+        clear: both;
+        content: "";
+    }
+
+    .comentario-sort-buttons {
+        float: right;
+    }
+
+    .comentario-btn{
+
+        // The down caret icon
+        svg {
+            width: 8px;
+            height: 8px;
+            margin-left: 4px;
+            transition: transform 0.2s;
+        }
+
+        &.comentario-sort-asc svg {
+            transform: rotate(180deg);
+        }
+    }
+}

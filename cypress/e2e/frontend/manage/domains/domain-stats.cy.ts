@@ -1,4 +1,5 @@
 import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../../support/cy-utils';
+import { EmbedUtils } from '../../../../support/cy-embed-utils';
 
 context('Domain Statistics page', () => {
 
@@ -55,10 +56,7 @@ context('Domain Statistics page', () => {
 
                     // Visit another page and leave a comment
                     cy.testSiteVisit(TEST_PATHS.noComment);
-                    cy.get('comentario-comments .comentario-add-comment-host').focus()
-                        .find('form').as('editor');
-                    cy.get('@editor').contains('label', 'Comment anonymously').click();
-                    cy.get('@editor').find('textarea').setValue('Hey there').type('{ctrl+Enter}');
+                    EmbedUtils.addComment(undefined, 'Hey', true);
                     cy.commentTree().should('have.length', 1);
 
                     // Back to the stats page

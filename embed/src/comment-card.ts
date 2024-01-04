@@ -387,7 +387,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 break;
             case 'collapse':
                 title = 'Collapse';
-                svg = UIToolkit.svg(320, 512, '<path fill="currentColor" d="M137.4 374.6c12.5 12.5 32.8 12.5 45.3 0l128-128c9.2-9.2 11.9-22.9 6.9-34.9s-16.6-19.8-29.6-19.8L32 192c-12.9 0-24.6 7.8-29.6 19.8s-2.2 25.7 6.9 34.9l128 128z"/>');
+                svg = UIToolkit.svgCaretDown();
                 break;
             case 'delete':
                 title = 'Delete';
@@ -418,6 +418,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 svg = UIToolkit.svg(320, 512, '<path fill="currentColor" d="M318 177.5c3.8-8.8 2-19-4.6-26l-136-144C172.9 2.7 166.6 0 160 0s-12.9 2.7-17.4 7.5l-136 144c-6.6 7-8.4 17.2-4.6 26S14.4 192 24 192h88l0 288c0 17.7 14.3 32 32 32h32c17.7 0 32-14.3 32-32l0-288h88c9.6 0 18.2-5.7 22-14.5z"/>');
                 break;
         }
-        return UIToolkit.button(svg, onClick, 'option-button', cls).attr({title});
+        return UIToolkit.button(svg, onClick, 'btn-link', 'btn-option', cls).attr({title});
     }
 }

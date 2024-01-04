@@ -21,7 +21,7 @@ context('Login Popup', () => {
         cy.get('@loginDialog').contains('Proceed with social login').next()
             .texts('button').should('arrayMatch', ['Facebook', 'GitHub', 'GitLab', 'Google', 'Twitter']);
         // -- Login form
-        cy.get('@loginDialog').find('input[name=email]')   .as('email')   .should('be.visible').and('be.focused');
+        cy.get('@loginDialog').find('input[name=email]')   .as('email')   .should('be.visible');
         cy.get('@loginDialog').find('input[name=password]').as('password').should('be.visible');
         cy.get('@loginDialog').find('button[type=submit]') .as('submit')  .should('be.visible').and('be.enabled');
     });

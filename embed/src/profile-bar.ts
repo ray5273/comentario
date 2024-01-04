@@ -54,22 +54,26 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     }
 
     /**
-     * Show a login dialog and return a promise that's resolved when the dialog is closed.
+     * Show a login dialog and return a promise that's resolved when the dialog is closed. If resolves to true, the user
+     * opted to stay anonymous (only when addingComment === true).
+     * @param addingComment Whether the dialog is shown as a response to adding a new comment.
      */
-    async loginUser(): Promise<void> {
+    async loginUser(addingComment: boolean): Promise<boolean> {
         // If there's only one external auth method available, use it right away
-        if (!this._pageInfo?.authLocal) {
+        if (!this._pageInfo?.authLocal && (!addingComment || !this._pageInfo?.authAnonymous)) {
             switch (this._pageInfo?.idps?.length || 0) {
                 // If only SSO is enabled: trigger an SSO login
                 case 0:
                     if (this._pageInfo?.authSso) {
-                        return this.onOAuth('sso');
+                        await this.onOAuth('sso');
+                        return false;
                     }
                     break;
 
                 // A single federated IdP is enabled: turn to that IdP
                 case 1:
-                    return this.onOAuth(this._pageInfo!.idps![0].id);
+                    await this.onOAuth(this._pageInfo!.idps![0].id);
+                    return false;
             }
         }
 
@@ -79,22 +83,34 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             {ref: this.btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
             this.config,
-            this._pageInfo!);
+            this._pageInfo!,
+            addingComment);
         if (dlg.confirmed) {
-            switch (dlg.navigateTo) {
+            switch (dlg.result) {
                 case null:
                     // Local auth
-                    return this.onLocalAuth(dlg.email, dlg.password);
+                    await this.onLocalAuth(dlg.email, dlg.password);
+                    break;
+
+                case 'anonymous':
+                    // User chose "Comment anonymously"
+                    if (addingComment) {
+                        return true;
+                    }
+                    break;
 
                 case 'signup':
                     // Switch to signup
-                    return this.signupUser();
+                    await this.signupUser();
+                    break;
 
                 default:
                     // External auth
-                    return this.onOAuth(dlg.navigateTo);
+                    await this.onOAuth(dlg.result);
+                    break;
             }
         }
+        return false;
     }
 
     /**
@@ -151,9 +167,9 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 UIToolkit.div()
                     .append(
                         // Settings link
-                        this.btnSettings = UIToolkit.button('Settings', () => this.editSettings()),
+                        this.btnSettings = UIToolkit.button('Settings', () => this.editSettings(), 'btn-link'),
                         // Logout link
-                        UIToolkit.button('Logout', () => this.onLogout())));
+                        UIToolkit.button('Logout', () => this.onLogout(), 'btn-link')));
             return;
         }
 
@@ -163,7 +179,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
                 UIToolkit.div(),
                 // Add a Login button
-                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(), 'fw-bold'));
+                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(false), 'btn-link', 'fw-bold'));
         }
     }
 }

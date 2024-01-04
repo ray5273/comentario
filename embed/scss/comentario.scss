@@ -15,14 +15,15 @@
     @import "animations";
     @import "button";
     @import "table";
-    @import "profile";
-    @import "mod-tools";
     @import "input";
-    @import "editor";
     @import "badge";
-    @import "card";
     @import "dialog";
     @import "footer";
+    @import "comment-editor";
+    @import "comment-card";
+    @import "profile-bar";
+    @import "sort-bar";
+    @import "mod-tools";
 
     .comentario-backdrop {
         position: absolute;
@@ -57,28 +58,6 @@
         text-align: center;
         color: $orange-8;
     }
-
-    .comentario-sort-buttons-container {
-        padding: 12px 0;
-        font-weight: 400;
-
-        .comentario-sort-buttons {
-            float: right;
-
-            .comentario-sort-button {
-                color: $gray-6 !important;
-                font-size: 13px;
-                padding: 0 7px;
-                cursor: pointer;
-            }
-
-            .comentario-sort-button-selected {
-                color: $blue-8 !important;
-                font-weight: bold;
-            }
-        }
-    }
-
 
     &.comentario-root-font {
         * {font-family: 'Source Sans Pro', sans-serif;}

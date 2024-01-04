@@ -35,8 +35,8 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
                 html:      $self.find(' > .comentario-card-body').html(),
                 author:    $header.find('.comentario-name').html(),
                 score:     sc ? Number(sc) : null,
-                upvoted:   $options.find('.comentario-button[title=Upvote]')  .hasClass('comentario-upvoted'),
-                downvoted: $options.find('.comentario-button[title=Downvote]').hasClass('comentario-downvoted'),
+                upvoted:   $options.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'),
+                downvoted: $options.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'),
                 sticky:    !!$options.find('.comentario-is-sticky').length,
                 pending:   $self.hasClass('comentario-pending'),
             };

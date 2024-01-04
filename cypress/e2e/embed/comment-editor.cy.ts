@@ -169,7 +169,7 @@ context('Comment Editor', () => {
 
             // Click on "Preview"
             cy.get('@editor').contains('.comentario-comment-editor-buttons button', 'Preview').as('previewBtn').click()
-                .should('have.class', 'comentario-button-active');
+                .should('have.class', 'comentario-btn-active');
 
             // The textarea is gone and a preview pane is visible
             cy.get('@textarea').should('not.be.visible');
@@ -184,7 +184,7 @@ context('Comment Editor', () => {
                     '<pre><code>echo "I\'m a code block"\n</code></pre>\n');
 
             // Deactivate the preview: the editor's back and the preview gone
-            cy.get('@previewBtn').click().should('not.have.class', 'comentario-button-active');
+            cy.get('@previewBtn').click().should('not.have.class', 'comentario-btn-active');
             cy.get('@preview') .should('not.be.visible');
             cy.get('@textarea').should('be.visible').and('be.focused').and('have.value', text);
         });

@@ -16,19 +16,20 @@ export class ConfirmDialog extends Dialog {
      * @param pos Positioning options.
      * @param text Dialog text.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, text: string): Promise<boolean> {
+    static async run(parent: Wrap<any>, pos: DialogPositioning, text: string): Promise<boolean> {
         const dlg = new ConfirmDialog(parent, pos, text);
-        return dlg.run(null).then(() => dlg.confirmed);
+        await dlg.run(null);
+        return dlg.confirmed;
     }
 
     override renderContent(): Wrap<any> {
-        this.btnOk = UIToolkit.button('OK', () => this.dismiss(true), 'danger-button');
+        this.btnOk = UIToolkit.button('OK', () => this.dismiss(true), 'btn-danger');
         return UIToolkit.div()
             .append(
                 // Dialog text
                 UIToolkit.div('dialog-centered').inner(this.text),
                 // Button
-                UIToolkit.div('dialog-centered').append(UIToolkit.button('Cancel', () => this.dismiss()), this.btnOk));
+                UIToolkit.div('dialog-centered').append(UIToolkit.button('Cancel', () => this.dismiss(), 'btn-link'), this.btnOk));
     }
 
     override onShow() {

@@ -1,15 +1,17 @@
 @import "colours";
 @import "mixins";
 
-.comentario-button {
+.comentario-btn {
     // Vars
-    --comentario-btn-color:         #{$link-color};
-    --comentario-btn-hover-color:   #{$link-hover-color};
-    --comentario-btn-bgcolor:       transparent;
-    --comentario-btn-hover-bgcolor: transparent;
+    --cmntr-btn-color:        #{$link-color};
+    --cmntr-btn-bg:           transparent;
+    --cmntr-btn-hover-color:  #{$link-hover-color};
+    --cmntr-btn-hover-bg:     transparent;
+    --cmntr-btn-active-color: #{$link-hover-color};
+    --cmntr-btn-active-bg:    transparent;
 
-    color: var(--comentario-btn-color);
-    background-color: var(--comentario-btn-bgcolor);
+    color: var(--cmntr-btn-color);
+    background-color: var(--cmntr-btn-bg);
 
     display: inline-flex;
     justify-content: center;
@@ -26,8 +28,8 @@
 
     &:not(:disabled) {
         &:hover, &:focus, &:active {
-            color: var(--comentario-btn-hover-color);
-            background-color: var(--comentario-btn-hover-bgcolor);
+            color: var(--cmntr-btn-hover-color);
+            background-color: var(--cmntr-btn-hover-bg);
             opacity: 1;
         }
     }
@@ -37,17 +39,33 @@
         opacity: 0.3 !important;
     }
 
-    &.comentario-button-active {
-        --comentario-btn-bgcolor:   #{darken($secondary, 10%)};
+    &:not(.comentario-btn-link).comentario-btn-active {
+        color: var(--cmntr-btn-active-color);
+        background-color: var(--cmntr-btn-active-bg);
         @include btn-active-shadow();
+    }
+
+    &:not(.comentario-btn-link):not(.comentario-btn-active) {
+        @include btn-shadow();
+    }
+
+    &.comentario-btn-link.comentario-btn-active {
+        font-weight: bold;
     }
 }
 
-.comentario-submit-button {
-    --comentario-btn-color:         #{$white};
-    --comentario-btn-hover-color:   #{$white};
-    --comentario-btn-bgcolor:       #{$primary};
-    --comentario-btn-hover-bgcolor: #{$blue-6};
+.comentario-btn-sm {
+    font-size: 12px;
+    line-height: 16px;
+    padding: 3px 6px;
+    margin: 2.5px;
+}
+
+.comentario-btn-submit {
+    --cmntr-btn-color:       #{$white};
+    --cmntr-btn-hover-color: #{$white};
+    --cmntr-btn-bg:          #{$primary};
+    --cmntr-btn-hover-bg:    #{$blue-6};
 
     font-weight: bold;
 
@@ -59,74 +77,28 @@
         padding-left: 20px;
         padding-right: 20px;
     }
-
-    @include btn-shadow();
 }
 
-.comentario-secondary-button {
-    --comentario-btn-color:         #{$white};
-    --comentario-btn-hover-color:   #{$white};
-    --comentario-btn-bgcolor:       #{$secondary};
-    --comentario-btn-hover-bgcolor: #{lighten($secondary, 10%)};
-
-    &.comentario-button-active {
-        --comentario-btn-bgcolor:   #{darken($secondary, 10%)};
-    }
-
-    &:not(.comentario-button-active) {
-        @include btn-shadow();
+@mixin make-btn($name, $color, $bg-color) {
+    .comentario-btn-#{$name} {
+        --cmntr-btn-color:        #{$color};
+        --cmntr-btn-bg:           #{$bg-color};
+        --cmntr-btn-hover-color:  #{$color};
+        --cmntr-btn-hover-bg:     #{lighten($bg-color, 15%)};
+        --cmntr-btn-active-color: #{$color};
+        --cmntr-btn-active-bg:    #{darken($bg-color, 15%)};
     }
 }
 
-.comentario-danger-button {
-    --comentario-btn-color:         #{$white};
-    --comentario-btn-hover-color:   #{$white};
-    --comentario-btn-bgcolor:       #{$red-8};
-    --comentario-btn-hover-bgcolor: #{$red-6};
-
-    font-weight: bold;
-
-    @include btn-shadow();
-}
-
-// OAuth buttons
-.comentario-oauth-button {
-    // Text defaults to white
-    --comentario-btn-color:         #{$white};
-    --comentario-btn-hover-color:   #{$white};
-
-    font-weight: bold;
-
-    @include btn-shadow();
-}
-.comentario-facebook-button {
-    --comentario-btn-bgcolor:       #1877f2;
-    --comentario-btn-hover-bgcolor: #{lighten(#1877f2, 15%)};
-}
-.comentario-github-button   {
-    --comentario-btn-bgcolor:       #000000;
-    --comentario-btn-hover-bgcolor: #{lighten(#000000, 30%)};
-}
-.comentario-gitlab-button   {
-    --comentario-btn-bgcolor:       #fc6d26;
-    --comentario-btn-hover-bgcolor: #{lighten(#fc6d26, 15%)};
-}
-.comentario-google-button   {
-    --comentario-btn-bgcolor:       #4285f4;
-    --comentario-btn-hover-bgcolor: #{lighten(#4285f4, 15%)};
-}
-.comentario-linkedin-button {
-    --comentario-btn-bgcolor:       #0a66c2;
-    --comentario-btn-hover-bgcolor: #{lighten(#0a66c2, 15%)};
-}
-.comentario-twitter-button  {
-    --comentario-btn-bgcolor:       #1da1f2;
-    --comentario-btn-hover-bgcolor: #{lighten(#1da1f2, 15%)};
-}
-.comentario-sso-button      {
-    --comentario-btn-bgcolor:       #7275ab;
-    --comentario-btn-hover-bgcolor: #{lighten(#7275ab, 15%)};
-}
+@include make-btn("secondary", $white, $secondary);
+@include make-btn("danger",    $white, $red-8);
+@include make-btn("facebook",  $white, #1877f2);
+@include make-btn("github",    $white, $black);
+@include make-btn("gitlab",    $white, #fc6d26);
+@include make-btn("google",    $white, #4285f4);
+@include make-btn("linkedin",  $white, #0077b5);
+@include make-btn("twitter",   $white, #1da1f2);
+@include make-btn("sso",       $white, #7275ab);
 
 .comentario-oauth-buttons {
     display: flex;

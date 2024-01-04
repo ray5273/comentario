@@ -7,7 +7,7 @@ export class LoginDialog extends Dialog {
 
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
-    private _navigateTo: string | null = null;
+    private _result: string | null = null;
 
     private constructor(
         parent: Wrap<any>,
@@ -15,6 +15,7 @@ export class LoginDialog extends Dialog {
         private readonly baseUrl: string,
         private readonly config: InstanceConfig,
         private readonly pageInfo: PageInfo,
+        private readonly addingComment: boolean,
     ) {
         super(parent, 'Log in', pos);
     }
@@ -34,10 +35,10 @@ export class LoginDialog extends Dialog {
     }
 
     /**
-     * Where to navigate ('signup') or the name of an external IdP is chosen.
+     * Dialog result: one of 'signup', 'anonymous', or the name of the chosen external IdP.
      */
-    get navigateTo(): string | null {
-        return this._navigateTo;
+    get result(): string | null {
+        return this._result;
     }
 
     /**
@@ -47,15 +48,17 @@ export class LoginDialog extends Dialog {
      * @param baseUrl Base URL of the Comentario instance
      * @param config Comentario configuration obtained from the backend.
      * @param pageInfo Current page data.
+     * @param addingComment Whether the dialog is shown as a response to adding a new comment.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, baseUrl, config, pageInfo);
+    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo, addingComment: boolean): Promise<LoginDialog> {
+        const dlg = new LoginDialog(parent, pos, baseUrl, config, pageInfo, addingComment);
         return dlg.run(dlg);
     }
 
     override renderContent(): Wrap<any> {
         // Create a login form
         const form = UIToolkit.form(() => this.dismiss(true), () => this.dismiss());
+        let hasSections = false;
 
         // SSO auth
         if (this.pageInfo.authSso) {
@@ -65,23 +68,23 @@ export class LoginDialog extends Dialog {
                     .inner(`Login via ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
                 // SSO button
                 UIToolkit.div('oauth-buttons')
-                    .append(UIToolkit.button('Single Sign-On', () => this.dismissWith('sso'), 'oauth-button', 'sso-button')),
-                // Separator
-                (!!this.pageInfo.idps?.length || this.pageInfo.authLocal) && Wrap.new('hr'));
+                    .append(UIToolkit.button('Single Sign-On', () => this.dismissWith('sso'), 'btn-sso')));
+            hasSections = true;
         }
 
         // Add OAuth buttons, if applicable
         if (this.pageInfo.idps?.length) {
             form.append(
+                // Separator
+                hasSections && Wrap.new('hr'),
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner('Proceed with social login'),
                 // OAuth buttons
                 UIToolkit.div('oauth-buttons')
                     .append(
                         ...this.pageInfo.idps.map(idp =>
-                            UIToolkit.button(idp.name, () => this.dismissWith(idp.id), 'oauth-button', `${idp.id}-button`))),
-                // Separator
-                this.pageInfo.authLocal && Wrap.new('hr'));
+                            UIToolkit.button(idp.name, () => this.dismissWith(idp.id), `btn-${idp.id}`))));
+            hasSections = true;
         }
 
         // Local auth
@@ -92,6 +95,8 @@ export class LoginDialog extends Dialog {
 
             // Add the inputs to the dialog
             form.append(
+                // Separator
+                hasSections && Wrap.new('hr'),
                 // Subtitle
                 UIToolkit.div('dialog-centered').inner('Log in with your email address'),
                 // Email
@@ -110,16 +115,25 @@ export class LoginDialog extends Dialog {
                         .append(
                             Wrap.new('span').inner('Don\'t have an account? '),
                             Wrap.new('a').inner('Sign up here').click(() => this.dismissWith('signup'))));
+            hasSections = true;
+        }
+
+        // Anonymous auth, only when adding a comment
+        if (this.addingComment && this.pageInfo.authAnonymous) {
+            form.append(
+                // Separator
+                hasSections && Wrap.new('hr'),
+                // Subtitle
+                UIToolkit.div('dialog-centered').inner('Not willing to login?'),
+                // Comment anonymously button
+                UIToolkit.div('oauth-buttons')
+                    .append(UIToolkit.button('Comment anonymously', () => this.dismissWith('anonymous'), 'btn-secondary')));
         }
         return form;
     }
 
-    override onShow(): void {
-        this._email?.focus();
-    }
-
-    private dismissWith(nav: string) {
-        this._navigateTo = nav;
+    private dismissWith(res: string) {
+        this._result = res;
         this.dismiss(true);
     }
 }

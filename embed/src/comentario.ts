@@ -343,7 +343,8 @@ export class Comentario extends HTMLElement {
                         // Lock/Unlock button
                         UIToolkit.button(
                             this.pageInfo?.isPageReadonly ? 'Unlock thread' : 'Lock thread',
-                            () => this.pageReadonlyToggle())));
+                            () => this.pageReadonlyToggle(),
+                            'btn-link')));
         }
 
         // If the domain or the page are readonly, add a corresponding message
@@ -389,11 +390,9 @@ export class Comentario extends HTMLElement {
             parentCard?.children || this.addCommentHost!,
             false,
             '',
-            !!this.principal,
             this.config,
-            this.pageInfo!,
             () => this.cancelCommentEdits(),
-            async editor => await this.submitNewComment(parentCard, editor.markdown, editor.anonymous),
+            async editor => await this.submitNewComment(parentCard, editor.markdown),
             s => this.apiService.commentPreview(s));
     }
 
@@ -410,9 +409,7 @@ export class Comentario extends HTMLElement {
             card,
             true,
             card.comment.markdown!,
-            true,
             this.config,
-            this.pageInfo!,
             () => this.cancelCommentEdits(),
             async editor => await this.submitCommentEdits(card, editor.markdown),
             s => this.apiService.commentPreview(s));
@@ -422,17 +419,13 @@ export class Comentario extends HTMLElement {
      * Submit a new comment to the backend, authenticating the user before if necessary.
      * @param parentCard Parent card for adding a reply to. If falsy, a top-level comment is being added
      * @param markdown Markdown text entered by the user.
-     * @param anonymous Whether the user chose to comment anonymously.
      */
-    private async submitNewComment(parentCard: CommentCard | undefined, markdown: string, anonymous: boolean): Promise<void> {
-        // Authenticate the user, if required
-        const auth = !this.pageInfo?.authAnonymous || !anonymous;
-        if (!this.principal && auth) {
-            await this.profileBar!.loginUser();
-        }
+    private async submitNewComment(parentCard: CommentCard | undefined, markdown: string): Promise<void> {
+        // Authenticate the user or allow to comment anonymously
+        const anonymous = !this.principal && await this.profileBar!.loginUser(true);
 
         // If we can proceed: user logged in or that wasn't required
-        if (this.principal || !auth) {
+        if (this.principal || anonymous) {
             // Submit the comment to the backend
             const r = await this.apiService.commentNew(this.location.host, this.pagePath, anonymous, parentCard?.comment.id, markdown);
 
@@ -751,7 +744,7 @@ export class Comentario extends HTMLElement {
         // Only registered users can vote
         let reloaded = false;
         if (!this.principal) {
-            await this.profileBar!.loginUser();
+            await this.profileBar!.loginUser(false);
 
             // Failed to authenticate
             if (!this.principal) {

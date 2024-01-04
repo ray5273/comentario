@@ -43,7 +43,7 @@ export class EmbedUtils {
         }
 
         // Check sort buttons
-        cy.get('@mainArea').find('.comentario-sort-buttons-container').should('be.visible');
+        cy.get('@mainArea').find('.comentario-sort-bar').should('be.visible');
 
         // Check comments
         cy.get('@mainArea').find('.comentario-comments').as('comments').should('exist');
@@ -71,7 +71,7 @@ export class EmbedUtils {
      * @param title Button title.
      */
     static commentOptionButton(id: string, title: string) {
-        return cy.get(`.comentario-root #comentario-${id} .comentario-option-button[title="${title}"]`);
+        return cy.get(`.comentario-root #comentario-${id} .comentario-btn-option[title="${title}"]`);
     }
 
     /**
@@ -94,14 +94,15 @@ export class EmbedUtils {
         // Enter comment text
         cy.get('@editor').find('textarea').should('be.focused').setValue(markdown);
 
-        // Tick off "Comment anonymously" if needed
-        if (anonymous) {
-            cy.get('@editor').contains('label', 'Comment anonymously').click();
-        }
-
         // Submit the comment
         cy.get('@editor').find('.comentario-comment-editor-buttons button[type=submit]')
             .should('have.text', 'Add Comment')
             .click();
+
+        // If we're to comment anonymously, the Login dialog must appear
+        if (anonymous) {
+            cy.get('.comentario-root .comentario-dialog').should('be.visible')
+                .contains('button', 'Comment anonymously').click();
+        }
     }
 }

@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { InstanceConfig, PageInfo } from './models';
+import { InstanceConfig } from './models';
 import { Utils } from './utils';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
@@ -8,11 +8,10 @@ export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>
 
 export class CommentEditor extends Wrap<HTMLFormElement>{
 
-    private readonly cbAnonymous?: Wrap<HTMLInputElement>;
-    private readonly textarea:     Wrap<HTMLTextAreaElement>;
-    private readonly preview:      Wrap<HTMLDivElement>;
-    private readonly btnPreview:   Wrap<HTMLButtonElement>;
-    private readonly btnSubmit:    Wrap<HTMLButtonElement>;
+    private readonly textarea:   Wrap<HTMLTextAreaElement>;
+    private readonly preview:    Wrap<HTMLDivElement>;
+    private readonly btnPreview: Wrap<HTMLButtonElement>;
+    private readonly btnSubmit:  Wrap<HTMLButtonElement>;
     private previewing = false;
 
     /**
@@ -20,9 +19,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
      * @param parent Parent element to host the editor.
      * @param isEdit Whether it's adding a new comment (false) or editing an existing one (true).
      * @param initialText Initial text to insert into the editor.
-     * @param isAuthenticated Whether the user is authenticated.
      * @param config Comentario configuration obtained from the backend.
-     * @param pageInfo Page data.
      * @param onCancel Cancel callback.
      * @param onSubmit Submit callback.
      * @param onPreview Preview callback.
@@ -31,35 +28,19 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         private readonly parent: Wrap<any>,
         isEdit: boolean,
         initialText: string,
-        isAuthenticated: boolean,
         config: InstanceConfig,
-        pageInfo: PageInfo,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,
         private readonly onPreview: CommentEditorPreviewCallback,
     ) {
         super(UIToolkit.form(() => onSubmit(this), () => onCancel(this)).element);
 
-        // "Comment anonymously" checkbox
-        let anonContainer: Wrap<any> | undefined;
-        if (!isAuthenticated && pageInfo.authAnonymous && !isEdit) {
-            this.cbAnonymous = Wrap.new('input').id(`anonymous-${Math.random()}`).attr({type: 'checkbox'});
-            // Tick off and disable if only anonymous comments are possible
-            if (!pageInfo.authLocal && !pageInfo.authSso && !pageInfo.idps?.length) {
-                this.cbAnonymous.checked(true).attr({disabled: 'true'});
-            }
-            anonContainer = UIToolkit.div('checkbox-container')
-                .append(
-                    this.cbAnonymous,
-                    Wrap.new('label').attr({for: this.cbAnonymous.getAttr('id')}).inner('Comment anonymously'));
-        }
-
         // Set up the form
         this.classes('comment-editor')
             .append(
                 // Textarea
                 this.textarea = UIToolkit.textarea(null, true, true)
-                    .attr({maxlength: '4096'})
+                    .attr({name: 'comentario-comment-editor', maxlength: '4096'})
                     .value(initialText)
                     .on('input', () => this.textChanged()),
                 // Preview
@@ -84,12 +65,10 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                         // Buttons
                         UIToolkit.div('comment-editor-buttons')
                             .append(
-                                // Anonymous checkbox, if any
-                                anonContainer,
                                 // Cancel
-                                UIToolkit.button('Cancel', () => onCancel(this)),
+                                UIToolkit.button('Cancel', () => onCancel(this), 'btn-link'),
                                 // Preview
-                                this.btnPreview = UIToolkit.button('Preview', () => this.togglePreview(), 'secondary-button'),
+                                this.btnPreview = UIToolkit.button('Preview', () => this.togglePreview(), 'btn-secondary'),
                                 // Submit
                                 this.btnSubmit = UIToolkit.submit(isEdit ? 'Save Changes' : 'Add Comment', false),
                             )));
@@ -102,13 +81,6 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
 
         // Focus the textarea
         this.textarea.focus();
-    }
-
-    /**
-     * Whether the Comment anonymously checkbox is ticked off.
-     */
-    get anonymous(): boolean {
-        return !!this.cbAnonymous?.isChecked;
     }
 
     /**
@@ -135,7 +107,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         this.preview.setClasses(!this.previewing, 'hidden');
 
         // Update the button
-        this.btnPreview.setClasses(this.previewing, 'button-active');
+        this.btnPreview.setClasses(this.previewing, 'btn-active');
 
         // Request a comment text rendering
         let html = '';

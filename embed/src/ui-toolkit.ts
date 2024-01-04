@@ -106,7 +106,7 @@ export class UIToolkit {
      * @param classes Additional button classes to add.
      */
     static button(label: string, onClick?: (btn: Wrap<HTMLButtonElement>, e: MouseEvent) => void,  ...classes: (false | null | undefined | string)[]): Wrap<HTMLButtonElement> {
-        return Wrap.new('button').classes('button', ...classes).html(label).attr({type: 'button'}).click(onClick);
+        return Wrap.new('button').classes('btn', ...classes).html(label).attr({type: 'button'}).click(onClick);
     }
 
     /**
@@ -116,7 +116,7 @@ export class UIToolkit {
      */
     static submit(title: string, glyph: boolean): Wrap<HTMLButtonElement> {
         return Wrap.new('button')
-            .classes('button', 'submit-button', glyph && 'submit-glyph')
+            .classes('btn', 'btn-submit', glyph && 'submit-glyph')
             .inner(glyph ? '' : title)
             .attr({type: 'submit', title: glyph ? title : undefined});
     }
@@ -129,5 +129,12 @@ export class UIToolkit {
      */
     static svg(width: number, height: number, content: string): string {
         return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${content}</svg>`;
+    }
+
+    /**
+     * Return a textual representation of a caret-down SVG image.
+     */
+    static svgCaretDown(): string {
+        return this.svg(512, 256, '<path fill="currentColor" d="M256 0 0 256h512L256 0z"/>');
     }
 }

@@ -2,7 +2,7 @@
 @import "mixins";
 
 .comentario-card {
-    margin-top: 16px;
+    margin-bottom: 16px;
     border-top: 1px solid $gray-1;
 
     .comentario-card-self {
@@ -72,14 +72,14 @@
         }
     }
 
-    .comentario-option-button {
+    .comentario-btn-option {
+        --cmntr-btn-color: $gray-6;
+
         margin: 0;
         padding: 8px;
         width: 32px;
         height: 32px;
-        color: $gray-6;
         opacity: 0.5;
-        transition: all 0.2s;
 
         svg {
             width: 100%;
