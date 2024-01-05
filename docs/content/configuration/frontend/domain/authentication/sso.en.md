@@ -59,6 +59,13 @@ For example:
 }
 ```
 
+### Single SSO provider for multiple domains
+
+If your SSO provider is used for authentication against multiple Comentario domains, and you want to know which domain triggered the authentication, you can use one of the two options:
+
+* Add domain name or ID to the SSO URL path, e.g.: `https://sso.example.com/auth/3f63a124-6208-4e2b-a7a0-651e6e317744`
+* Add domain name or ID to a query parameter in the URL. Comentario will keep any existing query param in the SSO URL, and will only add (or replace) `token` and `hmac` as described above. Therefore you can use a URL like `https://sso.example.com/auth?host=myblog.org`. Then your SSO provider will need to look at the `host` parameter value and complete the authentication for this specific domain.
+
 ## Non-interactive SSO authentication flow
 
 When activated, the `Non-interactive` switch changes the behaviour of the SSO authentication. The user won't see any login popup, but the whole process will be executed in the background.
