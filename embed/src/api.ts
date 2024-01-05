@@ -118,9 +118,7 @@ export class ApiService {
             this._userSessionToken = token;
 
             // Store the session in a cookie, setting it to expire after one month
-            const exp = new Date();
-            exp.setTime(exp.getTime() + 30 * 24 * 60 * 60 * 1000);
-            Utils.setCookie(ApiService.SessionTokenCookieName, this._userSessionToken, exp.toUTCString());
+            Utils.setCookie(ApiService.SessionTokenCookieName, this._userSessionToken, 30);
         }
     }
 

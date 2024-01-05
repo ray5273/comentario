@@ -75,8 +75,8 @@ context('Comment Editor', () => {
                   pending: true
                 `);
 
-            // Add a reply
-            EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', true);
+            // Add a reply: no login dialog will appear second time
+            EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', false);
 
             // New comment is added, also in the Pending state
             cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',

@@ -66,7 +66,7 @@ context('Login Popup', () => {
     });
 
     it('allows to switch to Sign-up', () => {
-        cy.get('@loginDialog').contains('a', 'Sign up here').click();
+        cy.get('@loginDialog').contains('button', 'Sign up here').click();
         cy.get('@root').contains('.comentario-dialog .comentario-dialog-header', 'Create an account').should('be.visible');
     });
 

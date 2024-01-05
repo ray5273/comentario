@@ -15,7 +15,6 @@ export class LoginDialog extends Dialog {
         private readonly baseUrl: string,
         private readonly config: InstanceConfig,
         private readonly pageInfo: PageInfo,
-        private readonly addingComment: boolean,
     ) {
         super(parent, 'Log in', pos);
     }
@@ -48,10 +47,9 @@ export class LoginDialog extends Dialog {
      * @param baseUrl Base URL of the Comentario instance
      * @param config Comentario configuration obtained from the backend.
      * @param pageInfo Current page data.
-     * @param addingComment Whether the dialog is shown as a response to adding a new comment.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo, addingComment: boolean): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, baseUrl, config, pageInfo, addingComment);
+    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo): Promise<LoginDialog> {
+        const dlg = new LoginDialog(parent, pos, baseUrl, config, pageInfo);
         return dlg.run(dlg);
     }
 
@@ -108,26 +106,27 @@ export class LoginDialog extends Dialog {
                     .append(
                         Wrap.new('a')
                             .inner('Forgot your password?')
-                            .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})),
-                // Switch to signup link, if signup is enabled
-                this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsLocalSignupEnabled)?.value === 'true' &&
-                    UIToolkit.div('dialog-centered')
-                        .append(
-                            Wrap.new('span').inner('Don\'t have an account? '),
-                            Wrap.new('a').inner('Sign up here').click(() => this.dismissWith('signup'))));
+                            .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})));
             hasSections = true;
         }
 
-        // Anonymous auth, only when adding a comment
-        if (this.addingComment && this.pageInfo.authAnonymous) {
+        // Signup and anonymous auth
+        const canSignup = this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsLocalSignupEnabled)?.value === 'true';
+        if (canSignup || this.pageInfo.authAnonymous) {
             form.append(
                 // Separator
                 hasSections && Wrap.new('hr'),
-                // Subtitle
-                UIToolkit.div('dialog-centered').inner('Not willing to login?'),
-                // Comment anonymously button
-                UIToolkit.div('oauth-buttons')
-                    .append(UIToolkit.button('Comment anonymously', () => this.dismissWith('anonymous'), 'btn-secondary')));
+                UIToolkit.div('flex').append(
+                    // Signup
+                    canSignup && UIToolkit.div('flex-50', 'text-center')
+                        .append(
+                            UIToolkit.div('dialog-centered').inner('Don\'t have an account? '),
+                            UIToolkit.button('Sign up here', () => this.dismissWith('signup'), 'btn-secondary')),
+                    // Anonymous auth
+                    this.pageInfo.authAnonymous && UIToolkit.div('flex-50', 'text-center')
+                        .append(
+                            UIToolkit.div('dialog-centered').inner('Not willing to login?'),
+                            UIToolkit.button('Comment anonymously', () => this.dismissWith('anonymous'), 'btn-secondary'))));
         }
         return form;
     }

@@ -1,4 +1,4 @@
-import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, CommentSort, DefaultInstanceConfig, ErrorMessage, InstanceDynamicConfigKey, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
+import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, DefaultInstanceConfig, ErrorMessage, InstanceDynamicConfigKey, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
@@ -7,6 +7,7 @@ import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
 import { Utils } from './utils';
+import { LocalConfig } from './local-config';
 
 export class Comentario extends HTMLElement {
 
@@ -34,6 +35,9 @@ export class Comentario extends HTMLElement {
 
     /** Comentario config obtained from the backend. */
     private config = DefaultInstanceConfig;
+
+    /** Local configuration. */
+    private readonly localConfig = new LocalConfig();
 
     /** Message panel (only shown when needed). */
     private messagePanel?: Wrap<HTMLDivElement>;
@@ -67,9 +71,6 @@ export class Comentario extends HTMLElement {
 
     /** Current page info as retrieved from the server. */
     private pageInfo?: PageInfo;
-
-    /** Currently applied comment sort. */
-    private commentSort: CommentSort = 'sd';
 
     /** Path of the page for loading comments. Defaults to the actual path on the host. */
     private readonly pagePath = this.getAttribute('page-id') || this.location.pathname;
@@ -117,6 +118,9 @@ export class Comentario extends HTMLElement {
      * @return Promise that resolves as soon as Comentario setup is complete
      */
     async main(): Promise<void> {
+        // Load local configuration
+        this.localConfig.load();
+
         // If CSS isn't disabled altogether
         if (this.cssOverride !== 'false') {
             try {
@@ -147,6 +151,7 @@ export class Comentario extends HTMLElement {
                     this.root,
                     this.config,
                     () => this.createAvatarElement(this.principal),
+                    () => this.localConfig.anonymousCommenting = true,
                     (email, password) => this.authenticateLocally(email, password),
                     idp => this.oAuthLogin(idp),
                     () => this.logout(),
@@ -321,6 +326,11 @@ export class Comentario extends HTMLElement {
     private async updateAuthStatus(): Promise<void> {
         this.principal = await this.apiService.getPrincipal();
 
+        // If the user is logged in, remove any stored anonymous status
+        if (this.principal) {
+            this.localConfig.anonymousCommenting = false;
+        }
+
         // Update the profile bar
         this.profileBar!.principal = this.principal;
     }
@@ -365,11 +375,11 @@ export class Comentario extends HTMLElement {
         if (this.parentIdMap) {
             this.mainArea!.append(new SortBar(
                 cs => {
-                    this.commentSort = cs;
+                    this.localConfig.commentSort = cs;
                     // Re-render comments using the new sort
                     this.renderComments();
                 },
-                this.commentSort,
+                this.localConfig.commentSort,
                 this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsEnableCommentVoting)?.value === 'true'));
         }
 
@@ -421,13 +431,16 @@ export class Comentario extends HTMLElement {
      * @param markdown Markdown text entered by the user.
      */
     private async submitNewComment(parentCard: CommentCard | undefined, markdown: string): Promise<void> {
-        // Authenticate the user or allow to comment anonymously
-        const anonymous = !this.principal && await this.profileBar!.loginUser(true);
+        // Check if the user deliberately chose to comment anonymously. If not and not authenticated yet, show them a
+        // login dialog
+        if (!this.principal && !this.localConfig.anonymousCommenting) {
+            await this.profileBar!.loginUser();
+        }
 
         // If we can proceed: user logged in or that wasn't required
-        if (this.principal || anonymous) {
+        if (this.principal || this.localConfig.anonymousCommenting) {
             // Submit the comment to the backend
-            const r = await this.apiService.commentNew(this.location.host, this.pagePath, anonymous, parentCard?.comment.id, markdown);
+            const r = await this.apiService.commentNew(this.location.host, this.pagePath, !this.principal, parentCard?.comment.id, markdown);
 
             // Make sure parent map exists
             if (!this.parentIdMap) {
@@ -638,7 +651,9 @@ export class Comentario extends HTMLElement {
 
             // Store page- and backend-related properties
             this.pageInfo = r.pageInfo;
-            this.commentSort = r.pageInfo.defaultSort;
+            if (!this.localConfig.commentSort) {
+                this.localConfig.commentSort = r.pageInfo.defaultSort;
+            }
 
             // Configure the page in the profile bar
             this.profileBar!.pageInfo = r.pageInfo;
@@ -648,6 +663,15 @@ export class Comentario extends HTMLElement {
             this.profileBar!.pageInfo = undefined;
             throw err;
         }
+
+        // Update the anonymous commenting status
+        this.localConfig.anonymousCommenting =
+            // User cannot be authenticated
+            !this.principal && (
+                // True if anonymous is the only option
+                (!this.pageInfo!.authLocal && (!this.pageInfo!.authSso || this.pageInfo.ssoNonInteractive) && !this.pageInfo!.idps?.length) ||
+                // Otherwise restore the user choice
+                (this.pageInfo!.authAnonymous && this.localConfig.anonymousCommenting === true));
 
         // Build a map by grouping all comments by their parentId value
         this.parentIdMap = r.comments?.reduce(
@@ -744,7 +768,7 @@ export class Comentario extends HTMLElement {
         // Only registered users can vote
         let reloaded = false;
         if (!this.principal) {
-            await this.profileBar!.loginUser(false);
+            await this.profileBar!.loginUser();
 
             // Failed to authenticate
             if (!this.principal) {
@@ -777,7 +801,7 @@ export class Comentario extends HTMLElement {
             parentMap:    this.parentIdMap!,
             commenters:   this.commenters,
             principal:    this.principal,
-            commentSort:  this.commentSort,
+            commentSort:  this.localConfig.commentSort || 'ta',
             isReadonly:   this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
             curTimeMs:    new Date().getTime(),
             maxLevel:     this.maxLevel,

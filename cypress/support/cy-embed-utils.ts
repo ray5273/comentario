@@ -78,7 +78,7 @@ export class EmbedUtils {
      * Add a root comment or reply on the current page.
      * @param parentId Parent comment ID. If undefined, a root comment is created.
      * @param markdown Markdown text of the comment.
-     * @param anonymous Whether to submit the comment anonymously.
+     * @param anonymous Whether the user will be given an option to submit the comment anonymously in the Login dialog.
      */
     static addComment(parentId: string | undefined, markdown: string, anonymous: boolean) {
         // Focus the add host or click the reply button

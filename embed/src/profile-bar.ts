@@ -17,6 +17,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param root Root element (for showing popups).
      * @param config Comentario configuration obtained from the backend.
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
+     * @param onAnonymousAuth Callback invoked when user chose to comment anonymously.
      * @param onLocalAuth Callback for executing a local authentication.
      * @param onOAuth Callback for executing external (OAuth) authentication.
      * @param onLogout Callback for executing logout.
@@ -28,6 +29,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly root: Wrap<any>,
         private readonly config: InstanceConfig,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
+        private readonly onAnonymousAuth: () => void,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
         private readonly onOAuth: (idp: string) => Promise<void>,
         private readonly onLogout: () => void,
@@ -54,26 +56,22 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     }
 
     /**
-     * Show a login dialog and return a promise that's resolved when the dialog is closed. If resolves to true, the user
-     * opted to stay anonymous (only when addingComment === true).
-     * @param addingComment Whether the dialog is shown as a response to adding a new comment.
+     * Show a login dialog and return a promise that's resolved when the dialog is closed.
      */
-    async loginUser(addingComment: boolean): Promise<boolean> {
+    async loginUser(): Promise<void> {
         // If there's only one external auth method available, use it right away
-        if (!this._pageInfo?.authLocal && (!addingComment || !this._pageInfo?.authAnonymous)) {
+        if (!this._pageInfo?.authLocal && !this._pageInfo?.authAnonymous) {
             switch (this._pageInfo?.idps?.length || 0) {
                 // If only SSO is enabled: trigger an SSO login
                 case 0:
                     if (this._pageInfo?.authSso) {
-                        await this.onOAuth('sso');
-                        return false;
+                        return this.onOAuth('sso');
                     }
                     break;
 
                 // A single federated IdP is enabled: turn to that IdP
                 case 1:
-                    await this.onOAuth(this._pageInfo!.idps![0].id);
-                    return false;
+                    return this.onOAuth(this._pageInfo!.idps![0].id);
             }
         }
 
@@ -83,34 +81,27 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             {ref: this.btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
             this.config,
-            this._pageInfo!,
-            addingComment);
+            this._pageInfo!);
         if (dlg.confirmed) {
             switch (dlg.result) {
                 case null:
                     // Local auth
-                    await this.onLocalAuth(dlg.email, dlg.password);
-                    break;
+                    return this.onLocalAuth(dlg.email, dlg.password);
 
                 case 'anonymous':
                     // User chose "Comment anonymously"
-                    if (addingComment) {
-                        return true;
-                    }
-                    break;
+                    this.onAnonymousAuth();
+                    return;
 
                 case 'signup':
                     // Switch to signup
-                    await this.signupUser();
-                    break;
+                    return this.signupUser();
 
                 default:
                     // External auth
-                    await this.onOAuth(dlg.result);
-                    break;
+                    return this.onOAuth(dlg.result);
             }
         }
-        return false;
     }
 
     /**
@@ -179,7 +170,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
                 UIToolkit.div(),
                 // Add a Login button
-                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(false), 'btn-link', 'fw-bold'));
+                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(), 'btn-link', 'fw-bold'));
         }
     }
 }

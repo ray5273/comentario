@@ -110,9 +110,11 @@ export class Utils {
      * Set a document cookie with the given name and value.
      * @param name Name of the cookie to set.
      * @param value Value of the cookie.
-     * @param expires Expiry date of the cookie.
+     * @param days Number of days for the cookie to stay valid.
      */
-    static setCookie(name: string, value: string | null | undefined, expires: string) {
-        this.cookieSrc.cookie = `${name}=${value || ''}; Expires=${expires}; Path=/; SameSite=Strict`;
+    static setCookie(name: string, value: string | null | undefined, days: number) {
+        const exp = new Date();
+        exp.setTime(exp.getTime() + days * 24 * 60 * 60 * 1000);
+        this.cookieSrc.cookie = `${name}=${value || ''}; Expires=${exp.toUTCString()}; Path=/; SameSite=Strict`;
     }
 }

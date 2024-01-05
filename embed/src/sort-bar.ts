@@ -10,7 +10,7 @@ export class SortBar extends Wrap<HTMLDivElement> {
 
     constructor(
         private readonly onChange: (cs: CommentSort) => void,
-        private curSort: CommentSort,
+        private curSort: CommentSort | undefined,
         allowByScore: boolean,
     ) {
         super(UIToolkit.div('sort-bar').element);
@@ -31,19 +31,19 @@ export class SortBar extends Wrap<HTMLDivElement> {
         this.setSort(curSort);
     }
 
-    private setSort(cs: CommentSort) {
+    private setSort(cs: CommentSort | undefined) {
         const chg = this.curSort !== cs;
 
         // Save the set sort
         this.curSort = cs;
 
         // Update button appearance
-        this.btnByScore  ?.setClasses(cs[0] === 's', 'btn-active').setClasses(cs === 'sa', 'sort-asc');
+        this.btnByScore  ?.setClasses(cs?.[0] === 's', 'btn-active').setClasses(cs === 'sa', 'sort-asc');
         this.btnByTimeAsc .setClasses(cs === 'ta', 'btn-active');
         this.btnByTimeDesc.setClasses(cs === 'td', 'btn-active');
 
         // If the sort has changed, call the change callback
-        if (chg) {
+        if (chg && cs) {
             this.onChange(cs);
         }
     }

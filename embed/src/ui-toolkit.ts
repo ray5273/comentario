@@ -135,6 +135,6 @@ export class UIToolkit {
      * Return a textual representation of a caret-down SVG image.
      */
     static svgCaretDown(): string {
-        return this.svg(512, 256, '<path fill="currentColor" d="M256 0 0 256h512L256 0z"/>');
+        return this.svg(512, 512, '<path fill="currentColor" d="M256 384 0 128h512z"/>');
     }
 }
