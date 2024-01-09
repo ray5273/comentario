@@ -116,7 +116,7 @@ export class LoginDialog extends Dialog {
             form.append(
                 // Separator
                 hasSections && Wrap.new('hr'),
-                UIToolkit.div('flex').append(
+                UIToolkit.div('flex', 'flex-wrap').append(
                     // Signup
                     canSignup && UIToolkit.div('flex-50', 'text-center')
                         .append(

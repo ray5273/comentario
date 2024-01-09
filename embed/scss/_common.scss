@@ -76,11 +76,15 @@ blockquote {
 }
 
 .comentario-text-center {
-    text-align: center;
+    text-align: center !important;
 }
 
 .comentario-flex {
-    display: flex;
+    display: flex !important;
+}
+
+.comentario-flex-wrap {
+    flex-wrap: wrap !important;
 }
 
 .comentario-flex-50 {
