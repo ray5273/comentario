@@ -35,8 +35,8 @@ export interface CommentRenderingContext {
     readonly principal?: Principal;
     /** Current sorting. */
     readonly commentSort: CommentSort;
-    /** Whether comments are readonly on this page. */
-    readonly isReadonly: boolean;
+    /** Whether the user can add comments on this page. */
+    readonly canAddComments: boolean;
     /** Current time in milliseconds. */
     readonly curTimeMs: number;
     /** Max comment nesting level. */
@@ -313,7 +313,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         }
 
         // Reply button
-        if (!ctx.isReadonly) {
+        if (ctx.canAddComments) {
             this.btnReply = this.getOptionButton('reply', null, () => ctx.onReply(this)).appendTo(left);
         }
 

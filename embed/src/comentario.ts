@@ -114,6 +114,17 @@ export class Comentario extends HTMLElement {
     }
 
     /**
+     * Whether there's any auth method available on the current page.
+     */
+    get authAvailable(): boolean {
+        return !!(
+            this.pageInfo?.authAnonymous ||
+            this.pageInfo?.authLocal ||
+            this.pageInfo?.authSso ||
+            this.pageInfo?.idps?.length);
+    }
+
+    /**
      * The main worker routine of Comentario
      * @return Promise that resolves as soon as Comentario setup is complete
      */
@@ -362,8 +373,13 @@ export class Comentario extends HTMLElement {
             this.mainArea!.append(
                 UIToolkit.div('page-moderation-notice').inner('This thread is locked. You cannot add new comments.'));
 
-        // Otherwise, add a comment editor host, which will get an editor for creating a new comment
+        // If no auth method available, also add a message
+        } else if (!this.authAvailable) {
+            this.mainArea!.append(
+                UIToolkit.div('page-moderation-notice').inner('This domain has no authentication method available. You cannot add new comments.'));
+
         } else {
+            // Otherwise, add a comment editor host, which will get an editor for creating a new comment
             this.mainArea!.append(
                 this.addCommentHost = UIToolkit.div('add-comment-host')
                     .attr({tabindex: '0'})
@@ -796,23 +812,23 @@ export class Comentario extends HTMLElement {
      */
     private makeCommentRenderingContext(): CommentRenderingContext {
         return {
-            apiUrl:       this.apiService.basePath,
-            root:         this.root,
-            parentMap:    this.parentIdMap!,
-            commenters:   this.commenters,
-            principal:    this.principal,
-            commentSort:  this.localConfig.commentSort || 'ta',
-            isReadonly:   this.pageInfo!.isDomainReadonly || this.pageInfo!.isPageReadonly,
-            curTimeMs:    new Date().getTime(),
-            maxLevel:     this.maxLevel,
-            enableVoting: this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsEnableCommentVoting)?.value === 'true',
-            onGetAvatar:  user => this.createAvatarElement(user),
-            onModerate:   (card, approve) => this.moderateComment(card, approve),
-            onDelete:     card => this.deleteComment(card),
-            onEdit:       card => this.editComment(card),
-            onReply:      card => this.addComment(card),
-            onSticky:     card => this.stickyComment(card),
-            onVote:       (card, direction) => this.voteComment(card, direction),
+            apiUrl:         this.apiService.basePath,
+            root:           this.root,
+            parentMap:      this.parentIdMap!,
+            commenters:     this.commenters,
+            principal:      this.principal,
+            commentSort:    this.localConfig.commentSort || 'ta',
+            canAddComments: !this.pageInfo?.isDomainReadonly && !this.pageInfo?.isPageReadonly && this.authAvailable,
+            curTimeMs:      new Date().getTime(),
+            maxLevel:       this.maxLevel,
+            enableVoting:   this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsEnableCommentVoting)?.value === 'true',
+            onGetAvatar:    user => this.createAvatarElement(user),
+            onModerate:     (card, approve) => this.moderateComment(card, approve),
+            onDelete:       card => this.deleteComment(card),
+            onEdit:         card => this.editComment(card),
+            onReply:        card => this.addComment(card),
+            onSticky:       card => this.stickyComment(card),
+            onVote:         (card, direction) => this.voteComment(card, direction),
         };
     }
 
