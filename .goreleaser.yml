@@ -1,17 +1,42 @@
 project_name: comentario
 
 builds:
+  # Dynamically linked binary
   - id: comentario
     binary: comentario
     goos:
       - linux
     goarch:
       - amd64
+  # Statically linked binary
+  - id: comentario-static
+    binary: comentario
+    goos:
+      - linux
+    goarch:
+      - amd64
+    env:
+      - CGO_ENABLED=0
 
 archives:
-  - id: comentario-binary
+  - id: comentario-tarball
     builds:
       - comentario
+    wrap_in_directory: 'true'
+    files:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+      - src: build/frontend
+        dst: frontend
+      - db
+      - templates
+      - src: resources/etc
+        dst: etc
+  - id: comentario-static-tarball
+    builds:
+      - comentario-static
+    name_template: '{{ .ProjectName }}-static_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
     wrap_in_directory: 'true'
     files:
       - CHANGELOG.md
@@ -43,7 +68,9 @@ changelog:
 nfpms:
   - id: comentario
     package_name: comentario
-
+    builds:
+      # We make packages only from a dynamically-linked binary
+      - comentario
     vendor: Dmitry Kann
     homepage: https://comentario.app/
     maintainer: Dmitry Kann <yktooo@gmail.com>
