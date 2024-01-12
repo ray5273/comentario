@@ -16,6 +16,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/e2e"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"io"
 	"net/url"
 	"os"
 	"path"
@@ -85,6 +86,8 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 	// Configure API endpoints
 	e2eHandler = *hPtr
 	api.APIE2eE2eConfigDynamicItemSetHandler = api_e2e.E2eConfigDynamicItemSetHandlerFunc(E2eConfigDynamicItemSet)
+	api.APIE2eE2eDomainPatchHandler = api_e2e.E2eDomainPatchHandlerFunc(E2eDomainPatch)
+	api.APIE2eE2eDomainUpdateIdpsHandler = api_e2e.E2eDomainUpdateIdpsHandlerFunc(E2eDomainUpdateIdps)
 	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
 	api.APIE2eE2eOAuthSSONonInteractiveHandler = api_e2e.E2eOAuthSSONonInteractiveHandlerFunc(E2eOAuthSSONonInteractive)
 	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(E2eReset)
@@ -118,6 +121,62 @@ func E2eConfigDynamicItemSet(params api_e2e.E2eConfigDynamicItemSetParams) middl
 
 	// Succeeded
 	return api_e2e.NewE2eConfigDynamicItemSetNoContent()
+}
+
+func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
+	// Parse domain ID
+	domainID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Load the domain
+	domain, err := svc.TheDomainService.FindByID(domainID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Convert the domain into a DTO model
+	dto := domain.ToDTO()
+
+	// Patch the DTO using the provided JSON
+	if params.HTTPRequest.Body == nil {
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("body is required"))
+	}
+	//goland:noinspection GoUnhandledErrorResult
+	defer params.HTTPRequest.Body.Close()
+	if body, err := io.ReadAll(params.HTTPRequest.Body); err != nil {
+		return respInternalError(ErrorInvalidInputData.WithDetails(err.Error()))
+	} else {
+		if err := json.Unmarshal(body, &dto); err != nil {
+			return respBadRequest(ErrorInvalidPropertyValue.WithDetails(err.Error()))
+		}
+	}
+
+	// Save the changes back into the DB
+	domain.FromDTO(dto)
+	if err := svc.TheDomainService.Update(domain); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_e2e.NewE2eDomainPatchNoContent()
+}
+
+func E2eDomainUpdateIdps(params api_e2e.E2eDomainUpdateIdpsParams) middleware.Responder {
+	// Parse domain ID
+	domainID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Update the list of IdPs
+	if err := svc.TheDomainService.SaveIdPs(domainID, params.Body); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_e2e.NewE2eDomainUpdateIdpsNoContent()
 }
 
 func E2eMailsGet(api_e2e.E2eMailsGetParams) middleware.Responder {

@@ -4,7 +4,9 @@ export interface LayoutSettings {
     rootSelector?: string;
     /** Whether the user is anonymous. */
     anonymous?: boolean;
-    /** Whether the comments are read-only. */
+    /** Whether login button is available (only when anonymous is true). Defaults to true. */
+    login?: boolean;
+    /** Whether the comments are read-only (also applies when no auth method is available). */
     readonly?: boolean;
     /** Whether root font is applied. Defaults to true. */
     hasRootFont?: boolean;
@@ -24,13 +26,14 @@ export class EmbedUtils {
             .should('be.visible')
             .should(settings?.hasRootFont === false ? 'not.have.class' : 'have.class', 'comentario-root-font');
 
-        // Check Profile bar
-        cy.get('@root').find('.comentario-profile-bar').as('profileBar')
-            .should('be.visible');
+        // Check Profile bar. It won't be "visible" if has no elements because of zero height
+        cy.get('@root').find('.comentario-profile-bar').as('profileBar');
 
         // Check login/logout buttons
-        cy.get('@profileBar').contains('button', 'Login') .should(settings?.anonymous ? 'be.visible' : 'not.exist');
-        cy.get('@profileBar').contains('button', 'Logout').should(settings?.anonymous ? 'not.exist' : 'be.visible');
+        cy.get('@profileBar').contains('button', 'Login')
+            .should(settings?.anonymous && (settings?.login ?? true) ? 'be.visible' : 'not.exist');
+        cy.get('@profileBar').contains('button', 'Logout')
+            .should(settings?.anonymous ? 'not.exist' : 'be.visible');
 
         // Check main area
         cy.get('@root').find('.comentario-main-area').as('mainArea')
@@ -78,9 +81,9 @@ export class EmbedUtils {
      * Add a root comment or reply on the current page.
      * @param parentId Parent comment ID. If undefined, a root comment is created.
      * @param markdown Markdown text of the comment.
-     * @param anonymous Whether the user will be given an option to submit the comment anonymously in the Login dialog.
+     * @param clickAnonymous Whether the user will be given an option to submit the comment anonymously in the Login dialog.
      */
-    static addComment(parentId: string | undefined, markdown: string, anonymous: boolean) {
+    static addComment(parentId: string | undefined, markdown: string, clickAnonymous: boolean) {
         // Focus the add host or click the reply button
         if (parentId) {
             this.commentOptionButton(parentId, 'Reply').click();
@@ -100,7 +103,7 @@ export class EmbedUtils {
             .click();
 
         // If we're to comment anonymously, the Login dialog must appear
-        if (anonymous) {
+        if (clickAnonymous) {
             cy.get('.comentario-root .comentario-dialog').should('be.visible')
                 .contains('button', 'Comment anonymously').click();
         }

@@ -1,4 +1,4 @@
-import { TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment Editor', () => {
@@ -6,6 +6,52 @@ context('Comment Editor', () => {
     beforeEach(cy.backendReset);
 
     context('on comment page', () => {
+
+        const addAnonymousComment = (clickAnonymous: boolean) => {
+            // Submit a root comment. First time a Login dialog may appear
+            EmbedUtils.addComment(undefined, 'This is also a root', clickAnonymous);
+
+            // New comment is added, in the Pending state since anonymous comments are to be moderated
+            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: <p>This is a <b>root</b>, sticky comment</p>
+                  score: 0
+                  sticky: true
+                  pending: false
+                - author: Anonymous
+                  html: <p>This is also a root</p>
+                  score: 0
+                  sticky: false
+                  pending: true
+                `);
+
+            // Add a reply: no login dialog will appear second time
+            EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', false);
+
+            // New comment is added, also in the Pending state
+            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: <p>This is a <b>root</b>, sticky comment</p>
+                  score: 0
+                  sticky: true
+                  pending: false
+                  children:
+                  - author: Anonymous
+                    html: <p>A reply here!</p>
+                    score: 0
+                    sticky: false
+                    pending: true
+                - author: Anonymous
+                  html: <p>This is also a root</p>
+                  score: 0
+                  sticky: false
+                  pending: true
+                `);
+        };
 
         it('can be entered and canceled', () => {
             // Visit the page as anonymous
@@ -51,54 +97,26 @@ context('Comment Editor', () => {
             cy.commentTree('id').should('have.length', 1);
         });
 
-        it('submits anonymous comment', () => {
+        it('submits anonymous comment, choosing Comment anonymously in Login dialog', () => {
             // Visit the page as anonymous
             cy.testSiteVisit(TEST_PATHS.comments);
             EmbedUtils.makeAliases({anonymous: true});
 
-            // Submit a root comment
-            EmbedUtils.addComment(undefined, 'This is also a root', true);
+            // Add comment
+            addAnonymousComment(true);
+        });
 
-            // New comment is added, in the Pending state since anonymous comments are to be moderated
-            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
-                // language=yaml
-                `
-                - author: Anonymous
-                  html: <p>This is a <b>root</b>, sticky comment</p>
-                  score: 0
-                  sticky: true
-                  pending: false
-                - author: Anonymous
-                  html: <p>This is also a root</p>
-                  score: 0
-                  sticky: false
-                  pending: true
-                `);
+        it('submits anonymous comment directly when only anonymous is enabled', () => {
+            // Allow only anonymous comments
+            cy.backendPatchDomain(DOMAINS.localhost.id, {authLocal: false, authSso: false});
+            cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
 
-            // Add a reply: no login dialog will appear second time
-            EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', false);
+            // Visit the page as anonymous: there's no Login button
+            cy.testSiteVisit(TEST_PATHS.comments);
+            EmbedUtils.makeAliases({anonymous: true, login: false});
 
-            // New comment is added, also in the Pending state
-            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
-                // language=yaml
-                `
-                - author: Anonymous
-                  html: <p>This is a <b>root</b>, sticky comment</p>
-                  score: 0
-                  sticky: true
-                  pending: false
-                  children:
-                  - author: Anonymous
-                    html: <p>A reply here!</p>
-                    score: 0
-                    sticky: false
-                    pending: true
-                - author: Anonymous
-                  html: <p>This is also a root</p>
-                  score: 0
-                  sticky: false
-                  pending: true
-                `);
+            // Add comment
+            addAnonymousComment(false);
         });
 
         it('submits non-anonymous comment', () => {

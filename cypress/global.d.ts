@@ -351,6 +351,20 @@ declare namespace Cypress {
          * Obtain and return all sent emails from the backend.
          */
         backendGetSentEmails(): Chainable<SentMail[]>;
+
+        /**
+         * Patch properties of the specified domain.
+         * @param id ID of the domain to patch.
+         * @param values Properties to patch. Properties not provided will be left unchanged.
+         */
+        backendPatchDomain(id: string, values: any): Chainable<void>;
+
+        /**
+         * Update the list of federated identity providers enabled for the specified domain.
+         * @param id ID of the domain to patch.
+         * @param idps List of enabled IdP IDs.
+         */
+        backendUpdateDomainIdps(id: string, idps: string[]): Chainable<void>;
     }
 
     // noinspection JSUnusedGlobalSymbols

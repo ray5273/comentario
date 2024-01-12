@@ -589,3 +589,9 @@ Cypress.Commands.add('backendSetDynConfigItem', (key: string, value: string | nu
 
 Cypress.Commands.add('backendGetSentEmails', () =>
     cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body'));
+
+Cypress.Commands.add('backendPatchDomain', (id: string, values: any) =>
+    void cy.request('PATCH', `/api/e2e/domains/${id}`, values).its('status').should('eq', 204));
+
+Cypress.Commands.add('backendUpdateDomainIdps', (id: string, idps: string[]) =>
+    void cy.request('PUT', `/api/e2e/domains/${id}/idps`, idps).its('status').should('eq', 204));

@@ -182,10 +182,15 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		return r
 	}
 
+	// Prepare a DB model
+	d := &data.Domain{
+		ID:          uuid.New(),
+		CreatedTime: time.Now().UTC(),
+	}
+	d.FromDTO(params.Body.Domain)
+
 	// Properly validate the domain's host (the Swagger pattern only performs a superficial check)
-	domain := params.Body.Domain
-	host := strings.ToLower(strings.TrimSpace(string(domain.Host)))
-	if r := Verifier.DomainHostCanBeAdded(host); r != nil {
+	if r := Verifier.DomainHostCanBeAdded(d.Host); r != nil {
 		return r
 	}
 
@@ -201,27 +206,11 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 	}
 
 	// Persist a new domain record in the database
-	d := &data.Domain{
-		ID:                uuid.New(),
-		Name:              strings.TrimSpace(domain.Name),
-		Host:              host,
-		CreatedTime:       time.Now().UTC(),
-		IsHTTPS:           swag.BoolValue(domain.IsHTTPS),
-		AuthAnonymous:     domain.AuthAnonymous,
-		AuthLocal:         domain.AuthLocal,
-		AuthSSO:           domain.AuthSso,
-		SSOURL:            domain.SsoURL,
-		SSONonInteractive: domain.SsoNonInteractive,
-		ModAnonymous:      domain.ModAnonymous,
-		ModAuthenticated:  domain.ModAuthenticated,
-		ModNumComments:    int(domain.ModNumComments),
-		ModUserAgeDays:    int(domain.ModUserAgeDays),
-		ModLinks:          domain.ModLinks,
-		ModImages:         domain.ModImages,
-		ModNotifyPolicy:   data.DomainModNotifyPolicy(domain.ModNotifyPolicy),
-		DefaultSort:       string(domain.DefaultSort),
-	}
-	if err := svc.TheDomainService.Create(&user.ID, d, params.Body.FederatedIdpIds, exts); err != nil {
+	if err := svc.TheDomainService.Create(&user.ID, d); err != nil {
+		return respServiceError(err)
+	} else if err := svc.TheDomainService.SaveIdPs(&d.ID, params.Body.FederatedIdpIds); err != nil {
+		return respServiceError(err)
+	} else if err := svc.TheDomainService.SaveExtensions(&d.ID, exts); err != nil {
 		return respServiceError(err)
 	}
 
@@ -276,14 +265,13 @@ func DomainReadonly(params api_general.DomainReadonlyParams, user *data.User) mi
 
 func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	newDomain := params.Body.Domain
 	domain, _, r := domainGetWithUser(params.UUID, user, true)
 	if r != nil {
 		return r
 	}
 
 	// Verify the host isn't changing
-	if string(newDomain.Host) != domain.Host {
+	if string(params.Body.Domain.Host) != domain.Host {
 		return respBadRequest(ErrorImmutableProperty.WithDetails("host"))
 	}
 
@@ -299,24 +287,14 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	}
 
 	// Update domain properties
-	domain.IsHTTPS = swag.BoolValue(newDomain.IsHTTPS)
-	domain.Name = newDomain.Name
-	domain.AuthAnonymous = newDomain.AuthAnonymous
-	domain.AuthLocal = newDomain.AuthLocal
-	domain.AuthSSO = newDomain.AuthSso
-	domain.SSOURL = newDomain.SsoURL
-	domain.SSONonInteractive = newDomain.SsoNonInteractive
-	domain.ModAnonymous = newDomain.ModAnonymous
-	domain.ModAuthenticated = newDomain.ModAuthenticated
-	domain.ModNumComments = int(newDomain.ModNumComments)
-	domain.ModUserAgeDays = int(newDomain.ModUserAgeDays)
-	domain.ModImages = newDomain.ModImages
-	domain.ModLinks = newDomain.ModLinks
-	domain.ModNotifyPolicy = data.DomainModNotifyPolicy(newDomain.ModNotifyPolicy)
-	domain.DefaultSort = string(newDomain.DefaultSort)
+	domain.FromDTO(params.Body.Domain)
 
 	// Persist the updated properties
-	if err := svc.TheDomainService.Update(domain, params.Body.FederatedIdpIds, exts); err != nil {
+	if err := svc.TheDomainService.Update(domain); err != nil {
+		return respServiceError(err)
+	} else if err := svc.TheDomainService.SaveIdPs(&domain.ID, params.Body.FederatedIdpIds); err != nil {
+		return respServiceError(err)
+	} else if err := svc.TheDomainService.SaveExtensions(&domain.ID, exts); err != nil {
 		return respServiceError(err)
 	}
 

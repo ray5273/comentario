@@ -1,7 +1,7 @@
-import { DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../../support/cy-utils';
-import { EmbedUtils } from '../../../support/cy-embed-utils';
+import { DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { EmbedUtils } from '../../support/cy-embed-utils';
 
-context('Signup Popup', () => {
+context('Signup dialog', () => {
 
     const signupWith = (creds: Cypress.CredentialsWithName, website?: string) => {
         cy.get('@email')   .setValue(creds.email);
@@ -15,7 +15,6 @@ context('Signup Popup', () => {
     };
 
     //------------------------------------------------------------------------------------------------------------------
-
 
     beforeEach(() => {
         cy.backendReset();

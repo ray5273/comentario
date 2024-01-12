@@ -1,4 +1,4 @@
-import { DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment threads', () => {
@@ -53,6 +53,8 @@ context('Comment threads', () => {
         {name: 'anonymous',  user: USERS.anonymous,      isModerator: false},
     ]
         .forEach(userTest => context(`is shown for ${userTest.name} user`, () => {
+
+            before(cy.backendReset);
 
             [
                 {
@@ -487,9 +489,23 @@ context('Comment threads', () => {
                             - id: 069f98da-bbc5-40ad-8c91-e8a089288ecb
                               score: null
                     `);
-
-                // Re-enable voting
-                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsEnableCommentVoting, true);
             });
         }));
+
+    it('disallows adding comment when no authentication method is available', () => {
+        cy.backendReset();
+
+        // Disable all auth methods
+        cy.backendPatchDomain(DOMAINS.localhost.id, {authAnonymous: false, authLocal: false, authSso: false});
+        cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
+
+        // Go to the comments page and verify the layout
+        cy.testSiteVisit(TEST_PATHS.comments);
+        EmbedUtils.makeAliases({
+            anonymous: true,
+            login:     false,
+            readonly:  true,
+            notice:    'This domain has no authentication method available. You cannot add new comments.',
+        });
+    });
 });

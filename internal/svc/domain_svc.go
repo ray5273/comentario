@@ -27,7 +27,7 @@ type DomainService interface {
 	//  - moderator indicates whether to only include domains where the user is a moderator
 	CountForUser(userID *uuid.UUID, owner, moderator bool) (int, error)
 	// Create creates and persists a new domain record
-	Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error
+	Create(userID *uuid.UUID, domain *data.Domain) error
 	// DeleteByID removes the domain with all dependent objects (users, pages, comments, votes etc.) for the specified
 	// domain by its ID
 	DeleteByID(id *uuid.UUID) error
@@ -68,10 +68,14 @@ type DomainService interface {
 	//   - userDeleted indicates whether to remove comments created by now deleted users
 	// Returns number of deleted comments
 	PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (int64, error)
+	// SaveExtensions saves domain's extension links
+	SaveExtensions(domainID *uuid.UUID, extensions []*data.DomainExtension) error
+	// SaveIdPs saves domain's identity provider links
+	SaveIdPs(domainID *uuid.UUID, idps []models.FederatedIdpID) error
 	// SetReadonly sets the readonly status for the given domain
 	SetReadonly(domainID *uuid.UUID, readonly bool) error
 	// Update updates an existing domain record in the database
-	Update(domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error
+	Update(domain *data.Domain) error
 	// UserAdd links the specified user to the given domain
 	UserAdd(du *data.DomainUser) error
 	// UserModify updates roles and settings of the specified user in the given domain
@@ -122,8 +126,8 @@ func (svc *domainService) CountForUser(userID *uuid.UUID, owner, moderator bool)
 	return i, nil
 }
 
-func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error {
-	logger.Debugf("domainService.Create(%s, %#v, %v, %v)", userID, domain, idps, extensions)
+func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
+	logger.Debugf("domainService.Create(%s, %#v)", userID, domain)
 
 	// Insert a new domain record
 	if err := db.ExecuteOne(
@@ -153,16 +157,6 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain, idps []
 	); err != nil {
 		logger.Errorf("domainService.Create: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
-	}
-
-	// Save the domain IdPs
-	if err := svc.saveIdPs(&domain.ID, idps); err != nil {
-		return err
-	}
-
-	// Save the domain extensions
-	if err := svc.saveExtensions(&domain.ID, extensions); err != nil {
-		return err
 	}
 
 	// Register the user as domain owner
@@ -590,6 +584,66 @@ func (svc *domainService) PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (i
 	return cnt, nil
 }
 
+func (svc *domainService) SaveExtensions(domainID *uuid.UUID, extensions []*data.DomainExtension) error {
+	logger.Debugf("domainService.SaveExtensions(%v)", extensions)
+
+	// Delete any existing links
+	if err := db.Execute(db.Dialect().Delete("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID})); err != nil {
+		logger.Errorf("domainService.SaveExtensions: Execute() failed for deleting links: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Insert domain IdP records, if any
+	if len(extensions) > 0 {
+		// Prepare rows for inserting
+		var rows []goqu.Record
+		for _, de := range extensions {
+			rows = append(rows, goqu.Record{
+				"domain_id":    domainID,
+				"extension_id": de.ID,
+				"config":       util.If(de.HasDefaultConfig(), "", de.Config), // Empty config if it matches the default
+			})
+		}
+
+		// Execute the statement
+		if err := db.Execute(db.Dialect().Insert("cm_domains_extensions").Rows(rows)); err != nil {
+			logger.Errorf("domainService.SaveExtensions: Execute() failed for inserting links: %v", err)
+			return translateDBErrors(err)
+		}
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *domainService) SaveIdPs(domainID *uuid.UUID, idps []models.FederatedIdpID) error {
+	logger.Debugf("domainService.SaveIdPs(%v)", idps)
+
+	// Delete any existing links
+	if err := db.Execute(db.Dialect().Delete("cm_domains_idps").Where(goqu.Ex{"domain_id": domainID})); err != nil {
+		logger.Errorf("domainService.SaveIdPs: Execute() failed for deleting links: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Insert domain IdP records, if any
+	if len(idps) > 0 {
+		// Prepare rows for inserting
+		var rows []goqu.Record
+		for _, id := range idps {
+			rows = append(rows, goqu.Record{"domain_id": domainID, "fed_idp_id": id})
+		}
+
+		// Execute the statement
+		if err := db.Execute(db.Dialect().Insert("cm_domains_idps").Rows(rows)); err != nil {
+			logger.Errorf("domainService.SaveIdPs: Execute() failed for inserting links: %v", err)
+			return translateDBErrors(err)
+		}
+	}
+
+	// Succeeded
+	return nil
+}
+
 func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error {
 	logger.Debugf("domainService.SetReadonly(%s, %v)", domainID, readonly)
 
@@ -603,8 +657,8 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	return nil
 }
 
-func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdpID, extensions []*data.DomainExtension) error {
-	logger.Debugf("domainService.Update(%#v, %v)", domain, idps)
+func (svc *domainService) Update(domain *data.Domain) error {
+	logger.Debugf("domainService.Update(%#v)", domain)
 
 	// Update the domain record
 	q := db.Dialect().
@@ -630,16 +684,6 @@ func (svc *domainService) Update(domain *data.Domain, idps []models.FederatedIdp
 	if err := db.ExecuteOne(q); err != nil {
 		logger.Errorf("domainService.Update: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
-	}
-
-	// Save the domain IdPs
-	if err := svc.saveIdPs(&domain.ID, idps); err != nil {
-		return err
-	}
-
-	// Save the domain extensions
-	if err := svc.saveExtensions(&domain.ID, extensions); err != nil {
-		return err
 	}
 
 	// Succeeded
@@ -827,62 +871,4 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*d
 
 	// Succeeded
 	return &d, pdu, nil
-}
-
-// saveExtensions saves domain's extension links
-func (svc *domainService) saveExtensions(domainID *uuid.UUID, extensions []*data.DomainExtension) error {
-	// Delete any existing links
-	if err := db.Execute(db.Dialect().Delete("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID})); err != nil {
-		logger.Errorf("domainService.saveExtensions: Execute() failed for deleting links: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Insert domain IdP records, if any
-	if len(extensions) > 0 {
-		// Prepare rows for inserting
-		var rows []goqu.Record
-		for _, de := range extensions {
-			rows = append(rows, goqu.Record{
-				"domain_id":    domainID,
-				"extension_id": de.ID,
-				"config":       util.If(de.HasDefaultConfig(), "", de.Config), // Empty config if it matches the default
-			})
-		}
-
-		// Execute the statement
-		if err := db.Execute(db.Dialect().Insert("cm_domains_extensions").Rows(rows)); err != nil {
-			logger.Errorf("domainService.saveExtensions: Execute() failed for inserting links: %v", err)
-			return translateDBErrors(err)
-		}
-	}
-
-	// Succeeded
-	return nil
-}
-
-// saveIdPs saves domain's identity provider links
-func (svc *domainService) saveIdPs(domainID *uuid.UUID, idps []models.FederatedIdpID) error {
-	// Delete any existing links
-	if err := db.Execute(db.Dialect().Delete("cm_domains_idps").Where(goqu.Ex{"domain_id": domainID})); err != nil {
-		logger.Errorf("domainService.saveIdPs: Execute() failed for deleting links: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Insert domain IdP records, if any
-	if len(idps) > 0 {
-		// Prepare rows for inserting
-		var rows []goqu.Record
-		for _, id := range idps {
-			rows = append(rows, goqu.Record{"domain_id": domainID, "fed_idp_id": id})
-		}
-
-		// Execute the statement
-		if err := db.Execute(db.Dialect().Insert("cm_domains_idps").Rows(rows)); err != nil {
-			logger.Errorf("domainService.saveIdPs: Execute() failed for inserting links: %v", err)
-			return translateDBErrors(err)
-		}
-	}
-
-	// Succeeded
-	return nil
 }

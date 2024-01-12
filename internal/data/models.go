@@ -625,6 +625,31 @@ func (d *Domain) DisplayName() string {
 	return d.Host
 }
 
+// FromDTO updates this model from an API model. It omits fields that never originate from the DTO:
+//   - ID
+//   - CreatedTime
+//   - CountComments
+//   - CountViews
+func (d *Domain) FromDTO(dto *models.Domain) {
+	d.AuthAnonymous = dto.AuthAnonymous
+	d.AuthLocal = dto.AuthLocal
+	d.AuthSSO = dto.AuthSso
+	d.DefaultSort = string(dto.DefaultSort)
+	d.Host = strings.ToLower(strings.TrimSpace(string(dto.Host)))
+	d.IsHTTPS = swag.BoolValue(dto.IsHTTPS)
+	d.IsReadonly = dto.IsReadonly
+	d.ModAnonymous = dto.ModAnonymous
+	d.ModAuthenticated = dto.ModAuthenticated
+	d.ModImages = dto.ModImages
+	d.ModLinks = dto.ModLinks
+	d.ModNotifyPolicy = DomainModNotifyPolicy(dto.ModNotifyPolicy)
+	d.ModNumComments = int(dto.ModNumComments)
+	d.ModUserAgeDays = int(dto.ModUserAgeDays)
+	d.Name = dto.Name
+	d.SSONonInteractive = dto.SsoNonInteractive
+	d.SSOURL = dto.SsoURL
+}
+
 // RootURL returns the root URL of the domain, without the trailing slash
 func (d *Domain) RootURL() string {
 	return fmt.Sprintf("%s://%s", d.Scheme(), d.Host)
