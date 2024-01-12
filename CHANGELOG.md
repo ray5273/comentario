@@ -1,5 +1,24 @@
 # Comentario changelog
 
+## v3.3.0
+
+This release introduces comment preview feature, persisted sort settings and the anonymous commenter status (which has moved to the Login dialog). It also adds fine-grained configuration parameters for controlling user registrations.
+
+Furthermore, we published a preview of Comentario Angular library [ngx-comentario](https://www.npmjs.com/package/ngx-comentario), which allows to easily embed comments into a single-page Angular app.
+
+### Changes
+
+* Add static binary tarball to release artifacts (#50) - f4c2623
+* Embed: comment preview feature (#43) - 7f8c7e4, 4f0fe0a
+* Embed: move "Comment anonymously" to Login dialog - df25c15, 9dc80ea, 25ef9b0
+* Embed: persist sort/anonymous settings locally - 25ef9b0
+* Embed: sort by upvotes, ascending - 72cfedc
+* Embed: hide sort by upvotes when voting is disabled (#48) - 72cfedc
+* Embed: hide Edit profile for SSO user (#45) - a41e563
+* New dynamic config items for controlling commenter signups (#47) - 3df0e8e
+* Dynamic config editor: improved layout for switches - 1034af2
+* Documentation updates (also #46) - f6fe3af, 13e61df, 075c27a, 0dd4452
+
 ## v3.2.2
 
 This is another bugfix release, finally fixing the "Failed to construct 'CustomElement'" error.

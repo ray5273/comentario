@@ -10,6 +10,9 @@ tags:
     - SPA
 ---
 
+**WARNING:\
+This feature is in the preview status. The provided API can (and probably will) change in future releases.**
+
 [Angular](https://angular.io/) is one of the most popular frameworks for building rich single-page web applications.
 
 <!--more-->
@@ -24,7 +27,7 @@ npm install --save ngx-comentario
 3. Insert the component into the required template(s) where you want comments to appear, with the correct Comentario backend URL:
 ```html
 ...
-    <ngx-comentario-comments comentarioUrl="https://comentario.example.com"></ngx-comentario-comments>
+<ngx-comentario-comments comentarioUrl="https://comentario.example.com"></ngx-comentario-comments>
 ...
 ```
 4. Consult the [library documentation](https://www.npmjs.com/package/ngx-comentario) to learn how to customise the rendered comments.
