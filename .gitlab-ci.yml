@@ -271,8 +271,8 @@ release:
   rules:
     - if: $CI_COMMIT_TAG
   before_script:
-    # Install curl
-    - apk add --no-cache curl
+    # Install curl, jq
+    - apk add --no-cache curl jq
   script:
     # Strip the 'v' prefix from the version number
     - ver_num="${VERSION#v}"
