@@ -283,7 +283,7 @@ release:
       jq -r '.[] | select(.type != "Binary") | .path' dist/artifacts.json | 
           while read artifact; do
               echo "Uploading artifact $artifact to $package_registry_url"
-              curl --no-progress-meter --fail‐with‐body \
+              curl -fsS \
                   --header "JOB-TOKEN: $CI_JOB_TOKEN" \
                   --upload-file "$artifact" "$package_registry_url/$(basename "$artifact")"
           done
