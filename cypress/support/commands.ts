@@ -24,9 +24,9 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
         // Filter comment cards
         .filter(c => c.classList.contains('comentario-card'))
         // Turn the card into a comment
-        .map(c => $(c))
-        .map($card => {
-            const $self    = $card.find('> .comentario-card-self');
+        .map(c => $(c).find('> .comentario-card-expand-body'))
+        .map($body => {
+            const $self    = $body.find('> .comentario-card-self');
             const $header  = $self.find('> .comentario-card-header');
             const $options = $self.find('> .comentario-options');
             const sc       = $options.find('.comentario-score').html();
@@ -42,7 +42,7 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
             };
 
             // Recurse children, if any
-            const $children = $card.find('> .comentario-card-children');
+            const $children = $body.find('> .comentario-card-children');
             if ($children.length) {
                 const ch = getChildComments($children[0]);
                 if (ch.length) {

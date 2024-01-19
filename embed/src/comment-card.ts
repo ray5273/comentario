@@ -64,6 +64,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
     private eNameWrap?: Wrap<HTMLDivElement>;
     private eScore?: Wrap<HTMLDivElement>;
+    private eToggler?: Wrap<HTMLDivElement>;
     private eCardSelf?: Wrap<HTMLDivElement>;
     private eHeader?: Wrap<HTMLDivElement>;
     private eBody?: Wrap<HTMLDivElement>;
@@ -72,7 +73,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     private eModNotice?: Wrap<HTMLDivElement>;
     private btnApprove?: Wrap<HTMLButtonElement>;
     private btnReject?: Wrap<HTMLButtonElement>;
-    private btnCollapse?: Wrap<HTMLButtonElement>;
     private btnDelete?: Wrap<HTMLButtonElement>;
     private btnDownvote?: Wrap<HTMLButtonElement>;
     private btnEdit?: Wrap<HTMLButtonElement>;
@@ -164,11 +164,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         this.btnUpvote?.setClasses(c.direction > 0, 'upvoted');
         this.btnDownvote?.setClasses(c.direction < 0, 'downvoted');
 
-        // Collapsed
-        this.btnCollapse
-            ?.attr({title: this.collapsed ? 'Expand children' : 'Collapse children'})
-            .setClasses(this.collapsed, 'collapsed');
-
         // Pending approval
         const pending = this._comment.isPending;
         this.eCardSelf?.setClasses(pending, 'pending');
@@ -244,47 +239,61 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Convert comment creation time to milliseconds
         const ms = new Date(this._comment.createdTime).getTime();
 
-        // Render a card
-        this.classes('card', `border-${bgColor}`)
+        // Card self
+        this.eCardSelf = UIToolkit.div('card-self')
+            // ID for highlighting/scrolling to
+            .id(id)
             .append(
-                // Card self
-                this.eCardSelf = UIToolkit.div('card-self')
-                    .id(id) // ID for highlighting/scrolling to
+                // Card header
+                this.eHeader = UIToolkit.div('card-header')
                     .append(
-                        // Card header
-                        this.eHeader = UIToolkit.div('card-header')
+                        // Avatar
+                        ctx.onGetAvatar(commenter),
+                        // Name and subtitle
+                        UIToolkit.div('name-container')
                             .append(
-                                // Avatar
-                                ctx.onGetAvatar(commenter),
-                                // Name and subtitle
-                                UIToolkit.div('name-container')
+                                this.eNameWrap = UIToolkit.div('name-wrap')
                                     .append(
-                                        this.eNameWrap = UIToolkit.div('name-wrap')
-                                            .append(
-                                                // Name
-                                                Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
-                                                    .inner(commenter?.name ?? '[Deleted User]')
-                                                    .classes('name')
-                                                    .attr(commenter?.websiteUrl ?
-                                                        {href: commenter.websiteUrl, rel: 'nofollow noopener noreferrer'} :
-                                                        undefined),
-                                                // Moderator badge
-                                                this.eModeratorBadge),
-                                        // Subtitle
-                                        UIToolkit.div('subtitle')
-                                            .append(
-                                                // Permalink and the comment creation time
-                                                Wrap.new('a')
-                                                    .attr({
-                                                        href:  `#${Wrap.idPrefix}${id}`,
-                                                        title: `${this._comment.createdTime} — Permalink`})
-                                                    .inner(Utils.timeAgo(ctx.curTimeMs, ms))))),
-                        // Card body
-                        this.eBody = UIToolkit.div('card-body'),
-                        // Options toolbar
-                        this.commentOptionsBar(ctx)),
-                // Card's children (if any)
-                this.children);
+                                        // Name
+                                        Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
+                                            .inner(commenter?.name ?? '[Deleted User]')
+                                            .classes('name')
+                                            .attr(commenter?.websiteUrl ?
+                                                {href: commenter.websiteUrl, rel: 'nofollow noopener noreferrer'} :
+                                                undefined),
+                                        // Moderator badge
+                                        this.eModeratorBadge),
+                                // Subtitle
+                                UIToolkit.div('subtitle')
+                                    .append(
+                                        // Permalink and the comment creation time
+                                        Wrap.new('a')
+                                            .attr({
+                                                href:  `#${Wrap.idPrefix}${id}`,
+                                                title: `${this._comment.createdTime} — Permalink`})
+                                            .inner(Utils.timeAgo(ctx.curTimeMs, ms))))),
+                // Card body
+                this.eBody = UIToolkit.div('card-body'),
+                // Options toolbar
+                this.commentOptionsBar(ctx));
+
+        // Expand toggler or spacer
+        const hasChildren = this.children.hasChildren;
+        this.eToggler = UIToolkit.div(hasChildren ? 'card-expand-toggler' : 'card-expand-spacer', `border-${bgColor}`);
+        if (hasChildren) {
+            this.eToggler.attr({role: 'button'}).click(() => this.collapse(!this.collapsed));
+        }
+
+        // Render a card
+        this.classes('card')
+            .append(
+                this.eToggler,
+                UIToolkit.div('card-expand-body')
+                    .append(
+                        // Card self
+                        this.eCardSelf,
+                        // Card's children (if any)
+                        this.children));
     }
 
     /**
@@ -344,11 +353,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 // Delete button
                 this.btnDelete = this.getOptionButton('delete', 'text-danger', btn => this.deleteComment(btn, ctx)).appendTo(right));
         }
-
-        // Collapse button, if there are any children
-        if (this.children?.hasChildren) {
-            this.btnCollapse = this.getOptionButton('collapse', 'btn-collapse', () => this.collapse(!this.collapsed)).appendTo(right);
-        }
         return options;
     }
 
@@ -367,7 +371,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 .noClasses('fade-in', 'fade-out', !c && 'hidden')
                 .on('animationend', ch => ch.classes(c && 'hidden'), true)
                 .classes(c && 'fade-out', !c && 'fade-in');
-            this.update();
+            this.eToggler?.setClasses(c, 'collapsed');
         }
     }
 
@@ -377,45 +381,41 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      * @param cls Optional additional class.
      * @param onClick Button's click handler.
      */
-    private getOptionButton(icon: 'approve' | 'collapse' | 'delete' | 'downvote' | 'edit' | 'reject' | 'reply' | 'sticky' | 'upvote', cls?: string | null, onClick?: (btn: Wrap<HTMLButtonElement>) => void): Wrap<any> {
+    private getOptionButton(icon: 'approve' | 'delete' | 'downvote' | 'edit' | 'reject' | 'reply' | 'sticky' | 'upvote', cls?: string | null, onClick?: (btn: Wrap<HTMLButtonElement>) => void): Wrap<any> {
         let title: string;
         let svg: string;
         switch (icon) {
             case 'approve':
                 title = 'Approve';
-                svg = UIToolkit.svg(512, 512, '<path fill="currentColor" d="M470.6 105.4c12.5 12.5 12.5 32.8 0 45.3l-256 256c-12.5 12.5-32.8 12.5-45.3 0l-128-128c-12.5-12.5-12.5-32.8 0-45.3s32.8-12.5 45.3 0L192 338.7 425.4 105.4c12.5-12.5 32.8-12.5 45.3 0z"/>');
-                break;
-            case 'collapse':
-                title = 'Collapse';
-                svg = UIToolkit.svgCaretDown();
+                svg = UIToolkit.svg(16, 16, '<path d="M10.97 4.97a.75.75 0 0 1 1.07 1.05l-3.99 4.99a.75.75 0 0 1-1.08.02L4.324 8.384a.75.75 0 1 1 1.06-1.06l2.094 2.093 3.473-4.425z"/>');
                 break;
             case 'delete':
                 title = 'Delete';
-                svg = UIToolkit.svg(448, 512, '<path fill="currentColor" d="M135.2 17.7L128 32H32C14.3 32 0 46.3 0 64S14.3 96 32 96H416c17.7 0 32-14.3 32-32s-14.3-32-32-32H320l-7.2-14.3C307.4 6.8 296.3 0 284.2 0H163.8c-12.1 0-23.2 6.8-28.6 17.7zM416 128H32L53.2 467c1.6 25.3 22.6 45 47.9 45H346.9c25.3 0 46.3-19.7 47.9-45L416 128z"/>');
+                svg = UIToolkit.svg(16, 16, '<path d="M2.5 1a1 1 0 0 0-1 1v1a1 1 0 0 0 1 1H3v9a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2V4h.5a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H10a1 1 0 0 0-1-1H7a1 1 0 0 0-1 1zm3 4a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 .5-.5M8 5a.5.5 0 0 1 .5.5v7a.5.5 0 0 1-1 0v-7A.5.5 0 0 1 8 5m3 .5v7a.5.5 0 0 1-1 0v-7a.5.5 0 0 1 1 0"/>');
                 break;
             case 'downvote':
                 title = 'Downvote';
-                svg = UIToolkit.svg(320, 512, '<path fill="currentColor" d="M318 334.5c3.8 8.8 2 19-4.6 26l-136 144c-4.5 4.8-10.8 7.5-17.4 7.5s-12.9-2.7-17.4-7.5l-136-144c-6.6-7-8.4-17.2-4.6-26S14.4 320 24 320h88l0-288c0-17.7 14.3-32 32-32h32c17.7 0 32 14.3 32 32l0 288h88c9.6 0 18.2 5.7 22 14.5z"/>');
+                svg = UIToolkit.svg(16, 16, '<path fill-rule="evenodd" d="M8 1a.5.5 0 0 1 .5.5v11.793l3.146-3.147a.5.5 0 0 1 .708.708l-4 4a.5.5 0 0 1-.708 0l-4-4a.5.5 0 0 1 .708-.708L7.5 13.293V1.5A.5.5 0 0 1 8 1"/>');
                 break;
             case 'edit':
                 title = 'Edit';
-                svg = UIToolkit.svg(512, 512, '<path fill="currentColor" d="M362.7 19.3L314.3 67.7 444.3 197.7l48.4-48.4c25-25 25-65.5 0-90.5L453.3 19.3c-25-25-65.5-25-90.5 0zm-71 71L58.6 323.5c-10.4 10.4-18 23.3-22.2 37.4L1 481.2C-1.5 489.7 .8 498.8 7 505s15.3 8.5 23.7 6.1l120.3-35.4c14.1-4.2 27-11.8 37.4-22.2L421.7 220.3 291.7 90.3z"/>');
+                svg = UIToolkit.svg(16, 16, '<path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.5.5 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11z"/>');
                 break;
             case 'reject':
                 title = 'Reject';
-                svg = UIToolkit.svg(384, 512, '<path fill="currentColor" d="M342.6 150.6c12.5-12.5 12.5-32.8 0-45.3s-32.8-12.5-45.3 0L192 210.7 86.6 105.4c-12.5-12.5-32.8-12.5-45.3 0s-12.5 32.8 0 45.3L146.7 256 41.4 361.4c-12.5 12.5-12.5 32.8 0 45.3s32.8 12.5 45.3 0L192 301.3 297.4 406.6c12.5 12.5 32.8 12.5 45.3 0s12.5-32.8 0-45.3L237.3 256 342.6 150.6z"/>');
+                svg = UIToolkit.svg(16, 16, '<path d="M4.646 4.646a.5.5 0 0 1 .708 0L8 7.293l2.646-2.647a.5.5 0 0 1 .708.708L8.707 8l2.647 2.646a.5.5 0 0 1-.708.708L8 8.707l-2.646 2.647a.5.5 0 0 1-.708-.708L7.293 8 4.646 5.354a.5.5 0 0 1 0-.708"/>');
                 break;
             case 'reply':
                 title = 'Reply';
-                svg = UIToolkit.svg(512, 512, '<path fill="currentColor" d="M205 34.8c11.5 5.1 19 16.6 19 29.2v64H336c97.2 0 176 78.8 176 176c0 113.3-81.5 163.9-100.2 174.1c-2.5 1.4-5.3 1.9-8.1 1.9c-10.9 0-19.7-8.9-19.7-19.7c0-7.5 4.3-14.4 9.8-19.5c9.4-8.8 22.2-26.4 22.2-56.7c0-53-43-96-96-96H224v64c0 12.6-7.4 24.1-19 29.2s-25 3-34.4-5.4l-160-144C3.9 225.7 0 217.1 0 208s3.9-17.7 10.6-23.8l160-144c9.4-8.5 22.9-10.6 34.4-5.4z"/>');
+                svg = UIToolkit.svg(16, 16, '<path d="M5.921 11.9 1.353 8.62a.72.72 0 0 1 0-1.238L5.921 4.1A.716.716 0 0 1 7 4.719V6c1.5 0 6 0 7 8-2.5-4.5-7-4-7-4v1.281c0 .56-.606.898-1.079.62z"/>');
                 break;
             case 'sticky':
                 title = 'Sticky';
-                svg = UIToolkit.svg(576, 512, '<path fill="currentColor" d="M316.9 18C311.6 7 300.4 0 288.1 0s-23.4 7-28.8 18L195 150.3 51.4 171.5c-12 1.8-22 10.2-25.7 21.7s-.7 24.2 7.9 32.7L137.8 329 113.2 474.7c-2 12 3 24.2 12.9 31.3s23 8 33.8 2.3l128.3-68.5 128.3 68.5c10.8 5.7 23.9 4.9 33.8-2.3s14.9-19.3 12.9-31.3L438.5 329 542.7 225.9c8.6-8.5 11.7-21.2 7.9-32.7s-13.7-19.9-25.7-21.7L381.2 150.3 316.9 18z"/>');
+                svg = UIToolkit.svg(16, 16, '<path d="M3.612 15.443c-.386.198-.824-.149-.746-.592l.83-4.73L.173 6.765c-.329-.314-.158-.888.283-.95l4.898-.696L7.538.792c.197-.39.73-.39.927 0l2.184 4.327 4.898.696c.441.062.612.636.282.95l-3.522 3.356.83 4.73c.078.443-.36.79-.746.592L8 13.187l-4.389 2.256z"/>');
                 break;
             case 'upvote':
                 title = 'Upvote';
-                svg = UIToolkit.svg(320, 512, '<path fill="currentColor" d="M318 177.5c3.8-8.8 2-19-4.6-26l-136-144C172.9 2.7 166.6 0 160 0s-12.9 2.7-17.4 7.5l-136 144c-6.6 7-8.4 17.2-4.6 26S14.4 192 24 192h88l0 288c0 17.7 14.3 32 32 32h32c17.7 0 32-14.3 32-32l0-288h88c9.6 0 18.2-5.7 22-14.5z"/>');
+                svg = UIToolkit.svg(16, 16, '<path fill-rule="evenodd" d="M8 15a.5.5 0 0 0 .5-.5V2.707l3.146 3.147a.5.5 0 0 0 .708-.708l-4-4a.5.5 0 0 0-.708 0l-4 4a.5.5 0 1 0 .708.708L7.5 2.707V14.5a.5.5 0 0 0 .5.5"/>');
                 break;
         }
         return UIToolkit.button(svg, onClick, 'btn-link', 'btn-option', cls).attr({title});

@@ -2,11 +2,37 @@
 @import "mixins";
 
 .comentario-card {
-    margin-bottom: 16px;
+    display: flex;
+    margin-top: 16px;
     border-top: 1px solid $gray-1;
 
+    // Replaces the .comentario-card-expand-toggler in a card that has no children
+    .comentario-card-expand-spacer {
+        flex: 0 0 12px;
+    }
+
+    // Clickable toggler on the left side of a card that has children
+    .comentario-card-expand-toggler {
+        flex: 0 0 12px;
+        cursor: pointer;
+        transition: border-left-width 0.1s linear;
+
+        &:hover:not(.comentario-collapsed) {
+            border-left-width: 4px !important;
+        }
+
+        &.comentario-collapsed {
+            border-left-style: dotted !important;
+        }
+    }
+
+    // Content of the card, taking up the remaining space right of the spacer or toggler
+    .comentario-card-expand-body {
+        flex: 1 1 100%;
+    }
+
     .comentario-card-self {
-        padding: 12px;
+        padding-top: 12px;
     }
 
     // Hide the content of the card when there's an editor inside it (immediate child only, not nested ones)
@@ -15,11 +41,8 @@
     }
 
     .comentario-card-children {
-        padding-left: 12px;
-
         &.comentario-card-children-unnest {
-            padding-left: 0;
-            margin-left: -2px; // To compensate for the left border width
+            margin-left: -12px; // To compensate for the spacer/toggler width
         }
     }
 
@@ -76,23 +99,14 @@
         --cmntr-btn-color: $gray-6;
 
         margin: 0;
-        padding: 8px;
+        padding: 0;
         width: 32px;
         height: 32px;
         opacity: 0.5;
 
         svg {
-            width: 100%;
-            height: auto;
-            max-height: 100%;
-        }
-    }
-
-    .comentario-btn-collapse {
-        transition: all 0.2s;
-
-        &.comentario-collapsed {
-            transform: rotate(180deg);
+            width: 16px;
+            height: 16px;
         }
     }
 

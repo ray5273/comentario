@@ -123,18 +123,18 @@ export class UIToolkit {
 
     /**
      * Return a textual representation of an SVG image.
-     * @param width Viewport width.
-     * @param height Viewport height.
+     * @param width Viewbox width.
+     * @param height Viewbox height.
      * @param content SVG content.
      */
     static svg(width: number, height: number, content: string): string {
-        return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${width} ${height}">${content}</svg>`;
+        return `<svg xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 ${width} ${height}">${content}</svg>`;
     }
 
     /**
      * Return a textual representation of a caret-down SVG image.
      */
     static svgCaretDown(): string {
-        return this.svg(512, 512, '<path fill="currentColor" d="M256 384 0 128h512z"/>');
+        return this.svg(512, 512, '<path d="M256 384 0 128h512z"/>');
     }
 }
