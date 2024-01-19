@@ -417,8 +417,8 @@ func MarkdownToHTML(markdown string, links, images, tables bool) string {
 		// Blocks and separators
 		"br", "div", "hr", "p", "span",
 		// Inline elements
-		"abbr", "acronym", "cite", "code", "dfn", "em", "mark", "s", "strong", "sub", "sup", "var", "b", "i", "pre",
-		"small", "strike", "tt", "u",
+		"abbr", "acronym", "cite", "code", "del", "dfn", "em", "mark", "s", "strong", "sub", "sup", "var", "b", "i",
+		"pre", "small", "strike", "tt", "u",
 	)
 	p.AllowLists()
 	p.AddTargetBlankToFullyQualifiedLinks(true)

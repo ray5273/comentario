@@ -752,7 +752,7 @@ func TestMarkdownToHTML(t *testing.T) {
 		{"XSS link               ", "XSS [Link](data:text/html;base64,PHNjcmlwdD5hbGVydCgxKTwvc2NyaXB0Pgo=)", false, false, false, "<p>XSS Link</p>"},
 		{"Image, images off      ", "![Image](http://example.com/image.jpg)", false, false, false, "<p></p>"},
 		{"Image, images on       ", "![Image](http://example.com/image.jpg)", false, true, false, "<p><img src=\"http://example.com/image.jpg\" alt=\"Image\"></p>"},
-		{"Formatting             ", "**bold** *italics*", false, false, false, "<p><strong>bold</strong> <em>italics</em></p>"},
+		{"Formatting             ", "**bold** *italics* ~~deleted~~", false, false, false, "<p><strong>bold</strong> <em>italics</em> <del>deleted</del></p>"},
 		{"URL, links off         ", "http://example.com/autolink", false, false, false, "<p>http://example.com/autolink</p>"},
 		{"URL, links on          ", "http://example.com/autolink", true, false, false, "<p><a href=\"http://example.com/autolink\" rel=\"nofollow noopener\" target=\"_blank\">http://example.com/autolink</a></p>"},
 		{"HTML                   ", "<b>not bold</b>", false, false, false, "<p>not bold</p>"},
