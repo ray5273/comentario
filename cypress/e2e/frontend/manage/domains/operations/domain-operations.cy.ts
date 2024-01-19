@@ -164,6 +164,11 @@ context('Domain Operations page', () => {
                         .dlgButtonClick('Clear domain');
                     cy.toastCheckAndClose('domain-cleared');
 
+                    // Verify comment/view counters in domain props
+                    cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
+                    cy.contains('#domain-detail-table dt', 'Number of comments').next().should('have.text', '0');
+                    cy.contains('#domain-detail-table dt', 'Number of views')   .next().should('have.text', '0');
+
                     // Verify the numbers in stats
                     cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).stats);
                     cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 0}, {label: Comments, value: 0}]');

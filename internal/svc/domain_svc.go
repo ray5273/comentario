@@ -92,8 +92,15 @@ type domainService struct{}
 func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.ClearByID(%s)", id)
 
+	// Remove all domain's pages, which will also cause the removal of all comments, votes, and view stats
 	if err := db.Execute(db.Dialect().Delete("cm_domain_pages").Where(goqu.Ex{"domain_id": id})); err != nil {
-		logger.Errorf("domainService.ClearByID: Execute() failed: %v", err)
+		logger.Errorf("domainService.ClearByID: Execute() for page removal failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Zero the domain's counters
+	if err := db.Execute(db.Dialect().Update("cm_domains").Set(goqu.Record{"count_comments": 0, "count_views": 0}).Where(goqu.Ex{"id": id})); err != nil {
+		logger.Errorf("domainService.ClearByID: Execute() for domain update failed: %v", err)
 		return translateDBErrors(err)
 	}
 

@@ -124,8 +124,12 @@ export class DomainOperationsComponent implements OnInit {
         // Run cleaning with the API
         this.api.domainClear(this.domain!.id!)
             .pipe(this.clearing.processing())
-            // Add a toast
-            .subscribe(() => this.toastSvc.success('domain-cleared'));
+            .subscribe(() => {
+                // Add a success toast
+                this.toastSvc.success('domain-cleared');
+                // Reload the domain to reflect updated counters
+                this.domainSelectorSvc.reload();
+            });
     }
 
     toggleFrozen() {
