@@ -1,5 +1,5 @@
 import { Wrap } from './element-wrap';
-import { UIToolkit } from './ui-toolkit';
+import { IconName, UIToolkit } from './ui-toolkit';
 import { InstanceConfig } from './models';
 import { Utils } from './utils';
 
@@ -28,7 +28,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         private readonly parent: Wrap<any>,
         isEdit: boolean,
         initialText: string,
-        config: InstanceConfig,
+        private readonly config: InstanceConfig,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,
         private readonly onPreview: CommentEditorPreviewCallback,
@@ -38,6 +38,8 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         // Set up the form
         this.classes('comment-editor')
             .append(
+                // Toolbar
+                this.renderToolbar(),
                 // Textarea
                 this.textarea = UIToolkit.textarea(null, true, true)
                     .attr({name: 'comentario-comment-editor', maxlength: '4096'})
@@ -45,33 +47,16 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                     .on('input', () => this.textChanged()),
                 // Preview
                 this.preview = UIToolkit.div('comment-editor-preview', 'hidden'),
-                // Textarea footer
+                // Editor footer
                 UIToolkit.div('comment-editor-footer')
                     .append(
-                        // Markdown help link
-                        Wrap.new('a')
-                            .html(
-                                '<svg xmlns="http://www.w3.org/2000/svg" height="1em" viewBox="0 0 208 128">' +
-                                    '<rect width="198" height="118" x="5" y="5" ry="10" stroke="currentColor" stroke-width="10" fill="none"/>' +
-                                    '<path fill="currentColor" d="M30 98V30h20l20 25 20-25h20v68H90V59L70 84 50 59v39zm125 0-30-33h20V30h20v35h20z"/>' +
-                                '</svg>')
-                            .attr({
-                                title: 'Markdown help',
-                                href: Utils.joinUrl(
-                                    config.staticConfig.baseDocsUrl,
-                                    config.staticConfig.defaultLangId,
-                                    'kb/markdown/'),
-                                target: '_blank'}),
-                        // Buttons
-                        UIToolkit.div('comment-editor-buttons')
-                            .append(
-                                // Cancel
-                                UIToolkit.button('Cancel', () => onCancel(this), 'btn-link'),
-                                // Preview
-                                this.btnPreview = UIToolkit.button('Preview', () => this.togglePreview(), 'btn-secondary'),
-                                // Submit
-                                this.btnSubmit = UIToolkit.submit(isEdit ? 'Save Changes' : 'Add Comment', false),
-                            )));
+                        // Cancel
+                        UIToolkit.button('Cancel', () => onCancel(this), 'btn-link'),
+                        // Preview
+                        this.btnPreview = UIToolkit.button('Preview', () => this.togglePreview(), 'btn-secondary'),
+                        // Submit
+                        this.btnSubmit = UIToolkit.submit(isEdit ? 'Save Changes' : 'Add Comment', false),
+                    ));
 
         // Update the parent
         this.parent.classes('editor-inserted').prepend(this);
@@ -131,5 +116,40 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         const attr = {disabled: this.markdown ? undefined : 'disabled'};
         this.btnPreview.attr(attr);
         this.btnSubmit.attr(attr);
+    }
+
+    private applyPattern(pattern: string) {
+        const ta = this.textarea.element;
+        // Replace the selected text with the processed pattern (just insert the pattern if no selection)
+        ta.setRangeText(pattern.replace('$', ta.value.substring(ta.selectionStart, ta.selectionEnd) || 'text'));
+        this.textChanged();
+        ta.focus();
+    }
+
+    private toolButton(icon: IconName, title: string, pattern: string): Wrap<HTMLButtonElement> {
+        return UIToolkit.iconButton(icon, title, () => this.applyPattern(pattern), 'btn-link').attr({tabindex: '-1'});
+    }
+
+    private renderToolbar(): Wrap<HTMLDivElement> {
+        return UIToolkit.div('toolbar').append(
+            // Left section
+            UIToolkit.div('toolbar-section').append(
+                this.toolButton('bold',          'Bold',          '**$**'),
+                this.toolButton('italic',        'Italic',        '*$*'),
+                this.toolButton('strikethrough', 'Strikethrough', '~~$~~'),
+                this.toolButton('link',          'Link',          '[$](https://example.com)'),
+                this.toolButton('quote',         'Quote',         '\n> $'),
+                this.toolButton('code',          'Code',          '`$`'),
+                this.toolButton('bulletList',    'Bullet list',   '\n* $'),
+                this.toolButton('numberedList',  'Numbered list', '\n1. $'),
+            ),
+            // Right section
+            UIToolkit.div('toolbar-section').append(
+                // Markdown help link
+                UIToolkit.a('', Utils.joinUrl(this.config.staticConfig.baseDocsUrl, this.config.staticConfig.defaultLangId, 'kb/markdown/'))
+                    .classes('btn', 'btn-link')
+                    .attr({title: 'Markdown help'})
+                    .append(UIToolkit.icon('help')),
+            ));
     }
 }

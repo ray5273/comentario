@@ -68,9 +68,9 @@ export class SettingsDialog extends Dialog {
                 // Edit profile link (non-SSO only)
                 !this.principal.isSso && Wrap.new('hr'),
                 !this.principal.isSso &&
-                    UIToolkit.div('dialog-centered').append(
-                        Wrap.new('a')
-                            .inner('Edit Comentario profile')
-                            .attr({href: `${this.baseUrl}/en/manage/account/profile`, target: '_blank'})));
+                    UIToolkit.div('dialog-centered')
+                        .append(
+                            UIToolkit.a('Edit Comentario profile', `${this.baseUrl}/en/manage/account/profile`)
+                                .append(UIToolkit.icon('newTab').classes('ms-1'))));
     }
 }

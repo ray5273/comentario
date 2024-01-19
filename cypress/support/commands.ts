@@ -28,16 +28,16 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
         .map($body => {
             const $self    = $body.find('> .comentario-card-self');
             const $header  = $self.find('> .comentario-card-header');
-            const $options = $self.find('> .comentario-options');
-            const sc       = $options.find('.comentario-score').html();
+            const $toolbar = $self.find('> .comentario-toolbar');
+            const sc       = $toolbar.find('.comentario-score').html();
             const c: Cypress.Comment = {
                 id:        $self.attr('id')?.replace('comentario-', ''),
                 html:      $self.find(' > .comentario-card-body').html(),
                 author:    $header.find('.comentario-name').html(),
                 score:     sc ? Number(sc) : null,
-                upvoted:   $options.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'),
-                downvoted: $options.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'),
-                sticky:    !!$options.find('.comentario-is-sticky').length,
+                upvoted:   $toolbar.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'),
+                downvoted: $toolbar.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'),
+                sticky:    !!$toolbar.find('.comentario-is-sticky').length,
                 pending:   $self.hasClass('comentario-pending'),
             };
 

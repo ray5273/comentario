@@ -173,12 +173,7 @@ export class Comentario extends HTMLElement {
                 // Footer
                 UIToolkit.div('footer')
                     .append(
-                        UIToolkit.div('logo-container')
-                            .append(
-                                Wrap.new('a')
-                                    .attr({href: 'https://comentario.app/', target: '_blank'})
-                                    .html('Powered by ')
-                                    .append(Wrap.new('span').classes('logo-brand').inner('Comentario')))));
+                        UIToolkit.a('Powered by ', 'https://comentario.app/').append(UIToolkit.span('fw-bold').inner('Comentario'))));
 
         // Load information about ourselves
         await this.updateAuthStatus();
@@ -311,17 +306,25 @@ export class Comentario extends HTMLElement {
         this.root.prepend(
             this.messagePanel = UIToolkit.div('message-box')
                 .classes(err && 'error')
-                // Message text
-                .append(UIToolkit.div('text-center').inner(err ? `Error: ${message.text}.` : message.text)));
+                // Message body
+                .append(UIToolkit.div('message-box-body').inner(err ? `Error: ${message.text}.` : message.text)));
 
         // If there are details
         if (message.details) {
-            const details = Wrap.new('pre').classes('hidden').inner(message.details);
+            const details = Wrap.new('code').classes('fade-in', 'hidden').append(Wrap.new('pre').inner(message.details));
             let hidden = true;
             this.messagePanel.append(
                 // Details toggle link
-                UIToolkit.div().append(
-                    Wrap.new('a').classes('small').inner('Details ▾').click(() => details.setClasses(hidden = !hidden, 'hidden'))),
+                UIToolkit.div()
+                    .append(
+                        UIToolkit.button(
+                            'Technical details',
+                            btn => {
+                                details.setClasses(hidden = !hidden, 'hidden');
+                                btn.setClasses(!hidden, 'btn-active');
+                            },
+                            'btn-link',
+                            'btn-sm')),
                 // Details text
                 details);
         }
@@ -360,7 +363,7 @@ export class Comentario extends HTMLElement {
                 UIToolkit.div('mod-tools')
                     .append(
                         // Title
-                        Wrap.new('span').classes('mod-tools-title').inner('Moderator tools'),
+                        UIToolkit.span('mod-tools-title').inner('Moderator tools'),
                         // Lock/Unlock button
                         UIToolkit.button(
                             this.pageInfo?.isPageReadonly ? 'Unlock thread' : 'Lock thread',
@@ -432,7 +435,7 @@ export class Comentario extends HTMLElement {
 
         // Create a new editor
         this.editor = new CommentEditor(
-            card,
+            card.expandBody!,
             true,
             card.comment.markdown!,
             this.config,

@@ -23,6 +23,7 @@
     @import "comment-card";
     @import "profile-bar";
     @import "sort-bar";
+    @import "toolbar";
     @import "mod-tools";
 
     .comentario-backdrop {
@@ -38,7 +39,6 @@
 
     .comentario-message-box {
         width: 100%;
-        padding: 2rem;
         margin-top: 1rem;
         margin-bottom: 1rem;
         border-radius: 4px;
@@ -48,6 +48,18 @@
         &.comentario-error {
             background-color: $red-1;
             color: $red-8;
+        }
+
+        .comentario-message-box-body {
+            padding: 1rem;
+            text-align: center;
+        }
+
+        code {
+            pre {
+                padding: 12px;
+                font-family: 'DejaVu Sans Mono', 'Noto Mono', monospace;
+            }
         }
     }
 

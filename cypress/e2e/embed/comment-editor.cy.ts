@@ -89,7 +89,7 @@ context('Comment Editor', () => {
                     .should('match', ':valid');
 
             // Click on Cancel, the editor is gone again
-            cy.get('@editor').contains('.comentario-comment-editor-buttons button', 'Cancel').click();
+            cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Cancel').click();
             cy.get('@editor').should('not.exist');
             cy.get('@addCommentHost').should('not.have.class', 'comentario-editor-inserted');
 
@@ -186,7 +186,7 @@ context('Comment Editor', () => {
             cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(text);
 
             // Click on "Preview"
-            cy.get('@editor').contains('.comentario-comment-editor-buttons button', 'Preview').as('previewBtn').click()
+            cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview').as('previewBtn').click()
                 .should('have.class', 'comentario-btn-active');
 
             // The textarea is gone and a preview pane is visible

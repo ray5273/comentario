@@ -1,7 +1,7 @@
 /**
  * Wrapper around an HTML element that facilitates adjusting and managing it.
  */
-export class Wrap<T extends HTMLElement> {
+export class Wrap<T extends HTMLElement | SVGElement> {
 
     static readonly idPrefix = 'comentario-';
 
@@ -15,6 +15,13 @@ export class Wrap<T extends HTMLElement> {
      */
     static new<K extends keyof HTMLElementTagNameMap>(tagName: K): Wrap<HTMLElementTagNameMap[K]> {
         return new Wrap(document.createElement(tagName));
+    }
+
+    /**
+     * Instantiate a new SVG element and return a new Wrap object for it.
+     */
+    static newSvg(): Wrap<SVGElement> {
+        return new Wrap(document.createElementNS('http://www.w3.org/2000/svg', 'svg'));
     }
 
     /**
@@ -66,15 +73,12 @@ export class Wrap<T extends HTMLElement> {
 
     /**
      * Set attributes of the underlying element from the provided object.
-     * @param values Object that provides attribute names (keys, they can use camelCase, which will be converted to
-     * kebab-case) and their values. null and undefined values cause attribute removal from the node.
+     * @param values Object that provides attribute names and their values. null and undefined values cause attribute
+     * removal from the node.
      */
     attr(values: { [k: string]: string | null | undefined } | false | null | undefined): Wrap<T> {
         if (this.el && values) {
-            Object.keys(values).forEach(k => {
-                const v = values[k];
-                // Convert the cameCase attribute name into kebab-case
-                k = k.replace(/[A-Z]/g, l => `-${l.toLowerCase()}`);
+            Object.entries(values).forEach(([k, v]) => {
                 if (v === undefined || v === null) {
                     this.el!.removeAttribute(k);
                 } else {
@@ -100,7 +104,7 @@ export class Wrap<T extends HTMLElement> {
      * @param s New value to set.
      */
     inner(s: string): Wrap<T> {
-        if (this.el) {
+        if (this.el instanceof HTMLElement) {
             this.el.innerText = s;
         }
         return this;
@@ -231,7 +235,7 @@ export class Wrap<T extends HTMLElement> {
      */
     on<E extends keyof HTMLElementEventMap>(type: E, handler?: (target: Wrap<T>, ev: HTMLElementEventMap[E]) => void, once?: boolean): Wrap<T> {
         if (typeof handler === 'function') {
-            this.el?.addEventListener(type, e => handler(this, e), {once});
+            this.el?.addEventListener(type, e => handler(this, e as HTMLElementEventMap[E]), {once});
         }
         return this;
     }

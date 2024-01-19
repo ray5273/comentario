@@ -19,11 +19,9 @@ export class SortBar extends Wrap<HTMLDivElement> {
         UIToolkit.div('sort-buttons').appendTo(this)
             .append(
                 allowByScore &&
-                    (this.btnByScore = UIToolkit.button(
-                        // eslint-disable-next-line prefer-template
-                        'Votes' + UIToolkit.svgCaretDown(),
-                        () => this.setSort(this.curSort === 'sd' ? 'sa' : 'sd'),
-                        'btn-sm', 'btn-link')),
+                    (this.btnByScore =
+                        UIToolkit.button('Votes', () => this.setSort(this.curSort === 'sd' ? 'sa' : 'sd'), 'btn-sm', 'btn-link')
+                            .append(UIToolkit.icon('caretDown').classes('ms-1'))),
                 this.btnByTimeAsc  = UIToolkit.button('Oldest', () => this.setSort('ta'), 'btn-sm', 'btn-link'),
                 this.btnByTimeDesc = UIToolkit.button('Newest', () => this.setSort('td'), 'btn-sm', 'btn-link'));
 

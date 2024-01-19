@@ -16,14 +16,13 @@
     .comentario-btn{
 
         // The down caret icon
-        svg {
+        .comentario-icon {
             width: 8px;
             height: 8px;
-            margin-left: 4px;
             transition: transform 0.2s;
         }
 
-        &.comentario-sort-asc svg {
+        &.comentario-sort-asc .comentario-icon {
             transform: rotate(180deg);
         }
     }

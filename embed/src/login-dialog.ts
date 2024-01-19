@@ -104,9 +104,8 @@ export class LoginDialog extends Dialog {
                 // Forgot password link
                 UIToolkit.div('dialog-centered')
                     .append(
-                        Wrap.new('a')
-                            .inner('Forgot your password?')
-                            .attr({href: `${this.baseUrl}/en/auth/forgotPassword`, target: '_blank'})));
+                        UIToolkit.a('Forgot your password?', `${this.baseUrl}/en/auth/forgotPassword`)
+                            .append(UIToolkit.icon('newTab').classes('ms-1'))));
             hasSections = true;
         }
 

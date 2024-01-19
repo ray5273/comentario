@@ -56,29 +56,13 @@ export class SignupDialog extends Dialog {
                 UIToolkit.div('input-group').append(this._website),
                 UIToolkit.div('dialog-centered')
                     .append(
-                        Wrap.new('span').inner('By signing up, you agree to our '),
-                        Wrap.new('a')
-                            .inner('Terms of Service')
-                            .attr({
-                                href: Utils.joinUrl(
-                                    this.config.staticConfig.baseDocsUrl,
-                                    this.config.staticConfig.defaultLangId,
-                                    'legal/tos/'),
-                                target: '_blank',
-                                rel: 'noopener',
-                            }),
-                        Wrap.new('span').inner(' and '),
-                        Wrap.new('a')
-                            .inner('Privacy Policy')
-                            .attr({
-                                href: Utils.joinUrl(
-                                    this.config.staticConfig.baseDocsUrl,
-                                    this.config.staticConfig.defaultLangId,
-                                    'legal/privacy/'),
-                                target: '_blank',
-                                rel: 'noopener',
-                            }),
-                        Wrap.new('span').inner('.')),
+                        UIToolkit.span().inner('By signing up, you agree to our '),
+                        UIToolkit.a('Terms of Service', Utils.joinUrl(this.config.staticConfig.baseDocsUrl, this.config.staticConfig.defaultLangId, 'legal/tos/'))
+                            .append(UIToolkit.icon('newTab').classes('ms-1')),
+                        UIToolkit.span().inner(' and '),
+                        UIToolkit.a('Privacy Policy', Utils.joinUrl(this.config.staticConfig.baseDocsUrl, this.config.staticConfig.defaultLangId, 'legal/privacy/'))
+                            .append(UIToolkit.icon('newTab').classes('ms-1')),
+                        UIToolkit.span().inner('.')),
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit('Sign up', false)),
             );
     }

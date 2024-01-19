@@ -1,0 +1,22 @@
+@import "colours";
+
+.comentario-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+
+    .comentario-toolbar-section {
+        display: flex;
+        align-items: center;
+    }
+
+    .comentario-btn-link {
+        --cmntr-btn-color: $gray-7;
+
+        margin: 0;
+        padding: 0;
+        width: 32px;
+        height: 32px;
+        opacity: 0.5;
+    }
+}

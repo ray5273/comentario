@@ -29,15 +29,15 @@
     // Content of the card, taking up the remaining space right of the spacer or toggler
     .comentario-card-expand-body {
         flex: 1 1 100%;
+
+        // Hide the content of the card when there's an editor inside it (immediate child only, not nested ones)
+        &.comentario-editor-inserted > .comentario-card-self {
+            display: none;
+        }
     }
 
     .comentario-card-self {
         padding-top: 12px;
-    }
-
-    // Hide the content of the card when there's an editor inside it (immediate child only, not nested ones)
-    &.comentario-editor-inserted > .comentario-card-self {
-        display: none;
     }
 
     .comentario-card-children {
@@ -82,31 +82,6 @@
 
         a {
             color: $gray-5 !important;
-        }
-    }
-
-    .comentario-options {
-        display: flex;
-        justify-content: space-between;
-
-        .comentario-options-sub {
-            display: flex;
-            align-items: center;
-        }
-    }
-
-    .comentario-btn-option {
-        --cmntr-btn-color: $gray-6;
-
-        margin: 0;
-        padding: 0;
-        width: 32px;
-        height: 32px;
-        opacity: 0.5;
-
-        svg {
-            width: 16px;
-            height: 16px;
         }
     }
 

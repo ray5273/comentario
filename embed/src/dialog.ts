@@ -134,7 +134,7 @@ export class Dialog {
             // Title
             .inner(this.title)
             // Close button
-            .append(UIToolkit.closeButton(() => this.dismiss()));
+            .append(UIToolkit.iconButton('times', 'Close', () => this.dismiss(), 'btn-link', 'dialog-btn-close'));
     }
 
     private popperBind() {

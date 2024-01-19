@@ -24,6 +24,14 @@ blockquote {
     color: $gray-6;
 }
 
+
+.comentario-icon {
+    display: inline-block;
+    width: 1em;
+    height: 1em;
+    vertical-align: -0.125em;
+}
+
 .comentario-add-comment-host {
     display: flex;
     justify-content: center;
@@ -50,11 +58,11 @@ blockquote {
 // Margins
 
 .comentario-ms-1 {
-    margin-left: 0.25rem !important;
+    margin-left: 0.25em !important;
 }
 
 .comentario-me-1 {
-    margin-right: 0.25rem !important;
+    margin-right: 0.25em !important;
 }
 
 // Font weight

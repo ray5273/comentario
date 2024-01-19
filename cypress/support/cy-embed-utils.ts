@@ -69,12 +69,12 @@ export class EmbedUtils {
     };
 
     /**
-     * Find and return a titled option button for a comment with the given ID.
+     * Find and return a titled comment toolbar button for a comment with the given ID.
      * @param id Comment ID.
      * @param title Button title.
      */
-    static commentOptionButton(id: string, title: string) {
-        return cy.get(`.comentario-root #comentario-${id} .comentario-btn-option[title="${title}"]`);
+    static commentToolbarButton(id: string, title: string) {
+        return cy.get(`.comentario-root #comentario-${id} .comentario-toolbar button[title="${title}"]`);
     }
 
     /**
@@ -86,7 +86,7 @@ export class EmbedUtils {
     static addComment(parentId: string | undefined, markdown: string, clickAnonymous: boolean) {
         // Focus the add host or click the reply button
         if (parentId) {
-            this.commentOptionButton(parentId, 'Reply').click();
+            this.commentToolbarButton(parentId, 'Reply').click();
         } else {
             cy.get('.comentario-root .comentario-add-comment-host').focus();
         }
@@ -98,7 +98,7 @@ export class EmbedUtils {
         cy.get('@editor').find('textarea').should('be.focused').setValue(markdown);
 
         // Submit the comment
-        cy.get('@editor').find('.comentario-comment-editor-buttons button[type=submit]')
+        cy.get('@editor').find('.comentario-comment-editor-footer button[type=submit]')
             .should('have.text', 'Add Comment')
             .click();
 
