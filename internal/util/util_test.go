@@ -745,6 +745,7 @@ func TestMarkdownToHTML(t *testing.T) {
 		{"Bare text              ", "Foo", false, false, false, "<p>Foo</p>"},
 		{"Line breaks            ", "Foo\nBar", false, false, false, "<p>Foo<br>\nBar</p>"},
 		{"Paragraphs             ", "Foo\n\nBar", false, false, false, "<p>Foo</p>\n<p>Bar</p>"},
+		{"Blockquote             ", "> This is\n> a blockquote", false, false, false, "<blockquote>\n<p>This is<br>\na blockquote</p>\n</blockquote>"},
 		{"Bullet list            ", "* abc\n* def\n* ghi", false, false, false, "<ul>\n<li>abc</li>\n<li>def</li>\n<li>ghi</li>\n</ul>"},
 		{"Script                 ", "XSS: <script src='http://example.com/script.js'></script> Foo", false, false, false, "<p>XSS:  Foo</p>"},
 		{"Regular link, links off", "Regular [Link](http://example.com)", false, false, false, "<p>Regular Link</p>"},

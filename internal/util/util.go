@@ -415,7 +415,7 @@ func MarkdownToHTML(markdown string, links, images, tables bool) string {
 		// Headings
 		"h1", "h2", "h3", "h4", "h5", "h6",
 		// Blocks and separators
-		"br", "div", "hr", "p", "span",
+		"blockquote", "br", "div", "hr", "p", "span",
 		// Inline elements
 		"abbr", "acronym", "cite", "code", "del", "dfn", "em", "mark", "s", "strong", "sub", "sup", "var", "b", "i",
 		"pre", "small", "strike", "tt", "u",
