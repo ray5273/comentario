@@ -200,12 +200,12 @@ verify-package-deb:
   dependencies:
     - build
   before_script:
-    # Install systemd to fulfill the requirements
+    # Install systemd to fulfill the requirements, and jq to query artifacts
     - apt-get update
-    - apt-get install -y systemd
+    - apt-get install -y systemd jq
   script:
     # Install the package
-    - pkg_name="$(find dist -maxdepth 1 -name '*.deb')"
+    - pkg_name="$(jq -r '.[] | select(.goos == "linux" and .goarch == "amd64" and .extra.Ext == "deb") | .path' dist/artifacts.json)"
     - '[[ -z "$pkg_name" ]] && echo "Failed to find the .deb package" && exit 1'
     - dpkg -i "$pkg_name"
 
@@ -229,11 +229,12 @@ verify-package-rpm:
   dependencies:
     - build
   before_script:
-    # Install systemd to fulfill the requirements
-    - yum install -y systemd
+    # Install systemd to fulfill the requirements, and jq (from epel-release) to query artifacts
+    - yum install -y systemd epel-release
+    - yum install -y jq
   script:
     # Install the package
-    - pkg_name="$(find dist -maxdepth 1 -name '*.rpm')"
+    - pkg_name="$(jq -r '.[] | select(.goos == "linux" and .goarch == "amd64" and .extra.Ext == "rpm") | .path' dist/artifacts.json)"
     - '[[ -z "$pkg_name" ]] && echo "Failed to find the .rpm package" && exit 1'
     - rpm -i "$pkg_name"
 
