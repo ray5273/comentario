@@ -36,7 +36,6 @@ build:
     expire_in: 1 days  # Only keep the last batch
     paths:
       - build/
-      - build-e2e/
       - dist/
       - node_modules/
   variables:
@@ -56,28 +55,13 @@ build:
       - .yarn-cache/
   before_script:
     # Create the required dirs
-    - mkdir -p build build-e2e .go
+    - mkdir -p build .go
   script:
     # Backend build
     - go generate               # Generate code
     - go mod download           # Fetch the dependencies explicitly (not exactly necessary, but makes it easier to spot problems)
     - test -z "$(go fmt ./...)" # Make sure there are no formatting issues
     - go test -v ./...          # Run unit tests
-
-    # End-2-end: build the backend, e2e plugin and relay
-    - go build -v 
-        -o "./build-e2e/comentario" 
-        -ldflags "-X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
-    - go build -buildmode=plugin -o "./build-e2e/comentario-e2e.so" "./e2e/plugin/"
-    - go build -v -o "./build-e2e/comentario-relay" "./e2e/relay/"
-
-    # Production backend build: disable CGO to statically link the executable so that we can run that in Alpine
-    - CGO_ENABLED=0 go build -a -v
-      -o "./build/comentario"
-      -ldflags "-w -s -X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
-
-    # Copy static assets
-    - cp -r db/ templates/ build/
 
     # Frontend build
     - yarn install 
@@ -98,6 +82,10 @@ build:
     -     goreleaser_opts="$goreleaser_opts --snapshot"
     - fi
     - goreleaser release $goreleaser_opts
+
+    # Build the e2e plugin and relay, placing them next to the Linux AMD64 binary
+    - go build -buildmode=plugin -o "./dist/comentario_linux_amd64_v1/comentario-e2e.so" "./e2e/plugin/"
+    - go build -v -o "./dist/comentario_linux_amd64_v1/comentario-relay" "./e2e/relay/"
 
 e2e:
   stage: test
@@ -157,12 +145,12 @@ e2e:
       }
 
     # Start the e2e backend
-    - ./build-e2e/comentario -vv
+    - ./dist/comentario_linux_amd64_v1/comentario -vv
           --e2e
           --port=8080
           --static-path=build/frontend
-          --db-migration-path=build/db
-          --template-path=build/templates
+          --db-migration-path=db
+          --template-path=templates
           --secrets=resources/k8s/secrets.yaml
           --base-docs-url="https://edge.docs.comentario.app"
           --home-content-url="https://edge.docs.comentario.app/en/embed/front-page/"
@@ -170,7 +158,7 @@ e2e:
     - waitFor http://localhost:8080/en/
 
     # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
-    - ./build-e2e/comentario-relay 
+    - ./dist/comentario_linux_amd64_v1/comentario-relay 
           -listen 127.0.0.1:8000
           -target http://comentario-test-site
           &> ./tmp/logs/comentario-relay.log &
@@ -193,9 +181,6 @@ docker-image:
   script:
     # Login to the Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
-
-    # Remove the e2e plugin (it isn't supposed to be in the image)
-    - rm -f build/comentario-e2e.so
 
     # Build and push the image
     - docker build -t "$IMG_TAG_CURRENT" .
@@ -393,7 +378,7 @@ smoke-test:
     # Check function. Synopsis: checkRedirect <URL> <Expected Location>
     - |
       checkRedirect() {
-        curl -fisS "$1" | grep -i 'Location:' | tr -d '\r' | cut -d ' ' -f 2 | grep -Fx "$2"
+          curl -fisS "$1" | grep -i 'Location:' | tr -d '\r' | cut -d ' ' -f 2 | grep -Fx "$2"
       }
 
     # Check basic redirections

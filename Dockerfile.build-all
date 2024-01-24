@@ -56,13 +56,13 @@ RUN rm -rf build && \
     cd /comentario/embed && yarn run build:prod
 
 # Final image
-FROM alpine:3.17
+FROM alpine:3
 RUN apk add --no-cache --update ca-certificates
 
 COPY --from=backend-build /go/src/comentario/comentario /comentario/
 COPY --from=frontend-build /comentario/build/frontend/ /comentario/frontend/
-COPY ./templates/ /comentario/templates/
 COPY ./db/ /comentario/db/
+COPY ./templates/ /comentario/templates/
 
 WORKDIR /comentario/
 ENTRYPOINT ["/comentario/comentario"]
