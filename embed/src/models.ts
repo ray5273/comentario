@@ -49,31 +49,13 @@ export interface InstanceStaticConfig {
     readonly uiLanguages?: UILanguage[];
 }
 
-/** Dynamic configuration keys. */
-export enum InstanceDynamicConfigKey {
-    authSignupConfirmCommenter           = 'auth.signup.confirm.commenter',
-    authSignupConfirmUser                = 'auth.signup.confirm.user',
-    authSignupEnabled                    = 'auth.signup.enabled',
-    domainDefaultsEnableCommentVoting    = 'domain.defaults.comments.enableVoting',
-    domainDefaultsShowDeletedComments    = 'domain.defaults.comments.showDeleted',
-    domainDefaultsLocalSignupEnabled     = 'domain.defaults.signup.enableLocal',
-    domainDefaultsFederatedSignupEnabled = 'domain.defaults.signup.enableFederated',
-    domainDefaultsSsoSignupEnabled       = 'domain.defaults.signup.enableSso',
-    domainDefaultsUseGravatar            = 'domain.defaults.useGravatar',
-    markdownImagesEnabled                = 'markdown.images.enabled',
-    markdownLinksEnabled                 = 'markdown.links.enabled',
-    markdownTablesEnabled                = 'markdown.tables.enabled',
-    operationNewOwnerEnabled             = 'operation.newOwner.enabled',
-}
-
-
 /** Dynamic instance configuration item datatype. */
 export type InstanceDynamicConfigItemDatatype = 'boolean';
 
 /** Dynamic instance configuration item. */
 export interface InstanceDynamicConfigItem {
     /** Item key */
-    readonly key: InstanceDynamicConfigKey;
+    readonly key: string;
     /** Item value */
     readonly value: string;
     /** Item description */
@@ -87,26 +69,6 @@ export interface InstanceDynamicConfigItem {
     /** Item's default value */
     readonly defaultValue?: string;
 }
-
-/** Instance configuration. */
-export interface InstanceConfig {
-    staticConfig:  InstanceStaticConfig;
-    dynamicConfig: Map<InstanceDynamicConfigKey, InstanceDynamicConfigItem>;
-}
-
-export const DefaultInstanceConfig: InstanceConfig = {
-    staticConfig: {
-        baseUrl:        'https://comentario.app',
-        baseDocsUrl:    'https://docs.comentario.app',
-        version:        '',
-        buildDate:      '',
-        serverTime:     '',
-        defaultLangId:  'en',
-        homeContentUrl: 'https://docs.comentario.app/en/embed/front-page/',
-        resultPageSize: 25,
-    },
-    dynamicConfig: new Map(),
-};
 
 /** User abstraction. **/
 export interface User {

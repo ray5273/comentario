@@ -1,4 +1,4 @@
-import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, DefaultInstanceConfig, ErrorMessage, InstanceDynamicConfigKey, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
+import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
@@ -7,7 +7,7 @@ import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
 import { Utils } from './utils';
-import { LocalConfig } from './local-config';
+import { InstanceConfig, LocalConfig } from './config';
 
 export class Comentario extends HTMLElement {
 
@@ -34,7 +34,7 @@ export class Comentario extends HTMLElement {
     private root!: Wrap<HTMLDivElement>;
 
     /** Comentario config obtained from the backend. */
-    private config = DefaultInstanceConfig;
+    private config = InstanceConfig.default();
 
     /** Local configuration. */
     private readonly localConfig = new LocalConfig();
@@ -149,7 +149,7 @@ export class Comentario extends HTMLElement {
         }
 
         // Load Comentario configuration
-        this.config = await this.apiService.configGet();
+        this.config = InstanceConfig.of(await this.apiService.configGet());
 
         // Set up the root content
         this.root
@@ -183,7 +183,7 @@ export class Comentario extends HTMLElement {
 
         // Scroll to the requested comment, if any
         this.scrollToCommentHash();
-        console.info(`Initialised Comentario ${this.config.staticConfig.version}`);
+        console.info(`Initialised Comentario ${this.config.statics.version}`);
     }
 
     /**
@@ -399,7 +399,7 @@ export class Comentario extends HTMLElement {
                     this.renderComments();
                 },
                 this.localConfig.commentSort,
-                this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsEnableCommentVoting)?.value === 'true'));
+                this.config.dynamic.enableCommentVoting));
         }
 
         // Create a panel for comments
@@ -741,7 +741,7 @@ export class Comentario extends HTMLElement {
         await this.apiService.commentDelete(card.comment.id);
 
         // If deleted comments are to be shown
-        if (this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsShowDeletedComments)?.value === 'true') {
+        if (this.config.dynamic.showDeletedComments) {
             // Update the comment, marking it as deleted, and then the card
             card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '', html: ''});
         } else {
@@ -824,7 +824,7 @@ export class Comentario extends HTMLElement {
             canAddComments: !this.pageInfo?.isDomainReadonly && !this.pageInfo?.isPageReadonly && this.authAvailable,
             curTimeMs:      new Date().getTime(),
             maxLevel:       this.maxLevel,
-            enableVoting:   this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsEnableCommentVoting)?.value === 'true',
+            enableVoting:   this.config.dynamic.enableCommentVoting,
             onGetAvatar:    user => this.createAvatarElement(user),
             onModerate:     (card, approve) => this.moderateComment(card, approve),
             onDelete:       card => this.deleteComment(card),

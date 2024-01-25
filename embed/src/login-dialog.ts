@@ -1,7 +1,8 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { InstanceConfig, InstanceDynamicConfigKey, PageInfo } from './models';
+import { PageInfo } from './models';
+import { InstanceConfig } from './config';
 
 export class LoginDialog extends Dialog {
 
@@ -110,7 +111,7 @@ export class LoginDialog extends Dialog {
         }
 
         // Signup and anonymous auth
-        const canSignup = this.config.dynamicConfig.get(InstanceDynamicConfigKey.domainDefaultsLocalSignupEnabled)?.value === 'true';
+        const canSignup = this.config.dynamic.localSignupEnabled;
         if (canSignup || this.pageInfo.authAnonymous) {
             form.append(
                 // Separator

@@ -1,8 +1,8 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { InstanceConfig, SignupData } from './models';
-import { Utils } from './utils';
+import { SignupData } from './models';
+import { InstanceConfig } from './config';
 
 export class SignupDialog extends Dialog {
 
@@ -57,10 +57,10 @@ export class SignupDialog extends Dialog {
                 UIToolkit.div('dialog-centered')
                     .append(
                         UIToolkit.span().inner('By signing up, you agree to our '),
-                        UIToolkit.a('Terms of Service', Utils.joinUrl(this.config.staticConfig.baseDocsUrl, this.config.staticConfig.defaultLangId, 'legal/tos/'))
+                        UIToolkit.a('Terms of Service', this.config.docsUrl('legal/tos/'))
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span().inner(' and '),
-                        UIToolkit.a('Privacy Policy', Utils.joinUrl(this.config.staticConfig.baseDocsUrl, this.config.staticConfig.defaultLangId, 'legal/privacy/'))
+                        UIToolkit.a('Privacy Policy', this.config.docsUrl('legal/privacy/'))
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span().inner('.')),
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit('Sign up', false)),

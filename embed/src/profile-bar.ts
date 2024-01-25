@@ -1,9 +1,10 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { InstanceConfig, PageInfo, Principal, SignupData, UserSettings } from './models';
+import { PageInfo, Principal, SignupData, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
+import { InstanceConfig } from './config';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 

@@ -1,4 +1,4 @@
-import { Comment, Commenter, InstanceConfig, InstanceDynamicConfigItem, InstanceDynamicConfigKey, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
+import { Comment, Commenter, InstanceDynamicConfigItem, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
 import { HttpClient, HttpHeaders } from './http-client';
 import { Utils } from './utils';
 
@@ -263,13 +263,8 @@ export class ApiService {
     /**
      * Obtain instance configuration.
      */
-    async configGet(): Promise<InstanceConfig> {
-        const r = await this.httpClient.get<ApiConfigResponse>('config');
-        // Convert the dynamic config into a map
-        return {
-            staticConfig:  r.staticConfig,
-            dynamicConfig: new Map<InstanceDynamicConfigKey, InstanceDynamicConfigItem>(r.dynamicConfig?.map(i => [i.key, i])),
-        };
+    async configGet(): Promise<ApiConfigResponse> {
+        return this.httpClient.get<ApiConfigResponse>('config');
     }
 
     /**
