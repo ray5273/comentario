@@ -1,4 +1,4 @@
-import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment Editor', () => {
@@ -212,7 +212,7 @@ context('Comment Editor', () => {
 
         const tblBody = '\n|---------|---------|\n| Text    | Text    |\n';
 
-        const tests = {
+        const buttonTests = {
             'Bold' : [
                 {in: '',         sel: [0],    want: '**text**',                              wantSel: [2, 6],  wantHtml: '<p><strong>text</strong></p>'},
                 {in: 'foo',      sel: [0],    want: '**text**foo',                           wantSel: [2, 6],  wantHtml: '<p><strong>text</strong>foo</p>'},
@@ -289,22 +289,57 @@ context('Comment Editor', () => {
             ],
         };
 
-        before(cy.backendReset);
-
-        beforeEach(() => {
+        const visitAndEdit = () => {
             // Visit the page as anonymous
             cy.testSiteVisit(TEST_PATHS.comments);
             EmbedUtils.makeAliases({anonymous: true});
 
             // Open the editor
             cy.get('.comentario-root .comentario-add-comment-host').focus();
-            cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+            cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible')
+                .find('.comentario-toolbar').as('toolbar');
+        };
+
+        before(cy.backendReset);
+
+        it('shows buttons based on instance config', () => {
+            const btns = [
+                'Bold', 'Italic', 'Strikethrough', 'Link', 'Quote', 'Code', 'Image', 'Table', 'Bullet list',
+                'Numbered list', 'Markdown help'];
+
+            // Check titles of all buttons
+            visitAndEdit();
+            cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', btns);
+
+            // Disable links and the Link button is gone
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled, false);
+            visitAndEdit();
+            cy.get('@toolbar').find('.comentario-btn').attrValues('title')
+                .should('arrayMatch', btns.filter(b => b !== 'Link'));
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled, true);
+
+            // Disable images and the Image button is gone
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled, false);
+            visitAndEdit();
+            cy.get('@toolbar').find('.comentario-btn').attrValues('title')
+                .should('arrayMatch', btns.filter(b => b !== 'Image'));
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled, true);
+
+            // Disable tables and the Table button is gone
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled, false);
+            visitAndEdit();
+            cy.get('@toolbar').find('.comentario-btn').attrValues('title')
+                .should('arrayMatch', btns.filter(b => b !== 'Table'));
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled, true);
         });
 
-        Object.entries(tests).forEach(([button, btnTests]) =>
+        Object.entries(buttonTests).forEach(([button, btnTests]) =>
             context(`button '${button}'`, () =>
                 btnTests.forEach(test =>
                     it(`handles text '${test.in}' and selection ${JSON.stringify(test.sel)}`, () => {
+                        // Visit the page and open the editor
+                        visitAndEdit();
+
                         // Put the text into the editor
                         cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(test.in)
                             // Select the required part
@@ -312,7 +347,7 @@ context('Comment Editor', () => {
                                 ta[0].setSelectionRange(test.sel[0], test.sel[1]));
 
                         // Click the button
-                        cy.get('@editor').find(`.comentario-toolbar .comentario-btn[title='${button}']`).click();
+                        cy.get('@toolbar').find(`.comentario-btn[title='${button}']`).click();
 
                         // Verify the editor
                         cy.get('@textarea')
@@ -331,12 +366,12 @@ context('Comment Editor', () => {
                     }))));
 
         it('has Markdown help button', () => {
-            cy.get('@editor').find('.comentario-toolbar .comentario-btn[title="Markdown help"]')
+            visitAndEdit();
+            cy.get('@toolbar').find('.comentario-btn[title="Markdown help"]')
                 .should(
                     'be.anchor',
                     'https://edge.docs.comentario.app/en/kb/markdown/',
                     {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
-
         });
     });
 });

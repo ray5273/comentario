@@ -112,6 +112,11 @@ declare namespace Cypress {
         hasClass(className: string): Chainable<boolean[]>;
 
         /**
+         * Collect attribute values of all subject elements, and return them as a string array.
+         */
+        attrValues(attrName: string): Chainable<(string | null)[]>;
+
+        /**
          * Collect visible texts of all child elements or all elements matching the selector and return them as a string
          * array. Must either be used as a child command, or be given a selector (or both).
          */

@@ -122,6 +122,12 @@ Cypress.Commands.addQuery(
     });
 
 Cypress.Commands.addQuery(
+    'attrValues',
+    function attrValues(attrName: string) {
+        return (elements: JQueryWithSelector) => elements.map((_, e) => e.getAttribute(attrName)).get();
+    });
+
+Cypress.Commands.addQuery(
     'texts',
     function texts(selector?: string) {
         return (element?: JQueryWithSelector) => {
