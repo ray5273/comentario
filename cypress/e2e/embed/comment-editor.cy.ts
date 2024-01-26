@@ -3,9 +3,7 @@ import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment Editor', () => {
 
-    beforeEach(cy.backendReset);
-
-    context('on comment page', () => {
+    context('comment editing', () => {
 
         const addAnonymousComment = (clickAnonymous: boolean) => {
             // Submit a root comment. First time a Login dialog may appear
@@ -52,6 +50,8 @@ context('Comment Editor', () => {
                   pending: true
                 `);
         };
+
+        beforeEach(cy.backendReset);
 
         it('can be entered and canceled', () => {
             // Visit the page as anonymous
@@ -205,6 +205,138 @@ context('Comment Editor', () => {
             cy.get('@previewBtn').click().should('not.have.class', 'comentario-btn-active');
             cy.get('@preview') .should('not.be.visible');
             cy.get('@textarea').should('be.visible').and('be.focused').and('have.value', text);
+        });
+    });
+
+    context('toolbar', () => {
+
+        const tblBody = '\n|---------|---------|\n| Text    | Text    |\n';
+
+        const tests = {
+            'Bold' : [
+                {in: '',         sel: [0],    want: '**text**',                              wantSel: [2, 6],  wantHtml: '<p><strong>text</strong></p>'},
+                {in: 'foo',      sel: [0],    want: '**text**foo',                           wantSel: [2, 6],  wantHtml: '<p><strong>text</strong>foo</p>'},
+                {in: 'foo',      sel: [2, 2], want: 'fo**text**o',                           wantSel: [4, 8],  wantHtml: '<p>fo<strong>text</strong>o</p>'},
+                {in: 'foo',      sel: [0, 3], want: '**foo**',                               wantSel: [7, 7],  wantHtml: '<p><strong>foo</strong></p>'},
+            ],
+            'Italic' : [
+                {in: '',         sel: [0],    want: '*text*',                                wantSel: [1, 5],  wantHtml: '<p><em>text</em></p>'},
+                {in: 'foo',      sel: [0],    want: '*text*foo',                             wantSel: [1, 5],  wantHtml: '<p><em>text</em>foo</p>'},
+                {in: 'foo',      sel: [2, 2], want: 'fo*text*o',                             wantSel: [3, 7],  wantHtml: '<p>fo<em>text</em>o</p>'},
+                {in: 'foo',      sel: [0, 3], want: '*foo*',                                 wantSel: [5, 5],  wantHtml: '<p><em>foo</em></p>'},
+            ],
+            'Strikethrough' : [
+                {in: '',         sel: [0],    want: '~~text~~',                              wantSel: [2, 6],  wantHtml: '<p><del>text</del></p>'},
+                {in: 'foo',      sel: [0],    want: '~~text~~foo',                           wantSel: [2, 6],  wantHtml: '<p><del>text</del>foo</p>'},
+                {in: 'foo',      sel: [2, 2], want: 'fo~~text~~o',                           wantSel: [4, 8],  wantHtml: '<p>fo<del>text</del>o</p>'},
+                {in: 'foo',      sel: [0, 3], want: '~~foo~~',                               wantSel: [7, 7],  wantHtml: '<p><del>foo</del></p>'},
+            ],
+            'Link' : [
+                {in: '',         sel: [0],    want: '[Link text](https://example.com)',      wantSel: [1, 10], wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">Link text</a></p>'},
+                {in: 'bar',      sel: [0],    want: '[Link text](https://example.com)bar',   wantSel: [1, 10], wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">Link text</a>bar</p>'},
+                {in: 'bar',      sel: [2, 2], want: 'ba[Link text](https://example.com)r',   wantSel: [3, 12], wantHtml: '<p>ba<a href="https://example.com" rel="nofollow noopener" target="_blank">Link text</a>r</p>'},
+                {in: 'bar',      sel: [0, 3], want: '[bar](https://example.com)',            wantSel: [6, 25], wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">bar</a></p>'},
+            ],
+            'Quote' : [
+                {in: '',         sel: [0],    want: '> ',                                    wantSel: [2, 2],  wantHtml: '<blockquote></blockquote>'},
+                {in: 'zip',      sel: [0],    want: '> zip',                                 wantSel: [2, 2],  wantHtml: '<blockquote><p>zip</p></blockquote>'},
+                {in: 'zip',      sel: [2, 2], want: '> zip',                                 wantSel: [4, 4],  wantHtml: '<blockquote><p>zip</p></blockquote>'},
+                {in: 'zip',      sel: [3, 3], want: '> zip',                                 wantSel: [5, 5],  wantHtml: '<blockquote><p>zip</p></blockquote>'},
+                {in: 'zip',      sel: [1, 2], want: '> zip',                                 wantSel: [3, 3],  wantHtml: '<blockquote><p>zip</p></blockquote>'},
+                {in: 'zip',      sel: [0, 3], want: '> zip',                                 wantSel: [2, 2],  wantHtml: '<blockquote><p>zip</p></blockquote>'},
+                {in: 'zip\nrar', sel: [0, 3], want: '> zip\nrar',                            wantSel: [2, 2],  wantHtml: '<blockquote><p>zip<br>rar</p></blockquote>'},
+                {in: 'zip\nrar', sel: [0, 7], want: '> zip\n> rar',                          wantSel: [2, 2],  wantHtml: '<blockquote><p>zip<br>rar</p></blockquote>'},
+                {in: 'zip\nrar', sel: [1, 5], want: '> zip\n> rar',                          wantSel: [3, 3],  wantHtml: '<blockquote><p>zip<br>rar</p></blockquote>'},
+            ],
+            'Code' : [
+                {in: '',         sel: [0],    want: '`text`',                                wantSel: [1, 5],  wantHtml: '<p><code>text</code></p>'},
+                {in: 'var',      sel: [0],    want: '`text`var',                             wantSel: [1, 5],  wantHtml: '<p><code>text</code>var</p>'},
+                {in: 'var',      sel: [2, 2], want: 'va`text`r',                             wantSel: [3, 7],  wantHtml: '<p>va<code>text</code>r</p>'},
+                {in: 'var',      sel: [0, 3], want: '`var`',                                 wantSel: [5, 5],  wantHtml: '<p><code>var</code></p>'},
+            ],
+            'Image' : [
+                {in: '',         sel: [0],    want: '![](https://example.com/image.png)',    wantSel: [4, 33], wantHtml: '<p><img src="https://example.com/image.png" alt=""></p>'},
+                {in: 'bar',      sel: [0],    want: '![](https://example.com/image.png)bar', wantSel: [4, 33], wantHtml: '<p><img src="https://example.com/image.png" alt="">bar</p>'},
+                {in: 'bar',      sel: [2, 2], want: 'ba![](https://example.com/image.png)r', wantSel: [6, 35], wantHtml: '<p>ba<img src="https://example.com/image.png" alt="">r</p>'},
+                {in: 'bar',      sel: [0, 3], want: '![](bar)',                              wantSel: [8, 8],  wantHtml: '<p><img src="bar" alt=""></p>'},
+            ],
+            'Table' : [
+                {in: '',         sel: [0],    want: '\n| Heading | Heading |'+tblBody,       wantSel: [3, 10], wantHtml: '<table><thead><tr><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Text</td><td>Text</td></tr></tbody></table>'},
+                {in: 'boo',      sel: [0],    want: '\n| Heading | Heading |'+tblBody+'boo', wantSel: [3, 10], wantHtml: '<table><thead><tr><th>Heading</th><th>Heading</th></tr></thead><tbody><tr><td>Text</td><td>Text</td></tr><tr><td>boo</td><td></td></tr></tbody></table>'},
+                {in: 'boo',      sel: [0, 3], want: '\n| boo | Heading |'+tblBody,           wantSel: [9, 16], wantHtml: '<table><thead><tr><th>boo</th><th>Heading</th></tr></thead><tbody><tr><td>Text</td><td>Text</td></tr></tbody></table>'},
+            ],
+            'Bullet list' : [
+                {in: '',         sel: [0],    want: '* ',                                    wantSel: [2, 2],  wantHtml: '<ul><li></li></ul>'},
+                {in: 'zip',      sel: [0],    want: '* zip',                                 wantSel: [2, 2],  wantHtml: '<ul><li>zip</li></ul>'},
+                {in: 'zip',      sel: [2, 2], want: '* zip',                                 wantSel: [4, 4],  wantHtml: '<ul><li>zip</li></ul>'},
+                {in: 'zip',      sel: [3, 3], want: '* zip',                                 wantSel: [5, 5],  wantHtml: '<ul><li>zip</li></ul>'},
+                {in: 'zip',      sel: [1, 2], want: '* zip',                                 wantSel: [3, 3],  wantHtml: '<ul><li>zip</li></ul>'},
+                {in: 'zip',      sel: [0, 3], want: '* zip',                                 wantSel: [2, 2],  wantHtml: '<ul><li>zip</li></ul>'},
+                {in: 'zip\nrar', sel: [0, 3], want: '* zip\nrar',                            wantSel: [2, 2],  wantHtml: '<ul><li>zip<br>rar</li></ul>'},
+                {in: 'zip\nrar', sel: [0, 7], want: '* zip\n* rar',                          wantSel: [2, 2],  wantHtml: '<ul><li>zip</li><li>rar</li></ul>'},
+                {in: 'zip\nrar', sel: [1, 5], want: '* zip\n* rar',                          wantSel: [3, 3],  wantHtml: '<ul><li>zip</li><li>rar</li></ul>'},
+            ],
+            'Numbered list' : [
+                {in: '',         sel: [0],    want: '1. ',                                   wantSel: [3, 3],  wantHtml: '<ol><li></li></ol>'},
+                {in: 'zip',      sel: [0],    want: '1. zip',                                wantSel: [3, 3],  wantHtml: '<ol><li>zip</li></ol>'},
+                {in: 'zip',      sel: [2, 2], want: '1. zip',                                wantSel: [5, 5],  wantHtml: '<ol><li>zip</li></ol>'},
+                {in: 'zip',      sel: [3, 3], want: '1. zip',                                wantSel: [6, 6],  wantHtml: '<ol><li>zip</li></ol>'},
+                {in: 'zip',      sel: [1, 2], want: '1. zip',                                wantSel: [4, 4],  wantHtml: '<ol><li>zip</li></ol>'},
+                {in: 'zip',      sel: [0, 3], want: '1. zip',                                wantSel: [3, 3],  wantHtml: '<ol><li>zip</li></ol>'},
+                {in: 'zip\nrar', sel: [0, 3], want: '1. zip\nrar',                           wantSel: [3, 3],  wantHtml: '<ol><li>zip<br>rar</li></ol>'},
+                {in: 'zip\nrar', sel: [0, 7], want: '1. zip\n1. rar',                        wantSel: [3, 3],  wantHtml: '<ol><li>zip</li><li>rar</li></ol>'},
+                {in: 'zip\nrar', sel: [1, 5], want: '1. zip\n1. rar',                        wantSel: [4, 4],  wantHtml: '<ol><li>zip</li><li>rar</li></ol>'},
+            ],
+        };
+
+        before(cy.backendReset);
+
+        beforeEach(() => {
+            // Visit the page as anonymous
+            cy.testSiteVisit(TEST_PATHS.comments);
+            EmbedUtils.makeAliases({anonymous: true});
+
+            // Open the editor
+            cy.get('.comentario-root .comentario-add-comment-host').focus();
+            cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+        });
+
+        Object.entries(tests).forEach(([button, btnTests]) =>
+            context(`button '${button}'`, () =>
+                btnTests.forEach(test =>
+                    it(`handles text '${test.in}' and selection ${JSON.stringify(test.sel)}`, () => {
+                        // Put the text into the editor
+                        cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(test.in)
+                            // Select the required part
+                            .then((ta: JQuery<HTMLInputElement>) =>
+                                ta[0].setSelectionRange(test.sel[0], test.sel[1]));
+
+                        // Click the button
+                        cy.get('@editor').find(`.comentario-toolbar .comentario-btn[title='${button}']`).click();
+
+                        // Verify the editor
+                        cy.get('@textarea')
+                            .should('have.value', test.want)
+                            .should((ta: JQuery<HTMLInputElement>) => {
+                                expect(ta[0].selectionStart).eq(test.wantSel[0]);
+                                expect(ta[0].selectionEnd)  .eq(test.wantSel[1]);
+                            });
+
+                        // Click on "Preview" and verify its content
+                        cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview').click();
+                        cy.get('@editor').find('.comentario-comment-editor-preview').invoke('html')
+                            // Clean up all linebreaks as they are irrelevant in the produced HTML
+                            .invoke('replaceAll', '\n', '')
+                            .should('eq', test.wantHtml);
+                    }))));
+
+        it('has Markdown help button', () => {
+            cy.get('@editor').find('.comentario-toolbar .comentario-btn[title="Markdown help"]')
+                .should(
+                    'be.anchor',
+                    'https://edge.docs.comentario.app/en/kb/markdown/',
+                    {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
+
         });
     });
 });

@@ -224,7 +224,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                 this.config.dynamic.imagesEnabled &&
                     this.toolButton('image',     'Image',         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
                 this.config.dynamic.tablesEnabled &&
-                    this.toolButton('table',     'Table',         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |', 'Heading')),
+                    this.toolButton('table',     'Table',         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
                 this.toolButton('bulletList',    'Bullet list',   () => this.applyBlockPattern('* ')),
                 this.toolButton('numberedList',  'Numbered list', () => this.applyBlockPattern('1. ')),
             ),
