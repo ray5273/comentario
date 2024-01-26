@@ -890,10 +890,20 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		UserCreated: c.UserCreated,
 	}
 
-	// Comment author can see a bit more, but no audit fields. No reason for pending status either
-	if c.UserCreated.UUID == user.ID {
+	// Comment author can see a bit more
+	if c.UserCreated.Valid && c.UserCreated.UUID == user.ID {
 		cc.Markdown = c.Markdown
 		cc.IsPending = c.IsPending
+		cc.ModeratedTime = c.ModeratedTime
+		cc.DeletedTime = c.DeletedTime
+
+		// Audit user fields are visible only if they point to themselves
+		if c.UserModerated.Valid && c.UserModerated.UUID == user.ID {
+			cc.UserModerated = c.UserModerated
+		}
+		if c.UserDeleted.Valid && c.UserDeleted.UUID == user.ID {
+			cc.UserDeleted = c.UserDeleted
+		}
 	}
 	return cc
 }

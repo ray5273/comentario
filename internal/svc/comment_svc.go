@@ -201,13 +201,15 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 		From("cm_comments").
 		Select(
 			"id", "parent_id", "page_id", "markdown", "html", "score", "is_sticky", "is_approved", "is_pending",
-			"is_deleted", "ts_created", "user_created", "pending_reason").
+			"is_deleted", "ts_created", "ts_moderated", "ts_deleted", "user_created", "user_moderated", "user_deleted",
+			"pending_reason").
 		Where(goqu.Ex{"id": id})
 
 	if err := db.SelectRow(q).
 		Scan(
 			&c.ID, &c.ParentID, &c.PageID, &c.Markdown, &c.HTML, &c.Score, &c.IsSticky, &c.IsApproved, &c.IsPending,
-			&c.IsDeleted, &c.CreatedTime, &c.UserCreated, &c.PendingReason,
+			&c.IsDeleted, &c.CreatedTime, &c.ModeratedTime, &c.DeletedTime, &c.UserCreated, &c.UserModerated,
+			&c.UserDeleted, &c.PendingReason,
 		); err != nil {
 		logger.Errorf("commentService.FindByID: SelectRow() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -226,7 +228,8 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 		Select(
 			// Comment fields
 			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
-			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created", "c.pending_reason",
+			"c.is_pending", "c.is_deleted", "c.ts_created", "c.ts_moderated", "c.ts_deleted", "c.user_created",
+			"c.user_moderated", "c.user_deleted", "c.pending_reason",
 			// Page fields
 			"p.path",
 			// Domain fields
@@ -266,7 +269,11 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 			&c.IsPending,
 			&c.IsDeleted,
 			&c.CreatedTime,
+			&c.ModeratedTime,
+			&c.DeletedTime,
 			&c.UserCreated,
+			&c.UserModerated,
+			&c.UserDeleted,
 			&c.PendingReason,
 			// Page
 			&pagePath,
@@ -309,7 +316,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		Select(
 			// Comment fields
 			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
-			"c.is_pending", "c.is_deleted", "c.ts_created", "c.user_created", "c.pending_reason",
+			"c.is_pending", "c.is_deleted", "c.ts_created", "c.ts_moderated", "c.ts_deleted", "c.user_created",
+			"c.user_moderated", "c.user_deleted", "c.pending_reason",
 			// Commenter fields
 			"u.id", "u.email", "u.name", "u.website_url", "u.is_superuser", "du.is_owner", "du.is_moderator",
 			"du.is_commenter",
@@ -437,7 +445,11 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			&c.IsPending,
 			&c.IsDeleted,
 			&c.CreatedTime,
+			&c.ModeratedTime,
+			&c.DeletedTime,
 			&c.UserCreated,
+			&c.UserModerated,
+			&c.UserDeleted,
 			&c.PendingReason,
 			// User
 			&uID,

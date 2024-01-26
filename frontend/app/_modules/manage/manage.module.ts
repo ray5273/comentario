@@ -49,6 +49,7 @@ import { StaticConfigComponent } from './config/static-config/static-config.comp
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 import { ConfigEditComponent } from './config/config-edit/config-edit.component';
 import { DomainInstallComponent } from './domains/domain-properties/domain-install/domain-install.component';
+import { UserLinkComponent } from './user-link/user-link.component';
 
 @NgModule({
     declarations: [
@@ -88,6 +89,7 @@ import { DomainInstallComponent } from './domains/domain-properties/domain-insta
         StatsChartComponent,
         UserDetailsComponent,
         UserEditComponent,
+        UserLinkComponent,
         UserManagerComponent,
         UserPropertiesComponent,
         DomainInstallComponent,
@@ -111,6 +113,9 @@ import { DomainInstallComponent } from './domains/domain-properties/domain-insta
         CommentService,
         DomainSelectorService,
         ManageGuard,
+    ],
+    exports: [
+        CurrentUserBadgeComponent,
     ],
 })
 export class ManageModule {}

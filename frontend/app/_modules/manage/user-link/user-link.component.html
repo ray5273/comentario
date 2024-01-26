@@ -1,0 +1,26 @@
+<!-- User link if the route is provided -->
+@if (user && linkRoute) {
+    <a [routerLink]="linkRoute">
+        <app-user-avatar [user]="user" size="S" class="me-1"/>
+        <ng-container>{{ user.name }}</ng-container>
+        @if (user.email) {
+            &ngsp;<ng-container>({{ user.email }})</ng-container>
+        }
+    </a>
+
+<!-- Existing, non-anonymous user -->
+} @else if (user && user.id !== anonUserId) {
+    <app-user-avatar [user]="user" size="S" class="me-1"/>
+    <ng-container>{{ user.name }}</ng-container>
+
+<!-- Anonymous user -->
+} @else if (user) {
+    <i i18n>(anonymous user)</i>
+
+<!-- Nonexistent (deleted) user -->
+} @else {
+    <i class="text-muted" i18n>(deleted user)</i>
+}
+
+<!-- Current user badge -->
+<app-current-user-badge [userId]="user?.id" class="ms-2"/>

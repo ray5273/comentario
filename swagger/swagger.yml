@@ -2679,6 +2679,12 @@ paths:
               commenter:
                 $ref: "#/definitions/commenter"
                 description: Commenter who authored the comment (optional, may not exist anymore)
+              moderator:
+                $ref: "#/definitions/user"
+                description: User who moderated the comment (only when the current user is owner or superuser)
+              deleter:
+                $ref: "#/definitions/user"
+                description: User who authored the comment (only when the comment is deleted and the current user is owner or superuser)
               page:
                 $ref: "#/definitions/domainPage"
                 description: Domain page the comment is on

@@ -6,23 +6,27 @@
 <div [appSpinner]="loading.active" spinnerSize="lg">
     @if (domainMeta?.domain && comment) {
         <div class="row">
-            <!-- Buttons: only for moderator+ and if comment isn't deleted -->
-            @if (!comment.isDeleted && domainMeta!.canModerateDomain) {
+            <!-- Buttons: non-deleted, moderators or own comments only -->
+            @if (!comment.isDeleted && (domainMeta!.canModerateDomain || comment.userCreated === domainMeta?.principal?.id)) {
                 <div class="col-sm-auto order-sm-last pb-3">
                     <!-- Approve -->
-                    <button [appSpinner]="updating.active" [class.active]="!comment.isPending && comment.isApproved"
-                            (click)="moderate(true)"
-                            type="button" class="btn btn-outline-success w-100 mb-2">
-                        <fa-icon [icon]="faCheck" class="me-1"/>
-                        <ng-container i18n>Approve</ng-container>
-                    </button>
+                    @if (domainMeta!.canModerateDomain) {
+                        <button [appSpinner]="updating.active" [class.active]="!comment.isPending && comment.isApproved"
+                                (click)="moderate(true)"
+                                type="button" class="btn btn-outline-success w-100 mb-2">
+                            <fa-icon [icon]="faCheck" class="me-1"/>
+                            <ng-container i18n>Approve</ng-container>
+                        </button>
+                    }
                     <!-- Reject -->
-                    <button [appSpinner]="updating.active" [class.active]="!comment.isPending && !comment.isApproved"
-                            (click)="moderate(false)"
-                            type="button" class="btn btn-outline-warning w-100 mb-2">
-                        <fa-icon [icon]="faXmark" class="me-1"/>
-                        <ng-container i18n>Reject</ng-container>
-                    </button>
+                    @if (domainMeta!.canModerateDomain) {
+                        <button [appSpinner]="updating.active" [class.active]="!comment.isPending && !comment.isApproved"
+                                (click)="moderate(false)"
+                                type="button" class="btn btn-outline-warning w-100 mb-2">
+                            <fa-icon [icon]="faXmark" class="me-1"/>
+                            <ng-container i18n>Reject</ng-container>
+                        </button>
+                    }
                     <!-- Delete -->
                     <button [appSpinner]="deleting.active" (click)="delete()"
                             type="button" class="btn btn-outline-danger w-100">
@@ -93,32 +97,35 @@
                     @if (page) {
                         <div>
                             <dt i18n>Created by</dt>
-                            <dd>
-                                <!-- Domain user link if the current user is an owner+ -->
-                                @if (commenter && domainMeta!.canManageDomain) {
-                                    <a [routerLink]="[Paths.manage.domains, page.domainId, 'users', commenter.id]">
-                                        <app-user-avatar [user]="commenter" size="S" class="me-1"/>
-                                        <ng-container>{{ commenter.name }}</ng-container>
-                                        @if (commenter.email) { ({{ commenter.email }}) }
-                                    </a>
-
-                                <!-- Commenter name otherwise -->
-                                } @else {
-                                    <!-- Existing, non-anonymous commenter -->
-                                    @if (commenter) {
-                                        <app-user-avatar [user]="commenter" size="S" class="me-1"/>
-                                        <ng-container>{{ commenter.name }}</ng-container>
-                                    }
-                                    <!-- Anonymous commenter -->
-                                    @if (!commenter && comment.userCreated === anonUserId) {
-                                        <i i18n>(anonymous user)</i>
-                                    }
-                                    <!-- Deleted commenter -->
-                                    @if (!commenter && comment.userCreated !== anonUserId) {
-                                        <i class="text-muted" i18n>(deleted user)</i>
-                                    }
-                                }
-                            </dd>
+                            <dd><app-user-link [user]="commenter" [linkRoute]="commenterRoute"/></dd>
+                        </div>
+                    }
+                    <!-- Moderated -->
+                    @if (comment.moderatedTime | datetime; as v) {
+                        <div>
+                            <dt i18n>Moderated</dt>
+                            <dd>{{ v }}</dd>
+                        </div>
+                    }
+                    <!-- Moderated by -->
+                    @if (userModerated) {
+                        <div>
+                            <dt i18n>Moderated by</dt>
+                            <dd><app-user-link [user]="userModerated" [linkRoute]="userModeratedRoute"/></dd>
+                        </div>
+                    }
+                    <!-- Deleted -->
+                    @if (comment.deletedTime | datetime; as v) {
+                        <div>
+                            <dt i18n>Deleted</dt>
+                            <dd>{{ v }}</dd>
+                        </div>
+                    }
+                    <!-- Deleted by -->
+                    @if (userDeleted) {
+                        <div>
+                            <dt i18n>Deleted by</dt>
+                            <dd><app-user-link [user]="userDeleted" [linkRoute]="userDeletedRoute"/></dd>
                         </div>
                     }
                 </dl>

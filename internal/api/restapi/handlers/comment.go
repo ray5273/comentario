@@ -88,11 +88,34 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 		}
 	}
 
+	// If the current user is an owner or a superuser
+	var um, ud *models.User
+	if user.IsSuperuser || domainUser != nil && domainUser.IsOwner {
+		// Fetch the user moderated, if any
+		if comment.UserModerated.Valid {
+			if u, err := svc.TheUserService.FindUserByID(&comment.UserModerated.UUID); err != nil {
+				return respServiceError(err)
+			} else {
+				um = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
+			}
+		}
+		// Fetch the user deleted, if any
+		if comment.IsDeleted && comment.UserDeleted.Valid {
+			if u, err := svc.TheUserService.FindUserByID(&comment.UserDeleted.UUID); err != nil {
+				return respServiceError(err)
+			} else {
+				ud = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
+			}
+		}
+	}
+
 	// Succeeded
 	return api_general.NewCommentGetOK().
 		WithPayload(&api_general.CommentGetOKBody{
 			Comment:   comment.CloneWithClearance(user, domainUser).ToDTO(domain.IsHTTPS, domain.Host, page.Path),
 			Commenter: cr,
+			Deleter:   ud,
+			Moderator: um,
 			Page:      page.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner).ToDTO(),
 		})
 }

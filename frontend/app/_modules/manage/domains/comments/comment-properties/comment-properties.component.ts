@@ -5,7 +5,7 @@ import { catchError, filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import { faCheck, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Comment, Commenter, DomainPage } from '../../../../../../generated-api';
+import { ApiGeneralService, Comment, Commenter, DomainPage, Principal, User } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
@@ -26,6 +26,21 @@ export class CommentPropertiesComponent implements OnInit {
     /** The comment author (if any). */
     commenter?: Commenter;
 
+    /** Link route for the commenter domain user. */
+    commenterRoute?: string[];
+
+    /** User who moderated the comment. */
+    userModerated?: User | Principal;
+
+    /** Link route for the user who moderated the comment. */
+    userModeratedRoute?: string[];
+
+    /** User who deleted the comment. */
+    userDeleted?: User | Principal;
+
+    /** Link route for the user who deleted the comment. */
+    userDeletedRoute?: string[];
+
     /** Domain page the comment is on. */
     page?: DomainPage;
 
@@ -34,9 +49,6 @@ export class CommentPropertiesComponent implements OnInit {
 
     /** Optional action extracted from query param. */
     action?: string;
-
-    /** Anonymous user ID. */
-    readonly anonUserId = Utils.ANONYMOUS_USER_ID;
 
     readonly Paths = Paths;
 
@@ -83,9 +95,37 @@ export class CommentPropertiesComponent implements OnInit {
                     return this.reload$.pipe(switchMap(() => this.api.commentGet(id).pipe(this.loading.processing())));
                 }))
             .subscribe(r => {
-                this.comment   = r.comment;
-                this.commenter = r.commenter;
-                this.page      = r.page;
+                this.comment       = r.comment;
+                this.commenter     = r.commenter;
+                this.userModerated = r.moderator;
+                this.userDeleted   = r.deleter;
+                this.page          = r.page;
+
+                // If the comment is anonymous, imitate the anonymous user
+                if (!this.commenter && this.comment?.userCreated === Utils.ANONYMOUS_USER_ID) {
+                    this.commenter = {id: Utils.ANONYMOUS_USER_ID};
+                }
+
+                // If moderator/deleter refer to the current user, copy the principal into them
+                if (!this.userModerated && r.comment?.userModerated === this.domainMeta?.principal?.id) {
+                    this.userModerated = this.domainMeta?.principal;
+                }
+                if (!this.userDeleted && r.comment?.userDeleted === this.domainMeta?.principal?.id) {
+                    this.userDeleted = this.domainMeta?.principal;
+                }
+
+                // Prepare link routes for users
+                if (this.commenter && this.page && this.domainMeta?.canManageDomain) {
+                    this.commenterRoute = [Paths.manage.domains, this.page.domainId!, 'users', this.commenter.id!];
+                }
+                if (this.domainMeta?.principal?.isSuperuser) {
+                    if (this.userModerated) {
+                        this.userModeratedRoute = [Paths.manage.users, this.userModerated.id!];
+                    }
+                    if (this.userDeleted) {
+                        this.userDeletedRoute = [Paths.manage.users, this.userDeleted.id!];
+                    }
+                }
 
                 // If there's a comment and an action, apply it
                 if (this.comment && this.action) {
