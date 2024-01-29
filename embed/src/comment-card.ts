@@ -27,6 +27,10 @@ export interface CommentRenderingContext {
     readonly commentSort: CommentSort;
     /** Whether the user can add comments on this page. */
     readonly canAddComments: boolean;
+    /** Whether users can edit own comments on this page. */
+    readonly ownCommentEditing: boolean;
+    /** Whether moderators can edit others' comments on this page. */
+    readonly modCommentEditing: boolean;
     /** Current time in milliseconds. */
     readonly curTimeMs: number;
     /** Max comment nesting level. */
@@ -337,13 +341,14 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 .appendTo(right);
         }
 
-        // Moderator or own comment
+        // Edit button: when enabled
+        if (isModerator && ctx.modCommentEditing || ownComment && ctx.ownCommentEditing) {
+            this.btnEdit = UIToolkit.iconButton('pencil', 'Edit', () => ctx.onEdit(this), 'btn-link').appendTo(right);
+        }
+
+        // Delete button: when moderator or own comment
         if (isModerator || ownComment) {
-            right.append(
-                // Edit button
-                this.btnEdit = UIToolkit.iconButton('pencil', 'Edit', () => ctx.onEdit(this), 'btn-link').appendTo(right),
-                // Delete button
-                this.btnDelete = UIToolkit.iconButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'btn-link', 'text-danger').appendTo(right));
+            this.btnDelete = UIToolkit.iconButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'btn-link', 'text-danger').appendTo(right);
         }
         return toolbar;
     }

@@ -27,6 +27,7 @@ var (
 	ErrorNoLocalUser           = &exmodels.Error{ID: "no-local-user", Message: "User is not locally authenticated"}
 	ErrorNoRootComment         = &exmodels.Error{ID: "no-root-comment", Message: "Comment is not a root comment"}
 	ErrorNoSuperuser           = &exmodels.Error{ID: "no-superuser", Message: "User is not a superuser"}
+	ErrorNotAllowed            = &exmodels.Error{ID: "not-allowed", Message: "This action is forbidden"}
 	ErrorNotDomainOwner        = &exmodels.Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator          = &exmodels.Error{ID: "not-moderator", Message: "User is not a moderator"}
 	ErrorPageReadonly          = &exmodels.Error{ID: "page-readonly", Message: "This page is read-only"}

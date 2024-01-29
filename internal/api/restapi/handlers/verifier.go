@@ -36,6 +36,9 @@ type VerifierService interface {
 	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 	// indicates if the user must also have a confirmed email
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
+	// UserCanDeleteComment verifies the given domain user is allowed to delete the specified comment. domainUser can be
+	// nil
+	UserCanDeleteComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
 	// UserCanManageDomain verifies the given user is a superuser or the domain user is a domain owner. domainUser can
 	// be nil
 	UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
@@ -180,6 +183,26 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 	return nil, nil
 }
 
+func (v *verifier) UserCanDeleteComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
+	// Superuser can do anything
+	if user.IsSuperuser {
+		return nil
+	}
+
+	// If no domain user provided, it's a fail
+	if domainUser == nil {
+		return respForbidden(ErrorNotModerator)
+	}
+
+	// If the user doesn't own the comment, they must be a domain moderator
+	if comment.IsAnonymous() || comment.UserCreated.UUID != domainUser.UserID {
+		if r := v.UserCanModerateDomain(user, domainUser); r != nil {
+			return r
+		}
+	}
+	return nil
+}
+
 func (v *verifier) UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
 	if !user.IsSuperuser && (domainUser == nil || !domainUser.IsOwner) {
 		return respForbidden(ErrorNotDomainOwner)
@@ -221,23 +244,18 @@ func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 }
 
 func (v *verifier) UserCanUpdateComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
-	// Superuser can do anything
-	if user.IsSuperuser {
+	// If the user is a moderator+, editing is controlled by the "moderator editing" setting
+	if (user.IsSuperuser || domainUser.CanModerate()) && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentEditingModerator) {
 		return nil
 	}
 
-	// If no domain user provided, it's a fail
-	if domainUser == nil {
-		return respForbidden(ErrorNotModerator)
+	// If it's the comment author, editing is controlled by the "author editing" setting
+	if !comment.IsAnonymous() && domainUser != nil && comment.UserCreated.UUID == domainUser.UserID && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentEditingAuthor) {
+		return nil
 	}
 
-	// If the user doesn't own the comment, they must be a domain moderator
-	if comment.IsAnonymous() || comment.UserCreated.UUID != domainUser.UserID {
-		if r := v.UserCanModerateDomain(user, domainUser); r != nil {
-			return r
-		}
-	}
-	return nil
+	// Editing not allowed
+	return respForbidden(ErrorNotAllowed)
 }
 
 func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {
