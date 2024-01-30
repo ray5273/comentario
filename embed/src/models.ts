@@ -58,8 +58,6 @@ export interface InstanceDynamicConfigItem {
     readonly key: string;
     /** Item value */
     readonly value: string;
-    /** Item description */
-    readonly description?: string;
     /** Item datatype */
     readonly datatype?: InstanceDynamicConfigItemDatatype;
     /** Timestamp when the item was last updated in the database */

@@ -531,10 +531,6 @@ definitions:
       value:
         type: string
         description: Item value
-      description:
-        type: string
-        readOnly: true
-        description: Item description
       datatype:
         $ref: "#/definitions/instanceDynamicConfigItemDatatype"
         readOnly: true

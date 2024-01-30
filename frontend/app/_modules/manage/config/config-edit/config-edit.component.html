@@ -19,7 +19,7 @@
                                 @case ('boolean') {
                                     <div class="col-12 form-check form-switch">
                                         <input [formControlName]="k" [id]="k" class="form-check-input" type="checkbox">
-                                        <label [for]="k" class="form-check-label fw-bold">{{ item.description }}</label>
+                                        <label [for]="k" class="form-check-label fw-bold">{{ item.key | dynConfigItemName }}</label>
                                         <span [ngTemplateOutlet]="ii"></span>
                                     </div>
                                 }
@@ -27,7 +27,7 @@
                                 <!-- Any other (string) value -->
                                 @default {
                                     <div class="col-sm-6">
-                                        <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">{{ item.description }}</label>
+                                        <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">{{ item.key | dynConfigItemName }}</label>
                                         <span [ngTemplateOutlet]="ii"></span>
                                     </div>
                                     <div class="col-sm-6">

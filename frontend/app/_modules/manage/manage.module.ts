@@ -50,6 +50,7 @@ import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.c
 import { ConfigEditComponent } from './config/config-edit/config-edit.component';
 import { DomainInstallComponent } from './domains/domain-properties/domain-install/domain-install.component';
 import { UserLinkComponent } from './user-link/user-link.component';
+import { DynConfigItemNamePipe } from './_pipes/dyn-config-item-name.pipe';
 
 @NgModule({
     declarations: [
@@ -80,6 +81,7 @@ import { UserLinkComponent } from './user-link/user-link.component';
         DomainUserManagerComponent,
         DomainUserPropertiesComponent,
         DynamicConfigComponent,
+        DynConfigItemNamePipe,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
         ProfileComponent,

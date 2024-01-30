@@ -17,7 +17,6 @@ type DynInstanceConfigItemDatatype string
 // DynInstanceConfigItem describes a single dynamic configuration entry (key-value pair)
 type DynInstanceConfigItem struct {
 	Value        string                        // Item value
-	Description  string                        // Item description
 	Datatype     DynInstanceConfigItemDatatype // Item datatype
 	UpdatedTime  time.Time                     // Timestamp when the item was last updated in the database
 	UserUpdated  uuid.NullUUID                 // Reference to the user who last updated the item in the database
@@ -39,7 +38,6 @@ func (ci *DynInstanceConfigItem) ToDTO(key DynInstanceConfigItemKey) *models.Ins
 	return &models.InstanceDynamicConfigItem{
 		Datatype:     models.InstanceDynamicConfigItemDatatype(ci.Datatype),
 		DefaultValue: ci.DefaultValue,
-		Description:  ci.Description,
 		Key:          swag.String(string(key)),
 		UpdatedTime:  strfmt.DateTime(ci.UpdatedTime),
 		UserUpdated:  strfmt.UUID(ci.UserUpdated.UUID.String()),
@@ -71,19 +69,19 @@ const (
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
 var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigItem{
-	ConfigKeyAuthSignupConfirmCommenter:            {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New commenters must confirm their email"},
-	ConfigKeyAuthSignupConfirmUser:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "New users must confirm their email"},
-	ConfigKeyAuthSignupEnabled:                     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable registration of new users"},
-	ConfigKeyDomainDefaultsCommentEditingAuthor:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Allow comment authors to edit comments"},
-	ConfigKeyDomainDefaultsCommentEditingModerator: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Allow moderators to edit comments"},
-	ConfigKeyDomainDefaultsEnableCommentVoting:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable voting on comments"},
-	ConfigKeyDomainDefaultsShowDeletedComments:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Show deleted comments"},
-	ConfigKeyDomainDefaultsLocalSignupEnabled:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable local commenter registration"},
-	ConfigKeyDomainDefaultsFederatedSignupEnabled:  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable commenter registration via external provider"},
-	ConfigKeyDomainDefaultsSsoSignupEnabled:        {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable commenter registration via SSO"},
-	ConfigKeyDomainDefaultsUseGravatar:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Use Gravatar for user avatars"},
-	ConfigKeyMarkdownImagesEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable images in comments"},
-	ConfigKeyMarkdownLinksEnabled:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable links in comments"},
-	ConfigKeyMarkdownTablesEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Description: "Enable tables in comments"},
-	ConfigKeyOperationNewOwnerEnabled:              {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Description: "Non-owner users can add domains"},
+	ConfigKeyAuthSignupConfirmCommenter:            {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyAuthSignupConfirmUser:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyAuthSignupEnabled:                     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsCommentEditingAuthor:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsCommentEditingModerator: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsEnableCommentVoting:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsShowDeletedComments:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsLocalSignupEnabled:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsFederatedSignupEnabled:  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsSsoSignupEnabled:        {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsUseGravatar:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyMarkdownImagesEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyMarkdownLinksEnabled:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyMarkdownTablesEnabled:                 {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyOperationNewOwnerEnabled:              {DefaultValue: "false", Datatype: ConfigDatatypeBoolean},
 }

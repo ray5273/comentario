@@ -242,7 +242,6 @@ func (svc *dynConfigService) reset() {
 	for key, item := range data.DefaultDynInstanceConfig {
 		svc.items[key] = &data.DynInstanceConfigItem{
 			Value:        item.DefaultValue,
-			Description:  item.Description,
 			Datatype:     item.Datatype,
 			DefaultValue: item.DefaultValue,
 		}

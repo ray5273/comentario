@@ -29,7 +29,7 @@
                     <div>
                         <dt>
                             <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
-                            <ng-container>{{ item.description }}</ng-container>
+                            <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
                         </dt>
                         <dd>
                             @switch (item.datatype) {
