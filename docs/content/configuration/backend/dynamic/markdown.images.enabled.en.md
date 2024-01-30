@@ -5,10 +5,16 @@ tags:
     - configuration
     - dynamic configuration
     - administration
+seeAlso:
+    - markdown.links.enabled.en
+    - markdown.tables.enabled.en
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter configures whether images can be inserted in comments.
 
 <!--more-->
 
-If set to `Off`, commenters won't be able to insert [images](/kb/markdown#images) in comments. Only applies to newly written comments.
+* If set to `On`, commenters can insert [images](/kb/markdown#images) in comments.
+* If set to `Off`, commenters won't be able to insert images, and the corresponding markup will be removed from the resulting text.
+
+This setting only applies to newly written comments and does not affect images in existing comments.

@@ -11,8 +11,13 @@ seeAlso:
     - /configuration/backend/dynamic/domain.defaults.signup.enablesso.en
 ---
 
-This [dynamic configuration](/configuration/backend/dynamic) parameter controls whether new commenters are allowed to register in Comentario via a federated (external) identity provider such as Google or Facebook.
+This [dynamic configuration](/configuration/backend/dynamic) parameter controls whether new commenters are allowed to register in Comentario via a federated (external) identity provider, such as Google or Facebook.
 
 <!--more-->
 
-If set to `Off`, no new commenter can register on websites embedding comments via federated providers. Doesn't apply to the Administration UI, which uses a [separate setting](/configuration/backend/dynamic/auth.signup.enabled.en) for that.
+* If set to `On`, new commenters can register on websites embedding comments via federated identity providers.
+* If set to `Off`, external user registration on websites embedding comments will be forbidden.
+
+This setting doesn't apply to the Administration UI, which uses a [separate configuration item](auth.signup.enabled.en) for that.
+
+It also doesn't affect *existing users*, i.e. those already registered. They will be able to login even when this setting is disabled. To disable federated login completely, switch off undesirable providers in the domain's [authentication settings](/configuration/frontend/domain/authentication).

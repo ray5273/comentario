@@ -184,23 +184,18 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 }
 
 func (v *verifier) UserCanDeleteComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
-	// Superuser can do anything
-	if user.IsSuperuser {
+	// If the user is a moderator+, deletion is controlled by the "moderator deletion" setting
+	if (user.IsSuperuser || domainUser.CanModerate()) && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentDeletionModerator) {
 		return nil
 	}
 
-	// If no domain user provided, it's a fail
-	if domainUser == nil {
-		return respForbidden(ErrorNotModerator)
+	// If it's the comment author, deletion is controlled by the "author deletion" setting
+	if !comment.IsAnonymous() && domainUser != nil && comment.UserCreated.UUID == domainUser.UserID && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentDeletionAuthor) {
+		return nil
 	}
 
-	// If the user doesn't own the comment, they must be a domain moderator
-	if comment.IsAnonymous() || comment.UserCreated.UUID != domainUser.UserID {
-		if r := v.UserCanModerateDomain(user, domainUser); r != nil {
-			return r
-		}
-	}
-	return nil
+	// Deletion not allowed
+	return respForbidden(ErrorNotAllowed)
 }
 
 func (v *verifier) UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {

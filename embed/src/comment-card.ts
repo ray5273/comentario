@@ -27,6 +27,10 @@ export interface CommentRenderingContext {
     readonly commentSort: CommentSort;
     /** Whether the user can add comments on this page. */
     readonly canAddComments: boolean;
+    /** Whether users can delete own comments on this page. */
+    readonly ownCommentDeletion: boolean;
+    /** Whether moderators can delete others' comments on this page. */
+    readonly modCommentDeletion: boolean;
     /** Whether users can edit own comments on this page. */
     readonly ownCommentEditing: boolean;
     /** Whether moderators can edit others' comments on this page. */
@@ -346,8 +350,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             this.btnEdit = UIToolkit.iconButton('pencil', 'Edit', () => ctx.onEdit(this), 'btn-link').appendTo(right);
         }
 
-        // Delete button: when moderator or own comment
-        if (isModerator || ownComment) {
+        // Delete button: when enabled
+        if (isModerator && ctx.modCommentDeletion || ownComment && ctx.ownCommentDeletion) {
             this.btnDelete = UIToolkit.iconButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'btn-link', 'text-danger').appendTo(right);
         }
         return toolbar;

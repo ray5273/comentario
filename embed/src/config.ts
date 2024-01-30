@@ -74,6 +74,14 @@ export class DynamicConfig {
         private readonly cfg?: Map<string, InstanceDynamicConfigItem>,
     ) {}
 
+    get enableCommentDeletionAuthor(): boolean {
+        return this.getBool('domain.defaults.comments.deletion.author');
+    }
+
+    get enableCommentDeletionModerator(): boolean {
+        return this.getBool('domain.defaults.comments.deletion.moderator');
+    }
+
     get enableCommentEditingAuthor(): boolean {
         return this.getBool('domain.defaults.comments.editing.author');
     }
