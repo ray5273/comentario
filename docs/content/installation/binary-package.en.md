@@ -33,7 +33,7 @@ The default configuration assumes:
 * PostgreSQL is available on `localhost`, the database is `comentario` and credentials used are `postgres`/`postgres`.
 * Comentario is listening on `localhost` port `80`.
 
-Fee free to make necessary changes:
+Feel free to make necessary changes:
 
 * Edit the file `/etc/comentario/comentario.conf` containing the [static configuration](/configuration/backend/static) (as environment variables).
 * Edit the [secrets](/configuration/backend/secrets) in `/etc/comentario/secrets.yaml`. Make sure the file is only readable by `root` (has `0600` permissions).
