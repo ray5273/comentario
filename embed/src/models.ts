@@ -93,19 +93,23 @@ export interface Principal extends User {
 
 /** Comment residing on a page. */
 export interface Comment {
-    readonly id:           UUID;    // Unique record ID
-    readonly parentId?:    string;  // Parent record ID, null if it's a root comment on the page
-    readonly pageId:       string;  // ID of the page
-    readonly markdown:     string;  // Comment text in markdown
-    readonly html:         string;  // Rendered comment text in HTML
-    readonly score:        number;  // Comment score
-    readonly isSticky:     boolean; // Whether the comment is sticky (attached to the top of page)
-    readonly isApproved:   boolean; // Whether the comment is approved and can be seen by everyone
-    readonly isPending:    boolean; // Whether the comment is pending moderator approval
-    readonly isDeleted:    boolean; // Whether the comment is marked as deleted
-    readonly createdTime:  string;  // When the comment was created
-    readonly userCreated?: string;  // ID of the user who created the comment. Null if the user has since been deleted
-    readonly direction:    number;  // Vote direction for the current user
+    readonly id:             UUID;    // Unique record ID
+    readonly parentId?:      string;  // Parent record ID, null if it's a root comment on the page
+    readonly pageId:         string;  // ID of the page
+    readonly markdown:       string;  // Comment text in markdown
+    readonly html:           string;  // Rendered comment text in HTML
+    readonly score:          number;  // Comment score
+    readonly isSticky:       boolean; // Whether the comment is sticky (attached to the top of page)
+    readonly isApproved:     boolean; // Whether the comment is approved and can be seen by everyone
+    readonly isPending:      boolean; // Whether the comment is pending moderator approval
+    readonly isDeleted:      boolean; // Whether the comment is marked as deleted
+    readonly createdTime:    string;  // When the comment was created
+    readonly moderatedTime:  string;  // When the comment was moderated
+    readonly deletedTime:    string;  // When the comment was deleted (deleted comment only)
+    readonly userCreated?:   string;  // ID of the user who created the comment. Null if the user has since been deleted
+    readonly userModerated?: string;  // ID of the user who moderated the comment. Null if the comment was moderated by another user and the current user isn't a moderator
+    readonly userDeleted?:   string;  // ID of the user who deleted the comment (deleted comment only). Null if the comment was deleted by another user and the current user isn't a moderator
+    readonly direction:      number;  // Vote direction for the current user
 }
 
 /** Stripped-down, read-only version of the user who authored a comment. For now equivalent to User. */

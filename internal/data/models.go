@@ -890,18 +890,20 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		UserCreated: c.UserCreated,
 	}
 
-	// Comment author can see a bit more
-	if c.UserCreated.Valid && c.UserCreated.UUID == user.ID {
-		cc.Markdown = c.Markdown
-		cc.IsPending = c.IsPending
-		cc.ModeratedTime = c.ModeratedTime
-		cc.DeletedTime = c.DeletedTime
+	if c.UserCreated.Valid {
+		// Comment author can see a bit more
+		if c.UserCreated.UUID == user.ID {
+			cc.Markdown = c.Markdown
+			cc.IsPending = c.IsPending
+			cc.ModeratedTime = c.ModeratedTime
+			cc.DeletedTime = c.DeletedTime
+		}
 
-		// Audit user fields are visible only if they point to themselves
-		if c.UserModerated.Valid && c.UserModerated.UUID == user.ID {
+		// Audit user fields are visible only if they point to the comment author
+		if c.UserModerated.Valid && c.UserModerated.UUID == c.UserCreated.UUID {
 			cc.UserModerated = c.UserModerated
 		}
-		if c.UserDeleted.Valid && c.UserDeleted.UUID == user.ID {
+		if c.UserDeleted.Valid && c.UserDeleted.UUID == c.UserCreated.UUID {
 			cc.UserDeleted = c.UserDeleted
 		}
 	}

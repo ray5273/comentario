@@ -743,7 +743,15 @@ export class Comentario extends HTMLElement {
         // If deleted comments are to be shown
         if (this.config.dynamic.showDeletedComments) {
             // Update the comment, marking it as deleted, and then the card
-            card.comment = this.replaceCommentById(card.comment, {isDeleted: true, markdown: '', html: ''});
+            card.comment = this.replaceCommentById(
+                card.comment,
+                {
+                    isDeleted:   true,
+                    markdown:    '',
+                    html:        '',
+                    deletedTime: new Date().toISOString(),
+                    userDeleted: this.principal?.id,
+                });
         } else {
             // Delete the comment from the parentMap
             delete this.parentIdMap![card.comment.id];

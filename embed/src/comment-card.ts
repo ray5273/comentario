@@ -211,7 +211,12 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      */
     private updateText() {
         if (this._comment.isDeleted) {
-            this.eBody?.inner('(deleted)');
+            this.eBody?.inner(
+                this._comment.userCreated ?
+                    this._comment.userCreated === this._comment.userDeleted ?
+                        '(deleted by author)' :
+                        '(deleted by a moderator)' :
+                    '(deleted)');
         } else {
             this.eBody!.html(this._comment.html || '');
         }

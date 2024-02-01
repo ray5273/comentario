@@ -106,11 +106,12 @@ definitions:
       moderatedTime:
         type: string
         format: date-time
-        description: When a moderation action has last been applied to the comment
+        description: >
+          When a moderation action has last been applied to the comment. Visible to moderators and comment authors only
       deletedTime:
         type: string
         format: date-time
-        description: When the comment was deleted
+        description: When the comment was deleted, only provided for deleted comments and moderators and comment authors
       userCreated:
         type: string
         format: uuid
@@ -118,14 +119,19 @@ definitions:
       userModerated:
         type: string
         format: uuid
-        description: ID of the user who last moderated the comment
+        description: >
+          ID of the user who last moderated (approved or rejected) the comment. Non-moderator users can only see a value 
+          of userCreated here, meaning the comment was immediately approved upon submission; if it was moderated by
+          someone else, the field will have no value
       userDeleted:
         type: string
         format: uuid
-        description: ID of the user who deleted the comment
+        description: >
+          ID of the user who deleted the comment. Non-moderator users can only see a value of userCreated here, meaning
+          the comment was deleted by its author; if it was deleted by someone else, the field will have no value
       pendingReason:
         type: string
-        description: Reason for the pending state of the comment
+        description: Reason for the pending state of the comment, visible to moderators only
       direction:
         type: integer
         format: int8
