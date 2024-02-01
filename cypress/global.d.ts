@@ -28,6 +28,9 @@ declare namespace Cypress {
         succeeded:  boolean;
     }
 
+    /** A comment button residing on the card's bottom toolbar. The elements are actually button titles. */
+    type CommentButton = 'Upvote' | 'Downvote' | 'Reply' | 'Approve' | 'Reject' | 'Sticky' | 'Unsticky' | 'Edit' | 'Delete';
+
     /** Rendered comment. */
     interface Comment {
         id:        string;
@@ -38,6 +41,7 @@ declare namespace Cypress {
         downvoted: boolean;
         sticky:    boolean;
         pending:   boolean;
+        buttons:   CommentButton[];
         children?: Comment[];
     }
 

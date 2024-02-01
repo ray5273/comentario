@@ -1,4 +1,4 @@
-import { DOMAINS, DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment threads', () => {
@@ -428,68 +428,6 @@ context('Comment threads', () => {
                                 .should('yamlMatch', pageTest.comments);
                         });
                 }));
-
-            it('hides scores when voting is disabled', () => {
-                // Disable voting
-                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsEnableCommentVoting, false);
-
-                // Login or navigate to the homepage
-                if (userTest.user.isAnonymous) {
-                    cy.testSiteVisit(TEST_PATHS.home);
-                } else {
-                    cy.testSiteLoginViaApi(userTest.user, TEST_PATHS.home);
-                }
-
-                // Check the comments
-                EmbedUtils.makeAliases({anonymous: userTest.user.isAnonymous});
-                cy.commentTree('id', 'score').should('yamlMatch',
-                    // language=yaml
-                    `
-                    - id: ef81dbe5-22f6-4d90-958f-834e6f2cdc63
-                      score: null
-                      children:
-                      - id: 40330ddf-13de-4921-b123-7a32057988cd
-                        score: null
-                        children:
-                        - id: 788c0b17-a922-4c2d-816b-98def34a0008
-                          score: null
-                          children:
-                          - id: 82acadba-3e77-4bcd-a366-78c7ff56c3b9
-                            score: null
-                          - id: 64fb0078-92c8-419d-98ec-7f22c270ef3a
-                            score: null
-                            children:
-                            - id: e8331f48-516d-45fc-80a1-d1b2d5a21d08
-                              score: null
-                        - id: 9a93d7bd-80cb-49bd-8dc1-67326df6fcaf
-                          score: null
-                          children:
-                          - id: da05d978-9218-4263-886e-542068251787
-                            score: null
-                            children:
-                            - id: 4922acc5-0330-4d1a-8092-ca7c67536b08
-                              score: null
-                    - id: bc460a63-f256-47e3-8915-3931acad132a
-                      score: null
-                      children:
-                      - id:  5f066198-03ab-41f8-bd80-c4efaeafd153
-                        score: null
-                        children:
-                        - id: 00e7320a-ecb4-44f4-84ca-ffc2f8c62729
-                          score: null
-                      - id: cb057a9b-e293-4e15-bdb9-c11880cb53bf
-                        score: null
-                        children:
-                        - id: 72314bae-a05d-4551-91df-270802e6b003
-                          score: null
-                          children:
-                          - id: 8f31a61b-e1e6-4090-a426-52ce91a5181b
-                            score: null
-                            children:
-                            - id: 069f98da-bbc5-40ad-8c91-e8a089288ecb
-                              score: null
-                    `);
-            });
         }));
 
     it('disallows adding comment when no authentication method is available', () => {

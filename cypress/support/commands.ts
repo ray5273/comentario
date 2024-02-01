@@ -1,5 +1,6 @@
 import JQueryWithSelector = Cypress.JQueryWithSelector;
 import { PATHS } from './cy-utils';
+import CommentButton = Cypress.CommentButton;
 
 // @ts-ignore
 const { config, $ } = Cypress;
@@ -38,6 +39,7 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
                 upvoted:   $toolbar.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'),
                 downvoted: $toolbar.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'),
                 sticky:    !!$toolbar.find('.comentario-is-sticky').length,
+                buttons:   $toolbar.find('.comentario-btn').map((_, e: HTMLButtonElement) => e.title as CommentButton).get(),
                 pending:   $self.hasClass('comentario-pending'),
             };
 
