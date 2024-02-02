@@ -1,3 +1,5 @@
+import { Utils } from './utils';
+
 export class HttpClientError {
     constructor(
         readonly status: number,
@@ -62,8 +64,7 @@ export class HttpClient {
      * @param path Relative endpoint path.
      */
     private getEndpointUrl(path: string): string {
-        // Combine the two paths, making sure there's exactly one slash in between
-        return this.baseUrl + (this.baseUrl.endsWith('/') ? '' : '/') + (path.startsWith('/') ? path.substring(1) : path);
+        return Utils.joinUrl(this.baseUrl, path);
     }
 
     private request<T>(method: 'DELETE' | 'GET' | 'POST' | 'PUT', path: string, body?: any, headers?: HttpHeaders): Promise<T> {

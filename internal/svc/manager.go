@@ -92,6 +92,11 @@ func (m *manager) Run() {
 	if err := TheCleanupService.Init(); err != nil {
 		logger.Fatalf("Failed to initialise cleanup service: %v", err)
 	}
+
+	// Start the websockets service
+	if err := TheWebSocketsService.Init(); err != nil {
+		logger.Fatalf("Failed to initialise websockets service: %v", err)
+	}
 }
 
 func (m *manager) Shutdown() {
@@ -101,6 +106,9 @@ func (m *manager) Shutdown() {
 	if !m.inited {
 		return
 	}
+
+	// Shut down the services
+	TheWebSocketsService.Shutdown()
 
 	// Teardown the database
 	_ = db.Shutdown()

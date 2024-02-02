@@ -11,6 +11,7 @@ const (
 	ApplicationName = "Comentario"     // Application name
 	APIPath         = "api/"           // Root path of the API requests
 	SwaggerUIPath   = APIPath + "docs" // Root path of the Swagger UI
+	WebSocketsPath  = "ws/"            // Root path of the WebSockets endpoints
 
 	OneDay = 24 * time.Hour // Time unit representing one day
 

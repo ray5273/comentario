@@ -45,6 +45,14 @@ func NullDateTime(t sql.NullTime) strfmt.DateTime {
 	return strfmt.DateTime(t.Time)
 }
 
+// NullUUIDPtr converts a nullable UUID value into *uuid.UUID
+func NullUUIDPtr(u *uuid.NullUUID) *uuid.UUID {
+	if !u.Valid {
+		return nil
+	}
+	return &u.UUID
+}
+
 // NullUUIDStr converts a nullable UUID value into strfmt.UUID
 func NullUUIDStr(u *uuid.NullUUID) strfmt.UUID {
 	if !u.Valid {

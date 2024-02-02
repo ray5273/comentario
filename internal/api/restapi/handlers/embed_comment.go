@@ -248,6 +248,9 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 		go func() { _ = sendCommentReplyNotifications(domain, page, comment, user) }()
 	}
 
+	// Notify websocket subscribers
+	svc.TheWebSocketsService.Send(&domain.ID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, svc.WSCommentActionNew)
+
 	// Succeeded
 	return api_embed.NewEmbedCommentNewOK().WithPayload(&api_embed.EmbedCommentNewOKBody{
 		Comment: comment.ToDTO(domain.IsHTTPS, domain.Host, page.Path),
@@ -342,6 +345,9 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 			return respServiceError(err)
 		}
 	}
+
+	// Notify websocket subscribers
+	svc.TheWebSocketsService.Send(&domain.ID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, svc.WSCommentActionUpdate)
 
 	// Succeeded
 	return api_embed.NewEmbedCommentUpdateOK().

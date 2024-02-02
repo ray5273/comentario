@@ -8,17 +8,19 @@ import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
 import { Utils } from './utils';
 import { InstanceConfig, LocalConfig } from './config';
+import { WebSocketClient, WebSocketMessage } from './ws-client';
 
 export class Comentario extends HTMLElement {
 
     /** Origin URL, injected by the backend on serving the file. */
     private readonly origin = '[[[.Origin]]]';
+
     /** CDN URL, injected by the backend on serving the file. */
     private readonly cdn = '[[[.CdnPrefix]]]';
 
     /** Service handling API requests. */
     private readonly apiService = new ApiService(
-        `${this.origin}/api`,
+        Utils.joinUrl(this.origin, 'api'),
         () => this.setMessage(),
         err => this.setMessage(ErrorMessage.of(err)));
 
@@ -89,6 +91,9 @@ export class Comentario extends HTMLElement {
 
     /** Maximum visual nesting level for comments. */
     private readonly maxLevel = Number(this.getAttribute('max-level')) || 10;
+
+    /** Whether live comment update is enabled. */
+    private readonly liveUpdate = this.getAttribute('live-update') !== 'false';
 
     // noinspection JSUnusedGlobalSymbols
     /**
@@ -183,6 +188,12 @@ export class Comentario extends HTMLElement {
 
         // Scroll to the requested comment, if any
         this.scrollToCommentHash();
+
+        // Initiate live updates, if enabled
+        if (this.liveUpdate && this.pageInfo) {
+            new WebSocketClient(this.origin, this.pageInfo.domainId, this.pagePath, msg => this.handleLiveUpdate(msg));
+        }
+
         console.info(`Initialised Comentario ${this.config.statics.version}`);
     }
 
@@ -559,7 +570,7 @@ export class Comentario extends HTMLElement {
     private async oAuthLogin(idp: string): Promise<void> {
         // Request a new, anonymous login token
         const token = await this.apiService.authNewLoginToken();
-        const url = `${this.apiService.basePath}/oauth/${idp}?host=${encodeURIComponent(this.location.host)}&token=${token}`;
+        const url = this.apiService.getOAuthInitUrl(idp, this.location.host, token);
 
         // If non-interactive SSO is triggered
         if (idp === 'sso' && this.pageInfo?.ssoNonInteractive) {
@@ -825,7 +836,6 @@ export class Comentario extends HTMLElement {
      */
     private makeCommentRenderingContext(): CommentRenderingContext {
         return {
-            apiUrl:             this.apiService.basePath,
             root:               this.root,
             parentMap:          this.parentIdMap!,
             commenters:         this.commenters,
@@ -903,11 +913,15 @@ export class Comentario extends HTMLElement {
             case user!.hasAvatar:
                 return Wrap.new('img')
                     .classes('avatar-img')
-                    .attr({src: `${this.apiService.basePath}/users/${user!.id}/avatar?size=M`, loading: 'lazy', alt: ''});
+                    .attr({src: this.apiService.getAvatarUrl(user!.id, 'M'), loading: 'lazy', alt: ''});
 
             // The user has no avatar: render a circle containing their initial
             default:
                 return UIToolkit.div('avatar', `bg-${user!.colourIndex}`).html(user!.name[0].toUpperCase());
         }
+    }
+
+    private handleLiveUpdate(msg: WebSocketMessage) {
+        console.log('>> Incoming message', msg); // TODO
     }
 }

@@ -13,8 +13,6 @@ export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1
  * Context for rendering comment trees.
  */
 export interface CommentRenderingContext {
-    /** Base API URL. */
-    readonly apiUrl: string;
     /** The root element (for displaying popups). */
     readonly root: Wrap<any>;
     /** Map that links comment lists to their parent IDs. */

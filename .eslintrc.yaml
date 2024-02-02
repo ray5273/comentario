@@ -50,7 +50,6 @@ overrides:
       no-caller: error
       no-use-before-define: off # Replaced by @typescript-eslint/no-use-before-define
       object-shorthand: error
-      prefer-template: error
       quote-props:
         - error
         - as-needed

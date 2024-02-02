@@ -108,6 +108,26 @@ func TestEmailToString(t *testing.T) {
 	}
 }
 
+func TestNullUUIDPtr(t *testing.T) {
+	u := uuid.MustParse("315368f7d10c4f8992b12f1e0a00bcc8")
+	tests := []struct {
+		name string
+		id   *uuid.NullUUID
+		want *uuid.UUID
+	}{
+		{"null and no value   ", &uuid.NullUUID{}, nil},
+		{"null but with value ", &uuid.NullUUID{UUID: u}, nil},
+		{"with value, not null", &uuid.NullUUID{UUID: u, Valid: true}, &u},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := NullUUIDPtr(tt.id); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("NullUUIDPtr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestNullUUIDStr(t *testing.T) {
 	tests := []struct {
 		name string

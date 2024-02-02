@@ -74,13 +74,34 @@ export class ApiService {
     private _userSessionToken?: string;
 
     /** HTTP client we'll use for API requests. */
-    private readonly httpClient = new HttpClient(this.basePath, this.onBeforeRequest, this.onError);
+    private readonly httpClient: HttpClient;
 
     constructor(
-        readonly basePath: string,
-        private readonly onBeforeRequest?: () => void,
-        private readonly onError?: (error: any) => void,
-    ) {}
+        private readonly baseUrl: string,
+        onBeforeRequest?: () => void,
+        onError?: (error: any) => void,
+    ) {
+        this.httpClient = new HttpClient(baseUrl, onBeforeRequest, onError);
+    }
+
+    /**
+     * Return the URL for the given user's avatar image.
+     * @param userId ID of the user to get avatar for.
+     * @param size Size of the requested avatar.
+     */
+    getAvatarUrl(userId: string, size: 'S' | 'M' | 'L'): string {
+        return Utils.joinUrl(this.baseUrl, 'users', userId, 'avatar') + `?size=${size}`;
+    }
+
+    /**
+     * Return the URL for initiating OAuth login flow using the given identity provider.
+     * @param idp Identity provider to initiate authentication with.
+     * @param host Host the user is signing in on.
+     * @param token Anonymous token to bind to the user session.
+     */
+    getOAuthInitUrl(idp: string, host: string, token: string): string {
+        return Utils.joinUrl(this.baseUrl, 'oauth', idp) + `?host=${encodeURIComponent(host)}&token=${token}`;
+    }
 
     /**
      * Return the currently authenticated principal or undefined if the user isn't authenticated.
