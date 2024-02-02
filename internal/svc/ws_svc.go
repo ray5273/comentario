@@ -206,18 +206,8 @@ func (c *wsClient) handleOutgoing(msg *wsMsgPayload) error {
 		return err
 	}
 
-	// Open a new writer
-	if w, err := c.conn.NextWriter(websocket.TextMessage); err != nil {
-		return err
-
-		// Write the message
-	} else if _, err := w.Write(b); err != nil {
-		return err
-
-	} else {
-		// Close the writer to send out the message
-		return w.Close()
-	}
+	// Write the message
+	return c.conn.WriteMessage(websocket.TextMessage, b)
 }
 
 // isSubscribed checks if the message is intended for this subscriber
@@ -290,7 +280,7 @@ func (c *wsClient) writeMessages() {
 
 			// Notify the peer and exit if the send channel is closed
 			if !ok {
-				_ = c.conn.WriteMessage(websocket.CloseMessage, []byte{})
+				_ = c.conn.WriteMessage(websocket.CloseMessage, nil)
 				return
 			}
 
