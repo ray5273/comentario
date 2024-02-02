@@ -29,7 +29,7 @@ declare namespace Cypress {
     }
 
     /** A comment button residing on the card's bottom toolbar. The elements are actually button titles. */
-    type CommentButton = 'Upvote' | 'Downvote' | 'Reply' | 'Approve' | 'Reject' | 'Sticky' | 'Unsticky' | 'Edit' | 'Delete';
+    type CommentButton = 'Upvote' | 'Downvote' | 'Reply' | 'Approve' | 'Reject' | 'Sticky' | 'Sticky comment' | 'Unsticky' | 'Edit' | 'Delete';
 
     /** Rendered comment. */
     interface Comment {

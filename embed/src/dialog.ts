@@ -55,9 +55,8 @@ export class Dialog {
                 .click((_, e) => e.stopPropagation())
                 // Close the dialog on Escape key
                 .keydown((_, e) => !e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && e.code === 'Escape' && this.dismiss())
-                // Invoke the animation callback when it's either ended or interrupted
-                .on('animationend',    () => this.animationDone?.())
-                .on('animationcancel', () => this.animationDone?.())
+                // Invoke the animation callback when animation has ended or was interrupted
+                .animated(() => this.animationDone?.())
                 .append(
                     // Dialog header
                     this.renderHeader(),

@@ -106,9 +106,9 @@ export interface Comment {
     readonly createdTime:    string;  // When the comment was created
     readonly moderatedTime:  string;  // When the comment was moderated
     readonly deletedTime:    string;  // When the comment was deleted (deleted comment only)
-    readonly userCreated?:   string;  // ID of the user who created the comment. Null if the user has since been deleted
-    readonly userModerated?: string;  // ID of the user who moderated the comment. Null if the comment was moderated by another user and the current user isn't a moderator
-    readonly userDeleted?:   string;  // ID of the user who deleted the comment (deleted comment only). Null if the comment was deleted by another user and the current user isn't a moderator
+    readonly userCreated?:   string;  // ID of the user who created the comment. Undefined if the user has since been deleted
+    readonly userModerated?: string;  // ID of the user who moderated the comment. Undefined if the comment was moderated by another user and the current user isn't a moderator
+    readonly userDeleted?:   string;  // ID of the user who deleted the comment (deleted comment only). Undefined if the comment was deleted by another user and the current user isn't a moderator
     readonly direction:      number;  // Vote direction for the current user
 }
 

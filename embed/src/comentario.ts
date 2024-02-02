@@ -266,14 +266,16 @@ export class Comentario extends HTMLElement {
      */
     private scrollToComment(id: UUID) {
         Wrap.byId(id)
+            // Add a highlight class
             .classes('bg-highlight')
+            // Remove the highlight as soon as the animation is over
+            .animated(c => c.noClasses('bg-highlight'))
+            // Scroll to the card
             .scrollTo()
-            .else(() => {
-                // Make sure it's a valid ID before showing the user a message
-                if (Utils.isUuid(id)) {
-                    this.setMessage(new ErrorMessage('The comment you\'re looking for doesn\'t exist; possibly it was deleted.'));
-                }
-            });
+            // Comment not found: make sure it's a valid ID before showing the user a message
+            .else(() =>
+                Utils.isUuid(id) &&
+                this.setMessage(new ErrorMessage('The comment you\'re looking for doesn\'t exist; possibly it was deleted.')));
     }
 
     /**

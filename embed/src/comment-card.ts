@@ -240,6 +240,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Render children
         this.children = UIToolkit.div('card-children', this.level >= ctx.maxLevel && 'card-children-unnest')
+            // When children are collapsed, hide the element after the fade-out animation finished
+            .animated(ch => ch.hasClass('fade-out') && ch.classes('hidden'))
             .append(...CommentCard.renderChildComments(ctx, this.level + 1, id));
 
         // Convert comment creation time to milliseconds
@@ -285,6 +287,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         this.eToggler = UIToolkit.div(hasChildren ? 'card-expand-toggler' : 'card-expand-spacer', `border-${bgColor}`);
         if (hasChildren) {
             this.eToggler.attr({role: 'button'}).click(() => this.collapse(!this.collapsed));
+            this.updateExpandToggler();
         }
 
         // Render a card
@@ -341,7 +344,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         if (!this._comment.parentId && (isSticky || isModerator)) {
             this.btnSticky = UIToolkit.iconButton(
                 'star',
-                isSticky ? (isModerator ? 'Unsticky' : 'This comment has been stickied') : 'Sticky',
+                isSticky ? (isModerator ? 'Unsticky' : 'Sticky comment') : 'Sticky',
                 () => ctx.onSticky(this),
                 'btn-link',
             )
@@ -370,14 +373,34 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         }
     }
 
+    /**
+     * Collapse or expand the card's children.
+     * @param c Whether to expand (false) or collapse (true) the child comments.
+     * @private
+     */
     private collapse(c: boolean) {
+        if (!this.children?.ok) {
+            return;
+        }
+
+        this.collapsed = c;
+
+        // Animate children expand/collapse
+        this.children
+            .noClasses('fade-in', 'fade-out', !c && 'hidden')
+            .classes(c && 'fade-out', !c && 'fade-in');
+
+        // Update the toggler's state
+        this.updateExpandToggler();
+    }
+
+    /**
+     * Update the expand toggler's state.
+     * @private
+     */
+    private updateExpandToggler() {
         if (this.children?.ok) {
-            this.collapsed = c;
-            this.children
-                .noClasses('fade-in', 'fade-out', !c && 'hidden')
-                .on('animationend', ch => ch.classes(c && 'hidden'), true)
-                .classes(c && 'fade-out', !c && 'fade-in');
-            this.eToggler?.setClasses(c, 'collapsed');
+            this.eToggler?.setClasses(this.collapsed, 'collapsed').attr({title: this.collapsed ? 'Expand children' : 'Collapse children'});
         }
     }
 }

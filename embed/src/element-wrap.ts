@@ -214,8 +214,7 @@ export class Wrap<T extends HTMLElement | SVGElement> {
      * @param handler Handler to bind (non-function value will be ignored).
      */
     click(handler?: (target: Wrap<T>, e: MouseEvent) => void): Wrap<T> {
-        this.on('click', handler);
-        return this;
+        return this.on('click', handler);
     }
 
     /**
@@ -223,8 +222,15 @@ export class Wrap<T extends HTMLElement | SVGElement> {
      * @param handler Handler to bind.
      */
     keydown(handler: (target: Wrap<T>, e: KeyboardEvent) => void): Wrap<T> {
-        this.on('keydown', handler);
-        return this;
+        return this.on('keydown', handler);
+    }
+
+    /**
+     * Bind a handler to the animation end and cancel events of the underlying element.
+     * @param handler Handler to bind.
+     */
+    animated(handler: (target: Wrap<T>, e: AnimationEvent) => void): Wrap<T> {
+        return this.on('animationend', handler).on('animationcancel', handler);
     }
 
     /**
