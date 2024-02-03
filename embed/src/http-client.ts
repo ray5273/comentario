@@ -34,9 +34,10 @@ export class HttpClient {
     /**
      * Run an HTTP GET request to the given endpoint.
      * @param path Endpoint path, relative to the client's baseURl.
+     * @param headers Optional additional headers.
      */
-    get<T>(path: string): Promise<T> {
-        return this.request<T>('GET', path);
+    get<T>(path: string, headers?: HttpHeaders): Promise<T> {
+        return this.request<T>('GET', path, undefined, headers);
     }
 
     /**

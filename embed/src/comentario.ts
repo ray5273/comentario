@@ -1,8 +1,8 @@
-import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
+import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { CommentCard, CommentRenderingContext } from './comment-card';
+import { CommentCard, CommentRenderingContext, CommentsGroupedById } from './comment-card';
 import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
@@ -21,8 +21,8 @@ export class Comentario extends HTMLElement {
     /** Service handling API requests. */
     private readonly apiService = new ApiService(
         Utils.joinUrl(this.origin, 'api'),
-        () => this.setMessage(),
-        err => this.setMessage(ErrorMessage.of(err)));
+        () => !this.ignoreApiErrors && this.setMessage(),
+        err => !this.ignoreApiErrors && this.setMessage(ErrorMessage.of(err)));
 
     /**
      * Location of the current page.
@@ -68,11 +68,20 @@ export class Comentario extends HTMLElement {
     /** Map of comments, grouped by their ID. */
     private parentIdMap?: CommentsGroupedById;
 
+    /** ID of the last added or updated comment. Used to ignore live updates initiated by ourselves. */
+    private lastCommentId?: UUID;
+
     /** Currently authenticated principal or undefined if the user isn't authenticated. */
     private principal?: Principal;
 
     /** Current page info as retrieved from the server. */
     private pageInfo?: PageInfo;
+
+    /**
+     * Whether to ignore errors coming from the ApiClient. If false, every error will result in an error banner
+     * appearing at the top of the embedded comments.
+     */
+    private ignoreApiErrors = false;
 
     /** Path of the page for loading comments. Defaults to the actual path on the host. */
     private readonly pagePath = this.getAttribute('page-id') || this.location.pathname;
@@ -486,6 +495,7 @@ export class Comentario extends HTMLElement {
             } else {
                 this.parentIdMap[parentId] = [r.comment];
             }
+            this.lastCommentId = r.comment.id;
 
             // Add the commenter to the commenter map
             this.commenters[r.commenter.id] = r.commenter;
@@ -513,6 +523,7 @@ export class Comentario extends HTMLElement {
         // Update the comment in the card, replacing the original in the parentIdMap and preserving the vote direction
         // (it isn't provided in the returned comment)
         card.comment = this.replaceCommentById(r.comment, {direction: card.comment.direction});
+        this.lastCommentId = r.comment.id;
 
         // Remove the editor
         this.cancelCommentEdits();
@@ -875,12 +886,11 @@ export class Comentario extends HTMLElement {
 
     /**
      * Make a clone of the original comment, replacing the provided properties, and replace that comment in parentIdMap
-     * based on its ID.
-     * NB: parentId should not change!
+     * based on its ID. NB: parentId cannot change!
      * @param c Original comment.
      * @param props Property overrides for the new clone.
      */
-    private replaceCommentById(c: Comment, props?: Partial<Comment>): Comment {
+    private replaceCommentById(c: Comment, props: Omit<Partial<Comment>, 'parentId'>): Comment {
         // Make a clone of the comment, overriding any property in props
         const cc = {...c, ...props};
 
@@ -921,7 +931,81 @@ export class Comentario extends HTMLElement {
         }
     }
 
-    private handleLiveUpdate(msg: WebSocketMessage) {
-        console.log('>> Incoming message', msg); // TODO
+    private async handleLiveUpdate(msg: WebSocketMessage) {
+        // Make sure the message is intended for us
+        if (msg.domain !== this.pageInfo?.domainId || msg.path !== this.pagePath || !msg.comment) {
+            return;
+        }
+
+        // Ignore if this update was caused by our own change (it's not 100% bullet-proof, but robust enough for a live
+        // update)
+        if (this.lastCommentId === msg.comment) {
+            this.lastCommentId = undefined;
+            return;
+        }
+
+        // Fetch the comment in question
+        let comment: Comment;
+        let commenter: Commenter | undefined;
+        this.ignoreApiErrors = true;
+        try {
+            const r = await this.apiService.commentGet(msg.comment);
+            comment = r.comment;
+            commenter = r.commenter;
+        } catch (e) {
+            // Ignore all failed requests. Possibly we simply can't see the comment because it's unapproved
+            return;
+        } finally {
+            this.ignoreApiErrors = false;
+        }
+
+        // Make sure parent map exists
+        if (!this.parentIdMap) {
+            // Prefill the map with a root list
+            this.parentIdMap = {'': []};
+        }
+
+        // Fetch the comment's list in the parent map
+        const pid = comment.parentId ?? '';
+        const list = pid in this.parentIdMap ? this.parentIdMap[pid] : (this.parentIdMap[pid] = []);
+
+        // Add the commenter, if any, to the commenter map
+        if (commenter) {
+            this.commenters[commenter.id] = commenter;
+        }
+
+        // Try to find an existing comment in the list by its ID
+        const idx = list.findIndex(ci => ci.id === comment.id);
+
+        // Comment found: update it
+        let card: CommentCard | undefined;
+        if (idx >= 0) {
+            card = list[idx].card;
+            list[idx] = comment;
+
+            // Also update the comment in the relevant card: this will trigger a re-rendering of the card
+            if (card) {
+                card.comment = comment;
+            }
+
+        } else {
+            // Comment not found: append it to the list. This means we don't take the current sort setting into account
+            // for live updates
+            list.push(comment);
+
+            // Find the parent card
+            let parentCard: CommentCard | undefined;
+            if (pid && !Object.values(this.parentIdMap).find(l => parentCard = l.find(c => c.id === pid)?.card)) {
+                // Failed to find parent card, ignore the update
+                return;
+            }
+
+            // Add a new comment card
+            card = new CommentCard(comment, this.makeCommentRenderingContext(), (parentCard?.level ?? 0) + 1)
+                .appendTo(parentCard?.children ?? this.commentsArea!) as CommentCard;
+        }
+
+        // Highlight the card, if succeeded
+        card?.classes('bg-highlight').animated(c => c.noClasses('bg-highlight'));
     }
 }

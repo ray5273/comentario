@@ -17,6 +17,13 @@ export interface ApiCommentListResponse {
     readonly commenters?: Commenter[];
 }
 
+export interface ApiCommentGetResponse {
+    /** Requested comment. */
+    readonly comment: Comment;
+    /** Commenter who authored the comment. */
+    readonly commenter?: Commenter;
+}
+
 export interface ApiCommentNewResponse {
     /** Added comment. */
     readonly comment: Comment;
@@ -213,6 +220,14 @@ export class ApiService {
      */
     async commentDelete(id: UUID): Promise<void> {
         return this.httpClient.delete<void>(`embed/comments/${id}`, undefined, this.addAuth());
+    }
+
+    /**
+     * Fetch the specified comment and the related commenter.
+     * @param id ID of the comment to retrieve.
+     */
+    async commentGet(id: UUID): Promise<ApiCommentGetResponse> {
+        return this.httpClient.get<ApiCommentGetResponse>(`embed/comments/${id}`, this.addAuth());
     }
 
     /**

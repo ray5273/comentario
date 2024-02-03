@@ -143,8 +143,6 @@ export interface PageInfo {
     readonly idps?: FederatedIdentityProvider[];
 }
 
-export type CommentsGroupedById = { [k: UUID]: Comment[] };
-
 /** Commenter users mapped by their IDs. There will be no entry for a commenter that corresponds to a deleted user. */
 export type CommenterMap = { [k: UUID]: Commenter | undefined };
 

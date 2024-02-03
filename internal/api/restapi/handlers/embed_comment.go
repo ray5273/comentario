@@ -42,6 +42,57 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 	return api_embed.NewEmbedCommentDeleteNoContent()
 }
 
+func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responder {
+	// Try to authenticate the user
+	user, _, err := GetUserSessionBySessionHeader(params.HTTPRequest)
+	if err != nil {
+		// Failed, consider the user anonymous
+		user = data.AnonymousUser
+	}
+
+	// Find the comment and related objects
+	comment, page, domain, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
+		return r
+	}
+
+	// Anonymous user only sees approved comments, non-moderators can also see their own comments
+	if (comment.IsPending || !comment.IsApproved) &&
+		!user.IsSuperuser &&
+		!domainUser.CanModerate() &&
+		(user.IsAnonymous() || !comment.UserCreated.Valid || comment.UserCreated.UUID != user.ID) {
+		return respNotFound(nil)
+	}
+
+	// Find the comment author, if any
+	var cr *models.Commenter
+	if comment.UserCreated.Valid {
+		// Anonymous commenter
+		if comment.UserCreated.UUID == data.AnonymousUser.ID {
+			cr = data.AnonymousUser.ToCommenter(true, false)
+
+			// Non-anonymous, existing user: fetch it
+		} else if u, du, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
+			return respServiceError(err)
+
+		} else {
+			// Convert to Commenter
+			cr = u.
+				CloneWithClearance(
+					user.IsSuperuser,
+					domainUser != nil && domainUser.IsOwner,
+					domainUser != nil && domainUser.IsModerator).
+				ToCommenter(du != nil && du.IsCommenter, du != nil && du.IsModerator)
+		}
+	}
+
+	// Succeeded
+	return api_embed.NewEmbedCommentGetOK().WithPayload(&api_embed.EmbedCommentGetOKBody{
+		Comment:   comment.CloneWithClearance(user, domainUser).ToDTO(domain.IsHTTPS, domain.Host, page.Path),
+		Commenter: cr,
+	})
+}
+
 func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Responder {
 	// Try to authenticate the user
 	user, _, err := GetUserSessionBySessionHeader(params.HTTPRequest)

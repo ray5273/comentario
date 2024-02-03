@@ -1,5 +1,5 @@
 import { Wrap } from './element-wrap';
-import { ANONYMOUS_ID, Comment, CommenterMap, CommentsGroupedById, CommentSort, CommentSortComparators, Principal, User, UUID } from './models';
+import { ANONYMOUS_ID, Comment, CommenterMap, CommentSort, CommentSortComparators, Principal, User, UUID } from './models';
 import { UIToolkit } from './ui-toolkit';
 import { Utils } from './utils';
 import { ConfirmDialog } from './confirm-dialog';
@@ -8,6 +8,19 @@ export type CommentCardEventHandler = (c: CommentCard) => void;
 export type CommentCardGetAvatarHandler = (user: User | undefined) => Wrap<any>;
 export type CommentCardModerateEventHandler = (c: CommentCard, approve: boolean) => void;
 export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1) => void;
+
+/**
+ * Extension of Comment that can hold a link to the card associated with the comment.
+ */
+export interface CommentWithCard extends Comment {
+    /** Reference to the card holding the comment. */
+    card?: CommentCard;
+}
+
+/**
+ * Map of comment lists, indexed by their parent's ID.
+ */
+export type CommentsGroupedById = { [k: UUID]: CommentWithCard[] };
 
 /**
  * Context for rendering comment trees.
@@ -81,11 +94,12 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     private collapsed = false;
 
     constructor(
-        private _comment: Comment,
+        private _comment: CommentWithCard,
         ctx: CommentRenderingContext,
-        private readonly level: number,
+        readonly level: number,
     ) {
         super(UIToolkit.div().element);
+        this._comment.card = this;
 
         // Render the content
         this.render(ctx);
@@ -126,7 +140,14 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     }
 
     set comment(c: Comment) {
+        // Release any existing card reference on the old comment
+        this._comment.card = undefined;
+
+        // Store the new comment and reference the card from it
         this._comment = c;
+        this._comment.card = this;
+
+        // Update the controls and the text
         this.update();
         this.updateText();
     }

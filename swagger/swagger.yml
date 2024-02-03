@@ -1957,6 +1957,25 @@ paths:
     parameters:
       - $ref: "#/parameters/pathUuid"
 
+    get:
+      operationId: EmbedCommentGet
+      summary: Fetch the specified comment and the related commenter
+      tags:
+        - ApiEmbed
+      security: []
+      responses:
+        200:
+          description: Comment and commenter properties
+          schema:
+            type: object
+            properties:
+              comment:
+                description: Requested comment
+                $ref: "#/definitions/comment"
+              commenter:
+                description: Commenter who authored the comment
+                $ref: "#/definitions/commenter"
+
     delete:
       operationId: EmbedCommentDelete
       summary: Delete specified comment

@@ -1,10 +1,11 @@
 import { Utils } from './utils';
+import { UUID } from './models';
 
 export interface WebSocketMessage {
-    readonly domain?:        string; // ID of the domain the message is for
+    readonly domain?:        UUID;   // ID of the domain the message is for
     readonly path?:          string; // Path on the domain
-    readonly comment?:       string; // ID of the comment
-    readonly parentComment?: string; // ID of the parent comment
+    readonly comment?:       UUID;   // ID of the comment
+    readonly parentComment?: UUID;   // ID of the parent comment
     readonly action?:        string; // Action
 }
 

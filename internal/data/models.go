@@ -868,7 +868,7 @@ type Comment struct {
 }
 
 // CloneWithClearance returns a clone of the comment with a limited set of properties, depending on the specified
-// authorisations
+// authorisations. domainUser can be nil
 func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Comment {
 	// Superuser and domain owner/moderator see everything: make a perfect clone
 	if user.IsSuperuser || domainUser.CanModerate() {
