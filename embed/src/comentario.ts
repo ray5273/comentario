@@ -2,7 +2,7 @@ import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, ErrorMessage, Message, 
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { CommentCard, CommentRenderingContext, CommentsGroupedById } from './comment-card';
+import { CommentCard, CommentRenderingContext, CommentsGroupedById, CommentWithCard } from './comment-card';
 import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
@@ -68,7 +68,7 @@ export class Comentario extends HTMLElement {
     /** Map of comments, grouped by their ID. */
     private parentIdMap?: CommentsGroupedById;
 
-    /** ID of the last added or updated comment. Used to ignore live updates initiated by ourselves. */
+    /** ID of the last added, deleted or updated comment. Used to ignore live updates initiated by ourselves. */
     private lastCommentId?: UUID;
 
     /** Currently authenticated principal or undefined if the user isn't authenticated. */
@@ -482,6 +482,7 @@ export class Comentario extends HTMLElement {
         if (this.principal || this.localConfig.anonymousCommenting) {
             // Submit the comment to the backend
             const r = await this.apiService.commentNew(this.location.host, this.pagePath, !this.principal, parentCard?.comment.id, markdown);
+            this.lastCommentId = r.comment.id;
 
             // Make sure parent map exists
             if (!this.parentIdMap) {
@@ -495,7 +496,6 @@ export class Comentario extends HTMLElement {
             } else {
                 this.parentIdMap[parentId] = [r.comment];
             }
-            this.lastCommentId = r.comment.id;
 
             // Add the commenter to the commenter map
             this.commenters[r.commenter.id] = r.commenter;
@@ -518,12 +518,13 @@ export class Comentario extends HTMLElement {
      */
     private async submitCommentEdits(card: CommentCard, markdown: string): Promise<void> {
         // Submit the edits to the backend
-        const r = await this.apiService.commentUpdate(card.comment.id, markdown);
+        const c = card.comment;
+        this.lastCommentId = c.id;
+        const r = await this.apiService.commentUpdate(c.id, markdown);
 
         // Update the comment in the card, replacing the original in the parentIdMap and preserving the vote direction
         // (it isn't provided in the returned comment)
-        card.comment = this.replaceCommentById(r.comment, {direction: card.comment.direction});
-        this.lastCommentId = r.comment.id;
+        card.comment = this.replaceComment(c.id, c.parentId, {...r.comment, direction: c.direction});
 
         // Remove the editor
         this.cancelCommentEdits();
@@ -751,10 +752,12 @@ export class Comentario extends HTMLElement {
      */
     private async moderateComment(card: CommentCard, approve: boolean): Promise<void> {
         // Submit the moderation to the backend
-        await this.apiService.commentModerate(card.comment.id, approve);
+        const c = card.comment;
+        this.lastCommentId = c.id;
+        await this.apiService.commentModerate(c.id, approve);
 
         // Update the comment and the card
-        card.comment = this.replaceCommentById(card.comment, {isPending: false, isApproved: approve});
+        card.comment = this.replaceComment(c.id, c.parentId, {isPending: false, isApproved: approve});
     }
 
     /**
@@ -762,26 +765,26 @@ export class Comentario extends HTMLElement {
      */
     private async deleteComment(card: CommentCard): Promise<void> {
         // Run deletion with the backend
-        await this.apiService.commentDelete(card.comment.id);
+        const c = card.comment;
+        this.lastCommentId = c.id;
+        await this.apiService.commentDelete(c.id);
 
         // If deleted comments are to be shown
         if (this.config.dynamic.showDeletedComments) {
-            // Update the comment, marking it as deleted, and then the card
-            card.comment = this.replaceCommentById(
-                card.comment,
-                {
-                    isDeleted:   true,
-                    markdown:    '',
-                    html:        '',
-                    deletedTime: new Date().toISOString(),
-                    userDeleted: this.principal?.id,
-                });
+            // Update the comment, marking it as deleted, and then update the card
+            card.comment = this.replaceComment(c.id, c.parentId, {
+                isDeleted:   true,
+                markdown:    '',
+                html:        '',
+                deletedTime: new Date().toISOString(),
+                userDeleted: this.principal?.id,
+            });
         } else {
             // Delete the comment from the parentMap
-            delete this.parentIdMap![card.comment.id];
+            delete this.parentIdMap![c.id];
 
             // Delete the comment itself from the parentMap's list
-            const pl = this.parentIdMap![card.comment.parentId ?? ''];
+            const pl = this.parentIdMap![c.parentId ?? ''];
             const idx = pl.indexOf(card.comment);
             if (idx >= 0) {
                 pl.splice(idx, 1);
@@ -797,18 +800,20 @@ export class Comentario extends HTMLElement {
      */
     private async stickyComment(card: CommentCard): Promise<void> {
         // Run the stickiness update with the API
-        const isSticky = !card.comment.isSticky;
-        await this.apiService.commentSticky(card.comment.id, isSticky);
+        const c = card.comment;
+        this.lastCommentId = c.id;
+        const isSticky = !c.isSticky;
+        await this.apiService.commentSticky(c.id, isSticky);
 
         // Update the comment
-        this.replaceCommentById(card.comment, {isSticky});
+        this.replaceComment(c.id, c.parentId, {isSticky});
 
         // Rerender comments to reflect the changed stickiness
         this.renderComments();
 
         // If sticky status is set, scroll to the comment
         if (isSticky) {
-            this.scrollToComment(card.comment.id);
+            this.scrollToComment(c.id);
         }
     }
 
@@ -831,14 +836,16 @@ export class Comentario extends HTMLElement {
         }
 
         // Run the vote with the backend
-        const r = await this.apiService.commentVote(card.comment.id, direction);
+        const c = card.comment;
+        this.lastCommentId = c.id;
+        const r = await this.apiService.commentVote(c.id, direction);
 
         // Update the comment and the card, if there's still one; otherwise reload the tree again (not optimal, but we
         // can't find the card at the moment as we don't store any of them, only the underlying elements)
         if (reloaded) {
             await this.reload();
         } else {
-            card.comment = this.replaceCommentById(card.comment, {score: r.score, direction});
+            card.comment = this.replaceComment(c.id, c.parentId, {score: r.score, direction});
         }
     }
 
@@ -886,23 +893,32 @@ export class Comentario extends HTMLElement {
 
     /**
      * Make a clone of the original comment, replacing the provided properties, and replace that comment in parentIdMap
-     * based on its ID. NB: parentId cannot change!
-     * @param c Original comment.
+     * based on its ID and parentId.
+     * @param id Comment ID.
+     * @param parentId Comment parent ID.
      * @param props Property overrides for the new clone.
      */
-    private replaceCommentById(c: Comment, props: Omit<Partial<Comment>, 'parentId'>): Comment {
-        // Make a clone of the comment, overriding any property in props
-        const cc = {...c, ...props};
-
-        // Replace the comment instance in the appropriate list in the parentIdMap
-        const a = this.parentIdMap?.[c.parentId ?? ''];
-        if (a) {
-            const idx = a.findIndex(ci => ci.id === c.id);
+    private replaceComment(id: string, parentId: string | null | undefined, props: Omit<Partial<Comment>, 'parentId' | 'id'>): CommentWithCard {
+        // Try to find the comment's list in the parent map
+        let comment: Comment | undefined;
+        let idx = -1;
+        const list = this.parentIdMap?.[parentId ?? ''];
+        if (list) {
+            // Try to find the comment in the list
+            idx = list.findIndex(c => c.id === id);
             if (idx >= 0) {
-                a[idx] = cc;
+                comment = list[idx];
             }
         }
-        return cc;
+
+        // Make a clone of the comment, overriding any property in props
+        const cc = {...comment, ...props};
+
+        // Replace the comment instance in the appropriate list in the parentIdMap
+        if (idx >= 0) {
+            list![idx] = cc as CommentWithCard;
+        }
+        return cc as CommentWithCard;
     }
 
     /**
@@ -944,7 +960,25 @@ export class Comentario extends HTMLElement {
             return;
         }
 
-        // Fetch the comment in question
+        // If the comment was deleted
+        if (msg.action === 'delete') {
+            // Find and replace the comment with its 'deleted version'. Don't remove the comment entirely even when
+            // deleted are configured to be hidden to minimise content jumping
+            const comment = this.replaceComment(msg.comment, msg.parentComment, {
+                isDeleted:   true,
+                markdown:    '',
+                html:        '',
+                deletedTime: new Date().toISOString(),
+            });
+
+            // If there's an associated card, update it, too
+            if (comment.card) {
+                comment.card.comment = comment;
+            }
+            return;
+        }
+
+        // Any other action (new, update, vote, sticky): fetch the comment in question
         let comment: Comment;
         let commenter: Commenter | undefined;
         this.ignoreApiErrors = true;
@@ -1005,7 +1039,9 @@ export class Comentario extends HTMLElement {
                 .appendTo(parentCard?.children ?? this.commentsArea!) as CommentCard;
         }
 
-        // Highlight the card, if succeeded
-        card?.classes('bg-highlight').animated(c => c.noClasses('bg-highlight'));
+        // On success blink the card, except for vote updates
+        if (msg.action !== 'vote') {
+            card?.blink();
+        }
     }
 }

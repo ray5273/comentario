@@ -56,11 +56,17 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 		return r
 	}
 
-	// Anonymous user only sees approved comments, non-moderators can also see their own comments
-	if (comment.IsPending || !comment.IsApproved) &&
-		!user.IsSuperuser &&
-		!domainUser.CanModerate() &&
-		(user.IsAnonymous() || !comment.UserCreated.Valid || comment.UserCreated.UUID != user.ID) {
+	// To be consistent with the way comment list works, return a "404 Not Found" when:
+	// * comment is rejected
+	// * comment is deleted and deleted comments should be hidden
+	// * comment is pending and the user isn't a moderator, and it's not their comment
+	pending := comment.IsPending
+	rejected := !pending && !comment.IsApproved
+	moderator := user.IsSuperuser || domainUser.CanModerate()
+	anonymous := !moderator && user.IsAnonymous()
+	ownComment := !anonymous && comment.UserCreated.Valid && comment.UserCreated.UUID == user.ID
+	delHidden := comment.IsDeleted && !svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsShowDeletedComments)
+	if rejected || delHidden || pending && !moderator && !ownComment {
 		return respNotFound(nil)
 	}
 
@@ -176,20 +182,9 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 }
 
 func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *data.User) middleware.Responder {
-	// Find the comment and related objects
-	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
-	if r != nil {
+	// Update the comment
+	if r := commentModerate(params.UUID, user, false, swag.BoolValue(params.Body.Approve)); r != nil {
 		return r
-	}
-
-	// Verify the user is a domain moderator
-	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
-		return r
-	}
-
-	// Update the comment's state in the database
-	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, false, swag.BoolValue(params.Body.Approve), ""); err != nil {
-		return respServiceError(err)
 	}
 
 	// Succeeded
@@ -300,7 +295,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	}
 
 	// Notify websocket subscribers
-	svc.TheWebSocketsService.Send(&domain.ID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, svc.WSCommentActionNew)
+	commentWebSocketNotify(page, comment, "new")
 
 	// Succeeded
 	return api_embed.NewEmbedCommentNewOK().WithPayload(&api_embed.EmbedCommentNewOKBody{
@@ -325,7 +320,7 @@ func EmbedCommentPreview(params api_embed.EmbedCommentPreviewParams) middleware.
 
 func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.User) middleware.Responder {
 	// Find the comment and related objects
-	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	comment, page, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
 	if r != nil {
 		return r
 	}
@@ -346,6 +341,9 @@ func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.Us
 		if err := svc.TheCommentService.UpdateSticky(&comment.ID, b); err != nil {
 			return respServiceError(err)
 		}
+
+		// Notify websocket subscribers
+		commentWebSocketNotify(page, comment, "sticky")
 	}
 
 	// Succeeded or no change
@@ -398,7 +396,7 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Notify websocket subscribers
-	svc.TheWebSocketsService.Send(&domain.ID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, svc.WSCommentActionUpdate)
+	commentWebSocketNotify(page, comment, "update")
 
 	// Succeeded
 	return api_embed.NewEmbedCommentUpdateOK().
@@ -408,28 +406,32 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 }
 
 func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) middleware.Responder {
-	// Parse comment ID
-	if commentID, r := parseUUID(params.UUID); r != nil {
+	// Find the comment and the related objects
+	comment, page, _, _, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	if r != nil {
 		return r
-
-		// Make sure voting is enabled
-	} else if !svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsEnableCommentVoting) {
-		return respForbidden(ErrorFeatureDisabled.WithDetails("comment voting"))
-
-		// Find the comment
-	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
-		return respServiceError(err)
-
-		// Make sure the user is not voting for their own comment
-	} else if comment.UserCreated.UUID == user.ID {
-		return respForbidden(ErrorSelfVote)
-
-		// Update the vote and the comment
-	} else if score, err := svc.TheCommentService.Vote(&comment.ID, &user.ID, *params.Body.Direction); err != nil {
-		return respServiceError(err)
-
-	} else {
-		// Succeeded
-		return api_embed.NewEmbedCommentVoteOK().WithPayload(&api_embed.EmbedCommentVoteOKBody{Score: int64(score)})
 	}
+
+	// Make sure voting is enabled
+	if !svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsEnableCommentVoting) {
+		return respForbidden(ErrorFeatureDisabled.WithDetails("comment voting"))
+	}
+
+	// Make sure the user is not voting for their own comment
+	if comment.UserCreated.UUID == user.ID {
+		return respForbidden(ErrorSelfVote)
+	}
+
+	// Update the vote and the comment
+	score, err := svc.TheCommentService.Vote(&comment.ID, &user.ID, *params.Body.Direction)
+	if err != nil {
+		return respServiceError(err)
+
+	}
+
+	// Notify websocket subscribers
+	commentWebSocketNotify(page, comment, "vote")
+
+	// Succeeded
+	return api_embed.NewEmbedCommentVoteOK().WithPayload(&api_embed.EmbedCommentVoteOKBody{Score: int64(score)})
 }

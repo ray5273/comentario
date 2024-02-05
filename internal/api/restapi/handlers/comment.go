@@ -10,6 +10,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"time"
 )
 
 func CommentCount(params api_general.CommentCountParams, user *data.User) middleware.Responder {
@@ -170,28 +171,9 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 }
 
 func CommentModerate(params api_general.CommentModerateParams, user *data.User) middleware.Responder {
-	// Find the comment and related objects
-	comment, _, _, domainUser, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
-	if r != nil {
+	// Update the comment
+	if r := commentModerate(params.UUID, user, swag.BoolValue(params.Body.Pending), swag.BoolValue(params.Body.Approve)); r != nil {
 		return r
-	}
-
-	// Verify the user is a domain moderator
-	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
-		return r
-	}
-
-	// Determine the pending reason (if pending)
-	pending := swag.BoolValue(params.Body.Pending)
-	approve := swag.BoolValue(params.Body.Approve)
-	reason := ""
-	if pending {
-		reason = fmt.Sprintf("Set to pending by %s <%s>", user.Name, user.Email)
-	}
-
-	// Update the comment's state in the database
-	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, pending, approve, reason); err != nil {
-		return respServiceError(err)
 	}
 
 	// Succeeded
@@ -220,6 +202,9 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, -1, 0) }()
 	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0) }()
 
+	// Notify websocket subscribers
+	commentWebSocketNotify(page, comment, "delete")
+
 	// Succeeded
 	return nil
 }
@@ -247,4 +232,44 @@ func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID)
 		// Succeeded
 		return comment, page, domain, domainUser, nil
 	}
+}
+
+// commentModerate verifies the user is allowed to moderate a comment (specified by its ID) and updates it
+func commentModerate(commentUUID strfmt.UUID, user *data.User, pending, approve bool) middleware.Responder {
+	// Find the comment and related objects
+	comment, page, _, domainUser, r := commentGetCommentPageDomainUser(commentUUID, &user.ID)
+	if r != nil {
+		return r
+	}
+
+	// Verify the user is a domain moderator
+	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+		return r
+	}
+
+	// Determine the pending reason (if pending)
+	reason := ""
+	if pending {
+		reason = fmt.Sprintf("Set to pending by %s <%s>", user.Name, user.Email)
+	}
+
+	// Update the comment's state in the database
+	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, pending, approve, reason); err != nil {
+		return respServiceError(err)
+	}
+
+	// Notify websocket subscribers
+	commentWebSocketNotify(page, comment, "update")
+
+	// Succeeded
+	return nil
+}
+
+// commentWebSocketNotify notifies websocket subscribers about a change in the given comment, in background
+func commentWebSocketNotify(page *data.DomainPage, comment *data.Comment, action string) {
+	go func() {
+		// Postpone the update a bit to let the frontend finish the API call
+		time.Sleep(500 * time.Millisecond)
+		svc.TheWebSocketsService.Send(&page.DomainID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, action)
+	}()
 }

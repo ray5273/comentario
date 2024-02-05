@@ -16,13 +16,6 @@ const (
 	wsMaxMessageSize = 2999                  // Maximum allowed incoming/outgoing message size. Must accommodate a complete wsMsgPayload
 )
 
-type WebSocketCommentAction string
-
-const (
-	WSCommentActionNew    WebSocketCommentAction = "new"
-	WSCommentActionUpdate WebSocketCommentAction = "update"
-)
-
 // TheWebSocketsService is a global WebSocketsService implementation
 var TheWebSocketsService WebSocketsService = &webSocketsService{
 	clients:    make(map[*wsClient]bool),
@@ -39,7 +32,7 @@ type WebSocketsService interface {
 	// Init the service
 	Init() error
 	// Send a message to relevant clients
-	Send(domainID, commentID, parentCommentID *uuid.UUID, path string, action WebSocketCommentAction)
+	Send(domainID, commentID, parentCommentID *uuid.UUID, path string, action string)
 	// Shutdown the service
 	Shutdown()
 }
@@ -48,11 +41,11 @@ type WebSocketsService interface {
 
 // wsMsgPayload is the WebSocket message payload
 type wsMsgPayload struct {
-	DomainID        uuid.UUID              `json:"domain"`        // ID of the domain the message is for
-	Path            string                 `json:"path"`          // Path on the domain
-	CommentID       *uuid.UUID             `json:"comment"`       // Optional ID of the comment (outgoing messages only)
-	ParentCommentID *uuid.UUID             `json:"parentComment"` // Optional ID of the parent comment (outgoing messages only)
-	Action          WebSocketCommentAction `json:"action"`        // Optional action (outgoing messages only)
+	DomainID        uuid.UUID  `json:"domain"`        // ID of the domain the message is for
+	Path            string     `json:"path"`          // Path on the domain
+	CommentID       *uuid.UUID `json:"comment"`       // Optional ID of the comment (outgoing messages only)
+	ParentCommentID *uuid.UUID `json:"parentComment"` // Optional ID of the parent comment (outgoing messages only)
+	Action          string     `json:"action"`        // Optional action (outgoing messages only)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -84,7 +77,7 @@ func (svc *webSocketsService) Init() error {
 	return nil
 }
 
-func (svc *webSocketsService) Send(domainID, commentID, parentCommentID *uuid.UUID, path string, action WebSocketCommentAction) {
+func (svc *webSocketsService) Send(domainID, commentID, parentCommentID *uuid.UUID, path string, action string) {
 	logger.Debugf("webSocketsService.Send(%s, %s, %s, %q, %q)", domainID, commentID, parentCommentID, path, action)
 	svc.send <- &wsMsgPayload{
 		DomainID:        *domainID,

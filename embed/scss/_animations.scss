@@ -32,6 +32,10 @@ $animation-duration: 250ms;
     animation: comentario-bg-highlight-animation 5s ease forwards 1;
 }
 
+.comentario-bg-blink {
+    animation: comentario-bg-blink-animation 2s ease forwards 1;
+}
+
 @keyframes comentario-expand-animation {
     from {
         opacity: 0;
@@ -58,5 +62,11 @@ $animation-duration: 250ms;
     0%   { background-color: transparent; }
     10%  { background-color: $indigo-2; }
     50%  { background-color: $indigo-2; }
+    100% { background-color: transparent; }
+}
+
+@keyframes comentario-bg-blink-animation {
+    0%   { background-color: transparent; }
+    50%  { background-color: $yellow-3; }
     100% { background-color: transparent; }
 }

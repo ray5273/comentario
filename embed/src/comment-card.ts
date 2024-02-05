@@ -153,6 +153,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     }
 
     /**
+     * Play a short animation on the card background to indicate it's been updated.
+     */
+    blink() {
+        this.eCardSelf?.classes('bg-blink').animated(c => c.noClasses('bg-blink'));
+    }
+
+    /**
      * Update comment controls according to the related comment's properties.
      */
     update() {
