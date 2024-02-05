@@ -169,6 +169,7 @@ context('Domain Properties page', () => {
 
             // Check option defaults
             cy.get('#opt-auto-init')   .as('optAutoInit')   .should('be.visible').and('be.checked');
+            cy.get('#opt-live-update') .as('optLiveUpdate') .should('be.visible').and('be.checked');
             cy.get('#opt-no-fonts')    .as('optNoFonts')    .should('be.visible').and('not.be.checked');
             cy.get('#opt-no-css')      .as('optNoCss')      .should('be.visible').and('not.be.checked');
             cy.get('#opt-css-override').as('optCssOverride').should('be.visible').and('have.value', '').and('be.enabled');
@@ -180,6 +181,11 @@ context('Domain Properties page', () => {
             cy.get('@optAutoInit').clickLabel().should('not.be.checked');
             checkSnippet(' auto-init="false"');
             cy.get('@optAutoInit').clickLabel();
+            checkSnippet('');
+            // -- live-update
+            cy.get('@optLiveUpdate').clickLabel().should('not.be.checked');
+            checkSnippet(' live-update="false"');
+            cy.get('@optLiveUpdate').clickLabel();
             checkSnippet('');
             // -- no-fonts
             cy.get('@optNoFonts').clickLabel().should('be.checked');
@@ -211,11 +217,12 @@ context('Domain Properties page', () => {
 
             // Multiple options as once
             cy.get('@optAutoInit').clickLabel();
+            cy.get('@optLiveUpdate').clickLabel();
             cy.get('@optNoFonts').clickLabel();
             cy.get('@optCssOverride').setValue('https://whatever.org/x.css');
             cy.get('@optMaxLevel').setValue('42');
             cy.get('@optPageId').setValue('/path/1');
-            checkSnippet(' auto-init="false" no-fonts="true" css-override="https://whatever.org/x.css" max-level="42" page-id="/path/1"');
+            checkSnippet(' auto-init="false" live-update="false" no-fonts="true" css-override="https://whatever.org/x.css" max-level="42" page-id="/path/1"');
         });
 
         it('shows properties for SSO-enabled domain', () => {

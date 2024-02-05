@@ -18,6 +18,7 @@ export class DomainInstallComponent implements OnInit {
 
     readonly form = this.fb.nonNullable.group({
         autoInit:    true,
+        liveUpdate:  true,
         noFonts:     false,
         noCss:       false,
         cssOverride: ['', [XtraValidators.url(false)]],
@@ -43,6 +44,9 @@ export class DomainInstallComponent implements OnInit {
 
         if (!val.autoInit) {
             opts += ' auto-init="false"';
+        }
+        if (!val.liveUpdate) {
+            opts += ' live-update="false"';
         }
         if (val.noFonts) {
             opts += ' no-fonts="true"';

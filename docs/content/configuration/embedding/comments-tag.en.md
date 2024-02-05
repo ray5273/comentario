@@ -32,6 +32,7 @@ Comentario recognises the following tag attributes:
 |----------------|--------------------------------------------------------------------------------|---------------|
 | `auto-init`    | Whether to automatically initialise Comentario                                 | `true`        |
 | `css-override` | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |               |
+| `live-update`  | Set to `false` to disable live updates of comments on the page                 | `true`        |
 | `max-level`    | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`          |
 | `no-fonts`     | Set to `true` to avoid applying default Comentario fonts                       | `false`       |
 | `page-id`      | Overrides the path (URL) of the current page                                   |               |
@@ -42,6 +43,7 @@ Example of a customised `<comentario-comments>` tag:
 ```html
 <comentario-comments auto-init="false" 
                      css-override="https://example.com/custom.css"
+                     live-update="false"
                      max-level="5"
                      no-fonts="true" 
                      page-id="/blog/post/123"></comentario-comments>
