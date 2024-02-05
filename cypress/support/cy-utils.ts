@@ -128,6 +128,11 @@ export const USERS = {
     johnDoeSso:     new User({isAnonymous: false, isSuper: false, id: '' /* Only known after first login */,  email: 'john.doe.sso@comentario.app', name: 'John Doe'}),
 };
 
+/** Predefined cookie names. */
+export const COOKIES = {
+    embedCommenterSession: 'comentario_commenter_session',
+};
+
 export enum DYN_CONFIG_ITEMS {
     authSignupConfirmCommenter             = 'auth.signup.confirm.commenter',
     authSignupConfirmUser                  = 'auth.signup.confirm.user',

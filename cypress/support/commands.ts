@@ -1,5 +1,5 @@
 import JQueryWithSelector = Cypress.JQueryWithSelector;
-import { PATHS } from './cy-utils';
+import { COOKIES, DOMAINS, PATHS, TEST_PATHS } from './cy-utils';
 import CommentButton = Cypress.CommentButton;
 
 // @ts-ignore
@@ -487,6 +487,20 @@ Cypress.Commands.add(
             .type('{backspace}').isValid(); // 63 is good enough
     });
 
+Cypress.Commands.add(
+    'commentAddViaApi',
+    {prevSubject: false},
+    (host: string, path: string, parentId: string | null | undefined, markdown: string) =>
+        // Try to fetch the user session cookie
+        cy.getCookie(COOKIES.embedCommenterSession)
+            // Then issue an API request
+            .then(token => cy.request({
+                method: 'PUT',
+                url:    '/api/embed/comments',
+                body:   {host, path, parentId, markdown, anonymous: !token?.value},
+                headers: token ? {'X-User-Session': token.value} : undefined,
+            })));
+
 Cypress.Commands.add('testSiteVisit', {prevSubject: false}, (path: string) =>
     cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
 
@@ -530,7 +544,7 @@ Cypress.Commands.add(
 Cypress.Commands.add(
     'testSiteLoginViaApi',
     {prevSubject: false},
-    (creds: Cypress.CredentialsWithName, path: string, options?: Cypress.TestSiteLoginOptions) => {
+    (creds: Cypress.CredentialsWithName, path?: string, options?: Cypress.TestSiteLoginOptions) => {
         cy.request<{sessionToken: string; principal: Cypress.CredentialsWithName}>({
                 method:           'POST',
                 url:              '/api/embed/auth/login',
@@ -545,21 +559,23 @@ Cypress.Commands.add(
                     expect(resp.body.principal.name).to.eq(creds.name);
 
                     // Store the session token in a cookie
-                    cy.setCookie('comentario_commenter_session', resp.body.sessionToken);
+                    cy.setCookie(COOKIES.embedCommenterSession, resp.body.sessionToken);
                 }
             });
 
-        // Navigate to the page
-        cy.testSiteVisit(path);
+        // Navigate to the page, if given
+        if (path) {
+            cy.testSiteVisit(path);
 
-        // Verify the outcome
-        if (options?.verify ?? true) {
-            if (options?.succeeds ?? true) {
-                cy.testSiteIsLoggedIn(creds.name);
-            } else if (!options?.errMessage) {
-                throw new Error('cy.testSiteLoginViaApi(): options.errMessage is not specified');
-            } else {
-                cy.testSiteCheckMessage(options.errMessage);
+            // Verify the outcome
+            if (options?.verify ?? true) {
+                if (options?.succeeds ?? true) {
+                    cy.testSiteIsLoggedIn(creds.name);
+                } else if (!options?.errMessage) {
+                    throw new Error('cy.testSiteLoginViaApi(): options.errMessage is not specified');
+                } else {
+                    cy.testSiteCheckMessage(options.errMessage);
+                }
             }
         }
     });

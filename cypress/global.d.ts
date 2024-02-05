@@ -291,6 +291,16 @@ declare namespace Cypress {
          */
         verifyPasswordInputValidation(options?: {required?: boolean, strong?: boolean}): Chainable<JQueryWithSelector>;
 
+        /**
+         * Submit a new comment via an API call. If the user is logged in (i.e. the commenter session cookie exists),
+         * the comment is submitted as that user, otherwise anonymously.
+         * @param host Host to submit comment on.
+         * @param path Path on the host.
+         * @param parentId Optional parent comment ID. If null/undefined, a root comment will be added.
+         * @param markdown Comment text in markdown.
+         */
+        commentAddViaApi(host: string, path: string, parentId: string | null | undefined, markdown: string): Chainable<Response<any>>;
+
         /***************************************************************************************************************
           Test site
         ***************************************************************************************************************/
@@ -318,10 +328,10 @@ declare namespace Cypress {
         /**
          * Login as provided user into embedded Comentario directly, via an API call.
          * @param creds Credentials to login with
-         * @param path Path to go to after the login.
-         * @param options Optional login options.
+         * @param path Path to go to after the login. If not provided, no navigation takes places.
+         * @param options Optional login options. Ignored if path is not given.
          */
-        testSiteLoginViaApi(creds: CredentialsWithName, path: string, options?: TestSiteLoginOptions): Chainable<void>;
+        testSiteLoginViaApi(creds: CredentialsWithName, path?: string, options?: TestSiteLoginOptions): Chainable<void>;
 
         /**
          * Login into the embedded Comentario (test site) using SSO, via the UI.
