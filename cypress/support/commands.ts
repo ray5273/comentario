@@ -1,6 +1,6 @@
 import JQueryWithSelector = Cypress.JQueryWithSelector;
-import { COOKIES, DOMAINS, PATHS, TEST_PATHS } from './cy-utils';
 import CommentButton = Cypress.CommentButton;
+import { COOKIES, PATHS } from './cy-utils';
 
 // @ts-ignore
 const { config, $ } = Cypress;
@@ -39,7 +39,10 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
                 upvoted:   $toolbar.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'),
                 downvoted: $toolbar.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'),
                 sticky:    !!$toolbar.find('.comentario-is-sticky').length,
-                buttons:   $toolbar.find('.comentario-btn').map((_, e: HTMLButtonElement) => e.title as CommentButton).get(),
+                buttons:   $toolbar.find('.comentario-btn')
+                               // Only keep visible buttons
+                               .filter((_, e) => !e.classList.contains('comentario-hidden'))
+                               .map((_, e: HTMLButtonElement) => e.title as CommentButton).get(),
                 pending:   $self.hasClass('comentario-pending'),
             };
 
@@ -495,10 +498,65 @@ Cypress.Commands.add(
         cy.getCookie(COOKIES.embedCommenterSession)
             // Then issue an API request
             .then(token => cy.request({
-                method: 'PUT',
-                url:    '/api/embed/comments',
-                body:   {host, path, parentId, markdown, anonymous: !token?.value},
+                method:  'PUT',
+                url:     '/api/embed/comments',
+                body:    {host, path, parentId, markdown, anonymous: !token?.value},
                 headers: token ? {'X-User-Session': token.value} : undefined,
+            })));
+
+Cypress.Commands.add(
+    'commentDeleteViaApi',
+    {prevSubject: false},
+    (id: string) =>
+        // Fetch the user session cookie
+        cy.getCookie(COOKIES.embedCommenterSession)
+            // Then issue an API request
+            .then(token => cy.request({
+                method:  'DELETE',
+                url:     `/api/embed/comments/${id}`,
+                headers: {'X-User-Session': token?.value},
+            })));
+
+Cypress.Commands.add(
+    'commentModerateViaApi',
+    {prevSubject: false},
+    (id: string, approve: boolean) =>
+        // Fetch the user session cookie
+        cy.getCookie(COOKIES.embedCommenterSession)
+            // Then issue an API request
+            .then(token => cy.request({
+                method:  'POST',
+                url:     `/api/embed/comments/${id}/moderate`,
+                body:    {approve},
+                headers: {'X-User-Session': token?.value},
+            })));
+
+Cypress.Commands.add(
+    'commentStickyViaApi',
+    {prevSubject: false},
+    (id: string, sticky: boolean) =>
+        // Fetch the user session cookie
+        cy.getCookie(COOKIES.embedCommenterSession)
+            // Then issue an API request
+            .then(token => cy.request({
+                method:  'POST',
+                url:     `/api/embed/comments/${id}/sticky`,
+                body:    {sticky},
+                headers: {'X-User-Session': token?.value},
+            })));
+
+Cypress.Commands.add(
+    'commentVoteViaApi',
+    {prevSubject: false},
+    (id: string, direction: -1 | 0 | 1) =>
+        // Fetch the user session cookie
+        cy.getCookie(COOKIES.embedCommenterSession)
+            // Then issue an API request
+            .then(token => cy.request({
+                method:  'POST',
+                url:     `/api/embed/comments/${id}/vote`,
+                body:    {direction},
+                headers: {'X-User-Session': token?.value},
             })));
 
 Cypress.Commands.add('testSiteVisit', {prevSubject: false}, (path: string) =>

@@ -301,6 +301,33 @@ declare namespace Cypress {
          */
         commentAddViaApi(host: string, path: string, parentId: string | null | undefined, markdown: string): Chainable<Response<any>>;
 
+        /**
+         * Delete an existing comment via an API call. The user must be logged in.
+         * @param id Comment ID to delete.
+         */
+        commentDeleteViaApi(id: string): Chainable<Response<void>>;
+
+        /**
+         * Moderate the given comment via an API call. The user must be logged in as a moderator.
+         * @param id Comment ID to moderate.
+         * @param approve Whether to approve (true) or reject (false) the comment.
+         */
+        commentModerateViaApi(id: string, approve: boolean): Chainable<Response<void>>;
+
+        /**
+         * Sticky or unsticky the given comment via an API call. The user must be logged in as a moderator.
+         * @param id Comment ID to (un)sticky.
+         * @param sticky Whether to make the comment sticky.
+         */
+        commentStickyViaApi(id: string, sticky: boolean): Chainable<Response<void>>;
+
+        /**
+         * Vote for the given comment via an API call. The user must be logged in.
+         * @param id Comment ID to vote for.
+         * @param direction Vote direction.
+         */
+        commentVoteViaApi(id: string, direction: -1 | 0 | 1): Chainable<Response<void>>;
+
         /***************************************************************************************************************
           Test site
         ***************************************************************************************************************/

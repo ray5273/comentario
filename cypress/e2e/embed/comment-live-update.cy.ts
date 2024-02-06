@@ -94,7 +94,7 @@ context('Live comment update', () => {
 
         // Add an anonymous comment
         cy.clearCookie(COOKIES.embedCommenterSession);
-        cy.commentAddViaApi(host, pagePath, null, 'Bar comment');
+        cy.commentAddViaApi(host, pagePath, null, 'Bar comment').its('body.comment.id').as('anonCommentId');
         cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -115,6 +115,103 @@ context('Live comment update', () => {
                   score: 0
                   sticky: false
                   pending: true
+                `);
+
+        // Delete the first comment
+        cy.testSiteLoginViaApi(USERS.king);
+        cy.commentDeleteViaApi('0b5e258b-ecc6-4a9c-9f31-f775d88a258b');
+        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+            .should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: (deleted by a moderator) # Text is gone
+                  score: null                    # No score anymore
+                  sticky: false                  # Not sticky anymore
+                  pending: false
+                  children:
+                  - author: Engineer King
+                    html: <p>Foo comment</p>
+                    score: 0
+                    sticky: false
+                    pending: false
+                - author: Anonymous
+                  html: <p>Bar comment</p>
+                  score: 0
+                  sticky: false
+                  pending: true
+                `);
+
+        // Approve the last added comment
+        cy.get<string>('@anonCommentId').then(id => cy.commentModerateViaApi(id, true));
+        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+            .should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: (deleted by a moderator)
+                  score: null
+                  sticky: false
+                  pending: false
+                  children:
+                  - author: Engineer King
+                    html: <p>Foo comment</p>
+                    score: 0
+                    sticky: false
+                    pending: false
+                - author: Anonymous
+                  html: <p>Bar comment</p>
+                  score: 0
+                  sticky: false
+                  pending: false  # Not pending anymore
+                `);
+
+        // Vote for the last comment
+        cy.get<string>('@anonCommentId').then(id => cy.commentVoteViaApi(id, -1));
+        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+            .should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: (deleted by a moderator)
+                  score: null
+                  sticky: false
+                  pending: false
+                  children:
+                  - author: Engineer King
+                    html: <p>Foo comment</p>
+                    score: 0
+                    sticky: false
+                    pending: false
+                - author: Anonymous
+                  html: <p>Bar comment</p>
+                  score: -1  # Score is updated
+                  sticky: false
+                  pending: false
+                `);
+
+        // Sticky the last comment
+        cy.get<string>('@anonCommentId').then(id => cy.commentStickyViaApi(id, true));
+        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+            .should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: (deleted by a moderator)
+                  score: null
+                  sticky: false
+                  pending: false
+                  children:
+                  - author: Engineer King
+                    html: <p>Foo comment</p>
+                    score: 0
+                    sticky: false
+                    pending: false
+                - author: Anonymous
+                  html: <p>Bar comment</p>
+                  score: -1
+                  sticky: true # It's sticky now
+                  pending: false
                 `);
     });
 });

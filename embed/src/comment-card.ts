@@ -92,6 +92,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     private btnSticky?: Wrap<HTMLButtonElement>;
     private btnUpvote?: Wrap<HTMLButtonElement>;
     private collapsed = false;
+    private isModerator = false;
 
     constructor(
         private _comment: CommentWithCard,
@@ -210,6 +211,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         } else if (!this.ePendingBadge) {
             this.eNameWrap?.append(this.ePendingBadge = UIToolkit.badge('Pending', 'badge-pending'));
         }
+
+        // Sticky
+        const sticky = this._comment.isSticky;
+        this.btnSticky
+            ?.attr({title: sticky ? (this.isModerator ? 'Unsticky' : 'Sticky comment') : 'Sticky'})
+            .setClasses(sticky, 'is-sticky')
+            .setClasses(!this.isModerator && !sticky, 'hidden');
 
         // Moderation notice
         let mn: string | undefined;
@@ -336,7 +344,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             return null;
         }
         const toolbar = UIToolkit.div('toolbar');
-        const isModerator = ctx.principal && (ctx.principal.isSuperuser || ctx.principal.isOwner || ctx.principal.isModerator);
+        this.isModerator = !!ctx.principal && (ctx.principal.isSuperuser || ctx.principal.isOwner || ctx.principal.isModerator);
         const ownComment = ctx.principal && this._comment.userCreated === ctx.principal.id;
 
         // Left- and right-hand side of the toolbar
@@ -359,33 +367,25 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         }
 
         // Approve/reject buttons
-        if (isModerator && this._comment.isPending) {
+        if (this.isModerator && this._comment.isPending) {
             this.btnApprove = UIToolkit.iconButton('check', 'Approve', () => ctx.onModerate(this, true),  'btn-link', 'text-success').appendTo(right);
             this.btnReject  = UIToolkit.iconButton('times', 'Reject',  () => ctx.onModerate(this, false), 'btn-link', 'text-warning').appendTo(right);
         }
 
-        // Sticky toggle button (top-level comments only). The sticky status can only be changed after a full tree
-        // reload
-        const isSticky = this._comment.isSticky;
-        if (!this._comment.parentId && (isSticky || isModerator)) {
-            this.btnSticky = UIToolkit.iconButton(
-                'star',
-                isSticky ? (isModerator ? 'Unsticky' : 'Sticky comment') : 'Sticky',
-                () => ctx.onSticky(this),
-                'btn-link',
-            )
-                .setClasses(isSticky, 'is-sticky')
-                .attr({disabled: isModerator ? null : 'true'})
+        // Sticky toggle button (top-level comments only)
+        if (!this._comment.parentId) {
+            this.btnSticky = UIToolkit.iconButton('star', '', () => ctx.onSticky(this), 'btn-link')
+                .attr({disabled: this.isModerator ? null : 'true'})
                 .appendTo(right);
         }
 
         // Edit button: when enabled
-        if (isModerator && ctx.modCommentEditing || ownComment && ctx.ownCommentEditing) {
+        if (this.isModerator && ctx.modCommentEditing || ownComment && ctx.ownCommentEditing) {
             this.btnEdit = UIToolkit.iconButton('pencil', 'Edit', () => ctx.onEdit(this), 'btn-link').appendTo(right);
         }
 
         // Delete button: when enabled
-        if (isModerator && ctx.modCommentDeletion || ownComment && ctx.ownCommentDeletion) {
+        if (this.isModerator && ctx.modCommentDeletion || ownComment && ctx.ownCommentDeletion) {
             this.btnDelete = UIToolkit.iconButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'btn-link', 'text-danger').appendTo(right);
         }
         return toolbar;
