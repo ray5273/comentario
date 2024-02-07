@@ -80,6 +80,7 @@ export const TEST_PATHS = {
         cssOverrideFalse: '/attr/css-override-false/',
         pageId:           '/attr/page-id/',
         maxLevel:         '/attr/max-level/',
+        noLiveUpdate:     '/attr/live-update/',
     },
 };
 

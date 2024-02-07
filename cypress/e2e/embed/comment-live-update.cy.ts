@@ -214,4 +214,27 @@ context('Live comment update', () => {
                   pending: false
                 `);
     });
+
+    it('doesn\'t update comments when disabled', () => {
+        // Navigate to the page that has live update disabled
+        cy.testSiteLoginViaApi(USERS.ace, TEST_PATHS.attr.noLiveUpdate);
+        cy.commentTree('id').should('be.empty');
+
+        // Submit a comment via API
+        cy.commentAddViaApi(host, TEST_PATHS.attr.noLiveUpdate, null, 'Phew!');
+
+        // Wait 2 seconds and there's still no comment
+        cy.wait(2000);
+        cy.commentTree('id').should('be.empty');
+
+        // Reload and the comment is there
+        cy.reload();
+        cy.commentTree('html', 'author')
+            .should('yamlMatch',
+                // language=yaml
+                `
+                - author: Captain Ace
+                  html: <p>Phew!</p>
+                `);
+    });
 });
