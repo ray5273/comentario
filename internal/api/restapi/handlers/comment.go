@@ -267,9 +267,11 @@ func commentModerate(commentUUID strfmt.UUID, user *data.User, pending, approve 
 
 // commentWebSocketNotify notifies websocket subscribers about a change in the given comment, in background
 func commentWebSocketNotify(page *data.DomainPage, comment *data.Comment, action string) {
-	go func() {
-		// Postpone the update a bit to let the frontend finish the API call
-		time.Sleep(500 * time.Millisecond)
-		svc.TheWebSocketsService.Send(&page.DomainID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, action)
-	}()
+	if svc.TheWebSocketsService.Active() {
+		go func() {
+			// Postpone the update a bit to let the client finish the API call
+			time.Sleep(500 * time.Millisecond)
+			svc.TheWebSocketsService.Send(&page.DomainID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, action)
+		}()
+	}
 }

@@ -93,9 +93,14 @@ func (m *manager) Run() {
 		logger.Fatalf("Failed to initialise cleanup service: %v", err)
 	}
 
-	// Start the websockets service
-	if err := TheWebSocketsService.Init(); err != nil {
-		logger.Fatalf("Failed to initialise websockets service: %v", err)
+	// Start the websockets service, if enabled
+	if config.CLIFlags.DisableLiveUpdate {
+		logger.Info("Live update is disabled")
+	} else {
+		logger.Info("Live update is enabled, starting WebSockets service")
+		if err := TheWebSocketsService.Run(); err != nil {
+			logger.Fatalf("Failed to start websockets service: %v", err)
+		}
 	}
 }
 

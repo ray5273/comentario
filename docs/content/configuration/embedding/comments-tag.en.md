@@ -38,7 +38,9 @@ Comentario recognises the following tag attributes:
 | `page-id`      | Overrides the path (URL) of the current page                                   |               |
 {{< /table >}}
 
-Example of a customised `<comentario-comments>` tag:
+**NB:** it's recommended to set `live-update` to `false` when live update is disabled [globally on the server](/configuration/backend/static) (see `--no-live-update`) to reduce network utilization and unburden the browser.
+
+Below is an example of a customised `<comentario-comments>` tag:
 
 ```html
 <comentario-comments auto-init="false" 

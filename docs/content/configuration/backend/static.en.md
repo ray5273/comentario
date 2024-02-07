@@ -67,5 +67,7 @@ Below is a list of available command-line options, with their environment equiva
 | `--log-full-ips`            | Log IP addresses in full                                              | `LOG_FULL_IPS`       |                               |
 | `--home-content-url=VALUE`  | URL of a HTML page to display on homepage                             | `HOME_CONTENT_URL`   |                               |
 | `--gitlab-url=VALUE`        | Custom GitLab URL for authentication                                  | `$GITLAB_URL`        |                               |
+| `--no-live-update`          | Disable live updates via WebSockets                                   | `$NO_LIVE_UPDATE`    |                               |
+| `--ws-max-clients=VALUE`    | Maximum number of WebSocket clients                                   | `$WS_MAX_CLIENTS`    | `10000`                       |
 | `--e2e`                     | Start server in end-to-end testing mode                               |                      |                               |
 {{< /table >}}

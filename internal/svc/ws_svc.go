@@ -2,10 +2,14 @@ package svc
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
+	"gitlab.com/comentario/comentario/internal/config"
+	"net/http"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -27,10 +31,12 @@ var TheWebSocketsService WebSocketsService = &webSocketsService{
 
 // WebSocketsService is a service interface for managing WebSocket subscriptions
 type WebSocketsService interface {
-	// Add a new WebSocket subscription
-	Add(conn *websocket.Conn)
-	// Init the service
-	Init() error
+	// Active returns whether the service is running
+	Active() bool
+	// Add a new WebSocket subscription by upgrading the provided HTTP request
+	Add(w http.ResponseWriter, r *http.Request) error
+	// Run the service
+	Run() error
 	// Send a message to relevant clients
 	Send(domainID, commentID, parentCommentID *uuid.UUID, path string, action string)
 	// Shutdown the service
@@ -52,6 +58,8 @@ type wsMsgPayload struct {
 
 // webSocketsService is a blueprint WebSocketsService implementation
 type webSocketsService struct {
+	active     bool               // Whether the service has been started
+	numClients atomic.Int32       // Number of connected clients
 	clients    map[*wsClient]bool // Map of all registered clients
 	send       chan *wsMsgPayload // Channel accepting messages for the clients
 	register   chan *wsClient     // Register requests from the clients
@@ -59,7 +67,40 @@ type webSocketsService struct {
 	quit       chan bool          // Channel for shutting down the service
 }
 
-func (svc *webSocketsService) Add(conn *websocket.Conn) {
+func (svc *webSocketsService) Active() bool {
+	return svc.active
+}
+
+func (svc *webSocketsService) Add(w http.ResponseWriter, r *http.Request) error {
+	logger.Debug("webSocketsService.Add()")
+
+	// Make sure the service is running
+	if !svc.active {
+		return errors.New("cannot Add: service isn't active")
+	}
+
+	// Make sure the maximum number of clients hasn't been exceeded
+	if svc.numClients.Load() >= int32(config.CLIFlags.WSMaxClients) {
+		return fmt.Errorf("cannot Add: maximum number of clients (%d) is reached", config.CLIFlags.WSMaxClients)
+	}
+
+	// Upgrade the request to a websocket
+	// Configure a protocol upgrader
+	var upgrader = websocket.Upgrader{
+		ReadBufferSize:  1024,
+		WriteBufferSize: 1024,
+		// We have to allow any origin so that webpages can initiate a websocket subscriptions
+		CheckOrigin: func(*http.Request) bool { return true },
+	}
+	conn, err := upgrader.Upgrade(w, r, nil)
+	if err != nil {
+		return fmt.Errorf("upgrade failed: %v", err)
+	}
+
+	// Increment the number of clients BEFORE sending the new client over the channel (because its handling may not
+	// occur in a while)
+	svc.numClients.Add(1)
+
 	// Register a new client
 	c := &wsClient{wss: svc, conn: conn, send: make(chan *wsMsgPayload, 100)}
 	svc.register <- c
@@ -67,18 +108,30 @@ func (svc *webSocketsService) Add(conn *websocket.Conn) {
 	// Start the client's reader and writer loops in the background
 	go c.readMessages()
 	go c.writeMessages()
+
+	// Succeeded
+	return nil
 }
 
-func (svc *webSocketsService) Init() error {
-	logger.Debugf("webSocketsService: initialising")
+func (svc *webSocketsService) Run() error {
+	logger.Debug("webSocketsService.Run()")
 
 	// Run the worker routine in the background
+	svc.active = true
 	go svc.run()
 	return nil
 }
 
 func (svc *webSocketsService) Send(domainID, commentID, parentCommentID *uuid.UUID, path string, action string) {
 	logger.Debugf("webSocketsService.Send(%s, %s, %s, %q, %q)", domainID, commentID, parentCommentID, path, action)
+
+	// Make sure the service is running
+	if !svc.active {
+		logger.Error("cannot Send: webSocketsService isn't active")
+		return
+	}
+
+	// Push a new message to the send channel
 	svc.send <- &wsMsgPayload{
 		DomainID:        *domainID,
 		CommentID:       commentID,
@@ -90,7 +143,10 @@ func (svc *webSocketsService) Send(domainID, commentID, parentCommentID *uuid.UU
 
 func (svc *webSocketsService) Shutdown() {
 	logger.Debugf("webSocketsService.Shutdown()")
-	close(svc.quit)
+	if svc.active {
+		svc.active = false
+		close(svc.quit)
+	}
 }
 
 // addClient adds a new client
@@ -108,6 +164,7 @@ func (svc *webSocketsService) removeClient(c *wsClient) {
 
 	// Remove the client from the map
 	delete(svc.clients, c)
+	svc.numClients.Add(-1)
 }
 
 // run is the main worker routine of the service

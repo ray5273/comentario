@@ -39,19 +39,27 @@ export class WebSocketClient {
         this.ws = new WebSocket(Utils.joinUrl(this.baseUrl, 'ws/comments'));
 
         // Subscribe to the current domain/page whenever the connection is ready
-        const msg: WebSocketMessage = {
-            domain: this.domainId,
-            path:   this.pagePath,
-        };
-        this.ws.onopen    = () => this.ws?.send(JSON.stringify(msg));
+        this.ws.onopen    = () => this.handleOpen();
         this.ws.onclose   = e => this.handleClose(e);
         this.ws.onmessage = e => this.handleIncoming(e.data);
         this.ws.onerror   = e => this.handleError(e);
 
-        // Double the next connection delay, maximising it at one minute
-        if (this.connectDelay < 60_000) {
+        // Double the next connection delay, maximising it at roughly four minutes
+        if (this.connectDelay < 256_000) {
             this.connectDelay *= 2;
         }
+    }
+
+    private handleOpen() {
+        // Reset the delay to one second on successful connection
+        this.connectDelay = 1000;
+
+        // Send page subscription params to the server
+        const msg: WebSocketMessage = {
+            domain: this.domainId,
+            path:   this.pagePath,
+        };
+        this.ws?.send(JSON.stringify(msg));
     }
 
     private handleClose(e: CloseEvent) {

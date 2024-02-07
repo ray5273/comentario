@@ -6,7 +6,6 @@ import (
 	"github.com/go-openapi/runtime"
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
-	"github.com/gorilla/websocket"
 	"github.com/justinas/alice"
 	rh "gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -275,15 +274,6 @@ func staticHandler(next http.Handler) http.Handler {
 }
 
 func webSocketsHandler(next http.Handler) http.Handler {
-	// Configure a protocol upgrader
-	var upgrader = websocket.Upgrader{
-		ReadBufferSize:  1024,
-		WriteBufferSize: 1024,
-	}
-
-	// We have to allow any origin so that webpages can initiate a websocket subscriptions
-	upgrader.CheckOrigin = func(*http.Request) bool { return true }
-
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if path is a web socket root path
 		if ok, p := config.PathOfBaseURL(r.URL.Path); ok && strings.HasPrefix(p, util.WebSocketsPath) {
@@ -293,18 +283,17 @@ func webSocketsHandler(next http.Handler) http.Handler {
 				return
 			}
 
-			// For now, we only support websockets subscription on the comment list
+			// Ignore if websockets aren't enabled. For now, we only support websockets subscription on the comment list
 			if strings.HasPrefix(p, util.WebSocketsPath+"comments") {
-				// Upgrade the request to a websocket
-				c, err := upgrader.Upgrade(w, r, nil)
-				if err != nil {
-					logger.Errorf("Failed to upgrade request to websocket: %v", err)
-					http.Error(w, err.Error(), http.StatusInternalServerError)
-					return
-				}
+				// Hand over to the websockets service
+				if err := svc.TheWebSocketsService.Add(w, r); err != nil {
+					// Failed to upgrade or accept
+					logger.Debugf("Failed to accept websocket connection: %v", err)
 
-				// Register a new client to the websocket service
-				svc.TheWebSocketsService.Add(c)
+					// Respond with "Too Many Requests" for simplicity (status isn't readable on the client due to
+					// security considerations anyway)
+					http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+				}
 				return
 			}
 		}
