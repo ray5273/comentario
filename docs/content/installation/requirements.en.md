@@ -33,10 +33,17 @@ Please note, however, that it's usually a good idea to use the latest available 
 
 ## Comentario server
 
-The Comentario server, or the *backend*, currently supports (presumably all) **Linux x86_64** flavours.
+The Comentario server, or the *backend*, currently supports the following architectures:
+* `linux_amd64` (Linux x86_64, 64-bit).
+* `linux_arm64` (Linux AArch64/ARMv8, 64-bit).
+* `linux_armv6` (Linux ARMv6, 32-bit).
 
-The official [Docker builds](/installation/docker-image) are based on Alpine Linux and are linked statically.
+Each of these architectures is built twice:
+* Statically linked;
+* Dynamically linked.
+
+The above flavours are assembled into a number of [binary packages](binary-package) and tarballs: see the [Releases](https://gitlab.com/comentario/comentario/-/releases) page for available artifacts.
+
+The official [Docker builds](/installation/docker-image) are based on Alpine Linux and contain a statically-linked `linux_amd64` binary.
 
 It's also possible to run Comentario on a "full-fledged" Linux variant (such as Ubuntu or Fedora), as well as to link it dynamically against `libc` or `musl` (see [](/installation/building)).
-
-Support for **Linux ARM** is planned, but we'll need to see if there's enough demand for it.
