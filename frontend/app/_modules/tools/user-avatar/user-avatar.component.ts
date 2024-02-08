@@ -1,6 +1,8 @@
 import { Component, HostBinding, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { Commenter, Configuration, Principal, User } from '../../../../generated-api';
+import { AnonymousUser } from '../../../_utils/consts';
 
 @Component({
     selector: 'app-user-avatar',
@@ -22,7 +24,11 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     updated?: number;
 
     _src?: SafeResourceUrl;
+    isAnonymous = false;
     urlOverride?: string | null;
+
+    // Icons
+    readonly faUser = faUser;
 
     constructor(
         @Inject(Configuration) private readonly API_CONFIG: Configuration,
@@ -31,7 +37,18 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
 
     @HostBinding('class')
     get classes(): string[] {
-        return [`size-${this.size.toLowerCase()}`, `user-bg-colour-${this.user?.colourIndex || 0}`];
+        // Size class
+        const c = [`size-${this.size.toLowerCase()}`];
+
+        // Anonymous user
+        if (this.isAnonymous)
+            c.push('avatar-anonymous');
+
+        // If no picture, add initial and background colour classes
+        else if (!this._src) {
+            c.push('avatar-initial', `user-bg-colour-${this.user?.colourIndex || 0}`);
+        }
+        return c;
     }
 
     /**
@@ -51,6 +68,7 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     ngOnChanges(changes: SimpleChanges): void {
         if ('user' in changes) {
             this.updateSrc();
+            this.isAnonymous = this.user?.id === AnonymousUser.id;
         }
     }
 

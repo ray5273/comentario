@@ -2,8 +2,6 @@ import { AbstractControl } from '@angular/forms';
 
 export class Utils {
 
-    static readonly ANONYMOUS_USER_ID = '00000000-0000-0000-0000-000000000000';
-
     /**
      * Enable or disable controls based on the boolean value.
      * @param enable Whether to enable controls.

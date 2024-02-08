@@ -5,7 +5,16 @@
     justify-content: center;
     align-items: center;
     overflow: hidden;
-    color: #fff;
+
+    &.avatar-anonymous {
+        color: #fff;
+        background-color: #000;
+        opacity: 0.33;
+    }
+
+    &.avatar-initial {
+        color: #fff;
+    }
 
     &.size-s {
         width: 16px;

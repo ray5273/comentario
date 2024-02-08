@@ -9,6 +9,7 @@ import { SortSelectorComponent } from '../../../sort-selector/sort-selector.comp
 import { ToolsModule } from '../../../../tools/tools.module';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { UserLinkComponent } from '../../../user-link/user-link.component';
 
 describe('CommentListComponent', () => {
 
@@ -17,7 +18,7 @@ describe('CommentListComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [CommentListComponent, MockComponents(SortSelectorComponent, SortPropertyComponent)],
+            declarations: [CommentListComponent, MockComponents(SortSelectorComponent, SortPropertyComponent, UserLinkComponent)],
             imports: [ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),

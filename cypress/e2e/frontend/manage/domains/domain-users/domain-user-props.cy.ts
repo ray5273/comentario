@@ -87,7 +87,7 @@ context('Domain User Properties', () => {
 
                     // Check comments
                     cy.get('@commentList').verifyListFooter(4, false);
-                    cy.get('@commentList').texts('.list-group-item .comment-author-name').should('arrayMatch', Array(4).fill(USERS.king.name));
+                    cy.get('@commentList').texts('.list-group-item app-user-link .user-name').should('arrayMatch', Array(4).fill(USERS.king.name));
 
                     // Click on Edit and land on the Edit user page
                     cy.get('@btnEdit').click();

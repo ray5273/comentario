@@ -94,12 +94,10 @@
                         </div>
                     }
                     <!-- Created by -->
-                    @if (page) {
-                        <div>
-                            <dt i18n>Created by</dt>
-                            <dd><app-user-link [user]="commenter" [linkRoute]="commenterRoute"/></dd>
-                        </div>
-                    }
+                    <div>
+                        <dt i18n>Created by</dt>
+                        <dd><app-user-link [user]="commenter" [linkRoute]="commenterRoute"/></dd>
+                    </div>
                     <!-- Moderated -->
                     @if (comment.moderatedTime | datetime; as v) {
                         <div>

@@ -1,4 +1,6 @@
 // Known UI paths
+import { User } from '../../generated-api';
+
 export const Paths = {
     home: '/',
 
@@ -27,3 +29,13 @@ export const Paths = {
         },
     },
 };
+
+/**
+ * The anonymous user, consistent with the predefined one in the database.
+ */
+export const AnonymousUser: User = {
+    id:            '00000000-0000-0000-0000-000000000000',
+    name:          $localize`Anonymous`,
+    systemAccount: true,
+};
+

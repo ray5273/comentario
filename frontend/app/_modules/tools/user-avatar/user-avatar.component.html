@@ -1,4 +1,7 @@
-@if (_src) {
+@if (isAnonymous) {
+    <!-- Anonymous user -->
+    <fa-icon [icon]="faUser"/>
+} @else if (_src) {
     <!-- User avatar image -->
     <img [src]="_src" alt="">
 } @else {

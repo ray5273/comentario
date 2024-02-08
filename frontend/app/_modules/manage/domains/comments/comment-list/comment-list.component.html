@@ -92,21 +92,8 @@
                     <div class="list-group-item-header row align-items-center">
                         <!-- User created and status badge -->
                         <div class="col-12 col-sm ps-0 d-flex align-items-center">
-                            <!-- If there's an existing author user -->
-                            @if (commenters.get(c.userCreated!); as cr) {
-                                <!-- Avatar -->
-                                <app-user-avatar [user]="cr" size="S"/>
-                                <!-- User link (non-anonymous and for superuser/owner) or name -->
-                                @if (cr.id !== anonUserId && domainMeta?.canManageDomain) {
-                                    <a [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id!, 'users', cr.id]"
-                                       class="ms-2 fw-bold text-truncate comment-author-name">{{ cr.name }}</a>
-                                } @else {
-                                    <div class="ms-2 fw-bold text-truncate comment-author-name">{{ cr.name }}</div>
-                                }
-                            } @else {
-                                <!-- Author doesn't exist anymore -->
-                                <i class="text-muted" i18n>(deleted user)</i>
-                            }
+                            <!-- User avatar and name -->
+                            <app-user-link [user]="commenters.get(c.userCreated!)" class="text-truncate"/>
 
                             <!-- Status badge, sm+ -->
                             <app-comment-status-badge [comment]="c" [subtle]="true" class="ms-2 d-none d-sm-inline"/>

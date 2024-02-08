@@ -8,10 +8,9 @@ import { faCheck, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons'
 import { ApiGeneralService, Comment, Commenter, DomainPage, Principal, User } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
-import { Paths } from '../../../../../_utils/consts';
+import { AnonymousUser, Paths } from '../../../../../_utils/consts';
 import { ConfirmDialogComponent } from '../../../../tools/confirm-dialog/confirm-dialog.component';
 import { CommentService } from '../../../_services/comment.service';
-import { Utils } from '../../../../../_utils/utils';
 
 @UntilDestroy()
 @Component({
@@ -102,8 +101,8 @@ export class CommentPropertiesComponent implements OnInit {
                 this.page          = r.page;
 
                 // If the comment is anonymous, imitate the anonymous user
-                if (!this.commenter && this.comment?.userCreated === Utils.ANONYMOUS_USER_ID) {
-                    this.commenter = {id: Utils.ANONYMOUS_USER_ID};
+                if (!this.commenter && this.comment?.userCreated === AnonymousUser.id) {
+                    this.commenter = AnonymousUser;
                 }
 
                 // If moderator/deleter refer to the current user, copy the principal into them
@@ -114,11 +113,21 @@ export class CommentPropertiesComponent implements OnInit {
                     this.userDeleted = this.domainMeta?.principal;
                 }
 
-                // Prepare link routes for users
+                // Prepare link routes for users (Anonymous has no domain user, so no link)
+                const isSuper = this.domainMeta?.principal?.isSuperuser;
                 if (this.commenter && this.page && this.domainMeta?.canManageDomain) {
-                    this.commenterRoute = [Paths.manage.domains, this.page.domainId!, 'users', this.commenter.id!];
+                    // If the user is Anonymous, there's no domain user, but superuser may see the user properties
+                    if (this.commenter.id === AnonymousUser.id) {
+                        if (isSuper) {
+                            this.commenterRoute = [Paths.manage.users, this.commenter.id!];
+                        }
+
+                    // Non-anonymous existing user
+                    } else {
+                        this.commenterRoute = [Paths.manage.domains, this.page.domainId!, 'users', this.commenter.id!];
+                    }
                 }
-                if (this.domainMeta?.principal?.isSuperuser) {
+                if (isSuper) {
                     if (this.userModerated) {
                         this.userModeratedRoute = [Paths.manage.users, this.userModerated.id!];
                     }

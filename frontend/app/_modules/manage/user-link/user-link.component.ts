@@ -1,6 +1,5 @@
 import { Component, Input } from '@angular/core';
 import { Commenter, Principal, User } from '../../../../generated-api';
-import { Utils } from '../../../_utils/utils';
 
 /**
  * Renders user name, accompanied with their avatar, optionally as a link.
@@ -18,7 +17,4 @@ export class UserLinkComponent {
     /** Optional route for the user. If not provided, the rendered user won't be clickable. */
     @Input()
     linkRoute?: string | string[];
-
-    /** Anonymous user ID. */
-    readonly anonUserId = Utils.ANONYMOUS_USER_ID;
 }

@@ -8,6 +8,7 @@ import { ApiGeneralService } from '../../../../../../generated-api';
 import { ToolsModule } from '../../../../tools/tools.module';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { UserLinkComponent } from '../../../user-link/user-link.component';
 
 describe('CommentPropertiesComponent', () => {
 
@@ -16,7 +17,7 @@ describe('CommentPropertiesComponent', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            declarations: [CommentPropertiesComponent, MockComponents(NoDataComponent)],
+            declarations: [CommentPropertiesComponent, MockComponents(NoDataComponent, UserLinkComponent)],
             imports: [RouterTestingModule, FontAwesomeTestingModule, NgbModalModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),

@@ -2,24 +2,20 @@
 @if (user && linkRoute) {
     <a [routerLink]="linkRoute">
         <app-user-avatar [user]="user" size="S" class="me-1"/>
-        <ng-container>{{ user.name }}</ng-container>
+        <span class="user-name">{{ user.name }}</span>
         @if (user.email) {
             &ngsp;<ng-container>({{ user.email }})</ng-container>
         }
     </a>
 
-<!-- Existing, non-anonymous user -->
-} @else if (user && user.id !== anonUserId) {
-    <app-user-avatar [user]="user" size="S" class="me-1"/>
-    <ng-container>{{ user.name }}</ng-container>
-
-<!-- Anonymous user -->
+<!-- Existing user -->
 } @else if (user) {
-    <i i18n>(anonymous user)</i>
+    <app-user-avatar [user]="user" size="S" class="me-1"/>
+    <span class="user-name">{{ user.name }}</span>
 
 <!-- Nonexistent (deleted) user -->
 } @else {
-    <i class="text-muted" i18n>(deleted user)</i>
+    <i class="user-name text-muted" i18n>(deleted user)</i>
 }
 
 <!-- Current user badge -->

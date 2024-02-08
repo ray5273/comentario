@@ -139,8 +139,8 @@ context('Domain Import page', () => {
                             cy.get('app-comment-list #filter-string').setValue('yay');
                             cy.get('app-comment-list').verifyListFooter(count, false);
                             if (count) {
-                                cy.get('app-comment-list #comment-list').texts('.comment-author-name').should('arrayMatch', ['Bugs Bunny']);
-                                cy.get('app-comment-list #comment-list').texts('.comment-text')       .should('arrayMatch', ['Yay, imported']);
+                                cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Bugs Bunny']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
                             }
                         }));
 
@@ -188,8 +188,8 @@ context('Domain Import page', () => {
                             cy.get('app-comment-list #filter-string').setValue('yay');
                             cy.get('app-comment-list').verifyListFooter(count, false);
                             if (count) {
-                                cy.get('app-comment-list #comment-list').texts('.comment-author-name').should('arrayMatch', ['Bugs Bunny']);
-                                cy.get('app-comment-list #comment-list').texts('.comment-text')       .should('arrayMatch', ['Yay, imported']);
+                                cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Bugs Bunny']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
                             }
                         }));
 
@@ -236,8 +236,8 @@ context('Domain Import page', () => {
                             cy.get('app-comment-list #filter-string').setValue('yay');
                             cy.get('app-comment-list').verifyListFooter(count, false);
                             if (count) {
-                                cy.get('app-comment-list #comment-list').texts('.comment-author-name').should('arrayMatch', ['Luke Skywalker']);
-                                cy.get('app-comment-list #comment-list').texts('.comment-text')       .should('arrayMatch', ['Yay, imported']);
+                                cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Luke Skywalker']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
                             }
                         }));
 

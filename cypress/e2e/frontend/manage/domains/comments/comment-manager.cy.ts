@@ -139,24 +139,24 @@ context('Comment Manager', () => {
             it('shows comment list', () => {
                 // Check page list: initial sorting is Created DESC
                 cy.get('@commentList').verifyListFooter(25, true);
-                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.author.name));
-                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.text));
+                cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.text));
                 // Add more
                 cy.get('@loadMore').click();
                 cy.get('@commentList').verifyListFooter(38, false);
-                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.map(c => c.author.name));
-                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.map(c => c.text));
+                cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.map(c => c.text));
 
                 // Sort by Created ASC
                 cy.get('@commentManager').changeListSort('Created', 'asc');
                 cy.get('@commentList').verifyListFooter(25, true);
-                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.author.name));
-                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.text));
+                cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.text));
                 // Add more
                 cy.get('@loadMore').click();
                 cy.get('@commentList').verifyListFooter(38, false);
-                cy.get('@commentList').texts('.comment-author-name').should('arrayMatch', undeletedComments.slice().reverse().map(c => c.author.name));
-                cy.get('@commentList').texts('.comment-text')       .should('arrayMatch', undeletedComments.slice().reverse().map(c => c.text));
+                cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.slice().reverse().map(c => c.author.name));
+                cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.slice().reverse().map(c => c.text));
 
                 // Sort by Score ASC
                 const commentsScore = undeletedComments.slice().sort((a, b) => a.score - b.score).map(c => c.score.toString());
