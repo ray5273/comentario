@@ -20,7 +20,7 @@ tags:
 * **Sticky** comments
 * Comment **editing** and **deletion**
 * **Voting** on a comment
-* [Live comment updates](/about/features/live-update) without reload
+* [Live comment updates](/kb/live-update) without reload
 * Custom **user avatars**: uploaded or from Gravatar
 * **Email notifications** about replies or comments pending moderation
 * **Multiple domains** in a single Administration UI
