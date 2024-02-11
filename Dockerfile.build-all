@@ -37,7 +37,7 @@ RUN \
     # Clean up modules
     go mod tidy && \
     # Build a binary
-    v=$(git describe --tags) && \
+    v=$(git describe --tags | sed 's/^v//') && \
     d=$(date -I'seconds') && \
     CGO_ENABLED=0 go build -a -v -o 'comentario' -ldflags "-w -s -X main.version=$v -X main.date=$d"
 

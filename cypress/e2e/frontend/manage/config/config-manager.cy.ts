@@ -62,7 +62,7 @@ context('Config Manager', () => {
             cy.get('app-static-config #static-config-items').dlTexts().should('matrixMatch', [
                 ['Base Comentario URL',                     'http://localhost:8080/'],
                 ['Base documentation URL',                  'https://edge.docs.comentario.app'],
-                ['Comentario version',                      /^v\d+.\d+/],
+                ['Comentario version',                      /^\d+.\d+/],
                 ['Build date',                              REGEXES.datetime],
                 ['Current server time',                     REGEXES.datetime],
                 ['Database version',                        /^PostgreSQL/],

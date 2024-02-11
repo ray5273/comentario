@@ -72,7 +72,7 @@ rm -rf "$build_dir/db" "$build_dir/templates"
 ((do_build)) &&
     rm -f "$build_dir/comentario" &&
     echo "Building comentario" &&
-    go build -o "$build_dir/comentario" -ldflags "-X main.version=$(git describe --tags) -X main.date=$(date --iso-8601=seconds)"
+    go build -o "$build_dir/comentario" -ldflags "-X main.version=$(git describe --tags | sed 's/^v//') -X main.date=$(date --iso-8601=seconds)"
 
 # Build the e2e plugin
 ((do_build)) &&

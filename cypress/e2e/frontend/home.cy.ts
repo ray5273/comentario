@@ -84,7 +84,7 @@ context('Home', () => {
         cy.get('@footer').find('.footer-copyright').invoke('text').should('match', /^Copyright ©\d{4}–\d{4} Comentario$/);
 
         // Check version
-        cy.get('@footer').find('.footer-version').invoke('text').should('match', /^Version v3\.\d+\.\d+.*/);
+        cy.get('@footer').find('.footer-version').invoke('text').should('match', /^Version 3\.\d+\.\d+/);
 
         // Check doc links
         ['Docs', 'About', 'Privacy Policy', 'Terms of Service']
