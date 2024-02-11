@@ -1,5 +1,30 @@
 # Comentario changelog
 
+## v3.4.0
+
+In this release we added **live comment updates** via WebSockets: you don't need to reload the page to see new comments. We also added a **toolbar in the comment editor**, removed the Collapse child button in favour of **clickable left border**, and added binary builds for 32- and 64-bit **ARM architectures**.
+
+### Changes
+
+* Admin UI: fix user link rendering for anonymous - d98be3e
+* Live update via WebSockets (#9) - 24a2ce2, 6400faf, 513dd1c, b9e16d7, 1797bec, 4d3d64e, ee11a82, 3364b86, 1410031, 93bf25f, a8dd8de
+* Live update: add CLI flags `--no-live-update`, `--ws-max-clients` - 3364b86
+* Embed: optimise animation handling, improve comment expand toggler - 1c30b47
+* Embed: deleted comments specify who deleted them (author/moderator) when possible (#62) - b815297
+* Add options controlling comment deletion by author/moderator - 7a2fdaf
+* Add options controlling comment editing by author/moderator (#61) - 3f588af
+* Make item names localizable - 23d9358
+* Admin UI: allow regular users to delete own comments - b9476b9
+* Admin UI: show moderated and deleted user and timestamp in Comment properties - b9476b9
+* Add binary builds for arm/arm64 (#57) - 201be4b, c2060b6, c8fd26d
+* Embed: add editor toolbar (#49) - b6700e8, c593350, a4e129f, 7ec2ba2
+* Allow blockquote in Markdown - 1c10abf
+* Allow strikethrough text in Markdown - a383d8b
+* Domain operations: reset comment/view counts on clearing domain (#55) - ac0eabc
+* Embed: replace collapse button with border click - 7d811c7
+* Embed: restyle icons - 7d811c7
+* Embed: show notice when no auth is configured for domain - dd95be9, 222e7f5, 5eb8ef7
+
 ## v3.3.0
 
 This release introduces comment preview feature, persisted sort settings and the anonymous commenter status (which has moved to the Login dialog). It also adds fine-grained configuration parameters for controlling user registrations.
