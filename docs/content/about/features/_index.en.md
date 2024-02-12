@@ -9,15 +9,19 @@ tags:
 
 ## Features in a nutshell
 
-* **Privacy by design**: no tracking scripts, ads etc.
-* Multiple **login options**:
-    * Local auth (with email and password)
-    * Social: via Google, Twitter/X, Facebook, GitHub, GitLab
-    * Single Sign-On (including non-interactive)
-    * Anonymous comments
-* Comment **replies** and nested comments
-* **Markdown formatting**, supporting links, images, tables etc.
-* **Sticky** comments
+* **Privacy by design**\
+  Comentario adds no tracking scripts or pixels, and shows no ads. It does collect some high-level statistics, such as visitor's country, browser, and language. It can collect visitor's IP addresses, but this option is off by default.
+* **Multiple login options**
+    * Optional anonymous comments;
+    * Local authentication with email and password;
+    * Social login via Google, Twitter/X, Facebook, GitHub, GitLab;
+    * Single Sign-On ([interactive](/configuration/frontend/domain/authentication/sso/interactive) and [non-interactive](/configuration/frontend/domain/authentication/sso/non-interactive)).
+* **Hierarchical comments**\
+  Each comment can be replied to, which results in nested comments. The number of nesting levels is unlimited, but you can opt to limit the maximum visual nesting level. 
+* **Markdown formatting**\
+  Comment text can be formatted by using simple [Markdown rules](/kb/markdown). So users can use **bold**, *italic*, ~~strikethrough~~, insert links, images, tables, code blocks etc.
+* **Sticky comments**\
+  Top-level comments can be marked [sticky](/kb/sticky-comment), pinning them at the top.
 * Comment **editing** and **deletion**
 * **Voting** on a comment
 * [Live comment updates](/kb/live-update) without reload
