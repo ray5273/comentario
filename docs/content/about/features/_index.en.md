@@ -19,7 +19,7 @@ tags:
     * Social login via Google, Twitter/X, Facebook, GitHub, GitLab;
     * Single Sign-On ([interactive](/configuration/frontend/domain/authentication/sso/interactive) and [non-interactive](/configuration/frontend/domain/authentication/sso/non-interactive)).
 * **Hierarchical comments**\
-  Each comment can be replied to, which results in nested comments. The number of nesting levels is unlimited, but you can opt to limit the maximum visual nesting level. 
+  Each comment can be replied to, which results in [nested comments](/kb/comment-tree). The number of nesting levels is unlimited, but you can opt to limit the maximum visual nesting level. 
 * **Markdown formatting**\
   Comment text supports simple [Markdown formatting](/kb/markdown) rules. So users can use **bold**, *italic*, ~~strikethrough~~, insert links, images, tables, code blocks etc.
 * **Thread locking**\

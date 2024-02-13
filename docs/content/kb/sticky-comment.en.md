@@ -16,7 +16,7 @@ seeAlso:
     - permissions/superuser
 ---
 
-If a comment that has no parent, we call it a *root* or a *top-level comment*. A root comment can be made **sticky**, which will pin it at the top of the [comment tree](comment-tree).
+If a comment has no parent, we call it a *root* or a *top-level comment*. A root comment can be made **sticky**, which will pin it at the top of the [comment tree](comment-tree).
 
 <!--more-->
 
