@@ -4,54 +4,59 @@
 
 ---
 
-**[Comentario](https://comentario.app)** is a platform that you can embed in your website to allow your readers to add comments. It's lightweight and fast.
+**[Comentario](https://comentario.app)** is an open-source web comment engine, which adds discussion functionality to plain, boring web pages.
 
 Available features:
 
-* **Privacy by design**: no tracking scripts, ads etc.
-* Multiple **login options**:
-    * Local auth (with email and password)
-    * Social: via Google, Twitter/X, Facebook, GitHub, GitLab
-    * Single Sign-On (including non-interactive)
-    * Anonymous comments
-* Comment **replies** and nested comments
-* **Markdown formatting**, supporting links, images, tables etc.
-* **Sticky** comments
-* Comment **editing** and **deletion**
-* **Voting** on a comment
-* Custom **user avatars**: uploaded or from Gravatar
-* **Email notifications** about replies or comments pending moderation
-* **Multiple domains** in a single Administration UI
-* Flexible **moderation** settings
-* External comment **content checkers** (extensions)
-* View and comment **statistics**, per-domain and overall
-* Import from Disqus, WordPress, Commento.
+## Features in a nutshell
+
+* **Privacy by design**\
+  Comentario adds no tracking scripts or pixels, and shows no ads. It does collect some high-level statistics, such as visitor's country, browser, and language.
+* **Role-based access**\
+  Every user gets a role (Owner, Moderator, Commenter, or Read-only) within a specific domain. There's also the global superuser privilege.
+* **Multiple login options**
+  * Optional anonymous comments;
+  * Local authentication with email and password;
+  * Social login via Google, Twitter/X, Facebook, GitHub, GitLab;
+  * Single Sign-On (interactive and non-interactive).
+* **Hierarchical comments**\
+  Each comment can be replied to, which results in nested comments. The number of nesting levels is unlimited, but you can opt to limit the maximum visual nesting level.
+* **Markdown formatting**\
+  Comment text supports simple Markdown formatting rules. So users can use **bold**, *italic*, ~~strikethrough~~, insert links, images, tables, code blocks etc.
+* **Thread locking**\
+  Commenting on certain pages can be disabled by the moderator by making the page read-only. This can also be done for the entire domain by "freezing" it.
+* **Sticky comments**\
+  Top-level comment can be marked sticky, which pins it at the top of the list.
+* **Comment editing and deletion**\
+  Comments can be edited and deleted, either by the author or by a moderator — all of it is configurable.
+* **Comment voting**\
+  Users can upvote and downvote comments, updating their score. This feature is also configurable.
+* **Live comment updates**\
+  When a user adds or updates a comment, everyone sees this change immediately, without reload.
+* **Custom user avatars**\
+  Comentario supports avatars from external identity providers, including SSO, as well as Gravatar. Users can also upload their own image.
+* **Email notifications**\
+  Users can choose to get notified about replies to their comments. Moderators can also get notified about a comment pending moderation, or every comment.
+* **Multiple domains in one UI**\
+  Comentario offers the so-called Administration UI, allowing to manage all your domains, pages, comments, users in a single interface.
+* **Flexible moderation rules**\
+  Each domain has own settings, automatically flagging comments for moderation based on whether the user is anonymous, how many approved comments they have, how long ago they registered, whether the comment contains a link etc.
+* **Extensions**\
+  The so-called extensions link Comentario to external services that check comment text for spam, offensive language, or toxic content. Those services include Akismet, APILayer, and Perspective, and they are configured separately for each domain.
+* **Statistics**\
+  Comentario collects and displays statistics on views and comments. It includes high-level depersonalised data, such as country, language, OS, browser, and device type. The statistical data can be viewed per-domain or for the entire system.
+* **Data import/export**\
+  Comments and users can be easily imported from Disqus, WordPress, Commento. Existing data can also be exported as a JSON file.
 
 ## FAQ
 
-### How is this different from Disqus, Facebook Comments, and the rest?
-
-Most other products in this category have privacy downsides you should know about.
-
-Many of these systems like to collect data — stuff like analytics, ads, and user info. This can be a privacy issue, especially if they're after your personal data.
-
-Apart from turning you, the user, into a product, theres a data security concern. If the commenting system gets hacked, your info might end up in the wrong hands. A good idea is to check the privacy policies and how they handle data before picking a commenting system for your site.
-
-Here's a start:
-
-* Comentario has no ads: you're the customer, not the product.
-* Comentario offers self-hosted options that give you more control over privacy settings.
-* Comentario is orders of magnitude lighter than alternatives: the downloadable embed part is some 20 KB compressed.
-
-### Why should I care about my readers' privacy?
-
-Firstly, it fosters trust and bolsters your website's reputation. When users believe that their personal information is handled responsibly, they are more likely to engage with your content and feel comfortable interacting with your online platform. Additionally, compliance with privacy laws and regulations is a must, as failure to do so can lead to legal repercussions and fines, making it essential to prioritize privacy as a fundamental aspect of your online presence.
-
-Moreover, beyond legal requirements, there are ethical considerations. Respecting user privacy reflects a commitment to treating your readers with respect and acknowledging the value of their personal data. This ethical stance not only aligns with responsible online practices but also contributes to long-term sustainability by fostering user loyalty and trust. By prioritizing user privacy, you create a secure and welcoming digital space, which is vital for your website's credibility, user engagement, and overall success.
-
 ### How does Comentario differ from its predecessor Commento?
 
-The list of differences is [really long](CHANGELOG.md), but here are a few major points:
+Indeed, Comentario started as a fork of the now-discontinued Commento, and it still bears a remote resemblance to its predecessor.
+
+Since Comentario 3.0 release, however, it has become a completely different product. There's literally no legacy code left.
+
+Feel free to examine the [changelog](CHANGELOG.md), but here are a few major points:
 
 * Comentario is in active development, regularly adding tons of features and improvements.
 * Comentario is running the latest and greatest software versions, with all necessary security updates.
