@@ -20,7 +20,112 @@ export interface CommentWithCard extends Comment {
 /**
  * Map of comment lists, indexed by their parent's ID.
  */
-export type CommentsGroupedById = { [k: UUID]: CommentWithCard[] };
+export class CommentParentMap {
+
+    /** Internal data object, a map of lists of comments, grouped by their parentId. */
+    private _data?: { [parentId: UUID]: CommentWithCard[] };
+
+    /**
+     * Add the given comment to the map.
+     */
+    add(c: Comment) {
+        this._data ||= {};
+
+        // Map root ID to an empty string
+        const pid = c.parentId ?? '';
+        if (pid in this._data) {
+            this._data[pid].push(c);
+        } else {
+            this._data[pid] = [c];
+        }
+    }
+
+    /**
+     * Remove the given comment from the map.
+     */
+    remove(c: Comment) {
+        if (this._data) {
+            // Delete the comment as parent, including all children
+            delete this._data[c.id];
+
+            // Delete the comment itself from the parentMap's list
+            const pl = this._data[c.parentId ?? ''];
+            const idx = pl.indexOf(c);
+            if (idx >= 0) {
+                pl.splice(idx, 1);
+            }
+        }
+    }
+
+    /**
+     * Return a list of comments for the given parentId. If parentId wasn't found, return an empty list and, optionally,
+     * update the map.
+     * @param parentId Parent ID to return a list for.
+     * @param allowUpdate Defines whether the map must be updated if parentId wasn't found (by storing an empty list).
+     */
+    getListFor(parentId: UUID | null | undefined, allowUpdate: boolean): CommentWithCard[] {
+        const pid = parentId ?? '';
+        if (allowUpdate && (!this._data || !(pid in this._data))) {
+            this._data ||= {};
+            this._data[pid] = [];
+        }
+        return this._data?.[pid] || [];
+    }
+
+    /**
+     * Find and return a comment by its ID, or undefined if not found.
+     * @param id ID to search for.
+     */
+    findById(id: UUID): CommentWithCard | undefined {
+        let fc: CommentWithCard | undefined;
+        if (this._data) {
+            // Iterate all lists, and then each list to find the comment
+            Object.values(this._data).find(l => fc = l.find(c => c.id === id));
+        }
+        return fc;
+    }
+
+    /**
+     * Empty and refill the map from the given comment list, grouping them in the process.
+     * @param comments Input comment list.
+     */
+    refill(comments: Comment[] | undefined) {
+        this._data = comments?.reduce(
+            (m, c) => {
+                const pid = c.parentId ?? '';
+                if (pid in m) {
+                    m[pid].push(c);
+                } else {
+                    m[pid] = [c];
+                }
+                return m;
+            },
+            {} as Exclude<typeof this._data, undefined>);
+    }
+
+    /**
+     * Make a clone of the original comment, replacing the provided properties, and replace that comment in the map
+     * based on its ID and parent ID.
+     * @param id Comment ID.
+     * @param parentId Comment parent ID.
+     * @param props Property overrides for the new clone.
+     */
+    replaceComment(id: string, parentId: string | null | undefined, props: Omit<Partial<Comment>, 'parentId' | 'id'>): CommentWithCard {
+        // Try to find the comment in the map
+        const list = this.getListFor(parentId, false);
+        const idx = list.findIndex(c => c.id === id);
+        const comment = idx >= 0 ? list[idx] : undefined;
+
+        // Make a clone of the comment, overriding any property in props
+        const cc = {...comment, ...props} as CommentWithCard;
+
+        // Replace the comment instance in the appropriate list in the parentIdMap
+        if (idx >= 0) {
+            list![idx] = cc;
+        }
+        return cc;
+    }
+}
 
 /**
  * Context for rendering comment trees.
@@ -29,7 +134,7 @@ export interface CommentRenderingContext {
     /** The root element (for displaying popups). */
     readonly root: Wrap<any>;
     /** Map that links comment lists to their parent IDs. */
-    readonly parentMap: CommentsGroupedById;
+    readonly parentMap: CommentParentMap;
     /** Map of known commenters. */
     readonly commenters: CommenterMap;
     /** Optional logged-in principal. */
@@ -115,7 +220,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      */
     static renderChildComments(ctx: CommentRenderingContext, level: number, parentId?: UUID): CommentCard[] {
         // Fetch comments that have the given parent (or no parent, i.e. root comments, if parentId is undefined)
-        const comments = ctx.parentMap[parentId ?? ''] || [];
+        const comments = ctx.parentMap.getListFor(parentId, false);
 
         // Apply the chosen sorting, always keeping the sticky comment on top
         comments.sort((a, b) => {

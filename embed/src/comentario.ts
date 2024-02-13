@@ -1,8 +1,8 @@
-import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
+import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, CommentSort, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { CommentCard, CommentRenderingContext, CommentsGroupedById, CommentWithCard } from './comment-card';
+import { CommentCard, CommentParentMap, CommentRenderingContext } from './comment-card';
 import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
@@ -47,6 +47,9 @@ export class Comentario extends HTMLElement {
     /** User profile toolbar. */
     private profileBar?: ProfileBar;
 
+    /** Comment sort toolbar. */
+    private sortBar?: SortBar;
+
     /** Main area panel. */
     private mainArea?: Wrap<HTMLDivElement>;
 
@@ -65,8 +68,8 @@ export class Comentario extends HTMLElement {
     /** Map of loaded CSS stylesheet URLs. */
     private readonly loadedCss: StringBooleanMap = {};
 
-    /** Map of comments, grouped by their ID. */
-    private parentIdMap?: CommentsGroupedById;
+    /** Map of comments grouped by their parent ID. */
+    private readonly parentMap = new CommentParentMap();
 
     /** ID of the last added, deleted or updated comment. Used to ignore live updates initiated by ourselves. */
     private lastCommentId?: UUID;
@@ -305,6 +308,30 @@ export class Comentario extends HTMLElement {
         this.commentsArea!
             .html('')
             .append(...CommentCard.renderChildComments(this.makeCommentRenderingContext(), 1));
+
+        // Show or hide the sort bar on comment list change
+        this.updateSortBar();
+    }
+
+    /**
+     * Apply the given sort order to the comments.
+     * @param cs Sort order to apply.
+     * @private
+     */
+    private applySort(cs: CommentSort) {
+        // Persist the chosen order in the config
+        this.localConfig.commentSort = cs;
+
+        // Re-render comments using the new sort
+        this.renderComments();
+    }
+
+    /**
+     * Update the sort bar visibility based on the presence of comments.
+     * @private
+     */
+    private updateSortBar() {
+        this.sortBar?.setClasses(!this.commentsArea?.hasChildren, 'hidden');
     }
 
     /**
@@ -412,20 +439,11 @@ export class Comentario extends HTMLElement {
                     .on('focus', t => !t.hasClass('editor-inserted') && this.addComment(undefined)));
         }
 
-        // If there's any comment, add sort buttons
-        if (this.parentIdMap) {
-            this.mainArea!.append(new SortBar(
-                cs => {
-                    this.localConfig.commentSort = cs;
-                    // Re-render comments using the new sort
-                    this.renderComments();
-                },
-                this.localConfig.commentSort,
-                this.config.dynamic.enableCommentVoting));
-        }
-
-        // Create a panel for comments
-        this.commentsArea = UIToolkit.div('comments').appendTo(this.mainArea!);
+        this.mainArea!.append(
+            // Sort bar
+            this.sortBar = new SortBar(cs => this.applySort(cs), this.localConfig.commentSort, this.config.dynamic.enableCommentVoting),
+            // Create a panel for comments
+            this.commentsArea = UIToolkit.div('comments').appendTo(this.mainArea!));
     }
 
     /**
@@ -484,18 +502,8 @@ export class Comentario extends HTMLElement {
             const r = await this.apiService.commentNew(this.location.host, this.pagePath, !this.principal, parentCard?.comment.id, markdown);
             this.lastCommentId = r.comment.id;
 
-            // Make sure parent map exists
-            if (!this.parentIdMap) {
-                this.parentIdMap = {};
-            }
-
             // Add the comment to the parent map
-            const parentId = parentCard?.comment.id ?? '';
-            if (parentId in this.parentIdMap) {
-                this.parentIdMap[parentId].push(r.comment);
-            } else {
-                this.parentIdMap[parentId] = [r.comment];
-            }
+            this.parentMap.add(r.comment);
 
             // Add the commenter to the commenter map
             this.commenters[r.commenter.id] = r.commenter;
@@ -522,9 +530,9 @@ export class Comentario extends HTMLElement {
         this.lastCommentId = c.id;
         const r = await this.apiService.commentUpdate(c.id, markdown);
 
-        // Update the comment in the card, replacing the original in the parentIdMap and preserving the vote direction
+        // Update the comment in the card, replacing the original in the parentMap and preserving the vote direction
         // (it isn't provided in the returned comment)
-        card.comment = this.replaceComment(c.id, c.parentId, {...r.comment, direction: c.direction});
+        card.comment = this.parentMap.replaceComment(c.id, c.parentId, {...r.comment, direction: c.direction});
 
         // Remove the editor
         this.cancelCommentEdits();
@@ -717,18 +725,8 @@ export class Comentario extends HTMLElement {
                 // Otherwise restore the user choice
                 (this.pageInfo!.authAnonymous && this.localConfig.anonymousCommenting === true));
 
-        // Build a map by grouping all comments by their parentId value
-        this.parentIdMap = r.comments?.reduce(
-            (m, c) => {
-                const pid = c.parentId ?? '';
-                if (pid in m) {
-                    m[pid].push(c);
-                } else {
-                    m[pid] = [c];
-                }
-                return m;
-            },
-            {} as CommentsGroupedById) || {};
+        // Rebuild the parent map
+        this.parentMap.refill(r.comments);
 
         // Convert commenter list into a map
         r.commenters?.forEach(c => this.commenters[c.id] = c);
@@ -757,7 +755,7 @@ export class Comentario extends HTMLElement {
         await this.apiService.commentModerate(c.id, approve);
 
         // Update the comment and the card
-        card.comment = this.replaceComment(c.id, c.parentId, {isPending: false, isApproved: approve});
+        card.comment = this.parentMap.replaceComment(c.id, c.parentId, {isPending: false, isApproved: approve});
     }
 
     /**
@@ -772,7 +770,7 @@ export class Comentario extends HTMLElement {
         // If deleted comments are to be shown
         if (this.config.dynamic.showDeletedComments) {
             // Update the comment, marking it as deleted, and then update the card
-            card.comment = this.replaceComment(c.id, c.parentId, {
+            card.comment = this.parentMap.replaceComment(c.id, c.parentId, {
                 isDeleted:   true,
                 markdown:    '',
                 html:        '',
@@ -781,17 +779,13 @@ export class Comentario extends HTMLElement {
             });
         } else {
             // Delete the comment from the parentMap
-            delete this.parentIdMap![c.id];
-
-            // Delete the comment itself from the parentMap's list
-            const pl = this.parentIdMap![c.parentId ?? ''];
-            const idx = pl.indexOf(card.comment);
-            if (idx >= 0) {
-                pl.splice(idx, 1);
-            }
+            this.parentMap.remove(c);
 
             // Delete the card, it'll also delete all its children
             card.remove();
+
+            // Hide the sort bar, if needed
+            this.updateSortBar();
         }
     }
 
@@ -806,7 +800,7 @@ export class Comentario extends HTMLElement {
         await this.apiService.commentSticky(c.id, isSticky);
 
         // Update the comment
-        this.replaceComment(c.id, c.parentId, {isSticky});
+        this.parentMap.replaceComment(c.id, c.parentId, {isSticky});
 
         // Rerender comments to reflect the changed stickiness
         this.renderComments();
@@ -845,7 +839,7 @@ export class Comentario extends HTMLElement {
         if (reloaded) {
             await this.reload();
         } else {
-            card.comment = this.replaceComment(c.id, c.parentId, {score: r.score, direction});
+            card.comment = this.parentMap.replaceComment(c.id, c.parentId, {score: r.score, direction});
         }
     }
 
@@ -855,7 +849,7 @@ export class Comentario extends HTMLElement {
     private makeCommentRenderingContext(): CommentRenderingContext {
         return {
             root:               this.root,
-            parentMap:          this.parentIdMap!,
+            parentMap:          this.parentMap,
             commenters:         this.commenters,
             principal:          this.principal,
             commentSort:        this.localConfig.commentSort || 'ta',
@@ -889,36 +883,6 @@ export class Comentario extends HTMLElement {
 
         // Reload all comments to reflect new commenter settings
         await this.reload();
-    }
-
-    /**
-     * Make a clone of the original comment, replacing the provided properties, and replace that comment in parentIdMap
-     * based on its ID and parentId.
-     * @param id Comment ID.
-     * @param parentId Comment parent ID.
-     * @param props Property overrides for the new clone.
-     */
-    private replaceComment(id: string, parentId: string | null | undefined, props: Omit<Partial<Comment>, 'parentId' | 'id'>): CommentWithCard {
-        // Try to find the comment's list in the parent map
-        let comment: Comment | undefined;
-        let idx = -1;
-        const list = this.parentIdMap?.[parentId ?? ''];
-        if (list) {
-            // Try to find the comment in the list
-            idx = list.findIndex(c => c.id === id);
-            if (idx >= 0) {
-                comment = list[idx];
-            }
-        }
-
-        // Make a clone of the comment, overriding any property in props
-        const cc = {...comment, ...props};
-
-        // Replace the comment instance in the appropriate list in the parentIdMap
-        if (idx >= 0) {
-            list![idx] = cc as CommentWithCard;
-        }
-        return cc as CommentWithCard;
     }
 
     /**
@@ -964,12 +928,15 @@ export class Comentario extends HTMLElement {
         if (msg.action === 'delete') {
             // Find and replace the comment with its 'deleted version'. Don't remove the comment entirely even when
             // deleted are configured to be hidden to minimise content jumping
-            const comment = this.replaceComment(msg.comment, msg.parentComment, {
-                isDeleted:   true,
-                markdown:    '',
-                html:        '',
-                deletedTime: new Date().toISOString(),
-            });
+            const comment = this.parentMap.replaceComment(
+                msg.comment,
+                msg.parentComment,
+                {
+                    isDeleted:   true,
+                    markdown:    '',
+                    html:        '',
+                    deletedTime: new Date().toISOString(),
+                });
 
             // If there's an associated card, update it, too
             if (comment.card) {
@@ -993,22 +960,13 @@ export class Comentario extends HTMLElement {
             this.ignoreApiErrors = false;
         }
 
-        // Make sure parent map exists
-        if (!this.parentIdMap) {
-            // Prefill the map with a root list
-            this.parentIdMap = {'': []};
-        }
-
-        // Fetch the comment's list in the parent map
-        const pid = comment.parentId ?? '';
-        const list = pid in this.parentIdMap ? this.parentIdMap[pid] : (this.parentIdMap[pid] = []);
-
         // Add the commenter, if any, to the commenter map
         if (commenter) {
             this.commenters[commenter.id] = commenter;
         }
 
         // Try to find an existing comment in the list by its ID
+        const list = this.parentMap.getListFor(comment.parentId, true);
         const idx = list.findIndex(ci => ci.id === comment.id);
 
         // Comment found: update it
@@ -1029,7 +987,7 @@ export class Comentario extends HTMLElement {
 
             // Find the parent card
             let parentCard: CommentCard | undefined;
-            if (pid && !Object.values(this.parentIdMap).find(l => parentCard = l.find(c => c.id === pid)?.card)) {
+            if (comment.parentId && !(parentCard = this.parentMap.findById(comment.parentId)?.card)) {
                 // Failed to find parent card, ignore the update
                 return;
             }
@@ -1038,6 +996,9 @@ export class Comentario extends HTMLElement {
             card = new CommentCard(comment, this.makeCommentRenderingContext(), (parentCard?.level ?? 0) + 1)
                 .appendTo(parentCard?.children ?? this.commentsArea!) as CommentCard;
         }
+
+        // Show or hide the sort bar on comment list change
+        this.updateSortBar();
 
         // On success blink the card, except for vote updates
         if (msg.action !== 'vote') {

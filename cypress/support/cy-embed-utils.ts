@@ -10,6 +10,8 @@ export interface LayoutSettings {
     readonly?: boolean;
     /** Whether root font is applied. Defaults to true. */
     hasRootFont?: boolean;
+    /** Whether sort bar is visible. Defaults to true. */
+    hasSortBar?: boolean;
     /** Moderation notice, if any. */
     notice?: string;
 }
@@ -46,7 +48,7 @@ export class EmbedUtils {
         }
 
         // Check sort buttons
-        cy.get('@mainArea').find('.comentario-sort-bar').should('be.visible');
+        cy.get('@mainArea').find('.comentario-sort-bar').should((settings?.hasSortBar ?? true) ? 'be.visible' : 'not.be.visible');
 
         // Check comments
         cy.get('@mainArea').find('.comentario-comments').as('comments').should('exist');
