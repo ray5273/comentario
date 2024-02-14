@@ -5,6 +5,7 @@ import (
 	"github.com/avct/uasurfer"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -57,11 +58,12 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
 
 	// Query paths/comment counts
+	pa := pq.StringArray(paths) // TODO PostgreSQL-specific
 	rows, err := db.Select(
 		db.Dialect().
 			From("cm_domain_pages").
 			Select("path", "count_comments").
-			Where(goqu.Ex{"domain_id": domainID, "path": goqu.Any(paths)}))
+			Where(goqu.Ex{"domain_id": domainID, "path": goqu.Any(pa)}))
 	if err != nil {
 		logger.Errorf("pageService.CommentCounts: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -87,7 +89,7 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	}
 
 	// Succeeded
-	return nil, nil
+	return res, nil
 }
 
 func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error) {
