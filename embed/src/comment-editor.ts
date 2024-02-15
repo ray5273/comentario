@@ -1,5 +1,5 @@
 import { Wrap } from './element-wrap';
-import { IconName, UIToolkit } from './ui-toolkit';
+import { UIToolkit } from './ui-toolkit';
 import { InstanceConfig } from './config';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
@@ -206,33 +206,29 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         ta.focus();
     }
 
-    private toolButton(icon: IconName, title: string, onClick: () => void): Wrap<HTMLButtonElement> {
-        return UIToolkit.iconButton(icon, title, onClick, 'btn-link').attr({tabindex: '-1'});
-    }
-
     private renderToolbar(): Wrap<HTMLDivElement> {
         return UIToolkit.div('toolbar').append(
             // Left section
             UIToolkit.div('toolbar-section').append(
-                this.toolButton('bold',          'Bold',          () => this.applyInlinePattern('**$**{}')),
-                this.toolButton('italic',        'Italic',        () => this.applyInlinePattern('*$*{}')),
-                this.toolButton('strikethrough', 'Strikethrough', () => this.applyInlinePattern('~~$~~{}')),
+                UIToolkit.toolButton('bold',          'Bold',          () => this.applyInlinePattern('**$**{}')),
+                UIToolkit.toolButton('italic',        'Italic',        () => this.applyInlinePattern('*$*{}')),
+                UIToolkit.toolButton('strikethrough', 'Strikethrough', () => this.applyInlinePattern('~~$~~{}')),
                 this.config.dynamic.linksEnabled &&
-                    this.toolButton('link',      'Link',          () => this.applyInlinePattern('[$]({https://example.com})', 'Link text')),
-                this.toolButton('quote',         'Quote',         () => this.applyBlockPattern('> ')),
-                this.toolButton('code',          'Code',          () => this.applyInlinePattern('`$`{}')),
+                    UIToolkit.toolButton('link',      'Link',          () => this.applyInlinePattern('[$]({https://example.com})', 'Link text')),
+                UIToolkit.toolButton('quote',         'Quote',         () => this.applyBlockPattern('> ')),
+                UIToolkit.toolButton('code',          'Code',          () => this.applyInlinePattern('`$`{}')),
                 this.config.dynamic.imagesEnabled &&
-                    this.toolButton('image',     'Image',         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
+                    UIToolkit.toolButton('image',     'Image',         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
                 this.config.dynamic.tablesEnabled &&
-                    this.toolButton('table',     'Table',         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
-                this.toolButton('bulletList',    'Bullet list',   () => this.applyBlockPattern('* ')),
-                this.toolButton('numberedList',  'Numbered list', () => this.applyBlockPattern('1. ')),
+                    UIToolkit.toolButton('table',     'Table',         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
+                UIToolkit.toolButton('bulletList',    'Bullet list',   () => this.applyBlockPattern('* ')),
+                UIToolkit.toolButton('numberedList',  'Numbered list', () => this.applyBlockPattern('1. ')),
             ),
             // Right section
             UIToolkit.div('toolbar-section').append(
                 // Markdown help link
                 UIToolkit.a('', this.config.docsUrl('kb/markdown/'))
-                    .classes('btn', 'btn-link')
+                    .classes('btn', 'btn-tool')
                     .attr({title: 'Markdown help'})
                     .append(UIToolkit.icon('help')),
             ));

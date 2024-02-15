@@ -21,8 +21,8 @@ context('Signup dialog', () => {
         cy.testSiteVisit(TEST_PATHS.comments);
         EmbedUtils.makeAliases({anonymous: true});
 
-        // Click on Login and subsequently on Signup
-        cy.get('@profileBar').contains('button', 'Login').click();
+        // Click on "Sign in" and subsequently on Signup
+        cy.get('@profileBar').contains('button', 'Sign in').click();
         cy.get('@root').contains('.comentario-dialog button', 'Sign up here').click();
         cy.get('@root').find('.comentario-dialog').as('signupDialog').should('be.visible');
         cy.get('@signupDialog').contains('.comentario-dialog-header', 'Create an account').should('be.visible');

@@ -27,7 +27,7 @@ context('Comment threads', () => {
 
     const checkCssOverride = () => {
         // Verify the original CSS and the override are both applied
-        cy.document().find(`head link[href="${Cypress.config().baseUrl}/comentario.css"]`)  .should('have.attr', 'rel', 'stylesheet');
+        cy.document().find(`head link[href="${Cypress.config().baseUrl}/comentario.css"]`).should('have.attr', 'rel', 'stylesheet');
         cy.document().find('head link[href="/css-override.css"]').should('have.attr', 'rel', 'stylesheet');
     };
 

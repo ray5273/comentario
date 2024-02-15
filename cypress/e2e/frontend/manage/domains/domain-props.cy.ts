@@ -2,6 +2,7 @@ import { DOMAINS, PATHS, REGEXES, USERS, Util } from '../../../../support/cy-uti
 
 context('Domain Properties page', () => {
 
+    const baseUrl = Cypress.config().baseUrl;
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).props;
 
     const makeAliases = (host: string, installSection: boolean, buttons: boolean, sso: boolean) => {
@@ -56,7 +57,7 @@ context('Domain Properties page', () => {
                     'Anonymous comments',
                     'Local (password-based)',
                     'Non-interactive Single Sign-On',
-                    `via http://localhost:8080/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
+                    `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
                     'Facebook',
                     'GitHub',
                     'GitLab',
@@ -128,7 +129,7 @@ context('Domain Properties page', () => {
                     'Anonymous comments',
                     'Local (password-based)',
                     'Non-interactive Single Sign-On',
-                    `via http://localhost:8080/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
+                    `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
                     'Facebook',
                     'GitHub',
                     'GitLab',
@@ -142,7 +143,7 @@ context('Domain Properties page', () => {
     context('for owner user', () => {
 
         const checkSnippet = (opts: string) => {
-            const html = `<script defer src="${Cypress.config().baseUrl}/comentario.js"></script>\n` +
+            const html = `<script defer src="${baseUrl}/comentario.js"></script>\n` +
                 `<comentario-comments${opts}></comentario-comments>`;
 
             // Check the HTML

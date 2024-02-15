@@ -437,7 +437,7 @@ context('Domain Edit page', () => {
                 cy.get('@authGoogle')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authTwitter')  .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authSso')      .should('be.visible').and('be.enabled').and('be.checked');
-                cy.get('@authSsoUrl')   .should('be.visible').and('be.enabled').and('have.value', `http://localhost:8080/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`);
+                cy.get('@authSsoUrl')   .should('be.visible').and('be.enabled').and('have.value', `${Cypress.config().baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`);
                 cy.get('@authSsoNonInt').should('be.visible').and('be.enabled').and('be.checked');
 
                 // Moderation

@@ -32,9 +32,9 @@ export class EmbedUtils {
         cy.get('@root').find('.comentario-profile-bar').as('profileBar');
 
         // Check login/logout buttons
-        cy.get('@profileBar').contains('button', 'Login')
+        cy.get('@profileBar').contains('button', 'Sign in')
             .should(settings?.anonymous && (settings?.login ?? true) ? 'be.visible' : 'not.exist');
-        cy.get('@profileBar').contains('button', 'Logout')
+        cy.get('@profileBar').find('button[title="Logout"]')
             .should(settings?.anonymous ? 'not.exist' : 'be.visible');
 
         // Check main area

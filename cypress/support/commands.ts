@@ -579,8 +579,8 @@ Cypress.Commands.add(
             Cypress.on('uncaught:exception', () => false);
         }
 
-        // Click on Login: a popup dialog appears
-        cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
+        // Click on "Sign in": a popup dialog appears
+        cy.contains('.comentario-root .comentario-profile-bar button', 'Sign in').click();
         cy.get('.comentario-root .comentario-dialog').should('be.visible');
 
         // Fill out the login form and submit
@@ -639,8 +639,8 @@ Cypress.Commands.add(
     });
 
 Cypress.Commands.add('testSiteSsoLogin', {prevSubject: false}, () => {
-    // Click on Login: a popup dialog appears
-    cy.contains('.comentario-root .comentario-profile-bar button', 'Login').click();
+    // Click on "Sign in": a popup dialog appears
+    cy.contains('.comentario-root .comentario-profile-bar button', 'Sign in').click();
     cy.get('.comentario-root .comentario-dialog').should('be.visible');
 
     // Click on the SSO login button: the process runs in the background
@@ -653,7 +653,7 @@ Cypress.Commands.add('testSiteSsoLogin', {prevSubject: false}, () => {
 Cypress.Commands.add(
     'testSiteLogout',
     {prevSubject: false},
-    () => void cy.contains('.comentario-root .comentario-profile-bar button', 'Logout').click());
+    () => void cy.get('.comentario-root .comentario-profile-bar button[title="Logout"]').click());
 
 Cypress.Commands.add(
     'testSiteCheckMessage',

@@ -64,7 +64,7 @@ export class LoginDialog extends Dialog {
             form.append(
                 // Subtitle
                 UIToolkit.div('dialog-centered')
-                    .inner(`Login via ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
+                    .inner(`Log in via ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
                 // SSO button
                 UIToolkit.div('oauth-buttons')
                     .append(UIToolkit.button('Single Sign-On', () => this.dismissWith('sso'), 'btn-sso')));

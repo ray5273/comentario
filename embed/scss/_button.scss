@@ -39,13 +39,13 @@
         opacity: 0.3 !important;
     }
 
-    &:not(.comentario-btn-link).comentario-btn-active {
+    &:not(.comentario-btn-link):not(.comentario-btn-tool).comentario-btn-active {
         color: var(--cmntr-btn-active-color);
         background-color: var(--cmntr-btn-active-bg);
         @include btn-active-shadow();
     }
 
-    &:not(.comentario-btn-link):not(.comentario-btn-active) {
+    &:not(.comentario-btn-link):not(.comentario-btn-tool):not(.comentario-btn-active) {
         @include btn-shadow();
     }
 
@@ -61,17 +61,8 @@
     margin: 2.5px;
 }
 
-.comentario-btn-submit {
-    --cmntr-btn-color:       #{$white};
-    --cmntr-btn-hover-color: #{$white};
-    --cmntr-btn-bg:          #{$primary};
-    --cmntr-btn-hover-bg:    #{$blue-6};
-
-    font-weight: bold;
-
-    .comentario-icon {
-        font-size: 20px;
-    }
+.comentario-submit-icon {
+    font-size: 20px;
 }
 
 @mixin make-btn($name, $color, $bg-color) {
@@ -85,6 +76,7 @@
     }
 }
 
+@include make-btn("primary",   $white, $primary);
 @include make-btn("secondary", $white, $secondary);
 @include make-btn("danger",    $white, $red-8);
 @include make-btn("facebook",  $white, #1877f2);

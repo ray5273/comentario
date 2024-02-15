@@ -184,7 +184,8 @@ export class Comentario extends HTMLElement {
                     idp => this.oAuthLogin(idp),
                     () => this.logout(),
                     data => this.signup(data),
-                    data => this.saveUserSettings(data)),
+                    data => this.saveUserSettings(data),
+                    () => this.pageReadonlyToggle()),
                 // Main area
                 this.mainArea = UIToolkit.div('main-area'),
                 // Footer
@@ -405,20 +406,6 @@ export class Comentario extends HTMLElement {
         // Clean up everything from the main area
         this.mainArea!.html('');
         this.commentsArea = undefined;
-
-        // Add a moderator toolbar, in necessary
-        if (this.principal && (this.principal.isSuperuser || this.principal.isOwner || this.principal.isModerator)) {
-            this.mainArea!.append(
-                UIToolkit.div('mod-tools')
-                    .append(
-                        // Title
-                        UIToolkit.span('mod-tools-title').inner('Moderator tools'),
-                        // Lock/Unlock button
-                        UIToolkit.button(
-                            this.pageInfo?.isPageReadonly ? 'Unlock thread' : 'Lock thread',
-                            () => this.pageReadonlyToggle(),
-                            'btn-link')));
-        }
 
         // If the domain or the page are readonly, add a corresponding message
         if (this.pageInfo?.isDomainReadonly || this.pageInfo?.isPageReadonly) {
@@ -874,15 +861,12 @@ export class Comentario extends HTMLElement {
     /**
      * Save current user's settings.
      */
-    private async saveUserSettings(data: UserSettings) {
+    private async saveUserSettings(data: UserSettings): Promise<void> {
         // Run the update with the backend
         await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.notifyReplies, data.notifyModerator);
 
-        // Refresh the auth status and update the profile bar
+        // Refresh the principal (it holds the profile settings) and update the profile bar
         await this.updateAuthStatus();
-
-        // Reload all comments to reflect new commenter settings
-        await this.reload();
     }
 
     /**

@@ -1,4 +1,4 @@
-import { DOMAINS, DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, DYN_CONFIG_ITEMS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Login dialog', () => {
@@ -7,8 +7,8 @@ context('Login dialog', () => {
         cy.testSiteVisit(TEST_PATHS.comments);
         EmbedUtils.makeAliases({anonymous: true});
 
-        // Click on Login
-        cy.get('@profileBar').contains('button', 'Login').click();
+        // Click on "Sign in"
+        cy.get('@profileBar').contains('button', 'Sign in').click();
 
         // Aliases
         cy.get('@root').find('.comentario-dialog').as('loginDialog').should('be.visible')
@@ -44,15 +44,15 @@ context('Login dialog', () => {
         it('shows no login button when disabled', () => {
             cy.backendPatchDomain(DOMAINS.localhost.id, {authSso: false});
             openLoginDlg();
-            cy.get('@loginDialog').contains('Login via localhost:8080').should('not.exist');
-            cy.get('@loginDialog').contains('button', 'Single Sign-On').should('not.exist');
+            cy.get('@loginDialog').contains('Log in via localhost:8080').should('not.exist');
+            cy.get('@loginDialog').contains('button', 'Single Sign-On') .should('not.exist');
         });
 
         context('when initially enabled', () => {
 
             beforeEach(() => {
                 openLoginDlg();
-                cy.get('@loginDialog').contains('Login via localhost:8080').next()
+                cy.get('@loginDialog').contains('Log in via localhost:8080').next()
                     .contains('button', 'Single Sign-On').as('btnSso').should('be.visible').and('be.enabled');
             });
 
@@ -64,11 +64,13 @@ context('Login dialog', () => {
             it('logs in existing user after disabled', () => {
                 // Login via SSO to register a new account
                 cy.get('@btnSso').click();
-                cy.testSiteLogout();
+
+                // Click on "Logout"
+                cy.get('@profileBar').find('button[title="Logout"]').click();
 
                 // Now disable SSO signups and login again
                 cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsSsoSignupEnabled, false);
-                cy.get('@profileBar').contains('button', 'Login').click();
+                cy.get('@profileBar').contains('button', 'Sign in').click();
                 cy.get('@root').contains('.comentario-dialog button', 'Single Sign-On').click();
                 cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
             });
@@ -158,7 +160,7 @@ context('Login dialog', () => {
                 // Check the Forgot password link
                 cy.get('@loginDialog').contains('a', 'Forgot your password?')
                     .should('be.visible')
-                    .and('be.anchor', 'http://localhost:8080/en/auth/forgotPassword', {newTab: true});
+                    .and('be.anchor', Cypress.config().baseUrl + PATHS.auth.forgotPassword, {newTab: true});
             });
 
             context('allows to login', () => {

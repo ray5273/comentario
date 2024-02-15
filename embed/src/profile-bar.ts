@@ -24,6 +24,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onLogout Callback for executing logout.
      * @param onSignup Callback for executing user registration.
      * @param onSaveSettings Callback for saving user settings.
+     * @param onToggleLock Callback for toggling page lock.
      */
     constructor(
         private readonly baseUrl: string,
@@ -36,8 +37,9 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly onLogout: () => void,
         private readonly onSignup: (data: SignupData) => Promise<void>,
         private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
+        private readonly onToggleLock: () => Promise<void>,
     ) {
-        super(UIToolkit.div('profile-bar').element);
+        super(UIToolkit.div('profile-bar', 'toolbar', 'py-2').element);
     }
 
     /**
@@ -108,7 +110,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     /**
      * Show a signup dialog and return a promise that's resolved when the dialog is closed.
      */
-    async signupUser(): Promise<void> {
+    private async signupUser(): Promise<void> {
         const dlg = await SignupDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.config);
         if (dlg.confirmed) {
             await this.onSignup(dlg.data);
@@ -118,7 +120,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     /**
      * Show the settings dialog and return a promise that's resolved when the dialog is closed.
      */
-    async editSettings(): Promise<void> {
+    private async editSettings(): Promise<void> {
         const dlg = await SettingsDialog.run(
             this.root,
             {ref: this.btnSettings!, placement: 'bottom-end'},
@@ -137,31 +139,41 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         // Remove all content
         this.html('');
         this.btnSettings = undefined;
-        this.btnLogin = undefined;
+        this.btnLogin    = undefined;
 
         // If the user is authenticated
         if (this._principal) {
+            const isMod = this._principal.isSuperuser || this._principal.isOwner || this._principal.isModerator;
+            const isDomainRO = this._pageInfo?.isDomainReadonly;
+            const isPageRO = this._pageInfo?.isPageReadonly;
             this.append(
                 // Commenter avatar and name
-                UIToolkit.div('logged-in-as')
+                UIToolkit.div('toolbar-section')
                     .append(
                         // Avatar
                         this.onGetAvatar(),
                         // Name and link
                         Wrap.new(this._principal.websiteUrl ? 'a' : 'div')
-                            .classes('name')
+                            .classes('name', 'text-muted', 'fw-bold')
                             .inner(this._principal.name!)
                             .attr({
                                 href: this._principal.websiteUrl,
                                 rel:  this._principal.websiteUrl && 'nofollow noopener noreferrer',
                             })),
                 // Buttons on the right
-                UIToolkit.div()
+                UIToolkit.div('toolbar-section')
                     .append(
-                        // Settings link
-                        this.btnSettings = UIToolkit.button('Settings', () => this.editSettings(), 'btn-link'),
-                        // Logout link
-                        UIToolkit.button('Logout', () => this.onLogout(), 'btn-link')));
+                        // Lock/Unlock button. The whole comment thread will be reloaded if it's toggled
+                        isMod && !isDomainRO &&
+                            UIToolkit.toolButton(
+                                isPageRO ? 'unlock' : 'lock',
+                                isPageRO ? 'Unlock' : 'Lock',
+                                () => this.onToggleLock(),
+                                'btn-lg'),
+                        // Settings button
+                        this.btnSettings = UIToolkit.toolButton('gear', 'Settings', () => this.editSettings(), 'btn-lg'),
+                        // Logout button
+                        UIToolkit.toolButton('exit', 'Logout', () => this.onLogout(), 'btn-lg')));
             return;
         }
 
@@ -171,7 +183,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
                 UIToolkit.div(),
                 // Add a Login button
-                this.btnLogin = UIToolkit.button('Login', () => this.loginUser(), 'btn-link', 'fw-bold'));
+                this.btnLogin = UIToolkit.button('Sign in', () => this.loginUser(), 'btn-primary', 'fw-bold'));
         }
     }
 }

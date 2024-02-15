@@ -1,4 +1,4 @@
-import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 // eslint-disable-next-line no-only-or-skip-tests/no-skip-tests
@@ -8,21 +8,21 @@ context('Profile bar', () => {
 
     beforeEach(cy.backendReset);
 
-    context('Login button', () => {
+    context('Sign in button', () => {
 
-        // Because of the login popup, this only works with a "headed" browser
+        // Because of the login popup window, this only works with a "headed" browser
         itHeaded('triggers SSO auth when only interactive SSO is enabled', () => {
             cy.backendPatchDomain(DOMAINS.localhost.id, {
-                authLocal: false,
-                authAnonymous: false,
+                authLocal:         false,
+                authAnonymous:     false,
                 ssoNonInteractive: false
             });
             cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
             cy.testSiteVisit(TEST_PATHS.comments);
             EmbedUtils.makeAliases({anonymous: true});
 
-            // Click on Login and get immediately logged-in
-            cy.get('@profileBar').contains('button', 'Login').click();
+            // Click on "Sign in" and get immediately logged in
+            cy.get('@profileBar').contains('button', 'Sign in').click();
             cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
         });
 
@@ -55,11 +55,106 @@ context('Profile bar', () => {
                 }));
     });
 
-    it('logs user out', () => {
-        cy.testSiteLoginViaApi(USERS.ace, TEST_PATHS.comments);
-        cy.testSiteLogout();
+    context('when logged in', () => {
 
-        // Verify there's a Login button again
-        EmbedUtils.makeAliases({anonymous: true});
+        [
+            {name: 'superuser',   user: USERS.root,           isModerator: true},
+            {name: 'owner',       user: USERS.ace,            isModerator: true},
+            {name: 'moderator',   user: USERS.king,           isModerator: true},
+            {name: 'commenter',   user: USERS.commenterTwo,   isModerator: false},
+            {name: 'read-only',   user: USERS.commenterThree, isModerator: false},
+            {name: 'non-domain',  user: USERS.commenterOne,   isModerator: false},
+        ]
+            .forEach(test =>
+                context(`as ${test.name} user`, () => {
+
+                    beforeEach(() => {
+                        // Make the user logged-in
+                        cy.testSiteLoginViaApi(test.user, TEST_PATHS.comments);
+                        EmbedUtils.makeAliases();
+
+                        // Make button aliases
+                        if (test.isModerator) {
+                            cy.get('@profileBar').find('button[title="Lock"]').as('btnLock').should('be.visible');
+                        } else {
+                            cy.get('@profileBar').find('button[title="Lock"]').should('not.exist');
+                        }
+                        cy.get('@profileBar').find('button[title="Settings"]').as('btnSettings').should('be.visible');
+                        cy.get('@profileBar').find('button[title="Logout"]')  .as('btnLogout')  .should('be.visible');
+                    });
+
+                    it('logs user out', () => {
+                        // Verify logout works
+                        cy.get('@btnLogout').click();
+
+                        // Verify there's a "Sign in" button again
+                        EmbedUtils.makeAliases({anonymous: true});
+                    });
+
+                    it('allows to update settings', () => {
+                        // Click on the gear button: the Settings dialog appears
+                        cy.get('@btnSettings').click();
+                        cy.get('@root').find('.comentario-dialog').as('settingsDialog').should('be.visible')
+                            .contains('.comentario-dialog-header', `User settings for ${DOMAINS.localhost.name}`).should('be.visible');
+
+                        // Check moderator notifications
+                        if (test.isModerator) {
+                            cy.get('@settingsDialog').find('#comentario-cb-notify-moderator')
+                                .should('be.visible').and('be.checked')
+                                .clickLabel()
+                                .should('not.be.checked');
+                        } else {
+                            cy.get('@settingsDialog').find('#comentario-cb-notify-moderator').should('not.exist');
+                        }
+
+                        // Check reply notifications
+                        cy.get('@settingsDialog').find('#comentario-cb-notify-replies')
+                            .should('be.visible').and('be.checked')
+                            .clickLabel()
+                            .should('not.be.checked');
+
+                        // Check profile link
+                        cy.get('@settingsDialog').contains('Edit Comentario profile')
+                            .should(
+                                'be.anchor',
+                                Cypress.config().baseUrl + PATHS.manage.account.profile,
+                                {newTab: true, noOpener: true});
+
+                        // Click "Save" and the dialog disappears
+                        cy.intercept('POST', '/api/embed/auth/user').as('fetchPrincipal');
+                        cy.get('@settingsDialog').find('button[type=submit]').should('have.text', 'Save').click();
+                        cy.get('@settingsDialog').should('not.exist');
+
+                        // Wait for the principal to get re-fetched
+                        cy.wait('@fetchPrincipal');
+
+                        // Open the dialog again and check the settings
+                        cy.get('@btnSettings').click();
+                        cy.get('@root').find('.comentario-dialog').as('settingsDialog').should('be.visible');
+                        cy.get('@settingsDialog').find('#comentario-cb-notify-moderator').should(test.isModerator ? 'not.be.checked' : 'not.exist');
+                        cy.get('@settingsDialog').find('#comentario-cb-notify-replies')  .should('not.be.checked')
+                            // Click on Escape and it's gone again
+                            .type('{esc}');
+                        cy.get('@settingsDialog').should('not.exist');
+                    });
+
+                    if (test.isModerator) {
+                        it('allows to toggle page lock', () => {
+                            // Click on Lock and the page gets read-only
+                            cy.get('@btnLock').click();
+                            EmbedUtils.makeAliases({readonly: true, notice: 'This thread is locked. You cannot add new comments.'});
+                            cy.get('@profileBar').find('button[title="Lock"]')  .should('not.exist');
+                            cy.get('@profileBar').find('button[title="Unlock"]').should('be.visible')
+                                // Click on Unlock
+                                .click();
+
+                            // Page is writable again, the notice is gone
+                            EmbedUtils.makeAliases();
+                            cy.get('@profileBar').find('button[title="Unlock"]').should('not.exist');
+                            cy.get('@profileBar').find('button[title="Lock"]')  .should('be.visible');
+                        });
+                    }
+                }));
+
     });
 });

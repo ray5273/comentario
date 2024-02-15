@@ -60,7 +60,7 @@ context('Config Manager', () => {
 
             // Check the items
             cy.get('app-static-config #static-config-items').dlTexts().should('matrixMatch', [
-                ['Base Comentario URL',                     'http://localhost:8080/'],
+                ['Base Comentario URL',                     Cypress.config().baseUrl + '/'],
                 ['Base documentation URL',                  'https://edge.docs.comentario.app'],
                 ['Comentario version',                      /^\d+.\d+/],
                 ['Build date',                              REGEXES.datetime],

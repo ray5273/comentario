@@ -459,39 +459,39 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Upvote / Downvote buttons and the score
         if (ctx.enableVoting) {
             left.append(
-                this.btnUpvote = UIToolkit.iconButton('arrowUp', 'Upvote', () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1), 'btn-link')
+                this.btnUpvote = UIToolkit.toolButton('arrowUp', 'Upvote', () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
                     .attr(ownComment && {disabled: 'true'}),
                 this.eScore = UIToolkit.div('score').attr({title: 'Comment score'}),
-                this.btnDownvote = UIToolkit.iconButton('arrowDown', 'Downvote', () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1), 'btn-link')
+                this.btnDownvote = UIToolkit.toolButton('arrowDown', 'Downvote', () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
                     .attr(ownComment && {disabled: 'true'}));
         }
 
         // Reply button
         if (ctx.canAddComments) {
-            this.btnReply = UIToolkit.iconButton('reply', 'Reply', () => ctx.onReply(this), 'btn-link').appendTo(left);
+            this.btnReply = UIToolkit.toolButton('reply', 'Reply', () => ctx.onReply(this)).appendTo(left);
         }
 
         // Approve/reject buttons
         if (this.isModerator && this._comment.isPending) {
-            this.btnApprove = UIToolkit.iconButton('check', 'Approve', () => ctx.onModerate(this, true),  'btn-link', 'text-success').appendTo(right);
-            this.btnReject  = UIToolkit.iconButton('times', 'Reject',  () => ctx.onModerate(this, false), 'btn-link', 'text-warning').appendTo(right);
+            this.btnApprove = UIToolkit.toolButton('check', 'Approve', () => ctx.onModerate(this, true),  'text-success').appendTo(right);
+            this.btnReject  = UIToolkit.toolButton('times', 'Reject',  () => ctx.onModerate(this, false), 'text-warning').appendTo(right);
         }
 
         // Sticky toggle button (top-level comments only)
         if (!this._comment.parentId) {
-            this.btnSticky = UIToolkit.iconButton('star', '', () => ctx.onSticky(this), 'btn-link')
+            this.btnSticky = UIToolkit.toolButton('star', '', () => ctx.onSticky(this))
                 .attr({disabled: this.isModerator ? null : 'true'})
                 .appendTo(right);
         }
 
         // Edit button: when enabled
         if (this.isModerator && ctx.modCommentEditing || ownComment && ctx.ownCommentEditing) {
-            this.btnEdit = UIToolkit.iconButton('pencil', 'Edit', () => ctx.onEdit(this), 'btn-link').appendTo(right);
+            this.btnEdit = UIToolkit.toolButton('pencil', 'Edit', () => ctx.onEdit(this)).appendTo(right);
         }
 
         // Delete button: when enabled
         if (this.isModerator && ctx.modCommentDeletion || ownComment && ctx.ownCommentDeletion) {
-            this.btnDelete = UIToolkit.iconButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'btn-link', 'text-danger').appendTo(right);
+            this.btnDelete = UIToolkit.toolButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'text-danger').appendTo(right);
         }
         return toolbar;
     }

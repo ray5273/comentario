@@ -65,6 +65,13 @@ blockquote {
     margin-right: 0.25em !important;
 }
 
+// Padding
+
+.comentario-py-2 {
+    padding-top:    0.5rem !important;
+    padding-bottom: 0.5rem !important;
+}
+
 // Font weight
 
 .comentario-fw-bold {
@@ -101,6 +108,9 @@ blockquote {
 
 // Colourising
 
+.comentario-text-muted {
+    color: $gray-7 !important;
+}
 .comentario-text-success {
     color: $green-7 !important;
 }

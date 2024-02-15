@@ -10,7 +10,7 @@
         align-items: center;
     }
 
-    .comentario-btn-link {
+    .comentario-btn-tool {
         --cmntr-btn-color: $gray-7;
 
         margin: 0;
@@ -18,5 +18,15 @@
         width: 32px;
         height: 32px;
         opacity: 0.5;
+
+        &.comentario-btn-lg {
+            width: 40px;
+            height: 40px;
+
+            .comentario-icon {
+                width: 1.25em;
+                height: 1.25em;
+            }
+        }
     }
 }
