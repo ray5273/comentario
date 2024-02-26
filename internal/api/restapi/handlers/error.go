@@ -20,9 +20,9 @@ var (
 	ErrorInvalidInputData      = &exmodels.Error{ID: "invalid-input-data", Message: "Invalid input data provided"}
 	ErrorInvalidPropertyValue  = &exmodels.Error{ID: "invalid-prop-value", Message: "Value of the property is invalid"}
 	ErrorInvalidUUID           = &exmodels.Error{ID: "invalid-uuid", Message: "Invalid UUID value"}
-	ErrorLoginLocally          = &exmodels.Error{ID: "login-locally", Message: "Login with your email and password instead"}
-	ErrorLoginUsingIdP         = &exmodels.Error{ID: "login-using-idp", Message: "Login via federated identity provider"}
-	ErrorLoginUsingSSO         = &exmodels.Error{ID: "login-using-sso", Message: "Login via SSO"}
+	ErrorLoginLocally          = &exmodels.Error{ID: "login-locally", Message: "There's already a registered account with this email. Please login with your email and password instead"}
+	ErrorLoginUsingIdP         = &exmodels.Error{ID: "login-using-idp", Message: "There's already a registered account with this email. Please login via the correct federated identity provider instead"}
+	ErrorLoginUsingSSO         = &exmodels.Error{ID: "login-using-sso", Message: "There's already a registered account with this email. Please login via SSO"}
 	ErrorNewOwnersForbidden    = &exmodels.Error{ID: "new-owners-forbidden", Message: "New owner users are forbidden"}
 	ErrorNoLocalUser           = &exmodels.Error{ID: "no-local-user", Message: "User is not locally authenticated"}
 	ErrorNoRootComment         = &exmodels.Error{ID: "no-root-comment", Message: "Comment is not a root comment"}

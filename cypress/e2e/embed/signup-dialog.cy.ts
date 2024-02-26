@@ -172,7 +172,7 @@ context('Signup dialog', () => {
 
         it('with a federated user\'s email', () => {
             signupWith({...USERS.facebookUser, password: 'Passw0rd'});
-            cy.testSiteCheckMessage('Login via federated identity provider (facebook)');
+            cy.testSiteCheckMessage('There\'s already a registered account with this email. Please login via the correct federated identity provider instead (facebook)');
         });
 
         it('with invalid website URL', () => {
