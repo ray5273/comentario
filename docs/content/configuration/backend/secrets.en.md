@@ -15,17 +15,22 @@ tags:
     - email
     - authentication
     - spam detection
+    - Facebook
     - GitHub
     - GitLab
     - Google
     - Twitter
+    - X
     - Akismet
     - Perspective
     - APILayer
     - extension
 seeAlso:
     - /configuration/idps/facebook
+    - /configuration/idps/github
+    - /configuration/idps/gitlab
     - /configuration/idps/google
+    - /configuration/idps/twitter
 ---
 
 Comentario stores its sensitive data in a YAML file called *secrets*. The secrets file is a part of [static backend configuration](static).

@@ -1,7 +1,6 @@
 ---
 title: Login via Google
 description: How to configure OAuth2 login via Google
-weight: 100
 tags:
     - configuration
     - identity provider

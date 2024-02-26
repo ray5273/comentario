@@ -43,7 +43,10 @@
     </div>
     <!-- Configured federated identity providers -->
     <div>
-        <dt i18n>Configured federated identity providers</dt>
+        <dt>
+            <ng-container i18n>Configured federated identity providers</ng-container>
+            <app-info-icon docLink="configuration/idps/" class="ms-2"/>
+        </dt>
         <dd>
             @if (cfg.federatedIdps?.length) {
                 <ul class="list-unstyled">
