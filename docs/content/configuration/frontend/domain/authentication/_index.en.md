@@ -19,6 +19,8 @@ tags:
     - Single Sign-On
 seeAlso:
     - /configuration/frontend/domain
+    - /configuration/idps/facebook
+    - /configuration/idps/google
 ---
 
 The `Authentication` tab allows to configure commenter authentication options for the domain.
@@ -29,5 +31,5 @@ These options include:
 
 * Anonymous comments
 * Local (username-and-password-based)
-* Social login via external identity providers (Facebook, GitHub, GitLab, Google, Twitter)
+* Social login via external identity providers ([Facebook](/configuration/idps/facebook), GitHub, GitLab, [Google](/configuration/idps/google), Twitter)
 * [Single Sign-On](sso)

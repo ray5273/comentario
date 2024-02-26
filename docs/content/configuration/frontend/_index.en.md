@@ -1,7 +1,7 @@
 ---
 title: Frontend configuration
 description: Configuring Comentario via the Administration UI
-weight: 50
+weight: 20
 tags:
     - configuration
     - frontend

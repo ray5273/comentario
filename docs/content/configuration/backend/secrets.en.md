@@ -11,6 +11,7 @@ tags:
     - PostgreSQL
     - SMTP
     - identity provider
+    - idp
     - email
     - authentication
     - spam detection
@@ -22,6 +23,9 @@ tags:
     - Perspective
     - APILayer
     - extension
+seeAlso:
+    - /configuration/idps/facebook
+    - /configuration/idps/google
 ---
 
 Comentario stores its sensitive data in a YAML file called *secrets*. The secrets file is a part of [static backend configuration](static).
