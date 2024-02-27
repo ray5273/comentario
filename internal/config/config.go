@@ -195,10 +195,23 @@ func URLForUI(lang, subPath string, queryParams map[string]string) string {
 }
 
 func configureMailer() error {
-	// If SMTP credentials are available, use a corresponding mailer
+	// If SMTP host is available, use a corresponding mailer
 	cfg := &SecretsConfig.SMTPServer
-	if cfg.Host == "" || cfg.User == "" || cfg.Pass == "" {
+	if cfg.Host == "" {
+		logger.Warning("SMTP host isn't provided, sending emails is not available")
 		return nil
+	}
+
+	// Issue a notification if no credentials are provided
+	if cfg.User == "" {
+		logger.Info("SMTP username isn't provided, no SMTP authentication will be used")
+	} else if cfg.Pass == "" {
+		logger.Warning("SMTP password isn't provided")
+	}
+
+	// Default port value is for STARTTLS
+	if cfg.Port == 0 {
+		cfg.Port = 587
 	}
 
 	// Figure out encryption params
