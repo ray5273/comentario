@@ -10,7 +10,8 @@ import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
-	_ "github.com/lib/pq" // PostgreSQL driver
+	_ "github.com/lib/pq"           // PostgreSQL driver
+	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -29,10 +30,11 @@ var logger = logging.MustGetLogger("persistence")
 
 // Database is an opaque structure providing database operations
 type Database struct {
+	dialect  string    // Database dialect in use
 	debug    bool      // Whether debug logging is enabled
 	db       *sql.DB   // Internal SQL database instance
 	doneConn chan bool // Receives a true when the connection process has been finished (successfully or not)
-	Version  string    // Actual database server version
+	version  string    // Actual database server version
 }
 
 // InitDB establishes a database connection
@@ -42,8 +44,20 @@ func InitDB() (*Database, error) {
 		return nil, err
 	}
 
+	// Determine the DB dialect (defaults to "postgres")
+	dialect := config.SecretsConfig.DBDialect
+	switch dialect {
+	case "":
+		dialect = "postgres"
+	case "postgres":
+	case "sqlite3":
+		break
+	default:
+		return nil, fmt.Errorf("unknown DB dialect: %q", dialect)
+	}
+
 	// Create a new database instance
-	db := &Database{debug: config.CLIFlags.DBDebug, doneConn: make(chan bool, 1)}
+	db := &Database{dialect: dialect, debug: config.CLIFlags.DBDebug, doneConn: make(chan bool, 1)}
 
 	// Try to connect
 	if err := db.connect(); err != nil {
@@ -59,9 +73,11 @@ func InitDB() (*Database, error) {
 	return db, nil
 }
 
+var errUnknownDialect = errors.New("unknown DB dialect")
+
 // Dialect returns the goqu dialect to use for this database
 func (db *Database) Dialect() goqu.DialectWrapper {
-	return goqu.Dialect("postgres")
+	return goqu.Dialect(db.dialect)
 }
 
 // Execute executes the provided goqu expression against the database
@@ -194,6 +210,21 @@ func (db *Database) Migrate(seed string) error {
 
 	// Install seed SQL, if any
 	if seed != "" {
+		// Preprocess the seed to tailor relative dates and binary data to the used database
+		reRelDate := regexp.MustCompile(`SEED_NOW\(([^)]+)\)`)
+		reBinary := regexp.MustCompile(`SEED_BINARY\('([^)]+)'\)`)
+		switch db.dialect {
+		case "postgres":
+			seed = reRelDate.ReplaceAllString(seed, "current_timestamp + interval $1")
+			seed = reBinary.ReplaceAllString(seed, `E'\\x$1'`)
+		case "sqlite3":
+			seed = reRelDate.ReplaceAllString(seed, "datetime('now', $1)")
+			seed = reBinary.ReplaceAllString(seed, `x'$1'`)
+		default:
+			return errUnknownDialect
+		}
+
+		// Run the seed script
 		if _, err := db.db.Exec(seed); err != nil {
 			return err
 		}
@@ -207,14 +238,36 @@ func (db *Database) Migrate(seed string) error {
 func (db *Database) RecreateSchema() error {
 	logger.Debug("db.RecreateSchema()")
 
-	// Drop the public schema
-	if _, err := db.db.Exec("drop schema public cascade"); err != nil {
-		return err
-	}
+	switch db.dialect {
+	case "postgres":
+		// Drop the public schema
+		if _, err := db.db.Exec("drop schema public cascade"); err != nil {
+			return err
+		}
 
-	// Create the public schema
-	if _, err := db.db.Exec("create schema public"); err != nil {
-		return err
+		// Create the public schema
+		if _, err := db.db.Exec("create schema public"); err != nil {
+			return err
+		}
+
+	case "sqlite3":
+		// Disconnect from the DB
+		if err := db.Shutdown(); err != nil {
+			return err
+		}
+
+		// Remove the database file
+		if err := os.Remove(config.SecretsConfig.SQLite3.File); err != nil {
+			return err
+		}
+
+		// Reconnect
+		if err := db.connect(); err != nil {
+			return err
+		}
+
+	default:
+		return errUnknownDialect
 	}
 	return nil
 }
@@ -268,14 +321,44 @@ func (db *Database) Shutdown() error {
 	return nil
 }
 
+// StartOfDay returns an expression for truncating the given datetime column to the start of day
+func (db *Database) StartOfDay(col string) exp.LiteralExpression {
+	switch db.dialect {
+	case "postgres":
+		col = fmt.Sprintf("date_trunc('day', %s)", col)
+	case "sqlite3":
+		col = fmt.Sprintf("strftime('%%FT00:00:00Z', %s)", col)
+	}
+	return goqu.L(col)
+}
+
+// Version returns the actual database server version
+func (db *Database) Version() string {
+	// Lazy-load the version
+	if db.version == "" {
+		// Try to fetch the version using the appropriate command
+		var err error
+		switch db.dialect {
+		case "postgres":
+			err = db.db.QueryRow("select version()").Scan(&db.version)
+		case "sqlite3":
+			err = db.db.QueryRow("select sqlite_version()").Scan(&db.version)
+			db.version = "SQLite " + db.version
+		default:
+			err = errUnknownDialect
+		}
+
+		// Check if fetching failed
+		if err != nil {
+			db.version = fmt.Sprintf("(failed to retrieve: %v)", err)
+		}
+	}
+	return db.version
+}
+
 // connect establishes a database connection up to the configured number of attempts
 func (db *Database) connect() error {
-	logger.Infof(
-		"Connecting to database '%s' at %s@%s:%d...",
-		config.SecretsConfig.Postgres.Database,
-		config.SecretsConfig.Postgres.Username,
-		config.SecretsConfig.Postgres.Host,
-		config.SecretsConfig.Postgres.Port)
+	logger.Infof("Connecting to DB using driver %q at %s...", db.dialect, db.getConnectString(true))
 
 	var interrupted atomic.Bool // Whether the connection process has been interrupted (because of a requested shutdown)
 
@@ -335,22 +418,18 @@ func (db *Database) connect() error {
 	// Configure the database
 	db.db.SetMaxIdleConns(config.CLIFlags.DBIdleConns)
 
-	// Fetch database version
-	if err := db.db.QueryRow("select version()").Scan(&db.Version); err != nil {
-		db.Version = fmt.Sprintf("(failed to retrieve: %v)", err)
-	}
-
 	// Succeeded
-	logger.Infof("Connected to database: %s", db.Version)
+	logger.Infof("Connected to %q database version %s", db.dialect, db.Version())
 	return nil
 }
 
 // getAvailableMigrations returns a list of available database migration files
 func (db *Database) getAvailableMigrations() ([]string, error) {
 	// Scan the migrations dir for available migration files
-	files, err := os.ReadDir(config.CLIFlags.DBMigrationPath)
+	dir := path.Join(config.CLIFlags.DBMigrationPath, db.dialect)
+	files, err := os.ReadDir(dir)
 	if err != nil {
-		logger.Errorf("Failed to read DB migrations dir '%s': %v", config.CLIFlags.DBMigrationPath, err)
+		logger.Errorf("Failed to read DB migrations dir %q: %v", dir, err)
 		return nil, err
 	}
 
@@ -365,22 +444,34 @@ func (db *Database) getAvailableMigrations() ([]string, error) {
 
 	// The files must be sorted by name, in the ascending order
 	sort.Strings(list)
-	logger.Infof("Discovered %d database migrations in %s", len(list), config.CLIFlags.DBMigrationPath)
+	logger.Infof("Discovered %d database migrations in %s", len(list), dir)
 	return list, err
+}
+
+// getConnectString returns a string description of the database connection, optionally masking the password
+func (db *Database) getConnectString(mask bool) string {
+	switch db.dialect {
+	case "postgres":
+		return fmt.Sprintf(
+			"postgres://%s:%s@%s:%d/%s?sslmode=%s",
+			config.SecretsConfig.Postgres.Username,
+			util.If(mask, "********", config.SecretsConfig.Postgres.Password),
+			config.SecretsConfig.Postgres.Host,
+			config.SecretsConfig.Postgres.Port,
+			config.SecretsConfig.Postgres.Database,
+			config.SecretsConfig.Postgres.SSLMode)
+	case "sqlite3":
+		return fmt.Sprintf("%s?_fk=true", config.SecretsConfig.SQLite3.File)
+	}
+	return "(?)"
 }
 
 // getInstalledMigrations returns a map of installed database migrations (filename: md5)
 func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	// If no migrations table is present, it means no migration is installed either (the schema is most likely empty)
-	var cnt int
-	if err := db.SelectRow(
-		db.Dialect().
-			From("pg_tables").
-			Select(goqu.COUNT("*")).
-			Where(goqu.Ex{"schemaname": "public", "tablename": "cm_migrations"})).
-		Scan(&cnt); err != nil {
+	if exists, err := db.tableExists("cm_migrations"); err != nil {
 		return nil, err
-	} else if cnt == 0 {
+	} else if !exists {
 		return nil, nil
 	}
 
@@ -427,7 +518,7 @@ func (db *Database) installMigration(filename string, csExpected *[16]byte) (csA
 	status = "failed"
 
 	// Read in the content of the file
-	fullName := path.Join(config.CLIFlags.DBMigrationPath, filename)
+	fullName := path.Join(config.CLIFlags.DBMigrationPath, db.dialect, filename)
 	contents, err := os.ReadFile(fullName)
 	if err != nil {
 		logger.Errorf("Failed to read file '%s': %v", fullName, err)
@@ -546,20 +637,32 @@ func (db *Database) parseMetadata(b []byte) (map[string]string, error) {
 	return m, nil
 }
 
+// tableExists returns whether table with the specified name exists
+func (db *Database) tableExists(name string) (bool, error) {
+	var sd *goqu.SelectDataset
+	switch db.dialect {
+	case "postgres":
+		sd = db.Dialect().From("pg_tables").Select(goqu.COUNT("*")).Where(goqu.Ex{"schemaname": "public", "tablename": name})
+	case "sqlite3":
+		sd = db.Dialect().From("sqlite_master").Select(goqu.COUNT("*")).Where(goqu.Ex{"type": "table", "name": name})
+	default:
+		return false, errUnknownDialect
+	}
+
+	// Query the DB
+	var cnt int
+	if err := db.SelectRow(sd).Scan(&cnt); err != nil {
+		return false, err
+	}
+
+	// Succeeded
+	return cnt > 0, nil
+}
+
 // tryConnect tries to establish a database connection, once
 func (db *Database) tryConnect(num, total int) error {
 	var err error
-	db.db, err = sql.Open(
-		"postgres",
-		fmt.Sprintf(
-			"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-			config.SecretsConfig.Postgres.Username,
-			config.SecretsConfig.Postgres.Password,
-			config.SecretsConfig.Postgres.Host,
-			config.SecretsConfig.Postgres.Port,
-			config.SecretsConfig.Postgres.Database,
-			config.SecretsConfig.Postgres.SSLMode,
-		))
+	db.db, err = sql.Open(db.dialect, db.getConnectString(false))
 
 	// Failed to connect
 	if err != nil {

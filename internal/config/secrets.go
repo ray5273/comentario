@@ -29,6 +29,8 @@ type APIKey struct {
 
 // SecretsConfig is a configuration object for storing sensitive information
 var SecretsConfig = &struct {
+	DBDialect string `yaml:"dbDialect"` // Database dialect. Defaults to "postgres"
+
 	Postgres struct {
 		Host     string `yaml:"host"`     // PostgreSQL host
 		Port     int    `yaml:"port"`     // PostgreSQL port
@@ -37,6 +39,10 @@ var SecretsConfig = &struct {
 		Database string `yaml:"database"` // PostgreSQL database
 		SSLMode  string `yaml:"sslmode"`  // PostgreSQL sslmode, defaults to "disable"
 	} `yaml:"postgres"`
+
+	SQLite3 struct {
+		File string `yaml:"file"` // Location of the database file
+	} `yaml:"sqlite3"`
 
 	SMTPServer struct {
 		Host       string         `yaml:"host"`       // SMTP server hostname

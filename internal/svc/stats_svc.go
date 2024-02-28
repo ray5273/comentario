@@ -40,7 +40,7 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	date := goqu.L("date_trunc('day', c.ts_created)")
+	date := db.StartOfDay("c.ts_created")
 	q := db.Dialect().
 		From(goqu.T("cm_comments").As("c")).
 		Select(goqu.COUNT("*"), date).
@@ -73,7 +73,7 @@ func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, doma
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	date := goqu.L("date_trunc('day', u.ts_created)")
+	date := db.StartOfDay("u.ts_created")
 	q := db.Dialect().
 		From(goqu.T("cm_domains_users").As("u")).
 		Select(goqu.COUNT("*"), date).
@@ -105,7 +105,7 @@ func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, doma
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	date := goqu.L("date_trunc('day', p.ts_created)")
+	date := db.StartOfDay("p.ts_created")
 	q := db.Dialect().
 		From(goqu.T("cm_domain_pages").As("p")).
 		Select(goqu.COUNT("*"), date).
@@ -137,7 +137,7 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for view counts, grouped by day
-	date := goqu.L("date_trunc('day', v.ts_created)")
+	date := db.StartOfDay("v.ts_created")
 	q := db.Dialect().
 		From(goqu.T("cm_domain_page_views").As("v")).
 		Select(goqu.COUNT("*"), date).
@@ -355,11 +355,19 @@ func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num in
 	// Iterate data rows
 	var res []uint64
 	for rows.Next() {
-		// Fetch a count and a time
+		// Fetch a count and a date. The date has to be fetched as a string and parsed afterwards due to SQLite3
+		// limitation on type detection when using a function, see https://github.com/mattn/go-sqlite3/issues/951
 		var i uint64
-		var t time.Time
-		if err := rows.Scan(&i, &t); err != nil {
+		var dateStr string
+		if err := rows.Scan(&i, &dateStr); err != nil {
 			logger.Errorf("statsService.queryStats: rs.Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
+		}
+
+		// Parse the returned string into time
+		var t time.Time
+		if t, err = time.Parse(time.RFC3339, dateStr); err != nil {
+			logger.Errorf("statsService.queryStats: failed to parse datetime string: %v", err)
 			return nil, translateDBErrors(err)
 		}
 

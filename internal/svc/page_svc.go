@@ -5,7 +5,6 @@ import (
 	"github.com/avct/uasurfer"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
-	"github.com/lib/pq"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -58,12 +57,11 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
 
 	// Query paths/comment counts
-	pa := pq.StringArray(paths) // TODO PostgreSQL-specific
 	rows, err := db.Select(
 		db.Dialect().
 			From("cm_domain_pages").
 			Select("path", "count_comments").
-			Where(goqu.Ex{"domain_id": domainID, "path": goqu.Any(pa)}))
+			Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)))
 	if err != nil {
 		logger.Errorf("pageService.CommentCounts: Select() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -258,8 +256,9 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 				goqu.Or(
 					goqu.Ex{"du.is_owner": true},
 					goqu.Ex{"du.is_moderator": true},
-					goqu.Func(
-						"exists",
+					goqu.L(
+						// Work around extra parens not understood by SQLite: https://github.com/doug-martin/goqu/issues/204
+						"exists ?",
 						db.Dialect().
 							From(goqu.T("cm_comments").As("c")).
 							Where(goqu.Ex{"c.page_id": goqu.I("p.id"), "c.user_created": userID})),

@@ -576,8 +576,7 @@ func (svc *domainService) PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (i
 		db.Dialect().
 			Delete("cm_comments").
 			Where(
-				goqu.I("page_id").
-					Eq(goqu.Any(db.Dialect().From("cm_domain_pages").Select("id").Where(goqu.Ex{"domain_id": id}))),
+				goqu.I("page_id").In(db.Dialect().From("cm_domain_pages").Select("id").Where(goqu.Ex{"domain_id": id})),
 				goqu.Or(filter...)),
 	); err != nil {
 		logger.Errorf("domainService.PurgeByID: ExecuteRes() failed: %v", err)

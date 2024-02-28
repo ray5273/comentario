@@ -122,7 +122,8 @@ context('Domain Operations page', () => {
                         // Purge marked as deleted only: expect 1 removed comment
                         cy.get('@delNoUser').clickLabel();
                         cy.get('@btnPurge').click();
-                        cy.toastCheckAndClose('domain-cleared', '(Removed 1 comment(s))');
+                        // We can't rely on the number of deleted comments (reported in details) as it varies among databases
+                        cy.toastCheckAndClose('domain-cleared');
 
                         // Verify no deleted comment
                         cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
@@ -150,7 +151,8 @@ context('Domain Operations page', () => {
                         cy.get('@delMarked').clickLabel();
                         cy.get('@delNoUser').clickLabel();
                         cy.get('@btnPurge').click();
-                        cy.toastCheckAndClose('domain-cleared', '(Removed 4 comment(s))');
+                        // We can't rely on the number of deleted comments (reported in details) as it varies among databases
+                        cy.toastCheckAndClose('domain-cleared');
 
                         // Verify comments left
                         cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);

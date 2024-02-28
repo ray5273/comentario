@@ -140,7 +140,7 @@ context('User Properties page', () => {
 
     context('allows to delete user', () => {
 
-        const delUser = (delComments: boolean, purge: boolean, expectNumDeleted?: number) => {
+        const delUser = (delComments: boolean, purge: boolean) => {
             cy.loginViaApi(USERS.root, pagePathAce);
             makeAliases(true, true, true, false, true);
 
@@ -165,9 +165,8 @@ context('User Properties page', () => {
 
             // We're back to the User Manager and there's a success toast
             cy.isAt(PATHS.manage.users);
-            cy.toastCheckAndClose(
-                'user-is-deleted',
-                expectNumDeleted === undefined ? '' : `(${expectNumDeleted} comments have been deleted)`);
+            // We can't rely on the number of deleted comments (reported in details) as it varies among databases
+            cy.toastCheckAndClose('user-is-deleted');
 
             // One fewer user on the list
             cy.get('app-user-manager #user-list').verifyListFooter(16, false);
@@ -232,7 +231,7 @@ context('User Properties page', () => {
         });
 
         it('deleting comments', () => {
-            delUser(true, false, 17);
+            delUser(true, false);
 
             // Verify comments' text is deleted as well
             cy.testSiteVisit(TEST_PATHS.home);
@@ -286,7 +285,7 @@ context('User Properties page', () => {
         });
 
         it('purging comments', () => {
-            delUser(true, true, 17);
+            delUser(true, true);
 
             // Verify no comment at all as the root ones were by Ace
             cy.testSiteVisit(TEST_PATHS.home);
@@ -296,7 +295,7 @@ context('User Properties page', () => {
 
     context('allows to ban and unban user', () => {
 
-        const banUser = (delComments: boolean, purge: boolean, expectNumDeleted?: number) => {
+        const banUser = (delComments: boolean, purge: boolean) => {
             cy.loginViaApi(USERS.root, pagePathAce);
             makeAliases(true, true, true, false, true);
 
@@ -321,9 +320,8 @@ context('User Properties page', () => {
 
             // We're still in user properties and there's a success toast
             cy.isAt(pagePathAce);
-            cy.toastCheckAndClose(
-                'user-is-banned',
-                expectNumDeleted === undefined ? '' : `(${expectNumDeleted} comments have been deleted)`);
+            // We can't rely on the number of deleted comments (reported in details) as it varies among databases
+            cy.toastCheckAndClose('user-is-banned');
             cy.get('@userProps').contains('button', 'Unban user').should('have.class', 'active');
 
             // The user is unable to log in
@@ -401,7 +399,7 @@ context('User Properties page', () => {
         });
 
         it('deleting comments', () => {
-            banUser(true, false, 17);
+            banUser(true, false);
 
             // Verify comments text is gone
             cy.testSiteVisit(TEST_PATHS.home);
@@ -455,7 +453,7 @@ context('User Properties page', () => {
         });
 
         it('purging comments', () => {
-            banUser(true, true, 17);
+            banUser(true, true);
 
             // Verify no comment at all as the root ones were by Ace
             cy.testSiteVisit(TEST_PATHS.home);

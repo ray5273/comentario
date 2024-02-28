@@ -65,7 +65,7 @@ context('Config Manager', () => {
                 ['Comentario version',                      /^\d+.\d+/],
                 ['Build date',                              REGEXES.datetime],
                 ['Current server time',                     REGEXES.datetime],
-                ['Database version',                        /^PostgreSQL/],
+                ['Database version',                        /^(PostgreSQL|SQLite)/],
                 ['Default UI language ID',                  'en'],
                 ['Homepage content URL',                    'https://edge.docs.comentario.app/en/embed/front-page/'],
                 ['Configured federated identity providers', ['Facebook', 'GitHub', 'GitLab', 'Google', 'Twitter']],

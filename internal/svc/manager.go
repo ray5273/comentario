@@ -33,7 +33,7 @@ type manager struct {
 }
 
 func (m *manager) DBVersion() string {
-	return db.Version
+	return db.Version()
 }
 
 func (m *manager) E2eRecreateDBSchema(seedSQL string) error {

@@ -207,7 +207,7 @@ context('Profile', () => {
 
     context('account deletion', () => {
 
-        const loginAndDelete = (creds: Cypress.Credentials, delComments: boolean, purge: boolean, succeeds: boolean, expectNumDeleted?: number) => {
+        const loginAndDelete = (creds: Cypress.Credentials, delComments: boolean, purge: boolean, succeeds: boolean) => {
             cy.loginViaApi(creds, PATHS.manage.account.profile);
             makeAliases();
 
@@ -235,9 +235,8 @@ context('Profile', () => {
             if (succeeds) {
                 // We're back to the home page, and there's a success toast
                 cy.isAt(PATHS.home);
-                cy.toastCheckAndClose(
-                    'account-deleted',
-                    expectNumDeleted === undefined ? '' : `(${expectNumDeleted} comments have been deleted)`);
+                // We can't rely on the number of deleted comments (reported in details) as it varies among databases
+                cy.toastCheckAndClose('account-deleted');
 
                 // We're logged off
                 cy.isLoggedIn(false);
@@ -306,7 +305,7 @@ context('Profile', () => {
         });
 
         it('allows deletion, deleting comments', () => {
-            loginAndDelete(USERS.queen, true, false, true, 3);
+            loginAndDelete(USERS.queen, true, false, true);
             cy.testSiteVisit(TEST_PATHS.home);
             cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
@@ -359,7 +358,7 @@ context('Profile', () => {
         });
 
         it('allows deletion, purging comments', () => {
-            loginAndDelete(USERS.queen, true, true, true, 3);
+            loginAndDelete(USERS.queen, true, true, true);
             cy.testSiteVisit(TEST_PATHS.home);
             cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
@@ -430,7 +429,7 @@ context('Profile', () => {
                 cy.toastCheckAndClose('data-saved');
 
                 // Now the deletion succeeds
-                loginAndDelete(USERS.ace, true, true, true, 17);
+                loginAndDelete(USERS.ace, true, true, true);
 
                 // No comment on the test site homepage anymore
                 cy.testSiteVisit(TEST_PATHS.home);
