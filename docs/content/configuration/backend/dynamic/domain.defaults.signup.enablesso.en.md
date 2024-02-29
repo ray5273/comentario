@@ -8,9 +8,9 @@ tags:
     - SSO
     - Single Sign-On
 seeAlso:
-    - auth.signup.enabled.en
-    - domain.defaults.signup.enablefederated.en
-    - domain.defaults.signup.enablelocal.en
+    - auth.signup.enabled
+    - domain.defaults.signup.enablefederated
+    - domain.defaults.signup.enablelocal
     - /configuration/frontend/domain/authentication/sso
 ---
 

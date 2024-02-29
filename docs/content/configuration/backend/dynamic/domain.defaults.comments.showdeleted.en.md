@@ -6,8 +6,8 @@ tags:
     - dynamic configuration
     - administration
 seeAlso:
-    - domain.defaults.comments.deletion.author.en
-    - domain.defaults.comments.deletion.moderator.en
+    - domain.defaults.comments.deletion.author
+    - domain.defaults.comments.deletion.moderator
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter controls the display of deleted comments.

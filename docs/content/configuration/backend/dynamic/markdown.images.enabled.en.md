@@ -6,8 +6,8 @@ tags:
     - dynamic configuration
     - administration
 seeAlso:
-    - markdown.links.enabled.en
-    - markdown.tables.enabled.en
+    - markdown.links.enabled
+    - markdown.tables.enabled
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter configures whether images can be inserted in comments.
