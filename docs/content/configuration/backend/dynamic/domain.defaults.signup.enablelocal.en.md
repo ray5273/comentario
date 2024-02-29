@@ -7,9 +7,9 @@ tags:
     - administration
     - local authentication
 seeAlso:
-    - auth.signup.enabled.en
-    - domain.defaults.signup.enablefederated.en
-    - domain.defaults.signup.enablesso.en
+    - auth.signup.enabled
+    - domain.defaults.signup.enablefederated
+    - domain.defaults.signup.enablesso
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter controls whether new commenters are allowed to register in Comentario with email and password.
@@ -19,6 +19,6 @@ This [dynamic configuration](/configuration/backend/dynamic) parameter controls 
 * If set to `On`, new commenters can register on websites embedding comments with email and password.
 * If set to `Off`, user registration (with email/password) on websites embedding comments will be forbidden.
 
-This setting doesn't apply to the Administration UI, which uses a [separate configuration item](auth.signup.enabled.en) for that.
+This setting doesn't apply to the Administration UI, which uses a [separate configuration item](auth.signup.enabled) for that.
 
 It also doesn't affect *existing users*. They will be able to login even when this setting is disabled.

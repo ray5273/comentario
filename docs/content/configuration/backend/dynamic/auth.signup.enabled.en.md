@@ -7,9 +7,9 @@ tags:
     - administration
     - Administration UI
 seeAlso:
-    - domain.defaults.signup.enablefederated.en
-    - domain.defaults.signup.enablelocal.en
-    - domain.defaults.signup.enablesso.en
+    - domain.defaults.signup.enablefederated
+    - domain.defaults.signup.enablelocal
+    - domain.defaults.signup.enablesso
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter controls whether new users are allowed to register in the Administration UI of Comentario.

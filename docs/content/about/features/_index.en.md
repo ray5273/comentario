@@ -33,7 +33,7 @@ tags:
 * **Live comment updates**\
   When a user adds or updates a comment, everyone sees this change [immediately](/kb/live-update), without reload.
 * **Custom user avatars**\
-  Comentario supports avatars from external identity providers, including SSO, as well as [Gravatar](/configuration/backend/dynamic/domain.defaults.usegravatar.en). Users can also upload their own image.
+  Comentario supports avatars from external identity providers, including SSO, as well as [Gravatar](/configuration/backend/dynamic/domain.defaults.usegravatar). Users can also upload their own image.
 * **Email notifications**\
   Users can choose to get notified about replies to their comments. Moderators can also get notified about a comment pending moderation, or every comment.
 * **Multiple domains in one UI**\
