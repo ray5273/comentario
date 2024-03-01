@@ -1,5 +1,20 @@
 # Comentario changelog
 
+## v3.5.0
+
+This version introduces a complete support for a file-based SQLite database. You don't need PostgreSQL anymore to try things out, or even to run Comentario on a low-traffic website! It also enables unauthenticated SMTP and largely improves docs on configuring external identity providers.
+
+### Changes
+
+* Support for local SQLite database - 5c89782, 13579b0, 416b664, ed5626a, 4375528, 3fbe1af
+* Make SMTP auth optional, improve logging, default port to 587 (#68) - 79b3feb
+* Embed: redesign the profile bar (use icons instead of text labels), ditch moderator toolbar - bb47386
+* Embed: hide sort bar when there's no comment - 79213e7
+* Fix the comment count API endpoint (#66) - 5756942
+* Upgrade the toolchain to Go 1.22, Hugo 0.123.6 - 3de87cd, a7eb480
+* Documentation: provide instructions for configuring Facebook, Google, Twitter, GitHub, GitLab auth (#67) - 9a52173, a2464b2
+* Other docs updates - e9fceb4, 521ef47, 4d43f9a, ce4b619
+
 ## v3.4.0
 
 In this release we added **live comment updates** via WebSockets: you don't need to reload the page to see new comments. We also added a **toolbar in the comment editor**, removed the Collapse child button in favour of **clickable left border**, and added binary builds for 32- and 64-bit **ARM architectures**.

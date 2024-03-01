@@ -51,46 +51,46 @@ Below is a summary of the values in the secrets file.
 
 {{< table "table table-striped" >}}
 
-| Key                                           | Type    | Description                                                                                  |    Default value    |
-|-----------------------------------------------|---------|----------------------------------------------------------------------------------------------|:-------------------:|
-| **Database**                                  |         |                                                                                              |                     |
-| `postgres.host`                               | string  | Hostname or IP address of PostgreSQL DB                                                      |                     |
-| `postgres.port`                               | integer | Port number of PostgreSQL DB                                                                 |       `5432`        |
-| `postgres.database`                           | string  | Name of the PostgreSQL database                                                              |                     |
-| `postgres.username`                           | string  | Username to connect to PostgreSQL                                                            |                     |
-| `postgres.password`                           | string  | Password to connect to PostgreSQL                                                            |                     |
-| `postgres.sslmode`                            | string  | SSL mode for PostgreSQL (`disable`, `allow`, `prefer`, `require`, `verify-ca`, `verify-full` |      `disable`      |
-| `sqlite3.file`                                | string  | Path to the SQLite3 database file                                                            |                     |
-| **SMTP server**                               |         |                                                                                              |                     |
-| `smtpServer.host`                             | string  | Hostname or IP address of SMTP server. Required for emailing to work                         |                     |
-| `smtpServer.port`                             | integer | Port number of SMTP server                                                                   |  `587` (STARTTLS)   |
-| `smtpServer.username`                         | string  | Username to connect to SMTP server                                                           |                     |
-| `smtpServer.password`                         | string  | Password to connect to SMTP server                                                           |                     |
-| `smtpServer.encryption`                       | string  | Encryption used for sending mails: `none`, `ssl`, `tls`                                      | Derived from `port` |
-| `smtpServer.insecure`                         | boolean | Whether to skip SMTP server's SSL certificate verification                                   |       `false`       |
-| **[Identity providers](/configuration/idps)** |         |                                                                                              |                     |
-| `idp.facebook.disable`                        | boolean | Whether to forcefully disable Facebook authentication                                        |                     |
-| `idp.facebook.key`                            | string  | Client ID for Facebook authentication                                                        |                     |
-| `idp.facebook.secret`                         | string  | Client secret for Facebook authentication                                                    |                     |
-| `idp.github.disable`                          | boolean | Whether to forcefully disable GitHub authentication                                          |                     |
-| `idp.github.key`                              | string  | Client ID for GitHub authentication                                                          |                     |
-| `idp.github.secret`                           | string  | Client secret for GitHub authentication                                                      |                     |
-| `idp.gitlab.disable`                          | boolean | Whether to forcefully disable GitLab authentication                                          |                     |
-| `idp.gitlab.key`                              | string  | Client ID for GitLab authentication                                                          |                     |
-| `idp.gitlab.secret`                           | string  | Client secret for GitLab authentication                                                      |                     |
-| `idp.google.disable`                          | boolean | Whether to forcefully disable Google authentication                                          |                     |
-| `idp.google.key`                              | string  | Client ID for Google authentication                                                          |                     |
-| `idp.google.secret`                           | string  | Client secret for Google authentication                                                      |                     |
-| `idp.twitter.disable`                         | boolean | Whether to forcefully disable Twitter/X authentication                                       |                     |
-| `idp.twitter.key`                             | string  | Client ID for Twitter/X authentication                                                       |                     |
-| `idp.twitter.secret`                          | string  | Client secret for Twitter/X authentication                                                   |                     |
-| **Extensions**                                |         |                                                                                              |                     |
-| `extensions.akismet.disable`                  | boolean | Whether to globally disable Akismet API                                                      |                     |
-| `extensions.akismet.key`                      | string  | Akismet API key                                                                              |                     |
-| `extensions.perspective.disable`              | boolean | Whether to globally disable Perspective API                                                  |                     |
-| `extensions.perspective.key`                  | string  | Perspective API key                                                                          |                     |
-| `extensions.apiLayerSpamChecker.disable`      | boolean | Whether to globally disable APILayer SpamChecker API                                         |                     |
-| `extensions.apiLayerSpamChecker.key`          | string  | APILayer SpamChecker API key                                                                 |                     |
+| Key                                           | Type    | Description                                                                                   |    Default value    |
+|-----------------------------------------------|---------|-----------------------------------------------------------------------------------------------|:-------------------:|
+| **Database**                                  |         |                                                                                               |                     |
+| `postgres.host`                               | string  | Hostname or IP address of PostgreSQL DB                                                       |                     |
+| `postgres.port`                               | integer | Port number of PostgreSQL DB                                                                  |       `5432`        |
+| `postgres.database`                           | string  | Name of the PostgreSQL database                                                               |                     |
+| `postgres.username`                           | string  | Username to connect to PostgreSQL                                                             |                     |
+| `postgres.password`                           | string  | Password to connect to PostgreSQL                                                             |                     |
+| `postgres.sslmode`                            | string  | SSL mode for PostgreSQL (`disable`, `allow`, `prefer`, `require`, `verify-ca`, `verify-full`) |      `disable`      |
+| `sqlite3.file`                                | string  | Path to the SQLite3 database file                                                             |                     |
+| **SMTP server**                               |         |                                                                                               |                     |
+| `smtpServer.host`                             | string  | Hostname or IP address of SMTP server. Required for emailing to work                          |                     |
+| `smtpServer.port`                             | integer | Port number of SMTP server                                                                    |  `587` (STARTTLS)   |
+| `smtpServer.username`                         | string  | Username to connect to SMTP server                                                            |                     |
+| `smtpServer.password`                         | string  | Password to connect to SMTP server                                                            |                     |
+| `smtpServer.encryption`                       | string  | Encryption used for sending mails: `none`, `ssl`, `tls`                                       | Derived from `port` |
+| `smtpServer.insecure`                         | boolean | Whether to skip SMTP server's SSL certificate verification                                    |       `false`       |
+| **[Identity providers](/configuration/idps)** |         |                                                                                               |                     |
+| `idp.facebook.disable`                        | boolean | Whether to forcefully disable Facebook authentication                                         |                     |
+| `idp.facebook.key`                            | string  | Client ID for Facebook authentication                                                         |                     |
+| `idp.facebook.secret`                         | string  | Client secret for Facebook authentication                                                     |                     |
+| `idp.github.disable`                          | boolean | Whether to forcefully disable GitHub authentication                                           |                     |
+| `idp.github.key`                              | string  | Client ID for GitHub authentication                                                           |                     |
+| `idp.github.secret`                           | string  | Client secret for GitHub authentication                                                       |                     |
+| `idp.gitlab.disable`                          | boolean | Whether to forcefully disable GitLab authentication                                           |                     |
+| `idp.gitlab.key`                              | string  | Client ID for GitLab authentication                                                           |                     |
+| `idp.gitlab.secret`                           | string  | Client secret for GitLab authentication                                                       |                     |
+| `idp.google.disable`                          | boolean | Whether to forcefully disable Google authentication                                           |                     |
+| `idp.google.key`                              | string  | Client ID for Google authentication                                                           |                     |
+| `idp.google.secret`                           | string  | Client secret for Google authentication                                                       |                     |
+| `idp.twitter.disable`                         | boolean | Whether to forcefully disable Twitter/X authentication                                        |                     |
+| `idp.twitter.key`                             | string  | Client ID for Twitter/X authentication                                                        |                     |
+| `idp.twitter.secret`                          | string  | Client secret for Twitter/X authentication                                                    |                     |
+| **Extensions**                                |         |                                                                                               |                     |
+| `extensions.akismet.disable`                  | boolean | Whether to globally disable Akismet API                                                       |                     |
+| `extensions.akismet.key`                      | string  | Akismet API key                                                                               |                     |
+| `extensions.perspective.disable`              | boolean | Whether to globally disable Perspective API                                                   |                     |
+| `extensions.perspective.key`                  | string  | Perspective API key                                                                           |                     |
+| `extensions.apiLayerSpamChecker.disable`      | boolean | Whether to globally disable APILayer SpamChecker API                                          |                     |
+| `extensions.apiLayerSpamChecker.key`          | string  | APILayer SpamChecker API key                                                                  |                     |
 {{< /table >}}
 
 ## Database
