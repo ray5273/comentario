@@ -164,7 +164,7 @@ e2e-postgres:
           - 11-alpine
           - 10-alpine
   variables:
-    $SECRETS_FILE: resources/k8s/secrets.postgres.yaml
+    SECRETS_FILE: resources/k8s/secrets.postgres.yaml
   services:
     - name: postgres:$POSTGRES_VERSION
       variables:
@@ -175,7 +175,7 @@ e2e-postgres:
 e2e-sqlite3:
   extends: .e2e
   variables:
-    $SECRETS_FILE: resources/k8s/secrets.sqlite3.yaml
+    SECRETS_FILE: resources/k8s/secrets.sqlite3.yaml
 
 docker-image:
   stage: package
