@@ -7,6 +7,11 @@ fixPermissions() {
     chmod 0600 /etc/comentario/secrets.yaml
 }
 
+# Create necessary directories
+createDirs() {
+    mkdir -p --mode=0644 /var/lib/comentario ||:
+}
+
 reloadConfig() {
     printf "\033[32m* Reloading the service unit from disk\033[0m\n"
     systemctl daemon-reload ||:
@@ -19,6 +24,7 @@ restartService() {
 
 # Post Install of an clean install
 cleanInstall() {
+    createDirs
     fixPermissions
     reloadConfig
 

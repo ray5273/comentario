@@ -9,7 +9,7 @@
 #
 # The below example assumes you have a local PostgreSQL instance started with 'docker-compose up', a local secrets file,
 # and the backend will listen on port 8080 (instead of the default 80):
-#     docker run -v $PWD/resources/k8s/secrets.yaml:/comentario/secrets.yaml:ro --network=host --rm my-comentario \
+#     docker run -v $PWD/resources/k8s/secrets.postgres.yaml:/comentario/secrets.yaml:ro --network=host --rm my-comentario \
 #         --host=0.0.0.0 \
 #         --port=8080 \
 #         -vv

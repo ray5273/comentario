@@ -7,6 +7,7 @@ tags:
     - installation
     - migration
     - upgrade
+    - PostgreSQL
 ---
 
 Commento was once a popular open-source commenting system.
@@ -15,7 +16,9 @@ It is in fact a predecessor of Comentario, because Comentario 2.x started as a f
 
 <!--more-->
 
-The fact that Comentario 2.x database was 100% compatible with Commento made the migration very easy: it was basically a drop-in replacement, which only required adjusting some server parameters. It made also a reverse migration possible.
+The fact that Comentario 2.x database was 100% compatible with Commento made the [migration](comentario-2.x) very easy: it was basically a drop-in replacement, which only required adjusting some server parameters. It made also a reverse migration possible.
+
+**IMPORTANT:** a direct database migration from Commento to Comentario is only possible if you're staying on the same database, i.e. PostgreSQL (the only option for Commento). Migration from PostgreSQL to SQLite can only be done via export and a subsequent import.
 
 ## Comentario 3
 

@@ -94,9 +94,9 @@ fi
 echo "Copying assets to $build_dir"
 cp -r "$root_dir/db/" "$root_dir/templates/" "$build_dir"
 
-# Use the (local) ~secrets.yaml file if it's present, otherwise the "stock" secrets.yaml
+# Use the (local) ~secrets.yaml file if it's present, otherwise the "stock" secrets.postgres.yaml
 secrets="$root_dir/resources/k8s/~secrets.yaml"
-[[ ! -f "$secrets" ]] && secrets="$root_dir/resources/k8s/secrets.yaml"
+[[ ! -f "$secrets" ]] && secrets="$root_dir/resources/k8s/secrets.postgres.yaml"
 echo "Using secrets file: $secrets"
 
 # Start the backend

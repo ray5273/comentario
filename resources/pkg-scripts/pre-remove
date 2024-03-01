@@ -8,6 +8,9 @@ remove() {
 
     printf "\033[32m* Stopping service %s\033[0m\n" $service_name
     systemctl stop $service_name ||:
+
+    # Remove the database dir if empty
+    rmdir /var/lib/comentario 2>/dev/null ||:
 }
 
 purge() {

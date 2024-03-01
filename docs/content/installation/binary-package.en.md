@@ -8,6 +8,8 @@ tags:
     - binary package
     - database
     - PostgreSQL
+    - SQLite
+    - SQLite3
 ---
 
 This page explains how you can install Comentario locally using a binary package.
@@ -17,7 +19,7 @@ This page explains how you can install Comentario locally using a binary package
 ## Prerequisites
 
 * Your system has [systemd](https://systemd.io/), because Comentario runs as a systemd service.
-* [PostgreSQL](requirements) is installed and running, and the required database is created.
+* *Optional:* [PostgreSQL](requirements#postgresql) is installed and running, and the required database is created.
 
 ## Installation
 
@@ -30,7 +32,7 @@ Upon installation, Comentario (`comentario.service`) will start with all the def
 
 The default configuration assumes:
 
-* PostgreSQL is available on `localhost`, the database is `comentario` and credentials used are `postgres`/`postgres`.
+* Comentario is using a local, [file-based SQLite3 database](requirements#database) for storing comments, users, statistics etc. The database file will be created at `/var/lib/comentario/comentario.sqlite3`.
 * Comentario is listening on `localhost` port `80`.
 
 Feel free to make necessary changes:

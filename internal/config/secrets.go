@@ -29,8 +29,7 @@ type APIKey struct {
 
 // SecretsConfig is a configuration object for storing sensitive information
 var SecretsConfig = &struct {
-	DBDialect string `yaml:"dbDialect"` // Database dialect. Defaults to "postgres"
-
+	// PostgreSQL settings. Used when at least host is provided
 	Postgres struct {
 		Host     string `yaml:"host"`     // PostgreSQL host
 		Port     int    `yaml:"port"`     // PostgreSQL port
@@ -40,10 +39,12 @@ var SecretsConfig = &struct {
 		SSLMode  string `yaml:"sslmode"`  // PostgreSQL sslmode, defaults to "disable"
 	} `yaml:"postgres"`
 
+	// SQLite3 settings. Used if PostgreSQL settings are omitted
 	SQLite3 struct {
 		File string `yaml:"file"` // Location of the database file
 	} `yaml:"sqlite3"`
 
+	// SMTP server settings
 	SMTPServer struct {
 		Host       string         `yaml:"host"`       // SMTP server hostname
 		Port       int            `yaml:"port"`       // SMTP server port
@@ -53,6 +54,7 @@ var SecretsConfig = &struct {
 		Insecure   bool           `yaml:"insecure"`   // Skip SMTP server certificate verification
 	} `yaml:"smtpServer"`
 
+	// Federated identity provider settings
 	IdP struct {
 		Facebook KeySecret `yaml:"facebook"` // Facebook auth config
 		GitHub   KeySecret `yaml:"github"`   // GitHub auth config
@@ -62,6 +64,7 @@ var SecretsConfig = &struct {
 		Twitter  KeySecret `yaml:"twitter"`  // Twitter auth config
 	} `yaml:"idp"`
 
+	// Extension settings
 	Extensions struct {
 		Akismet             APIKey `yaml:"akismet"`
 		Perspective         APIKey `yaml:"perspective"`

@@ -8,14 +8,13 @@ tags:
     - installation
 ---
 
-To self-host a Comentario instance, you'll need two components: a PostgreSQL database and a network-attached server machine.
+To self-host a Comentario instance, you'll need two components: a database and a network-attached server machine.
 
 <!--more-->
 
 ## Database
 
 Have a look at the [](installation/requirements) document to learn about the database component.
-
 
 ## Server
 
