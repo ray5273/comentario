@@ -21,7 +21,8 @@ COPY ./dist/comentario-static_linux_amd64_v1/comentario /comentario/
 RUN ls -lAF /comentario/ && \
     test -x /comentario/comentario && \
     test -d /comentario/db && \
-    test -s /comentario/db/0001-comentario-v3.sql && \
+    test -s /comentario/db/postgres/0001-comentario-v3.sql && \
+    test -s /comentario/db/sqlite3/0001-comentario-v3.sql && \
     test -s /comentario/frontend/comentario.css && \
     test -s /comentario/frontend/comentario.js && \
     test -d /comentario/frontend/en/fonts && \
