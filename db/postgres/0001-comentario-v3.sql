@@ -525,7 +525,7 @@ begin
                 join temp_domain_map dm on dm.domain=mod.domain
                 left join emails e on e.email=u.email
                 -- Exclude already migrated owners
-                where not exists(select 1 from cm_users xu where xu.email=mod.email);
+                where not exists(select 1 from cm_domains_users xu where xu.domain_id=dm.id and xu.user_id=u.id);
 
         -- Migrate domain commenters
         insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
@@ -534,8 +534,9 @@ begin
                     coalesce(bool_or(e.sendmoderatornotifications), false), min(u.ts_created)
                 from (select distinct commenterhex, domain from comments where commenterhex != 'anonymous') c
                 join temp_commenterhex_map cm on cm.commenterhex=c.commenterhex
-                join cm_users u on u.id=cm.id
                 join temp_domain_map dm on dm.domain=c.domain
+                left join commenters com on com.commenterhex=cm.commenterhex
+                join cm_users u on com.email=u.email or u.id=cm.id
                 left join emails e on e.email=u.email
                 -- Exclude already migrated owners/moderators
                 where not exists(select 1 from cm_domains_users xdu where xdu.domain_id=dm.id and xdu.user_id=u.id)
@@ -588,7 +589,8 @@ begin
                 left join pages op on op.domain=c.domain and op.path=c.path
                 -- user created
                 join temp_commenterhex_map cmc on cmc.commenterhex=c.commenterhex
-                join cm_users uc on uc.id=cmc.id
+                left join commenters com on com.commenterhex=cmc.commenterhex
+                join cm_users uc on com.email=uc.email or uc.id=cmc.id
                 -- user deleted
                 left join temp_commenterhex_map cmd on cmd.commenterhex=c.deleterhex
                 left join cm_users ud on ud.id=cmd.id;
