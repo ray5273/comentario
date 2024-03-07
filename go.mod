@@ -22,7 +22,9 @@ require (
 	github.com/justinas/alice v1.2.0
 	github.com/lib/pq v1.10.9
 	github.com/markbates/goth v1.78.0
+	github.com/mattn/go-sqlite3 v1.14.22
 	github.com/microcosm-cc/bluemonday v1.0.26
+	github.com/nicksnyder/go-i18n/v2 v2.4.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/phuslu/iploc v1.0.20240203
 	github.com/yuin/goldmark v1.7.0
@@ -50,7 +52,6 @@ require (
 	github.com/gorilla/securecookie v1.1.2 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
-	github.com/mattn/go-sqlite3 v1.14.22 // indirect
 	github.com/mitchellh/mapstructure v1.5.0 // indirect
 	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect

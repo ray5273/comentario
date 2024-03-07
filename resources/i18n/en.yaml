@@ -1,0 +1,13 @@
+- {id: actionApprove,          translation: Approve}
+- {id: actionContext,          translation: Context}
+- {id: actionDelete,           translation: Delete}
+- {id: actionReject,           translation: Reject}
+- {id: actionUnsubscribe,      translation: Unsubscribe}
+- {id: newComment,             translation: New comment}
+- {id: newCommentOn,           translation: 'New comment on {{ index . 0 }}'}
+- {id: notificationModAll,     translation: You've received this email because the domain owner chose to notify moderators for all new comments by email.}
+- {id: notificationModPending, translation: You've received this email because the domain owner chose to notify moderators of comments pending moderation by email.}
+- {id: notificationNewReply,   translation: You've received this email because you opted in to receive email notifications for comment replies.}
+- {id: pendingModeration,      translation: Pending moderation}
+- {id: poweredBy,              translation: Powered by Comentario}
+- {id: unreadReply,            translation: Unread reply}

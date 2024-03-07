@@ -1,6 +1,7 @@
 package config
 
 import (
+	"embed"
 	"encoding/json"
 	"fmt"
 	"github.com/op/go-logging"
@@ -53,6 +54,8 @@ var (
 	CDNURL   *url.URL // The parsed CDN URL
 	UseHTTPS bool     // Whether the base URL is an HTTPS one
 	XSRFKey  []byte   // The XSRF key for the server
+
+	I18nFS *embed.FS // Embedded translations linked to during bootstrapping
 )
 
 // CLIParsed is a callback that signals the config the CLI flags have been parsed

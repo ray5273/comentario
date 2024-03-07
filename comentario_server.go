@@ -4,6 +4,7 @@ package main
 //go:generate swagger generate server --exclude-main --name Comentario --target internal/api --spec ./swagger/swagger.yml --principal gitlab.com/comentario/comentario/internal/data.User
 
 import (
+	"embed"
 	"errors"
 	"fmt"
 	"github.com/go-openapi/loads"
@@ -25,6 +26,9 @@ var (
 	version = "(?)"
 	date    = "(?)"
 )
+
+//go:embed resources/i18n/*.yaml
+var i18nFS embed.FS // Translations
 
 func main() {
 	// Load the embedded Swagger file
@@ -55,7 +59,7 @@ func main() {
 		code := 1
 		var fe *flags.Error
 		if errors.As(err, &fe) {
-			if fe.Type == flags.ErrHelp {
+			if errors.Is(fe.Type, flags.ErrHelp) {
 				code = 0
 			}
 		}
@@ -66,6 +70,9 @@ func main() {
 	config.AppVersion = version
 	config.BuildDate, _ = time.Parse(time.RFC3339, date)
 	fmt.Printf("Comentario server, version %s, built %s\n", config.AppVersion, config.BuildDate)
+
+	// Link the translations to the embedded filesystem
+	config.I18nFS = &i18nFS
 
 	// Configure logging
 	var logLevel logging.Level

@@ -72,11 +72,16 @@ func (m *manager) Initialise() {
 	}
 	m.inited = true
 
+	// Init i18n
+	var err error
+	if err = TheI18nService.Init(); err != nil {
+		logger.Fatalf("Failed to initialise i18n: %v", err)
+	}
+
 	// Init content scanners
 	ThePerlustrationService.Init()
 
 	// Initiate a DB connection
-	var err error
 	if db, err = persistence.InitDB(); err != nil {
 		logger.Fatalf("Failed to connect to database: %v", err)
 	}

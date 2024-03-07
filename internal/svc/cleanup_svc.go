@@ -10,6 +10,7 @@ import (
 var TheCleanupService CleanupService = &cleanupService{}
 
 type CleanupService interface {
+	// Init the service
 	Init() error
 }
 

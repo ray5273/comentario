@@ -8,10 +8,14 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"html/template"
 	"path"
+	"reflect"
+	"sync"
 )
 
 // TheMailService is a global MailService implementation
-var TheMailService MailService = &mailService{}
+var TheMailService MailService = &mailService{
+	templates: make(map[string]*template.Template),
+}
 
 type MailNotificationKind string
 
@@ -33,7 +37,10 @@ type MailService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // mailService is a blueprint MailService implementation
-type mailService struct{}
+type mailService struct {
+	templates map[string]*template.Template // Template cache
+	templMu   sync.RWMutex                  // Template cache mutex
+}
 
 func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recipient *data.User, canModerate bool, domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenterName string) error {
 	// Prepare params
@@ -74,6 +81,7 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 
 	// Send out a notification email
 	return svc.sendFromTemplate(
+		recipient.LangID,
 		"",
 		recipient.Email,
 		"Comentario: New comment on "+page.DisplayTitle(domain),
@@ -83,6 +91,7 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 
 func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) error {
 	return svc.sendFromTemplate(
+		user.LangID,
 		"",
 		user.Email,
 		"Comentario: Please confirm your email address",
@@ -95,6 +104,7 @@ func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) err
 
 func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) error {
 	return svc.sendFromTemplate(
+		user.LangID,
 		"",
 		user.Email,
 		"Comentario: Reset your password",
@@ -103,6 +113,50 @@ func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) er
 			"ResetURL": config.URLForUI(user.LangID, "", map[string]string{"passwordResetToken": token.String()}),
 			"Name":     user.Name,
 		})
+}
+
+// getTemplate returns a cached template by its language and name, or nil if there's none
+func (svc *mailService) getTemplate(lang, name string) *template.Template {
+	svc.templMu.RLock()
+	defer svc.templMu.RUnlock()
+	return svc.templates[lang+"/"+name]
+}
+
+// execTemplateFile loads and executes a named template from the corresponding file. Returns the resulting string
+func (svc *mailService) execTemplateFile(lang, name string, data map[string]any) (string, error) {
+	// If the template hasn't been loaded yet, load and parse it
+	templ := svc.getTemplate(lang, name)
+	if templ == nil {
+		// Create a new template
+		filePath := path.Join(config.CLIFlags.TemplatePath, name)
+		var err error
+		templ, err = template.New(name).
+			// Add required functions
+			Funcs(template.FuncMap{
+				"T": func(id string, args ...reflect.Value) string { return TheI18nService.Translate(lang, id, args...) },
+			}).
+			// Parse the file
+			ParseFiles(filePath)
+		if err != nil {
+			return "", fmt.Errorf("parsing HTML template file %q failed: %w", filePath, err)
+		}
+
+		// Cache the parsed template. We need to "namespace" them by language because the "T" (Translate) function,
+		// which takes language as an argument, has been bound during template compilation above
+		svc.templMu.Lock()
+		svc.templates[lang+"/"+name] = templ
+		svc.templMu.Unlock()
+		logger.Debugf("Parsed HTML template %q", filePath)
+	}
+
+	// Execute the template
+	var buf bytes.Buffer
+	if err := templ.Execute(&buf, data); err != nil {
+		return "", fmt.Errorf("executing template %q failed: %w", name, err)
+	}
+
+	// Succeeded
+	return buf.String(), nil
 }
 
 // Send sends an email and logs the outcome
@@ -120,30 +174,16 @@ func (svc *mailService) send(replyTo, recipient, subject, htmlMessage string, em
 }
 
 // sendFromTemplate sends an email from the provided template and logs the outcome
-func (svc *mailService) sendFromTemplate(replyTo, recipient, subject, templateFile string, templateData map[string]any) error {
+func (svc *mailService) sendFromTemplate(lang, replyTo, recipient, subject, templateFile string, templateData map[string]any) error {
 	logger.Debugf("mailService.sendFromTemplate('%s', '%s', '%s', '%s', ...)", replyTo, recipient, subject, templateFile)
 
-	// Load and parse the template
-	filename := path.Join(config.CLIFlags.TemplatePath, templateFile)
-	t, err := template.ParseFiles(filename)
+	// Load and execute the template
+	body, err := svc.execTemplateFile(lang, templateFile, templateData)
 	if err != nil {
-		logger.Errorf("Failed to parse HTML template file %s: %v", filename, err)
-		return err
-	}
-	logger.Debugf("Parsed HTML template '%s'", filename)
-
-	// Execute the template
-	var bufHTML bytes.Buffer
-	if err := t.Execute(&bufHTML, templateData); err != nil {
-		logger.Errorf("Failed to execute HTML template file %s: %v", filename, err)
+		logger.Errorf("Failed to execute HTML template file %s: %v", templateFile, err)
 		return err
 	}
 
-	// Send the mail (embed the logo)
-	return svc.send(
-		replyTo,
-		recipient,
-		subject,
-		bufHTML.String(),
-		path.Join(config.CLIFlags.TemplatePath, "images", "logo.png"))
+	// Send the mail, embedding the logo
+	return svc.send(replyTo, recipient, subject, body, path.Join(config.CLIFlags.TemplatePath, "images", "logo.png"))
 }
