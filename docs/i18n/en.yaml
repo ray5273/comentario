@@ -1,5 +1,5 @@
 - {id: about,             translation: About}
-- {id: copyright,         translation: Copyright ©2023 Comentario.}
+- {id: copyright,         translation: 'Copyright ©2022–{{ .year }} Comentario.'}
 - {id: dashboard,         translation: Dashboard}
 - {id: demo,              translation: Demo}
 - {id: documentation,     translation: Documentation}
