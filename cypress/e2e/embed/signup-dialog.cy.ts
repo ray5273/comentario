@@ -23,7 +23,7 @@ context('Signup dialog', () => {
 
         // Click on "Sign in" and subsequently on Signup
         cy.get('@profileBar').contains('button', 'Sign in').click();
-        cy.get('@root').contains('.comentario-dialog button', 'Sign up here').click();
+        cy.get('@root').contains('.comentario-dialog button', 'Sign up').click();
         cy.get('@root').find('.comentario-dialog').as('signupDialog').should('be.visible');
         cy.get('@signupDialog').contains('.comentario-dialog-header', 'Create an account').should('be.visible');
 

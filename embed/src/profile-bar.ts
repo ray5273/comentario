@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { PageInfo, Principal, SignupData, UserSettings } from './models';
+import { PageInfo, Principal, SignupData, TranslateFunc, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -14,6 +14,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     private _pageInfo?: PageInfo;
 
     /**
+     * @param t Function for obtaining translated messages.
      * @param baseUrl Base URL of the Comentario instance
      * @param root Root element (for showing popups).
      * @param config Comentario configuration obtained from the backend.
@@ -27,6 +28,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onToggleLock Callback for toggling page lock.
      */
     constructor(
+        private readonly t: TranslateFunc,
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
         private readonly config: InstanceConfig,
@@ -80,6 +82,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
 
         // Multiple options are available, show the login dialog
         const dlg = await LoginDialog.run(
+            this.t,
             this.root,
             {ref: this.btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
@@ -111,7 +114,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a signup dialog and return a promise that's resolved when the dialog is closed.
      */
     private async signupUser(): Promise<void> {
-        const dlg = await SignupDialog.run(this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.config);
+        const dlg = await SignupDialog.run(this.t, this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.config);
         if (dlg.confirmed) {
             await this.onSignup(dlg.data);
         }
@@ -122,11 +125,11 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      */
     private async editSettings(): Promise<void> {
         const dlg = await SettingsDialog.run(
+            this.t,
             this.root,
             {ref: this.btnSettings!, placement: 'bottom-end'},
             this.baseUrl,
-            this._principal!,
-            this._pageInfo!);
+            this._principal!);
         if (dlg.confirmed) {
             await this.onSaveSettings(dlg.data);
         }
@@ -167,13 +170,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                         isMod && !isDomainRO &&
                             UIToolkit.toolButton(
                                 isPageRO ? 'unlock' : 'lock',
-                                isPageRO ? 'Unlock' : 'Lock',
+                                this.t(isPageRO ? 'btnUnlock' : 'btnLock'),
                                 () => this.onToggleLock(),
                                 'btn-lg'),
                         // Settings button
-                        this.btnSettings = UIToolkit.toolButton('gear', 'Settings', () => this.editSettings(), 'btn-lg'),
+                        this.btnSettings = UIToolkit.toolButton('gear', this.t('btnSettings'), () => this.editSettings(), 'btn-lg'),
                         // Logout button
-                        UIToolkit.toolButton('exit', 'Logout', () => this.onLogout(), 'btn-lg')));
+                        UIToolkit.toolButton('exit', this.t('btnLogout'), () => this.onLogout(), 'btn-lg')));
             return;
         }
 
@@ -183,7 +186,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
                 UIToolkit.div(),
                 // Add a Login button
-                this.btnLogin = UIToolkit.button('Sign in', () => this.loginUser(), 'btn-primary', 'fw-bold'));
+                this.btnLogin = UIToolkit.button(this.t('actionSignIn'), () => this.loginUser(), 'btn-primary', 'fw-bold'));
         }
     }
 }

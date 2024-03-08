@@ -1,0 +1,236 @@
+- id: accountCreatedConfirmEmail
+  translation: Аккаунт успешно зарегистрирован. Мы отправили вам емэйл, пожалуйста, подтвердите свой адрес, перейдя по содержащейся в нём ссылке.
+- id: actionAddComment
+  translation: Добавить комментарий
+- id: actionApprove
+  translation: Утвердить
+- id: actionCancel
+  translation: Отмена
+- id: actionClose
+  translation: Закрыть
+- id: actionCollapseChildren
+  translation: Свернуть дочерние комментарии
+- id: actionConfirmEmail
+  translation: Подтвердить емэйл
+- id: actionContext
+  translation: Контекст
+- id: actionDelete
+  translation: Удалить
+- id: actionDownvote
+  translation: Плохой комментарий
+- id: actionEdit
+  translation: Редактировать
+- id: actionEditComentarioProfile
+  translation: Редактировать профиль Comentario
+- id: actionExpandChildren
+  translation: Развернуть дочерние комментарии
+- id: actionLogIn
+  translation: Войти
+- id: actionOk
+  translation: ОК
+- id: actionPreview
+  translation: Предпросмотр
+- id: actionReject
+  translation: Отклонить
+- id: actionReply
+  translation: Ответить
+- id: actionResetPassword
+  translation: Сбросить пароль
+- id: actionSave
+  translation: Сохранить
+- id: actionSignIn
+  translation: Войти
+- id: actionSignUp
+  translation: Регистрироваться
+- id: actionSso
+  translation: Single Sign-On
+- id: actionSticky
+  translation: Прилепить
+- id: actionUnsticky
+  translation: Отлепить
+- id: actionUnsubscribe
+  translation: Отписаться
+- id: actionUpvote
+  translation: Хороший комментарий
+- id: btnBold
+  translation: Жирный
+- id: btnBulletList
+  translation: Маркированный список
+- id: btnCode
+  translation: Код
+- id: btnImage
+  translation: Изображение
+- id: btnItalic
+  translation: Курсив
+- id: btnLink
+  translation: Ссылка
+- id: btnLock
+  translation: Заблокировать
+- id: btnLogout
+  translation: Выйти
+- id: btnMarkdownHelp
+  translation: Справка по Markdown
+- id: btnNumberedList
+  translation: Нумерованный список
+- id: btnQuote
+  translation: Цитата
+- id: btnSettings
+  translation: Настройки
+- id: btnStrikethrough
+  translation: Зачёркнутый
+- id: btnTable
+  translation: Таблица
+- id: btnUnlock
+  translation: Разблокировать
+- id: clickButtonBelow
+  translation: Чтобы сделать это, кликните по кнопке ниже.
+- id: commentAnonymously
+  translation: Комментировать анонимно
+- id: commentIsPending
+  translation: Комментарий ожидает утверждения модератором.
+- id: commentIsRejected
+  translation: Комментарий отклонён, так как содержит спам или иной недопустимый контент.
+- id: commentNotFound
+  translation: Указанный комментарий не найден; возможно, он был удалён.
+- id: commentScore
+  translation: Оценка комментария
+- id: confirmCommentDeletion
+  translation: Вы уверены, что хотите удалить этот комментарий?
+- id: confirmEmailAct
+  translation: Если вы желаете завершить регистрацию, кликните по кнопке ниже.
+- id: confirmEmailExplanation
+  translation: Вы получили это письмо, потому что вы (или кто-то ещё) зарегистрировался с этим емэйлом в нашем сервисе.
+- id: confirmEmailRequest
+  translation: Вы только что зарегистрировали новый аккаунт в Comentario с этим емэйлом.
+- id: confirmYourEmail
+  translation: Подтверждение емэйла
+- id: dlgTitleConfirm
+  translation: Подтверждение
+- id: dlgTitleCreateAccount
+  translation: Создать аккаунт
+- id: dlgTitleLogIn
+  translation: Войти
+- id: dlgTitleUserSettings
+  translation: Настройки пользователя
+- id: domainAuthUnconfigured
+  translation: Нет доступных методов аутентификации для данного домена, добавление комментариев недоступно.
+- id: error
+  translation: Ошибка
+- id: errorUnknown
+  translation: Неизвестная ошибка
+- id: errorUnknownHost
+  translation: Этот домен не зарегистрирован в Comentario
+- id: fieldEmail
+  translation: Емэйл
+- id: fieldModNotifications
+  translation: Уведомления о модерации
+- id: fieldPassword
+  translation: Пароль
+- id: fieldRealName
+  translation: Настоящее имя
+- id: fieldReplyNotifications
+  translation: Уведомления об ответах
+- id: fieldWebsiteOpt
+  translation: Веб-сайт (необязательно)
+- id: forgotPasswordLink
+  translation: Забыли пароль?
+- id: helloName
+  translation: Привет, {{ index . 0 }}!
+- id: ignoreEmail
+  translation: Если вы этого не делали, пожалуйста, игнорируйте это письмо.
+- id: loginViaLocalAuth
+  translation: Вход с емэйлом и паролем
+- id: loginViaSocial
+  translation: Вход через соцсети
+- id: loginViaSso
+  translation: Войти через
+- id: newComment
+  translation: Новый комментарий
+- id: newCommentOn
+  translation: Новый комментарий на {{ index . 0 }}
+- id: noAccountYet
+  translation: Ещё нет аккаунта?
+- id: notificationModAll
+  translation: Вы получили это письмо, потому что владелец домена решил уведомлять модераторов о каждом новом комментарии.
+- id: notificationModPending
+  translation: Вы получили это письмо, потому что владелец домена решил уведомлять модераторов о комментариях, ожидающих модерации.
+- id: notificationNewReply
+  translation: Вы получили это письмо, потому что включили емэйл-уведомления о новых ответах на ваши комментарии.
+- id: notWillingToLogin
+  translation: Неохота регистрироваться?
+- id: pageIsReadonly
+  translation: Комментарии на этой странице заблокированы, добавление комментариев недоступно.
+- id: pendingModeration
+  translation: Ожидает модерации
+- id: permalink
+  translation: Постоянная ссылка
+- id: poweredBy
+  translation: Работает на Comentario
+- id: previewFailed
+  translation: Ошибка предпросмотра
+- id: pwdResetExplanation
+  translation: Вы получили это письмо, потому что вы (или кто-то другой) запросили сброс пароля в нашем сервисе.
+- id: pwdResetRequest
+  translation: Вы только что запустили процедуру сброса пароля от вашего аккаунта Comentario.
+- id: pwdStrengthExplained
+  translation: Пароль должен иметь в длину не менее 8 символов и содержать заглавную букву, строчную букву и цифру или спецсимвол.
+- id: resetYourPassword
+  translation: Сброс пароля
+- id: sampleText
+  translation: текст
+- id: signUpAgreeAnd
+  translation: и
+- id: signUpAgreePrivacyPolicy
+  translation: Политикой приватности
+- id: signUpAgreeTerms
+  translation: Условиями предоставления услуг
+- id: signUpAgreeTo
+  translation: Регистрируясь в сервисе, вы соглашаетесь с
+- id: sortNewest
+  translation: Новые
+- id: sortOldest
+  translation: Старые
+- id: sortVotes
+  translation: Оценка
+- id: ssoAuthFailed
+  translation: Аутентификация через SSO завершилась неудачно.
+- id: statusDeleted
+  translation: Удалён
+- id: statusDeletedByAuthor
+  translation: Удалён автором
+- id: statusDeletedByModerator
+  translation: Удалён модератором
+- id: statusDeletedUser
+  translation: Удалённый пользователь
+- id: statusModerator
+  translation: Модератор
+- id: statusPending
+  translation: Ждёт модерации
+- id: stickyComment
+  translation: Прилепленный комментарий.
+- id: technicalDetails
+  translation: Технические подробности
+- id: timeDaysAgo
+  translation: дней назад
+- id: timeHourAgo
+  translation: Час назад
+- id: timeHoursAgo
+  translation: часов назад
+- id: timeJustNow
+  translation: Только что
+- id: timeMinuteAgo
+  translation: Минуту назад
+- id: timeMinutesAgo
+  translation: минут назад
+- id: timeMonthAgo
+  translation: Месяц назад
+- id: timeMonthsAgo
+  translation: месяцев назад
+- id: timeYearAgo
+  translation: Год назад
+- id: timeYearsAgo
+  translation: лет назад
+- id: timeYesterday
+  translation: Вчера
+- id: unreadReply
+  translation: Непрочитанный ответ

@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { CommentSort } from './models';
+import { CommentSort, TranslateFunc } from './models';
 
 export class SortBar extends Wrap<HTMLDivElement> {
 
@@ -9,6 +9,7 @@ export class SortBar extends Wrap<HTMLDivElement> {
     private readonly btnByTimeDesc: Wrap<HTMLButtonElement>;
 
     constructor(
+        private readonly t: TranslateFunc,
         private readonly onChange: (cs: CommentSort) => void,
         private curSort: CommentSort | undefined,
         allowByScore: boolean,
@@ -20,10 +21,10 @@ export class SortBar extends Wrap<HTMLDivElement> {
             .append(
                 allowByScore &&
                     (this.btnByScore =
-                        UIToolkit.button('Votes', () => this.setSort(this.curSort === 'sd' ? 'sa' : 'sd'), 'btn-sm', 'btn-link')
+                        UIToolkit.button(this.t('sortVotes'), () => this.setSort(this.curSort === 'sd' ? 'sa' : 'sd'), 'btn-sm', 'btn-link')
                             .append(UIToolkit.icon('caretDown').classes('ms-1'))),
-                this.btnByTimeAsc  = UIToolkit.button('Oldest', () => this.setSort('ta'), 'btn-sm', 'btn-link'),
-                this.btnByTimeDesc = UIToolkit.button('Newest', () => this.setSort('td'), 'btn-sm', 'btn-link'));
+                this.btnByTimeAsc  = UIToolkit.button(this.t('sortOldest'), () => this.setSort('ta'), 'btn-sm', 'btn-link'),
+                this.btnByTimeDesc = UIToolkit.button(this.t('sortNewest'), () => this.setSort('td'), 'btn-sm', 'btn-link'));
 
         // Apply the initial sorting selection
         this.setSort(curSort);

@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { SignupData } from './models';
+import { SignupData, TranslateFunc } from './models';
 import { InstanceConfig } from './config';
 
 export class SignupDialog extends Dialog {
@@ -11,18 +11,19 @@ export class SignupDialog extends Dialog {
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
 
-    private constructor(parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceConfig) {
-        super(parent, 'Create an account', pos);
+    private constructor(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceConfig) {
+        super(t, parent, t('dlgTitleCreateAccount'), pos);
     }
 
     /**
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
+     * @param t Function for obtaining translated messages.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
      * @param config Comentario configuration obtained from the backend.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, config: InstanceConfig): Promise<SignupDialog> {
-        const dlg = new SignupDialog(parent, pos, config);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, config: InstanceConfig): Promise<SignupDialog> {
+        const dlg = new SignupDialog(t, parent, pos, config);
         return dlg.run(dlg);
     }
 
@@ -40,10 +41,10 @@ export class SignupDialog extends Dialog {
 
     override renderContent(): Wrap<any> {
         // Create inputs
-        this._email   = UIToolkit.input('email',    'email',    'Email address',      'email',            true).attr({minlength: '6', maxlength: '254'});
-        this._name    = UIToolkit.input('name',     'text',     'Real name',          'name',             true).attr({pattern: '^.{2,63}$', maxlength: '63'});
-        this._pwd     = UIToolkit.input('password', 'password', 'Password',           'current-password', true).attr({pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).{8,63}$', maxlength: '63'});
-        this._website = UIToolkit.input('website',  'url',      'Website (optional)', 'url')                   .attr({minlength: '8', maxlength: '2083'});
+        this._email   = UIToolkit.input('email',    'email',    this.t('fieldEmail'),      'email',            true).attr({minlength: '6', maxlength: '254'});
+        this._name    = UIToolkit.input('name',     'text',     this.t('fieldRealName'),   'name',             true).attr({pattern: '^.{2,63}$', maxlength: '63'});
+        this._pwd     = UIToolkit.input('password', 'password', this.t('fieldPassword'),   'current-password', true).attr({pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).{8,63}$', maxlength: '63'});
+        this._website = UIToolkit.input('website',  'url',      this.t('fieldWebsiteOpt'), 'url')                   .attr({minlength: '8', maxlength: '2083'});
 
         // Add the inputs to a new form
         return UIToolkit.form(() => this.dismiss(true), () => this.dismiss())
@@ -51,19 +52,18 @@ export class SignupDialog extends Dialog {
                 UIToolkit.div('input-group').append(this._email),
                 UIToolkit.div('input-group').append(this._name),
                 UIToolkit.div('input-group').append(this._pwd),
-                UIToolkit.div('form-text')
-                    .inner('Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, and a digit or symbol.'),
+                UIToolkit.div('form-text').inner(this.t('pwdStrengthExplained')),
                 UIToolkit.div('input-group').append(this._website),
                 UIToolkit.div('dialog-centered')
                     .append(
-                        UIToolkit.span().inner('By signing up, you agree to our '),
-                        UIToolkit.a('Terms of Service', this.config.docsUrl('legal/tos/'))
+                        UIToolkit.span().inner(this.t('signUpAgreeTo') + ' '),
+                        UIToolkit.a(this.t('signUpAgreeTerms'), this.config.docsUrl('legal/tos/'))
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
-                        UIToolkit.span().inner(' and '),
-                        UIToolkit.a('Privacy Policy', this.config.docsUrl('legal/privacy/'))
+                        UIToolkit.span().inner(' ' + this.t('signUpAgreeAnd') + ' '),
+                        UIToolkit.a(this.t('signUpAgreePrivacyPolicy'), this.config.docsUrl('legal/privacy/'))
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span().inner('.')),
-                UIToolkit.div('dialog-centered').append(UIToolkit.submit('Sign up', false)),
+                UIToolkit.div('dialog-centered').append(UIToolkit.submit(this.t('actionSignUp'), false)),
             );
     }
 

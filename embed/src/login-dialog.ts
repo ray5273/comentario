@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { PageInfo } from './models';
+import { PageInfo, TranslateFunc } from './models';
 import { InstanceConfig } from './config';
 
 export class LoginDialog extends Dialog {
@@ -11,13 +11,14 @@ export class LoginDialog extends Dialog {
     private _result: string | null = null;
 
     private constructor(
+        t: TranslateFunc,
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly baseUrl: string,
         private readonly config: InstanceConfig,
         private readonly pageInfo: PageInfo,
     ) {
-        super(parent, 'Log in', pos);
+        super(t, parent, t('dlgTitleLogIn'), pos);
     }
 
     /**
@@ -43,14 +44,15 @@ export class LoginDialog extends Dialog {
 
     /**
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
+     * @param t Function for obtaining translated messages.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
      * @param baseUrl Base URL of the Comentario instance
      * @param config Comentario configuration obtained from the backend.
      * @param pageInfo Current page data.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo): Promise<LoginDialog> {
-        const dlg = new LoginDialog(parent, pos, baseUrl, config, pageInfo);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo): Promise<LoginDialog> {
+        const dlg = new LoginDialog(t, parent, pos, baseUrl, config, pageInfo);
         return dlg.run(dlg);
     }
 
@@ -64,10 +66,10 @@ export class LoginDialog extends Dialog {
             form.append(
                 // Subtitle
                 UIToolkit.div('dialog-centered')
-                    .inner(`Log in via ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
+                    .inner(`${this.t('loginViaSso')} ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
                 // SSO button
                 UIToolkit.div('oauth-buttons')
-                    .append(UIToolkit.button('Single Sign-On', () => this.dismissWith('sso'), 'btn-sso')));
+                    .append(UIToolkit.button(this.t('actionSso'), () => this.dismissWith('sso'), 'btn-sso')));
             hasSections = true;
         }
 
@@ -77,7 +79,7 @@ export class LoginDialog extends Dialog {
                 // Separator
                 hasSections && Wrap.new('hr'),
                 // Subtitle
-                UIToolkit.div('dialog-centered').inner('Proceed with social login'),
+                UIToolkit.div('dialog-centered').inner(this.t('loginViaSocial')),
                 // OAuth buttons
                 UIToolkit.div('oauth-buttons')
                     .append(
@@ -89,23 +91,23 @@ export class LoginDialog extends Dialog {
         // Local auth
         if (this.pageInfo.authLocal) {
             // Create inputs
-            this._email = UIToolkit.input('email',    'email',    'Email address', 'email',            true).attr({maxlength: '254'});
-            this._pwd   = UIToolkit.input('password', 'password', 'Password',      'current-password', true).attr({maxlength: '63'});
+            this._email = UIToolkit.input('email',    'email',    this.t('fieldEmail'),    'email',            true).attr({maxlength: '254'});
+            this._pwd   = UIToolkit.input('password', 'password', this.t('fieldPassword'), 'current-password', true).attr({maxlength: '63'});
 
             // Add the inputs to the dialog
             form.append(
                 // Separator
                 hasSections && Wrap.new('hr'),
                 // Subtitle
-                UIToolkit.div('dialog-centered').inner('Log in with your email address'),
+                UIToolkit.div('dialog-centered').inner(this.t('loginViaLocalAuth')),
                 // Email
                 UIToolkit.div('input-group').append(this._email),
                 // Password
-                UIToolkit.div('input-group').append(this._pwd, UIToolkit.submit('Log in', true)),
+                UIToolkit.div('input-group').append(this._pwd, UIToolkit.submit(this.t('actionLogIn'), true)),
                 // Forgot password link
                 UIToolkit.div('dialog-centered')
                     .append(
-                        UIToolkit.a('Forgot your password?', `${this.baseUrl}/en/auth/forgotPassword`)
+                        UIToolkit.a(this.t('forgotPasswordLink'), `${this.baseUrl}/en/auth/forgotPassword`)
                             .append(UIToolkit.icon('newTab').classes('ms-1'))));
             hasSections = true;
         }
@@ -120,13 +122,13 @@ export class LoginDialog extends Dialog {
                     // Signup
                     canSignup && UIToolkit.div('flex-50', 'text-center')
                         .append(
-                            UIToolkit.div('dialog-centered').inner('Don\'t have an account? '),
-                            UIToolkit.button('Sign up here', () => this.dismissWith('signup'), 'btn-secondary')),
+                            UIToolkit.div('dialog-centered').inner(this.t('noAccountYet')),
+                            UIToolkit.button(this.t('actionSignUp'), () => this.dismissWith('signup'), 'btn-secondary')),
                     // Anonymous auth
                     this.pageInfo.authAnonymous && UIToolkit.div('flex-50', 'text-center')
                         .append(
-                            UIToolkit.div('dialog-centered').inner('Not willing to login?'),
-                            UIToolkit.button('Comment anonymously', () => this.dismissWith('anonymous'), 'btn-secondary'))));
+                            UIToolkit.div('dialog-centered').inner(this.t('notWillingToLogin')),
+                            UIToolkit.button(this.t('commentAnonymously'), () => this.dismissWith('anonymous'), 'btn-secondary'))));
         }
         return form;
     }

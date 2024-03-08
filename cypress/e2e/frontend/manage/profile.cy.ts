@@ -330,7 +330,7 @@ context('Profile', () => {
                       html: <p>What about supplies, cook?</p>
                       children:
                       - author: '[Deleted User]'
-                        html: '(deleted)'
+                        html: '(Deleted)'
                         children:
                         - author: Captain Ace
                           html: <p>Absolutely, cook. I'll make a note of it.</p>
@@ -349,7 +349,7 @@ context('Profile', () => {
                       html: <p>Good point, navigator. I'll make sure our crew is well-armed and that we have extra lookouts posted. Safety is our top priority, after all.</p>
                       children:
                       - author: '[Deleted User]'
-                        html: '(deleted)'
+                        html: '(Deleted)'
                         children:
                         - author: Captain Ace
                           html: <p>Let's hope it doesn't come to that, cook. But it's good to know we have you on our side.</p><p>Alright, everyone, let's get to work. We've got a long journey ahead of us!</p>

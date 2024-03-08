@@ -470,6 +470,18 @@ definitions:
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
 
+  i18nMessage:
+    description: Message for i18n
+    type: object
+    readOnly: true
+    properties:
+      id:
+        type: string
+        description: Message ID
+      translation:
+        type: string
+        description: Message translation in the target language
+
   importResult:
     description: Comment import result
     type: object
@@ -1587,6 +1599,29 @@ paths:
   #---------------------------------------------------------------------------------------------------------------------
   # Embed API
   #---------------------------------------------------------------------------------------------------------------------
+
+  # i18n
+
+  /embed/i18n/{lang}/messages:
+    get:
+      operationId: EmbedI18nMessages
+      summary: Get messages in the given language
+      tags:
+        - ApiEmbed
+      security: []
+      parameters:
+        - name: lang
+          in: path
+          required: true
+          description: Language code to get messages for
+          type: string
+      responses:
+        200:
+          description: List of all messages for the specified language
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/i18nMessage"
 
   # Auth
 

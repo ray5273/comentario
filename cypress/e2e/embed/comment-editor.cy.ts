@@ -232,9 +232,9 @@ context('Comment Editor', () => {
                 {in: 'foo',      sel: [0, 3], want: '~~foo~~',                               wantSel: [7, 7],  wantHtml: '<p><del>foo</del></p>'},
             ],
             'Link' : [
-                {in: '',         sel: [0],    want: '[Link text](https://example.com)',      wantSel: [1, 10], wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">Link text</a></p>'},
-                {in: 'bar',      sel: [0],    want: '[Link text](https://example.com)bar',   wantSel: [1, 10], wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">Link text</a>bar</p>'},
-                {in: 'bar',      sel: [2, 2], want: 'ba[Link text](https://example.com)r',   wantSel: [3, 12], wantHtml: '<p>ba<a href="https://example.com" rel="nofollow noopener" target="_blank">Link text</a>r</p>'},
+                {in: '',         sel: [0],    want: '[text](https://example.com)',           wantSel: [1, 5],  wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">text</a></p>'},
+                {in: 'bar',      sel: [0],    want: '[text](https://example.com)bar',        wantSel: [1, 5],  wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">text</a>bar</p>'},
+                {in: 'bar',      sel: [2, 2], want: 'ba[text](https://example.com)r',        wantSel: [3, 7], wantHtml: '<p>ba<a href="https://example.com" rel="nofollow noopener" target="_blank">text</a>r</p>'},
                 {in: 'bar',      sel: [0, 3], want: '[bar](https://example.com)',            wantSel: [6, 25], wantHtml: '<p><a href="https://example.com" rel="nofollow noopener" target="_blank">bar</a></p>'},
             ],
             'Quote' : [

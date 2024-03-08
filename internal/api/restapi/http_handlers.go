@@ -71,9 +71,7 @@ func fallbackHandler() http.Handler {
 
 		} else {
 			// Any other method
-			w.WriteHeader(http.StatusMethodNotAllowed)
-			w.Header().Set("Content-Type", "text/plain")
-			_, _ = w.Write([]byte("Method not allowed"))
+			writeError(w, http.StatusMethodNotAllowed)
 		}
 	})
 }
@@ -279,7 +277,7 @@ func webSocketsHandler(next http.Handler) http.Handler {
 		if ok, p := config.PathOfBaseURL(r.URL.Path); ok && strings.HasPrefix(p, util.WebSocketsPath) {
 			// Only allow GET requests
 			if r.Method != http.MethodGet {
-				http.Error(w, http.StatusText(http.StatusMethodNotAllowed), http.StatusMethodNotAllowed)
+				writeError(w, http.StatusMethodNotAllowed)
 				return
 			}
 
@@ -292,7 +290,7 @@ func webSocketsHandler(next http.Handler) http.Handler {
 
 					// Respond with "Too Many Requests" for simplicity (status isn't readable on the client due to
 					// security considerations anyway)
-					http.Error(w, http.StatusText(http.StatusTooManyRequests), http.StatusTooManyRequests)
+					writeError(w, http.StatusTooManyRequests)
 				}
 				return
 			}
@@ -301,6 +299,11 @@ func webSocketsHandler(next http.Handler) http.Handler {
 		// Pass on to the next handler otherwise
 		next.ServeHTTP(w, r)
 	})
+}
+
+// writeError writes an HTTP error
+func writeError(w http.ResponseWriter, code int) {
+	http.Error(w, http.StatusText(code), code)
 }
 
 // xsrfErrorHandler handles XSRF related errors

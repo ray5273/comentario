@@ -212,12 +212,12 @@ context('Login dialog', () => {
         it('shows no button when disabled', () => {
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsLocalSignupEnabled, false);
             openLoginDlg();
-            cy.get('@loginDialog').contains('button', 'Sign up here').should('not.exist');
+            cy.get('@loginDialog').contains('button', 'Sign up').should('not.exist');
         });
 
         it('open Signup dialog when enabled', () => {
             openLoginDlg();
-            cy.get('@loginDialog').contains('button', 'Sign up here').click();
+            cy.get('@loginDialog').contains('button', 'Sign up').click();
             cy.get('@root').contains('.comentario-dialog .comentario-dialog-header', 'Create an account').should('be.visible');
         });
     });

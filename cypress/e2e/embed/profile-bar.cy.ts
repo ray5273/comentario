@@ -95,7 +95,7 @@ context('Profile bar', () => {
                         // Click on the gear button: the Settings dialog appears
                         cy.get('@btnSettings').click();
                         cy.get('@root').find('.comentario-dialog').as('settingsDialog').should('be.visible')
-                            .contains('.comentario-dialog-header', `User settings for ${DOMAINS.localhost.name}`).should('be.visible');
+                            .contains('.comentario-dialog-header', 'User settings').should('be.visible');
 
                         // Check moderator notifications
                         if (test.isModerator) {

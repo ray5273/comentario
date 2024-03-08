@@ -239,13 +239,13 @@ context('User Properties page', () => {
                 // language=yaml
                 `
                 - author: '[Deleted User]'
-                  html: '(deleted)'
+                  html: '(Deleted)'
                   children:
                   - author: Engineer King
                     html: <p>What's on the agenda, captain?</p>
                     children:
                     - author: '[Deleted User]'
-                      html: '(deleted)'
+                      html: '(Deleted)'
                       children:
                       - author: Engineer King
                         html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
@@ -253,34 +253,34 @@ context('User Properties page', () => {
                         html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
                         children:
                         - author: '[Deleted User]'
-                          html: '(deleted)'
+                          html: '(Deleted)'
                     - author: '[Deleted User]'
-                      html: '(deleted)'
+                      html: '(Deleted)'
                       children:
                       - author: Cook Queen
                         html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
                         children:
                         - author: '[Deleted User]'
-                          html: '(deleted)'
+                          html: '(Deleted)'
                 - author: '[Deleted User]'
-                  html: '(deleted)'
+                  html: '(Deleted)'
                   children:
                   - author: Engineer King
                     html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
                     children:
                     - author: '[Deleted User]'
-                      html: '(deleted)'
+                      html: '(Deleted)'
                   - author: Navigator Jack
                     html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
                     children:
                     - author: '[Deleted User]'
-                      html: '(deleted)'
+                      html: '(Deleted)'
                       children:
                       - author: Cook Queen
                         html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
                         children:
                         - author: '[Deleted User]'
-                          html: '(deleted)'
+                          html: '(Deleted)'
                 `);
         });
 
@@ -407,13 +407,13 @@ context('User Properties page', () => {
                 // language=yaml
                 `
                 - author: Captain Ace
-                  html: (deleted by a moderator)
+                  html: (Deleted by moderator)
                   children:
                   - author: Engineer King
                     html: <p>What's on the agenda, captain?</p>
                     children:
                     - author: Captain Ace
-                      html: (deleted by a moderator)
+                      html: (Deleted by moderator)
                       children:
                       - author: Engineer King
                         html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
@@ -421,34 +421,34 @@ context('User Properties page', () => {
                         html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
                         children:
                         - author: Captain Ace
-                          html: (deleted by a moderator)
+                          html: (Deleted by moderator)
                     - author: Captain Ace
-                      html: (deleted by a moderator)
+                      html: (Deleted by moderator)
                       children:
                       - author: Cook Queen
                         html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
                         children:
                         - author: Captain Ace
-                          html: (deleted by a moderator)
+                          html: (Deleted by moderator)
                 - author: Captain Ace
-                  html: (deleted by a moderator)
+                  html: (Deleted by moderator)
                   children:
                   - author: Engineer King
                     html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
                     children:
                     - author: Captain Ace
-                      html: (deleted by a moderator)
+                      html: (Deleted by moderator)
                   - author: Navigator Jack
                     html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
                     children:
                     - author: Captain Ace
-                      html: (deleted by a moderator)
+                      html: (Deleted by moderator)
                       children:
                       - author: Cook Queen
                         html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
                         children:
                         - author: Captain Ace
-                          html: (deleted by a moderator)
+                          html: (Deleted by moderator)
                 `);
         });
 

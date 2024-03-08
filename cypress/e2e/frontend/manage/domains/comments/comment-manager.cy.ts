@@ -238,7 +238,7 @@ context('Comment Manager', () => {
                 cy.get('@filterPendingBtn') .clickLabel();
                 checkFilter(false, false, true, true);
                 cy.get('@commentList').verifyListFooter(2, false);
-                cy.get('@commentList').texts('.comment-deleted').should('arrayMatch', ['(deleted)']);
+                cy.get('@commentList').texts('.comment-deleted').should('arrayMatch', ['(Deleted)']);
                 cy.get('@commentList').texts('.comment-text')   .should('arrayMatch', ['Rejected reply']);
 
                 // Add filter string

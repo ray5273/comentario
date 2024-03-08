@@ -1,5 +1,15 @@
 import { Wrap } from './element-wrap';
-import { ANONYMOUS_ID, Comment, CommenterMap, CommentSort, CommentSortComparators, Principal, User, UUID } from './models';
+import {
+    ANONYMOUS_ID,
+    Comment,
+    CommenterMap,
+    CommentSort,
+    CommentSortComparators,
+    Principal,
+    TranslateFunc,
+    User,
+    UUID,
+} from './models';
 import { UIToolkit } from './ui-toolkit';
 import { Utils } from './utils';
 import { ConfirmDialog } from './confirm-dialog';
@@ -157,6 +167,8 @@ export interface CommentRenderingContext {
     readonly maxLevel: number;
     /** Whether voting on comments is enabled. */
     readonly enableVoting: boolean;
+    /** i18n translation function. */
+    readonly t: TranslateFunc;
 
     // Events
     readonly onGetAvatar: CommentCardGetAvatarHandler;
@@ -199,6 +211,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     private collapsed = false;
     private isModerator = false;
 
+    /** Localisation function (mapped to the I18n service). */
+    private readonly t: TranslateFunc;
+
     constructor(
         private _comment: CommentWithCard,
         ctx: CommentRenderingContext,
@@ -206,6 +221,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     ) {
         super(UIToolkit.div().element);
         this._comment.card = this;
+        this.t = ctx.t;
 
         // Render the content
         this.render(ctx);
@@ -314,22 +330,22 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Add a Pending badge otherwise
         } else if (!this.ePendingBadge) {
-            this.eNameWrap?.append(this.ePendingBadge = UIToolkit.badge('Pending', 'badge-pending'));
+            this.eNameWrap?.append(this.ePendingBadge = UIToolkit.badge(this.t('statusPending'), 'badge-pending'));
         }
 
         // Sticky
         const sticky = this._comment.isSticky;
         this.btnSticky
-            ?.attr({title: sticky ? (this.isModerator ? 'Unsticky' : 'Sticky comment') : 'Sticky'})
+            ?.attr({title: this.t(sticky ? (this.isModerator ? 'actionUnsticky' : 'stickyComment') : 'actionSticky')})
             .setClasses(sticky, 'is-sticky')
             .setClasses(!this.isModerator && !sticky, 'hidden');
 
         // Moderation notice
         let mn: string | undefined;
         if (c.isPending) {
-            mn = 'This comment is awaiting moderator approval.';
+            mn = this.t('commentIsPending');
         } else if (!c.isApproved) {
-            mn = 'This comment was flagged as spam.';
+            mn = this.t('commentIsRejected');
         }
         if (mn) {
             // If there's something to display, make sure the notice element exists and appended to the header
@@ -351,11 +367,12 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     private updateText() {
         if (this._comment.isDeleted) {
             this.eBody?.inner(
-                this._comment.userCreated ?
-                    this._comment.userCreated === this._comment.userDeleted ?
-                        '(deleted by author)' :
-                        '(deleted by a moderator)' :
-                    '(deleted)');
+                '(' +
+                this.t(
+                    this._comment.userCreated ?
+                        this._comment.userCreated === this._comment.userDeleted ? 'statusDeletedByAuthor' : 'statusDeletedByModerator' :
+                        'statusDeleted') +
+                ')');
         } else {
             this.eBody!.html(this._comment.html || '');
         }
@@ -373,7 +390,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         if (commenter) {
             bgColor = commenter.id === ANONYMOUS_ID ? 'anonymous' : commenter.colourIndex.toString();
             if (commenter.isModerator) {
-                this.eModeratorBadge = UIToolkit.badge('Moderator', 'badge-moderator');
+                this.eModeratorBadge = UIToolkit.badge(this.t('statusModerator'), 'badge-moderator');
             }
         }
 
@@ -403,7 +420,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                     .append(
                                         // Name
                                         Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
-                                            .inner(commenter?.name ?? '[Deleted User]')
+                                            .inner(commenter?.name ?? `[${this.t('statusDeletedUser')}]`)
                                             .classes('name')
                                             .attr(commenter?.websiteUrl ?
                                                 {href: commenter.websiteUrl, rel: 'nofollow noopener noreferrer'} :
@@ -414,8 +431,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                 UIToolkit.div('subtitle')
                                     .append(
                                         // Permalink and the comment creation time
-                                        UIToolkit.a(Utils.timeAgo(ctx.curTimeMs, ms), `#${Wrap.idPrefix}${id}`)
-                                            .attr({title: `${this._comment.createdTime} — Permalink`})))),
+                                        UIToolkit.a(Utils.timeAgo(this.t, ctx.curTimeMs, ms), `#${Wrap.idPrefix}${id}`)
+                                            .attr({title: `${this._comment.createdTime} — ${this.t('permalink')}`})))),
                 // Card body
                 this.eBody = UIToolkit.div('card-body'),
                 // Comment toolbar
@@ -459,22 +476,22 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Upvote / Downvote buttons and the score
         if (ctx.enableVoting) {
             left.append(
-                this.btnUpvote = UIToolkit.toolButton('arrowUp', 'Upvote', () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
+                this.btnUpvote = UIToolkit.toolButton('arrowUp', this.t('actionUpvote'), () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
                     .attr(ownComment && {disabled: 'true'}),
-                this.eScore = UIToolkit.div('score').attr({title: 'Comment score'}),
-                this.btnDownvote = UIToolkit.toolButton('arrowDown', 'Downvote', () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
+                this.eScore = UIToolkit.div('score').attr({title: this.t('commentScore')}),
+                this.btnDownvote = UIToolkit.toolButton('arrowDown', this.t('actionDownvote'), () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
                     .attr(ownComment && {disabled: 'true'}));
         }
 
         // Reply button
         if (ctx.canAddComments) {
-            this.btnReply = UIToolkit.toolButton('reply', 'Reply', () => ctx.onReply(this)).appendTo(left);
+            this.btnReply = UIToolkit.toolButton('reply', this.t('actionReply'), () => ctx.onReply(this)).appendTo(left);
         }
 
         // Approve/reject buttons
         if (this.isModerator && this._comment.isPending) {
-            this.btnApprove = UIToolkit.toolButton('check', 'Approve', () => ctx.onModerate(this, true),  'text-success').appendTo(right);
-            this.btnReject  = UIToolkit.toolButton('times', 'Reject',  () => ctx.onModerate(this, false), 'text-warning').appendTo(right);
+            this.btnApprove = UIToolkit.toolButton('check', this.t('actionApprove'), () => ctx.onModerate(this, true),  'text-success').appendTo(right);
+            this.btnReject  = UIToolkit.toolButton('times', this.t('actionReject'),  () => ctx.onModerate(this, false), 'text-warning').appendTo(right);
         }
 
         // Sticky toggle button (top-level comments only)
@@ -486,19 +503,19 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Edit button: when enabled
         if (this.isModerator && ctx.modCommentEditing || ownComment && ctx.ownCommentEditing) {
-            this.btnEdit = UIToolkit.toolButton('pencil', 'Edit', () => ctx.onEdit(this)).appendTo(right);
+            this.btnEdit = UIToolkit.toolButton('pencil', this.t('actionEdit'), () => ctx.onEdit(this)).appendTo(right);
         }
 
         // Delete button: when enabled
         if (this.isModerator && ctx.modCommentDeletion || ownComment && ctx.ownCommentDeletion) {
-            this.btnDelete = UIToolkit.toolButton('bin', 'Delete', btn => this.deleteComment(btn, ctx), 'text-danger').appendTo(right);
+            this.btnDelete = UIToolkit.toolButton('bin', this.t('actionDelete'), btn => this.deleteComment(btn, ctx), 'text-danger').appendTo(right);
         }
         return toolbar;
     }
 
     private async deleteComment(btn: Wrap<any>, ctx: CommentRenderingContext) {
         // Confirm deletion
-        if (await ConfirmDialog.run(ctx.root, {ref: btn, placement: 'bottom-end'}, 'Are you sure you want to delete this comment?')) {
+        if (await ConfirmDialog.run(this.t, ctx.root, {ref: btn, placement: 'bottom-end'}, this.t('confirmCommentDeletion'))) {
             // Notify the callback
             ctx.onDelete(this);
         }
@@ -531,7 +548,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      */
     private updateExpandToggler() {
         if (this.children?.ok) {
-            this.eToggler?.setClasses(this.collapsed, 'collapsed').attr({title: this.collapsed ? 'Expand children' : 'Collapse children'});
+            this.eToggler
+                ?.setClasses(this.collapsed, 'collapsed')
+                .attr({title: this.t(this.collapsed ? 'actionExpandChildren' : 'actionCollapseChildren')});
         }
     }
 }

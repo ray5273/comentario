@@ -3,6 +3,8 @@ import { ApiErrorResponse } from './api';
 
 export type UUID = string;
 
+export type TranslateFunc = (id: string) => string;
+
 export type StringBooleanMap = { [k: string]: boolean };
 
 /** UI language. **/
@@ -207,9 +209,10 @@ export class ErrorMessage implements Message {
      * Instantiate a new ErrorMessage instance from the given error object. For now, only handle a string and an HTTP
      * error in a special way.
      * @param err Source error object.
+     * @param t Translation function for messages.
      */
-    static of(err: any): ErrorMessage {
-        let text = 'Unknown error';
+    static of(err: any, t: TranslateFunc): ErrorMessage {
+        let text = t('errorUnknown');
 
         if (typeof err === 'string') {
             text = err;
@@ -228,7 +231,7 @@ export class ErrorMessage implements Message {
             // Translate error ID
             switch (resp?.id) {
                 case 'unknown-host':
-                    text = 'This domain is not registered in Comentario';
+                    text = t('errorUnknownHost');
                     break;
 
                 // Not a known error ID

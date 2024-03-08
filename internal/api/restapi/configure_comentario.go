@@ -139,6 +139,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Embed API
 	//------------------------------------------------------------------------------------------------------------------
 
+	// |I18n
+	api.APIEmbedEmbedI18nMessagesHandler = api_embed.EmbedI18nMessagesHandlerFunc(handlers.EmbedI18nMessages)
 	// Auth
 	api.APIEmbedEmbedAuthLoginHandler = api_embed.EmbedAuthLoginHandlerFunc(handlers.EmbedAuthLogin)
 	api.APIEmbedEmbedAuthLoginTokenNewHandler = api_embed.EmbedAuthLoginTokenNewHandlerFunc(handlers.EmbedAuthLoginTokenNew)

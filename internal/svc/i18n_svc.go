@@ -12,13 +12,16 @@ import (
 
 // TheI18nService is a global I18nService implementation
 var TheI18nService I18nService = &i18nService{
-	locs: make(map[string]*i18n.Localizer),
+	locs:     make(map[string]*i18n.Localizer),
+	msgFiles: make(map[string]*i18n.MessageFile),
 }
 
 // I18nService is a service interface for dealing with translations and internationalisation (i18)
 type I18nService interface {
 	// Init the service
 	Init() error
+	// Messages returns all messages for the given language
+	Messages(lang string) ([]*i18n.Message, error)
 	// Translate translates the provided ID into the given language
 	Translate(lang, id string, args ...reflect.Value) string
 }
@@ -27,9 +30,10 @@ type I18nService interface {
 
 // i18nService is a blueprint I18nService implementation
 type i18nService struct {
-	bundle *i18n.Bundle               // Internationalisation bundle
-	defLoc *i18n.Localizer            // Localizer for the default language
-	locs   map[string]*i18n.Localizer // Map of localizers by the language
+	bundle   *i18n.Bundle                 // Internationalisation bundle
+	defLoc   *i18n.Localizer              // Localizer for the default language
+	locs     map[string]*i18n.Localizer   // Map of localizers by the language
+	msgFiles map[string]*i18n.MessageFile // Map of message files by the language
 }
 
 func (svc i18nService) Init() error {
@@ -53,6 +57,16 @@ func (svc i18nService) Init() error {
 
 	// Succeeded
 	return nil
+}
+
+func (svc i18nService) Messages(lang string) ([]*i18n.Message, error) {
+	// Try to find the messages file for the required language
+	mf, ok := svc.msgFiles[lang]
+	if !ok {
+		return nil, ErrNotFound
+	}
+
+	return mf.Messages, nil
 }
 
 func (svc i18nService) Translate(lang, id string, args ...reflect.Value) string {
@@ -95,10 +109,13 @@ func (svc i18nService) scanDir(dirPath string) error {
 			return fmt.Errorf("failed to read i18n file %q: %w", fp, err)
 		}
 
-		// Create a localizer per language
+		// Store the message file in a map
 		lang := mf.Tag.String()
+		svc.msgFiles[lang] = mf
+
+		// Create a localizer per language
 		svc.locs[lang] = i18n.NewLocalizer(svc.bundle, lang, util.UIDefaultLangID)
-		logger.Debugf("Loaded i18n file %q for language %q", fp, lang)
+		logger.Debugf("Loaded i18n file %q for language %q (%d messages)", fp, lang, len(mf.Messages))
 	}
 
 	// Succeeded

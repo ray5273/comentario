@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { PageInfo, Principal, UserSettings } from './models';
+import { Principal, TranslateFunc, UserSettings } from './models';
 
 export class SettingsDialog extends Dialog {
 
@@ -9,25 +9,25 @@ export class SettingsDialog extends Dialog {
     private _cbNotifyReplies?: Wrap<HTMLInputElement>;
 
     private constructor(
+        t: TranslateFunc,
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly baseUrl: string,
         private readonly principal: Principal,
-        pageInfo: PageInfo,
     ) {
-        super(parent, `User settings for ${pageInfo.domainName}`, pos);
+        super(t, parent, t('dlgTitleUserSettings'), pos);
     }
 
     /**
      * Instantiate and show the dialog. Return a promise that resolves as soon as the dialog is closed.
+     * @param t Function for obtaining translated messages.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
      * @param baseUrl Base URL of the Comentario instance
      * @param principal Principal whose settings are being edited.
-     * @param pageInfo Data about the current page.
      */
-    static run(parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, principal: Principal, pageInfo: PageInfo): Promise<SettingsDialog> {
-        const dlg = new SettingsDialog(parent, pos, baseUrl, principal, pageInfo);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, principal: Principal): Promise<SettingsDialog> {
+        const dlg = new SettingsDialog(t, parent, pos, baseUrl, principal);
         return dlg.run(dlg);
     }
 
@@ -54,7 +54,7 @@ export class SettingsDialog extends Dialog {
                                 .id('cb-notify-moderator')
                                 .attr({type: 'checkbox'})
                                 .checked(this.principal.notifyModerator),
-                            Wrap.new('label').attr({for: this._cbNotifyModerator.getAttr('id')}).inner('Moderator notifications')),
+                            Wrap.new('label').attr({for: this._cbNotifyModerator.getAttr('id')}).inner(this.t('fieldModNotifications'))),
                     // Reply notifications checkbox
                     UIToolkit.div('checkbox-container')
                         .append(
@@ -62,15 +62,15 @@ export class SettingsDialog extends Dialog {
                                 .id('cb-notify-replies')
                                 .attr({type: 'checkbox'})
                                 .checked(this.principal.notifyReplies),
-                            Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner('Reply notifications'))),
+                            Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner(this.t('fieldReplyNotifications')))),
                 // Submit button
-                UIToolkit.div('dialog-centered').append(UIToolkit.submit('Save', false)),
+                UIToolkit.div('dialog-centered').append(UIToolkit.submit(this.t('actionSave'), false)),
                 // Edit profile link (non-SSO only)
                 !this.principal.isSso && Wrap.new('hr'),
                 !this.principal.isSso &&
                     UIToolkit.div('dialog-centered')
                         .append(
-                            UIToolkit.a('Edit Comentario profile', `${this.baseUrl}/en/manage/account/profile`)
+                            UIToolkit.a(this.t('actionEditComentarioProfile'), `${this.baseUrl}/en/manage/account/profile`)
                                 .append(UIToolkit.icon('newTab').classes('ms-1'))));
     }
 }

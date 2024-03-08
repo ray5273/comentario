@@ -1,4 +1,21 @@
-import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, CommentSort, ErrorMessage, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
+import {
+    ANONYMOUS_ID,
+    Comment,
+    Commenter,
+    CommenterMap,
+    CommentSort,
+    ErrorMessage,
+    Message,
+    OkMessage,
+    PageInfo,
+    Principal,
+    SignupData,
+    SsoLoginResponse,
+    StringBooleanMap,
+    User,
+    UserSettings,
+    UUID,
+} from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
@@ -9,6 +26,7 @@ import { SortBar } from './sort-bar';
 import { Utils } from './utils';
 import { InstanceConfig, LocalConfig } from './config';
 import { WebSocketClient, WebSocketMessage } from './ws-client';
+import { I18nService } from './i18n';
 
 export class Comentario extends HTMLElement {
 
@@ -22,7 +40,10 @@ export class Comentario extends HTMLElement {
     private readonly apiService = new ApiService(
         Utils.joinUrl(this.origin, 'api'),
         () => !this.ignoreApiErrors && this.setMessage(),
-        err => !this.ignoreApiErrors && this.setMessage(ErrorMessage.of(err)));
+        err => !this.ignoreApiErrors && this.handleApiError(err));
+
+    /** I18n service for obtaining localised messages. */
+    private readonly i18n = new I18nService(this.apiService);
 
     /**
      * Location of the current page.
@@ -168,6 +189,9 @@ export class Comentario extends HTMLElement {
         // Load Comentario configuration
         this.config = InstanceConfig.of(await this.apiService.configGet());
 
+        // Init i18n
+        await this.initI18n();
+
         // Set up the root content
         this.root
             .inner('')
@@ -175,6 +199,7 @@ export class Comentario extends HTMLElement {
             .append(
                 // Profile bar
                 this.profileBar = new ProfileBar(
+                    this.i18n.t,
                     this.origin,
                     this.root,
                     this.config,
@@ -189,9 +214,7 @@ export class Comentario extends HTMLElement {
                 // Main area
                 this.mainArea = UIToolkit.div('main-area'),
                 // Footer
-                UIToolkit.div('footer')
-                    .append(
-                        UIToolkit.a('Powered by ', 'https://comentario.app/').append(UIToolkit.span('fw-bold').inner('Comentario'))));
+                UIToolkit.div('footer').append(UIToolkit.a(this.i18n.t('poweredBy'), 'https://comentario.app/')));
 
         // Load information about ourselves
         await this.updateAuthStatus();
@@ -268,6 +291,15 @@ export class Comentario extends HTMLElement {
         this.renderComments();
     }
 
+    private async initI18n(): Promise<void> {
+        // Determine the language to use: first try the lang attribute, then the language of the document, then fall
+        // back to the default Comentario UI language
+        const lang = this.getAttribute('lang') || this.ownerDocument.documentElement.lang || this.config.statics.defaultLangId;
+
+        // Load the messages
+        return this.i18n.init(lang);
+    }
+
     /**
      * Scroll to the comment whose ID is provided in the current window's fragment (if any).
      */
@@ -299,7 +331,7 @@ export class Comentario extends HTMLElement {
             // Comment not found: make sure it's a valid ID before showing the user a message
             .else(() =>
                 Utils.isUuid(id) &&
-                this.setMessage(new ErrorMessage('The comment you\'re looking for doesn\'t exist; possibly it was deleted.')));
+                this.setMessage(new ErrorMessage(this.i18n.t('commentNotFound'))));
     }
 
     /**
@@ -357,7 +389,7 @@ export class Comentario extends HTMLElement {
             this.messagePanel = UIToolkit.div('message-box')
                 .classes(err && 'error')
                 // Message body
-                .append(UIToolkit.div('message-box-body').inner(err ? `Error: ${message.text}.` : message.text)));
+                .append(UIToolkit.div('message-box-body').inner(err ? `${this.i18n.t('error')}: ${message.text}.` : message.text)));
 
         // If there are details
         if (message.details) {
@@ -368,7 +400,7 @@ export class Comentario extends HTMLElement {
                 UIToolkit.div()
                     .append(
                         UIToolkit.button(
-                            'Technical details',
+                            this.i18n.t('technicalDetails'),
                             btn => {
                                 details.setClasses(hidden = !hidden, 'hidden');
                                 btn.setClasses(!hidden, 'btn-active');
@@ -410,12 +442,12 @@ export class Comentario extends HTMLElement {
         // If the domain or the page are readonly, add a corresponding message
         if (this.pageInfo?.isDomainReadonly || this.pageInfo?.isPageReadonly) {
             this.mainArea!.append(
-                UIToolkit.div('page-moderation-notice').inner('This thread is locked. You cannot add new comments.'));
+                UIToolkit.div('page-moderation-notice').inner(this.i18n.t('pageIsReadonly')));
 
         // If no auth method available, also add a message
         } else if (!this.authAvailable) {
             this.mainArea!.append(
-                UIToolkit.div('page-moderation-notice').inner('This domain has no authentication method available. You cannot add new comments.'));
+                UIToolkit.div('page-moderation-notice').inner(this.i18n.t('domainAuthUnconfigured')));
 
         } else {
             // Otherwise, add a comment editor host, which will get an editor for creating a new comment
@@ -428,7 +460,11 @@ export class Comentario extends HTMLElement {
 
         this.mainArea!.append(
             // Sort bar
-            this.sortBar = new SortBar(cs => this.applySort(cs), this.localConfig.commentSort, this.config.dynamic.enableCommentVoting),
+            this.sortBar = new SortBar(
+                this.i18n.t,
+                cs => this.applySort(cs),
+                this.localConfig.commentSort,
+                this.config.dynamic.enableCommentVoting),
             // Create a panel for comments
             this.commentsArea = UIToolkit.div('comments').appendTo(this.mainArea!));
     }
@@ -443,6 +479,7 @@ export class Comentario extends HTMLElement {
 
         // Create a new editor
         this.editor = new CommentEditor(
+            this.i18n.t,
             parentCard?.children || this.addCommentHost!,
             false,
             '',
@@ -462,6 +499,7 @@ export class Comentario extends HTMLElement {
 
         // Create a new editor
         this.editor = new CommentEditor(
+            this.i18n.t,
             card.expandBody!,
             true,
             card.comment.markdown!,
@@ -546,7 +584,7 @@ export class Comentario extends HTMLElement {
 
         } else {
             // Otherwise, show a message that the user should confirm their email
-            this.setMessage(new OkMessage('Account is successfully created. Please check your email and click the confirmation link it contains.'));
+            this.setMessage(new OkMessage(this.i18n.t('accountCreatedConfirmEmail')));
         }
     }
 
@@ -637,7 +675,7 @@ export class Comentario extends HTMLElement {
         try {
             await Promise.race([ready, timeout]);
         } catch (e) {
-            this.setMessage(ErrorMessage.of(e || 'SSO authentication failed.'));
+            this.setMessage(ErrorMessage.of(e || this.i18n.t('ssoAuthFailed'), this.i18n.t));
             throw e;
         } finally {
             iframe.remove();
@@ -848,6 +886,7 @@ export class Comentario extends HTMLElement {
             curTimeMs:          new Date().getTime(),
             maxLevel:           this.maxLevel,
             enableVoting:       this.config.dynamic.enableCommentVoting,
+            t:                  this.i18n.t,
             onGetAvatar:        user => this.createAvatarElement(user),
             onModerate:         (card, approve) => this.moderateComment(card, approve),
             onDelete:           card => this.deleteComment(card),
@@ -988,5 +1027,14 @@ export class Comentario extends HTMLElement {
         if (msg.action !== 'vote') {
             card?.blink();
         }
+    }
+
+    /**
+     * Handle an incoming API error by displaying it in the message panel.
+     * @param err Error to handle.
+     * @private
+     */
+    private handleApiError(err: any) {
+        this.setMessage(ErrorMessage.of(err, this.i18n.t));
     }
 }

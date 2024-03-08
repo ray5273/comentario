@@ -1,0 +1,26 @@
+import { ApiService } from './api';
+import { TranslateFunc } from './models';
+
+export class I18nService {
+
+    /**
+     * Get a translated message for the given ID.
+     * @param id ID to get a message for.
+     */
+    readonly t: TranslateFunc = (id: string) => this.messages.get(id) || `![${id}]`;
+
+    /** Messages for i18n in the current language. */
+    private readonly messages = new Map<string, string>();
+
+    constructor(private readonly api: ApiService) {}
+
+    /**
+     * Initialise the service with the given language.
+     * @param lang Language ID to use.
+     */
+    async init(lang: string): Promise<void> {
+        const ms = await this.api.i18nMessages(lang);
+        this.messages.clear();
+        ms.forEach(m => this.messages.set(m.id, m.translation));
+    }
+}

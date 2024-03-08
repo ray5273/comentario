@@ -1,3 +1,5 @@
+import { TranslateFunc } from './models';
+
 export class Utils {
 
     static readonly reUuid = /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/;
@@ -15,59 +17,60 @@ export class Utils {
 
     /**
      * Return a string representation of a time difference in the "time ago" notation.
+     * @param t Function for obtaining translated messages.
      * @param current Current time in milliseconds.
      * @param previous The past moment in milliseconds.
      */
-    static timeAgo(current: number, previous: number): string {
+    static timeAgo(t: TranslateFunc, current: number, previous: number): string {
         const seconds = Math.floor((current-previous) / 1000);
 
         // Years
         let interval = Math.floor(seconds / 31536000);
         if (interval > 1) {
-            return `${interval} years ago`;
+            return `${interval} ${t('timeYearsAgo')}`;
         }
         if (interval === 1) {
-            return 'A year ago';
+            return t('timeYearAgo');
         }
 
         // Months
         interval = Math.floor(seconds / 2592000);
         if (interval > 1) {
-            return `${interval} months ago`;
+            return `${interval} ${t('timeMonthsAgo')}`;
         }
         if (interval === 1) {
-            return 'A month ago';
+            return t('timeMonthAgo');
         }
 
         // Days
         interval = Math.floor(seconds / 86400);
         if (interval > 1) {
-            return `${interval} days ago`;
+            return `${interval} ${t('timeDaysAgo')}`;
         }
         if (interval === 1) {
-            return 'Yesterday';
+            return t('timeYesterday');
         }
 
         // Hours
         interval = Math.floor(seconds / 3600);
         if (interval > 1) {
-            return `${interval} hours ago`;
+            return `${interval} ${t('timeHoursAgo')}`;
         }
         if (interval === 1) {
-            return 'An hour ago';
+            return t('timeHourAgo');
         }
 
         // Minutes
         interval = Math.floor(seconds / 60);
         if (interval > 1) {
-            return `${interval} minutes ago`;
+            return `${interval} ${t('timeMinutesAgo')}`;
         }
         if (interval === 1) {
-            return 'A minute ago';
+            return t('timeMinuteAgo');
         }
 
         // Less than a minute
-        return 'Just now';
+        return t('timeJustNow');
     }
 
     /**

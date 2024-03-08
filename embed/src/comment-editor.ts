@@ -1,6 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { InstanceConfig } from './config';
+import { TranslateFunc } from './models';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
 export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
@@ -15,6 +16,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
 
     /**
      * Create a new editor for editing comment text.
+     * @param t Function for obtaining translated messages.
      * @param parent Parent element to host the editor.
      * @param isEdit Whether it's adding a new comment (false) or editing an existing one (true).
      * @param initialText Initial text to insert into the editor.
@@ -24,6 +26,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
      * @param onPreview Preview callback.
      */
     constructor(
+        private readonly t: TranslateFunc,
         private readonly parent: Wrap<any>,
         isEdit: boolean,
         initialText: string,
@@ -50,11 +53,11 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                 UIToolkit.div('comment-editor-footer')
                     .append(
                         // Cancel
-                        UIToolkit.button('Cancel', () => onCancel(this), 'btn-link'),
+                        UIToolkit.button(this.t('actionCancel'), () => onCancel(this), 'btn-link'),
                         // Preview
-                        this.btnPreview = UIToolkit.button('Preview', () => this.togglePreview(), 'btn-secondary'),
+                        this.btnPreview = UIToolkit.button(this.t('actionPreview'), () => this.togglePreview(), 'btn-secondary'),
                         // Submit
-                        this.btnSubmit = UIToolkit.submit(isEdit ? 'Save Changes' : 'Add Comment', false),
+                        this.btnSubmit = UIToolkit.submit(this.t(isEdit ? 'actionSave' : 'actionAddComment'), false),
                     ));
 
         // Update the parent
@@ -99,7 +102,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
             try {
                 html = await this.onPreview(this.markdown);
             } catch (e: any) {
-                html = `Preview failed: ${e.message || '(unknown error)'}`;
+                html = `${this.t('previewFailed')}: ${e.message || '(unknown error)'}`;
             }
         }
         this.preview.html(html);
@@ -131,7 +134,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         const ta = this.textarea.element;
         const is1 = ta.selectionStart, is2 = ta.selectionEnd;
         const text = ta.value;
-        let sel = text.substring(is1, is2) || placeholder || 'text';
+        let sel = text.substring(is1, is2) || placeholder || this.t('sampleText');
         const selLen = sel.length;
 
         // Parse the pattern
@@ -210,26 +213,26 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         return UIToolkit.div('toolbar').append(
             // Left section
             UIToolkit.div('toolbar-section').append(
-                UIToolkit.toolButton('bold',          'Bold',          () => this.applyInlinePattern('**$**{}')),
-                UIToolkit.toolButton('italic',        'Italic',        () => this.applyInlinePattern('*$*{}')),
-                UIToolkit.toolButton('strikethrough', 'Strikethrough', () => this.applyInlinePattern('~~$~~{}')),
+                UIToolkit.toolButton('bold',          this.t('btnBold'),          () => this.applyInlinePattern('**$**{}')),
+                UIToolkit.toolButton('italic',        this.t('btnItalic'),        () => this.applyInlinePattern('*$*{}')),
+                UIToolkit.toolButton('strikethrough', this.t('btnStrikethrough'), () => this.applyInlinePattern('~~$~~{}')),
                 this.config.dynamic.linksEnabled &&
-                    UIToolkit.toolButton('link',      'Link',          () => this.applyInlinePattern('[$]({https://example.com})', 'Link text')),
-                UIToolkit.toolButton('quote',         'Quote',         () => this.applyBlockPattern('> ')),
-                UIToolkit.toolButton('code',          'Code',          () => this.applyInlinePattern('`$`{}')),
+                    UIToolkit.toolButton('link',      this.t('btnLink'),          () => this.applyInlinePattern('[$]({https://example.com})', this.t('sampleText'))),
+                UIToolkit.toolButton('quote',         this.t('btnQuote'),         () => this.applyBlockPattern('> ')),
+                UIToolkit.toolButton('code',          this.t('btnCode'),          () => this.applyInlinePattern('`$`{}')),
                 this.config.dynamic.imagesEnabled &&
-                    UIToolkit.toolButton('image',     'Image',         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
+                    UIToolkit.toolButton('image',     this.t('btnImage'),         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
                 this.config.dynamic.tablesEnabled &&
-                    UIToolkit.toolButton('table',     'Table',         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
-                UIToolkit.toolButton('bulletList',    'Bullet list',   () => this.applyBlockPattern('* ')),
-                UIToolkit.toolButton('numberedList',  'Numbered list', () => this.applyBlockPattern('1. ')),
+                    UIToolkit.toolButton('table',     this.t('btnTable'),         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
+                UIToolkit.toolButton('bulletList',    this.t('btnBulletList'),    () => this.applyBlockPattern('* ')),
+                UIToolkit.toolButton('numberedList',  this.t('btnNumberedList'),  () => this.applyBlockPattern('1. ')),
             ),
             // Right section
             UIToolkit.div('toolbar-section').append(
                 // Markdown help link
                 UIToolkit.a('', this.config.docsUrl('kb/markdown/'))
                     .classes('btn', 'btn-tool')
-                    .attr({title: 'Markdown help'})
+                    .attr({title: this.t('btnMarkdownHelp')})
                     .append(UIToolkit.icon('help')),
             ));
     }

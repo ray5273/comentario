@@ -8,6 +8,11 @@ export interface ApiErrorResponse {
     readonly details?: string;
 }
 
+export interface ApiI18nMessageResponse {
+    readonly id:          string;
+    readonly translation: string;
+}
+
 export interface ApiCommentListResponse {
     /** Page info. */
     readonly pageInfo: PageInfo;
@@ -148,6 +153,10 @@ export class ApiService {
             // Store the session in a cookie, setting it to expire after one month
             Utils.setCookie(ApiService.SessionTokenCookieName, this._userSessionToken, 30);
         }
+    }
+
+    async i18nMessages(lang: string): Promise<ApiI18nMessageResponse[]> {
+        return await this.httpClient.get<ApiI18nMessageResponse[]>(`embed/i18n/${lang}/messages`);
     }
 
     /**

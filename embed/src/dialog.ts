@@ -3,6 +3,7 @@ import { arrow, flip, offset, preventOverflow } from '@popperjs/core';
 import { Placement } from '@popperjs/core/lib/enums';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
+import { TranslateFunc } from './models';
 
 export interface DialogPositioning {
     /** Reference element. */
@@ -21,9 +22,11 @@ export class Dialog {
     private resolve?: () => void;
     private animationDone?: () => void;
 
-    _confirmed = false;
+    private _confirmed = false;
 
     protected constructor(
+        /** Function for obtaining translated messages. */
+        protected readonly t: TranslateFunc,
         /** Parent element that will host the dialog and the backdrop. */
         private readonly parent: Wrap<any>,
         /** Dialog title. */
@@ -133,7 +136,7 @@ export class Dialog {
             // Title
             .inner(this.title)
             // Close button
-            .append(UIToolkit.toolButton('times', 'Close', () => this.dismiss(), 'dialog-btn-close'));
+            .append(UIToolkit.toolButton('times', this.t('actionClose'), () => this.dismiss(), 'dialog-btn-close'));
     }
 
     private popperBind() {

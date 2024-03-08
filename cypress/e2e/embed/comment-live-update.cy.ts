@@ -125,9 +125,9 @@ context('Live comment update', () => {
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (deleted by a moderator) # Text is gone
-                  score: null                    # No score anymore
-                  sticky: false                  # Not sticky anymore
+                  html: (Deleted by moderator) # Text is gone
+                  score: null                   # No score anymore
+                  sticky: false                 # Not sticky anymore
                   pending: false
                   children:
                   - author: Engineer King
@@ -149,7 +149,7 @@ context('Live comment update', () => {
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (deleted by a moderator)
+                  html: (Deleted by moderator)
                   score: null
                   sticky: false
                   pending: false
@@ -173,7 +173,7 @@ context('Live comment update', () => {
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (deleted by a moderator)
+                  html: (Deleted by moderator)
                   score: null
                   sticky: false
                   pending: false
@@ -197,7 +197,7 @@ context('Live comment update', () => {
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (deleted by a moderator)
+                  html: (Deleted by moderator)
                   score: null
                   sticky: false
                   pending: false
