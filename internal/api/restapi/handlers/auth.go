@@ -10,7 +10,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -75,7 +74,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 	loc := user.SignupHost
 	if loc == "" {
 		// Redirect to the UI login page otherwise
-		loc = config.URLForUI(user.LangID, "auth/login", map[string]string{"confirmed": "true"})
+		loc = svc.TheI18nService.FrontendURL(user.LangID, "auth/login", map[string]string{"confirmed": "true"})
 	}
 
 	// Redirect the user's browser

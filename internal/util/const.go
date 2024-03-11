@@ -54,16 +54,13 @@ var (
 	WrongAuthDelayMin = 100 * time.Millisecond // Minimal delay to exercise on a wrong email, password etc.
 	WrongAuthDelayMax = 4 * time.Second        // Maximal delay to exercise on a wrong email, password etc.
 
-	// UILanguageTags stores tags of supported frontend languages
-	UILanguageTags = []language.Tag{
-		language.English, // The first language is used as fallback
+	// DefaultLanguage represents the default language
+	DefaultLanguage = language.English
+
+	// FrontendLanguages stores tags of supported frontend (Administration UI) languages
+	FrontendLanguages = []language.Tag{
+		DefaultLanguage,
 	}
-
-	// UIDefaultLangID is the ID of the default interface language
-	UIDefaultLangID = UILanguageTags[0].String()
-
-	// UILangMatcher is a matcher instance for UI languages
-	UILangMatcher = language.NewMatcher(UILanguageTags)
 
 	// UIStaticPaths stores a map of known UI static paths to a flag that says whether the file contains replacements
 	UIStaticPaths = map[string]bool{

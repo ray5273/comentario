@@ -70,13 +70,13 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 
 		// Add moderation URLs and a reason only for pending comments
 		if comment.IsPending {
-			params["ApproveURL"] = config.URLForUI(recipient.LangID, commentPropPath, map[string]string{"action": "approve"})
-			params["RejectURL"] = config.URLForUI(recipient.LangID, commentPropPath, map[string]string{"action": "reject"})
+			params["ApproveURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "approve"})
+			params["RejectURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "reject"})
 			params["PendingReason"] = comment.PendingReason
 		}
 
 		// Add delete URL
-		params["DeleteURL"] = config.URLForUI(recipient.LangID, commentPropPath, map[string]string{"action": "delete"})
+		params["DeleteURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "delete"})
 	}
 
 	// Send out a notification email
@@ -110,7 +110,7 @@ func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) er
 		"Comentario: Reset your password",
 		"reset-password.gohtml",
 		map[string]any{
-			"ResetURL": config.URLForUI(user.LangID, "", map[string]string{"passwordResetToken": token.String()}),
+			"ResetURL": TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.String()}),
 			"Name":     user.Name,
 		})
 }

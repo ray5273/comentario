@@ -122,13 +122,13 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 				http.Redirect(
 					w,
 					r,
-					replacePath(r.URL, fmt.Sprintf("/%s/", config.GuessUserLanguage(r))),
+					replacePath(r.URL, fmt.Sprintf("/%s/", svc.TheI18nService.GuessFrontendUserLanguage(r))),
 					http.StatusFound)
 				return
 
 			// If it's an "incomplete" language root, redirect to the full root, permanently
 			case 2:
-				if util.IsUILang(p) {
+				if svc.TheI18nService.IsFrontendLang(p) {
 					http.Redirect(
 						w,
 						r,
@@ -219,7 +219,7 @@ func staticHandler(next http.Handler) http.Handler {
 			if ok, p := config.PathOfBaseURL(r.URL.Path); ok {
 				// Check if it's a static resource or a path on/under a language root
 				repl, static := util.UIStaticPaths[p]
-				hasLang := !static && len(p) >= 3 && p[2] == '/' && util.IsUILang(p[0:2])
+				hasLang := !static && len(p) >= 3 && p[2] == '/' && svc.TheI18nService.IsFrontendLang(p[0:2])
 				langRoot := hasLang && len(p) == 3 // If the path looks like 'xx/', it's a language root
 
 				// If under a language root, set a language cookie

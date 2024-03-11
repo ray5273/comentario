@@ -94,11 +94,12 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 
 	// Prepare a languages slice
 	var langs []*models.UILanguage
-	for _, l := range util.UILanguageTags {
+	for _, t := range svc.TheI18nService.LangTags() {
 		langs = append(langs, &models.UILanguage{
-			ID:          l.String(),
-			NameEnglish: display.English.Languages().Name(l),
-			NameNative:  display.Self.Name(l),
+			ID:                 t.String(),
+			NameEnglish:        display.English.Languages().Name(t),
+			NameNative:         display.Self.Name(t),
+			IsFrontendLanguage: svc.TheI18nService.IsFrontendTag(t),
 		})
 	}
 
@@ -123,7 +124,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 				BaseURL:        config.BaseURL.String(),
 				BuildDate:      strfmt.DateTime(config.BuildDate),
 				DbVersion:      svc.TheServiceManager.DBVersion(),
-				DefaultLangID:  util.UIDefaultLangID,
+				DefaultLangID:  util.DefaultLanguage.String(),
 				FederatedIdps:  idps,
 				HomeContentURL: strfmt.URI(config.CLIFlags.HomeContentURL),
 				ResultPageSize: util.ResultPageSize,

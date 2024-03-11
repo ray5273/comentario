@@ -215,7 +215,7 @@ func NewUser(email, name string) *User {
 		ID:          uuid.New(),
 		Email:       email,
 		Name:        name,
-		LangID:      util.UIDefaultLangID,
+		LangID:      util.DefaultLanguage.String(),
 		CreatedTime: time.Now().UTC(),
 		SecretToken: uuid.New(),
 	}

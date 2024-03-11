@@ -898,6 +898,10 @@ definitions:
       nameNative:
         type: string
         description: Language name in the language self
+      isFrontendLanguage:
+        type: boolean
+        description: Whether the language is also available in the frontend (Administration UI)
+        x-omitempty: false
 
   user:
     description: User

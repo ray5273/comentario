@@ -6,9 +6,7 @@ import (
 	"fmt"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/util"
-	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
-	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -106,26 +104,6 @@ func CLIParsed() error {
 	return nil
 }
 
-// GuessUserLanguage tries to identify the most appropriate language for the user based on the request URL path, the
-// user's language cookie and/or browser preferences, amongst those supported, and returns it as a 2-letter code.
-func GuessUserLanguage(r *http.Request) string {
-	// First, analyze the requested path. If it's under a language root, use that language
-	if ok, p := PathOfBaseURL(r.URL.Path); ok && len(p) >= 3 && p[2] == '/' && util.IsUILang(p[0:2]) {
-		return p[0:2]
-	}
-
-	// Next, try to extract the preferred language from a cookie
-	cookieLang := ""
-	if c, _ := r.Cookie("lang"); c != nil {
-		cookieLang = c.Value
-	}
-
-	// Find the best match based on the cookie and/or browser header
-	tag, _ := language.MatchStrings(util.UILangMatcher, cookieLang, r.Header.Get("Accept-Language"))
-	base, _ := tag.Base()
-	return base.String()
-}
-
 // MaskIP hides the second half of the given IP address if full IP logging isn't enabled, otherwise returns the IP as-is
 func MaskIP(ip string) string {
 	if !CLIFlags.LogFullIPs {
@@ -185,16 +163,6 @@ func URLFor(path string, queryParams map[string]string) string {
 // URLForAPI returns the complete absolute URL for the given API path, with optional query params
 func URLForAPI(path string, queryParams map[string]string) string {
 	return URLFor(util.APIPath+strings.TrimPrefix(path, "/"), queryParams)
-}
-
-// URLForUI returns the complete absolute URL for the given UI language and sub-path, with optional query params. If the
-// path is empty, returns the language root path
-func URLForUI(lang, subPath string, queryParams map[string]string) string {
-	// Make sure the language is correct
-	if !util.IsUILang(lang) {
-		lang = util.UIDefaultLangID
-	}
-	return URLFor(fmt.Sprintf("%s/%s", lang, subPath), queryParams)
 }
 
 func configureMailer() error {

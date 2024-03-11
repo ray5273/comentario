@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -63,7 +62,7 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 
 	// Succeeded: redirect to the homepage
 	return api_general.NewMailUnsubscribeTemporaryRedirect().
-		WithLocation(config.URLForUI(user.LangID, "", map[string]string{"unsubscribed": "true"}))
+		WithLocation(svc.TheI18nService.FrontendURL(user.LangID, "", map[string]string{"unsubscribed": "true"}))
 }
 
 // sendCommentModNotifications sends a comment notification to all domain moderators
