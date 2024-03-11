@@ -38,6 +38,7 @@
                     <div class="form-check">
                         <input formControlName="autoInit" class="form-check-input" type="checkbox" id="opt-auto-init">
                         <label class="form-check-label" for="opt-auto-init">Initialise Comentario automatically</label>
+                        <app-info-icon docLink="configuration/embedding/comments-tag/auto-init/" class="ms-2"/>
                     </div>
                     <!-- Live comment updates -->
                     <div class="form-check">
@@ -55,6 +56,22 @@
                         <input formControlName="noCss" class="form-check-input" type="checkbox" id="opt-no-css">
                         <label class="form-check-label" for="opt-no-css">Disable all Comentario styles</label>
                     </div>
+                </div>
+            </div>
+            <!-- Language -->
+            <div class="row mb-3">
+                <label for="opt-lang" class="col-form-label col-sm-3 colon">
+                    <ng-container i18n>Language</ng-container>
+                    <app-info-icon docLink="configuration/embedding/comments-tag/lang/" position="right"/>
+                </label>
+                <div class="col-sm-9">
+                    <select formControlName="lang" class="form-select" id="opt-lang"
+                            [class.is-invalid]="form.controls.lang.invalid">
+                        <option value="" i18n>(default)</option>
+                        @for (lang of languages; track lang.id) {
+                            <option [value]="lang.id">{{ lang.nameNative }} ({{ lang.nameEnglish }})</option>
+                        }
+                    </select>
                 </div>
             </div>
             <!-- CSS override URL -->

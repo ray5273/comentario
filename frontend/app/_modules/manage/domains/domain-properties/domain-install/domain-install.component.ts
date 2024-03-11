@@ -21,10 +21,13 @@ export class DomainInstallComponent implements OnInit {
         liveUpdate:  true,
         noFonts:     false,
         noCss:       false,
+        lang:        '',
         cssOverride: ['', [XtraValidators.url(false)]],
         maxLevel:    [10, [Validators.min(1), Validators.max(99)]],
         pageId:      ['', Validators.maxLength(2076)], // 2083 - length of 'http://'
     });
+
+    readonly languages = this.cfgSvc.staticConfig.uiLanguages;
 
     // Icons
     readonly faChevronDown         = faChevronDown;
@@ -50,6 +53,9 @@ export class DomainInstallComponent implements OnInit {
         }
         if (val.noFonts) {
             opts += ' no-fonts="true"';
+        }
+        if (val.lang) {
+            opts += ` lang="${val.lang}"`;
         }
         if (val.noCss) {
             opts += ' css-override="false"';

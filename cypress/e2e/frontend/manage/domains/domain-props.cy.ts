@@ -173,6 +173,7 @@ context('Domain Properties page', () => {
             cy.get('#opt-live-update') .as('optLiveUpdate') .should('be.visible').and('be.checked');
             cy.get('#opt-no-fonts')    .as('optNoFonts')    .should('be.visible').and('not.be.checked');
             cy.get('#opt-no-css')      .as('optNoCss')      .should('be.visible').and('not.be.checked');
+            cy.get('#opt-lang')        .as('optLang')       .should('be.visible').and('have.value', '').and('be.enabled');
             cy.get('#opt-css-override').as('optCssOverride').should('be.visible').and('have.value', '').and('be.enabled');
             cy.get('#opt-max-level')   .as('optMaxLevel')   .should('be.visible').and('have.value', '10');
             cy.get('#opt-page-id')     .as('optPageId')     .should('be.visible').and('have.value', '');
@@ -200,6 +201,18 @@ context('Domain Properties page', () => {
             cy.get('@optNoCss').clickLabel();
             cy.get('@optCssOverride').should('be.enabled');
             checkSnippet('');
+            // -- lang
+            cy.get('@optLang').texts('option').should('arrayMatch', [
+                '(default)',
+                'English (English)',
+                'русский (Russian)',
+            ]);
+            cy.get('@optLang').select(1);
+            checkSnippet(' lang="en"');
+            cy.get('@optLang').select(2);
+            checkSnippet(' lang="ru"');
+            cy.get('@optLang').select(0);
+            checkSnippet('');
             // -- css-override
             cy.get('@optCssOverride').setValue('https://example.com/test.css');
             checkSnippet(' css-override="https://example.com/test.css"');
@@ -220,10 +233,18 @@ context('Domain Properties page', () => {
             cy.get('@optAutoInit').clickLabel();
             cy.get('@optLiveUpdate').clickLabel();
             cy.get('@optNoFonts').clickLabel();
+            cy.get('@optLang').select(2);
             cy.get('@optCssOverride').setValue('https://whatever.org/x.css');
             cy.get('@optMaxLevel').setValue('42');
             cy.get('@optPageId').setValue('/path/1');
-            checkSnippet(' auto-init="false" live-update="false" no-fonts="true" css-override="https://whatever.org/x.css" max-level="42" page-id="/path/1"');
+            checkSnippet(
+                ' auto-init="false"' +
+                ' live-update="false"' +
+                ' no-fonts="true"' +
+                ' lang="ru"' +
+                ' css-override="https://whatever.org/x.css"' +
+                ' max-level="42"' +
+                ' page-id="/path/1"');
         });
 
         it('shows properties for SSO-enabled domain', () => {
