@@ -11,6 +11,7 @@ import (
 	"path"
 	"reflect"
 	"slices"
+	"strings"
 )
 
 // TheI18nService is a global I18nService implementation
@@ -97,6 +98,17 @@ func (svc *i18nService) Init() error {
 	if err := svc.scanDir("."); err != nil {
 		return err
 	}
+
+	// Sort translations by language code
+	slices.SortFunc(svc.tags, func(a, b language.Tag) int {
+		// The default language must always come first
+		if a == util.DefaultLanguage {
+			return -1
+		} else if b == util.DefaultLanguage {
+			return 1
+		}
+		return strings.Compare(a.String(), b.String())
+	})
 
 	// Identify the fallback localizer
 	if loc, ok := svc.locs[util.DefaultLanguage.String()]; !ok {

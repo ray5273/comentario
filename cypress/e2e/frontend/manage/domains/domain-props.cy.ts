@@ -205,11 +205,14 @@ context('Domain Properties page', () => {
             cy.get('@optLang').texts('option').should('arrayMatch', [
                 '(default)',
                 'English (English)',
+                'Nederlands (Dutch)',
                 'русский (Russian)',
             ]);
             cy.get('@optLang').select(1);
             checkSnippet(' lang="en"');
             cy.get('@optLang').select(2);
+            checkSnippet(' lang="nl"');
+            cy.get('@optLang').select(3);
             checkSnippet(' lang="ru"');
             cy.get('@optLang').select(0);
             checkSnippet('');
@@ -233,7 +236,7 @@ context('Domain Properties page', () => {
             cy.get('@optAutoInit').clickLabel();
             cy.get('@optLiveUpdate').clickLabel();
             cy.get('@optNoFonts').clickLabel();
-            cy.get('@optLang').select(2);
+            cy.get('@optLang').select('Nederlands (Dutch)');
             cy.get('@optCssOverride').setValue('https://whatever.org/x.css');
             cy.get('@optMaxLevel').setValue('42');
             cy.get('@optPageId').setValue('/path/1');
@@ -241,7 +244,7 @@ context('Domain Properties page', () => {
                 ' auto-init="false"' +
                 ' live-update="false"' +
                 ' no-fonts="true"' +
-                ' lang="ru"' +
+                ' lang="nl"' +
                 ' css-override="https://whatever.org/x.css"' +
                 ' max-level="42"' +
                 ' page-id="/path/1"');
