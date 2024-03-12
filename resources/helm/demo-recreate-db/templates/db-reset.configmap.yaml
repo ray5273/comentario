@@ -157,10 +157,12 @@ data:
                 notify_moderator = excluded.notify_moderator;
 
     -- Remove all pages except the root one
-    delete from cm_domain_pages where id != 'f88fffb2-c354-494b-94f4-aae1a84653c3';
+    delete from cm_domain_pages where id not in ('f88fffb2-c354-494b-94f4-aae1a84653c3', '86c5e9b9-c4c2-4c26-accc-0f221da08ae4', '97c872de-cfbb-4d9c-a41c-a5840559ec44');
     insert into cm_domain_pages(id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
         values
-            ('f88fffb2-c354-494b-94f4-aae1a84653c3', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/', 'Comentario Demo', false, current_timestamp, 3, 0)
+            ('f88fffb2-c354-494b-94f4-aae1a84653c3', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/',    'Comentario Demo',      false, current_timestamp, 3, 0),
+            ('86c5e9b9-c4c2-4c26-accc-0f221da08ae4', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/nl/', 'Comentario Demo',      false, current_timestamp, 2, 0),
+            ('97c872de-cfbb-4d9c-a41c-a5840559ec44', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/en/', 'Демо-сайт Comentario', false, current_timestamp, 2, 0)
         on conflict (id) do update
             set
                 domain_id   = excluded.domain_id,
@@ -172,6 +174,7 @@ data:
     delete from cm_comments where ts_created < current_timestamp - interval '7 days';
     insert into cm_comments(id, parent_id, page_id, markdown, html, score, is_sticky, is_approved, is_pending, is_deleted, ts_created, user_created, pending_reason)
         values
+            -- English
             ('53e9b427-7e46-4ec9-8797-0c28029a557f',
                 null,
                 'f88fffb2-c354-494b-94f4-aae1a84653c3',
@@ -210,7 +213,61 @@ data:
                 false,
                 current_timestamp,
                 '00000000-0000-0000-0000-000000000000',
-                'Don''t like it')
+                'Don''t like it'),
+            -- Dutch
+            ('065822de-e18a-48dd-ba0b-375e10add12d',
+                null,
+                '86c5e9b9-c4c2-4c26-accc-0f221da08ae4',
+                E'Voel je vrij om hieronder een comment achter te laten, en anders om te experimenteren met Comentario op deze pagina! Je kunt je ook registreren of inloggen met e-mailadres `admin@admin` en wachtwoord `admin`. En bekijk maar de **[Administration UI](https://edge.comentario.app/en/manage/dashboard)**!\n\n---\n\n💡 *Deze demo Comentario-instantie wordt elke nacht gereset en haar comments wekelijks.*',
+                '<p>Voel je vrij om hieronder een comment achter te laten, en anders om te experimenteren met Comentario op deze pagina! Je kunt je ook registreren of inloggen met e-mailadres <code>admin@admin</code> en wachtwoord <code>admin</code>. En bekijk maar de <strong><a href="https://edge.comentario.app/en/manage/dashboard" rel="nofollow noopener" target="_blank">Administration UI</a></strong>!</p><hr><p>💡 <em>Deze demo Comentario-instantie wordt elke nacht gereset en haar comments wekelijks.</em></p>',
+                1,
+                true,
+                true,
+                false,
+                false,
+                current_timestamp,
+                '39a71854-bcfd-42d5-af62-5e931d7a72d8',
+                ''),
+            ('21f731d4-425b-48fc-b621-80e8dcc165bd',
+                '065822de-e18a-48dd-ba0b-375e10add12d',
+                '86c5e9b9-c4c2-4c26-accc-0f221da08ae4',
+                E'**Opmerking:** houd er rekening mee dat, aangezien de Admin UI in deze demo voor iedereen toegankelijk is, alle gegevens die je invoert (zoals e-mailadres) openbaar toegankelijk worden tot de eerstvolgende reset.',
+                '<p><strong>Opmerking:</strong> houd er rekening mee dat, aangezien de Admin UI in deze demo voor iedereen toegankelijk is, alle gegevens die je invoert (zoals e-mailadres) openbaar toegankelijk worden tot de eerstvolgende reset.</p>',
+                0,
+                false,
+                true,
+                false,
+                false,
+                current_timestamp,
+                '39a71854-bcfd-42d5-af62-5e931d7a72d8',
+                ''),
+            -- Russian
+            ('8a41613d-e588-41f1-84dc-f95b0cb7857b',
+                null,
+                '97c872de-cfbb-4d9c-a41c-a5840559ec44',
+                E'Не стесняйтесь оставить свой комментарий и вообще поэкспериментировать с Comentario на этой странице! Вы также можете зарегистрироваться либо залогиниться с емэйлом `admin@admin` и паролем `admin`. Да, и не забудьте глянуть на **[Панель администратора](https://edge.comentario.app/en/manage/dashboard)**!\n\n---\n\n💡 *Этот демонстрационный сайт Comentario сбрасывается в исходное состояние каждую ночь, а его комментарии — еженедельно.*',
+                '<p>Не стесняйтесь оставить свой комментарий и вообще поэкспериментировать с Comentario на этой странице! Вы также можете зарегистрироваться либо залогиниться с емэйлом <code>admin@admin</code> и паролем <code>admin</code>. Да, и не забудьте глянуть на <strong><a href="https://edge.comentario.app/en/manage/dashboard" rel="nofollow noopener" target="_blank">Панель администратора</a></strong>!</p><hr><p>💡 <em>Этот демонстрационный сайт Comentario сбрасывается в исходное состояние каждую ночь, а его комментарии — еженедельно.</em></p>',
+                1,
+                true,
+                true,
+                false,
+                false,
+                current_timestamp,
+                '39a71854-bcfd-42d5-af62-5e931d7a72d8',
+                ''),
+            ('9f152ef8-b121-43ca-8268-a938574dbc96',
+                '8a41613d-e588-41f1-84dc-f95b0cb7857b',
+                '97c872de-cfbb-4d9c-a41c-a5840559ec44',
+                E'**Примечание:** пожалуйста, имейте в виду, что, поскольку Панель администратора на этом демо-сайте находится в открытом доступе, любые введённые вами данные (например, емэйл) будут видны всем вплоть до следующего момента сброса.',
+                '<p><strong>Примечание:</strong> пожалуйста, имейте в виду, что, поскольку Панель администратора на этом демо-сайте находится в открытом доступе, любые введённые вами данные (например, емэйл) будут видны всем вплоть до следующего момента сброса.</p>',
+                0,
+                false,
+                true,
+                false,
+                false,
+                current_timestamp,
+                '39a71854-bcfd-42d5-af62-5e931d7a72d8',
+                '')
         on conflict (id) do update
             set
                 page_id        = excluded.page_id,
