@@ -162,7 +162,7 @@ data:
         values
             ('f88fffb2-c354-494b-94f4-aae1a84653c3', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/',    'Comentario Demo',      false, current_timestamp, 3, 0),
             ('86c5e9b9-c4c2-4c26-accc-0f221da08ae4', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/nl/', 'Comentario Demo',      false, current_timestamp, 2, 0),
-            ('97c872de-cfbb-4d9c-a41c-a5840559ec44', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/en/', 'Демо-сайт Comentario', false, current_timestamp, 2, 0)
+            ('97c872de-cfbb-4d9c-a41c-a5840559ec44', '9f0b8563-f29e-456e-b53b-3c83fb068b58', '/ru/', 'Демо-сайт Comentario', false, current_timestamp, 2, 0)
         on conflict (id) do update
             set
                 domain_id   = excluded.domain_id,
