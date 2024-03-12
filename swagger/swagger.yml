@@ -1626,6 +1626,11 @@ paths:
             type: array
             items:
               $ref: "#/definitions/i18nMessage"
+        307:
+          description: Specified language isn't available, redirecting to the default message endpoint
+          headers:
+            Location:
+              type: string
 
   # Auth
 

@@ -34,8 +34,8 @@ type I18nService interface {
 	IsFrontendTag(tag language.Tag) bool
 	// LangTags returns tags of supported interface languages
 	LangTags() []language.Tag
-	// Messages returns all messages for the given language
-	Messages(lang string) ([]*i18n.Message, error)
+	// Messages returns all messages in the form of an ID-indexed map for the given language
+	Messages(lang string) (map[string]string, error)
 	// Translate translates the provided ID into the given language
 	Translate(lang, id string, args ...reflect.Value) string
 }
@@ -46,7 +46,7 @@ type I18nService interface {
 func newI18nService() *i18nService {
 	return &i18nService{
 		locs:      make(map[string]*i18n.Localizer),
-		msgFiles:  make(map[string]*i18n.MessageFile),
+		msgs:      make(map[string]map[string]string),
 		feMatcher: language.NewMatcher(util.FrontendLanguages),
 	}
 }
@@ -57,7 +57,7 @@ type i18nService struct {
 	defLoc    *i18n.Localizer              // Localizer for the default language
 	tags      []language.Tag               // Available language tags
 	locs      map[string]*i18n.Localizer   // Map of localizers by the language
-	msgFiles  map[string]*i18n.MessageFile // Map of message files by the language
+	msgs      map[string]map[string]string // Map of messages[ID] by the language
 	feMatcher language.Matcher             // Frontend language matcher
 }
 
@@ -117,6 +117,22 @@ func (svc *i18nService) Init() error {
 		svc.defLoc = loc
 	}
 
+	// Make sure every ID present in the default language has a (fallback) message in every other language
+	defMM := svc.msgs[util.DefaultLanguage.String()]
+	for lang, mm := range svc.msgs {
+		// Skip the default language
+		if lang == util.DefaultLanguage.String() {
+			continue
+		}
+		// Iterate all messages in the default language
+		for id, msg := range defMM {
+			if _, ok := mm[id]; !ok {
+				logger.Debugf("i18nService: language %q: message with ID=%q wasn't found, falling back to default", lang, id)
+				mm[id] = msg
+			}
+		}
+	}
+
 	// Succeeded
 	return nil
 }
@@ -139,14 +155,12 @@ func (svc *i18nService) LangTags() []language.Tag {
 	return svc.tags
 }
 
-func (svc *i18nService) Messages(lang string) ([]*i18n.Message, error) {
-	// Try to find the messages file for the required language
-	mf, ok := svc.msgFiles[lang]
-	if !ok {
-		return nil, ErrNotFound
+func (svc *i18nService) Messages(lang string) (map[string]string, error) {
+	// Try to find the messages map for the required language
+	if ms, ok := svc.msgs[lang]; ok {
+		return ms, nil
 	}
-
-	return mf.Messages, nil
+	return nil, ErrNotFound
 }
 
 func (svc *i18nService) Translate(lang, id string, args ...reflect.Value) string {
@@ -189,10 +203,10 @@ func (svc *i18nService) scanDir(dirPath string) error {
 			return fmt.Errorf("failed to read i18n file %q: %w", fp, err)
 		}
 
-		// Store the tag and the message file
+		// Store the tag and the messages
 		svc.tags = append(svc.tags, mf.Tag)
 		lang := mf.Tag.String()
-		svc.msgFiles[lang] = mf
+		svc.msgs[lang] = makeMsgMap(mf.Messages)
 
 		// Create a localizer per language
 		svc.locs[lang] = i18n.NewLocalizer(svc.bundle, lang, util.DefaultLanguage.String())
@@ -201,4 +215,13 @@ func (svc *i18nService) scanDir(dirPath string) error {
 
 	// Succeeded
 	return nil
+}
+
+// makeMsgMap converts a message slice into an ID-indexed string map
+func makeMsgMap(ms []*i18n.Message) map[string]string {
+	mm := make(map[string]string, len(ms))
+	for _, m := range ms {
+		mm[m.ID] = m.Other
+	}
+	return mm
 }

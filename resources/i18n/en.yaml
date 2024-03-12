@@ -1,3 +1,6 @@
+# This is the default, English, message file for Comentario. It has to include every message ID in use, because it also
+# serves as fallback for every other language if a certain message isn't found there.
+
 - id: accountCreatedConfirmEmail
   translation: Account is successfully created. Please check your email and click the confirmation link it contains.
 - id: actionAddComment
