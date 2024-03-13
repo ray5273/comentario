@@ -455,7 +455,9 @@ export class Comentario extends HTMLElement {
                 this.addCommentHost = UIToolkit.div('add-comment-host')
                     .attr({tabindex: '0'})
                     // Activate the editor on focus, but only if it isn't active yet
-                    .on('focus', t => !t.hasClass('editor-inserted') && this.addComment(undefined)));
+                    .on('focus', t => !t.hasClass('editor-inserted') && this.addComment(undefined))
+                    // Placeholder
+                    .append(UIToolkit.div('add-comment-placeholder').inner(this.i18n.t('addCommentPlaceholder'))));
         }
 
         this.mainArea!.append(

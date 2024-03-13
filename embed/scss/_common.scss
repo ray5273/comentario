@@ -47,11 +47,15 @@ blockquote {
         border-radius: 3px;
         cursor: text;
 
-        &:before {
+        .comentario-add-comment-placeholder {
             display: block;
             color: $gray-5;
-            content: 'Add a comment';
         }
+    }
+
+    // Placeholder saying "Add a comment", only visible without the editor inserted
+    .comentario-add-comment-placeholder {
+        display: none;
     }
 }
 

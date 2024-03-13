@@ -52,6 +52,8 @@
   translation: Afmelden
 - id: actionUpvote
   translation: Goed comment
+- id: addCommentPlaceholder
+  translation: Voeg een comment toe
 - id: btnBold
   translation: Vetgedrukt
 - id: btnBulletList

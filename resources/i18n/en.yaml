@@ -55,6 +55,8 @@
   translation: Unsubscribe
 - id: actionUpvote
   translation: Upvote
+- id: addCommentPlaceholder
+  translation: Add a comment
 - id: btnBold
   translation: Bold
 - id: btnBulletList

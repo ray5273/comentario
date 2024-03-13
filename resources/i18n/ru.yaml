@@ -52,6 +52,8 @@
   translation: Отписаться
 - id: actionUpvote
   translation: Хороший комментарий
+- id: addCommentPlaceholder
+  translation: Добавить комментарий
 - id: btnBold
   translation: Жирный
 - id: btnBulletList
