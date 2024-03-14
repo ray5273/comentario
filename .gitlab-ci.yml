@@ -93,7 +93,6 @@ build:
   rules:
     - if: $SKIP_TESTS != 'true'
   image: registry.gitlab.com/comentario/comentario-ci-tools/builder:$CI_TOOLS_VERSION
-  retry: 1
   artifacts:
     when: always
     name: comentario
