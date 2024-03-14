@@ -11,6 +11,8 @@ tags:
 
 * **Privacy by design**\
   Comentario adds no tracking scripts or pixels, and shows no ads. It does collect some high-level statistics, such as visitor's country, browser, and language. It can collect visitors' IP addresses, but this option is off by default.
+* **Multilingual**\
+  Embedded comment engine supports [i18n](/contributing/i18n) out-of-the-box.
 * **Role-based access**\
   Every user gets a [role](/kb/permissions/roles) (Owner, Moderator, Commenter, or Read-only) within a specific [domain](/kb/domain). There's also the global [superuser](/kb/permissions/superuser) privilege.
 * **Multiple login options**

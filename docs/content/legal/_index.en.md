@@ -4,7 +4,7 @@ description: Legal documents, terms, and conditions
 weight: 900
 menu:
     footer:
-        weight: 20
+        weight: 900
 tags:
     - legal
 ---

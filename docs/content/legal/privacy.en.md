@@ -3,7 +3,8 @@ title: Privacy Policy
 description: Detailed explanation of how we deal with your data
 weight: 210
 menu:
-    - footer
+    footer:
+        weight: 920
 tags:
     - legal
     - privacy policy

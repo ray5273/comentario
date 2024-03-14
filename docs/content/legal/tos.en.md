@@ -3,7 +3,8 @@ title: Terms of Service
 description: Legal terms and conditions concerning the provided service
 weight: 200
 menu:
-    - footer
+    footer:
+        weight: 910
 tags:
     - legal
     - terms of service

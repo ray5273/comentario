@@ -4,7 +4,7 @@ description: Comentario is an open-source software
 weight: 110
 menu:
     footer:
-        weight: 30
+        weight: 300
 tags:
     - about
     - open source

@@ -12,6 +12,8 @@ Available features:
 
 * **Privacy by design**\
   Comentario adds no tracking scripts or pixels, and shows no ads. It does collect some high-level statistics, such as visitor's country, browser, and language.
+* **Multilingual**\
+  Embedded comment engine supports i18n out-of-the-box.
 * **Role-based access**\
   Every user gets a role (Owner, Moderator, Commenter, or Read-only) within a specific domain. There's also the global superuser privilege.
 * **Multiple login options**
