@@ -1,5 +1,17 @@
 # Comentario changelog
 
+## v3.6.0
+
+This release adds multilingual capabilities to embedded Comentario and email templates, including Russian and Dutch translations.
+
+### Changes
+
+* Add i18n support (#71) - 102a731, 77767f8, 48edac1, 54f0a21, 30c69fb, cad411c, 9b81192, c2f2701, 4c306ec, ece2372, 0462046
+* Helm chart: add new values and detailed documentation - 29bfe79
+* Make Terms of Service and Privacy Policy URLs configurable (#56) - 5ac0174
+* Embed: turn live update off if disabled globally - 25f2eeb
+* PostgreSQL migration script: fix Commento DB migration with repeated user email (thanks Ahmad Abu Hantash) - 92df96d
+
 ## v3.5.0
 
 This version introduces a complete support for a file-based SQLite database. You don't need PostgreSQL anymore to try things out, or even to run Comentario on a low-traffic website! It also enables unauthenticated SMTP and largely improves docs on configuring external identity providers.
