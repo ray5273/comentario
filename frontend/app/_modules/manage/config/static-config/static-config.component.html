@@ -67,6 +67,11 @@
         <dt i18n>Max. number of items per page</dt>
         <dd>{{ cfg.resultPageSize }}</dd>
     </div>
+    <!-- Live update enabled -->
+    <div>
+        <dt i18n>Live update enabled</dt>
+        <dd><app-checkmark [value]="cfg.liveUpdateEnabled"/></dd>
+    </div>
     <!-- Available UI languages -->
     <div>
         <dt i18n>Available UI languages</dt>

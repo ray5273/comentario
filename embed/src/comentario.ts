@@ -226,7 +226,7 @@ export class Comentario extends HTMLElement {
         this.scrollToCommentHash();
 
         // Initiate live updates, if enabled
-        if (this.liveUpdate && this.pageInfo) {
+        if (this.config.statics.liveUpdateEnabled && this.liveUpdate && this.pageInfo) {
             new WebSocketClient(this.origin, this.pageInfo.domainId, this.pagePath, msg => this.handleLiveUpdate(msg));
         }
 

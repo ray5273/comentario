@@ -70,6 +70,7 @@ context('Config Manager', () => {
                 ['Homepage content URL',                    'https://edge.docs.comentario.app/en/embed/front-page/'],
                 ['Configured federated identity providers', ['Facebook', 'GitHub', 'GitLab', 'Google', 'Twitter']],
                 ['Max. number of items per page',           '25'],
+                ['Live update enabled',                     '✔'],
                 ['Available UI languages',                  ['en' + 'English (English)', 'nl' + 'Nederlands (Dutch)', 'ru' + 'русский (Russian)']],
                 ['Enabled extensions',                      ['Akismet', 'APILayer SpamChecker', 'Perspective']],
             ]);

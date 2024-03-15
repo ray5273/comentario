@@ -49,6 +49,8 @@ export interface InstanceStaticConfig {
     readonly resultPageSize: number;
     /** Available UI languages */
     readonly uiLanguages?: UILanguage[];
+    /** Whether the Live update is enabled globally */
+    readonly liveUpdateEnabled: boolean;
 }
 
 /** Dynamic instance configuration item datatype. */

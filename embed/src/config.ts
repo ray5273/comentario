@@ -135,14 +135,15 @@ export class InstanceConfig {
     static default() {
         return new this(
             {
-                baseUrl:        'https://comentario.app',
-                baseDocsUrl:    'https://docs.comentario.app',
-                version:        '',
-                buildDate:      '',
-                serverTime:     '',
-                defaultLangId:  'en',
-                homeContentUrl: 'https://docs.comentario.app/en/embed/front-page/',
-                resultPageSize: 25,
+                baseUrl:           'https://comentario.app',
+                baseDocsUrl:       'https://docs.comentario.app',
+                version:           '',
+                buildDate:         '',
+                serverTime:        '',
+                defaultLangId:     'en',
+                homeContentUrl:    'https://docs.comentario.app/en/embed/front-page/',
+                resultPageSize:    25,
+                liveUpdateEnabled: false,
             },
             new DynamicConfig());
     }

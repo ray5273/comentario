@@ -587,6 +587,7 @@ definitions:
       - dbVersion
       - defaultLangId
       - resultPageSize
+      - liveUpdateEnabled
     properties:
       baseUrl:
         type: string
@@ -639,6 +640,11 @@ definitions:
         items:
           $ref: "#/definitions/uiLanguage"
         description: Available UI languages
+      liveUpdateEnabled:
+        type: boolean
+        x-omitempty: false
+        x-isnullable: false
+        description: Whether the Live update is enabled globally
 
   pageInfo:
     description: Information about a page displaying comments
