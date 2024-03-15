@@ -1,7 +1,7 @@
 ---
-title: Helm chart
-description: Deploying Comentario in a Kubernetes cluster with Helm
-weight: 100
+title: Deployment
+description: How to deploy Comentario Helm chart
+weight: 200
 tags:
     - installation
     - configuration
@@ -10,40 +10,26 @@ tags:
     - Helm
     - Helm chart
     - Bitnami
-    - certmanager
     - database
     - PostgreSQL
+seeAlso:
+  - prerequisites
+  - parameters
+  - backup
 ---
-
-You can easily deploy Comentario into a Kubernetes cluster using a Helm chart.
-
-<!--more-->
-
-[Kubernetes](https://kubernetes.io/) is a modern, production-grade cloud deployment system developed by Google.
-
-Kubernetes provides numerous tools for reliable, scalable cloud deployments, but its flexibility may well prove overwhelming, especially when it comes to deploying multiple components.
-
-Comentario addresses that complexity by providing a so-called [Helm](https://helm.sh/) chart, which greatly facilitates server deployment in a cloud environment.
-
-The chart is available in [Comentario git repository](/about/source-code) in the `resources/helm/comentario` directory.
-
-## Prerequisites
-
-1. [Helm package manager](https://helm.sh/) 3.x is installed.
-2. We're using [certmanager](https://cert-manager.io/) for dealing with SSL certificates in the cluster: requesting and renewing.
-3. Once you have `certmanager` up and running, create a new `ClusterIssuer` for Let's Encrypt. Or, even better, two issuers: `letsencrypt-staging` for experimenting with your installation (so that you don't hit Let's Encrypt usage limits) and `letsencrypt-prod` for production usage.
-
-## Namespace
 
 All examples below use the same [namespace](https://kubernetes.io/docs/concepts/overview/working-with-objects/namespaces/), referred to as `$NAMESPACE`. If it doesn't exist yet, create it with:
 
+<!--more-->
+
 ```bash
+export NAMESPACE=my-comentario
 kubectl create namespace $NAMESPACE
 ```
 
-## Deploy PostgreSQL
+## Optional: deploy PostgreSQL
 
-Comentario requires a PostgreSQL server (refer to [](/installation/requirements) for details), which has to be installed separately.
+Comentario may use a PostgreSQL server (another option is local SQLite storage; refer to [](/installation/requirements) for details). In that case PostgreSQL has to be installed separately.
 
 The easiest way to do that in a Kubernetes cluster is by using a Helm chart by [Bitnami](https://bitnami.com/stacks/helm).
 
@@ -78,7 +64,7 @@ After this, a new release called `comentario-postgres` will be installed, with P
 
 1. Edit the values in `resources/k8s/comentario-secrets.yaml` as required (see [](/configuration) for details) and copy-paste its contents into `comentario-secrets.yaml` (indent with 4 spaces)
 2. Create the secret: `kubectl create -f resources/k8s/comentario-secrets.yaml --namespace $NAMESPACE`
-3. Install Comentario using Helm (adjust the values as you see fit):
+3. Install Comentario using Helm (consult the [](parameters) page for value description):
 ```bash
 helm upgrade --install \
     --namespace $NAMESPACE \                            # The same namespace value as above
@@ -93,25 +79,3 @@ helm upgrade --install \
     resources/helm/comentario
 ```
 
-## Backing up the database
-
-To get a full database dump from the PostgreSQL database running in the cluster, issue the following command (assuming your PostgreSQL instance is named `comentario-postgres`):
-
-```bash
-kubectl exec -t -n $NAMESPACE \
-    $(kubectl get -n $NAMESPACE pods -l app.kubernetes.io/instance=comentario-postgres -o name) \
-    -- pg_dump -U postgres -d comentario > /path/to/comentario.sql
-```
-
-## Restoring the database from backup
-
-To restore the database from a previously downloaded dump file (see above), you can use these commands (also assuming your PostgreSQL instance is named `comentario-postgres`).
-
-We cannot send it via the pipe directly (I'm not sure why), so we copy it over first and clean up afterwards.
-
-```bash
-PG_POD=$(kubectl get -n $NAMESPACE pods -l app.kubernetes.io/instance=comentario-postgres -o 'jsonpath={.items..metadata.name}')
-kubectl cp -n $NAMESPACE /path/to/comentario.sql $PG_POD:/tmp/c.sql
-kubectl exec -t -n $NAMESPACE $PG_POD -- psql -U postgres -d comentario -f /tmp/c.sql
-kubectl exec -t -n $NAMESPACE $PG_POD -- rm /tmp/c.sql
-```

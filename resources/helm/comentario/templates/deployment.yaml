@@ -43,6 +43,10 @@ spec:
               value: 'https://{{ .Values.ingress.host }}/'
             - name: BASE_DOCS_URL
               value: '{{ .Values.comentario.baseDocsUrl }}'
+            - name: TOS_URL
+              value: '{{ .Values.comentario.tosUrl }}'
+            - name: PRIVACY_POLICY_URL
+              value: '{{ .Values.comentario.privacyPolicyUrl }}'
             - name: HOME_CONTENT_URL
               value: '{{ .Values.comentario.homeContentURL }}'
             - name: SECRETS_FILE
@@ -51,6 +55,19 @@ spec:
               value: '{{ .Values.comentario.emailFrom }}'
             - name: SUPERUSER
               value: '{{ .Values.comentario.superuser }}'
+            {{- if .Values.comentario.logFullIPs }}
+            - name: LOG_FULL_IPS
+              value: 'true'
+            {{- end }}
+            - name: GITLAB_URL
+              value: '{{ .Values.comentario.gitlabUrl }}'
+            {{- if .Values.comentario.liveUpdate.enabled }}
+            - name: WS_MAX_CLIENTS
+              value: '{{ .Values.comentario.liveUpdate.maxClients }}'
+            {{- else }}
+            - name: NO_LIVE_UPDATE
+              value: 'true'
+            {{- end }}
           ports:
             - name: http
               containerPort: 80
