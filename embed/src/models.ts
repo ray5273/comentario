@@ -33,6 +33,10 @@ export interface InstanceStaticConfig {
     readonly baseUrl: string;
     /** Base Documentation URL */
     readonly baseDocsUrl: string;
+    /** Terms of Service page URL */
+    readonly termsOfServiceUrl: string;
+    /** Privacy Policy page URL */
+    readonly privacyPolicyUrl: string;
     /** Comentario version */
     readonly version: string;
     /** Server build date */

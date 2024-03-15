@@ -20,14 +20,6 @@ export class DocsService {
         return this.getPageUrl('about/');
     }
 
-    get urlPrivacyPolicy(): string {
-        return this.getPageUrl('legal/privacy/');
-    }
-
-    get urlTermsOfService(): string {
-        return this.getPageUrl('legal/tos/');
-    }
-
     /**
      * Return the URL of an embeddable with the given name
      * @param pageName Name of the embeddable page.

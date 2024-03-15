@@ -581,6 +581,8 @@ definitions:
     required:
       - baseUrl
       - baseDocsUrl
+      - termsOfServiceUrl
+      - privacyPolicyUrl
       - version
       - buildDate
       - serverTime
@@ -597,6 +599,14 @@ definitions:
         type: string
         x-isnullable: false
         description: Base Documentation URL
+      termsOfServiceUrl:
+        type: string
+        x-isnullable: false
+        description: Terms of Service page URL
+      privacyPolicyUrl:
+        type: string
+        x-isnullable: false
+        description: Privacy Policy page URL
       version:
         type: string
         x-isnullable: false

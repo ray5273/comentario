@@ -4,12 +4,22 @@
     <!-- Base Comentario URL -->
     <div>
         <dt i18n>Base Comentario URL</dt>
-        <dd>{{ cfg.baseUrl }}</dd>
+        <dd><a [appExternalLink]="cfg.baseUrl">{{ cfg.baseUrl }}</a></dd>
     </div>
     <!-- Base documentation URL -->
     <div>
         <dt i18n>Base documentation URL</dt>
-        <dd>{{ cfg.baseDocsUrl }}</dd>
+        <dd><a [appExternalLink]="cfg.baseDocsUrl">{{ cfg.baseDocsUrl }}</a></dd>
+    </div>
+    <!-- Terms of Service URL -->
+    <div>
+        <dt i18n>Terms of Service URL</dt>
+        <dd><a [appExternalLink]="cfg.termsOfServiceUrl">{{ cfg.termsOfServiceUrl }}</a></dd>
+    </div>
+    <!-- Privacy Policy URL -->
+    <div>
+        <dt i18n>Privacy Policy URL</dt>
+        <dd><a [appExternalLink]="cfg.privacyPolicyUrl">{{ cfg.privacyPolicyUrl }}</a></dd>
     </div>
     <!-- Comentario version -->
     <div>
@@ -37,10 +47,12 @@
         <dd>{{ cfg.defaultLangId }}</dd>
     </div>
     <!-- Homepage content URL -->
-    <div>
-        <dt i18n>Homepage content URL</dt>
-        <dd>{{ cfg.homeContentUrl }}</dd>
-    </div>
+    @if (cfg.homeContentUrl; as v) {
+        <div>
+            <dt i18n>Homepage content URL</dt>
+            <dd><a [appExternalLink]="v">{{ v }}</a></dd>
+        </div>
+    }
     <!-- Configured federated identity providers -->
     <div>
         <dt>

@@ -31,11 +31,7 @@
                     <!-- Path -->
                     <div>
                         <dt i18n>Path</dt>
-                        <dd>
-                            <a [href]="domainMeta!.domain!.rootUrl! + page.path" class="external-link"
-                               target="_blank" rel="nofollow noopener noreferrer"
-                               title="Open in new tab" i18n-title>{{ page.path }}</a>
-                        </dd>
+                        <dd><a [appExternalLink]="domainMeta!.domain!.rootUrl! + page.path">{{ page.path }}</a></dd>
                     </div>
                     <!-- Title -->
                     @if (page.title; as v) {

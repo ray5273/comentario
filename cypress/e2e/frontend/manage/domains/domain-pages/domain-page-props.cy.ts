@@ -127,7 +127,7 @@ context('Domain Page Properties page', () => {
 
                 // Test Update title button
                 cy.get('@btnUpdateTitle').click();
-                cy.get('@pageDetails').contains('dt', 'Title').next().should('have.text', 'Home | Comentario Test');
+                cy.get('@pageDetails').ddItem('Title').should('have.text', 'Home | Comentario Test');
 
                 // Check number of comments in the Comments section
                 cy.get('@commentList').verifyListFooter(16, false);

@@ -9,7 +9,6 @@ import { ConfigService } from '../../../_services/config.service';
 import { Animations } from '../../../_utils/animations';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
-import { DocsService } from '../../../_services/docs.service';
 
 @Component({
     selector: 'app-signup',
@@ -29,8 +28,8 @@ export class SignupComponent {
         name:     ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
     });
 
-    readonly tosUrl     = this.docsSvc.getPageUrl('legal/tos/');
-    readonly privacyUrl = this.docsSvc.getPageUrl('legal/privacy/');
+    readonly tosUrl     = this.cfgSvc.staticConfig.termsOfServiceUrl;
+    readonly privacyUrl = this.cfgSvc.staticConfig.privacyPolicyUrl;
 
     // Icons
     readonly faBan   = faBan;
@@ -39,12 +38,11 @@ export class SignupComponent {
     constructor(
         private readonly fb: FormBuilder,
         private readonly router: Router,
-        private readonly docsSvc: DocsService,
         private readonly api: ApiGeneralService,
         private readonly toastSvc: ToastService,
-        cfgSvc: ConfigService,
+        private readonly cfgSvc: ConfigService,
     ) {
-        cfgSvc.dynamicConfig
+        this.cfgSvc.dynamicConfig
             .pipe(first())
             .subscribe(dc => this.signupAllowed = dc.get('auth.signup.enabled')?.value === 'true');
     }

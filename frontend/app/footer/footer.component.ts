@@ -28,7 +28,7 @@ export class FooterComponent {
 
     constructor(
         readonly docsSvc: DocsService,
-        private readonly configSvc: ConfigService,
+        readonly configSvc: ConfigService,
         private readonly authSvc: AuthService,
     ) {
         // Fetch the auth status

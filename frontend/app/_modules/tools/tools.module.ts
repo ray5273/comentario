@@ -16,6 +16,7 @@ import { PasswordInputComponent } from './password-input/password-input.componen
 import { ServerMessageComponent } from './server-message/server-message.component';
 import { SpinnerDirective } from './_directives/spinner.directive';
 import { UserAvatarComponent } from './user-avatar/user-avatar.component';
+import { ExternalLinkDirective } from './_directives/external-link.directive';
 
 @NgModule({
     declarations: [
@@ -23,6 +24,7 @@ import { UserAvatarComponent } from './user-avatar/user-avatar.component';
         ConfirmDialogComponent,
         ConfirmDirective,
         CopyTextDirective,
+        ExternalLinkDirective,
         IdentityProviderIconComponent,
         InfoBlockComponent,
         InfoIconComponent,
@@ -45,6 +47,7 @@ import { UserAvatarComponent } from './user-avatar/user-avatar.component';
         ConfirmDialogComponent,
         ConfirmDirective,
         CopyTextDirective,
+        ExternalLinkDirective,
         IdentityProviderIconComponent,
         InfoBlockComponent,
         InfoIconComponent,

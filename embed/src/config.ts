@@ -137,6 +137,8 @@ export class InstanceConfig {
             {
                 baseUrl:           'https://comentario.app',
                 baseDocsUrl:       'https://docs.comentario.app',
+                termsOfServiceUrl: '',
+                privacyPolicyUrl:  '',
                 version:           '',
                 buildDate:         '',
                 serverTime:        '',

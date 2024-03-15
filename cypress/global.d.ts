@@ -133,6 +133,12 @@ declare namespace Cypress {
         dlTexts(): Chainable<string[][]>;
 
         /**
+         * Return the <dd> element immediately following the <dt> containing the given text. Must be chained off a <dl>
+         * element.
+         */
+        ddItem(dtText: string): Chainable<JQueryWithSelector>
+
+        /**
          * Collect metric cards and return them in an array. Must be chained off an element that contains cards.
          */
         metricCards(): Chainable<MetricCardContent[]>;

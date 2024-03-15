@@ -43,10 +43,7 @@
                     <!-- Host -->
                     <div>
                         <dt i18n>Host</dt>
-                        <dd>
-                            <a [href]="domain.rootUrl" class="external-link" target="_blank"
-                               rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>{{ domain.host }}</a>
-                        </dd>
+                        <dd><a [appExternalLink]="domain.rootUrl">{{ domain.host }}</a></dd>
                     </div>
                     <!-- Name -->
                     @if (domain.name) {

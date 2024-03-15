@@ -57,10 +57,10 @@ export class SignupDialog extends Dialog {
                 UIToolkit.div('dialog-centered')
                     .append(
                         UIToolkit.span().inner(this.t('signUpAgreeTo') + ' '),
-                        UIToolkit.a(this.t('signUpAgreeTerms'), this.config.docsUrl('legal/tos/'))
+                        UIToolkit.a(this.t('signUpAgreeTerms'), this.config.statics.termsOfServiceUrl)
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span().inner(' ' + this.t('signUpAgreeAnd') + ' '),
-                        UIToolkit.a(this.t('signUpAgreePrivacyPolicy'), this.config.docsUrl('legal/privacy/'))
+                        UIToolkit.a(this.t('signUpAgreePrivacyPolicy'), this.config.statics.privacyPolicyUrl)
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span().inner('.')),
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit(this.t('actionSignUp'), false)),

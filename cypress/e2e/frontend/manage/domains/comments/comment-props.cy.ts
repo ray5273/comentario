@@ -114,17 +114,17 @@ context('Comment Properties page', () => {
             // Re-approve the comment
             cy.get('@btnApprove').click();
             checkButtonsActive(true, false, false);
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Approved');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Approved');
 
             // Reject the comment
             cy.get('@btnReject').click();
             checkButtonsActive(false, true, false);
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Rejected');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Rejected');
 
             // Unreject the comment
             cy.get('@btnReject').click();
             checkButtonsActive(false, false, false);
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Pending');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Pending');
 
             // Delete the comment - all buttons and the text disappear
             delComment();
@@ -177,7 +177,7 @@ context('Comment Properties page', () => {
             // Unapprove the comment
             cy.get('@btnApprove').click();
             checkButtonsActive(false, false, false);
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Pending');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Pending');
 
             // Check properties: there's a pending reason, "moderated by" changed
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -200,7 +200,7 @@ context('Comment Properties page', () => {
             cy.get('@btnReject')  .should('not.exist');
             cy.get('@btnDelete')  .should('not.exist');
             cy.get('@commentText').should('not.exist');
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Deleted');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Deleted');
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -245,7 +245,7 @@ context('Comment Properties page', () => {
             // Unapprove the comment
             cy.get('@btnApprove').click();
             checkButtonsActive(false, false, false);
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Pending');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Pending');
 
             // Check properties: there's a pending reason, "moderated by" changed
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -268,7 +268,7 @@ context('Comment Properties page', () => {
             cy.get('@btnReject')  .should('not.exist');
             cy.get('@btnDelete')  .should('not.exist');
             cy.get('@commentText').should('not.exist');
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Deleted');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Deleted');
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -312,7 +312,7 @@ context('Comment Properties page', () => {
             delComment();
             cy.get('@btnDelete')  .should('not.exist');
             cy.get('@commentText').should('not.exist');
-            cy.get('@commentDetails').contains('dt', 'Status').next().should('have.text', 'Deleted');
+            cy.get('@commentDetails').ddItem('Status').should('have.text', 'Deleted');
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [

@@ -42,10 +42,7 @@
                     <!-- Permalink -->
                     <div>
                         <dt i18n>Permalink</dt>
-                        <dd>
-                            <a [href]="comment.url" class="external-link" target="_blank"
-                               rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>{{ comment.url }}</a>
-                        </dd>
+                        <dd><a [appExternalLink]="comment.url">{{ comment.url }}</a></dd>
                     </div>
                     <!-- Parent comment -->
                     @if (comment.parentId) {

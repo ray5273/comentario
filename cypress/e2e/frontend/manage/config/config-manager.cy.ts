@@ -59,9 +59,11 @@ context('Config Manager', () => {
             cy.loginViaApi(USERS.root, pagePathStatic);
 
             // Check the items
-            cy.get('app-static-config #static-config-items').dlTexts().should('matrixMatch', [
+            cy.get('app-static-config #static-config-items').as('cfgItems').dlTexts().should('matrixMatch', [
                 ['Base Comentario URL',                     Cypress.config().baseUrl + '/'],
                 ['Base documentation URL',                  'https://edge.docs.comentario.app'],
+                ['Terms of Service URL',                    'https://edge.docs.comentario.app/en/legal/tos/'],
+                ['Privacy Policy URL',                      'https://edge.docs.comentario.app/en/legal/privacy/'],
                 ['Comentario version',                      /^\d+.\d+/],
                 ['Build date',                              REGEXES.datetime],
                 ['Current server time',                     REGEXES.datetime],
@@ -74,6 +76,14 @@ context('Config Manager', () => {
                 ['Available UI languages',                  ['en' + 'English (English)', 'nl' + 'Nederlands (Dutch)', 'ru' + 'русский (Russian)']],
                 ['Enabled extensions',                      ['Akismet', 'APILayer SpamChecker', 'Perspective']],
             ]);
+
+            // Check clickable links
+            const anchorOpts = {newTab: true, noOpener: true, noReferrer: true, noFollow: false};
+            cy.get('@cfgItems').ddItem('Base Comentario URL')   .find('a').should('be.anchor', Cypress.config().baseUrl + '/',                          anchorOpts);
+            cy.get('@cfgItems').ddItem('Base documentation URL').find('a').should('be.anchor', 'https://edge.docs.comentario.app/',                     anchorOpts);
+            cy.get('@cfgItems').ddItem('Terms of Service URL')  .find('a').should('be.anchor', 'https://edge.docs.comentario.app/en/legal/tos/',        anchorOpts);
+            cy.get('@cfgItems').ddItem('Privacy Policy URL')    .find('a').should('be.anchor', 'https://edge.docs.comentario.app/en/legal/privacy/',    anchorOpts);
+            cy.get('@cfgItems').ddItem('Homepage content URL')  .find('a').should('be.anchor', 'https://edge.docs.comentario.app/en/embed/front-page/', anchorOpts);
         });
     });
 

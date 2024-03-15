@@ -154,6 +154,12 @@ Cypress.Commands.addQuery(
     });
 
 Cypress.Commands.addQuery(
+    'ddItem',
+    function ddItem(dtText: string) {
+        return (element: JQueryWithSelector) => element.find(`dt:contains("${dtText}")`).next();
+    });
+
+Cypress.Commands.addQuery(
     'metricCards',
     function metricCards() {
         return (element: JQueryWithSelector) => element.find('app-metric-card')
