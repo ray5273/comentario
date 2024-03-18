@@ -9,6 +9,6 @@
     {{- else if not (findRE "^http(s?)://" $url) }}
         {{- $url = ($.Page.Resources.GetMatch $url).Permalink }}
     {{- end -}}
-    <a href="{{ $url }}"><img src="{{ $url }}" alt="{{ .Get 1 | markdownify | plainify | default `Image` | safeHTML }}" class="figure-img img-fluid {{ .Get 2 }}"></a>
-    {{- with .Get 1 }}<figcaption class="figure-caption">{{ . | markdownify }}</figcaption>{{ end -}}
+    <a href="{{ $url }}"><img src="{{ $url }}" alt="{{ .Get 1 | page.RenderString | plainify | default `Image` | safeHTML }}" class="figure-img img-fluid {{ .Get 2 }}"></a>
+    {{- with .Get 1 }}<figcaption class="figure-caption">{{ . | page.RenderString }}</figcaption>{{ end -}}
 </figure>

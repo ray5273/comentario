@@ -94,14 +94,17 @@
             </div>
             <!-- Page ID -->
             <div class="row mb-3">
-                <label for="opt-page-id" class="col-form-label col-sm-3 colon" i18n>Page ID</label>
+                <label for="opt-page-id" class="col-form-label col-sm-3 colon">
+                    <ng-container i18n>Page ID</ng-container>
+                    <app-info-icon docLink="configuration/embedding/comments-tag/page-id/" position="right"/>
+                </label>
                 <div class="col-sm-9">
                     <input formControlName="pageId" type="text" class="form-control" id="opt-page-id"
                            [class.is-invalid]="form.controls.pageId.invalid"
                            maxlength="2076" placeholder="/another/path/to/page" aria-describedby="opt-page-id-help">
                     <div id="opt-page-id-help" class="form-text">
                         <fa-icon [icon]="faExclamationTriangle" class="me-1"/>
-                        <ng-container i18n>This value must be different for every page.</ng-container>
+                        <ng-container i18n>This value must be different for every page and represent a valid path on this domain.</ng-container>
                     </div>
                 </div>
             </div>

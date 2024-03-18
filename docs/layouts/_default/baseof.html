@@ -39,10 +39,10 @@
     <div class="container py-3">
         <!-- Heading -->
         {{- block "heading" . }}
-            {{- if default true .Params.showHeading }}<h1 class="mt-3">{{ .Title | markdownify }}</h1>{{ end }}
+            {{- if default true .Params.showHeading }}<h1 class="mt-3">{{ .Title | .RenderString }}</h1>{{ end }}
             {{- if default true .Params.showDescription }}
                 {{- with .Params.description -}}
-                    <p class="subheading"><i class="fas fa-chevron-right me-1"></i>{{ . | markdownify }}</p>
+                    <p class="subheading"><i class="fas fa-chevron-right me-1"></i>{{ . | $.RenderString }}</p>
                 {{- end -}}
             {{- end }}
         {{- end }}

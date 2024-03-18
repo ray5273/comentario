@@ -39,7 +39,7 @@ Comentario recognises the following tag attributes:
 | [`live-update`](/configuration/embedding/comments-tag/live-update) | Whether [Live update](/kb/live-update) of comments is enabled on the page      | `true`                |
 | `max-level`                                                        | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`                  |
 | `no-fonts`                                                         | Set to `true` to avoid applying default Comentario fonts                       | `false`               |
-| `page-id`                                                          | Overrides the path (URL) of the current page                                   |                       |
+| [`page-id`](/configuration/embedding/comments-tag/page-id)         | Overrides the path (URL) of the current page                                   |                       |
 {{< /table >}}
 
 Below is an example of a customised `<comentario-comments>` tag:

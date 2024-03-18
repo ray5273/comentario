@@ -29,7 +29,7 @@
                         {{- with .Date }}
                             <span class="ms-1 badge bg-secondary">{{ partial "date" (dict "date" . "long" false) }}</span>
                         {{ end }}
-                        {{- with .Description | markdownify | default .Summary  | plainify | safeHTML | truncate 200 "…" }}
+                        {{- with .Description | $.RenderString | default .Summary  | plainify | safeHTML | truncate 200 "…" }}
                             <p class="text-muted">{{ . }}</p>
                         {{- end }}
                     </li>

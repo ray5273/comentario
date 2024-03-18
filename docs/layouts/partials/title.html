@@ -1,4 +1,4 @@
 <title>
-    {{- if not .IsHome }}{{ .Title | markdownify | plainify }} | {{ end -}}
+    {{- if not .IsHome }}{{ .Title | $.RenderString | plainify }} | {{ end -}}
     {{- .Site.Title -}}
 </title>
