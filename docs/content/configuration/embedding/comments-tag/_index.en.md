@@ -31,15 +31,15 @@ Comentario recognises the following tag attributes:
 
 <div class="table-responsive">
 
-| Attribute                    | Description                                                                    | Default value         |
-|------------------------------|--------------------------------------------------------------------------------|-----------------------|
-| [`auto-init`](auto-init)     | Whether to automatically initialise Comentario                                 | `true`                |
-| `css-override`               | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |                       |
-| [`lang`](lang)               | Language for the embedded Comentario                                           | Page language or `en` |
-| [`live-update`](live-update) | Whether [Live update](/kb/live-update) of comments is enabled on the page      | `true`                |
-| `max-level`                  | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`                  |
-| `no-fonts`                   | Set to `true` to avoid applying default Comentario fonts                       | `false`               |
-| [`page-id`](page-id)         | Overrides the path (URL) of the current page                                   |                       |
+| Attribute                      | Description                                                                    | Default value         |
+|--------------------------------|--------------------------------------------------------------------------------|-----------------------|
+| [`auto-init`](auto-init)       | Whether to automatically initialise Comentario                                 | `true`                |
+| [`css-override`](css-override) | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |                       |
+| [`lang`](lang)                 | Language for the embedded Comentario                                           | Page language or `en` |
+| [`live-update`](live-update)   | Whether [Live update](/kb/live-update) of comments is enabled on the page      | `true`                |
+| [`max-level`](max-level)       | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`                  |
+| [`no-fonts`](no-fonts)         | Set to `true` to avoid applying default Comentario fonts                       | `false`               |
+| [`page-id`](page-id)           | Overrides the path (URL) of the current page                                   |                       |
 {.table .table-striped}
 </div>
 

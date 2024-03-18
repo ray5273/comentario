@@ -6,7 +6,6 @@ tags:
     - comments
     - embedding
     - HTML
-    - i18n
 seeAlso:
     - ../comments-tag
 ---
