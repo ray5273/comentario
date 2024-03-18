@@ -29,18 +29,19 @@ You can further customise Comentario by adding attributes to the `<comentario-co
 
 Comentario recognises the following tag attributes:
 
-{{< table "table table-narrow table-striped" >}}
+<div class="table-responsive">
 
-| Attribute                                                          | Description                                                                    | Default value         |
-|--------------------------------------------------------------------|--------------------------------------------------------------------------------|-----------------------|
-| [`auto-init`](/configuration/embedding/comments-tag/auto-init)     | Whether to automatically initialise Comentario                                 | `true`                |
-| `css-override`                                                     | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |                       |
-| [`lang`](/configuration/embedding/comments-tag/lang)               | Language for the embedded Comentario                                           | Page language or `en` |
-| [`live-update`](/configuration/embedding/comments-tag/live-update) | Whether [Live update](/kb/live-update) of comments is enabled on the page      | `true`                |
-| `max-level`                                                        | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`                  |
-| `no-fonts`                                                         | Set to `true` to avoid applying default Comentario fonts                       | `false`               |
-| [`page-id`](/configuration/embedding/comments-tag/page-id)         | Overrides the path (URL) of the current page                                   |                       |
-{{< /table >}}
+| Attribute                    | Description                                                                    | Default value         |
+|------------------------------|--------------------------------------------------------------------------------|-----------------------|
+| [`auto-init`](auto-init)     | Whether to automatically initialise Comentario                                 | `true`                |
+| `css-override`               | Additional CSS stylesheet URL, or `false` to disable loading styles altogether |                       |
+| [`lang`](lang)               | Language for the embedded Comentario                                           | Page language or `en` |
+| [`live-update`](live-update) | Whether [Live update](/kb/live-update) of comments is enabled on the page      | `true`                |
+| `max-level`                  | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`                  |
+| `no-fonts`                   | Set to `true` to avoid applying default Comentario fonts                       | `false`               |
+| [`page-id`](page-id)         | Overrides the path (URL) of the current page                                   |                       |
+{.table .table-striped}
+</div>
 
 Below is an example of a customised `<comentario-comments>` tag:
 

@@ -19,9 +19,10 @@ The extension doesn't have any configuration except for the API key. Akismet ser
 
 ## Configuration
 
-{{< table "table table-striped" >}}
+<div class="table-responsive">
 
 | Key      | Description     | Default value  |
 |----------|-----------------|:--------------:|
 | `apiKey` | Akismet API key |                |
-{{< /table >}}
+{.table .table-striped}
+</div>

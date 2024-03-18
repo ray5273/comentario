@@ -26,7 +26,7 @@ The extension supports all available [production attributes](https://developers.
 
 Consult Perspective docs to learn more about attributes and supported languages.
 
-{{< table "table table-striped" >}}
+<div class="table-responsive">
 
 | Key              | Description                                                                                                             | Default value |
 |------------------|-------------------------------------------------------------------------------------------------------------------------|:-------------:|
@@ -37,10 +37,5 @@ Consult Perspective docs to learn more about attributes and supported languages.
 | `insult`         | Threshold for flagging an insulting, inflammatory, or negative comment towards a person or a group of people.           |      0.5      |
 | `profanity`      | Threshold for flagging a comment containing swear words, curse words, or other obscene or profane language.             |      0.5      |
 | `threat`         | Threshold for flagging a comment with an intention to inflict pain, injury, or violence against an individual or group. |      0.5      |
-{{< /table >}}
-
-
-
-
-
-
+{.table .table-striped}
+</div>

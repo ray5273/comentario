@@ -19,10 +19,11 @@ The extension allows to specify a threshold for marking a comment as spam.
 
 ## Configuration
 
-{{< table "table table-striped" >}}
+<div class="table-responsive">
 
 | Key         | Description                       | Default value  |
 |-------------|-----------------------------------|:--------------:|
 | `apiKey`    | APILayer API key                  |                |
 | `threshold` | Minimum score to consider as spam |       5        |
-{{< /table >}}
+{.table .table-striped}
+</div>

@@ -49,7 +49,7 @@ There's a sample [secrets.postgres.yaml](https://gitlab.com/comentario/comentari
 
 Below is a summary of the values in the secrets file.
 
-{{< table "table table-striped" >}}
+<div class="table-responsive">
 
 | Key                                           | Type    | Description                                                                                   |    Default value    |
 |-----------------------------------------------|---------|-----------------------------------------------------------------------------------------------|:-------------------:|
@@ -91,7 +91,8 @@ Below is a summary of the values in the secrets file.
 | `extensions.perspective.key`                  | string  | Perspective API key                                                                           |                     |
 | `extensions.apiLayerSpamChecker.disable`      | boolean | Whether to globally disable APILayer SpamChecker API                                          |                     |
 | `extensions.apiLayerSpamChecker.key`          | string  | APILayer SpamChecker API key                                                                  |                     |
-{{< /table >}}
+{.table .table-striped}
+</div>
 
 ## Database
 

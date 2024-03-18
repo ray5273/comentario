@@ -39,7 +39,7 @@ comentario [OPTIONS]
 
 Below is a list of available command-line options, with their environment equivalents.
 
-{{< table "table table-striped" >}}
+<div class="table-responsive">
 
 | Option                       | Description                                                           | Environment variable  | Default value                       |
 |------------------------------|-----------------------------------------------------------------------|-----------------------|-------------------------------------|
@@ -76,7 +76,8 @@ Below is a list of available command-line options, with their environment equiva
 | `--no-live-update`           | Disable [live updates](/kb/live-update) via WebSockets                | `$NO_LIVE_UPDATE`     |                                     |
 | `--ws-max-clients=VALUE`     | Maximum number of WebSocket clients                                   | `$WS_MAX_CLIENTS`     | `10000`                             |
 | `--e2e`                      | Start server in end-to-end testing mode                               |                       |                                     |
-{{< /table >}}
+{.table .table-striped}
+</div>
 
 ### Documentation
 

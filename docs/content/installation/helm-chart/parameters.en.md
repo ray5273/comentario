@@ -18,7 +18,7 @@ Comentario [Helm chart](..) provides the following configuration parameters.
 
 <!--more-->
 
-{{< table "table table-striped" >}}
+<div class="table-responsive">
 
 | Name                               | Description                                                                                                              | Value                                              |
 |------------------------------------|--------------------------------------------------------------------------------------------------------------------------|----------------------------------------------------|
@@ -56,4 +56,5 @@ Comentario [Helm chart](..) provides the following configuration parameters.
 | `nodeSelector`                     | Node selector configuration                                                                                              | `{}`                                               |
 | `tolerations`                      | Pod tolerations configuration as an array                                                                                | `[]`                                               |
 | `affinity`                         | Pod scheduling constraints configuration                                                                                 | `{}`                                               |
-{{< /table >}}
+{.table .table-striped}
+</div>
