@@ -12,7 +12,7 @@
         <div class="card-body">
             <h5 class="card-title">{{ .Get "title" }}</h5>
             <div class="card-text">
-                {{ page.RenderString .Inner }}
+                {{ .Page.RenderString .Inner }}
             </div>
         </div>
     </div>
