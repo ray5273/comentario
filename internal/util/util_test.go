@@ -4,6 +4,8 @@ import (
 	"bytes"
 	"encoding/hex"
 	"github.com/go-openapi/strfmt"
+	"net/http"
+	"net/http/httptest"
 	"reflect"
 	"strings"
 	"testing"
@@ -563,6 +565,28 @@ func TestIsValidHostPort(t *testing.T) {
 	}
 }
 
+func TestIsValidIPv4(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want bool
+	}{
+		{"empty         ", "", false},
+		{"garbage       ", "foo2$%^@#$^%2bar", false},
+		{"partial IPv4  ", "123.32.16.", false},
+		{"localhost IPv4", "127.0.0.1", true},
+		{"valid IPv4    ", "214.31.117.6", true},
+		{"valid IPv6    ", "4c63:f372:8d3f:98d9:cc04:c082:898f:55a5", false},
+	}
+	for _, tt := range tests {
+		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
+			if got := IsValidIPv4(tt.s); got != tt.want {
+				t.Errorf("IsValidIPv4() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestIsValidPort(t *testing.T) {
 	tests := []struct {
 		name string
@@ -716,6 +740,12 @@ func TestStripPort(t *testing.T) {
 		{"host only                     ", "google.org.co.uk", "google.org.co.uk"},
 		{"host with port                ", "whatever.co.uk:23948", "whatever.co.uk"},
 		{"host with non-digits a-la port", "whatever.co.uk:0m", "whatever.co.uk:0m"},
+		{"IPv4 only                     ", "150.165.124.174", "150.165.124.174"},
+		{"IPv4 with port                ", "45.225.79.163:23948", "45.225.79.163"},
+		{"IPv4 with non-digits a-la port", "158.202.241.6:0m", "158.202.241.6:0m"},
+		{"IPv6 only                     ", "15b4:d551:8471:216e:3171:4d02:f439:6f97", "15b4:d551:8471:216e:3171:4d02:f439:6f97"},
+		{"IPv6 with port                ", "[80b6:feba:f94d:dcf2:3e9d:f27a:a338:0233]:23948", "[80b6:feba:f94d:dcf2:3e9d:f27a:a338:0233]"},
+		{"IPv6 with non-digits a-la port", "[76dc:654e:c239:9143:5ac3:3bd1:9250:ecb5]:0m", "[76dc:654e:c239:9143:5ac3:3bd1:9250:ecb5]:0m"},
 		{"garbage in garbage out        ", "SErc2%4G23Gb@t5g@x6hj4z<j37x3Q", "SErc2%4G23Gb@t5g@x6hj4z<j37x3Q"},
 	}
 	for _, tt := range tests {
@@ -780,6 +810,46 @@ func TestTruncateStr(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := TruncateStr(tt.s, tt.maxLen); got != tt.want {
 				t.Errorf("TruncateStr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestUserIP(t *testing.T) {
+	tests := []struct {
+		name       string
+		remoteAddr string
+		headers    http.Header
+		want       string
+	}{
+		{"no data                                                 ", "", nil, ""},
+		{"remote ipv4                                             ", "89.0.142.86", nil, "89.0.142.86"},
+		{"remote ipv4, invalid                                    ", "892.0.142.86", nil, ""},
+		{"remote ipv4 + port                                      ", "89.0.142.86:12345", nil, "89.0.142.86"},
+		{"remote ipv4 + port, invalid                             ", "89.0.342.86:12345", nil, ""},
+		{"remote ipv6                                             ", "[f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8]", nil, ""},
+		{"remote ipv6 + port                                      ", "[f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8]:12345", nil, ""},
+		{"remote ipv4 + empty X-Forwarded-For                     ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{""}}, "89.0.142.86"},
+		{"remote ipv4 + lacking X-Forwarded-For                   ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{",15.47.231.14"}}, "89.0.142.86"},
+		{"remote ipv4 + single X-Forwarded-For                    ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{"15.47.231.14"}}, "15.47.231.14"},
+		{"remote ipv4 + multiple X-Forwarded-For                  ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{"242.213.47.98,15.47.231.14,16.47.231.14"}}, "242.213.47.98"},
+		{"remote ipv4 + empty X-Real-Ip                           ", "89.0.142.86", http.Header{"X-Real-Ip": []string{""}}, "89.0.142.86"},
+		{"remote ipv4 + valid X-Real-Ip                           ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}}, "11.22.33.44"},
+		{"remote ipv4 + IPv6 X-Real-Ip                            ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"}}, "89.0.142.86"},
+		{"remote ipv4 + valid X-Real-Ip + empty X-Forwarded-For   ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{""}}, "11.22.33.44"},
+		{"remote ipv4 + valid X-Real-Ip + lacking X-Forwarded-For ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{",15.47.231.14"}}, "11.22.33.44"},
+		{"remote ipv4 + valid X-Real-Ip + single X-Forwarded-For  ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"15.47.231.14"}}, "15.47.231.14"},
+		{"remote ipv4 + valid X-Real-Ip + multiple X-Forwarded-For", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"242.213.47.98,15.47.231.14,16.47.231.14"}}, "242.213.47.98"},
+		{"remote ipv4 + valid X-Real-Ip + IPv6 X-Forwarded-For    ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"be4f:c05d:32c3:b007:0afb:6691:12fa:55b5,242.213.47.98,15.47.231.14,16.47.231.14"}}, "11.22.33.44"},
+		{"remote ipv4 + IPv6 X-Real-Ip + IPv6 X-Forwarded-For     ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"1637:4bf3:42cd:7980:220b:feb2:98e8:ff82"}, "X-Forwarded-For": []string{"f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8,242.213.47.98,15.47.231.14,16.47.231.14"}}, "89.0.142.86"},
+	}
+	for _, tt := range tests {
+		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
+			r := httptest.NewRequest("GET", "/", nil)
+			r.RemoteAddr = tt.remoteAddr
+			r.Header = tt.headers
+			if got := UserIP(r); got != tt.want {
+				t.Errorf("UserIP() = %v, want %v", got, tt.want)
 			}
 		})
 	}

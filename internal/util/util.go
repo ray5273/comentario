@@ -345,7 +345,7 @@ func IsValidHostPort(s string) (bool, string, string) {
 	// for now). Otherwise, the entire string is considered a hostname
 	host := s
 	port := ""
-	if i := strings.Index(s, ":"); i >= 0 {
+	if i := strings.LastIndex(s, ":"); i >= 0 {
 		host = s[:i]
 		// Validate port part
 		port = s[i+1:]
@@ -354,11 +354,16 @@ func IsValidHostPort(s string) (bool, string, string) {
 		}
 	}
 
-	// Validate hostname, or otherwise  try to parse it as an IP address
-	if IsValidHostname(host) || net.ParseIP(host) != nil {
+	// Validate as either a hostname or an IPv4 address
+	if IsValidHostname(host) || IsValidIPv4(host) {
 		return true, host, port
 	}
 	return false, "", ""
+}
+
+// IsValidIPv4 returns true if the passed string is a valid IPv4 address
+func IsValidIPv4(s string) bool {
+	return s != "" && net.ParseIP(s).To4() != nil
 }
 
 // IsValidPort returns true if the passed string represents a valid port
@@ -544,18 +549,29 @@ func UserAgent(r *http.Request) string {
 	return r.Header.Get("User-Agent")
 }
 
-// UserIP tries to determine the user IP
+// UserIP tries to determine the user IP, returning either a valid IPv4 address or an empty string. We only support IPv4
+// addresses for now, see https://gitlab.com/comentario/comentario/-/issues/69
 func UserIP(r *http.Request) string {
 	// First, try the X-Forwarded-For
 	if s := r.Header.Get("X-Forwarded-For"); s != "" {
-		return s
+		// This header may contain multiple, comma-separated values. We're interested in the first one (client IP)
+		if ip, _, _ := strings.Cut(s, ","); IsValidIPv4(ip) {
+			return ip
+		}
 	}
+
 	// Next, the X-Real-Ip
-	if s := r.Header.Get("X-Real-Ip"); s != "" {
-		return s
+	if ip := r.Header.Get("X-Real-Ip"); IsValidIPv4(ip) {
+		return ip
 	}
+
 	// Fall back to the remote IP from the request
-	return StripPort(r.RemoteAddr)
+	if ip := StripPort(r.RemoteAddr); IsValidIPv4(ip) {
+		return ip
+	}
+
+	// Failed to determine the IP
+	return ""
 }
 
 // UserIPCountry tries to determine the IP address and country code of the user based on it
