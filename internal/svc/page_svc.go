@@ -5,6 +5,7 @@ import (
 	"github.com/avct/uasurfer"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -415,7 +416,7 @@ func (svc *pageService) insertPageView(page data.DomainPage, req *http.Request) 
 				"page_id":            &page.ID,
 				"ts_created":         time.Now().UTC(),
 				"proto":              req.Proto,
-				"ip":                 ip,
+				"ip":                 config.MaskIP(ip),
 				"country":            country,
 				"ua_browser_name":    ua.Browser.Name.StringTrimPrefix(),
 				"ua_browser_version": util.FormatVersion(&ua.Browser.Version),
