@@ -426,6 +426,44 @@ definitions:
         format: date-time
         description: When the domain user was created
 
+  dynamicConfigItem:
+    description: Dynamic configuration item
+    type: object
+    required:
+      - key
+      - value
+    properties:
+      key:
+        type: string
+        description: Item key
+      value:
+        type: string
+        description: Item value
+      datatype:
+        $ref: "#/definitions/dynamicConfigItemDatatype"
+        readOnly: true
+        description: Item datatype
+      updatedTime:
+        type: string
+        format: date-time
+        readOnly: true
+        description: Timestamp when the item was last updated in the database
+      userUpdated:
+        type: string
+        format: uuid
+        readOnly: true
+        description: Reference to the user who last updated the item in the database
+      defaultValue:
+        type: string
+        readOnly: true
+        description: Item's default value
+
+  dynamicConfigItemDatatype:
+    description: Dynamic configuration item datatype
+    type: string
+    enum:
+      - boolean
+
   federatedIdentityProvider:
     description: Federated identity provider info
     type: object
@@ -535,44 +573,6 @@ definitions:
       error:
         type: string
         description: Any error message occurred during the import
-
-  instanceDynamicConfigItem:
-    description: Dynamic instance configuration item
-    type: object
-    required:
-      - key
-      - value
-    properties:
-      key:
-        type: string
-        description: Item key
-      value:
-        type: string
-        description: Item value
-      datatype:
-        $ref: "#/definitions/instanceDynamicConfigItemDatatype"
-        readOnly: true
-        description: Item datatype
-      updatedTime:
-        type: string
-        format: date-time
-        readOnly: true
-        description: Timestamp when the item was last updated in the database
-      userUpdated:
-        type: string
-        format: uuid
-        readOnly: true
-        description: Reference to the user who last updated the item in the database
-      defaultValue:
-        type: string
-        readOnly: true
-        description: Item's default value
-
-  instanceDynamicConfigItemDatatype:
-    description: Dynamic instance configuration item datatype
-    type: string
-    enum:
-      - boolean
 
   instanceStaticConfig:
     description: Static instance configuration
@@ -2283,6 +2283,11 @@ paths:
               domain:
                 $ref: "#/definitions/domain"
                 description: Domain properties
+              configuration:
+                type: array
+                items:
+                  $ref: "#/definitions/dynamicConfigItem"
+                description: Domain configuration items
               federatedIdpIds:
                 type: array
                 items:
@@ -2344,6 +2349,11 @@ paths:
               domainUser:
                 $ref: "#/definitions/domainUser"
                 description: Current user's properties on the domain (only when there is one)
+              configuration:
+                type: array
+                items:
+                  $ref: "#/definitions/dynamicConfigItem"
+                description: Domain configuration items
               federatedIdpIds:
                 type: array
                 items:
@@ -2372,6 +2382,11 @@ paths:
               domain:
                 $ref: "#/definitions/domain"
                 description: Domain properties
+              configuration:
+                type: array
+                items:
+                  $ref: "#/definitions/dynamicConfigItem"
+                description: Domain configuration items
               federatedIdpIds:
                 type: array
                 items:
@@ -3110,7 +3125,7 @@ paths:
               dynamicConfig:
                 type: array
                 items:
-                  $ref: "#/definitions/instanceDynamicConfigItem"
+                  $ref: "#/definitions/dynamicConfigItem"
                 description: Dynamic instance configuration items
 
     patch:
@@ -3125,7 +3140,7 @@ paths:
           schema:
             type: array
             items:
-              $ref: "#/definitions/instanceDynamicConfigItem"
+              $ref: "#/definitions/dynamicConfigItem"
             description: Instance configuration items to modify. Omitted items will not be modified
       responses:
         204:
@@ -3186,7 +3201,7 @@ paths:
           name: body
           required: true
           schema:
-            $ref: "#/definitions/instanceDynamicConfigItem"
+            $ref: "#/definitions/dynamicConfigItem"
       responses:
         204:
           description: Dynamic instance configuration item has been updated

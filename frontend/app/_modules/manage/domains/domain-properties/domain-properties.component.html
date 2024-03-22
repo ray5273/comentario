@@ -66,6 +66,13 @@
                             <dd>{{ domain.defaultSort | commentSort }}</dd>
                         </div>
                     }
+                    <!-- Configuration -->
+                    @for (kv of domainMeta!.config | keyvalue; track kv.key) {
+                        <div>
+                            <dt>{{ kv.key | dynConfigItemName }}</dt>
+                            <dd><app-dyn-config-item-value [item]="kv.value"/></dd>
+                        </div>
+                    }
                     <!-- Authentication -->
                     <div>
                         <dt>

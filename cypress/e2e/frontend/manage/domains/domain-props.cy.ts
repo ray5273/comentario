@@ -47,10 +47,20 @@ context('Domain Properties page', () => {
     const checkAllProperties = () => {
         cy.contains('h2', 'Properties').should('be.visible');
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-            ['Host',                                      DOMAINS.localhost.host],
-            ['Name',                                      DOMAINS.localhost.name],
-            ['Read-only',                                 ''],
-            ['Default comment sort',                      'Oldest first'],
+            ['Host',                                                DOMAINS.localhost.host],
+            ['Name',                                                DOMAINS.localhost.name],
+            ['Read-only',                                           ''],
+            ['Default comment sort',                                'Oldest first'],
+            ['Allow comment authors to delete comments',            '✔'],
+            ['Allow moderators to delete comments',                 '✔'],
+            ['Allow comment authors to edit comments',              '✔'],
+            ['Allow moderators to edit comments',                   '✔'],
+            ['Enable voting on comments',                           '✔'],
+            ['Show deleted comments',                               '✔'],
+            ['Enable commenter registration via external provider', '✔'],
+            ['Enable local commenter registration',                 '✔'],
+            ['Enable commenter registration via SSO',               '✔'],
+            ['Use Gravatar for user avatars',                       ''],
             [
                 'Authentication',
                 [
@@ -98,10 +108,20 @@ context('Domain Properties page', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.spirit.id).props);
         makeAliases(DOMAINS.spirit.host, false, false, false);
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-            ['Host',                 DOMAINS.spirit.host],
-            ['Read-only',            ''],
-            ['Default comment sort', 'Oldest first'],
-            ['Authentication',       ['Anonymous comments', 'Local (password-based)']],
+            ['Host',                                                DOMAINS.spirit.host],
+            ['Read-only',                                           ''],
+            ['Default comment sort',                                'Oldest first'],
+            ['Allow comment authors to delete comments',            '✔'],
+            ['Allow moderators to delete comments',                 '✔'],
+            ['Allow comment authors to edit comments',              '✔'],
+            ['Allow moderators to edit comments',                   '✔'],
+            ['Enable voting on comments',                           '✔'],
+            ['Show deleted comments',                               '✔'],
+            ['Enable commenter registration via external provider', '✔'],
+            ['Enable local commenter registration',                 '✔'],
+            ['Enable commenter registration via SSO',               '✔'],
+            ['Use Gravatar for user avatars',                       ''],
+            ['Authentication',                                      ['Anonymous comments', 'Local (password-based)']],
         ]);
     });
 
@@ -109,10 +129,20 @@ context('Domain Properties page', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.market.id).props);
         makeAliases(DOMAINS.market.host, false, false, false);
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-            ['Host',                 DOMAINS.market.host],
-            ['Read-only',            '✔'],
-            ['Default comment sort', 'Most upvoted first'],
-            ['Authentication',       'Local (password-based)'],
+            ['Host',                                                DOMAINS.market.host],
+            ['Read-only',                                           '✔'],
+            ['Default comment sort',                                'Most upvoted first'],
+            ['Allow comment authors to delete comments',            '✔'],
+            ['Allow moderators to delete comments',                 '✔'],
+            ['Allow comment authors to edit comments',              '✔'],
+            ['Allow moderators to edit comments',                   '✔'],
+            ['Enable voting on comments',                           '✔'],
+            ['Show deleted comments',                               '✔'],
+            ['Enable commenter registration via external provider', '✔'],
+            ['Enable local commenter registration',                 '✔'],
+            ['Enable commenter registration via SSO',               '✔'],
+            ['Use Gravatar for user avatars',                       ''],
+            ['Authentication',                                      'Local (password-based)'],
         ]);
     });
 
@@ -120,9 +150,19 @@ context('Domain Properties page', () => {
         cy.loginViaApi(USERS.king, localhostPagePath);
         makeAliases(DOMAINS.localhost.host, false, false, false);
         cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-            ['Host',                 DOMAINS.localhost.host],
-            ['Read-only',            ''],
-            ['Default comment sort', 'Oldest first'],
+            ['Host',                                                DOMAINS.localhost.host],
+            ['Read-only',                                           ''],
+            ['Default comment sort',                                'Oldest first'],
+            ['Allow comment authors to delete comments',            '✔'],
+            ['Allow moderators to delete comments',                 '✔'],
+            ['Allow comment authors to edit comments',              '✔'],
+            ['Allow moderators to edit comments',                   '✔'],
+            ['Enable voting on comments',                           '✔'],
+            ['Show deleted comments',                               '✔'],
+            ['Enable commenter registration via external provider', '✔'],
+            ['Enable local commenter registration',                 '✔'],
+            ['Enable commenter registration via SSO',               '✔'],
+            ['Use Gravatar for user avatars',                       ''],
             [
                 'Authentication',
                 [

@@ -1,4 +1,4 @@
-import { Comment, Commenter, InstanceDynamicConfigItem, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
+import { Comment, Commenter, DynamicConfigItem, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
 import { HttpClient, HttpHeaders } from './http-client';
 import { Utils } from './utils';
 
@@ -51,7 +51,7 @@ export interface ApiCommentVoteResponse {
 
 export interface ApiConfigResponse {
     staticConfig:   InstanceStaticConfig;
-    dynamicConfig?: InstanceDynamicConfigItem[];
+    dynamicConfig?: DynamicConfigItem[];
 }
 
 export interface ApiAuthSignupResponse {

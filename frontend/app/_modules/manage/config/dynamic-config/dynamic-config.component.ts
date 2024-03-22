@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faPencil, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { ConfigService } from '../../../../_services/config.service';
-import { ApiGeneralService, InstanceDynamicConfigItem } from '../../../../../generated-api';
+import { ApiGeneralService, DynamicConfigItem } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 
@@ -13,7 +13,7 @@ import { ToastService } from '../../../../_services/toast.service';
 })
 export class DynamicConfigComponent implements OnInit {
 
-    items?: InstanceDynamicConfigItem[];
+    items?: DynamicConfigItem[];
 
     readonly resetting = new ProcessingStatus();
 

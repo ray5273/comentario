@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { first } from 'rxjs';
-import { ApiGeneralService, InstanceDynamicConfigItem } from '../../../../../generated-api';
+import { ApiGeneralService, DynamicConfigItem } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
@@ -17,7 +17,7 @@ import { ToastService } from '../../../../_services/toast.service';
 export class ConfigEditComponent implements OnInit {
 
     /** Items being edited. */
-    items?: InstanceDynamicConfigItem[];
+    items?: DynamicConfigItem[];
 
     /** Edit form. */
     form?: FormGroup;

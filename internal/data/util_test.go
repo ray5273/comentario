@@ -215,6 +215,25 @@ func TestPathToString(t *testing.T) {
 	}
 }
 
+func TestPtrToNullUUID(t *testing.T) {
+	u := uuid.MustParse("315368f7d10c4f8992b12f1e0a00bcc8")
+	tests := []struct {
+		name string
+		id   *uuid.UUID
+		want *uuid.NullUUID
+	}{
+		{"nil    ", nil, &uuid.NullUUID{}},
+		{"non-nil", &u, &uuid.NullUUID{UUID: u, Valid: true}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := PtrToNullUUID(tt.id); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("PtrToNullUUID() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestTrimmedString(t *testing.T) {
 	v1 := "You see, it's complicated"
 	v2 := "  \nBut not as complicated\t"

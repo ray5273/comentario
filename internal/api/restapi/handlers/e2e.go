@@ -106,16 +106,13 @@ func E2eInit() error {
 }
 
 func E2eConfigDynamicItemSet(params api_e2e.E2eConfigDynamicItemSetParams) middleware.Responder {
-	err := svc.TheDynConfigService.Set(
+	// Update the config
+	err := svc.TheDynConfigService.Update(
 		nil,
-		data.DynInstanceConfigItemKey(swag.StringValue(params.Body.Key)),
-		swag.StringValue(params.Body.Value))
+		map[data.DynConfigItemKey]string{
+			data.DynConfigItemKey(swag.StringValue(params.Body.Key)): swag.StringValue(params.Body.Value),
+		})
 	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Save the config
-	if err := svc.TheDynConfigService.Save(); err != nil {
 		return respServiceError(err)
 	}
 

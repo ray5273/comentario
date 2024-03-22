@@ -261,9 +261,19 @@ context('Domain Edit page', () => {
                 // Verify properties
                 cy.contains('app-domain-properties header app-domain-badge', 'google.com');
                 cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                    ['Host',                 'google.com'],
-                    ['Read-only',            ''],
-                    ['Default comment sort', 'Newest first'],
+                    ['Host',                                                'google.com'],
+                    ['Read-only',                                           ''],
+                    ['Default comment sort',                                'Newest first'],
+                    ['Allow comment authors to delete comments',            '✔'],
+                    ['Allow moderators to delete comments',                 '✔'],
+                    ['Allow comment authors to edit comments',              '✔'],
+                    ['Allow moderators to edit comments',                   '✔'],
+                    ['Enable voting on comments',                           '✔'],
+                    ['Show deleted comments',                               '✔'],
+                    ['Enable commenter registration via external provider', '✔'],
+                    ['Enable local commenter registration',                 '✔'],
+                    ['Enable commenter registration via SSO',               '✔'],
+                    ['Use Gravatar for user avatars',                       ''],
                     ['Authentication',
                         [
                             'Local (password-based)',
@@ -344,10 +354,20 @@ context('Domain Edit page', () => {
                 // Verify properties
                 cy.contains('app-domain-properties header app-domain-badge', 'facebook.com:4551');
                 cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                    ['Host',                 'facebook.com:4551'],
-                    ['Name',                 'Face Book'],
-                    ['Read-only',            ''],
-                    ['Default comment sort', 'Most upvoted first'],
+                    ['Host',                                                'facebook.com:4551'],
+                    ['Name',                                                'Face Book'],
+                    ['Read-only',                                           ''],
+                    ['Default comment sort',                                'Most upvoted first'],
+                    ['Allow comment authors to delete comments',            '✔'],
+                    ['Allow moderators to delete comments',                 '✔'],
+                    ['Allow comment authors to edit comments',              '✔'],
+                    ['Allow moderators to edit comments',                   '✔'],
+                    ['Enable voting on comments',                           '✔'],
+                    ['Show deleted comments',                               '✔'],
+                    ['Enable commenter registration via external provider', '✔'],
+                    ['Enable local commenter registration',                 '✔'],
+                    ['Enable commenter registration via SSO',               '✔'],
+                    ['Use Gravatar for user avatars',                       ''],
                     ['Authentication',
                         [
                             'Anonymous comments',
@@ -524,11 +544,21 @@ context('Domain Edit page', () => {
 
                 // Verify properties
                 cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                    ['Host',                                      DOMAINS.localhost.host],
-                    ['Name',                                      'Big Time'],
-                    ['Read-only',                                 ''],
-                    ['Default comment sort',                      'Least upvoted first'],
-                    ['Authentication',                            'Local (password-based)'],
+                    ['Host',                                                DOMAINS.localhost.host],
+                    ['Name',                                                'Big Time'],
+                    ['Read-only',                                           ''],
+                    ['Default comment sort',                                'Least upvoted first'],
+                    ['Allow comment authors to delete comments',            '✔'],
+                    ['Allow moderators to delete comments',                 '✔'],
+                    ['Allow comment authors to edit comments',              '✔'],
+                    ['Allow moderators to edit comments',                   '✔'],
+                    ['Enable voting on comments',                           '✔'],
+                    ['Show deleted comments',                               '✔'],
+                    ['Enable commenter registration via external provider', '✔'],
+                    ['Enable local commenter registration',                 '✔'],
+                    ['Enable commenter registration via SSO',               '✔'],
+                    ['Use Gravatar for user avatars',                       ''],
+                    ['Authentication',                                      'Local (password-based)'],
                     ['Require moderator approval on comment, if',
                         [
                             'Author is authenticated',

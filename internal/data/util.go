@@ -71,6 +71,14 @@ func PathToString(v models.Path) string {
 	return strings.TrimSpace(string(v))
 }
 
+// PtrToNullUUID converts a *uuid.UUID value into a nullable UUID
+func PtrToNullUUID(u *uuid.UUID) *uuid.NullUUID {
+	if u == nil {
+		return &uuid.NullUUID{}
+	}
+	return &uuid.NullUUID{UUID: *u, Valid: true}
+}
+
 // SliceToDTOs converts a slice of models into a slice of DTO instances using the ToDTO() method of the former
 func SliceToDTOs[F DTOAware[T], T any](in []F) []T {
 	// Nil pointers will be passed through

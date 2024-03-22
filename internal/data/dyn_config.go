@@ -8,35 +8,35 @@ import (
 	"time"
 )
 
-// DynInstanceConfigItemKey is a dynamic configuration item key
-type DynInstanceConfigItemKey string
+// DynConfigItemKey is a dynamic configuration item key
+type DynConfigItemKey string
 
-// DynInstanceConfigItemDatatype is a dynamic configuration item datatype
-type DynInstanceConfigItemDatatype string
+// DynConfigItemDatatype is a dynamic configuration item datatype
+type DynConfigItemDatatype string
 
-// DynInstanceConfigItem describes a single dynamic configuration entry (key-value pair)
-type DynInstanceConfigItem struct {
-	Value        string                        // Item value
-	Datatype     DynInstanceConfigItemDatatype // Item datatype
-	UpdatedTime  time.Time                     // Timestamp when the item was last updated in the database
-	UserUpdated  uuid.NullUUID                 // Reference to the user who last updated the item in the database
-	DefaultValue string                        // Item's default value
+// DynConfigItem describes a single dynamic configuration entry (key-value pair, with a default value and metadata)
+type DynConfigItem struct {
+	Value        string                // Item value
+	Datatype     DynConfigItemDatatype // Item datatype
+	UpdatedTime  time.Time             // Timestamp when the item was last updated in the database
+	UserUpdated  uuid.NullUUID         // Reference to the user who last updated the item in the database
+	DefaultValue string                // Item's default value
 }
 
 // AsBool returns the value converted to a boolean
-func (ci *DynInstanceConfigItem) AsBool() bool {
+func (ci *DynConfigItem) AsBool() bool {
 	return ci.Value == "true"
 }
 
 // HasDefaultValue returns true if the item has its default value
-func (ci *DynInstanceConfigItem) HasDefaultValue() bool {
+func (ci *DynConfigItem) HasDefaultValue() bool {
 	return ci.Value == ci.DefaultValue
 }
 
 // ToDTO converts this model into an API model
-func (ci *DynInstanceConfigItem) ToDTO(key DynInstanceConfigItemKey) *models.InstanceDynamicConfigItem {
-	return &models.InstanceDynamicConfigItem{
-		Datatype:     models.InstanceDynamicConfigItemDatatype(ci.Datatype),
+func (ci *DynConfigItem) ToDTO(key DynConfigItemKey) *models.DynamicConfigItem {
+	return &models.DynamicConfigItem{
+		Datatype:     models.DynamicConfigItemDatatype(ci.Datatype),
 		DefaultValue: ci.DefaultValue,
 		Key:          swag.String(string(key)),
 		UpdatedTime:  strfmt.DateTime(ci.UpdatedTime),
@@ -46,31 +46,35 @@ func (ci *DynInstanceConfigItem) ToDTO(key DynInstanceConfigItemKey) *models.Ins
 }
 
 const (
-	ConfigDatatypeBoolean DynInstanceConfigItemDatatype = "boolean"
+	ConfigDatatypeBoolean DynConfigItemDatatype = "boolean"
 )
 
 const (
-	ConfigKeyAuthSignupConfirmCommenter             DynInstanceConfigItemKey = "auth.signup.confirm.commenter"
-	ConfigKeyAuthSignupConfirmUser                  DynInstanceConfigItemKey = "auth.signup.confirm.user"
-	ConfigKeyAuthSignupEnabled                      DynInstanceConfigItemKey = "auth.signup.enabled"
-	ConfigKeyDomainDefaultsCommentDeletionAuthor    DynInstanceConfigItemKey = "domain.defaults.comments.deletion.author"
-	ConfigKeyDomainDefaultsCommentDeletionModerator DynInstanceConfigItemKey = "domain.defaults.comments.deletion.moderator"
-	ConfigKeyDomainDefaultsCommentEditingAuthor     DynInstanceConfigItemKey = "domain.defaults.comments.editing.author"
-	ConfigKeyDomainDefaultsCommentEditingModerator  DynInstanceConfigItemKey = "domain.defaults.comments.editing.moderator"
-	ConfigKeyDomainDefaultsEnableCommentVoting      DynInstanceConfigItemKey = "domain.defaults.comments.enableVoting"
-	ConfigKeyDomainDefaultsShowDeletedComments      DynInstanceConfigItemKey = "domain.defaults.comments.showDeleted"
-	ConfigKeyDomainDefaultsLocalSignupEnabled       DynInstanceConfigItemKey = "domain.defaults.signup.enableLocal"
-	ConfigKeyDomainDefaultsFederatedSignupEnabled   DynInstanceConfigItemKey = "domain.defaults.signup.enableFederated"
-	ConfigKeyDomainDefaultsSsoSignupEnabled         DynInstanceConfigItemKey = "domain.defaults.signup.enableSso"
-	ConfigKeyDomainDefaultsUseGravatar              DynInstanceConfigItemKey = "domain.defaults.useGravatar"
-	ConfigKeyMarkdownImagesEnabled                  DynInstanceConfigItemKey = "markdown.images.enabled"
-	ConfigKeyMarkdownLinksEnabled                   DynInstanceConfigItemKey = "markdown.links.enabled"
-	ConfigKeyMarkdownTablesEnabled                  DynInstanceConfigItemKey = "markdown.tables.enabled"
-	ConfigKeyOperationNewOwnerEnabled               DynInstanceConfigItemKey = "operation.newOwner.enabled"
+	ConfigKeyDomainDefaultsPrefix = "domain.defaults."
+)
+
+const (
+	ConfigKeyAuthSignupConfirmCommenter             DynConfigItemKey = "auth.signup.confirm.commenter"
+	ConfigKeyAuthSignupConfirmUser                  DynConfigItemKey = "auth.signup.confirm.user"
+	ConfigKeyAuthSignupEnabled                      DynConfigItemKey = "auth.signup.enabled"
+	ConfigKeyDomainDefaultsCommentDeletionAuthor    DynConfigItemKey = "domain.defaults.comments.deletion.author"
+	ConfigKeyDomainDefaultsCommentDeletionModerator DynConfigItemKey = "domain.defaults.comments.deletion.moderator"
+	ConfigKeyDomainDefaultsCommentEditingAuthor     DynConfigItemKey = "domain.defaults.comments.editing.author"
+	ConfigKeyDomainDefaultsCommentEditingModerator  DynConfigItemKey = "domain.defaults.comments.editing.moderator"
+	ConfigKeyDomainDefaultsEnableCommentVoting      DynConfigItemKey = "domain.defaults.comments.enableVoting"
+	ConfigKeyDomainDefaultsShowDeletedComments      DynConfigItemKey = "domain.defaults.comments.showDeleted"
+	ConfigKeyDomainDefaultsLocalSignupEnabled       DynConfigItemKey = "domain.defaults.signup.enableLocal"
+	ConfigKeyDomainDefaultsFederatedSignupEnabled   DynConfigItemKey = "domain.defaults.signup.enableFederated"
+	ConfigKeyDomainDefaultsSsoSignupEnabled         DynConfigItemKey = "domain.defaults.signup.enableSso"
+	ConfigKeyDomainDefaultsUseGravatar              DynConfigItemKey = "domain.defaults.useGravatar"
+	ConfigKeyMarkdownImagesEnabled                  DynConfigItemKey = "markdown.images.enabled"
+	ConfigKeyMarkdownLinksEnabled                   DynConfigItemKey = "markdown.links.enabled"
+	ConfigKeyMarkdownTablesEnabled                  DynConfigItemKey = "markdown.tables.enabled"
+	ConfigKeyOperationNewOwnerEnabled               DynConfigItemKey = "operation.newOwner.enabled"
 )
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
-var DefaultDynInstanceConfig = map[DynInstanceConfigItemKey]*DynInstanceConfigItem{
+var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
 	ConfigKeyAuthSignupConfirmCommenter:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyAuthSignupConfirmUser:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyAuthSignupEnabled:                      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},

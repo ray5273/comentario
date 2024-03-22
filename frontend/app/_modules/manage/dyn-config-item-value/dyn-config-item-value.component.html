@@ -1,0 +1,8 @@
+@switch (item?.datatype) {
+    @case ('boolean') {
+        <app-checkmark [value]="item!.value === 'true'"/>
+    }
+    @default {
+        <span>{{ item?.value }}</span>
+    }
+}

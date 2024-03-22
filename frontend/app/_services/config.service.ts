@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, first, Observable, switchMap, tap } from 'rxjs';
 import { map, shareReplay } from 'rxjs/operators';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
-import { ApiGeneralService, InstanceDynamicConfigItem, InstanceStaticConfig } from '../../generated-api';
+import { ApiGeneralService, DynamicConfigItem, InstanceStaticConfig } from '../../generated-api';
 
 declare global {
     // noinspection JSUnusedGlobalSymbols
@@ -38,7 +38,7 @@ export class ConfigService {
             // Store its static part permanently
             tap(cfg => this._staticConfig = cfg.staticConfig),
             // Convert the dynamic part into a map
-            map(cfg => new Map<string, InstanceDynamicConfigItem>(cfg.dynamicConfig?.map(i => [i.key, i]))),
+            map(cfg => new Map<string, DynamicConfigItem>(cfg.dynamicConfig?.map(i => [i.key, i]))),
             // Cache the last result
             shareReplay(1));
 

@@ -31,16 +31,7 @@
                             <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
                             <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
                         </dt>
-                        <dd>
-                            @switch (item.datatype) {
-                                @case ('boolean') {
-                                    <app-checkmark [value]="item.value === 'true'"/>
-                                }
-                                @default {
-                                    <span>{{ item.value }}</span>
-                                }
-                            }
-                        </dd>
+                        <dd><app-dyn-config-item-value [item]="item"/></dd>
                     </div>
                 }
             </dl>

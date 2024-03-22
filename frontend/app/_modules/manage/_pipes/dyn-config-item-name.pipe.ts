@@ -26,6 +26,15 @@ export class DynConfigItemNamePipe implements PipeTransform {
     };
 
     transform(key: string | null | undefined): string {
-        return key && key in DynConfigItemNamePipe.ITEM_NAMES ? DynConfigItemNamePipe.ITEM_NAMES[key] : `[${key}]`;
+        if (!key) {
+            return '';
+        }
+
+        // First, try the key as-is
+        return DynConfigItemNamePipe.ITEM_NAMES[key] ??
+            // Second, try to look up as a domain default
+            DynConfigItemNamePipe.ITEM_NAMES[`domain.defaults.${key}`] ??
+            // No luck, just return the key name in brackets
+            `[${key}]`;
     }
 }

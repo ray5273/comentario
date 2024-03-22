@@ -3,7 +3,16 @@ import { HttpContext } from '@angular/common/http';
 import { BehaviorSubject, combineLatestWith, Observable, tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, Domain, DomainExtension, DomainGet200Response, DomainUser, FederatedIdpId, Principal } from '../../../../generated-api';
+import {
+    ApiGeneralService,
+    Domain,
+    DomainExtension,
+    DomainGet200Response,
+    DomainUser,
+    DynamicConfigItem,
+    FederatedIdpId,
+    Principal,
+} from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
@@ -19,6 +28,9 @@ export type DomainUserKind = 'superuser' | 'owner' | 'moderator' | 'commenter' |
 // An object that combines domain, user, and IdP data
 export class DomainMeta {
 
+    /** Domain configuration items. */
+    readonly config: Map<string, DynamicConfigItem>;
+
     /** Kind of the current user in relation to the domain. */
     readonly userKind?: DomainUserKind;
 
@@ -33,6 +45,8 @@ export class DomainMeta {
         readonly domain?: Domain,
         /** Domain user corresponding to the currently authenticated principal. */
         readonly domainUser?: DomainUser,
+        /** List of domain configuration items. */
+        config?: DynamicConfigItem[],
         /** List of federated IdP IDs enabled for the domain. */
         readonly federatedIdpIds?: FederatedIdpId[],
         /** List of extensions enabled for the domain. */
@@ -42,6 +56,9 @@ export class DomainMeta {
         /** Timestamp of the last time the principal was updated (fetched or reset). */
         readonly principalUpdated?: number,
     ) {
+        // Create a map of configuration items
+        this.config = new Map<string, DynamicConfigItem>(config?.map(i => [i.key, i]));
+
         // Calculate additional properties
         if (principal) {
             if (principal.isSuperuser) {
@@ -167,6 +184,7 @@ export class DomainSelectorService {
         this.domainMeta$.next(new DomainMeta(
             v?.domain,
             v?.domainUser,
+            v?.configuration,
             v?.federatedIdpIds,
             v?.extensions,
             this.principal,

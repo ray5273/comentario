@@ -57,17 +57,17 @@ export interface InstanceStaticConfig {
     readonly liveUpdateEnabled: boolean;
 }
 
-/** Dynamic instance configuration item datatype. */
-export type InstanceDynamicConfigItemDatatype = 'boolean';
+/** Dynamic configuration item datatype. */
+export type DynamicConfigItemDatatype = 'boolean';
 
-/** Dynamic instance configuration item. */
-export interface InstanceDynamicConfigItem {
+/** Dynamic configuration item. */
+export interface DynamicConfigItem {
     /** Item key */
     readonly key: string;
     /** Item value */
     readonly value: string;
     /** Item datatype */
-    readonly datatype?: InstanceDynamicConfigItemDatatype;
+    readonly datatype?: DynamicConfigItemDatatype;
     /** Timestamp when the item was last updated in the database */
     readonly updatedTime?: string;
     /** Reference to the user who last updated the item in the database */

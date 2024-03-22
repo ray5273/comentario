@@ -133,6 +133,9 @@ func (m *manager) postDBInit() error {
 		return fmt.Errorf("failed to load configuration: %v", err)
 	}
 
+	// Reset any cached config
+	TheDomainConfigService.ResetCache()
+
 	// If superuser's ID or email is provided, turn that user into a superuser
 	if s := config.CLIFlags.Superuser; s != "" {
 		if err := TheUserService.EnsureSuperuser(s); err != nil {

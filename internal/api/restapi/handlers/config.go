@@ -22,10 +22,7 @@ func ConfigDynamicReset(_ api_general.ConfigDynamicResetParams, user *data.User)
 	}
 
 	// Reset the config
-	svc.TheDynConfigService.Reset()
-
-	// Save the config
-	if err := svc.TheDynConfigService.Save(); err != nil {
+	if err := svc.TheDynConfigService.Reset(); err != nil {
 		return respServiceError(err)
 	}
 
@@ -39,19 +36,14 @@ func ConfigDynamicUpdate(params api_general.ConfigDynamicUpdateParams, user *dat
 		return r
 	}
 
-	// Iterate the params and update the config
+	// Iterate the params and create a key-value map
+	vals := map[data.DynConfigItemKey]string{}
 	for _, item := range params.Body {
-		err := svc.TheDynConfigService.Set(
-			&user.ID,
-			data.DynInstanceConfigItemKey(swag.StringValue(item.Key)),
-			swag.StringValue(item.Value))
-		if err != nil {
-			return respServiceError(err)
-		}
+		vals[data.DynConfigItemKey(swag.StringValue(item.Key))] = swag.StringValue(item.Value)
 	}
 
-	// Save the config
-	if err := svc.TheDynConfigService.Save(); err != nil {
+	// Update the config
+	if err := svc.TheDynConfigService.Update(&user.ID, vals); err != nil {
 		return respServiceError(err)
 	}
 
@@ -104,21 +96,15 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	}
 
 	// Fetch dynamic config
-	items, err := svc.TheDynConfigService.GetAll()
+	dynConfig, err := svc.TheDynConfigService.GetAll()
 	if err != nil {
 		return respServiceError(err)
-	}
-
-	// Convert the map into a slice of DTO objects
-	var dynConfig []*models.InstanceDynamicConfigItem
-	for key, item := range items {
-		dynConfig = append(dynConfig, item.ToDTO(key))
 	}
 
 	// Succeeded
 	return api_general.NewConfigGetOK().
 		WithPayload(&api_general.ConfigGetOKBody{
-			DynamicConfig: dynConfig,
+			DynamicConfig: dynConfigToDTOs(dynConfig),
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:       config.CLIFlags.BaseDocsURL,
 				BaseURL:           config.BaseURL.String(),
@@ -136,4 +122,13 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 				Version:           config.AppVersion,
 			},
 		})
+}
+
+// dynConfigToDTOs converts a map of dynamic config items into a slice of DTO models
+func dynConfigToDTOs(config map[data.DynConfigItemKey]*data.DynConfigItem) []*models.DynamicConfigItem {
+	result := make([]*models.DynamicConfigItem, 0, len(config))
+	for key, item := range config {
+		result = append(result, item.ToDTO(key))
+	}
+	return result
 }

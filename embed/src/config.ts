@@ -1,4 +1,4 @@
-import { CommentSort, InstanceDynamicConfigItem, InstanceStaticConfig } from './models';
+import { CommentSort, DynamicConfigItem, InstanceStaticConfig } from './models';
 import { ApiConfigResponse } from './api';
 import { Utils } from './utils';
 
@@ -71,7 +71,7 @@ export class LocalConfig {
 export class DynamicConfig {
 
     constructor(
-        private readonly cfg?: Map<string, InstanceDynamicConfigItem>,
+        private readonly cfg?: Map<string, DynamicConfigItem>,
     ) {}
 
     get enableCommentDeletionAuthor(): boolean {

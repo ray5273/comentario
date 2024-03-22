@@ -48,6 +48,7 @@ const (
 	UserPwdResetDuration     = 12 * time.Hour   // How long the token in the password-reset email stays valid
 	PageViewRetentionPeriod  = 45 * OneDay      // How long a page view stats record is retained
 	AvatarFetchTimeout       = 5 * time.Second  // Timeout for fetching external avatars
+	ConfigCacheTTL           = 30 * time.Second // TTL for cached configs
 )
 
 var (

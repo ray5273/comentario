@@ -80,26 +80,37 @@ func DomainExport(params api_general.DomainExportParams, user *data.User) middle
 // DomainGet returns properties of a domain belonging to the current user
 func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, du, r := domainGetWithUser(params.UUID, user, false); r != nil {
+	d, du, r := domainGetWithUser(params.UUID, user, false)
+	if r != nil {
 		return r
-
-		// Prepare a list of federated IdP IDs
-	} else if idps, err := svc.TheDomainService.ListDomainFederatedIdPs(&d.ID); err != nil {
-		return respServiceError(err)
-
-		// Prepare a list of extensions
-	} else if exts, err := svc.TheDomainService.ListDomainExtensions(&d.ID); err != nil {
-		return respServiceError(err)
-
-	} else {
-		// Succeeded
-		return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
-			Domain:          d.ToDTO(),
-			DomainUser:      du.ToDTO(),
-			Extensions:      data.SliceToDTOs[*data.DomainExtension, *models.DomainExtension](exts),
-			FederatedIdpIds: idps,
-		})
 	}
+
+	// Fetch domain config
+	cfg, err := svc.TheDomainConfigService.GetAll(&d.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Prepare a list of federated IdP IDs
+	idps, err := svc.TheDomainService.ListDomainFederatedIdPs(&d.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Prepare a list of extensions
+	exts, err := svc.TheDomainService.ListDomainExtensions(&d.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
+		Configuration:   dynConfigToDTOs(cfg),
+		Domain:          d.ToDTO(),
+		DomainUser:      du.ToDTO(),
+		Extensions:      data.SliceToDTOs[*data.DomainExtension, *models.DomainExtension](exts),
+		FederatedIdpIds: idps,
+	})
 }
 
 func DomainImport(params api_general.DomainImportParams, user *data.User) middleware.Responder {
