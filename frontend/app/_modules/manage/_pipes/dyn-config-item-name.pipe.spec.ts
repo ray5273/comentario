@@ -28,7 +28,7 @@ describe('DynConfigItemNamePipe', () => {
         {in: 'domain.defaults.signup.enableLocal',          want: 'Enable local commenter registration'},
         {in: 'domain.defaults.signup.enableFederated',      want: 'Enable commenter registration via external provider'},
         {in: 'domain.defaults.signup.enableSso',            want: 'Enable commenter registration via SSO'},
-        {in: 'domain.defaults.useGravatar',                 want: 'Use Gravatar for user avatars'},
+        {in: 'integrations.useGravatar',                    want: 'Use Gravatar for user avatars'},
         {in: 'markdown.images.enabled',                     want: 'Enable images in comments'},
         {in: 'markdown.links.enabled',                      want: 'Enable links in comments'},
         {in: 'markdown.tables.enabled',                     want: 'Enable tables in comments'},
@@ -43,7 +43,6 @@ describe('DynConfigItemNamePipe', () => {
         {in: 'signup.enableLocal',                          want: 'Enable local commenter registration'},
         {in: 'signup.enableFederated',                      want: 'Enable commenter registration via external provider'},
         {in: 'signup.enableSso',                            want: 'Enable commenter registration via SSO'},
-        {in: 'useGravatar',                                 want: 'Use Gravatar for user avatars'},
     ]
         .forEach(test =>
             it(`transforms '${test.in}' into '${test.want}'`, () =>

@@ -147,7 +147,7 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#domain_defaults_signup_enableLocal')         .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_signup_enableFederated')     .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_signup_enableSso')           .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#domain_defaults_useGravatar')                .should('not.be.checked').clickLabel().should('be.checked');
+            cy.get('@configEdit').find('#integrations_useGravatar')                   .should('not.be.checked').clickLabel().should('be.checked');
             cy.get('@configEdit').find('#markdown_images_enabled')                    .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#markdown_links_enabled')                     .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#markdown_tables_enabled')                    .should('be.checked')    .clickLabel().should('not.be.checked');
@@ -216,7 +216,7 @@ context('Config Manager', () => {
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsLocalSignupEnabled,       false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsFederatedSignupEnabled,   false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsSsoSignupEnabled,         false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsUseGravatar,              false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.integrationsUseGravatar,                false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled,                  true);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled,                   false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled,                  false);

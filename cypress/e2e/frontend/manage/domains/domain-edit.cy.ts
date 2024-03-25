@@ -273,7 +273,6 @@ context('Domain Edit page', () => {
                     ['Enable commenter registration via external provider', '✔'],
                     ['Enable local commenter registration',                 '✔'],
                     ['Enable commenter registration via SSO',               '✔'],
-                    ['Use Gravatar for user avatars',                       ''],
                     ['Authentication',
                         [
                             'Local (password-based)',
@@ -367,7 +366,6 @@ context('Domain Edit page', () => {
                     ['Enable commenter registration via external provider', '✔'],
                     ['Enable local commenter registration',                 '✔'],
                     ['Enable commenter registration via SSO',               '✔'],
-                    ['Use Gravatar for user avatars',                       ''],
                     ['Authentication',
                         [
                             'Anonymous comments',
@@ -557,7 +555,6 @@ context('Domain Edit page', () => {
                     ['Enable commenter registration via external provider', '✔'],
                     ['Enable local commenter registration',                 '✔'],
                     ['Enable commenter registration via SSO',               '✔'],
-                    ['Use Gravatar for user avatars',                       ''],
                     ['Authentication',                                      'Local (password-based)'],
                     ['Require moderator approval on comment, if',
                         [

@@ -223,7 +223,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		util.GoTimeout(util.AvatarFetchTimeout, func() { _ = svc.TheAvatarService.DownloadAndUpdateByUserID(&user.ID, fedUser.AvatarURL, false) })
 
 		// Otherwise, try to fetch an image from Gravatar, if enabled
-	} else if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+	} else if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 		svc.TheAvatarService.SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
 

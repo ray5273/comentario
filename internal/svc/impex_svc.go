@@ -157,7 +157,7 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 		}
 
 		// If the email is real and Gravatar is enabled, enqueue a fetching operation
-		if realEmail && TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+		if realEmail && TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 			TheAvatarService.QueueGravatarUpdate(&user.ID, user.Email)
 		}
 		userAdded = true

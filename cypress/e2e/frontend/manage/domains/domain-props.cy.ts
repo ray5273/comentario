@@ -60,7 +60,6 @@ context('Domain Properties page', () => {
             ['Enable commenter registration via external provider', '✔'],
             ['Enable local commenter registration',                 '✔'],
             ['Enable commenter registration via SSO',               '✔'],
-            ['Use Gravatar for user avatars',                       ''],
             [
                 'Authentication',
                 [
@@ -120,7 +119,6 @@ context('Domain Properties page', () => {
             ['Enable commenter registration via external provider', '✔'],
             ['Enable local commenter registration',                 '✔'],
             ['Enable commenter registration via SSO',               '✔'],
-            ['Use Gravatar for user avatars',                       ''],
             ['Authentication',                                      ['Anonymous comments', 'Local (password-based)']],
         ]);
     });
@@ -141,7 +139,6 @@ context('Domain Properties page', () => {
             ['Enable commenter registration via external provider', '✔'],
             ['Enable local commenter registration',                 '✔'],
             ['Enable commenter registration via SSO',               '✔'],
-            ['Use Gravatar for user avatars',                       ''],
             ['Authentication',                                      'Local (password-based)'],
         ]);
     });
@@ -162,7 +159,6 @@ context('Domain Properties page', () => {
             ['Enable commenter registration via external provider', '✔'],
             ['Enable local commenter registration',                 '✔'],
             ['Enable commenter registration via SSO',               '✔'],
-            ['Use Gravatar for user avatars',                       ''],
             [
                 'Authentication',
                 [

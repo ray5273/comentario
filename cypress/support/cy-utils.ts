@@ -147,7 +147,7 @@ export enum DYN_CONFIG_ITEMS {
     domainDefaultsLocalSignupEnabled       = 'domain.defaults.signup.enableLocal',
     domainDefaultsFederatedSignupEnabled   = 'domain.defaults.signup.enableFederated',
     domainDefaultsSsoSignupEnabled         = 'domain.defaults.signup.enableSso',
-    domainDefaultsUseGravatar              = 'domain.defaults.useGravatar',
+    integrationsUseGravatar                = 'integrations.useGravatar',
     markdownImagesEnabled                  = 'markdown.images.enabled',
     markdownLinksEnabled                   = 'markdown.links.enabled',
     markdownTablesEnabled                  = 'markdown.tables.enabled',

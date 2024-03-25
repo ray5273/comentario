@@ -21,4 +21,4 @@ This [dynamic configuration](/configuration/backend/dynamic) parameter controls 
 * If set to `On`, new commenters can register on websites embedding comments via SSO.
 * If set to `Off`, SSO registration on websites embedding comments will be forbidden.
 
-This setting doesn't affect *SSO users who are already registered*. They will be able to login even when this setting is disabled. To disable SSO login completely, switch it off in the domain's [authentication settings](/configuration/frontend/domain/authentication).
+This setting doesn't affect *SSO users who are already registered*. They will be able to log in even when this setting is disabled. To disable SSO login completely, switch it off in the domain's [authentication settings](/configuration/frontend/domain/authentication).

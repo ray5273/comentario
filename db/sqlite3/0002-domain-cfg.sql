@@ -11,3 +11,8 @@ create table cm_domain_configuration (
     constraint fk_domain_configuration_domain_id    foreign key (domain_id)    references cm_domains(id) on delete cascade,
     constraint fk_domain_configuration_user_updated foreign key (user_updated) references cm_users(id)   on delete set null
 );
+
+------------------------------------------------------------------------------------------------------------------------
+-- Rename parameters
+------------------------------------------------------------------------------------------------------------------------
+update cm_configuration set key = 'integrations.useGravatar' where key = 'domain.defaults.useGravatar';

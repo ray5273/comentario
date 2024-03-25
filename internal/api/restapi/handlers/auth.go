@@ -470,7 +470,7 @@ func loginUser(user *data.User, host string, req *http.Request) (*data.UserSessi
 	}
 
 	// If Gravatar is enabled, try to fetch the user's avatar, in the background
-	if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+	if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 		svc.TheAvatarService.SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
 
@@ -492,7 +492,7 @@ func signupUser(user *data.User) middleware.Responder {
 
 	// If Gravatar is enabled, try to fetch the user's avatar, ignoring any error. Do that synchronously to let the user
 	// see their avatar right away
-	if svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsUseGravatar) {
+	if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 		svc.TheAvatarService.SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
 

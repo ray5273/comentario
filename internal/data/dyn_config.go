@@ -66,7 +66,7 @@ const (
 	ConfigKeyDomainDefaultsLocalSignupEnabled       DynConfigItemKey = "domain.defaults.signup.enableLocal"
 	ConfigKeyDomainDefaultsFederatedSignupEnabled   DynConfigItemKey = "domain.defaults.signup.enableFederated"
 	ConfigKeyDomainDefaultsSsoSignupEnabled         DynConfigItemKey = "domain.defaults.signup.enableSso"
-	ConfigKeyDomainDefaultsUseGravatar              DynConfigItemKey = "domain.defaults.useGravatar"
+	ConfigKeyIntegrationsUseGravatar                DynConfigItemKey = "integrations.useGravatar"
 	ConfigKeyMarkdownImagesEnabled                  DynConfigItemKey = "markdown.images.enabled"
 	ConfigKeyMarkdownLinksEnabled                   DynConfigItemKey = "markdown.links.enabled"
 	ConfigKeyMarkdownTablesEnabled                  DynConfigItemKey = "markdown.tables.enabled"
@@ -87,7 +87,7 @@ var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
 	ConfigKeyDomainDefaultsLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyDomainDefaultsFederatedSignupEnabled:   {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyDomainDefaultsSsoSignupEnabled:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsUseGravatar:              {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyIntegrationsUseGravatar:                {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyMarkdownImagesEnabled:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyMarkdownLinksEnabled:                   {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 	ConfigKeyMarkdownTablesEnabled:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},

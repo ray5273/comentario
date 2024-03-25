@@ -21,4 +21,4 @@ Comentario's **embedded comment engine** allows to render a [comment thread (tre
 {{< imgfig "/img/comentario-embed-ui-elements.png" "Example of comment tree on a web page." "border shadow p-4" >}}
 
 * There's a variety of login options available for commenters; there's also an [option](/configuration/frontend/domain/authentication) to write a comment anonymously, should the site owner enable it for this specific domain.
-* Users can upload their own avatars, or opt to use [images from Gravatar](/configuration/backend/dynamic/domain.defaults.usegravatar).
+* Users can upload their own avatars, or opt to use [images from Gravatar](/configuration/backend/dynamic/integrations.usegravatar).

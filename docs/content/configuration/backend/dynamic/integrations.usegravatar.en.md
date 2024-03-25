@@ -1,10 +1,11 @@
 ---
 title: Use Gravatar for user avatars
-description: domain.defaults.useGravatar
+description: integrations.useGravatar
 tags:
     - configuration
     - dynamic configuration
     - administration
+    - integration
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter configures the use of the [Gravatar](https://www.gravatar.com) service.

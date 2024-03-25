@@ -18,7 +18,7 @@ export class DynConfigItemNamePipe implements PipeTransform {
         'domain.defaults.signup.enableLocal':          $localize`Enable local commenter registration`,
         'domain.defaults.signup.enableFederated':      $localize`Enable commenter registration via external provider`,
         'domain.defaults.signup.enableSso':            $localize`Enable commenter registration via SSO`,
-        'domain.defaults.useGravatar':                 $localize`Use Gravatar for user avatars`,
+        'integrations.useGravatar':                    $localize`Use Gravatar for user avatars`,
         'markdown.images.enabled':                     $localize`Enable images in comments`,
         'markdown.links.enabled':                      $localize`Enable links in comments`,
         'markdown.tables.enabled':                     $localize`Enable tables in comments`,
