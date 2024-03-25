@@ -138,20 +138,21 @@ export enum DYN_CONFIG_ITEMS {
     authSignupConfirmCommenter             = 'auth.signup.confirm.commenter',
     authSignupConfirmUser                  = 'auth.signup.confirm.user',
     authSignupEnabled                      = 'auth.signup.enabled',
+    integrationsUseGravatar                = 'integrations.useGravatar',
+    operationNewOwnerEnabled               = 'operation.newOwner.enabled',
+    // Domain defaults
     domainDefaultsCommentDeletionAuthor    = 'domain.defaults.comments.deletion.author',
     domainDefaultsCommentDeletionModerator = 'domain.defaults.comments.deletion.moderator',
     domainDefaultsCommentEditingAuthor     = 'domain.defaults.comments.editing.author',
     domainDefaultsCommentEditingModerator  = 'domain.defaults.comments.editing.moderator',
     domainDefaultsEnableCommentVoting      = 'domain.defaults.comments.enableVoting',
     domainDefaultsShowDeletedComments      = 'domain.defaults.comments.showDeleted',
+    domainDefaultsMarkdownImagesEnabled    = 'domain.defaults.markdown.images.enabled',
+    domainDefaultsMarkdownLinksEnabled     = 'domain.defaults.markdown.links.enabled',
+    domainDefaultsMarkdownTablesEnabled    = 'domain.defaults.markdown.tables.enabled',
     domainDefaultsLocalSignupEnabled       = 'domain.defaults.signup.enableLocal',
     domainDefaultsFederatedSignupEnabled   = 'domain.defaults.signup.enableFederated',
     domainDefaultsSsoSignupEnabled         = 'domain.defaults.signup.enableSso',
-    integrationsUseGravatar                = 'integrations.useGravatar',
-    markdownImagesEnabled                  = 'markdown.images.enabled',
-    markdownLinksEnabled                   = 'markdown.links.enabled',
-    markdownTablesEnabled                  = 'markdown.tables.enabled',
-    operationNewOwnerEnabled               = 'operation.newOwner.enabled',
 }
 
 /** Predefined domains, declared in "creation order", i.e. ordered by ts_created. */

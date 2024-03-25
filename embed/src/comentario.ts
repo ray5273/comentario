@@ -466,7 +466,7 @@ export class Comentario extends HTMLElement {
                 this.i18n.t,
                 cs => this.applySort(cs),
                 this.localConfig.commentSort,
-                this.config.dynamic.enableCommentVoting),
+                !!this.pageInfo?.enableCommentVoting),
             // Create a panel for comments
             this.commentsArea = UIToolkit.div('comments').appendTo(this.mainArea!));
     }
@@ -485,10 +485,11 @@ export class Comentario extends HTMLElement {
             parentCard?.children || this.addCommentHost!,
             false,
             '',
+            this.pageInfo!,
             this.config,
             () => this.cancelCommentEdits(),
             async editor => await this.submitNewComment(parentCard, editor.markdown),
-            s => this.apiService.commentPreview(s));
+            s => this.apiService.commentPreview(this.pageInfo!.domainId, s));
     }
 
     /**
@@ -505,10 +506,11 @@ export class Comentario extends HTMLElement {
             card.expandBody!,
             true,
             card.comment.markdown!,
+            this.pageInfo!,
             this.config,
             () => this.cancelCommentEdits(),
             async editor => await this.submitCommentEdits(card, editor.markdown),
-            s => this.apiService.commentPreview(s));
+            s => this.apiService.commentPreview(this.pageInfo!.domainId, s));
     }
 
     /**
@@ -795,7 +797,7 @@ export class Comentario extends HTMLElement {
         await this.apiService.commentDelete(c.id);
 
         // If deleted comments are to be shown
-        if (this.config.dynamic.showDeletedComments) {
+        if (this.pageInfo!.showDeletedComments) {
             // Update the comment, marking it as deleted, and then update the card
             card.comment = this.parentMap.replaceComment(c.id, c.parentId, {
                 isDeleted:   true,
@@ -881,13 +883,13 @@ export class Comentario extends HTMLElement {
             principal:          this.principal,
             commentSort:        this.localConfig.commentSort || 'ta',
             canAddComments:     !this.pageInfo?.isDomainReadonly && !this.pageInfo?.isPageReadonly && this.authAvailable,
-            ownCommentDeletion: this.config.dynamic.enableCommentDeletionAuthor,
-            modCommentDeletion: this.config.dynamic.enableCommentDeletionModerator,
-            ownCommentEditing:  this.config.dynamic.enableCommentEditingAuthor,
-            modCommentEditing:  this.config.dynamic.enableCommentEditingModerator,
+            ownCommentDeletion: !!this.pageInfo?.commentDeletionAuthor,
+            modCommentDeletion: !!this.pageInfo?.commentDeletionModerator,
+            ownCommentEditing:  !!this.pageInfo?.commentEditingAuthor,
+            modCommentEditing:  !!this.pageInfo?.commentEditingModerator,
             curTimeMs:          new Date().getTime(),
             maxLevel:           this.maxLevel,
-            enableVoting:       this.config.dynamic.enableCommentVoting,
+            enableVoting:       !!this.pageInfo?.enableCommentVoting,
             t:                  this.i18n.t,
             onGetAvatar:        user => this.createAvatarElement(user),
             onModerate:         (card, approve) => this.moderateComment(card, approve),

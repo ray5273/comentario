@@ -1,13 +1,13 @@
 ---
 title: Enable tables in comments
-description: markdown.tables.enabled
+description: domain.defaults.markdown.tables.enabled
 tags:
     - configuration
     - dynamic configuration
     - administration
 seeAlso:
-    - markdown.images.enabled
-    - markdown.links.enabled
+    - domain.defaults.markdown.images.enabled
+    - domain.defaults.markdown.links.enabled
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter configures whether tables can be inserted in comments.

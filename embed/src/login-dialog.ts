@@ -2,7 +2,6 @@ import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
 import { PageInfo, TranslateFunc } from './models';
-import { InstanceConfig } from './config';
 
 export class LoginDialog extends Dialog {
 
@@ -15,7 +14,6 @@ export class LoginDialog extends Dialog {
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly baseUrl: string,
-        private readonly config: InstanceConfig,
         private readonly pageInfo: PageInfo,
     ) {
         super(t, parent, t('dlgTitleLogIn'), pos);
@@ -48,11 +46,10 @@ export class LoginDialog extends Dialog {
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
      * @param baseUrl Base URL of the Comentario instance
-     * @param config Comentario configuration obtained from the backend.
      * @param pageInfo Current page data.
      */
-    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, config: InstanceConfig, pageInfo: PageInfo): Promise<LoginDialog> {
-        const dlg = new LoginDialog(t, parent, pos, baseUrl, config, pageInfo);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, pageInfo: PageInfo): Promise<LoginDialog> {
+        const dlg = new LoginDialog(t, parent, pos, baseUrl, pageInfo);
         return dlg.run(dlg);
     }
 
@@ -113,7 +110,7 @@ export class LoginDialog extends Dialog {
         }
 
         // Signup and anonymous auth
-        const canSignup = this.config.dynamic.localSignupEnabled;
+        const canSignup = this.pageInfo.localSignupEnabled;
         if (canSignup || this.pageInfo.authAnonymous) {
             form.append(
                 // Separator

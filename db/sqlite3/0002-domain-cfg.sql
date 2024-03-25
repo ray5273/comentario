@@ -15,4 +15,9 @@ create table cm_domain_configuration (
 ------------------------------------------------------------------------------------------------------------------------
 -- Rename parameters
 ------------------------------------------------------------------------------------------------------------------------
+-- Make "useGravatar" an instance-wide setting (as users are instance-wide entities)
 update cm_configuration set key = 'integrations.useGravatar' where key = 'domain.defaults.useGravatar';
+-- Conversely, make Markdown options domain-level settings
+update cm_configuration set key = 'domain.defaults.markdown.images.enabled' where key = 'markdown.images.enabled';
+update cm_configuration set key = 'domain.defaults.markdown.links.enabled'  where key = 'markdown.links.enabled';
+update cm_configuration set key = 'domain.defaults.markdown.tables.enabled' where key = 'markdown.tables.enabled';

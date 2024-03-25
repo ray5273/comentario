@@ -1,13 +1,13 @@
 ---
 title: Enable images in comments
-description: markdown.images.enabled
+description: domain.defaults.markdown.images.enabled
 tags:
     - configuration
     - dynamic configuration
     - administration
 seeAlso:
-    - markdown.links.enabled
-    - markdown.tables.enabled
+    - domain.defaults.markdown.links.enabled
+    - domain.defaults.markdown.tables.enabled
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter configures whether images can be inserted in comments.

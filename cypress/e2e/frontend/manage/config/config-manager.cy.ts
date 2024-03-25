@@ -213,13 +213,13 @@ context('Config Manager', () => {
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentEditingModerator,  false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsEnableCommentVoting,      false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsShowDeletedComments,      false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsMarkdownImagesEnabled,    true);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsMarkdownLinksEnabled,     false);
+            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsMarkdownTablesEnabled,    false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsLocalSignupEnabled,       false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsFederatedSignupEnabled,   false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsSsoSignupEnabled,         false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.integrationsUseGravatar,                false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled,                  true);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled,                   false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled,                  false);
             cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.operationNewOwnerEnabled,               true);
             cy.reload();
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [

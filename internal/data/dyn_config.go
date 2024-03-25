@@ -49,47 +49,59 @@ const (
 	ConfigDatatypeBoolean DynConfigItemDatatype = "boolean"
 )
 
+// Instance (global) settings
 const (
-	ConfigKeyDomainDefaultsPrefix = "domain.defaults."
+	ConfigKeyAuthSignupConfirmCommenter DynConfigItemKey = "auth.signup.confirm.commenter"
+	ConfigKeyAuthSignupConfirmUser      DynConfigItemKey = "auth.signup.confirm.user"
+	ConfigKeyAuthSignupEnabled          DynConfigItemKey = "auth.signup.enabled"
+	ConfigKeyIntegrationsUseGravatar    DynConfigItemKey = "integrations.useGravatar"
+	ConfigKeyOperationNewOwnerEnabled   DynConfigItemKey = "operation.newOwner.enabled"
 )
 
+// Domain defaults. They are not used directly but serve as defaults for same-named (excluding the "domain.defaults."
+// prefix) domain settings
 const (
-	ConfigKeyAuthSignupConfirmCommenter             DynConfigItemKey = "auth.signup.confirm.commenter"
-	ConfigKeyAuthSignupConfirmUser                  DynConfigItemKey = "auth.signup.confirm.user"
-	ConfigKeyAuthSignupEnabled                      DynConfigItemKey = "auth.signup.enabled"
-	ConfigKeyDomainDefaultsCommentDeletionAuthor    DynConfigItemKey = "domain.defaults.comments.deletion.author"
-	ConfigKeyDomainDefaultsCommentDeletionModerator DynConfigItemKey = "domain.defaults.comments.deletion.moderator"
-	ConfigKeyDomainDefaultsCommentEditingAuthor     DynConfigItemKey = "domain.defaults.comments.editing.author"
-	ConfigKeyDomainDefaultsCommentEditingModerator  DynConfigItemKey = "domain.defaults.comments.editing.moderator"
-	ConfigKeyDomainDefaultsEnableCommentVoting      DynConfigItemKey = "domain.defaults.comments.enableVoting"
-	ConfigKeyDomainDefaultsShowDeletedComments      DynConfigItemKey = "domain.defaults.comments.showDeleted"
-	ConfigKeyDomainDefaultsLocalSignupEnabled       DynConfigItemKey = "domain.defaults.signup.enableLocal"
-	ConfigKeyDomainDefaultsFederatedSignupEnabled   DynConfigItemKey = "domain.defaults.signup.enableFederated"
-	ConfigKeyDomainDefaultsSsoSignupEnabled         DynConfigItemKey = "domain.defaults.signup.enableSso"
-	ConfigKeyIntegrationsUseGravatar                DynConfigItemKey = "integrations.useGravatar"
-	ConfigKeyMarkdownImagesEnabled                  DynConfigItemKey = "markdown.images.enabled"
-	ConfigKeyMarkdownLinksEnabled                   DynConfigItemKey = "markdown.links.enabled"
-	ConfigKeyMarkdownTablesEnabled                  DynConfigItemKey = "markdown.tables.enabled"
-	ConfigKeyOperationNewOwnerEnabled               DynConfigItemKey = "operation.newOwner.enabled"
+	ConfigKeyDomainDefaultsLocalSignupEnabled     DynConfigItemKey = "domain.defaults.signup.enableLocal"     // TODO deprecate
+	ConfigKeyDomainDefaultsFederatedSignupEnabled DynConfigItemKey = "domain.defaults.signup.enableFederated" // TODO deprecate
+	ConfigKeyDomainDefaultsSsoSignupEnabled       DynConfigItemKey = "domain.defaults.signup.enableSso"       // TODO deprecate
 )
+
+// Domain settings
+const (
+	DomainConfigKeyCommentDeletionAuthor    DynConfigItemKey = "comments.deletion.author"
+	DomainConfigKeyCommentDeletionModerator DynConfigItemKey = "comments.deletion.moderator"
+	DomainConfigKeyCommentEditingAuthor     DynConfigItemKey = "comments.editing.author"
+	DomainConfigKeyCommentEditingModerator  DynConfigItemKey = "comments.editing.moderator"
+	DomainConfigKeyEnableCommentVoting      DynConfigItemKey = "comments.enableVoting"
+	DomainConfigKeyShowDeletedComments      DynConfigItemKey = "comments.showDeleted"
+	DomainConfigKeyMarkdownImagesEnabled    DynConfigItemKey = "markdown.images.enabled"
+	DomainConfigKeyMarkdownLinksEnabled     DynConfigItemKey = "markdown.links.enabled"
+	DomainConfigKeyMarkdownTablesEnabled    DynConfigItemKey = "markdown.tables.enabled"
+	DomainConfigKeyLocalSignupEnabled       DynConfigItemKey = "signup.enableLocal"
+	DomainConfigKeyFederatedSignupEnabled   DynConfigItemKey = "signup.enableFederated"
+	DomainConfigKeySsoSignupEnabled         DynConfigItemKey = "signup.enableSso"
+)
+
+// ConfigKeyDomainDefaultsPrefix is a prefix given to domain setting keys that turn them into global domain defaults keys
+const ConfigKeyDomainDefaultsPrefix = "domain.defaults."
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
 var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
-	ConfigKeyAuthSignupConfirmCommenter:             {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyAuthSignupConfirmUser:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyAuthSignupEnabled:                      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsCommentDeletionAuthor:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsCommentDeletionModerator: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsCommentEditingAuthor:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsCommentEditingModerator:  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsEnableCommentVoting:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsShowDeletedComments:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsFederatedSignupEnabled:   {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyDomainDefaultsSsoSignupEnabled:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyIntegrationsUseGravatar:                {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyMarkdownImagesEnabled:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyMarkdownLinksEnabled:                   {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyMarkdownTablesEnabled:                  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
-	ConfigKeyOperationNewOwnerEnabled:               {DefaultValue: "false", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyAuthSignupConfirmCommenter:                                     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyAuthSignupConfirmUser:                                          {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyAuthSignupEnabled:                                              {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyIntegrationsUseGravatar:                                        {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyOperationNewOwnerEnabled:                                       {DefaultValue: "false", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentDeletionAuthor:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentDeletionModerator: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingAuthor:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingModerator:  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyEnableCommentVoting:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyShowDeletedComments:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownLinksEnabled:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownTablesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyFederatedSignupEnabled:   {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeySsoSignupEnabled:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean},
 }

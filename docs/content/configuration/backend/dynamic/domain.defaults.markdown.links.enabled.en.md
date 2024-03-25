@@ -1,13 +1,13 @@
 ---
 title: Enable links in comments
-description: markdown.links.enabled
+description: domain.defaults.markdown.links.enabled
 tags:
     - configuration
     - dynamic configuration
     - administration
 seeAlso:
-    - markdown.images.enabled
-    - markdown.tables.enabled
+    - domain.defaults.markdown.images.enabled
+    - domain.defaults.markdown.tables.enabled
 ---
 
 This [dynamic configuration](/configuration/backend/dynamic) parameter configures whether links can be inserted in comments.

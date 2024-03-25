@@ -271,10 +271,11 @@ export class ApiService {
 
     /**
      * Render comment text into HTML.
+     * @param domainId ID of the current domain.
      * @param markdown Comment text in the Markdown format.
      */
-    async commentPreview(markdown: string): Promise<string> {
-        const r = await this.httpClient.post<ApiCommentPreviewResponse>('embed/comments/preview', {markdown});
+    async commentPreview(domainId: UUID, markdown: string): Promise<string> {
+        const r = await this.httpClient.post<ApiCommentPreviewResponse>('embed/comments/preview', {domainId, markdown});
         return r.html;
     }
 

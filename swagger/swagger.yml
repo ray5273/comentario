@@ -672,6 +672,18 @@ definitions:
       - ssoUrl
       - ssoNonInteractive
       - defaultSort
+      - commentDeletionAuthor
+      - commentDeletionModerator
+      - commentEditingAuthor
+      - commentEditingModerator
+      - enableCommentVoting
+      - showDeletedComments
+      - localSignupEnabled
+      - federatedSignupEnabled
+      - ssoSignupEnabled
+      - markdownImagesEnabled
+      - markdownLinksEnabled
+      - markdownTablesEnabled
     properties:
       domainId:
         type: string
@@ -729,6 +741,66 @@ definitions:
         items:
           $ref: "#/definitions/federatedIdentityProvider"
         description: List of enabled federated identity providers
+      commentDeletionAuthor:
+        type: boolean
+        description: Whether comment authors are allowed to delete their comments
+        x-isnullable: false
+        x-omitempty: false
+      commentDeletionModerator:
+        type: boolean
+        description: Whether domain moderators are allowed to delete comments
+        x-isnullable: false
+        x-omitempty: false
+      commentEditingAuthor:
+        type: boolean
+        description: Whether comment authors are allowed to edit their comments
+        x-isnullable: false
+        x-omitempty: false
+      commentEditingModerator:
+        type: boolean
+        description: Whether domain moderators are allowed to edit comments
+        x-isnullable: false
+        x-omitempty: false
+      enableCommentVoting:
+        type: boolean
+        description: Whether voting on comments is enabled
+        x-isnullable: false
+        x-omitempty: false
+      showDeletedComments:
+        type: boolean
+        description: Whether deleted comments should be shown
+        x-isnullable: false
+        x-omitempty: false
+      localSignupEnabled:
+        type: boolean
+        description: Whether new users can register locally (with email and password)
+        x-isnullable: false
+        x-omitempty: false
+      federatedSignupEnabled:
+        type: boolean
+        description: Whether new users can register via a federated identity provider
+        x-isnullable: false
+        x-omitempty: false
+      ssoSignupEnabled:
+        type: boolean
+        description: Whether new users can register via SSO
+        x-isnullable: false
+        x-omitempty: false
+      markdownImagesEnabled:
+        type: boolean
+        description: Whether images are enabled in Markdown
+        x-isnullable: false
+        x-omitempty: false
+      markdownLinksEnabled:
+        type: boolean
+        description: Whether links are enabled in Markdown
+        x-isnullable: false
+        x-omitempty: false
+      markdownTablesEnabled:
+        type: boolean
+        description: Whether tables are enabled in Markdown
+        x-isnullable: false
+        x-omitempty: false
 
   path:
     description: Path on a certain host
@@ -1961,8 +2033,14 @@ paths:
           schema:
             type: object
             required:
+              - domainId
               - markdown
             properties:
+              domainId:
+                description: ID of the domain the page resides on
+                type: string
+                format: uuid
+                x-isnullable: false
               markdown:
                 description: Comment text in the markdown format
                 type: string

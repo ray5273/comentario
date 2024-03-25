@@ -280,9 +280,9 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 		if !del {
 			c.HTML = util.MarkdownToHTML(
 				comment.Markdown,
-				TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-				TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-				TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled))
+				TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
+				TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
+				TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled))
 		}
 
 		// File it under the appropriate parent ID

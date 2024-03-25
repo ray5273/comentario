@@ -149,6 +149,30 @@ export interface PageInfo {
     readonly defaultSort: CommentSort;
     /** List of enabled federated identity providers */
     readonly idps?: FederatedIdentityProvider[];
+    /** Whether comment authors are allowed to delete their comments */
+    readonly commentDeletionAuthor: boolean;
+    /** Whether domain moderators are allowed to delete comments */
+    readonly commentDeletionModerator: boolean;
+    /** Whether comment authors are allowed to edit their comments */
+    readonly commentEditingAuthor: boolean;
+    /** Whether domain moderators are allowed to edit comments */
+    readonly commentEditingModerator: boolean;
+    /** Whether voting on comments is enabled */
+    readonly enableCommentVoting: boolean;
+    /** Whether deleted comments should be shown */
+    readonly showDeletedComments: boolean;
+    /** Whether new users can register locally (with email and password) */
+    readonly localSignupEnabled: boolean;
+    /** Whether new users can register via a federated identity provider */
+    readonly federatedSignupEnabled: boolean;
+    /** Whether new users can register via SSO */
+    readonly ssoSignupEnabled: boolean;
+    /** Whether images are enabled in Markdown */
+    readonly markdownImagesEnabled: boolean;
+    /** Whether links are enabled in Markdown */
+    readonly markdownLinksEnabled: boolean;
+    /** Whether tables are enabled in Markdown */
+    readonly markdownTablesEnabled: boolean;
 }
 
 /** Commenter users mapped by their IDs. There will be no entry for a commenter that corresponds to a deleted user. */

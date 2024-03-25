@@ -86,7 +86,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             this.root,
             {ref: this.btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
-            this.config,
             this._pageInfo!);
         if (dlg.confirmed) {
             switch (dlg.result) {

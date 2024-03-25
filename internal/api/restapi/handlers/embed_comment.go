@@ -65,7 +65,7 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 	moderator := user.IsSuperuser || domainUser.CanModerate()
 	anonymous := !moderator && user.IsAnonymous()
 	ownComment := !anonymous && comment.UserCreated.Valid && comment.UserCreated.UUID == user.ID
-	delHidden := comment.IsDeleted && !svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsShowDeletedComments)
+	delHidden := comment.IsDeleted && !svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments)
 	if rejected || delHidden || pending && !moderator && !ownComment {
 		return respNotFound(nil)
 	}
@@ -124,17 +124,29 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 
 	// Prepare page info
 	pageInfo := &models.PageInfo{
-		AuthAnonymous:     domain.AuthAnonymous,
-		AuthLocal:         domain.AuthLocal,
-		AuthSso:           domain.AuthSSO,
-		DefaultSort:       models.CommentSort(domain.DefaultSort),
-		DomainID:          strfmt.UUID(domain.ID.String()),
-		DomainName:        domain.DisplayName(),
-		IsDomainReadonly:  domain.IsReadonly,
-		IsPageReadonly:    page.IsReadonly,
-		PageID:            strfmt.UUID(page.ID.String()),
-		SsoNonInteractive: domain.SSONonInteractive,
-		SsoURL:            domain.SSOURL,
+		AuthAnonymous:            domain.AuthAnonymous,
+		AuthLocal:                domain.AuthLocal,
+		AuthSso:                  domain.AuthSSO,
+		CommentDeletionAuthor:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionAuthor),
+		CommentDeletionModerator: svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionModerator),
+		CommentEditingAuthor:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingAuthor),
+		CommentEditingModerator:  svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingModerator),
+		DefaultSort:              models.CommentSort(domain.DefaultSort),
+		DomainID:                 strfmt.UUID(domain.ID.String()),
+		DomainName:               domain.DisplayName(),
+		EnableCommentVoting:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting),
+		FederatedSignupEnabled:   svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled),
+		IsDomainReadonly:         domain.IsReadonly,
+		IsPageReadonly:           page.IsReadonly,
+		LocalSignupEnabled:       svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyLocalSignupEnabled),
+		MarkdownImagesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
+		MarkdownLinksEnabled:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
+		MarkdownTablesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled),
+		PageID:                   strfmt.UUID(page.ID.String()),
+		ShowDeletedComments:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
+		SsoNonInteractive:        domain.SSONonInteractive,
+		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
+		SsoURL:                   domain.SSOURL,
 	}
 
 	// Fetch the domain's identity providers
@@ -159,7 +171,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		true,
 		true,
 		false, // Don't include rejected: no one's interested in spam
-		svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsShowDeletedComments),
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
 		true, // Filter out orphans (they won't show up on the client anyway)
 		"",
 		"",
@@ -258,9 +270,9 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	}
 	comment.HTML = util.MarkdownToHTML(
 		comment.Markdown,
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled))
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled))
 
 	// Determine comment state
 	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
@@ -307,12 +319,18 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 }
 
 func EmbedCommentPreview(params api_embed.EmbedCommentPreviewParams) middleware.Responder {
+	// Extract domain ID
+	domainID, r := parseUUID(params.Body.DomainID)
+	if r != nil {
+		return r
+	}
+
 	// Render the passed markdown
 	html := util.MarkdownToHTML(
 		params.Body.Markdown,
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled))
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownLinksEnabled),
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownImagesEnabled),
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownTablesEnabled))
 
 	// Succeeded
 	return api_embed.NewEmbedCommentPreviewOK().WithPayload(&api_embed.EmbedCommentPreviewOKBody{HTML: html})
@@ -358,7 +376,7 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Check the user is allowed to update the comment
-	if r := Verifier.UserCanUpdateComment(user, domainUser, comment); r != nil {
+	if r := Verifier.UserCanUpdateComment(&domain.ID, user, domainUser, comment); r != nil {
 		return r
 	}
 
@@ -379,9 +397,9 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	comment.Markdown = strings.TrimSpace(params.Body.Markdown)
 	comment.HTML = util.MarkdownToHTML(
 		comment.Markdown,
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-		svc.TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled))
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
+		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled))
 
 	// Persist the edits in the database
 	if err := svc.TheCommentService.UpdateText(&comment.ID, comment.Markdown, comment.HTML); err != nil {
@@ -407,13 +425,13 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 
 func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) middleware.Responder {
 	// Find the comment and the related objects
-	comment, page, _, _, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
+	comment, page, domain, _, r := commentGetCommentPageDomainUser(params.UUID, &user.ID)
 	if r != nil {
 		return r
 	}
 
 	// Make sure voting is enabled
-	if !svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsEnableCommentVoting) {
+	if !svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting) {
 		return respForbidden(ErrorFeatureDisabled.WithDetails("comment voting"))
 	}
 

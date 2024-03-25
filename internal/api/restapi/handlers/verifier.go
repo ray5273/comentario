@@ -38,7 +38,7 @@ type VerifierService interface {
 	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
 	// UserCanDeleteComment verifies the given domain user is allowed to delete the specified comment. domainUser can be
 	// nil
-	UserCanDeleteComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
+	UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
 	// UserCanManageDomain verifies the given user is a superuser or the domain user is a domain owner. domainUser can
 	// be nil
 	UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
@@ -49,7 +49,7 @@ type VerifierService interface {
 	UserCanSignupWithEmail(email string) middleware.Responder
 	// UserCanUpdateComment verifies the given domain user is allowed to update the specified comment. domainUser can be
 	// nil
-	UserCanUpdateComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
+	UserCanUpdateComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
 	// UserIsAuthenticated verifies the given user is an authenticated one
 	UserIsAuthenticated(user *data.User) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
@@ -183,14 +183,18 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 	return nil, nil
 }
 
-func (v *verifier) UserCanDeleteComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
+func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
 	// If the user is a moderator+, deletion is controlled by the "moderator deletion" setting
-	if (user.IsSuperuser || domainUser.CanModerate()) && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentDeletionModerator) {
+	if (user.IsSuperuser || domainUser.CanModerate()) &&
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentDeletionModerator) {
 		return nil
 	}
 
 	// If it's the comment author, deletion is controlled by the "author deletion" setting
-	if !comment.IsAnonymous() && domainUser != nil && comment.UserCreated.UUID == domainUser.UserID && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentDeletionAuthor) {
+	if !comment.IsAnonymous() &&
+		domainUser != nil &&
+		comment.UserCreated.UUID == domainUser.UserID &&
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentDeletionAuthor) {
 		return nil
 	}
 
@@ -238,14 +242,18 @@ func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
 	return respUnauthorized(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP))
 }
 
-func (v *verifier) UserCanUpdateComment(user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
+func (v *verifier) UserCanUpdateComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
 	// If the user is a moderator+, editing is controlled by the "moderator editing" setting
-	if (user.IsSuperuser || domainUser.CanModerate()) && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentEditingModerator) {
+	if (user.IsSuperuser || domainUser.CanModerate()) &&
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentEditingModerator) {
 		return nil
 	}
 
 	// If it's the comment author, editing is controlled by the "author editing" setting
-	if !comment.IsAnonymous() && domainUser != nil && comment.UserCreated.UUID == domainUser.UserID && svc.TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsCommentEditingAuthor) {
+	if !comment.IsAnonymous() &&
+		domainUser != nil &&
+		comment.UserCreated.UUID == domainUser.UserID &&
+		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentEditingAuthor) {
 		return nil
 	}
 

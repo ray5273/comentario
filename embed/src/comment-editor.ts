@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { InstanceConfig } from './config';
-import { TranslateFunc } from './models';
+import { PageInfo, TranslateFunc } from './models';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
 export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
@@ -20,6 +20,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
      * @param parent Parent element to host the editor.
      * @param isEdit Whether it's adding a new comment (false) or editing an existing one (true).
      * @param initialText Initial text to insert into the editor.
+     * @param pageInfo Current page data.
      * @param config Comentario configuration obtained from the backend.
      * @param onCancel Cancel callback.
      * @param onSubmit Submit callback.
@@ -30,6 +31,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         private readonly parent: Wrap<any>,
         isEdit: boolean,
         initialText: string,
+        private readonly pageInfo: PageInfo,
         private readonly config: InstanceConfig,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,
@@ -216,13 +218,13 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                 UIToolkit.toolButton('bold',          this.t('btnBold'),          () => this.applyInlinePattern('**$**{}')),
                 UIToolkit.toolButton('italic',        this.t('btnItalic'),        () => this.applyInlinePattern('*$*{}')),
                 UIToolkit.toolButton('strikethrough', this.t('btnStrikethrough'), () => this.applyInlinePattern('~~$~~{}')),
-                this.config.dynamic.linksEnabled &&
+                this.pageInfo.markdownLinksEnabled &&
                     UIToolkit.toolButton('link',      this.t('btnLink'),          () => this.applyInlinePattern('[$]({https://example.com})', this.t('sampleText'))),
                 UIToolkit.toolButton('quote',         this.t('btnQuote'),         () => this.applyBlockPattern('> ')),
                 UIToolkit.toolButton('code',          this.t('btnCode'),          () => this.applyInlinePattern('`$`{}')),
-                this.config.dynamic.imagesEnabled &&
+                this.pageInfo.markdownImagesEnabled &&
                     UIToolkit.toolButton('image',     this.t('btnImage'),         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
-                this.config.dynamic.tablesEnabled &&
+                this.pageInfo.markdownTablesEnabled &&
                     UIToolkit.toolButton('table',     this.t('btnTable'),         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
                 UIToolkit.toolButton('bulletList',    this.t('btnBulletList'),    () => this.applyBlockPattern('* ')),
                 UIToolkit.toolButton('numberedList',  this.t('btnNumberedList'),  () => this.applyBlockPattern('1. ')),

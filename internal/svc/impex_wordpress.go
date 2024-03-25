@@ -165,9 +165,9 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 					UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
 					UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
 					HTML: util.MarkdownToHTML(comment.Content,
-						TheDynConfigService.GetBool(data.ConfigKeyMarkdownLinksEnabled),
-						TheDynConfigService.GetBool(data.ConfigKeyMarkdownImagesEnabled),
-						TheDynConfigService.GetBool(data.ConfigKeyMarkdownTablesEnabled)),
+						TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
+						TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
+						TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled)),
 				}
 
 				// File it under the appropriate parent ID

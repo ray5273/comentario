@@ -65,60 +65,6 @@ export class LocalConfig {
     }
 }
 
-/**
- * Wrapper around the dynamic instance config, with some convenience methods.
- */
-export class DynamicConfig {
-
-    constructor(
-        private readonly cfg?: Map<string, DynamicConfigItem>,
-    ) {}
-
-    get enableCommentDeletionAuthor(): boolean {
-        return this.getBool('domain.defaults.comments.deletion.author');
-    }
-
-    get enableCommentDeletionModerator(): boolean {
-        return this.getBool('domain.defaults.comments.deletion.moderator');
-    }
-
-    get enableCommentEditingAuthor(): boolean {
-        return this.getBool('domain.defaults.comments.editing.author');
-    }
-
-    get enableCommentEditingModerator(): boolean {
-        return this.getBool('domain.defaults.comments.editing.moderator');
-    }
-
-    get enableCommentVoting(): boolean {
-        return this.getBool('domain.defaults.comments.enableVoting');
-    }
-
-    get imagesEnabled(): boolean {
-        return this.getBool('markdown.images.enabled');
-    }
-
-    get linksEnabled(): boolean {
-        return this.getBool('markdown.links.enabled');
-    }
-
-    get localSignupEnabled(): boolean {
-        return this.getBool('domain.defaults.signup.enableLocal');
-    }
-
-    get showDeletedComments(): boolean {
-        return this.getBool('domain.defaults.comments.showDeleted');
-    }
-
-    get tablesEnabled(): boolean {
-        return this.getBool('markdown.tables.enabled');
-    }
-
-    getBool(key: string): boolean {
-        return this.cfg?.get(key)?.value === 'true';
-    }
-}
-
 /** Instance configuration. */
 export class InstanceConfig {
 
@@ -126,7 +72,7 @@ export class InstanceConfig {
         /** Static config (named "statics" to avoid a clash with the "static" keyword). */
         readonly statics: InstanceStaticConfig,
         /** Dynamic config. */
-        readonly dynamic: DynamicConfig,
+        readonly dynamic: DynamicConfigItem[],
     ) {}
 
     /**
@@ -147,17 +93,14 @@ export class InstanceConfig {
                 resultPageSize:    25,
                 liveUpdateEnabled: false,
             },
-            new DynamicConfig());
+            []);
     }
 
     /**
      * Instantiates and returns a new instance config based on the provided API response.
      */
     static of(r: ApiConfigResponse) {
-        return new this(
-            r.staticConfig,
-            // Convert the config item array into a map
-            new DynamicConfig(new Map(r.dynamicConfig?.map(i => [i.key, i]))));
+        return new this(r.staticConfig, r.dynamicConfig || []);
     }
 
     /**

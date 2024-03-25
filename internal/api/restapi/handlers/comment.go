@@ -189,7 +189,7 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 	}
 
 	// Check the user is allowed to delete the comment
-	if r := Verifier.UserCanDeleteComment(user, domainUser, comment); r != nil {
+	if r := Verifier.UserCanDeleteComment(&domain.ID, user, domainUser, comment); r != nil {
 		return r
 	}
 
