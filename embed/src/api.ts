@@ -212,14 +212,15 @@ export class ApiService {
 
     /**
      * Sign up as a new commenter. Return whether the user has been immediately confirmed.
+     * @param domainId ID of the current domain.
      * @param email User's email.
      * @param name User's full name.
      * @param password User's password.
      * @param websiteUrl Optional website URL of the user.
      * @param url URL the user signed up on.
      */
-    async authSignup(email: string, name: string, password: string, websiteUrl: string | undefined, url: string): Promise<boolean> {
-        const r = await this.httpClient.post<ApiAuthSignupResponse>('embed/auth/signup', {email, name, password, websiteUrl, url});
+    async authSignup(domainId: UUID, email: string, name: string, password: string, websiteUrl: string | undefined, url: string): Promise<boolean> {
+        const r = await this.httpClient.post<ApiAuthSignupResponse>('embed/auth/signup', {domainId, email, name, password, websiteUrl, url});
         return r.isConfirmed;
     }
 

@@ -58,14 +58,6 @@ const (
 	ConfigKeyOperationNewOwnerEnabled   DynConfigItemKey = "operation.newOwner.enabled"
 )
 
-// Domain defaults. They are not used directly but serve as defaults for same-named (excluding the "domain.defaults."
-// prefix) domain settings
-const (
-	ConfigKeyDomainDefaultsLocalSignupEnabled     DynConfigItemKey = "domain.defaults.signup.enableLocal"     // TODO deprecate
-	ConfigKeyDomainDefaultsFederatedSignupEnabled DynConfigItemKey = "domain.defaults.signup.enableFederated" // TODO deprecate
-	ConfigKeyDomainDefaultsSsoSignupEnabled       DynConfigItemKey = "domain.defaults.signup.enableSso"       // TODO deprecate
-)
-
 // Domain settings
 const (
 	DomainConfigKeyCommentDeletionAuthor    DynConfigItemKey = "comments.deletion.author"

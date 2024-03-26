@@ -1,4 +1,4 @@
-import { DOMAINS, DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAIN_CONFIG_ITEM_KEY, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment Editor', () => {
@@ -302,7 +302,7 @@ context('Comment Editor', () => {
 
         before(cy.backendReset);
 
-        it('shows buttons based on instance config', () => {
+        it('shows buttons based on domain config', () => {
             const btns = [
                 'Bold', 'Italic', 'Strikethrough', 'Link', 'Quote', 'Code', 'Image', 'Table', 'Bullet list',
                 'Numbered list', 'Markdown help'];
@@ -312,25 +312,25 @@ context('Comment Editor', () => {
             cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', btns);
 
             // Disable links and the Link button is gone
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled, false);
+            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownLinksEnabled, false);
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title')
                 .should('arrayMatch', btns.filter(b => b !== 'Link'));
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownLinksEnabled, true);
+            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownLinksEnabled, true);
 
             // Disable images and the Image button is gone
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled, false);
+            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownImagesEnabled, false);
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title')
                 .should('arrayMatch', btns.filter(b => b !== 'Image'));
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownImagesEnabled, true);
+            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownImagesEnabled, true);
 
             // Disable tables and the Table button is gone
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled, false);
+            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownTablesEnabled, false);
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title')
                 .should('arrayMatch', btns.filter(b => b !== 'Table'));
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.markdownTablesEnabled, true);
+            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownTablesEnabled, true);
         });
 
         Object.entries(buttonTests).forEach(([button, btnTests]) =>

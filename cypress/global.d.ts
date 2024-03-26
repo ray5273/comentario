@@ -412,6 +412,14 @@ declare namespace Cypress {
         backendPatchDomain(id: string, values: any): Chainable<void>;
 
         /**
+         * Update the value of the given config item for the specified domain.
+         * @param id ID of the domain to patch.
+         * @param key Configuration item key
+         * @param value New configuration item value
+         */
+        backendUpdateDomainConfigItem(id: string, key: string, value: string | number | boolean): Chainable<void>;
+
+        /**
          * Update the list of federated identity providers enabled for the specified domain.
          * @param id ID of the domain to patch.
          * @param idps List of enabled IdP IDs.

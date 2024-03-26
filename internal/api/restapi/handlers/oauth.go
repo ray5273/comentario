@@ -43,32 +43,38 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	var authSession *data.AuthSession
 	if cookie, err := params.HTTPRequest.Cookie(util.CookieNameAuthSession); err != nil {
 		logger.Debugf("Auth session cookie error: %v", err)
-		return oauthFailure(false, errors.New("auth session cookie missing"))
+		return oauthFailure(false, "auth session cookie missing", err)
 
 		// Parse the session ID
 	} else if authSessID, err := uuid.Parse(cookie.Value); err != nil {
-		logger.Debugf("Invalid auth session ID in cookie: %v", err)
-		return oauthFailure(false, errors.New("invalid auth session ID"))
+		return oauthFailure(false, "invalid auth session ID", err)
 
 		// Find and delete the session
 	} else if authSession, err = svc.TheAuthSessionService.TakeByID(&authSessID); errors.Is(err, svc.ErrNotFound) {
-		logger.Debugf("No auth session found with ID=%v: %v", authSessID, err)
-		return oauthFailure(false, errors.New("auth session not found"))
+		return oauthFailure(false, "auth session not found", fmt.Errorf("no auth session found with ID=%v: %w", authSessID, err))
 
 	} else if err != nil {
 		// Any other DB-related error
-		return oauthFailure(false, err)
+		return oauthFailureInternal(false, err)
 	}
 
 	// Obtain the token linked by the auth session
 	token, err := svc.TheTokenService.FindByValue(authSession.TokenValue, false)
 	if err != nil {
-		return oauthFailure(false, err)
+		return oauthFailureInternal(false, err)
 
 		// Make sure the token is still anonymous
 	} else if !token.IsAnonymous() {
-		logger.Debugf("Token isn't anonymous but belongs to user %v", &token.Owner)
-		return oauthFailure(false, ErrorBadToken.Error())
+		return oauthFailure(false, ErrorBadToken.Message, fmt.Errorf("token isn't anonymous but belongs to user %v", &token.Owner))
+	}
+
+	// If it's a commenter login/signup, find the domain the user is authenticating on
+	var domain *data.Domain
+	if authSession.Host != "" {
+		domain, err = svc.TheDomainService.FindByHost(authSession.Host)
+		if err != nil {
+			return oauthFailureInternal(false, err)
+		}
 	}
 
 	reqParams := params.HTTPRequest.URL.Query()
@@ -76,41 +82,34 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 	// SSO auth
 	nonIntSSO := false
-	var ssoDomain *data.Domain
 	if provider == nil {
-		// Find the domain the user is authenticating on
-		ssoDomain, err = svc.TheDomainService.FindByHost(authSession.Host)
-		if err != nil {
-			return oauthFailure(false, err)
-		}
-
 		// Validate domain SSO config
-		if r := Verifier.DomainSSOConfig(ssoDomain); r != nil {
+		if r := Verifier.DomainSSOConfig(domain); r != nil {
 			return r
 		}
 
-		nonIntSSO = ssoDomain.SSONonInteractive
+		nonIntSSO = domain.SSONonInteractive
 
 		// Verify the payload
 		payload := ssoPayload{}
 		var payloadBytes []byte
 		if s := reqParams.Get("payload"); s == "" {
-			return oauthFailure(nonIntSSO, errors.New("payload is missing"))
+			return oauthFailure(nonIntSSO, "payload is missing", nil)
 		} else if payloadBytes, err = hex.DecodeString(s); err != nil {
-			return oauthFailure(nonIntSSO, fmt.Errorf("payload: invalid hex encoding: %s", err.Error()))
+			return oauthFailure(nonIntSSO, "payload: invalid hex encoding", err)
 		} else if err = json.Unmarshal(payloadBytes, &payload); err != nil {
-			return oauthFailure(nonIntSSO, fmt.Errorf("payload: failed to unmarshal: %s", err.Error()))
+			return oauthFailureInternal(nonIntSSO, fmt.Errorf("payload: failed to unmarshal: %w", err))
 		} else if payload.Token != token.String() {
-			return oauthFailure(nonIntSSO, errors.New("payload: invalid token"))
+			return oauthFailure(nonIntSSO, "payload: invalid token", nil)
 		}
 
 		// Verify the HMAC signature
 		if s := reqParams.Get("hmac"); s == "" {
-			return oauthFailure(nonIntSSO, errors.New("hmac is missing"))
+			return oauthFailure(nonIntSSO, "hmac is missing", nil)
 		} else if signature, err := hex.DecodeString(s); err != nil {
-			return oauthFailure(nonIntSSO, fmt.Errorf("hmac: invalid hex encoding: %s", err.Error()))
-		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, ssoDomain.SSOSecret)) {
-			return oauthFailure(nonIntSSO, fmt.Errorf("hmac: signature verification failed"))
+			return oauthFailure(nonIntSSO, "hmac: invalid hex encoding", err)
+		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, domain.SSOSecret)) {
+			return oauthFailure(nonIntSSO, "hmac: signature verification failed", nil)
 		}
 
 		// Prepare a federated user
@@ -126,55 +125,68 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		// Recover the original provider session
 		sess, err := provider.UnmarshalSession(authSession.Data)
 		if err != nil {
-			logger.Debugf("provider.UnmarshalSession() failed: %v", err)
-			return oauthFailure(false, errors.New("auth session unmarshalling"))
+			return oauthFailureInternal(false, fmt.Errorf("failed to unmarshal auth session: %w", err))
 		}
 
 		// Validate the session state
-		if err := validateAuthSessionState(sess, params.HTTPRequest); err != nil {
-			return oauthFailure(false, err)
+		if msg, err := validateAuthSessionState(sess, params.HTTPRequest); err != nil {
+			return oauthFailure(false, msg, err)
 		}
 
 		// Obtain the OAuth tokens
 		_, err = sess.Authorize(provider, reqParams)
 		if err != nil {
-			logger.Debugf("sess.Authorize() failed: %v", err)
-			return oauthFailure(false, errors.New("auth session unauthorised"))
+			return oauthFailure(false, "auth session unauthorised", err)
 		}
 
 		// Fetch the federated user
 		fedUser, err = provider.FetchUser(sess)
 		if err != nil {
-			logger.Debugf("provider.FetchUser() failed: %v", err)
-			return oauthFailure(false, errors.New("fetching user"))
+			return oauthFailure(false, "fetching user failed", err)
 		}
 	}
 
 	// Validate the federated user
 	// -- UserID
 	if fedUser.UserID == "" {
-		return oauthFailure(nonIntSSO, errors.New("user ID missing"))
+		return oauthFailure(nonIntSSO, "user ID missing", nil)
 	}
 	// -- Email
 	if fedUser.Email == "" {
-		return oauthFailure(nonIntSSO, errors.New("user email missing"))
+		return oauthFailure(nonIntSSO, "user email missing", nil)
 	}
 	// -- Name
 	if fedUser.Name == "" {
-		return oauthFailure(nonIntSSO, errors.New("user name missing"))
+		return oauthFailure(nonIntSSO, "user name missing", nil)
 	}
 
 	// Try to find an existing user by email
 	var user *data.User
 	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); errors.Is(err, svc.ErrNotFound) {
 		// No such email/user: it's a signup. Check whether signup is enabled
-		setting := data.ConfigKeyAuthSignupEnabled // If it's a frontend signup
-		if authSession.Host != "" {
-			// It's a commenter signup
-			setting = util.If(provider == nil, data.ConfigKeyDomainDefaultsSsoSignupEnabled, data.ConfigKeyDomainDefaultsFederatedSignupEnabled)
+		var cfgItem *data.DynConfigItem
+		if domain == nil {
+			// Frontend signup
+			cfgItem, err = svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupEnabled)
+
+		} else if provider != nil {
+			// Federated embed signup
+			cfgItem, err = svc.TheDomainConfigService.Get(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled)
+
+		} else {
+			// SSO embed signup
+			cfgItem, err = svc.TheDomainConfigService.Get(&domain.ID, data.DomainConfigKeySsoSignupEnabled)
 		}
-		if !svc.TheDynConfigService.GetBool(setting) {
-			return oauthFailure(nonIntSSO, ErrorSignupsForbidden.Error())
+
+		// Check for setting fetching error
+		if err != nil {
+			return oauthFailureInternal(nonIntSSO, err)
+
+		}
+
+		// Check if the setting enables signup
+		if !cfgItem.AsBool() {
+			return oauthFailure(nonIntSSO, ErrorSignupsForbidden.Message, nil)
 		}
 
 		// Insert a new user
@@ -183,24 +195,24 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			WithSignup(params.HTTPRequest, authSession.Host).
 			WithFederated(fedUser.UserID, params.Provider)
 		if err := svc.TheUserService.Create(user); err != nil {
-			return respServiceError(err)
+			return oauthFailureInternal(nonIntSSO, err)
 		}
 
 	} else if err != nil {
 		// Any other DB error
-		return respServiceError(err)
+		return oauthFailureInternal(nonIntSSO, err)
 
 		// Email found. If a local account exists
 	} else if user.IsLocal() {
-		return oauthFailure(nonIntSSO, ErrorLoginLocally.Error())
+		return oauthFailure(nonIntSSO, ErrorLoginLocally.Message, nil)
 
 		// Existing account is a federated one. Make sure the user isn't changing their IdP
 	} else if provider != nil && user.FederatedIdP != params.Provider {
-		return oauthFailure(nonIntSSO, ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).Error())
+		return oauthFailure(nonIntSSO, ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).String(), nil)
 
 		// If user is authenticating via SSO, it must stay that way
 	} else if provider == nil && !user.FederatedSSO {
-		return oauthFailure(nonIntSSO, ErrorLoginUsingSSO.Error())
+		return oauthFailure(nonIntSSO, ErrorLoginUsingSSO.Message, nil)
 
 		// Verify they're allowed to log in
 	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
@@ -213,7 +225,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			WithName(fedUser.Name).
 			WithFederated(fedUser.UserID, params.Provider)
 		if err := svc.TheUserService.Update(user); err != nil {
-			return respServiceError(err)
+			return oauthFailureInternal(nonIntSSO, err)
 		}
 	}
 
@@ -230,14 +242,14 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	// Update the token by binding it to the authenticated user
 	token.Owner = user.ID
 	if err := svc.TheTokenService.Update(token); err != nil {
-		return respServiceError(err)
+		return oauthFailureInternal(nonIntSSO, err)
 	}
 
 	// Auth successful. If it's non-interactive SSO
 	var resp middleware.Responder
 	if nonIntSSO {
 		// Send a success message to the parent window
-		resp = postNonInteractiveLoginResponse(nil)
+		resp = postNonInteractiveLoginResponse("")
 	} else {
 		// Interactive auth: close the login popup
 		resp = closeParentWindowResponse()
@@ -256,7 +268,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	if params.Provider == "sso" {
 		// Verify there's a host specified
 		if host == "" {
-			return respBadRequest(ErrorInvalidPropertyValue.WithDetails("host"))
+			return oauthFailure(false, ErrorInvalidPropertyValue.WithDetails("host").String(), nil)
 		}
 
 		// Otherwise it's a goth provider: find it
@@ -266,22 +278,25 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 
 	// Try to find the passed anonymous token
 	token, err := svc.TheTokenService.FindByStrValue(params.Token, false)
-	if err != nil {
-		return respBadRequest(ErrorBadToken)
-	}
-
-	// Make sure the token is anonymous
-	if !token.IsAnonymous() {
-		return respBadRequest(ErrorBadToken)
+	if errors.Is(err, svc.ErrNotFound) {
+		// Token not found
+		return oauthFailure(false, ErrorBadToken.Message, nil)
+	} else if err != nil {
+		// Any other database error
+		return oauthFailureInternal(false, err)
+		// Make sure the token is anonymous
+	} else if !token.IsAnonymous() {
+		return oauthFailure(false, ErrorBadToken.Message, fmt.Errorf("token isn't anonymous but belongs to user %v", &token.Owner))
 	}
 
 	// SSO auth
 	var authURL, sessionData string
+	nonIntSSO := false
 	if provider == nil {
 		// Find the domain the user is authenticating on
 		domain, err := svc.TheDomainService.FindByHost(host)
 		if err != nil {
-			return oauthFailure(false, err)
+			return oauthFailureInternal(false, err)
 		}
 
 		// Validate domain SSO config
@@ -289,10 +304,12 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 			return r
 		}
 
+		nonIntSSO = domain.SSONonInteractive
+
 		// Parse the SSO URL
 		ssoURL, err := util.ParseAbsoluteURL(domain.SSOURL, true, false)
 		if err != nil {
-			return oauthFailure(domain.SSONonInteractive, err)
+			return oauthFailure(nonIntSSO, "failed to parse SSO URL", err)
 		}
 
 		// Add the token and its HMAC signature to the SSO URL
@@ -307,8 +324,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		// Generate a random base64-encoded nonce to use as the state on the auth URL
 		var state string
 		if b, err := util.RandomBytes(64); err != nil {
-			logger.Warningf("AuthOauthInit(): RandomBytes() failed: %v", err)
-			return respInternalError(nil)
+			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit: RandomBytes() failed: %w", err))
 		} else {
 			state = base64.URLEncoding.EncodeToString(b)
 		}
@@ -316,15 +332,13 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		// Initiate an authentication session
 		sess, err := provider.BeginAuth(state)
 		if err != nil {
-			logger.Warningf("AuthOauthInit(): provider.BeginAuth() failed: %v", err)
-			return respInternalError(nil)
+			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit: provider.BeginAuth() failed: %w", err))
 		}
 
 		// Fetch the URL for authenticating with the provider
 		authURL, err = sess.GetAuthURL()
 		if err != nil {
-			logger.Warningf("AuthOauthInit(): sess.GetAuthURL() failed: %v", err)
-			return respInternalError(nil)
+			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit: sess.GetAuthURL() failed: %w", err))
 		}
 
 		// Serialise the session for persisting
@@ -334,7 +348,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	// Store the session in the cookie/DB
 	authSession, err := svc.TheAuthSessionService.Create(sessionData, host, token.Value)
 	if err != nil {
-		return respServiceError(err)
+		return oauthFailureInternal(nonIntSSO, fmt.Errorf("AuthOauthInit: failed to create auth session: %w", err))
 	}
 
 	// Succeeded: redirect the user to the federated identity provider, setting the state cookie
@@ -350,12 +364,19 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 }
 
 // oauthFailure returns either a generic "Unauthorized" responder (in case of interactive authentication), with the
-// error message in the details, or a postMessage responder (for non-interactive auth). Also wipes out any auth session
-// cookie
-func oauthFailure(nonInteractive bool, err error) middleware.Responder {
+// given message in the details, or a postMessage responder (for non-interactive auth), and logging the passed error.
+// The reason it's handled this way is that logging may expose actual (confidential) error details, whereas the response
+// is kept generic. If err == nil, a new error is constructed using the message; this use case assumes there are no
+// additional details available to be logged.
+// Also, wipes out any auth session cookie
+func oauthFailure(nonInteractive bool, message string, err error) middleware.Responder {
+	if err == nil {
+		err = errors.New(message)
+	}
+	logger.Warningf("%s OAuth failed: %s: %v", util.If(nonInteractive, "Non-interactive", "Interactive"), message, err)
 	var r middleware.Responder
 	if nonInteractive {
-		r = postNonInteractiveLoginResponse(err)
+		r = postNonInteractiveLoginResponse(message)
 	} else {
 		r = api_general.NewAuthOauthInitUnauthorized().
 			WithPayload(fmt.Sprintf(
@@ -365,37 +386,41 @@ func oauthFailure(nonInteractive bool, err error) middleware.Responder {
 				</head>
 				<body>
 					<h1>Unauthorized</h1>
-					<p>Federated authentication failed with the error: %s</p>
+					<p>Federated authentication failed with the error: <strong>%s</strong></p>
 				</body>
 				</html>`,
-				err.Error()))
+				message))
 	}
 
-	// Respond wiping the auth sessio cookie
+	// Respond wiping the auth session cookie
 	return NewCookieResponder(r).WithoutCookie(util.CookieNameAuthSession, "/")
+}
+
+// oauthFailureInternal calls oauthFailure for an internal error
+func oauthFailureInternal(nonInteractive bool, err error) middleware.Responder {
+	return oauthFailure(nonInteractive, "internal error", err)
 }
 
 // validateAuthSessionState verifies the session token initially submitted, if any, is matching the one returned with
 // the given callback request
-func validateAuthSessionState(sess goth.Session, req *http.Request) error {
+func validateAuthSessionState(sess goth.Session, req *http.Request) (string, error) {
 	// Fetch the original session's URL
 	rawAuthURL, err := sess.GetAuthURL()
 	if err != nil {
-		return err
+		return "failed to get auth URL from session", err
 	}
 
 	// Parse it
 	authURL, err := url.Parse(rawAuthURL)
 	if err != nil {
-		return err
+		return "failed to parse auth URL", err
 	}
 
 	// If there was a state initially, the value returned with the request must be the same
 	if originalState := authURL.Query().Get("state"); originalState != "" {
 		if reqState := req.URL.Query().Get("state"); reqState != originalState {
-			logger.Debugf("Auth session state mismatch: want '%s', got '%s'", originalState, reqState)
-			return errors.New("auth session state mismatch")
+			return "auth session state mismatch", fmt.Errorf("want '%s', got '%s'", originalState, reqState)
 		}
 	}
-	return nil
+	return "", nil
 }

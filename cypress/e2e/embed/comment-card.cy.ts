@@ -1,4 +1,4 @@
-import { DYN_CONFIG_ITEMS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAIN_CONFIG_ITEM_KEY, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 
 context('Comment card', () => {
 
@@ -547,10 +547,10 @@ context('Comment card', () => {
                                 isOff(test.editMod, 'moderator editing'),
                             () => {
                                 // Update the config as needed
-                                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentDeletionAuthor,    test.delOwn);
-                                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentDeletionModerator, test.delMod);
-                                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentEditingAuthor,     test.editOwn);
-                                cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentEditingModerator,  test.editMod);
+                                cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.commentDeletionAuthor,    test.delOwn);
+                                cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.commentDeletionModerator, test.delMod);
+                                cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.commentEditingAuthor,     test.editOwn);
+                                cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.commentEditingModerator,  test.editMod);
 
                                 // Open Home test page
                                 goHome();
@@ -562,7 +562,7 @@ context('Comment card', () => {
                 it('hides scores when voting is disabled', () => {
                     // Disable voting
                     cy.backendReset();
-                    cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsEnableCommentVoting, false);
+                    cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.enableCommentVoting, false);
 
                     // Open Home test page
                     goHome();

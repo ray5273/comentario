@@ -79,8 +79,14 @@ func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, _ *data.User) middl
 }
 
 func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responder {
+	// Extract domain ID
+	domainID, r := parseUUID(params.Body.DomainID)
+	if r != nil {
+		return r
+	}
+
 	// Verify new users are allowed
-	if r := Verifier.LocalSignupEnabled(true); r != nil {
+	if r := Verifier.LocalSignupEnabled(domainID); r != nil {
 		return r
 	}
 

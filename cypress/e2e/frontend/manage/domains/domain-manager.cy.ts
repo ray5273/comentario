@@ -1,4 +1,4 @@
-import { DOMAINS, DYN_CONFIG_ITEMS, PATHS, USERS } from '../../../../support/cy-utils';
+import { DOMAINS, INSTANCE_CONFIG_ITEM_KEY, PATHS, USERS } from '../../../../support/cy-utils';
 
 context('Domain Manager', () => {
 
@@ -39,7 +39,7 @@ context('Domain Manager', () => {
             .contains('a', 'Add domain').should('not.exist');
 
         // Enable new owners and reload
-        cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.operationNewOwnerEnabled, true);
+        cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.operationNewOwnerEnabled, true);
         cy.reload();
         makeDMAliases(true, false);
 

@@ -87,6 +87,7 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 	e2eHandler = *hPtr
 	api.APIE2eE2eConfigDynamicItemSetHandler = api_e2e.E2eConfigDynamicItemSetHandlerFunc(E2eConfigDynamicItemSet)
 	api.APIE2eE2eDomainPatchHandler = api_e2e.E2eDomainPatchHandlerFunc(E2eDomainPatch)
+	api.APIE2eE2eDomainUpdateConfigItemHandler = api_e2e.E2eDomainUpdateConfigItemHandlerFunc(E2eDomainUpdateConfigItem)
 	api.APIE2eE2eDomainUpdateIdpsHandler = api_e2e.E2eDomainUpdateIdpsHandlerFunc(E2eDomainUpdateIdps)
 	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
 	api.APIE2eE2eOAuthSSONonInteractiveHandler = api_e2e.E2eOAuthSSONonInteractiveHandlerFunc(E2eOAuthSSONonInteractive)
@@ -158,6 +159,28 @@ func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
 
 	// Succeeded
 	return api_e2e.NewE2eDomainPatchNoContent()
+}
+
+func E2eDomainUpdateConfigItem(params api_e2e.E2eDomainUpdateConfigItemParams) middleware.Responder {
+	// Parse domain ID
+	domainID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Update the domain setting
+	err := svc.TheDomainConfigService.Update(
+		domainID,
+		nil,
+		map[data.DynConfigItemKey]string{
+			data.DynConfigItemKey(swag.StringValue(params.Body.Key)): swag.StringValue(params.Body.Value),
+		})
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_e2e.NewE2eDomainUpdateConfigItemNoContent()
 }
 
 func E2eDomainUpdateIdps(params api_e2e.E2eDomainUpdateIdpsParams) middleware.Responder {

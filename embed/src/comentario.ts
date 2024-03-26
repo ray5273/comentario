@@ -580,7 +580,8 @@ export class Comentario extends HTMLElement {
      */
     private async signup(data: SignupData): Promise<void> {
         // Sign the user up
-        const isConfirmed = await this.apiService.authSignup(data.email, data.name, data.password, data.websiteUrl, this.location.href);
+        const isConfirmed = await this.apiService.authSignup(
+            this.pageInfo!.domainId, data.email, data.name, data.password, data.websiteUrl, this.location.href);
 
         // If the user is confirmed, log them immediately in
         if (isConfirmed) {

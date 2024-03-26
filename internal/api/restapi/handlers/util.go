@@ -29,8 +29,8 @@ func closeParentWindowResponse() middleware.Responder {
 }
 
 // postNonInteractiveLoginResponse returns a responder that renders an HTML script posting an SSO login response to the
-// parent window. If err == nil, it's success response, otherwise an error
-func postNonInteractiveLoginResponse(err error) middleware.Responder {
+// parent window. If errMessage == "", it's success response, otherwise an error
+func postNonInteractiveLoginResponse(errMessage string) middleware.Responder {
 	// Prepare a response message payload
 	ssoResponse := struct {
 		Type    string `json:"type"`
@@ -38,10 +38,8 @@ func postNonInteractiveLoginResponse(err error) middleware.Responder {
 		Error   string `json:"error,omitempty"`
 	}{
 		Type:    "auth.sso.result",
-		Success: err == nil,
-	}
-	if err != nil {
-		ssoResponse.Error = err.Error()
+		Success: errMessage == "",
+		Error:   errMessage,
 	}
 
 	// Marshal the response object into a string

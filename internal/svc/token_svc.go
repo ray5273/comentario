@@ -18,9 +18,9 @@ type TokenService interface {
 	Create(t *data.Token) error
 	// DeleteByValue deletes a token by its binary value
 	DeleteByValue(value []byte) error
-	// FindByStrValue finds and returns a token by its string value, or nil if not found
+	// FindByStrValue finds and returns a token by its string value
 	FindByStrValue(s string, allowExpired bool) (*data.Token, error)
-	// FindByValue finds and returns a token by its binary value, or nil if not found
+	// FindByValue finds and returns a token by its binary value
 	FindByValue(value []byte, allowExpired bool) (*data.Token, error)
 	// Update updates the token record in the database
 	Update(t *data.Token) error

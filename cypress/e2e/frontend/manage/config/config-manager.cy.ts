@@ -1,4 +1,4 @@
-import { DYN_CONFIG_ITEMS, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import { INSTANCE_CONFIG_ITEM_KEY, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Config Manager', () => {
 
@@ -114,13 +114,13 @@ context('Config Manager', () => {
                 ['Allow moderators to edit comments',                   '✔'],
                 ['Enable voting on comments',                           '✔'],
                 ['Show deleted comments',                               '✔'],
+                ['Enable images in comments',                           '✔'],
+                ['Enable links in comments',                            '✔'],
+                ['Enable tables in comments',                           '✔'],
                 ['Enable commenter registration via external provider', '✔'],
                 ['Enable local commenter registration',                 '✔'],
                 ['Enable commenter registration via SSO',               '✔'],
                 ['Use Gravatar for user avatars',                       ''],
-                ['Enable images in comments',                           '✔'],
-                ['Enable links in comments',                            '✔'],
-                ['Enable tables in comments',                           '✔'],
                 ['Non-owner users can add domains',                     ''],
             ]);
 
@@ -144,13 +144,13 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#domain_defaults_comments_editing_moderator') .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_enableVoting')      .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_showDeleted')       .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_markdown_images_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_markdown_links_enabled')     .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_markdown_tables_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_signup_enableLocal')         .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_signup_enableFederated')     .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_signup_enableSso')           .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#integrations_useGravatar')                   .should('not.be.checked').clickLabel().should('be.checked');
-            cy.get('@configEdit').find('#markdown_images_enabled')                    .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#markdown_links_enabled')                     .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#markdown_tables_enabled')                    .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#operation_newOwner_enabled')                 .should('not.be.checked').clickLabel().should('be.checked');
 
             // Submit and get a success toast
@@ -169,13 +169,13 @@ context('Config Manager', () => {
                 ['Allow moderators to edit comments',                   ''],
                 ['Enable voting on comments',                           ''],
                 ['Show deleted comments',                               ''],
+                ['Enable images in comments',                           ''],
+                ['Enable links in comments',                            ''],
+                ['Enable tables in comments',                           ''],
                 ['Enable commenter registration via external provider', ''],
                 ['Enable local commenter registration',                 ''],
                 ['Enable commenter registration via SSO',               ''],
                 ['Use Gravatar for user avatars',                       '✔'],
-                ['Enable images in comments',                           ''],
-                ['Enable links in comments',                            ''],
-                ['Enable tables in comments',                           ''],
                 ['Non-owner users can add domains',                     '✔'],
             ]);
 
@@ -193,34 +193,34 @@ context('Config Manager', () => {
                 ['Allow moderators to edit comments',                   '✔'],
                 ['Enable voting on comments',                           '✔'],
                 ['Show deleted comments',                               '✔'],
+                ['Enable images in comments',                           '✔'],
+                ['Enable links in comments',                            '✔'],
+                ['Enable tables in comments',                           '✔'],
                 ['Enable commenter registration via external provider', '✔'],
                 ['Enable local commenter registration',                 '✔'],
                 ['Enable commenter registration via SSO',               '✔'],
                 ['Use Gravatar for user avatars',                       '✔'],
-                ['Enable images in comments',                           '✔'],
-                ['Enable links in comments',                            '✔'],
-                ['Enable tables in comments',                           '✔'],
                 ['Non-owner users can add domains',                     ''],
             ]);
 
             // Tweak the config using backend calls
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupConfirmCommenter,             false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupConfirmUser,                  false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.authSignupEnabled,                      false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentDeletionAuthor,    false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentDeletionModerator, false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentEditingAuthor,     false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsCommentEditingModerator,  false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsEnableCommentVoting,      false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsShowDeletedComments,      false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsMarkdownImagesEnabled,    true);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsMarkdownLinksEnabled,     false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsMarkdownTablesEnabled,    false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsLocalSignupEnabled,       false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsFederatedSignupEnabled,   false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.domainDefaultsSsoSignupEnabled,         false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.integrationsUseGravatar,                false);
-            cy.backendSetDynConfigItem(DYN_CONFIG_ITEMS.operationNewOwnerEnabled,               true);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupConfirmCommenter,             false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupConfirmUser,                  false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupEnabled,                      false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentDeletionAuthor,    false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentDeletionModerator, false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentEditingAuthor,     false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentEditingModerator,  false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsEnableCommentVoting,      false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsShowDeletedComments,      false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsMarkdownImagesEnabled,    true);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsMarkdownLinksEnabled,     false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsMarkdownTablesEnabled,    false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsLocalSignupEnabled,       false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsFederatedSignupEnabled,   false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsSsoSignupEnabled,         false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.integrationsUseGravatar,                false);
+            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.operationNewOwnerEnabled,               true);
             cy.reload();
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
                 ['New commenters must confirm their email',             ''],
@@ -232,13 +232,13 @@ context('Config Manager', () => {
                 ['Allow moderators to edit comments',                   ''],
                 ['Enable voting on comments',                           ''],
                 ['Show deleted comments',                               ''],
+                ['Enable images in comments',                           '✔'],
+                ['Enable links in comments',                            ''],
+                ['Enable tables in comments',                           ''],
                 ['Enable commenter registration via external provider', ''],
                 ['Enable local commenter registration',                 ''],
                 ['Enable commenter registration via SSO',               ''],
                 ['Use Gravatar for user avatars',                       ''],
-                ['Enable images in comments',                           '✔'],
-                ['Enable links in comments',                            ''],
-                ['Enable tables in comments',                           ''],
                 ['Non-owner users can add domains',                     '✔'],
             ]);
         });

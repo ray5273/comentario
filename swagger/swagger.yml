@@ -1840,11 +1840,17 @@ paths:
           schema:
             type: object
             required:
+              - domainId
               - email
               - name
               - password
               - url
             properties:
+              domainId:
+                description: ID of the domain the user is signing up on
+                type: string
+                format: uuid
+                x-isnullable: false
               email:
                 type: string
                 format: email
@@ -3297,6 +3303,24 @@ paths:
       responses:
         204:
           description: Domain properties have been updated
+
+  /e2e/domains/{uuid}/config:
+    put:
+      operationId: E2eDomainUpdateConfigItem
+      summary: Update a dynamic configuration item value for the specified domain
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+              $ref: "#/definitions/dynamicConfigItem"
+      responses:
+        204:
+          description: Domain configuration item has been updated
 
   /e2e/domains/{uuid}/idps:
     put:
