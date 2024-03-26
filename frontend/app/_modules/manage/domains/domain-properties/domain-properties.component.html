@@ -67,16 +67,23 @@
                         </div>
                     }
                     <!-- Configuration -->
-                    @for (kv of domainMeta!.config | keyvalue; track kv.key) {
+                    @for (secItems of configItems! | keyvalue; track secItems.key) {
+                        <!-- Section heading -->
                         <div>
-                            <dt>{{ kv.key | dynConfigItemName }}</dt>
-                            <dd><app-dyn-config-item-value [item]="kv.value"/></dd>
+                            <dt>{{ secItems.key | dynConfigSectionName }}</dt>
                         </div>
+                        <!-- Section items -->
+                        @for (item of secItems.value; track item.key) {
+                            <div>
+                                <dt class="fw-normal ms-3">{{ item.key | dynConfigItemName }}</dt>
+                                <dd><app-dyn-config-item-value [item]="item"/></dd>
+                            </div>
+                        }
                     }
-                    <!-- Authentication -->
+                    <!-- Authentication methods -->
                     <div>
                         <dt>
-                            <ng-container i18n>Authentication</ng-container>
+                            <ng-container i18n>Authentication methods</ng-container>
                             <app-info-icon docLink="configuration/frontend/domain/authentication/" position="right"/>
                         </dt>
                         <dd>

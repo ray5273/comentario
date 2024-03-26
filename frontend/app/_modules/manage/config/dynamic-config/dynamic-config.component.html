@@ -25,14 +25,21 @@
         <!-- Config items -->
         <div class="col-sm">
             <dl class="detail-table" id="dynamic-config-items">
-                @for (item of items; track item.key) {
+                @for (secItems of items | keyvalue; track secItems.key) {
+                    <!-- Section heading -->
                     <div>
-                        <dt>
-                            <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
-                            <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
-                        </dt>
-                        <dd><app-dyn-config-item-value [item]="item"/></dd>
+                        <dt>{{ secItems.key | dynConfigSectionName }}</dt>
                     </div>
+                    <!-- Section items -->
+                    @for (item of secItems.value; track item.key) {
+                        <div>
+                            <dt class="fw-normal ms-3">
+                                <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
+                                <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
+                            </dt>
+                            <dd><app-dyn-config-item-value [item]="item"/></dd>
+                        </div>
+                    }
                 }
             </dl>
         </div>

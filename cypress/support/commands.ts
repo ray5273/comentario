@@ -149,7 +149,15 @@ Cypress.Commands.addQuery(
     'dlTexts',
     function dlTexts() {
         return (element: JQueryWithSelector) => element.find('dt')
-            .map((_, dt) => [[dt.innerText, (dt.nextSibling as HTMLElement).innerText]])
+            .map((_, dt) => {
+                const r = [dt.innerText];
+                // <dd> is optional
+                const dd = dt.nextSibling as HTMLElement;
+                if (dd) {
+                    r.push(dd.innerText);
+                }
+                return [r];
+            })
             .get();
     });
 

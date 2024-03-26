@@ -28,8 +28,11 @@ export type DomainUserKind = 'superuser' | 'owner' | 'moderator' | 'commenter' |
 // An object that combines domain, user, and IdP data
 export class DomainMeta {
 
-    /** Domain configuration items. */
-    readonly config: Map<string, DynamicConfigItem>;
+    /** Domain configuration items, mapped by key. */
+    readonly configByKey: { [key: string]: DynamicConfigItem };
+
+    /** Domain configuration items, grouped by section key. */
+    readonly configBySection: { [section: string]: DynamicConfigItem[] };
 
     /** Kind of the current user in relation to the domain. */
     readonly userKind?: DomainUserKind;
@@ -46,7 +49,7 @@ export class DomainMeta {
         /** Domain user corresponding to the currently authenticated principal. */
         readonly domainUser?: DomainUser,
         /** List of domain configuration items. */
-        config?: DynamicConfigItem[],
+        configItems?: DynamicConfigItem[],
         /** List of federated IdP IDs enabled for the domain. */
         readonly federatedIdpIds?: FederatedIdpId[],
         /** List of extensions enabled for the domain. */
@@ -56,8 +59,12 @@ export class DomainMeta {
         /** Timestamp of the last time the principal was updated (fetched or reset). */
         readonly principalUpdated?: number,
     ) {
-        // Create a map of configuration items
-        this.config = new Map<string, DynamicConfigItem>(config?.map(i => [i.key, i]));
+        // Sort configuration items by section and item key
+        configItems?.sort((a, b) => a.section?.localeCompare(b.section ?? '') || a.key.localeCompare(b.key));
+
+        // Create configuration item maps
+        this.configByKey     = this.getConfigByKey(configItems);
+        this.configBySection = this.getConfigBySection(configItems);
 
         // Calculate additional properties
         if (principal) {
@@ -75,6 +82,35 @@ export class DomainMeta {
         }
         this.canManageDomain = !!(domain && (principal?.isSuperuser || domainUser?.isOwner));
         this.canModerateDomain = this.canManageDomain || !!(domain && domainUser?.isModerator);
+    }
+
+    /**
+     * Return an object whose keys are configuration items' keys and values are the items.
+     */
+    private getConfigByKey(items?: DynamicConfigItem[]): { [key: string]: DynamicConfigItem } {
+        return items?.reduce(
+            (acc, i) => {
+                acc[i.key] = i;
+                return acc;
+            },
+            {} as { [key: string]: DynamicConfigItem }) || {};
+    }
+
+    /**
+     * Return an object whose keys are configuration items' section keys and values are the item lists.
+     */
+    private getConfigBySection(items?: DynamicConfigItem[]): { [key: string]: DynamicConfigItem[] } {
+        return items?.reduce(
+            (acc, i) => {
+                const sec = i.section || '';
+                if (sec in acc) {
+                    acc[sec].push(i);
+                } else {
+                    acc[sec] = [i];
+                }
+                return acc;
+            },
+            {} as { [key: string]: DynamicConfigItem[] }) || {};
     }
 }
 

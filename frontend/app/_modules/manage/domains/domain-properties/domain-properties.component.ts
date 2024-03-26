@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { combineLatestWith, first } from 'rxjs';
 import { faEdit, faTicket } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { DomainExtension, FederatedIdentityProvider } from '../../../../../generated-api';
+import { DomainExtension, DynamicConfigItem, FederatedIdentityProvider } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { Paths } from '../../../../_utils/consts';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
@@ -16,6 +16,9 @@ export class DomainPropertiesComponent implements OnInit {
 
     /** Domain/user metadata. */
     domainMeta?: DomainMeta;
+
+    /** Domain config items, grouped by section. */
+    configItems?: { [section: string]: DynamicConfigItem[] };
 
     /** List of federated identity providers configured in the domain. */
     fedIdps?: FederatedIdentityProvider[];
@@ -56,7 +59,8 @@ export class DomainPropertiesComponent implements OnInit {
                 untilDestroyed(this),
                 combineLatestWith(this.cfgSvc.extensions.pipe(first())))
             .subscribe(([meta, exts]) => {
-                this.domainMeta = meta;
+                this.domainMeta  = meta;
+                this.configItems = meta.configBySection;
                 // Only add those federated identity providers available globally
                 this.fedIdps = this.cfgSvc.staticConfig.federatedIdps?.filter(idp => meta.federatedIdpIds?.includes(idp.id));
                 // Only add those extensions available globally

@@ -457,6 +457,9 @@ definitions:
         type: string
         readOnly: true
         description: Item's default value
+      section:
+        type: string
+        description: Key of the section the item belongs to
 
   dynamicConfigItemDatatype:
     description: Dynamic configuration item datatype

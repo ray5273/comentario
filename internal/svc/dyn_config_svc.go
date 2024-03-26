@@ -246,6 +246,7 @@ func getInstanceDefaults() (map[data.DynConfigItemKey]*data.DynConfigItem, error
 			Value:        item.DefaultValue,
 			Datatype:     item.Datatype,
 			DefaultValue: item.DefaultValue,
+			Section:      item.Section,
 		}
 	}
 	return m, nil

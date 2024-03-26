@@ -65,6 +65,7 @@ func getDomainDefaults() (map[data.DynConfigItemKey]*data.DynConfigItem, error) 
 				Value:        item.Value,
 				Datatype:     item.Datatype,
 				DefaultValue: item.Value,
+				Section:      item.Section,
 			}
 		}
 	}

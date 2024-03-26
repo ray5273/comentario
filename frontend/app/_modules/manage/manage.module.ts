@@ -52,6 +52,7 @@ import { DomainInstallComponent } from './domains/domain-properties/domain-insta
 import { UserLinkComponent } from './user-link/user-link.component';
 import { DynConfigItemNamePipe } from './_pipes/dyn-config-item-name.pipe';
 import { DynConfigItemValueComponent } from './dyn-config-item-value/dyn-config-item-value.component';
+import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe';
 
 @NgModule({
     declarations: [
@@ -83,6 +84,7 @@ import { DynConfigItemValueComponent } from './dyn-config-item-value/dyn-config-
         DomainUserPropertiesComponent,
         DynamicConfigComponent,
         DynConfigItemNamePipe,
+        DynConfigSectionNamePipe,
         DynConfigItemValueComponent,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
