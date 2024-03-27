@@ -7,6 +7,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
 import { ToastService } from '../../../../_services/toast.service';
+import { DynamicConfig } from '../../../../_models/config';
 
 describe('ConfigEditComponent', () => {
 
@@ -18,7 +19,7 @@ describe('ConfigEditComponent', () => {
             declarations: [ConfigEditComponent],
             imports: [ReactiveFormsModule, ToolsModule],
             providers: [
-                MockProvider(ConfigService, {dynamicConfig: of({}) as any}),
+                MockProvider(ConfigService, {dynamicConfig: of(new DynamicConfig())}),
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),
             ],

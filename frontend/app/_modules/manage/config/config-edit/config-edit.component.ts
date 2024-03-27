@@ -3,11 +3,12 @@ import { FormBuilder, FormGroup } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { first } from 'rxjs';
-import { ApiGeneralService, DynamicConfigItem } from '../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
+import { DynamicConfig } from '../../../../_models/config';
 
 @UntilDestroy()
 @Component({
@@ -17,7 +18,7 @@ import { ToastService } from '../../../../_services/toast.service';
 export class ConfigEditComponent implements OnInit {
 
     /** Items being edited. */
-    items?: DynamicConfigItem[];
+    config?: DynamicConfig;
 
     /** Edit form. */
     form?: FormGroup;
@@ -40,9 +41,9 @@ export class ConfigEditComponent implements OnInit {
                 untilDestroyed(this),
                 first(),
                 this.loading.processing())
-            .subscribe(m => {
+            .subscribe(c => {
                 // Convert the map into configuration items, sorting it by key
-                this.items = Array.from(m.values()).sort((a, b) => a.key.localeCompare(b.key));
+                this.config = c;
 
                 // Create a form
                 this.initForm();
@@ -51,7 +52,7 @@ export class ConfigEditComponent implements OnInit {
 
     submit() {
         // Collect config values
-        const vals = this.items!.map(i => ({
+        const vals = this.config!.items.map(i => ({
             key:   i.key,
             value: String(this.form!.controls[this.ctlName(i.key)].value),
         }));
@@ -79,7 +80,7 @@ export class ConfigEditComponent implements OnInit {
 
     private initForm() {
         // Convert the configuration items into a control config
-        const ctls = this.items!.reduce(
+        const ctls = this.config!.items.reduce(
             (acc, e) => {
                 acc[this.ctlName(e.key)] = e.datatype === 'boolean' ? e.value === 'true' : e.value;
                 return acc;

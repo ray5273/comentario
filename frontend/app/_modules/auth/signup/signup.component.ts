@@ -9,6 +9,7 @@ import { ConfigService } from '../../../_services/config.service';
 import { Animations } from '../../../_utils/animations';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
+import { InstanceConfigItemKey } from '../../../_models/config';
 
 @Component({
     selector: 'app-signup',
@@ -44,7 +45,7 @@ export class SignupComponent {
     ) {
         this.cfgSvc.dynamicConfig
             .pipe(first())
-            .subscribe(dc => this.signupAllowed = dc.get('auth.signup.enabled')?.value === 'true');
+            .subscribe(dc => this.signupAllowed = dc.getBool(InstanceConfigItemKey.authSignupEnabled));
     }
 
     submit(): void {

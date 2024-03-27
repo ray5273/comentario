@@ -11,6 +11,7 @@ import { DomainMeta, DomainSelectorService } from '../../_services/domain-select
 import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 import { Animations } from '../../../../_utils/animations';
+import { InstanceConfigItemKey } from '../../../../_models/config';
 
 @UntilDestroy()
 @Component({
@@ -67,7 +68,7 @@ export class DomainManagerComponent implements OnInit {
                 // new owners are allowed
                 switchMap(() => this.domainMeta?.principal?.isSuperuser ?
                     of(true) :
-                    this.configSvc.dynamicConfig.pipe(first(), map(dc => dc.get('operation.newOwner.enabled')?.value === 'true'))),
+                    this.configSvc.dynamicConfig.pipe(first(), map(dc => dc.getBool(InstanceConfigItemKey.operationNewOwnerEnabled)))),
                 // If no new owner enabled, the user must already own at least one domain
                 switchMap(enabled => enabled ?
                     of(true) :

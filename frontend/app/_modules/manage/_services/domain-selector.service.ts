@@ -9,7 +9,6 @@ import {
     DomainExtension,
     DomainGet200Response,
     DomainUser,
-    DynamicConfigItem,
     FederatedIdpId,
     Principal,
 } from '../../../../generated-api';
@@ -17,6 +16,7 @@ import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
 import { ProcessingStatus } from '../../../_utils/processing-status';
+import { DynamicConfig } from '../../../_models/config';
 
 interface DomainSelectorSettings {
     domainId?: string;
@@ -27,12 +27,6 @@ export type DomainUserKind = 'superuser' | 'owner' | 'moderator' | 'commenter' |
 
 // An object that combines domain, user, and IdP data
 export class DomainMeta {
-
-    /** Domain configuration items, mapped by key. */
-    readonly configByKey: { [key: string]: DynamicConfigItem };
-
-    /** Domain configuration items, grouped by section key. */
-    readonly configBySection: { [section: string]: DynamicConfigItem[] };
 
     /** Kind of the current user in relation to the domain. */
     readonly userKind?: DomainUserKind;
@@ -48,8 +42,8 @@ export class DomainMeta {
         readonly domain?: Domain,
         /** Domain user corresponding to the currently authenticated principal. */
         readonly domainUser?: DomainUser,
-        /** List of domain configuration items. */
-        configItems?: DynamicConfigItem[],
+        /** Domain dynamic configuration. */
+        readonly config?: DynamicConfig,
         /** List of federated IdP IDs enabled for the domain. */
         readonly federatedIdpIds?: FederatedIdpId[],
         /** List of extensions enabled for the domain. */
@@ -59,13 +53,6 @@ export class DomainMeta {
         /** Timestamp of the last time the principal was updated (fetched or reset). */
         readonly principalUpdated?: number,
     ) {
-        // Sort configuration items by section and item key
-        configItems?.sort((a, b) => a.section?.localeCompare(b.section ?? '') || a.key.localeCompare(b.key));
-
-        // Create configuration item maps
-        this.configByKey     = this.getConfigByKey(configItems);
-        this.configBySection = this.getConfigBySection(configItems);
-
         // Calculate additional properties
         if (principal) {
             if (principal.isSuperuser) {
@@ -82,35 +69,6 @@ export class DomainMeta {
         }
         this.canManageDomain = !!(domain && (principal?.isSuperuser || domainUser?.isOwner));
         this.canModerateDomain = this.canManageDomain || !!(domain && domainUser?.isModerator);
-    }
-
-    /**
-     * Return an object whose keys are configuration items' keys and values are the items.
-     */
-    private getConfigByKey(items?: DynamicConfigItem[]): { [key: string]: DynamicConfigItem } {
-        return items?.reduce(
-            (acc, i) => {
-                acc[i.key] = i;
-                return acc;
-            },
-            {} as { [key: string]: DynamicConfigItem }) || {};
-    }
-
-    /**
-     * Return an object whose keys are configuration items' section keys and values are the item lists.
-     */
-    private getConfigBySection(items?: DynamicConfigItem[]): { [key: string]: DynamicConfigItem[] } {
-        return items?.reduce(
-            (acc, i) => {
-                const sec = i.section || '';
-                if (sec in acc) {
-                    acc[sec].push(i);
-                } else {
-                    acc[sec] = [i];
-                }
-                return acc;
-            },
-            {} as { [key: string]: DynamicConfigItem[] }) || {};
     }
 }
 
@@ -220,7 +178,7 @@ export class DomainSelectorService {
         this.domainMeta$.next(new DomainMeta(
             v?.domain,
             v?.domainUser,
-            v?.configuration,
+            v?.configuration ? new DynamicConfig(v.configuration) : undefined,
             v?.federatedIdpIds,
             v?.extensions,
             this.principal,

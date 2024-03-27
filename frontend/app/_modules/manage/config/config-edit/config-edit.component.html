@@ -1,42 +1,51 @@
 <!-- Edit form -->
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    @if (form) {
+    @if (form && config) {
         <form [formGroup]="form" (ngSubmit)="submit()" (keydown.control.enter)="submit()">
             <fieldset [disabled]="loading.active || saving.active">
                 <!-- Create a control for each item -->
-                @for (item of items; track item.key) {
-                    <!-- Add a local var for control name (also use it for switch ID) -->
-                    @if (ctlName(item.key); as k) {
-                        <!-- Info icon template -->
-                        <ng-template #ii>
-                            <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="ms-2"/>
-                        </ng-template>
+                @for (secItems of config!.bySection | keyvalue; track secItems.key) {
+                    <div class="pb-3">
+                        <!-- Section name -->
+                        <p class="lead">{{ secItems.key | dynConfigSectionName }}</p>
+                        <!-- Section items -->
+                        <div class="ms-4">
+                            @for (item of secItems.value; track item.key) {
+                                <!-- Add a local var for control name (also use it for switch ID) -->
+                                @if (ctlName(item.key); as k) {
+                                    <!-- Info icon template -->
+                                    <ng-template #ii>
+                                        <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="ms-2"/>
+                                    </ng-template>
 
-                        <div class="row mb-3">
-                            <!-- Label with a control -->
-                            @switch (item.datatype) {
-                                <!-- Boolean value -->
-                                @case ('boolean') {
-                                    <div class="col-12 form-check form-switch">
-                                        <input [formControlName]="k" [id]="k" class="form-check-input" type="checkbox">
-                                        <label [for]="k" class="form-check-label fw-bold">{{ item.key | dynConfigItemName }}</label>
-                                        <span [ngTemplateOutlet]="ii"></span>
-                                    </div>
-                                }
+                                    <div class="row mb-3">
+                                        <!-- Label with a control -->
+                                        @switch (item.datatype) {
+                                            <!-- Boolean value -->
+                                            @case ('boolean') {
+                                                <div class="col-12 form-check form-switch">
+                                                    <input [formControlName]="k" [id]="k" class="form-check-input" type="checkbox">
+                                                    <label [for]="k" class="form-check-label fw-bold">{{ item.key | dynConfigItemName }}</label>
+                                                    <span [ngTemplateOutlet]="ii"></span>
+                                                </div>
+                                            }
 
-                                <!-- Any other (string) value -->
-                                @default {
-                                    <div class="col-sm-6">
-                                        <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">{{ item.key | dynConfigItemName }}</label>
-                                        <span [ngTemplateOutlet]="ii"></span>
-                                    </div>
-                                    <div class="col-sm-6">
-                                        <input [formControlName]="k" type="text" class="form-control" [id]="k">
+                                            <!-- Any other (string) value -->
+                                            @default {
+                                                <div class="col-sm-6">
+                                                    <label [for]="k" class="col-sm-6 col-form-label colon fw-bold">{{ item.key | dynConfigItemName }}</label>
+                                                    <span [ngTemplateOutlet]="ii"></span>
+                                                </div>
+                                                <div class="col-sm-6">
+                                                    <input [formControlName]="k" type="text" class="form-control" [id]="k">
+                                                </div>
+                                            }
+                                        }
                                     </div>
                                 }
                             }
                         </div>
-                    }
+                    </div>
                 }
 
                 <!-- Buttons -->

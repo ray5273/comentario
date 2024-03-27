@@ -1,7 +1,7 @@
 <!-- Info block -->
 <app-info-block i18n>These parameters can be changed on-the-fly.</app-info-block>
 
-@if (items) {
+@if (bySection) {
     <div class="row">
         <!-- Buttons -->
         <div class="col-sm-auto order-sm-last pb-3">
@@ -25,7 +25,7 @@
         <!-- Config items -->
         <div class="col-sm">
             <dl class="detail-table" id="dynamic-config-items">
-                @for (secItems of items | keyvalue; track secItems.key) {
+                @for (secItems of bySection | keyvalue; track secItems.key) {
                     <!-- Section heading -->
                     <div>
                         <dt>{{ secItems.key | dynConfigSectionName }}</dt>
@@ -33,7 +33,7 @@
                     <!-- Section items -->
                     @for (item of secItems.value; track item.key) {
                         <div>
-                            <dt class="fw-normal ms-3">
+                            <dt class="fw-normal ms-md-3">
                                 <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
                                 <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
                             </dt>
