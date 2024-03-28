@@ -53,6 +53,7 @@ import { UserLinkComponent } from './user-link/user-link.component';
 import { DynConfigItemNamePipe } from './_pipes/dyn-config-item-name.pipe';
 import { DynConfigItemValueComponent } from './dyn-config-item-value/dyn-config-item-value.component';
 import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe';
+import { ConfigSectionEditComponent } from './config/config-section-edit/config-section-edit.component';
 
 @NgModule({
     declarations: [
@@ -63,6 +64,7 @@ import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe'
         CommentStatusBadgeComponent,
         ConfigEditComponent,
         ConfigManagerComponent,
+        ConfigSectionEditComponent,
         ControlCenterComponent,
         CurrentUserBadgeComponent,
         DashboardComponent,
@@ -71,6 +73,7 @@ import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe'
         DomainDetailComponent,
         DomainEditComponent,
         DomainImportComponent,
+        DomainInstallComponent,
         DomainManagerComponent,
         DomainOperationsComponent,
         DomainPageManagerComponent,
@@ -84,8 +87,8 @@ import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe'
         DomainUserPropertiesComponent,
         DynamicConfigComponent,
         DynConfigItemNamePipe,
-        DynConfigSectionNamePipe,
         DynConfigItemValueComponent,
+        DynConfigSectionNamePipe,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
         ProfileComponent,
@@ -98,7 +101,6 @@ import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe'
         UserLinkComponent,
         UserManagerComponent,
         UserPropertiesComponent,
-        DomainInstallComponent,
     ],
     imports: [
         CommonModule,
