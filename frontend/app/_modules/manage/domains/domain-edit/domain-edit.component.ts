@@ -45,10 +45,10 @@ export class DomainEditComponent implements OnInit {
     extensions?: DomainExtension[];
 
     readonly Paths = Paths;
-    readonly sorts = Object.values(CommentSort);
-    readonly modNotifyPolicies = Object.values(DomainModNotifyPolicy);
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
+
+    /** Federated IdPs configured on the current instance. */
     readonly fedIdps = this.cfgSvc.staticConfig.federatedIdps;
 
     // Icons
@@ -73,7 +73,8 @@ export class DomainEditComponent implements OnInit {
             (v.anonymous ? 1 : 0) +
             (v.local     ? 1 : 0) +
             (v.sso       ? 1 : 0) +
-            (v.fedIdps?.filter((e: boolean) => e).length ?? 0) : 0;
+            (v.fedIdps?.filter((e: boolean) => e).length ?? 0) :
+            0;
     }
 
     /**
@@ -232,14 +233,6 @@ export class DomainEditComponent implements OnInit {
                     return this.router.navigate([Paths.manage.domains, newDomain.id]);
                 });
         }
-    }
-
-    /**
-     * Get a HTML-safe ID for an extension. Replaces all dots with hyphens.
-     * @param ext Extension to get ID for.
-     */
-    getExtId(ext: DomainExtension): string {
-        return `extension-${ext.id.replaceAll('.', '-')}`;
     }
 
     private initForm(): Observable<void> {

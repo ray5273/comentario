@@ -1,0 +1,43 @@
+@if (formGroup) {
+    <ng-container [formGroup]="formGroup">
+        <!-- Info -->
+        <app-info-block>
+            <ng-container i18n>Extensions allow to engage external services for spam and toxicity checking in comments.</ng-container>
+            <app-info-icon docLink="configuration/frontend/domain/extensions/" class="ms-2"/>
+        </app-info-block>
+
+        <div>
+            <!-- Iterate extensions enabled globally -->
+            @for (e of extensions; track e.id;let idx = $index) {
+                <div [formGroupName]="idx">
+                    <!-- Enabled checkbox -->
+                    <div class="form-check">
+                        <input #extCB [id]="getExtId(e) + '-enabled'"
+                               formControlName="enabled" type="checkbox" class="form-check-input">
+                        <label class="form-check-label" [for]="extCB.id">{{ e.name }}</label>
+                    </div>
+                    <!-- Extension config, only when enabled -->
+                    @if (extCB.checked) {
+                        <div class="mb-3 ps-4">
+                            <label class="form-check-label colon" [for]="'extension-' + e.id + '-config'" i18n>Configuration</label>
+                            <textarea [id]="getExtId(e) + '-config'"
+                                      formControlName="config" class="form-control font-monospace" rows="5"></textarea>
+                            <!-- Requires key warning -->
+                            @if (e.requiresKey) {
+                                <div class="form-text text-warning-emphasis">
+                                    <fa-icon [icon]="faExclamationTriangle" class="me-1"/>
+                                    <ng-container i18n>You have to provide an API key for this extension to work.</ng-container>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+
+        <!-- No data placeholder -->
+        @if (!extensions?.length) {
+            <app-no-data/>
+        }
+    </ng-container>
+}

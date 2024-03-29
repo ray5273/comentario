@@ -54,6 +54,10 @@ import { DynConfigItemNamePipe } from './_pipes/dyn-config-item-name.pipe';
 import { DynConfigItemValueComponent } from './dyn-config-item-value/dyn-config-item-value.component';
 import { DynConfigSectionNamePipe } from './_pipes/dyn-config-section-name.pipe';
 import { ConfigSectionEditComponent } from './config/config-section-edit/config-section-edit.component';
+import { DomainEditGeneralComponent } from './domains/domain-edit/domain-edit-general/domain-edit-general.component';
+import { DomainEditAuthComponent } from './domains/domain-edit/domain-edit-auth/domain-edit-auth.component';
+import { DomainEditModerationComponent } from './domains/domain-edit/domain-edit-moderation/domain-edit-moderation.component';
+import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit-extensions/domain-edit-extensions.component';
 
 @NgModule({
     declarations: [
@@ -71,7 +75,11 @@ import { ConfigSectionEditComponent } from './config/config-section-edit/config-
         DatetimePipe,
         DomainBadgeComponent,
         DomainDetailComponent,
+        DomainEditAuthComponent,
         DomainEditComponent,
+        DomainEditExtensionsComponent,
+        DomainEditGeneralComponent,
+        DomainEditModerationComponent,
         DomainImportComponent,
         DomainInstallComponent,
         DomainManagerComponent,

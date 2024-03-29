@@ -62,11 +62,11 @@ context('Domain Edit page', () => {
 
     /** Check the activity state of all tabs. */
     const checkActiveTabs = (states: boolean[]) =>
-        cy.get('@domainEdit').find('a[ngbnavlink]').hasClass('active').should('arrayMatch', states);
+        cy.get('@domainEdit').find('button[ngbnavlink]').hasClass('active').should('arrayMatch', states);
 
     /** Check the invalid state of all tabs. */
     const checkInvalidTabs = (states: boolean[]) =>
-        cy.get('@domainEdit').find('a[ngbnavlink]').hasClass('is-invalid').should('arrayMatch', states);
+        cy.get('@domainEdit').find('button[ngbnavlink]').hasClass('is-invalid').should('arrayMatch', states);
 
     /** Select domain scheme using dropdown. General tab must be active and aliases created. */
     const selectScheme = (https: boolean) => {
@@ -523,7 +523,7 @@ context('Domain Edit page', () => {
                 cy.get('@authTwitter')  .clickLabel();
                 cy.get('@authSso')      .clickLabel();
                 // Check there's "no auth method available" warning
-                cy.contains('div[ngbnavpane] .form-text', 'No authentication method enabled').should('be.visible');
+                cy.contains('div[ngbnavpane] .alert-warning', 'No authentication method enabled').should('be.visible');
                 // Enable local
                 cy.get('@authLocal').clickLabel();
 

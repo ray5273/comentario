@@ -1,0 +1,68 @@
+@if (formGroup) {
+    <ng-container [formGroup]="formGroup">
+        <!-- Info -->
+        <app-info-block>
+            <ng-container i18n>General settings describe the website that will display comments.</ng-container>
+            <app-info-icon docLink="configuration/frontend/domain/general/" class="ms-2"/>
+        </app-info-block>
+
+        <!-- Host -->
+        <div class="mb-3 row">
+            <label for="host" class="col-sm-3 col-form-label colon fw-bold" i18n>Host</label>
+            <div class="col-sm-9">
+                <div class="input-group">
+                    <!-- HTTP(S) -->
+                    <div ngbDropdown class="d-inline-block">
+                        <button ngbDropdownToggle type="button" class="btn btn-outline-secondary"
+                                id="scheme">{{ isHttps ? 'https' : 'http' }}://</button>
+                        <div ngbDropdownMenu aria-labelledby="scheme">
+                            <button ngbDropdownItem (click)="isHttps = false" type="button">http://</button>
+                            <button ngbDropdownItem (click)="isHttps = true"  type="button">https://</button>
+                        </div>
+                    </div>
+                    <!-- Host -->
+                    <input formControlName="host" type="text" class="form-control" id="host"
+                           [class.is-valid]="isNew && formGroup.controls.host.touched && formGroup.controls.host.valid"
+                           [class.is-invalid]="isNew && formGroup.controls.host.touched && formGroup.controls.host.invalid"
+                           placeholder="example.com">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback" i18n>Please enter a valid domain host.</div>
+                </div>
+                @if (isNew) {
+                    <small id="nameHelpBlock" class="form-text text-warning-emphasis">
+                        <fa-icon [icon]="faExclamationTriangle" class="me-1"/>
+                        <ng-container i18n>You won't be able to change the host once domain is created.</ng-container>
+                    </small>
+                }
+            </div>
+        </div>
+
+        <!-- Name -->
+        <div class="mb-3 row">
+            <label for="name" class="col-sm-3 col-form-label colon fw-bold">
+                <ng-container i18n>Name</ng-container>&ngsp;
+                <i class="fw-normal" i18n>(optional)</i>
+            </label>
+            <div class="col-sm-9">
+                <input formControlName="name" type="text" class="form-control" id="name"
+                       [class.is-valid]="formGroup.controls.name.touched && formGroup.controls.name.valid"
+                       [class.is-invalid]="formGroup.controls.name.touched && formGroup.controls.name.invalid"
+                       placeholder="My blog" i18n-placeholder>
+                <div class="invalid-feedback" i18n>Value is too long.</div>
+            </div>
+        </div>
+
+        <!-- Default comment sort -->
+        <div class="mb-3 row">
+            <div class="col-sm-3 colon fw-bold" i18n>Default comment sort</div>
+            <div class="col-sm-9">
+                @for (s of sorts; track s) {
+                    <div class="form-check">
+                        <input formControlName="defaultSort" class="form-check-input" type="radio" [id]="'sort-'+s" [value]="s">
+                        <label class="form-check-label" [for]="'sort-'+s" i18n>{{ s | commentSort }}</label>
+                    </div>
+                }
+            </div>
+        </div>
+    </ng-container>
+}

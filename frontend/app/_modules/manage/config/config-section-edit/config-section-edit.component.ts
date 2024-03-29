@@ -1,6 +1,7 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { DynamicConfig } from '../../../../_models/config';
+import { DynamicConfigItem } from '../../../../../generated-api';
 
 @Component({
     selector: 'app-config-section-edit',
@@ -20,13 +21,20 @@ export class ConfigSectionEditComponent implements OnChanges {
     @Input({required: true})
     section?: string;
 
-    /** Base path for rendering info icons for each parameter. Optional, if not provided, no info icons will appear. */
+    /**
+     * Base path for rendering info icons for each parameter, without the trailing slash. Optional, if not provided, no
+     * info icons will appear.
+     */
     @Input()
     docsBasePath?: string;
 
     constructor(
         private readonly fb: FormBuilder,
     ) {}
+
+    get items(): DynamicConfigItem[] | undefined {
+        return this.section ? this.config?.bySection[this.section] : undefined;
+    }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.formGroup || changes.config || changes.section) {
@@ -55,15 +63,11 @@ export class ConfigSectionEditComponent implements OnChanges {
         Object.keys(this.formGroup.controls).forEach(c => this.formGroup!.removeControl(c, {emitEvent: false}));
 
         // Create new controls
-        if (this.section) {
-            this.config
-                ?.bySection[this.section]
-                ?.forEach(item => {
-                    const ctl = this.fb.nonNullable.control(item.datatype === 'boolean' ? item.value === 'true' : item.value);
-                    this.formGroup!.addControl(this.ctlName(item.key), ctl, {emitEvent: false});
-                    // Subscribe to the control's value changes to update the underlying config
-                    ctl.valueChanges.subscribe(v => item.value = String(v));
-                });
-        }
+        this.items?.forEach(item => {
+            const ctl = this.fb.nonNullable.control(item.datatype === 'boolean' ? item.value === 'true' : item.value);
+            this.formGroup!.addControl(this.ctlName(item.key), ctl, {emitEvent: false});
+            // Subscribe to the control's value changes to update the underlying config
+            ctl.valueChanges.subscribe(v => item.value = String(v));
+        });
     }
 }

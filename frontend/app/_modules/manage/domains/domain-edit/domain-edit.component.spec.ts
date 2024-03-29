@@ -13,6 +13,10 @@ import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.
 import { CommentSortPipe } from '../../_pipes/comment-sort.pipe';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { DomainEditGeneralComponent } from './domain-edit-general/domain-edit-general.component';
+import { DomainEditAuthComponent } from './domain-edit-auth/domain-edit-auth.component';
+import { DomainEditModerationComponent } from './domain-edit-moderation/domain-edit-moderation.component';
+import { DomainEditExtensionsComponent } from './domain-edit-extensions/domain-edit-extensions.component';
 
 describe('DomainEditComponent', () => {
 
@@ -28,7 +32,11 @@ describe('DomainEditComponent', () => {
             declarations: [
                 DomainEditComponent,
                 MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe),
-                MockComponents(InfoIconComponent),
+                MockComponents(InfoIconComponent,
+                    DomainEditGeneralComponent,
+                    DomainEditAuthComponent,
+                    DomainEditModerationComponent,
+                    DomainEditExtensionsComponent),
             ],
             imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, NgbNavModule, ToolsModule],
             providers: [

@@ -5,8 +5,18 @@
             <fieldset [disabled]="loading.active || saving.active">
                 <!-- Create a section editor for each group (config section) -->
                 @for (group of form.controls | keyvalue; track group.key) {
-                    <app-config-section-edit [formGroup]="$any(group.value)" [config]="config" [section]="group.key"
-                                             docsBasePath="configuration/backend/dynamic"/>
+                    <div class="pb-3">
+                        <!-- Section name -->
+                        <p class="fw-bold">{{ group.key | dynConfigSectionName }}</p>
+
+                        <!-- Section items -->
+                        <div class="ms-4">
+                            <app-config-section-edit [formGroup]="$any(group.value)"
+                                                     [config]="config"
+                                                     [section]="group.key"
+                                                     docsBasePath="configuration/backend/dynamic"/>
+                        </div>
+                    </div>
                 }
 
                 <!-- Buttons -->
