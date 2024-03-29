@@ -58,10 +58,12 @@ export class ConfigSectionEditComponent implements OnChanges {
         if (this.section) {
             this.config
                 ?.bySection[this.section]
-                ?.forEach(item => this.formGroup!.addControl(
-                    this.ctlName(item.key),
-                    this.fb.nonNullable.control(item.datatype === 'boolean' ? item.value === 'true' : item.value),
-                    {emitEvent: false}));
+                ?.forEach(item => {
+                    const ctl = this.fb.nonNullable.control(item.datatype === 'boolean' ? item.value === 'true' : item.value);
+                    this.formGroup!.addControl(this.ctlName(item.key), ctl, {emitEvent: false});
+                    // Subscribe to the control's value changes to update the underlying config
+                    ctl.valueChanges.subscribe(v => item.value = String(v));
+                });
         }
     }
 }

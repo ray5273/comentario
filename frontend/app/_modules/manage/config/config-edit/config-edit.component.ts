@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder } from '@angular/forms';
 import { Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { first } from 'rxjs';
@@ -17,11 +17,11 @@ import { DynamicConfig } from '../../../../_models/config';
 })
 export class ConfigEditComponent implements OnInit {
 
-    /** Items being edited. */
+    /** Config being edited. */
     config?: DynamicConfig;
 
     /** Edit form. */
-    form?: FormGroup;
+    form = this.fb.group({});
 
     readonly loading = new ProcessingStatus();
     readonly saving = new ProcessingStatus();
@@ -42,23 +42,17 @@ export class ConfigEditComponent implements OnInit {
                 first(),
                 this.loading.processing())
             .subscribe(c => {
-                // Convert the map into configuration items, sorting it by key
-                this.config = c;
+                // Make a clone of the original config
+                this.config = c.clone();
 
-                // Create a form
-                this.initForm();
+                // Create a form group per config section
+                Object.keys(this.config!.bySection).forEach(s => this.form.addControl(s, this.fb.group({}), {emitEvent: false}));
             });
     }
 
     submit() {
-        // Collect config values
-        const vals = this.config!.items.map(i => ({
-            key:   i.key,
-            value: String(this.form!.controls[this.ctlName(i.key)].value),
-        }));
-
-        // Update the config on the server
-        this.api.configDynamicUpdate(vals)
+        // Submit the config to the backend
+        this.api.configDynamicUpdate(this.config!.items)
             .pipe(this.saving.processing())
             .subscribe(() => {
                 // Reload the config
@@ -68,24 +62,5 @@ export class ConfigEditComponent implements OnInit {
                 // Go back to the list
                 this.router.navigate([Paths.manage.config.dynamic]);
             });
-    }
-
-    /**
-     * Return the name of a form control for the given item key.
-     */
-    ctlName(key: string) {
-        // Replace dots with underscores because a dot means a subproperty
-        return key.replaceAll('.', '_');
-    }
-
-    private initForm() {
-        // Convert the configuration items into a control config
-        const ctls = this.config!.items.reduce(
-            (acc, e) => {
-                acc[this.ctlName(e.key)] = e.datatype === 'boolean' ? e.value === 'true' : e.value;
-                return acc;
-            },
-            {} as any);
-        this.form = this.fb.group(ctls);
     }
 }

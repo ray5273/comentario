@@ -67,6 +67,13 @@ export class DynamicConfig {
     }
 
     /**
+     * Return a clone of this config.
+     */
+    clone(): DynamicConfig {
+        return new DynamicConfig(this.items.map(item => JSON.parse(JSON.stringify(item))));
+    }
+
+    /**
      * Get config item by its key.
      */
     get(key: DomainConfigItemKey | InstanceConfigItemKey): DynamicConfigItem {

@@ -37,7 +37,14 @@
                                 <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
                                 <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
                             </dt>
-                            <dd><app-dyn-config-item-value [item]="item"/></dd>
+                            <dd>
+                                <!-- Item value -->
+                                <app-dyn-config-item-value [item]="item"/>
+                                <!-- Overridable icon -->
+                                @if (item.key.startsWith('domain.defaults.')) {
+                                    <fa-icon [icon]="faDice" class="ms-2 opacity-25" title="Overridable at domain level" i18n-title/>
+                                }
+                            </dd>
                         </div>
                     }
                 }
