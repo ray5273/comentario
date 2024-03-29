@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/internal/util"
 )
 
 // logger represents a package-wide logger instance
@@ -17,19 +18,9 @@ var (
 	ErrResourceFetch = errors.New("services: failed to fetch resource")
 )
 
-// checkErrors picks and returns the first non-nil error, or nil if there's none
-func checkErrors(errs ...error) error {
-	for _, err := range errs {
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
 // translateDBErrors "translates" database errors into a service error, picking the first non-nil error
 func translateDBErrors(errs ...error) error {
-	switch err := checkErrors(errs...); {
+	switch err := util.CheckErrors(errs...); {
 	case err == nil:
 		// No error
 		return nil

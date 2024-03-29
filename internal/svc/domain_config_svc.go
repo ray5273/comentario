@@ -27,6 +27,8 @@ type DomainConfigService interface {
 	ResetCache()
 	// Update the values of the configuration items with the given keys and persist the changes. curUserID can be nil
 	Update(domainID, curUserID *uuid.UUID, vals map[data.DynConfigItemKey]string) error
+	// ValidateKeyValue validates the given config item's key and value
+	ValidateKeyValue(key, value string) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -146,6 +148,16 @@ func (svc *domainConfigService) Update(domainID, curUserID *uuid.UUID, vals map[
 
 	// Write the store to the database
 	return s.Save()
+}
+
+func (svc *domainConfigService) ValidateKeyValue(key, value string) error {
+	// Try to find the item among the instance defaults, by looking up the key for domain defaults
+	if item, ok := data.DefaultDynInstanceConfig[data.DynConfigItemKey(data.ConfigKeyDomainDefaultsPrefix+key)]; !ok {
+		return fmt.Errorf("invalid domain config item key: %q", key)
+	} else {
+		// Item found, now validate the value
+		return item.ValidateValue(value)
+	}
 }
 
 // getStore returns the store for the given domain

@@ -435,9 +435,11 @@ definitions:
     properties:
       key:
         type: string
+        maxLength: 255
         description: Item key
       value:
         type: string
+        maxLength: 255
         description: Item value
       datatype:
         $ref: "#/definitions/dynamicConfigItemDatatype"

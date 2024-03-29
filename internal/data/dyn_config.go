@@ -1,6 +1,7 @@
 package data
 
 import (
+	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
@@ -48,6 +49,23 @@ func (ci *DynConfigItem) ToDTO(key DynConfigItemKey) *models.DynamicConfigItem {
 		UserUpdated:  strfmt.UUID(ci.UserUpdated.UUID.String()),
 		Value:        swag.String(ci.Value),
 	}
+}
+
+// ValidateValue validates the given value for this item
+func (ci *DynConfigItem) ValidateValue(value string) error {
+	// Validate value length
+	if len(value) > 255 {
+		return fmt.Errorf("value too long (%d chars, 255 allowed): %q", len(value), value)
+	}
+
+	// Validate according to the datatype
+	switch ci.Datatype {
+	case ConfigDatatypeBoolean:
+		if value != "false" && value != "true" {
+			return fmt.Errorf("invalid boolean item value: %q", value)
+		}
+	}
+	return nil
 }
 
 const (

@@ -11,17 +11,17 @@
             <div class="col-sm-3 colon fw-bold" i18n>Require moderator approval on comment, if</div>
             <div class="col-sm-9">
                 <!-- Author is anonymous -->
-                <div class="form-check">
+                <div class="form-check form-switch">
                     <input formControlName="anonymous" type="checkbox" class="form-check-input" id="mod-anonymous">
                     <label class="form-check-label" for="mod-anonymous" i18n>Author is anonymous</label>
                 </div>
                 <!-- Author is authenticated -->
-                <div class="form-check">
+                <div class="form-check form-switch">
                     <input formControlName="authenticated" type="checkbox" class="form-check-input" id="mod-authenticated">
                     <label class="form-check-label" for="mod-authenticated" i18n>Author is authenticated</label>
                 </div>
                 <!-- Author has less than this number of approved comments -->
-                <div class="form-check">
+                <div class="form-check form-switch">
                     <input formControlName="numCommentsOn" type="checkbox" class="form-check-input" id="mod-num-comments-on">
                     <label class="form-check-label colon" for="mod-num-comments-on" i18n>Author has less than this number of approved comments</label>
                 </div>
@@ -36,7 +36,7 @@
                     </div>
                 }
                 <!-- Author is registered less than this number of days ago -->
-                <div class="form-check">
+                <div class="form-check form-switch">
                     <input formControlName="userAgeDaysOn" type="checkbox" class="form-check-input" id="mod-user-age-days-on">
                     <label class="form-check-label colon" for="mod-user-age-days-on" i18n>Author is registered less than this number of days ago</label>
                 </div>
@@ -51,12 +51,12 @@
                     </div>
                 }
                 <!-- Comment contains link -->
-                <div class="form-check">
+                <div class="form-check form-switch">
                     <input formControlName="links" type="checkbox" class="form-check-input" id="mod-links">
                     <label class="form-check-label" for="mod-links" i18n>Comment contains link</label>
                 </div>
                 <!-- Comment contains image -->
-                <div class="form-check">
+                <div class="form-check form-switch">
                     <input formControlName="images" type="checkbox" class="form-check-input" id="mod-images">
                     <label class="form-check-label" for="mod-images" i18n>Comment contains image</label>
                 </div>

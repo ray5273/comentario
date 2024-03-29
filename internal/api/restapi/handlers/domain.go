@@ -205,6 +205,11 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		return r
 	}
 
+	// Validate domain configuration
+	if r := Verifier.DomainConfigItems(params.Body.Configuration); r != nil {
+		return r
+	}
+
 	// Validate identity providers
 	if r := Verifier.FederatedIdProviders(params.Body.FederatedIdpIds); r != nil {
 		return r
@@ -219,9 +224,14 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 	// Persist a new domain record in the database
 	if err := svc.TheDomainService.Create(&user.ID, d); err != nil {
 		return respServiceError(err)
-	} else if err := svc.TheDomainService.SaveIdPs(&d.ID, params.Body.FederatedIdpIds); err != nil {
-		return respServiceError(err)
-	} else if err := svc.TheDomainService.SaveExtensions(&d.ID, exts); err != nil {
+	}
+
+	// Update the dependent lists
+	err := util.CheckErrors(
+		svc.TheDomainConfigService.Update(&d.ID, &user.ID, domainConvertConfigItems(params.Body.Configuration)),
+		svc.TheDomainService.SaveIdPs(&d.ID, params.Body.FederatedIdpIds),
+		svc.TheDomainService.SaveExtensions(&d.ID, exts))
+	if err != nil {
 		return respServiceError(err)
 	}
 
@@ -286,6 +296,11 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 		return respBadRequest(ErrorImmutableProperty.WithDetails("host"))
 	}
 
+	// Validate domain configuration
+	if r := Verifier.DomainConfigItems(params.Body.Configuration); r != nil {
+		return r
+	}
+
 	// Validate identity providers
 	if r := Verifier.FederatedIdProviders(params.Body.FederatedIdpIds); r != nil {
 		return r
@@ -301,11 +316,12 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	domain.FromDTO(params.Body.Domain)
 
 	// Persist the updated properties
-	if err := svc.TheDomainService.Update(domain); err != nil {
-		return respServiceError(err)
-	} else if err := svc.TheDomainService.SaveIdPs(&domain.ID, params.Body.FederatedIdpIds); err != nil {
-		return respServiceError(err)
-	} else if err := svc.TheDomainService.SaveExtensions(&domain.ID, exts); err != nil {
+	err := util.CheckErrors(
+		svc.TheDomainService.Update(domain),
+		svc.TheDomainConfigService.Update(&domain.ID, &user.ID, domainConvertConfigItems(params.Body.Configuration)),
+		svc.TheDomainService.SaveIdPs(&domain.ID, params.Body.FederatedIdpIds),
+		svc.TheDomainService.SaveExtensions(&domain.ID, exts))
+	if err != nil {
 		return respServiceError(err)
 	}
 
@@ -313,7 +329,16 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	return api_general.NewDomainUpdateOK().WithPayload(domain.ToDTO())
 }
 
-// domainConvertExtensions converts domain extensions into data models, verifying the given extensions are enabled
+// domainConvertConfigItems converts domain config items from DTOs to data models
+func domainConvertConfigItems(items []*models.DynamicConfigItem) map[data.DynConfigItemKey]string {
+	m := make(map[data.DynConfigItemKey]string, len(items))
+	for _, item := range items {
+		m[data.DynConfigItemKey(swag.StringValue(item.Key))] = swag.StringValue(item.Value)
+	}
+	return m
+}
+
+// domainConvertExtensions converts domain extensions from DTOs into data models, verifying the given extensions are enabled
 func domainConvertExtensions(exIn []*models.DomainExtension) ([]*data.DomainExtension, middleware.Responder) {
 	var exOut []*data.DomainExtension
 	for _, e := range exIn {

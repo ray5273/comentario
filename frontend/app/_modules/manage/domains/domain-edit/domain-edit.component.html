@@ -16,7 +16,10 @@
                 <li ngbNavItem formGroupName="general">
                     <button ngbNavLink [class.is-invalid]="ctlGroupGeneral.invalid" class="fw-bold" i18n>General</button>
                     <ng-template ngbNavContent>
-                        <app-domain-edit-general [formGroup]="ctlGroupGeneral" [isNew]="isNew"/>
+                        <app-domain-edit-general [generalFormGroup]="ctlGroupGeneral"
+                                                 [configFormGroup]="ctlGroupConfig"
+                                                 [config]="config"
+                                                 [isNew]="isNew"/>
                     </ng-template>
                 </li>
 
@@ -41,7 +44,10 @@
                             </div>
                         }
                         <!-- Auth properties -->
-                        <app-domain-edit-auth [formGroup]="ctlGroupAuth" [federatedIdps]="fedIdps"/>
+                        <app-domain-edit-auth [configFormGroup]="$any(ctlGroupConfig.controls.auth)"
+                                              [methodsFormGroup]="ctlGroupAuth"
+                                              [config]="config"
+                                              [federatedIdps]="fedIdps"/>
                     </ng-template>
                 </li>
 

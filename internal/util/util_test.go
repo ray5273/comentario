@@ -3,6 +3,7 @@ package util
 import (
 	"bytes"
 	"encoding/hex"
+	"errors"
 	"github.com/go-openapi/strfmt"
 	"net/http"
 	"net/http/httptest"
@@ -60,6 +61,29 @@ func Test_pathRegistry_Has(t *testing.T) {
 			p := &pathRegistry{r: tt.initial}
 			if got := p.Has(tt.path); got != tt.want {
 				t.Errorf("pathRegistry.Has() got = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+//goland:noinspection GoDirectComparisonOfErrors
+func Test_CheckErrors(t *testing.T) {
+	err1 := errors.New("FOO")
+	err2 := errors.New("BAR")
+	tests := []struct {
+		name    string
+		errs    []error
+		wantErr error
+	}{
+		{"No error       ", nil, nil},
+		{"Multiple nils  ", []error{nil, nil, nil, nil}, nil},
+		{"Single error   ", []error{err1}, err1},
+		{"Mix nils/errors", []error{nil, nil, nil, nil, err1, nil, err2}, err1},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if err := CheckErrors(tt.errs...); err != tt.wantErr {
+				t.Errorf("CheckErrors() error = %v, wantErr = %v", err, tt.wantErr)
 			}
 		})
 	}

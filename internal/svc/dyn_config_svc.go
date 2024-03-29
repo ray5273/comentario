@@ -87,6 +87,11 @@ func (cs *ConfigStore) Set(curUserID *uuid.UUID, key data.DynConfigItemKey, valu
 		return err
 	}
 
+	// Validate the value
+	if err := ci.ValidateValue(value); err != nil {
+		return err
+	}
+
 	// Update the item
 	ci.Value = value
 	ci.UpdatedTime = time.Now().UTC()

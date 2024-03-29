@@ -3,6 +3,7 @@ package handlers
 import (
 	"errors"
 	"github.com/go-openapi/runtime/middleware"
+	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
@@ -18,6 +19,8 @@ var Verifier VerifierService = &verifier{}
 
 // VerifierService is an API service interface for data and permission verification
 type VerifierService interface {
+	// DomainConfigItems verifies the passed config items are valid
+	DomainConfigItems(items []*models.DynamicConfigItem) middleware.Responder
 	// DomainHostCanBeAdded verifies the given host is valid and not existing yet
 	DomainHostCanBeAdded(host string) middleware.Responder
 	// DomainSSOConfig verifies the given domain is properly configured for SSO authentication
@@ -64,6 +67,19 @@ type VerifierService interface {
 // ----------------------------------------------------------------------------------------------------------------------
 // verifier is a blueprint VerifierService implementation
 type verifier struct{}
+
+func (v *verifier) DomainConfigItems(items []*models.DynamicConfigItem) middleware.Responder {
+	// Iterate every item from the list
+	for _, item := range items {
+		// Pass the key and the value to the domain config service for validation
+		if err := svc.TheDomainConfigService.ValidateKeyValue(swag.StringValue(item.Key), swag.StringValue(item.Value)); err != nil {
+			return respBadRequest(ErrorInvalidPropertyValue.WithDetails(err.Error()))
+		}
+	}
+
+	// Succeeded
+	return nil
+}
 
 func (v *verifier) DomainHostCanBeAdded(host string) middleware.Responder {
 	// Validate the host

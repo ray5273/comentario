@@ -2,6 +2,7 @@ import { Component, Input } from '@angular/core';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { FormGroup } from '@angular/forms';
 import { CommentSort } from '../../../../../../generated-api';
+import { DynamicConfig } from '../../../../../_models/config';
 
 @Component({
     selector: 'app-domain-edit-general',
@@ -9,9 +10,17 @@ import { CommentSort } from '../../../../../../generated-api';
 })
 export class DomainEditGeneralComponent {
 
-    /** Form group to bind controls to. */
+    /** Form group to bind general controls to. */
     @Input({required: true})
-    formGroup?: FormGroup;
+    generalFormGroup?: FormGroup;
+
+    /** Form group to bind config controls to. */
+    @Input({required: true})
+    configFormGroup?: FormGroup;
+
+    /** Domain configuration to edit. */
+    @Input({required: true})
+    config?: DynamicConfig;
 
     /** Whether the form is for creating a new domain, as opposed to editing an existing one. */
     @Input({required: true})
@@ -24,10 +33,10 @@ export class DomainEditGeneralComponent {
     readonly faExclamationTriangle = faExclamationTriangle;
 
     get isHttps(): boolean {
-        return !!this.formGroup?.controls.isHttps.value;
+        return !!this.generalFormGroup?.controls.isHttps.value;
     }
 
     set isHttps(b: boolean) {
-        this.formGroup?.controls.isHttps.setValue(b);
+        this.generalFormGroup?.controls.isHttps.setValue(b);
     }
 }

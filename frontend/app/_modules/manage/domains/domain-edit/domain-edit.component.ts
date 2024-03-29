@@ -19,6 +19,7 @@ import { ToastService } from '../../../../_services/toast.service';
 import { Utils } from '../../../../_utils/utils';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
+import { DynamicConfig } from '../../../../_models/config';
 
 interface ExtensionValue {
     enabled: boolean;
@@ -40,6 +41,9 @@ export class DomainEditComponent implements OnInit {
 
     /** The edit form. */
     form?: FormGroup;
+
+    /** Domain config being edited. */
+    config?: DynamicConfig;
 
     /** Enabled domain extensions. */
     extensions?: DomainExtension[];
@@ -87,6 +91,10 @@ export class DomainEditComponent implements OnInit {
             0;
     }
 
+    get ctlGroupConfig(): FormGroup {
+        return this.form!.controls.config as FormGroup;
+    }
+
     get ctlGroupGeneral(): FormGroup {
         return this.form!.controls.general as FormGroup;
     }
@@ -101,14 +109,6 @@ export class DomainEditComponent implements OnInit {
 
     get ctlGroupExtensions(): FormGroup {
         return this.form!.controls.extensions as FormGroup;
-    }
-
-    get isHttps(): boolean {
-        return !!this.ctlGroupGeneral.controls.isHttps.value;
-    }
-
-    set isHttps(b: boolean) {
-        this.ctlGroupGeneral.controls.isHttps.setValue(b);
     }
 
     ngOnInit(): void {
@@ -168,6 +168,12 @@ export class DomainEditComponent implements OnInit {
                             group.controls.config.enable();
                         });
                 }
+
+                // Make a clone of the domain config
+                this.config = this.domainMeta?.config?.clone();
+
+                // Create form subgroups for domain config
+                this.setupFormConfigGroups();
             });
     }
 
@@ -205,6 +211,10 @@ export class DomainEditComponent implements OnInit {
                 modNotifyPolicy:   vals.mod.notifyPolicy ?? DomainModNotifyPolicy.Pending,
             };
 
+            // Prepare config, keeping only key and value from each item (other fields are readonly and shouldn't be
+            // included)
+            const configuration = this.config?.items.map(i => ({key: i.key, value: i.value}));
+
             // Collect IDs of enabled IdPs
             const federatedIdpIds = this.fedIdps?.filter((_, idx) => vals.auth.fedIdps?.[idx]).map(idp => idp.id);
 
@@ -221,8 +231,8 @@ export class DomainEditComponent implements OnInit {
 
             // Run creation/updating with the API
             (this.isNew ?
-                    this.api.domainNew({domain, federatedIdpIds, extensions}) :
-                    this.api.domainUpdate(this.domainMeta!.domain!.id!, {domain, federatedIdpIds, extensions}))
+                    this.api.domainNew({domain, configuration, federatedIdpIds, extensions}) :
+                    this.api.domainUpdate(this.domainMeta!.domain!.id!, {domain, configuration, federatedIdpIds, extensions}))
                 .pipe(this.saving.processing())
                 .subscribe(newDomain => {
                     // Add a success toast
@@ -279,6 +289,7 @@ export class DomainEditComponent implements OnInit {
                             notifyPolicy:  DomainModNotifyPolicy.Pending,
                         }),
                         extensions: this.getExtensionsFormGroup(),
+                        config: this.fb.nonNullable.group({}),
                     });
 
                     // SSO URL is only relevant when SSO auth is enabled
@@ -317,5 +328,14 @@ export class DomainEditComponent implements OnInit {
                     return acc;
                 },
                 {} as any) ?? {});
+    }
+
+    private setupFormConfigGroups() {
+        if (this.config) {
+            // Create subgroups per section in the config form group, with the section key as group name
+            const cfgGroup = this.ctlGroupConfig;
+            Object.keys(this.config.bySection)
+                .forEach(s => cfgGroup.addControl(s, this.fb.nonNullable.group({}), {emitEvent: false}));
+        }
     }
 }

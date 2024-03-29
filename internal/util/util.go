@@ -135,6 +135,16 @@ func (p *pathRegistry) Has(path string) bool {
 
 // ----------------------------------------------------------------------------------------------------------------------
 
+// CheckErrors picks and returns the first non-nil error, or nil if there's none
+func CheckErrors(errs ...error) error {
+	for _, err := range errs {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // CompressGzip compresses a data buffer using gzip
 func CompressGzip(b []byte) ([]byte, error) {
 	var buf bytes.Buffer
@@ -242,6 +252,7 @@ func HTMLDocumentTitle(body io.Reader) (string, error) {
 	tokenizer := html.NewTokenizer(body)
 	for {
 		// Get the next token type
+		//goland:noinspection GoSwitchMissingCasesForIotaConsts
 		switch tokenizer.Next() {
 		// An error token, we either reached the end of the file, or the HTML was malformed
 		case html.ErrorToken:

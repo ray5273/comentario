@@ -7,27 +7,6 @@ import (
 )
 
 //goland:noinspection GoDirectComparisonOfErrors
-func Test_checkErrors(t *testing.T) {
-	tests := []struct {
-		name    string
-		errs    []error
-		wantErr error
-	}{
-		{"No error       ", nil, nil},
-		{"Multiple nils  ", []error{nil, nil, nil, nil}, nil},
-		{"Single error   ", []error{sql.ErrNoRows}, sql.ErrNoRows},
-		{"Mix nils/errors", []error{nil, nil, nil, nil, sql.ErrNoRows, nil, sql.ErrConnDone}, sql.ErrNoRows},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if err := checkErrors(tt.errs...); err != tt.wantErr {
-				t.Errorf("checkErrors() error = %v, wantErr = %v", err, tt.wantErr)
-			}
-		})
-	}
-}
-
-//goland:noinspection GoDirectComparisonOfErrors
 func Test_translateError(t *testing.T) {
 	tests := []struct {
 		name    string

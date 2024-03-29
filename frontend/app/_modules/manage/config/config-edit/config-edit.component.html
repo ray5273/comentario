@@ -10,21 +10,15 @@
                         <p class="fw-bold">{{ group.key | dynConfigSectionName }}</p>
 
                         <!-- Section items -->
-                        <div class="ms-4">
-                            <app-config-section-edit [formGroup]="$any(group.value)"
-                                                     [config]="config"
-                                                     [section]="group.key"
-                                                     docsBasePath="configuration/backend/dynamic"/>
-                        </div>
+                        <app-config-section-edit [formGroup]="$any(group.value)" [config]="config" [section]="group.key"
+                                                 docsBasePath="configuration/backend/dynamic"/>
                     </div>
                 }
 
                 <!-- Buttons -->
                 <div class="form-footer">
                     <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
-                    <button [appSpinner]="saving.active" type="submit" class="btn btn-primary">
-                        <ng-container i18n="action">Save</ng-container>
-                    </button>
+                    <button [appSpinner]="saving.active" type="submit" class="btn btn-primary" i18n="action">Save</button>
                 </div>
             </fieldset>
         </form>

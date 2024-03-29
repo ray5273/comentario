@@ -1,5 +1,5 @@
-@if (formGroup) {
-    <ng-container [formGroup]="formGroup">
+@if (generalFormGroup) {
+    <ng-container [formGroup]="generalFormGroup">
         <!-- Info -->
         <app-info-block>
             <ng-container i18n>General settings describe the website that will display comments.</ng-container>
@@ -22,8 +22,8 @@
                     </div>
                     <!-- Host -->
                     <input formControlName="host" type="text" class="form-control" id="host"
-                           [class.is-valid]="isNew && formGroup.controls.host.touched && formGroup.controls.host.valid"
-                           [class.is-invalid]="isNew && formGroup.controls.host.touched && formGroup.controls.host.invalid"
+                           [class.is-valid]="isNew && generalFormGroup.controls.host.touched && generalFormGroup.controls.host.valid"
+                           [class.is-invalid]="isNew && generalFormGroup.controls.host.touched && generalFormGroup.controls.host.invalid"
                            placeholder="example.com">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback" i18n>Please enter a valid domain host.</div>
@@ -45,8 +45,8 @@
             </label>
             <div class="col-sm-9">
                 <input formControlName="name" type="text" class="form-control" id="name"
-                       [class.is-valid]="formGroup.controls.name.touched && formGroup.controls.name.valid"
-                       [class.is-invalid]="formGroup.controls.name.touched && formGroup.controls.name.invalid"
+                       [class.is-valid]="generalFormGroup.controls.name.touched && generalFormGroup.controls.name.valid"
+                       [class.is-invalid]="generalFormGroup.controls.name.touched && generalFormGroup.controls.name.invalid"
                        placeholder="My blog" i18n-placeholder>
                 <div class="invalid-feedback" i18n>Value is too long.</div>
             </div>
@@ -64,5 +64,20 @@
                 }
             </div>
         </div>
+
+        <!-- Dynamic configuration items -->
+        @for (group of configFormGroup?.controls | keyvalue; track group.key) {
+            <!-- Skip the 'auth' section as it's edited on the Authentication tab -->
+            @if (group.key !== 'auth') {
+                <div class="mb-3 row">
+                    <!-- Section name -->
+                    <div class="col-sm-3 colon fw-bold">{{ group.key | dynConfigSectionName }}</div>
+                    <!-- Section items -->
+                    <div class="col-sm-9">
+                        <app-config-section-edit [formGroup]="$any(group.value)" [config]="config" [section]="group.key"/>
+                    </div>
+                </div>
+            }
+        }
     </ng-container>
 }
