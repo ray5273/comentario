@@ -121,58 +121,63 @@ export class DomainEditComponent implements OnInit {
                 switchMap(() =>
                     this.route.snapshot.data.clean ?
                         of(undefined) :
-                        this.domainSelectorSvc.domainMeta(true).pipe(this.loading.processing(), first())))
-            .subscribe(meta => {
-                this.domainMeta = meta;
-                const d = this.domainMeta?.domain;
-                if (d) {
-                    this.form!.patchValue({
-                        general: {
-                            isHttps:     d.isHttps,
-                            host:        d.host,
-                            name:        d.name,
-                            defaultSort: d.defaultSort,
-                        },
-                        auth: {
-                            anonymous: d.authAnonymous,
-                            local:     d.authLocal,
-                            sso:       d.authSso,
-                            ssoUrl:    d.ssoUrl,
-                            ssoNonInt: d.ssoNonInteractive,
-                            fedIdps:   this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
-                        },
-                        mod: {
-                            anonymous:     d.modAnonymous,
-                            authenticated: d.modAuthenticated,
-                            numCommentsOn: !!d.modNumComments,
-                            numComments:   d.modNumComments || 3,
-                            userAgeDaysOn: !!d.modUserAgeDays,
-                            userAgeDays:   d.modUserAgeDays || 7,
-                            images:        d.modImages,
-                            links:         d.modLinks,
-                            notifyPolicy:  d.modNotifyPolicy,
-                        }
-                    });
-
-                    // Update enabled extension controls
-                    this.extensions
-                        // Collect {index, extension} pairs for each known extension
-                        ?.map((cfgEx, idx) => ({idx, ex: this.domainMeta!.extensions?.find(e => e.id === cfgEx.id)}))
-                        // Filter out disabled extensions
-                        .filter(el => el.ex)
-                        // Update the extension group
-                        .forEach(el => {
-                            const group = this.form!.get(`extensions.${el.idx}`) as FormGroup<{enabled: AbstractControl<boolean>; config: AbstractControl<string>}>;
-                            group.controls.enabled.setValue(true);
-                            group.controls.config.setValue(el.ex!.config ?? '');
-                            group.controls.config.enable();
+                        this.domainSelectorSvc.domainMeta(true).pipe(this.loading.processing(), first())),
+                // Process domain metadata
+                switchMap(meta => {
+                    this.domainMeta = meta;
+                    const d = this.domainMeta?.domain;
+                    if (d) {
+                        this.form!.patchValue({
+                            general: {
+                                isHttps:     d.isHttps,
+                                host:        d.host,
+                                name:        d.name,
+                                defaultSort: d.defaultSort,
+                            },
+                            auth: {
+                                anonymous: d.authAnonymous,
+                                local:     d.authLocal,
+                                sso:       d.authSso,
+                                ssoUrl:    d.ssoUrl,
+                                ssoNonInt: d.ssoNonInteractive,
+                                fedIdps:   this.fedIdps?.map(idp => !!this.domainMeta!.federatedIdpIds?.includes(idp.id)),
+                            },
+                            mod: {
+                                anonymous:     d.modAnonymous,
+                                authenticated: d.modAuthenticated,
+                                numCommentsOn: !!d.modNumComments,
+                                numComments:   d.modNumComments || 3,
+                                userAgeDaysOn: !!d.modUserAgeDays,
+                                userAgeDays:   d.modUserAgeDays || 7,
+                                images:        d.modImages,
+                                links:         d.modLinks,
+                                notifyPolicy:  d.modNotifyPolicy,
+                            }
                         });
-                }
 
-                // Make a clone of the domain config
-                this.config = this.domainMeta?.config?.clone();
+                        // Update enabled extension controls
+                        this.extensions
+                            // Collect {index, extension} pairs for each known extension
+                            ?.map((cfgEx, idx) => ({idx, ex: this.domainMeta!.extensions?.find(e => e.id === cfgEx.id)}))
+                            // Filter out disabled extensions
+                            .filter(el => el.ex)
+                            // Update the extension group
+                            .forEach(el => {
+                                const group = this.form!.get(`extensions.${el.idx}`) as FormGroup<{enabled: AbstractControl<boolean>; config: AbstractControl<string>}>;
+                                group.controls.enabled.setValue(true);
+                                group.controls.config.setValue(el.ex!.config ?? '');
+                                group.controls.config.enable();
+                            });
+                    }
 
-                // Create form subgroups for domain config
+                    // Return either a cloned domain config if there's a domain, or the vanilla domain defaults as config
+                    return this.domainMeta?.config ?
+                        of(this.domainMeta.config.clone()) :
+                        this.cfgSvc.dynamicConfig.pipe(untilDestroyed(this), first(), map(dc => dc.toDomainDefaults()));
+                }))
+            // Domain config arrived: create form subgroups for it
+            .subscribe(cfg => {
+                this.config = cfg;
                 this.setupFormConfigGroups();
             });
     }

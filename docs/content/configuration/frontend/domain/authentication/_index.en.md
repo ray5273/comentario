@@ -34,7 +34,7 @@ The `Authentication` tab allows to configure commenter authentication options fo
 These options include:
 
 * Anonymous comments
-* Local (username-and-password-based)
+* Local (password-based)
 * Social login via external identity providers:
     * [Facebook](/configuration/idps/facebook)
     * [GitHub](/configuration/idps/github)

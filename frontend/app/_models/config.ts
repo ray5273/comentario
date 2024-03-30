@@ -74,6 +74,17 @@ export class DynamicConfig {
     }
 
     /**
+     * Return a partial clone of this config that only contains domain default settings, removing the 'domain.defaults.'
+     * prefix from each key. This effectively translates instance config into a domain default config.
+     */
+    toDomainDefaults(): DynamicConfig {
+        return new DynamicConfig(
+            this.items
+                .filter(item => item.key.startsWith('domain.defaults.'))
+                .map(item => JSON.parse(JSON.stringify({...item, key: item.key.substring(16 /* Length of 'domain.defaults.' */)}))));
+    }
+
+    /**
      * Get config item by its key.
      */
     get(key: DomainConfigItemKey | InstanceConfigItemKey): DynamicConfigItem {

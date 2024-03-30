@@ -34,7 +34,10 @@
                 @for (idp of federatedIdps; track idp.id; let idx = $index) {
                     <div class="form-check form-switch">
                         <input [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id">
-                        <label class="form-check-label" [for]="'auth-' + idp.id">{{ idp.name }}</label>
+                        <label class="form-check-label" [for]="'auth-' + idp.id">
+                            <app-idp-icon [idpId]="idp.id"/>
+                            <span class="ms-1">{{ idp.name }}</span>
+                        </label>
                     </div>
                 }
             </div>

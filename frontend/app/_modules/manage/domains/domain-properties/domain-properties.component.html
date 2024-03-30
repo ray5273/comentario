@@ -87,12 +87,18 @@
                             <app-info-icon docLink="configuration/frontend/domain/authentication/" position="right"/>
                         </dt>
                         <dd>
-                            <ul class="ps-3 mb-0">
+                            <ul class="list-unstyled">
                                 @if (domain.authAnonymous) {
                                     <li i18n>Anonymous comments</li>
                                 }
                                 @if (domain.authLocal) {
                                     <li i18n>Local (password-based)</li>
+                                }
+                                @for (idp of fedIdps; track idp.id) {
+                                    <li>
+                                        <app-idp-icon [idpId]="idp.id"/>
+                                        <span class="ms-1">{{ idp.name }}</span>
+                                    </li>
                                 }
                                 @if (domain.authSso) {
                                     <li>
@@ -100,11 +106,8 @@
                                             <ng-container i18n>Non-interactive</ng-container>&ngsp;
                                         }
                                         <ng-container>Single Sign-On</ng-container>
-                                        <div class="text-truncate"><i i18n>via</i> {{ domain.ssoUrl }}</div>
+                                        <div class="text-truncate ps-3"><i i18n>via</i> {{ domain.ssoUrl }}</div>
                                     </li>
-                                }
-                                @for (idp of fedIdps; track idp.id) {
-                                    <li>{{ idp.name }}</li>
                                 }
                             </ul>
                         </dd>

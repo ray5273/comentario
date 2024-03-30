@@ -23,9 +23,25 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#sort-td').as('sortTD');
         cy.get('@domainEdit').find('#sort-sa').as('sortSA');
         cy.get('@domainEdit').find('#sort-sd').as('sortSD');
+        // Config - Comments
+        cy.get('@domainEdit').find('#comments_deletion_author')   .as('cfgCommentsDeletionAuthor');
+        cy.get('@domainEdit').find('#comments_deletion_moderator').as('cfgCommentsDeletionModerator');
+        cy.get('@domainEdit').find('#comments_editing_author')    .as('cfgCommentsEditingAuthor');
+        cy.get('@domainEdit').find('#comments_editing_moderator') .as('cfgCommentsEditingModerator');
+        cy.get('@domainEdit').find('#comments_enableVoting')      .as('cfgCommentsEnableVoting');
+        cy.get('@domainEdit').find('#comments_showDeleted')       .as('cfgCommentsShowDeleted');
+        // Config - Markdown
+        cy.get('@domainEdit').find('#markdown_images_enabled').as('cfgMarkdownImagesEnabled');
+        cy.get('@domainEdit').find('#markdown_links_enabled') .as('cfgMarkdownLinksEnabled');
+        cy.get('@domainEdit').find('#markdown_tables_enabled').as('cfgMarkdownTablesEnabled');
     };
 
     const makeAuthAliases = (sso: boolean) => {
+        // Options
+        cy.get('@domainEdit').find('#signup_enableFederated').as('cfgSignupEnableFederated');
+        cy.get('@domainEdit').find('#signup_enableLocal')    .as('cfgSignupEnableLocal');
+        cy.get('@domainEdit').find('#signup_enableSso')      .as('cfgSignupEnableSso');
+        // Methods
         cy.get('@domainEdit').find('#auth-anonymous').as('authAnonymous');
         cy.get('@domainEdit').find('#auth-local')    .as('authLocal');
         cy.get('@domainEdit').find('#auth-facebook') .as('authFacebook');
@@ -180,11 +196,26 @@ context('Domain Edit page', () => {
                 cy.get('@host')  .should('be.visible').and('have.value', '').and('be.enabled');
                 cy.get('@name')  .should('be.visible').and('have.value', '').and('be.enabled');
                 cy.get('@sortTD').should('be.checked');
+                // -- Config
+                cy.get('@cfgCommentsDeletionAuthor')   .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsDeletionModerator').should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEditingAuthor')    .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEditingModerator') .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEnableVoting')     .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsShowDeleted')      .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgMarkdownImagesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgMarkdownLinksEnabled')     .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgMarkdownTablesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
 
                 // Authentication
                 cy.get('@tabAuth').click();
                 checkActiveTabs([false, true, false, false]);
                 makeAuthAliases(false);
+                // -- Options
+                cy.get('@cfgSignupEnableFederated').should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgSignupEnableLocal')    .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgSignupEnableSso')      .should('be.visible').and('be.enabled').and('be.checked');
+                // -- Methods
                 cy.get('@authAnonymous').should('be.visible').and('be.enabled').and('not.be.checked');
                 cy.get('@authLocal')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authFacebook') .should('be.visible').and('be.enabled').and('be.checked');
@@ -310,13 +341,29 @@ context('Domain Edit page', () => {
             });
 
             it('allows to add domain with custom settings', () => {
+                // General
                 cy.get('@host').setValue('facebook.com:4551');
                 cy.get('@name').setValue('Face Book');
                 cy.get('@sortSD').clickLabel();
+                // -- Config
+                cy.get('@cfgCommentsDeletionAuthor')   .clickLabel();
+                cy.get('@cfgCommentsDeletionModerator').clickLabel();
+                cy.get('@cfgCommentsEditingAuthor')    .clickLabel();
+                cy.get('@cfgCommentsEditingModerator') .clickLabel();
+                cy.get('@cfgCommentsEnableVoting')     .clickLabel();
+                cy.get('@cfgCommentsShowDeleted')      .clickLabel();
+                cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
+                cy.get('@cfgMarkdownLinksEnabled')     .clickLabel();
+                cy.get('@cfgMarkdownTablesEnabled')    .clickLabel();
 
                 // Auth
                 cy.get('@tabAuth').click();
                 makeAuthAliases(false);
+                // -- Options
+                cy.get('@cfgSignupEnableFederated').clickLabel();
+                cy.get('@cfgSignupEnableLocal')    .clickLabel();
+                cy.get('@cfgSignupEnableSso')      .clickLabel();
+                // -- Methods
                 cy.get('@authAnonymous').clickLabel();
                 cy.get('@authLocal')    .clickLabel();
                 cy.get('@authFacebook') .clickLabel();
@@ -364,25 +411,25 @@ context('Domain Edit page', () => {
                     ['Read-only',                                               ''],
                     ['Default comment sort',                                    'Most upvoted first'],
                     ['Authentication'],
-                        ['Enable commenter registration via external provider', '✔'],
-                        ['Enable local commenter registration',                 '✔'],
-                        ['Enable commenter registration via SSO',               '✔'],
+                        ['Enable commenter registration via external provider', ''],
+                        ['Enable local commenter registration',                 ''],
+                        ['Enable commenter registration via SSO',               ''],
                     ['Comments'],
-                        ['Allow comment authors to delete comments',            '✔'],
-                        ['Allow moderators to delete comments',                 '✔'],
-                        ['Allow comment authors to edit comments',              '✔'],
-                        ['Allow moderators to edit comments',                   '✔'],
-                        ['Enable voting on comments',                           '✔'],
-                        ['Show deleted comments',                               '✔'],
+                        ['Allow comment authors to delete comments',            ''],
+                        ['Allow moderators to delete comments',                 ''],
+                        ['Allow comment authors to edit comments',              ''],
+                        ['Allow moderators to edit comments',                   ''],
+                        ['Enable voting on comments',                           ''],
+                        ['Show deleted comments',                               ''],
                     ['Markdown'],
-                        ['Enable images in comments',                           '✔'],
-                        ['Enable links in comments',                            '✔'],
-                        ['Enable tables in comments',                           '✔'],
+                        ['Enable images in comments',                           ''],
+                        ['Enable links in comments',                            ''],
+                        ['Enable tables in comments',                           ''],
                     ['Authentication methods',
                         [
                             'Anonymous comments',
                             'Non-interactive Single Sign-On',
-                            'via https://sso.facebook.com',
+                                'via https://sso.facebook.com',
                         ],
                     ],
                     ['Require moderator approval on comment, if',
@@ -451,14 +498,29 @@ context('Domain Edit page', () => {
 
                 // General
                 checkActiveTabs([true, false, false, false]);
-                cy.get('@host').should('be.visible').and('have.value', DOMAINS.localhost.host).and('be.disabled');
-                cy.get('@name').should('be.visible').and('have.value', DOMAINS.localhost.name).and('be.enabled');
+                cy.get('@host')  .should('be.visible').and('have.value', DOMAINS.localhost.host).and('be.disabled');
+                cy.get('@name')  .should('be.visible').and('have.value', DOMAINS.localhost.name).and('be.enabled');
                 cy.get('@sortTA').should('be.checked');
+                // -- Config
+                cy.get('@cfgCommentsDeletionAuthor')   .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsDeletionModerator').should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEditingAuthor')    .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEditingModerator') .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEnableVoting')     .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsShowDeleted')      .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgMarkdownImagesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgMarkdownLinksEnabled')     .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgMarkdownTablesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
 
                 // Authentication
                 cy.get('@tabAuth').click();
                 checkActiveTabs([false, true, false, false]);
                 makeAuthAliases(true);
+                // -- Options
+                cy.get('@cfgSignupEnableFederated').should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgSignupEnableLocal')    .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgSignupEnableSso')      .should('be.visible').and('be.enabled').and('be.checked');
+                // -- Methods
                 cy.get('@authAnonymous').should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authLocal')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authFacebook') .should('be.visible').and('be.enabled').and('be.checked');
@@ -509,11 +571,28 @@ context('Domain Edit page', () => {
             });
 
             it('allows to edit domain', () => {
+                // General
                 cy.get('@name').setValue('Big Time');
                 cy.get('@sortSA').clickLabel();
-                // -- Auth
+                // -- Config
+                cy.get('@cfgCommentsDeletionAuthor')   .clickLabel();
+                cy.get('@cfgCommentsDeletionModerator').clickLabel();
+                cy.get('@cfgCommentsEditingAuthor')    .clickLabel();
+                cy.get('@cfgCommentsEditingModerator') .clickLabel();
+                cy.get('@cfgCommentsEnableVoting')     .clickLabel();
+                cy.get('@cfgCommentsShowDeleted')      .clickLabel();
+                cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
+                cy.get('@cfgMarkdownLinksEnabled')     .clickLabel();
+                cy.get('@cfgMarkdownTablesEnabled')    .clickLabel();
+
+                // Auth
                 cy.get('@tabAuth').click();
                 makeAuthAliases(false);
+                // -- Options
+                cy.get('@cfgSignupEnableFederated').clickLabel();
+                cy.get('@cfgSignupEnableLocal')    .clickLabel();
+                cy.get('@cfgSignupEnableSso')      .clickLabel();
+                // -- Methods
                 cy.get('@authAnonymous').clickLabel();
                 cy.get('@authLocal')    .clickLabel();
                 cy.get('@authFacebook') .clickLabel();
@@ -527,7 +606,7 @@ context('Domain Edit page', () => {
                 // Enable local
                 cy.get('@authLocal').clickLabel();
 
-                // -- Moderation
+                // Moderation
                 cy.get('@tabModeration').click();
                 makeModerationAliases();
                 cy.get('@modAnonymous')      .clickLabel();
@@ -539,7 +618,8 @@ context('Domain Edit page', () => {
                 cy.get('@modNotifyPolicyAll').clickLabel();
                 cy.get('app-domain-edit #mod-num-comments') .setValue('15');
                 cy.get('app-domain-edit #mod-user-age-days').setValue('672');
-                // -- Extensions
+
+                // Extensions
                 cy.get('@tabExtensions').click();
                 makeExtensionsAliases();
                 cy.get('@extAkismetEnabled')                                    .clickLabel();
@@ -559,20 +639,20 @@ context('Domain Edit page', () => {
                     ['Read-only',                                               ''],
                     ['Default comment sort',                                    'Least upvoted first'],
                     ['Authentication'],
-                        ['Enable commenter registration via external provider', '✔'],
-                        ['Enable local commenter registration',                 '✔'],
-                        ['Enable commenter registration via SSO',               '✔'],
+                        ['Enable commenter registration via external provider', ''],
+                        ['Enable local commenter registration',                 ''],
+                        ['Enable commenter registration via SSO',               ''],
                     ['Comments'],
-                        ['Allow comment authors to delete comments',            '✔'],
-                        ['Allow moderators to delete comments',                 '✔'],
-                        ['Allow comment authors to edit comments',              '✔'],
-                        ['Allow moderators to edit comments',                   '✔'],
-                        ['Enable voting on comments',                           '✔'],
-                        ['Show deleted comments',                               '✔'],
+                        ['Allow comment authors to delete comments',            ''],
+                        ['Allow moderators to delete comments',                 ''],
+                        ['Allow comment authors to edit comments',              ''],
+                        ['Allow moderators to edit comments',                   ''],
+                        ['Enable voting on comments',                           ''],
+                        ['Show deleted comments',                               ''],
                     ['Markdown'],
-                        ['Enable images in comments',                           '✔'],
-                        ['Enable links in comments',                            '✔'],
-                        ['Enable tables in comments',                           '✔'],
+                        ['Enable images in comments',                           ''],
+                        ['Enable links in comments',                            ''],
+                        ['Enable tables in comments',                           ''],
                     ['Authentication methods',                                  'Local (password-based)'],
                     ['Require moderator approval on comment, if',
                         [
@@ -599,38 +679,61 @@ context('Domain Edit page', () => {
                 // Edit the domain again and verify control values
                 cy.contains('app-domain-detail a', 'Edit settings').click();
                 cy.isAt(pagePath);
-                // -- General
-                cy.get('app-domain-edit').find('#name')   .should('have.value', 'Big Time');
-                cy.get('app-domain-edit').find('#sort-sa').should('be.checked');
-                // -- Auth
+
+                // General
+                makeGeneralAliases();
+                cy.get('@name')  .should('have.value', 'Big Time');
+                cy.get('@sortSA').should('be.checked');
+                // -- Config
+                cy.get('@cfgCommentsDeletionAuthor')   .should('not.be.checked');
+                cy.get('@cfgCommentsDeletionModerator').should('not.be.checked');
+                cy.get('@cfgCommentsEditingAuthor')    .should('not.be.checked');
+                cy.get('@cfgCommentsEditingModerator') .should('not.be.checked');
+                cy.get('@cfgCommentsEnableVoting')     .should('not.be.checked');
+                cy.get('@cfgCommentsShowDeleted')      .should('not.be.checked');
+                cy.get('@cfgMarkdownImagesEnabled')    .should('not.be.checked');
+                cy.get('@cfgMarkdownLinksEnabled')     .should('not.be.checked');
+                cy.get('@cfgMarkdownTablesEnabled')    .should('not.be.checked');
+
+                // Auth
                 cy.contains('app-domain-edit li[ngbnavitem]', 'Authentication').click();
-                cy.get('app-domain-edit #auth-anonymous').should('not.be.checked');
-                cy.get('app-domain-edit #auth-local')    .should('be.checked');
-                cy.get('app-domain-edit #auth-facebook') .should('not.be.checked');
-                cy.get('app-domain-edit #auth-github')   .should('not.be.checked');
-                cy.get('app-domain-edit #auth-gitlab')   .should('not.be.checked');
-                cy.get('app-domain-edit #auth-google')   .should('not.be.checked');
-                cy.get('app-domain-edit #auth-twitter')  .should('not.be.checked');
-                cy.get('app-domain-edit #auth-sso')      .should('not.be.checked');
-                // -- Moderation
+                makeAuthAliases(false);
+                // -- Options
+                cy.get('@cfgSignupEnableFederated').should('not.be.checked');
+                cy.get('@cfgSignupEnableLocal')    .should('not.be.checked');
+                cy.get('@cfgSignupEnableSso')      .should('not.be.checked');
+                // -- Methods
+                cy.get('@authAnonymous').should('not.be.checked');
+                cy.get('@authLocal')    .should('be.checked');
+                cy.get('@authFacebook') .should('not.be.checked');
+                cy.get('@authGithub')   .should('not.be.checked');
+                cy.get('@authGitlab')   .should('not.be.checked');
+                cy.get('@authGoogle')   .should('not.be.checked');
+                cy.get('@authTwitter')  .should('not.be.checked');
+                cy.get('@authSso')      .should('not.be.checked');
+
+                //  Moderation
                 cy.contains('app-domain-edit li[ngbnavitem]', 'Moderation').click();
-                cy.get('app-domain-edit #mod-anonymous')        .should('not.be.checked');
-                cy.get('app-domain-edit #mod-authenticated')    .should('be.checked');
-                cy.get('app-domain-edit #mod-num-comments-on')  .should('be.checked');
-                cy.get('app-domain-edit #mod-num-comments')     .should('have.value', '15');
-                cy.get('app-domain-edit #mod-user-age-days-on') .should('be.checked');
-                cy.get('app-domain-edit #mod-user-age-days')    .should('have.value', '672');
-                cy.get('app-domain-edit #mod-links')            .should('be.checked');
-                cy.get('app-domain-edit #mod-images')           .should('be.checked');
-                cy.get('app-domain-edit #mod-notify-policy-all').should('be.checked');
-                // -- Extensions
+                makeModerationAliases();
+                cy.get('@modAnonymous')                     .should('not.be.checked');
+                cy.get('@modAuthenticated')                 .should('be.checked');
+                cy.get('@modNumCommentsOn')                 .should('be.checked');
+                cy.get('app-domain-edit #mod-num-comments') .should('have.value', '15');
+                cy.get('@modUserAgeDaysOn')                 .should('be.checked');
+                cy.get('app-domain-edit #mod-user-age-days').should('have.value', '672');
+                cy.get('@modLinks')                         .should('be.checked');
+                cy.get('@modImages')                        .should('be.checked');
+                cy.get('@modNotifyPolicyAll')               .should('be.checked');
+
+                // Extensions
                 cy.contains('app-domain-edit li[ngbnavitem]', 'Extensions').click();
-                cy.get('app-domain-edit #extension-akismet-enabled')             .should('be.checked');
-                cy.get('app-domain-edit #extension-akismet-config')              .should('have.value', 'name=akismet\nfoo=bar');
-                cy.get('app-domain-edit #extension-apiLayer-spamChecker-enabled').should('be.checked');
-                cy.get('app-domain-edit #extension-apiLayer-spamChecker-config') .should('have.value', 'name=apiLayer-spamChecker\nbaz=42');
-                cy.get('app-domain-edit #extension-perspective-enabled')         .should('be.checked');
-                cy.get('app-domain-edit #extension-perspective-config')          .should('have.value', 'name=perspective\nabc=xyz');
+                makeExtensionsAliases();
+                cy.get('@extAkismetEnabled')                                    .should('be.checked');
+                cy.get('app-domain-edit #extension-akismet-config')             .should('have.value', 'name=akismet\nfoo=bar');
+                cy.get('@extApiLayerEnabled')                                   .should('be.checked');
+                cy.get('app-domain-edit #extension-apiLayer-spamChecker-config').should('have.value', 'name=apiLayer-spamChecker\nbaz=42');
+                cy.get('@extPerspectiveEnabled')                                .should('be.checked');
+                cy.get('app-domain-edit #extension-perspective-config')         .should('have.value', 'name=perspective\nabc=xyz');
 
                 // Go to the domain list and verify the domain is updated
                 cy.sidebarClick('Domains', PATHS.manage.domains);
