@@ -1,5 +1,6 @@
 import { DomainConfigKey, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
+import { InstanceConfigItemKey } from 'comentario-frontend/app/_models/config';
 
 context('Comment Editor', () => {
 
@@ -307,30 +308,37 @@ context('Comment Editor', () => {
                 'Bold', 'Italic', 'Strikethrough', 'Link', 'Quote', 'Code', 'Image', 'Table', 'Bullet list',
                 'Numbered list', 'Markdown help'];
 
+            /** Disable the given config value, visit the site and check the toolbar buttons. */
+            const checkSetting = (instKey: string, domainKey: string, hidesButton: string) => {
+                const expectedButtons = btns.filter(b => b !== hidesButton);
+
+                // Disable the setting globally and check
+                cy.backendUpdateDynConfig({[instKey]: false});
+                visitAndEdit();
+                cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', expectedButtons);
+
+                // Re-enable the global setting, disable in the domain config, and recheck
+                cy.backendUpdateDynConfig({[instKey]: true});
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[domainKey]: false});
+                visitAndEdit();
+                cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', expectedButtons);
+
+                // Revert the domain setting
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[domainKey]: true});
+            };
+
             // Check titles of all buttons
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', btns);
 
             // Disable links and the Link button is gone
-            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownLinksEnabled]: false});
-            visitAndEdit();
-            cy.get('@toolbar').find('.comentario-btn').attrValues('title')
-                .should('arrayMatch', btns.filter(b => b !== 'Link'));
-            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownLinksEnabled]: true});
+            checkSetting(InstanceConfigItemKey.domainDefaultsMarkdownLinksEnabled, DomainConfigKey.markdownLinksEnabled, 'Link');
 
             // Disable images and the Image button is gone
-            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownImagesEnabled]: false});
-            visitAndEdit();
-            cy.get('@toolbar').find('.comentario-btn').attrValues('title')
-                .should('arrayMatch', btns.filter(b => b !== 'Image'));
-            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownImagesEnabled]: true});
+            checkSetting(InstanceConfigItemKey.domainDefaultsMarkdownImagesEnabled, DomainConfigKey.markdownImagesEnabled, 'Image');
 
             // Disable tables and the Table button is gone
-            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownTablesEnabled]: false});
-            visitAndEdit();
-            cy.get('@toolbar').find('.comentario-btn').attrValues('title')
-                .should('arrayMatch', btns.filter(b => b !== 'Table'));
-            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownTablesEnabled]: true});
+            checkSetting(InstanceConfigItemKey.domainDefaultsMarkdownTablesEnabled, DomainConfigKey.markdownTablesEnabled, 'Table');
         });
 
         Object.entries(buttonTests).forEach(([button, btnTests]) =>

@@ -1,5 +1,6 @@
 import { DomainConfigKey, DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
+import { InstanceConfigItemKey } from 'comentario-frontend/app/_models/config';
 
 context('Login dialog', () => {
 
@@ -79,10 +80,15 @@ context('Login dialog', () => {
                 // Disable Cypress' rejected promise handling
                 Cypress.on('uncaught:exception', () => false);
 
-                // Disable SSO signups
-                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.ssoSignupEnabled]: false});
+                // Disable SSO signups globally, try to register and fail
+                cy.backendUpdateDynConfig({[InstanceConfigItemKey.domainDefaultsSsoSignupEnabled]: false});
+                cy.get('@btnSso').click();
+                cy.testSiteCheckMessage('New signups are forbidden');
 
-                // Try to register and fail
+                // Re-enable SSO signups globally and disable locally, try to register again
+                cy.backendUpdateDynConfig({[InstanceConfigItemKey.domainDefaultsSsoSignupEnabled]: true});
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.ssoSignupEnabled]: false});
+                openLoginDlg();
                 cy.get('@btnSso').click();
                 cy.testSiteCheckMessage('New signups are forbidden');
             });
