@@ -55,7 +55,7 @@ chai.use((_chai) => {
 
     // Checks the passed two-dimensional array (a.k.a. matrix) against the expectation. If a string array is passed for expected, it's
     // converted into a linebreak-separated string
-    _chai.Assertion.addMethod('matrixMatch', function(expected: (string | string[] | RegExp)[][], options?: {trim: boolean}) {
+    _chai.Assertion.addMethod('matrixMatch', function(expected: ((string | string[] | RegExp)[] | null)[], options?: {trim: boolean}) {
 
         // Matches individual elements of the array
         const matchElement = (act: string, exp: string | string[] | RegExp, idx1: number, idx2: number) => {
@@ -113,8 +113,8 @@ chai.use((_chai) => {
             `expected #{this} not to be an Array(${expected.length})`,
             expected);
 
-        // Verify every element, which is itself a string[]
-        expected.forEach((exp, idx) => matchSubArray(this._obj[idx], exp, idx));
+        // Verify every element, with the exception of null (which means "we don't care"), which is otherwise a string[]
+        expected.forEach((exp, idx) => exp === null || matchSubArray(this._obj[idx], exp, idx));
     });
 
     // Deeply compares the object, passed as a YAML string, against the expectation

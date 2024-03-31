@@ -304,7 +304,17 @@ func (svc *dynConfigService) Reset() error {
 	if err := svc.s.Reset(); err != nil {
 		return err
 	}
-	return svc.s.Save()
+
+	// Save the updated values
+	if err := svc.s.Save(); err != nil {
+		return err
+	}
+
+	// Flush any cached domain config to enforce any new defaults
+	TheDomainConfigService.ResetCache()
+
+	// Succeeded
+	return nil
 }
 
 func (svc *dynConfigService) Update(curUserID *uuid.UUID, vals map[data.DynConfigItemKey]string) error {
@@ -317,6 +327,14 @@ func (svc *dynConfigService) Update(curUserID *uuid.UUID, vals map[data.DynConfi
 		}
 	}
 
-	// Save the configuration
-	return svc.s.Save()
+	// Save the updated values
+	if err := svc.s.Save(); err != nil {
+		return err
+	}
+
+	// Flush any cached domain config to enforce any new defaults
+	TheDomainConfigService.ResetCache()
+
+	// Succeeded
+	return nil
 }
