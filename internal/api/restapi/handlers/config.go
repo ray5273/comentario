@@ -3,7 +3,6 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
-	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -36,14 +35,8 @@ func ConfigDynamicUpdate(params api_general.ConfigDynamicUpdateParams, user *dat
 		return r
 	}
 
-	// Iterate the params and create a key-value map
-	vals := map[data.DynConfigItemKey]string{}
-	for _, item := range params.Body {
-		vals[data.DynConfigItemKey(swag.StringValue(item.Key))] = swag.StringValue(item.Value)
-	}
-
 	// Update the config
-	if err := svc.TheDynConfigService.Update(&user.ID, vals); err != nil {
+	if err := svc.TheDynConfigService.Update(&user.ID, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -104,7 +97,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	// Succeeded
 	return api_general.NewConfigGetOK().
 		WithPayload(&api_general.ConfigGetOKBody{
-			DynamicConfig: dynConfigToDTOs(dynConfig),
+			DynamicConfig: data.DynConfigMapToDTOs(dynConfig),
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:       config.CLIFlags.BaseDocsURL,
 				BaseURL:           config.BaseURL.String(),
@@ -122,13 +115,4 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 				Version:           config.AppVersion,
 			},
 		})
-}
-
-// dynConfigToDTOs converts a map of dynamic config items into a slice of DTO models
-func dynConfigToDTOs(config map[data.DynConfigItemKey]*data.DynConfigItem) []*models.DynamicConfigItem {
-	result := make([]*models.DynamicConfigItem, 0, len(config))
-	for key, item := range config {
-		result = append(result, item.ToDTO(key))
-	}
-	return result
 }

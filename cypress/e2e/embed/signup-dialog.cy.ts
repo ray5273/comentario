@@ -1,4 +1,4 @@
-import { DOMAIN_CONFIG_ITEM_KEY, DOMAINS, INSTANCE_CONFIG_ITEM_KEY, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, InstanceConfigKey, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Signup dialog', () => {
@@ -112,7 +112,7 @@ context('Signup dialog', () => {
 
         it('with confirmation', () => {
             // Enable commenter email confirmation
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupConfirmCommenter, true);
+            cy.backendUpdateDynConfig({[InstanceConfigKey.authSignupConfirmCommenter]: true});
 
             // Fill out and submit the form
             signupWith({email: 'obiwan@jedi.org', name: 'Obi-Wan Kenobi', password: '1wannaSandwich'}, 'https://jedi.org/lightsabers-for-sale');
@@ -160,7 +160,7 @@ context('Signup dialog', () => {
         });
 
         it('locally when signups are disabled', () => {
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.localSignupEnabled, false);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.localSignupEnabled]: false});
             signupWith({...USERS.ace, password: 'Passw0rd'});
             cy.testSiteCheckMessage('New signups are forbidden');
         });

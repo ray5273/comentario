@@ -680,8 +680,12 @@ Cypress.Commands.add(
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));
 
-Cypress.Commands.add('backendSetDynConfigItem', (key: string, value: string | number | boolean) =>
-    cy.request('PUT', '/api/e2e/config/dynamic', {key, value: String(value)}).its('status').should('eq', 204));
+Cypress.Commands.add('backendUpdateDynConfig', (values: { [key: string]: string | number | boolean }) =>
+    void cy.request(
+            'PUT',
+            '/api/e2e/config/dynamic',
+            Object.entries(values).map(([k, v]) => ({key: k, value: String(v)})))
+        .its('status').should('eq', 204));
 
 Cypress.Commands.add('backendGetSentEmails', () =>
     cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body'));
@@ -689,8 +693,12 @@ Cypress.Commands.add('backendGetSentEmails', () =>
 Cypress.Commands.add('backendPatchDomain', (id: string, values: any) =>
     void cy.request('PATCH', `/api/e2e/domains/${id}`, values).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDomainConfigItem', (id: string, key: string, value: string | number | boolean) =>
-    void cy.request('PUT', `/api/e2e/domains/${id}/config`, {key, value: String(value)}).its('status').should('eq', 204));
+Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: { [key: string]: string | number | boolean }) =>
+    void cy.request(
+            'PUT',
+            `/api/e2e/domains/${id}/config`,
+            Object.entries(values).map(([k, v]) => ({key: k, value: String(v)})))
+        .its('status').should('eq', 204));
 
 Cypress.Commands.add('backendUpdateDomainIdps', (id: string, idps: string[]) =>
     void cy.request('PUT', `/api/e2e/domains/${id}/idps`, idps).its('status').should('eq', 204));

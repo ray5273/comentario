@@ -135,7 +135,7 @@ export const COOKIES = {
 };
 
 /** Domain config item keys. */
-export enum DOMAIN_CONFIG_ITEM_KEY {
+export enum DomainConfigKey {
     commentDeletionAuthor    = 'comments.deletion.author',
     commentDeletionModerator = 'comments.deletion.moderator',
     commentEditingAuthor     = 'comments.editing.author',
@@ -151,25 +151,25 @@ export enum DOMAIN_CONFIG_ITEM_KEY {
 }
 
 /** Instance dynamic config item keys. */
-export enum INSTANCE_CONFIG_ITEM_KEY {
+export enum InstanceConfigKey {
     authSignupConfirmCommenter             = 'auth.signup.confirm.commenter',
     authSignupConfirmUser                  = 'auth.signup.confirm.user',
     authSignupEnabled                      = 'auth.signup.enabled',
     integrationsUseGravatar                = 'integrations.useGravatar',
     operationNewOwnerEnabled               = 'operation.newOwner.enabled',
     // Domain defaults
-    domainDefaultsCommentDeletionAuthor    = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.commentDeletionAuthor}`,
-    domainDefaultsCommentDeletionModerator = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.commentDeletionModerator}`,
-    domainDefaultsCommentEditingAuthor     = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.commentEditingAuthor}`,
-    domainDefaultsCommentEditingModerator  = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.commentEditingModerator}`,
-    domainDefaultsEnableCommentVoting      = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.enableCommentVoting}`,
-    domainDefaultsShowDeletedComments      = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.showDeletedComments}`,
-    domainDefaultsMarkdownImagesEnabled    = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.markdownImagesEnabled}`,
-    domainDefaultsMarkdownLinksEnabled     = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.markdownLinksEnabled}`,
-    domainDefaultsMarkdownTablesEnabled    = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.markdownTablesEnabled}`,
-    domainDefaultsLocalSignupEnabled       = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.localSignupEnabled}`,
-    domainDefaultsFederatedSignupEnabled   = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.federatedSignupEnabled}`,
-    domainDefaultsSsoSignupEnabled         = `domain.defaults.${DOMAIN_CONFIG_ITEM_KEY.ssoSignupEnabled}`,
+    domainDefaultsCommentDeletionAuthor    = `domain.defaults.${DomainConfigKey.commentDeletionAuthor}`,
+    domainDefaultsCommentDeletionModerator = `domain.defaults.${DomainConfigKey.commentDeletionModerator}`,
+    domainDefaultsCommentEditingAuthor     = `domain.defaults.${DomainConfigKey.commentEditingAuthor}`,
+    domainDefaultsCommentEditingModerator  = `domain.defaults.${DomainConfigKey.commentEditingModerator}`,
+    domainDefaultsEnableCommentVoting      = `domain.defaults.${DomainConfigKey.enableCommentVoting}`,
+    domainDefaultsShowDeletedComments      = `domain.defaults.${DomainConfigKey.showDeletedComments}`,
+    domainDefaultsMarkdownImagesEnabled    = `domain.defaults.${DomainConfigKey.markdownImagesEnabled}`,
+    domainDefaultsMarkdownLinksEnabled     = `domain.defaults.${DomainConfigKey.markdownLinksEnabled}`,
+    domainDefaultsMarkdownTablesEnabled    = `domain.defaults.${DomainConfigKey.markdownTablesEnabled}`,
+    domainDefaultsLocalSignupEnabled       = `domain.defaults.${DomainConfigKey.localSignupEnabled}`,
+    domainDefaultsFederatedSignupEnabled   = `domain.defaults.${DomainConfigKey.federatedSignupEnabled}`,
+    domainDefaultsSsoSignupEnabled         = `domain.defaults.${DomainConfigKey.ssoSignupEnabled}`,
 }
 
 /** Predefined domains, declared in "creation order", i.e. ordered by ts_created. */

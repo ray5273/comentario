@@ -3280,8 +3280,8 @@ paths:
 
   /e2e/config/dynamic:
     put:
-      operationId: E2eConfigDynamicItemSet
-      summary: Update dynamic instance configuration item
+      operationId: E2eConfigDynamicUpdate
+      summary: Update the given dynamic instance configuration items
       tags:
         - ApiE2e
       security: []
@@ -3290,7 +3290,9 @@ paths:
           name: body
           required: true
           schema:
-            $ref: "#/definitions/dynamicConfigItem"
+            type: array
+            items:
+              $ref: "#/definitions/dynamicConfigItem"
       responses:
         204:
           description: Dynamic instance configuration item has been updated
@@ -3311,8 +3313,8 @@ paths:
 
   /e2e/domains/{uuid}/config:
     put:
-      operationId: E2eDomainUpdateConfigItem
-      summary: Update a dynamic configuration item value for the specified domain
+      operationId: E2eDomainConfigUpdate
+      summary: Update the given dynamic configuration item values for the specified domain
       tags:
         - ApiE2e
       security: []
@@ -3322,6 +3324,8 @@ paths:
           name: body
           required: true
           schema:
+            type: array
+            items:
               $ref: "#/definitions/dynamicConfigItem"
       responses:
         204:

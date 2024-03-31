@@ -6,7 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/swag"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
@@ -85,9 +84,9 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 
 	// Configure API endpoints
 	e2eHandler = *hPtr
-	api.APIE2eE2eConfigDynamicItemSetHandler = api_e2e.E2eConfigDynamicItemSetHandlerFunc(E2eConfigDynamicItemSet)
+	api.APIE2eE2eConfigDynamicUpdateHandler = api_e2e.E2eConfigDynamicUpdateHandlerFunc(E2eConfigDynamicUpdate)
 	api.APIE2eE2eDomainPatchHandler = api_e2e.E2eDomainPatchHandlerFunc(E2eDomainPatch)
-	api.APIE2eE2eDomainUpdateConfigItemHandler = api_e2e.E2eDomainUpdateConfigItemHandlerFunc(E2eDomainUpdateConfigItem)
+	api.APIE2eE2eDomainConfigUpdateHandler = api_e2e.E2eDomainConfigUpdateHandlerFunc(E2eDomainConfigUpdate)
 	api.APIE2eE2eDomainUpdateIdpsHandler = api_e2e.E2eDomainUpdateIdpsHandlerFunc(E2eDomainUpdateIdps)
 	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
 	api.APIE2eE2eOAuthSSONonInteractiveHandler = api_e2e.E2eOAuthSSONonInteractiveHandlerFunc(E2eOAuthSSONonInteractive)
@@ -106,19 +105,14 @@ func E2eInit() error {
 	return e2eHandler.Init(&e2eApp{logger: logging.MustGetLogger("e2e")})
 }
 
-func E2eConfigDynamicItemSet(params api_e2e.E2eConfigDynamicItemSetParams) middleware.Responder {
+func E2eConfigDynamicUpdate(params api_e2e.E2eConfigDynamicUpdateParams) middleware.Responder {
 	// Update the config
-	err := svc.TheDynConfigService.Update(
-		nil,
-		map[data.DynConfigItemKey]string{
-			data.DynConfigItemKey(swag.StringValue(params.Body.Key)): swag.StringValue(params.Body.Value),
-		})
-	if err != nil {
+	if err := svc.TheDynConfigService.Update(nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_e2e.NewE2eConfigDynamicItemSetNoContent()
+	return api_e2e.NewE2eConfigDynamicUpdateNoContent()
 }
 
 func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
@@ -161,7 +155,7 @@ func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
 	return api_e2e.NewE2eDomainPatchNoContent()
 }
 
-func E2eDomainUpdateConfigItem(params api_e2e.E2eDomainUpdateConfigItemParams) middleware.Responder {
+func E2eDomainConfigUpdate(params api_e2e.E2eDomainConfigUpdateParams) middleware.Responder {
 	// Parse domain ID
 	domainID, r := parseUUID(params.UUID)
 	if r != nil {
@@ -169,18 +163,12 @@ func E2eDomainUpdateConfigItem(params api_e2e.E2eDomainUpdateConfigItemParams) m
 	}
 
 	// Update the domain setting
-	err := svc.TheDomainConfigService.Update(
-		domainID,
-		nil,
-		map[data.DynConfigItemKey]string{
-			data.DynConfigItemKey(swag.StringValue(params.Body.Key)): swag.StringValue(params.Body.Value),
-		})
-	if err != nil {
+	if err := svc.TheDomainConfigService.Update(domainID, nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_e2e.NewE2eDomainUpdateConfigItemNoContent()
+	return api_e2e.NewE2eDomainConfigUpdateNoContent()
 }
 
 func E2eDomainUpdateIdps(params api_e2e.E2eDomainUpdateIdpsParams) middleware.Responder {

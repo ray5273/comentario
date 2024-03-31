@@ -1,4 +1,4 @@
-import { INSTANCE_CONFIG_ITEM_KEY, PATHS, USERS } from '../../../support/cy-utils';
+import { InstanceConfigKey, PATHS, USERS } from '../../../support/cy-utils';
 
 context('Signup', () => {
 
@@ -6,7 +6,7 @@ context('Signup', () => {
 
     it('is unavailable when disabled in configuration', () => {
         // Disable registrations and visit the page
-        cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupEnabled, false);
+        cy.backendUpdateDynConfig({[InstanceConfigKey.authSignupEnabled]: false});
         cy.visit(PATHS.auth.signup);
 
         // There's a banner
@@ -134,7 +134,7 @@ context('Signup', () => {
 
         it('allows user to sign up without confirmation', () => {
             // Deactivate email confirmation (on by default)
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupConfirmUser, false);
+            cy.backendUpdateDynConfig({[InstanceConfigKey.authSignupConfirmUser]: false});
 
             // Sign up
             const user = {email: 'test@example', name: 'Imp', password: 'Passw0rd'};

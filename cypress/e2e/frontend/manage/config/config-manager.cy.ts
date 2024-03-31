@@ -1,4 +1,4 @@
-import { DOMAINS, INSTANCE_CONFIG_ITEM_KEY, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import { DOMAINS, InstanceConfigKey, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Config Manager', () => {
 
@@ -271,23 +271,25 @@ context('Config Manager', () => {
             ]);
 
             // Tweak the config using backend calls
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupConfirmCommenter,             false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupConfirmUser,                  false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.authSignupEnabled,                      false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentDeletionAuthor,    false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentDeletionModerator, true);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentEditingAuthor,     true);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsCommentEditingModerator,  false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsEnableCommentVoting,      false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsShowDeletedComments,      false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsMarkdownImagesEnabled,    true);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsMarkdownLinksEnabled,     false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsMarkdownTablesEnabled,    false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsLocalSignupEnabled,       false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsFederatedSignupEnabled,   false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.domainDefaultsSsoSignupEnabled,         false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.integrationsUseGravatar,                false);
-            cy.backendSetDynConfigItem(INSTANCE_CONFIG_ITEM_KEY.operationNewOwnerEnabled,               true);
+            cy.backendUpdateDynConfig({
+                [InstanceConfigKey.authSignupConfirmCommenter]:             false,
+                [InstanceConfigKey.authSignupConfirmUser]:                  false,
+                [InstanceConfigKey.authSignupEnabled]:                      false,
+                [InstanceConfigKey.domainDefaultsCommentDeletionAuthor]:    false,
+                [InstanceConfigKey.domainDefaultsCommentDeletionModerator]: true,
+                [InstanceConfigKey.domainDefaultsCommentEditingAuthor]:     true,
+                [InstanceConfigKey.domainDefaultsCommentEditingModerator]:  false,
+                [InstanceConfigKey.domainDefaultsEnableCommentVoting]:      false,
+                [InstanceConfigKey.domainDefaultsShowDeletedComments]:      false,
+                [InstanceConfigKey.domainDefaultsMarkdownImagesEnabled]:    true,
+                [InstanceConfigKey.domainDefaultsMarkdownLinksEnabled]:     false,
+                [InstanceConfigKey.domainDefaultsMarkdownTablesEnabled]:    false,
+                [InstanceConfigKey.domainDefaultsLocalSignupEnabled]:       false,
+                [InstanceConfigKey.domainDefaultsFederatedSignupEnabled]:   false,
+                [InstanceConfigKey.domainDefaultsSsoSignupEnabled]:         false,
+                [InstanceConfigKey.integrationsUseGravatar]:                false,
+                [InstanceConfigKey.operationNewOwnerEnabled]:               true,
+            });
 
             // Go back to the dynamic config tab and recheck
             cy.visit(pagePathDynamic);

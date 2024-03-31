@@ -68,6 +68,24 @@ func (ci *DynConfigItem) ValidateValue(value string) error {
 	return nil
 }
 
+// DynConfigDTOsToMap converts a slice of dynamic config item DTOs into a key-value map
+func DynConfigDTOsToMap(items []*models.DynamicConfigItem) map[DynConfigItemKey]string {
+	m := make(map[DynConfigItemKey]string, len(items))
+	for _, item := range items {
+		m[DynConfigItemKey(swag.StringValue(item.Key))] = swag.StringValue(item.Value)
+	}
+	return m
+}
+
+// DynConfigMapToDTOs converts a key-value map of dynamic config items into a slice of DTO models
+func DynConfigMapToDTOs(config map[DynConfigItemKey]*DynConfigItem) []*models.DynamicConfigItem {
+	result := make([]*models.DynamicConfigItem, 0, len(config))
+	for key, item := range config {
+		result = append(result, item.ToDTO(key))
+	}
+	return result
+}
+
 const (
 	ConfigDatatypeBoolean DynConfigItemDatatype = "boolean"
 )

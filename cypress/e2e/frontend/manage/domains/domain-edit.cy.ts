@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import { DOMAINS, InstanceConfigKey, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Domain Edit page', () => {
 
@@ -674,6 +674,82 @@ context('Domain Edit page', () => {
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '16'],
                     ['Number of views',    '5'],
+                ]);
+
+                // Now change the global domain defaults to OFF and verify this domain's settings are unaffected
+                // (because they are now non-default ones)
+                cy.backendUpdateDynConfig({
+                    [InstanceConfigKey.domainDefaultsCommentDeletionAuthor]:    false,
+                    [InstanceConfigKey.domainDefaultsCommentDeletionModerator]: false,
+                    [InstanceConfigKey.domainDefaultsCommentEditingAuthor]:     false,
+                    [InstanceConfigKey.domainDefaultsCommentEditingModerator]:  false,
+                    [InstanceConfigKey.domainDefaultsEnableCommentVoting]:      false,
+                    [InstanceConfigKey.domainDefaultsShowDeletedComments]:      false,
+                    [InstanceConfigKey.domainDefaultsMarkdownImagesEnabled]:    false,
+                    [InstanceConfigKey.domainDefaultsMarkdownLinksEnabled]:     false,
+                    [InstanceConfigKey.domainDefaultsMarkdownTablesEnabled]:    false,
+                    [InstanceConfigKey.domainDefaultsLocalSignupEnabled]:       false,
+                    [InstanceConfigKey.domainDefaultsFederatedSignupEnabled]:   false,
+                    [InstanceConfigKey.domainDefaultsSsoSignupEnabled]:         false,
+                });
+
+                cy.reload();
+                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                    ['Host',                                                    DOMAINS.localhost.host],
+                    null, null, null,
+                    ['Authentication'],
+                        ['Enable commenter registration via external provider', ''],
+                        ['Enable local commenter registration',                 ''],
+                        ['Enable commenter registration via SSO',               ''],
+                    ['Comments'],
+                        ['Allow comment authors to delete comments',            ''],
+                        ['Allow moderators to delete comments',                 ''],
+                        ['Allow comment authors to edit comments',              ''],
+                        ['Allow moderators to edit comments',                   ''],
+                        ['Enable voting on comments',                           ''],
+                        ['Show deleted comments',                               ''],
+                    ['Markdown'],
+                        ['Enable images in comments',                           ''],
+                        ['Enable links in comments',                            ''],
+                        ['Enable tables in comments',                           ''],
+                    null, null, null, null, null, null, null,
+                ]);
+
+                // Repeat, setting all global domain defaults to ON and verify this domain's settings are still unaffected
+                cy.backendUpdateDynConfig({
+                    [InstanceConfigKey.domainDefaultsCommentDeletionAuthor]:    true,
+                    [InstanceConfigKey.domainDefaultsCommentDeletionModerator]: true,
+                    [InstanceConfigKey.domainDefaultsCommentEditingAuthor]:     true,
+                    [InstanceConfigKey.domainDefaultsCommentEditingModerator]:  true,
+                    [InstanceConfigKey.domainDefaultsEnableCommentVoting]:      true,
+                    [InstanceConfigKey.domainDefaultsShowDeletedComments]:      true,
+                    [InstanceConfigKey.domainDefaultsMarkdownImagesEnabled]:    true,
+                    [InstanceConfigKey.domainDefaultsMarkdownLinksEnabled]:     true,
+                    [InstanceConfigKey.domainDefaultsMarkdownTablesEnabled]:    true,
+                    [InstanceConfigKey.domainDefaultsLocalSignupEnabled]:       true,
+                    [InstanceConfigKey.domainDefaultsFederatedSignupEnabled]:   true,
+                    [InstanceConfigKey.domainDefaultsSsoSignupEnabled]:         true,
+                });
+                cy.reload();
+                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                    ['Host',                                                    DOMAINS.localhost.host],
+                    null, null, null,
+                    ['Authentication'],
+                        ['Enable commenter registration via external provider', ''],
+                        ['Enable local commenter registration',                 ''],
+                        ['Enable commenter registration via SSO',               ''],
+                    ['Comments'],
+                        ['Allow comment authors to delete comments',            ''],
+                        ['Allow moderators to delete comments',                 ''],
+                        ['Allow comment authors to edit comments',              ''],
+                        ['Allow moderators to edit comments',                   ''],
+                        ['Enable voting on comments',                           ''],
+                        ['Show deleted comments',                               ''],
+                    ['Markdown'],
+                        ['Enable images in comments',                           ''],
+                        ['Enable links in comments',                            ''],
+                        ['Enable tables in comments',                           ''],
+                    null, null, null, null, null, null, null,
                 ]);
 
                 // Edit the domain again and verify control values

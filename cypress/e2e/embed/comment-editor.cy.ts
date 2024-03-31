@@ -1,4 +1,4 @@
-import { DOMAIN_CONFIG_ITEM_KEY, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment Editor', () => {
@@ -312,25 +312,25 @@ context('Comment Editor', () => {
             cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', btns);
 
             // Disable links and the Link button is gone
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownLinksEnabled, false);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownLinksEnabled]: false});
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title')
                 .should('arrayMatch', btns.filter(b => b !== 'Link'));
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownLinksEnabled, true);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownLinksEnabled]: true});
 
             // Disable images and the Image button is gone
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownImagesEnabled, false);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownImagesEnabled]: false});
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title')
                 .should('arrayMatch', btns.filter(b => b !== 'Image'));
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownImagesEnabled, true);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownImagesEnabled]: true});
 
             // Disable tables and the Table button is gone
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownTablesEnabled, false);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownTablesEnabled]: false});
             visitAndEdit();
             cy.get('@toolbar').find('.comentario-btn').attrValues('title')
                 .should('arrayMatch', btns.filter(b => b !== 'Table'));
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.markdownTablesEnabled, true);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.markdownTablesEnabled]: true});
         });
 
         Object.entries(buttonTests).forEach(([button, btnTests]) =>

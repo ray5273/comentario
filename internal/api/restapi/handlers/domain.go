@@ -105,7 +105,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 
 	// Succeeded
 	return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
-		Configuration:   dynConfigToDTOs(cfg),
+		Configuration:   data.DynConfigMapToDTOs(cfg),
 		Domain:          d.ToDTO(),
 		DomainUser:      du.ToDTO(),
 		Extensions:      data.SliceToDTOs[*data.DomainExtension, *models.DomainExtension](exts),
@@ -228,7 +228,7 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 
 	// Update the dependent lists
 	err := util.CheckErrors(
-		svc.TheDomainConfigService.Update(&d.ID, &user.ID, domainConvertConfigItems(params.Body.Configuration)),
+		svc.TheDomainConfigService.Update(&d.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
 		svc.TheDomainService.SaveIdPs(&d.ID, params.Body.FederatedIdpIds),
 		svc.TheDomainService.SaveExtensions(&d.ID, exts))
 	if err != nil {
@@ -318,7 +318,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	// Persist the updated properties
 	err := util.CheckErrors(
 		svc.TheDomainService.Update(domain),
-		svc.TheDomainConfigService.Update(&domain.ID, &user.ID, domainConvertConfigItems(params.Body.Configuration)),
+		svc.TheDomainConfigService.Update(&domain.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
 		svc.TheDomainService.SaveIdPs(&domain.ID, params.Body.FederatedIdpIds),
 		svc.TheDomainService.SaveExtensions(&domain.ID, exts))
 	if err != nil {
@@ -327,15 +327,6 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 
 	// Succeeded
 	return api_general.NewDomainUpdateOK().WithPayload(domain.ToDTO())
-}
-
-// domainConvertConfigItems converts domain config items from DTOs to data models
-func domainConvertConfigItems(items []*models.DynamicConfigItem) map[data.DynConfigItemKey]string {
-	m := make(map[data.DynConfigItemKey]string, len(items))
-	for _, item := range items {
-		m[data.DynConfigItemKey(swag.StringValue(item.Key))] = swag.StringValue(item.Value)
-	}
-	return m
 }
 
 // domainConvertExtensions converts domain extensions from DTOs into data models, verifying the given extensions are enabled

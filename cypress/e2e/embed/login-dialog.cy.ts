@@ -1,4 +1,4 @@
-import { DOMAIN_CONFIG_ITEM_KEY, DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Login dialog', () => {
@@ -69,7 +69,7 @@ context('Login dialog', () => {
                 cy.get('@profileBar').find('button[title="Logout"]').click();
 
                 // Now disable SSO signups and login again
-                cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.ssoSignupEnabled, false);
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.ssoSignupEnabled]: false});
                 cy.get('@profileBar').contains('button', 'Sign in').click();
                 cy.get('@root').contains('.comentario-dialog button', 'Single Sign-On').click();
                 cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
@@ -80,7 +80,7 @@ context('Login dialog', () => {
                 Cypress.on('uncaught:exception', () => false);
 
                 // Disable SSO signups
-                cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.ssoSignupEnabled, false);
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.ssoSignupEnabled]: false});
 
                 // Try to register and fail
                 cy.get('@btnSso').click();
@@ -210,7 +210,7 @@ context('Login dialog', () => {
     context('switching to Sign-up', () => {
 
         it('shows no button when disabled', () => {
-            cy.backendUpdateDomainConfigItem(DOMAINS.localhost.id, DOMAIN_CONFIG_ITEM_KEY.localSignupEnabled, false);
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.localSignupEnabled]: false});
             openLoginDlg();
             cy.get('@loginDialog').contains('button', 'Sign up').should('not.exist');
         });

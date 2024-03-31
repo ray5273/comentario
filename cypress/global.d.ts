@@ -395,9 +395,9 @@ declare namespace Cypress {
         backendReset(): void;
 
         /**
-         * Request the backend to update the given dynamic config item.
+         * Request the backend to update the given dynamic config items.
          */
-        backendSetDynConfigItem(key: string, value: string | number | boolean): void;
+        backendUpdateDynConfig(values: { [key: string]: string | number | boolean }): Chainable<void>;
 
         /**
          * Obtain and return all sent emails from the backend.
@@ -414,10 +414,9 @@ declare namespace Cypress {
         /**
          * Update the value of the given config item for the specified domain.
          * @param id ID of the domain to patch.
-         * @param key Configuration item key
-         * @param value New configuration item value
+         * @param values New configuration item values
          */
-        backendUpdateDomainConfigItem(id: string, key: string, value: string | number | boolean): Chainable<void>;
+        backendUpdateDomainConfig(id: string, values: { [key: string]: string | number | boolean }): Chainable<void>;
 
         /**
          * Update the list of federated identity providers enabled for the specified domain.
