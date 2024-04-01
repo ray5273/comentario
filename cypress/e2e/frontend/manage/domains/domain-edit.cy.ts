@@ -1,4 +1,11 @@
-import { DOMAINS, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import {
+    ConfigKeyDomainDefaultsPrefix,
+    DomainConfigKey,
+    DOMAINS,
+    PATHS,
+    REGEXES,
+    USERS,
+} from '../../../../support/cy-utils';
 
 context('Domain Edit page', () => {
 
@@ -174,6 +181,46 @@ context('Domain Edit page', () => {
         it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.domains.create, USERS.ace));
 
         it(`redirects user to login and back`, () => cy.verifyRedirectsAfterLogin(PATHS.manage.domains.create, USERS.ace));
+
+        context('follows global domain defaults', () => {
+
+            /** All known domain params. */
+            const params = Object.values(DomainConfigKey);
+
+            /** General tab params (whose key doesn't start with 'signup'). */
+            const paramsGeneral = params.filter(k => !k.startsWith('signup.'));
+
+            /** Auth tab params (whose key starts with 'signup'). */
+            const paramsAuth = params.filter(k => k.startsWith('signup.'));
+
+            /** Object with every instance domain default set to false. */
+            const allFalseParams = params.reduce(
+                (acc, k) => {
+                    acc[ConfigKeyDomainDefaultsPrefix + k] = false;
+                    return acc;
+                },
+                {} as any);
+
+            // Iterate every param
+            params.forEach(key =>
+                it(`when parameter ${key} is true`, () => {
+                    // Set the param in question globally to true, and every other to false
+                    cy.backendUpdateDynConfig({...allFalseParams, [ConfigKeyDomainDefaultsPrefix + key]: true});
+
+                    // Login and navigate to the Create domain page
+                    cy.loginViaApi(USERS.ace, PATHS.manage.domains.create);
+                    makeAliases(false);
+
+                    // Check the General tab first (params whose key doesn't start with 'signup'
+                    paramsGeneral.forEach(k =>
+                        cy.get('@domainEdit').find(`#${k.replaceAll('.', '_')}`).should(k === key ? 'be.checked' : 'not.be.checked'));
+
+                    // Controls whose key starts with 'signup' reside on the Auth tab
+                    cy.get('@tabAuth').click();
+                    paramsAuth.forEach(k =>
+                        cy.get('@domainEdit').find(`#${k.replaceAll('.', '_')}`).should(k === key ? 'be.checked' : 'not.be.checked'));
+                }));
+        });
 
         context('for authenticated user', () => {
 

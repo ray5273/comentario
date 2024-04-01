@@ -1,5 +1,8 @@
 import { DynamicConfigItem } from '../../generated-api';
 
+/** Instance domain defaults key prefix. */
+export const ConfigKeyDomainDefaultsPrefix = 'domain.defaults.';
+
 /** Domain config item keys. */
 export enum DomainConfigItemKey {
     commentDeletionAuthor    = 'comments.deletion.author',
@@ -24,18 +27,18 @@ export enum InstanceConfigItemKey {
     integrationsUseGravatar                = 'integrations.useGravatar',
     operationNewOwnerEnabled               = 'operation.newOwner.enabled',
     // Domain defaults
-    domainDefaultsCommentDeletionAuthor    = `domain.defaults.${DomainConfigItemKey.commentDeletionAuthor}`,
-    domainDefaultsCommentDeletionModerator = `domain.defaults.${DomainConfigItemKey.commentDeletionModerator}`,
-    domainDefaultsCommentEditingAuthor     = `domain.defaults.${DomainConfigItemKey.commentEditingAuthor}`,
-    domainDefaultsCommentEditingModerator  = `domain.defaults.${DomainConfigItemKey.commentEditingModerator}`,
-    domainDefaultsEnableCommentVoting      = `domain.defaults.${DomainConfigItemKey.enableCommentVoting}`,
-    domainDefaultsShowDeletedComments      = `domain.defaults.${DomainConfigItemKey.showDeletedComments}`,
-    domainDefaultsMarkdownImagesEnabled    = `domain.defaults.${DomainConfigItemKey.markdownImagesEnabled}`,
-    domainDefaultsMarkdownLinksEnabled     = `domain.defaults.${DomainConfigItemKey.markdownLinksEnabled}`,
-    domainDefaultsMarkdownTablesEnabled    = `domain.defaults.${DomainConfigItemKey.markdownTablesEnabled}`,
-    domainDefaultsLocalSignupEnabled       = `domain.defaults.${DomainConfigItemKey.localSignupEnabled}`,
-    domainDefaultsFederatedSignupEnabled   = `domain.defaults.${DomainConfigItemKey.federatedSignupEnabled}`,
-    domainDefaultsSsoSignupEnabled         = `domain.defaults.${DomainConfigItemKey.ssoSignupEnabled}`,
+    domainDefaultsCommentDeletionAuthor    = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.commentDeletionAuthor,
+    domainDefaultsCommentDeletionModerator = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.commentDeletionModerator,
+    domainDefaultsCommentEditingAuthor     = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.commentEditingAuthor,
+    domainDefaultsCommentEditingModerator  = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.commentEditingModerator,
+    domainDefaultsEnableCommentVoting      = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.enableCommentVoting,
+    domainDefaultsShowDeletedComments      = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.showDeletedComments,
+    domainDefaultsMarkdownImagesEnabled    = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.markdownImagesEnabled,
+    domainDefaultsMarkdownLinksEnabled     = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.markdownLinksEnabled,
+    domainDefaultsMarkdownTablesEnabled    = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.markdownTablesEnabled,
+    domainDefaultsLocalSignupEnabled       = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.localSignupEnabled,
+    domainDefaultsFederatedSignupEnabled   = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.federatedSignupEnabled,
+    domainDefaultsSsoSignupEnabled         = ConfigKeyDomainDefaultsPrefix + DomainConfigItemKey.ssoSignupEnabled,
 }
 
 /**
@@ -74,14 +77,14 @@ export class DynamicConfig {
     }
 
     /**
-     * Return a partial clone of this config that only contains domain default settings, removing the 'domain.defaults.'
+     * Return a partial clone of this config that only contains domain default settings, removing the domain defaults
      * prefix from each key. This effectively translates instance config into a domain default config.
      */
     toDomainDefaults(): DynamicConfig {
         return new DynamicConfig(
             this.items
-                .filter(item => item.key.startsWith('domain.defaults.'))
-                .map(item => JSON.parse(JSON.stringify({...item, key: item.key.substring(16 /* Length of 'domain.defaults.' */)}))));
+                .filter(item => item.key.startsWith(ConfigKeyDomainDefaultsPrefix))
+                .map(item => JSON.parse(JSON.stringify({...item, key: item.key.substring(ConfigKeyDomainDefaultsPrefix.length)}))));
     }
 
     /**

@@ -5,6 +5,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { ApiGeneralService, DynamicConfigItem } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
+import { ConfigKeyDomainDefaultsPrefix } from '../../../../_models/config';
 
 @UntilDestroy()
 @Component({
@@ -17,6 +18,7 @@ export class DynamicConfigComponent implements OnInit {
     bySection?: { [section: string]: DynamicConfigItem[] };
 
     readonly resetting = new ProcessingStatus();
+    readonly domainDefaultsPrefix = ConfigKeyDomainDefaultsPrefix;
 
     // Icons
     readonly faDice   = faDice;
