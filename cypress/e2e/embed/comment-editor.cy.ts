@@ -1,6 +1,5 @@
 import { DomainConfigKey, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
-import { InstanceConfigItemKey } from 'comentario-frontend/app/_models/config';
 
 context('Comment Editor', () => {
 
@@ -309,22 +308,15 @@ context('Comment Editor', () => {
                 'Numbered list', 'Markdown help'];
 
             /** Disable the given config value, visit the site and check the toolbar buttons. */
-            const checkSetting = (instKey: string, domainKey: string, hidesButton: string) => {
-                const expectedButtons = btns.filter(b => b !== hidesButton);
-
-                // Disable the setting globally and check
-                cy.backendUpdateDynConfig({[instKey]: false});
+            const checkSetting = (key: string, hidesButton: string) => {
+                // Disable the domain setting and check
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[key]: false});
                 visitAndEdit();
-                cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', expectedButtons);
-
-                // Re-enable the global setting, disable in the domain config, and recheck
-                cy.backendUpdateDynConfig({[instKey]: true});
-                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[domainKey]: false});
-                visitAndEdit();
-                cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', expectedButtons);
+                cy.get('@toolbar').find('.comentario-btn').attrValues('title')
+                    .should('arrayMatch', btns.filter(b => b !== hidesButton));
 
                 // Revert the domain setting
-                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[domainKey]: true});
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[key]: true});
             };
 
             // Check titles of all buttons
@@ -332,13 +324,13 @@ context('Comment Editor', () => {
             cy.get('@toolbar').find('.comentario-btn').attrValues('title').should('arrayMatch', btns);
 
             // Disable links and the Link button is gone
-            checkSetting(InstanceConfigItemKey.domainDefaultsMarkdownLinksEnabled, DomainConfigKey.markdownLinksEnabled, 'Link');
+            checkSetting(DomainConfigKey.markdownLinksEnabled, 'Link');
 
             // Disable images and the Image button is gone
-            checkSetting(InstanceConfigItemKey.domainDefaultsMarkdownImagesEnabled, DomainConfigKey.markdownImagesEnabled, 'Image');
+            checkSetting(DomainConfigKey.markdownImagesEnabled, 'Image');
 
             // Disable tables and the Table button is gone
-            checkSetting(InstanceConfigItemKey.domainDefaultsMarkdownTablesEnabled, DomainConfigKey.markdownTablesEnabled, 'Table');
+            checkSetting(DomainConfigKey.markdownTablesEnabled, 'Table');
         });
 
         Object.entries(buttonTests).forEach(([button, btnTests]) =>

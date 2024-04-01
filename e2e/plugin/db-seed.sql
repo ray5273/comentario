@@ -1,7 +1,22 @@
 insert into cm_configuration(key, value, ts_updated)
 values
-    ('auth.signup.confirm.commenter', 'false', '2023-01-17 17:55:47.008851'),
-    ('integrations.useGravatar',      'false', '2023-01-17 17:55:47.008851'); -- We don't want to involve Gravatar during e2e tests
+    ('auth.signup.confirm.commenter',               'false', '0001-01-01 00:00:00.000000'),
+    ('auth.signup.confirm.user',                    'true',  '0001-01-01 00:00:00.000000'),
+    ('auth.signup.enabled',                         'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.deletion.author',    'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.deletion.moderator', 'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.editing.author',     'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.editing.moderator',  'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.enableVoting',       'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.showDeleted',        'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.markdown.images.enabled',     'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.markdown.links.enabled',      'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.markdown.tables.enabled',     'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.signup.enableFederated',      'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.signup.enableLocal',          'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.signup.enableSso',            'true',  '0001-01-01 00:00:00.000000'),
+    ('integrations.useGravatar',                    'false', '0001-01-01 00:00:00.000000'), -- We don't want to involve Gravatar during e2e tests
+    ('operation.newOwner.enabled',                  'false', '0001-01-01 00:00:00.000000'); -- It's the default
 
 insert into cm_users (id, email, name, lang_id, password_hash, system_account, is_superuser, confirmed, ts_confirmed, ts_created, user_created, signup_ip, signup_country, signup_host, banned, ts_banned, user_banned, remarks, federated_idp, federated_sso, federated_id, website_url, secret_token)
 values
@@ -125,6 +140,21 @@ values
     ('c03b9b58-b2bb-4942-adca-168e7d812d8c', '',              'battle.example.com', '2023-04-07 17:57:48', false, false, true,  true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('84a766a2-7154-4d7f-8307-20ec9df4fc68', '',              'prison.example.com', '2023-04-08 17:57:49', false, false, true,  true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0),
     ('828f1362-37ae-4c8f-83e7-84801f84b6a8', '',              'bridge.example.com', '2023-04-09 17:57:50', false, false, true,  true, false, '', null, false, false, false, 0, 0, false, false, 'pending', 'ta', 0, 0);
+
+insert into cm_domain_configuration (domain_id, key, value, ts_updated, user_updated)
+values
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.editing.moderator',  'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.moderator', 'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableSso',            'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableLocal',          'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.editing.author',     'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.links.enabled',      'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.tables.enabled',     'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableFederated',      'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.showDeleted',        'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.images.enabled',     'true', '2024-04-01 10:11:46.816290', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.author',    'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.enableVoting',       'true', '2024-04-01 10:11:46.816293', '00000000-0000-0000-0000-000000000001');
 
 insert into cm_domains_idps (domain_id, fed_idp_id)
 values

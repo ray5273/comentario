@@ -159,13 +159,7 @@ context('Signup dialog', () => {
             Cypress.on('uncaught:exception', () => false);
         });
 
-        it('locally when signups are disabled at instance level', () => {
-            cy.backendUpdateDynConfig({[InstanceConfigKey.domainDefaultsLocalSignupEnabled]: false});
-            signupWith({...USERS.ace, password: 'Passw0rd'});
-            cy.testSiteCheckMessage('New signups are forbidden');
-        });
-
-        it('locally when signups are disabled at domain level', () => {
+        it('locally when signups are disabled', () => {
             cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.localSignupEnabled]: false});
             signupWith({...USERS.ace, password: 'Passw0rd'});
             cy.testSiteCheckMessage('New signups are forbidden');

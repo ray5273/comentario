@@ -1,4 +1,4 @@
-import { DOMAINS, InstanceConfigKey, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import { InstanceConfigKey, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
 
 context('Config Manager', () => {
 
@@ -189,34 +189,6 @@ context('Config Manager', () => {
                     ['Non-owner users can add domains',                     '✔'],
             ]);
 
-            // Now navigate to the "localhost" domain properties and witness their following the new defaults
-            const localhostPropsPath = PATHS.manage.domains.id(DOMAINS.localhost.id).props;
-            cy.visit(localhostPropsPath);
-            cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                ['Host',                                                    DOMAINS.localhost.host],
-                ['Name',                                                    DOMAINS.localhost.name],
-                null, null, // We don't care
-                ['Authentication'],
-                    ['Enable commenter registration via external provider', ''],
-                    ['Enable local commenter registration',                 ''],
-                    ['Enable commenter registration via SSO',               ''],
-                ['Comments'],
-                    ['Allow comment authors to delete comments',            ''],
-                    ['Allow moderators to delete comments',                 ''],
-                    ['Allow comment authors to edit comments',              ''],
-                    ['Allow moderators to edit comments',                   ''],
-                    ['Enable voting on comments',                           ''],
-                    ['Show deleted comments',                               ''],
-                ['Markdown'],
-                    ['Enable images in comments',                           ''],
-                    ['Enable links in comments',                            ''],
-                    ['Enable tables in comments',                           ''],
-                null, null, null, null, null, null, // We don't care
-            ]);
-
-            // Go back to the dynamic config tab
-            cy.visit(pagePathDynamic);
-
             // Reset the config to the defaults
             cy.contains('app-dynamic-config button', 'Reset to defaults').click();
             cy.confirmationDialog('Are you sure you want to reset the configuration to defaults?').dlgButtonClick('Reset configuration');
@@ -246,30 +218,6 @@ context('Config Manager', () => {
                     ['Non-owner users can add domains',                     ''],
             ]);
 
-            // Check the "localhost" domain properties again
-            cy.visit(localhostPropsPath);
-            cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                ['Host',                                                    DOMAINS.localhost.host],
-                ['Name',                                                    DOMAINS.localhost.name],
-                null, null, // We don't care
-                ['Authentication'],
-                    ['Enable commenter registration via external provider', '✔'],
-                    ['Enable local commenter registration',                 '✔'],
-                    ['Enable commenter registration via SSO',               '✔'],
-                ['Comments'],
-                    ['Allow comment authors to delete comments',            '✔'],
-                    ['Allow moderators to delete comments',                 '✔'],
-                    ['Allow comment authors to edit comments',              '✔'],
-                    ['Allow moderators to edit comments',                   '✔'],
-                    ['Enable voting on comments',                           '✔'],
-                    ['Show deleted comments',                               '✔'],
-                ['Markdown'],
-                    ['Enable images in comments',                           '✔'],
-                    ['Enable links in comments',                            '✔'],
-                    ['Enable tables in comments',                           '✔'],
-                null, null, null, null, null, null, // We don't care
-            ]);
-
             // Tweak the config using backend calls
             cy.backendUpdateDynConfig({
                 [InstanceConfigKey.authSignupConfirmCommenter]:             false,
@@ -291,8 +239,8 @@ context('Config Manager', () => {
                 [InstanceConfigKey.operationNewOwnerEnabled]:               true,
             });
 
-            // Go back to the dynamic config tab and recheck
-            cy.visit(pagePathDynamic);
+            // Reload the page and recheck
+            cy.reload();
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
                 ['Authentication'],
                     ['New commenters must confirm their email',             ''],
@@ -316,30 +264,6 @@ context('Config Manager', () => {
                     ['Enable tables in comments',                           ''],
                 ['Miscellaneous'],
                     ['Non-owner users can add domains',                     '✔'],
-            ]);
-
-            // Check the "localhost" domain properties again
-            cy.visit(localhostPropsPath);
-            cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
-                ['Host',                                                    DOMAINS.localhost.host],
-                ['Name',                                                    DOMAINS.localhost.name],
-                null, null, // We don't care
-                ['Authentication'],
-                    ['Enable commenter registration via external provider', ''],
-                    ['Enable local commenter registration',                 ''],
-                    ['Enable commenter registration via SSO',               ''],
-                ['Comments'],
-                    ['Allow comment authors to delete comments',            ''],
-                    ['Allow moderators to delete comments',                 '✔'],
-                    ['Allow comment authors to edit comments',              '✔'],
-                    ['Allow moderators to edit comments',                   ''],
-                    ['Enable voting on comments',                           ''],
-                    ['Show deleted comments',                               ''],
-                ['Markdown'],
-                    ['Enable images in comments',                           '✔'],
-                    ['Enable links in comments',                            ''],
-                    ['Enable tables in comments',                           ''],
-                null, null, null, null, null, null, // We don't care
             ]);
         });
     });

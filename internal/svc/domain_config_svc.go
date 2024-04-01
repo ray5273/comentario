@@ -140,10 +140,8 @@ func (svc *domainConfigService) Update(domainID, curUserID *uuid.UUID, vals map[
 	}
 
 	// Update the specified items
-	for k, v := range vals {
-		if err := s.Set(curUserID, k, v); err != nil {
-			return err
-		}
+	if err := s.Update(curUserID, vals); err != nil {
+		return err
 	}
 
 	// Write the store to the database

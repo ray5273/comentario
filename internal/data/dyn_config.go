@@ -33,11 +33,6 @@ func (ci *DynConfigItem) AsBool() bool {
 	return ci.Value == "true"
 }
 
-// HasDefaultValue returns true if the item has its default value
-func (ci *DynConfigItem) HasDefaultValue() bool {
-	return ci.Value == ci.DefaultValue
-}
-
 // ToDTO converts this model into an API model
 func (ci *DynConfigItem) ToDTO(key DynConfigItemKey) *models.DynamicConfigItem {
 	return &models.DynamicConfigItem{

@@ -1,5 +1,4 @@
 import { DomainConfigKey, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
-import { InstanceConfigItemKey } from 'comentario-frontend/app/_models/config';
 
 context('Comment card', () => {
 
@@ -559,7 +558,7 @@ context('Comment card', () => {
         users.forEach(userTest =>
             context(`for ${userTest.name} user`, () => {
 
-                beforeEach(cy.backendReset);
+                before(cy.backendReset);
 
                 const goHome = () =>
                     userTest.user.isAnonymous ?
@@ -578,29 +577,7 @@ context('Comment card', () => {
                                 isOff(test.editOwn, 'own editing') +
                                 isOff(test.editMod, 'moderator editing'),
                             () => {
-                                // Update the instance config (= domain defaults) as needed
-                                cy.backendUpdateDynConfig(
-                                    {
-                                        [InstanceConfigItemKey.domainDefaultsCommentDeletionAuthor]:    test.delOwn,
-                                        [InstanceConfigItemKey.domainDefaultsCommentDeletionModerator]: test.delMod,
-                                        [InstanceConfigItemKey.domainDefaultsCommentEditingAuthor]:     test.editOwn,
-                                        [InstanceConfigItemKey.domainDefaultsCommentEditingModerator]:  test.editMod,
-                                    });
-
-                                // Open Home test page
-                                goHome();
-
-                                // Verify comments
-                                cy.commentTree('buttons').should('yamlMatch', test.comments);
-
-                                // Now reverse the instance config and update the domain config instead
-                                cy.backendUpdateDynConfig(
-                                    {
-                                        [InstanceConfigItemKey.domainDefaultsCommentDeletionAuthor]:    !test.delOwn,
-                                        [InstanceConfigItemKey.domainDefaultsCommentDeletionModerator]: !test.delMod,
-                                        [InstanceConfigItemKey.domainDefaultsCommentEditingAuthor]:     !test.editOwn,
-                                        [InstanceConfigItemKey.domainDefaultsCommentEditingModerator]:  !test.editMod,
-                                    });
+                                // Update the domain config as needed
                                 cy.backendUpdateDomainConfig(
                                     DOMAINS.localhost.id,
                                     {
@@ -610,21 +587,18 @@ context('Comment card', () => {
                                         [DomainConfigKey.commentEditingModerator]:  test.editMod,
                                     });
 
-                                // Reload and verify: still the same comments
-                                cy.reload();
+                                // Open Home test page
+                                goHome();
+
+                                // Verify comments
                                 cy.commentTree('buttons').should('yamlMatch', test.comments);
                             }));
 
                 it('hides scores when voting is disabled', () => {
-                    // Disable voting globally and check the homepage
-                    cy.backendUpdateDynConfig({[InstanceConfigItemKey.domainDefaultsEnableCommentVoting]: false});
-                    goHome();
-                    cy.commentTree('score').should('yamlMatch', commentsNoVoting);
-
-                    // Re-enable voting globally, disable it locally and recheck
-                    cy.backendUpdateDynConfig({[InstanceConfigItemKey.domainDefaultsEnableCommentVoting]: true});
+                    // Disable voting and check the homepage
+                    cy.backendReset();
                     cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.enableCommentVoting]: false});
-                    cy.reload();
+                    goHome();
                     cy.commentTree('score').should('yamlMatch', commentsNoVoting);
                 });
             }));

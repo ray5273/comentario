@@ -76,26 +76,29 @@ func (cs *ConfigStore) Reset() error {
 	return err
 }
 
-func (cs *ConfigStore) Set(curUserID *uuid.UUID, key data.DynConfigItemKey, value string) error {
+// Update sets multiple item values at once
+func (cs *ConfigStore) Update(curUserID *uuid.UUID, vals map[data.DynConfigItemKey]string) error {
 	// Prevent concurrent access
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
 
-	// Find the item
-	ci, err := cs.get(key)
-	if err != nil {
-		return err
-	}
+	for k, v := range vals {
+		// Find the item
+		ci, err := cs.get(k)
+		if err != nil {
+			return err
+		}
 
-	// Validate the value
-	if err := ci.ValidateValue(value); err != nil {
-		return err
-	}
+		// Validate the value
+		if err := ci.ValidateValue(v); err != nil {
+			return err
+		}
 
-	// Update the item
-	ci.Value = value
-	ci.UpdatedTime = time.Now().UTC()
-	ci.UserUpdated = *data.PtrToNullUUID(curUserID)
+		// Update the item
+		ci.Value = v
+		ci.UpdatedTime = time.Now().UTC()
+		ci.UserUpdated = *data.PtrToNullUUID(curUserID)
+	}
 
 	// Succeeded
 	return nil
@@ -115,11 +118,10 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 	cs.items = items
 
 	// Query the data
-	q := db.Dialect().
+	rows, err := db.Select(db.Dialect().
 		From(goqu.T(tableName)).
 		Select("key", "value", "ts_updated", "user_updated").
-		Where(extraKeyCols)
-	rows, err := db.Select(q)
+		Where(extraKeyCols))
 	if err != nil {
 		logger.Errorf("ConfigStore.Load: Select() failed: %v", err)
 		return err
@@ -157,58 +159,44 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 // dbSave writes the config into the given table, with an optional key filter
 func (cs *ConfigStore) dbSave(tableName string, extraKeyCols goqu.Ex) error {
 	// Prevent concurrent access
-	cs.mu.Lock()
-	defer cs.mu.Unlock()
+	cs.mu.RLock()
+	defer cs.mu.RUnlock()
 
 	// Make sure the config is initialised
 	if cs.items == nil {
 		return errConfigUninitialised
 	}
 
-	// Iterate non-default items
-	var keys []data.DynConfigItemKey
+	// Make a key column spec
+	keyCols := "key"
+	for k := range extraKeyCols {
+		keyCols = k + "," + keyCols
+	}
+
+	// Iterate the items, building up a multirow insert statement
+	var rows []any
 	for key, ci := range cs.items {
-		if !ci.HasDefaultValue() {
-			// Prepare insert/key column lists
-			cols := goqu.Record{
-				"key":          key,
-				"value":        ci.Value,
-				"ts_updated":   ci.UpdatedTime,
-				"user_updated": ci.UserUpdated,
-			}
-			keyCols := "key"
-			for k, v := range extraKeyCols {
-				cols[k] = v
-				keyCols = k + "," + keyCols
-			}
-
-			// Prepare an insert statement
-			q := db.Dialect().
-				Insert(tableName).
-				Rows(cols).
-				OnConflict(goqu.DoUpdate(
-					keyCols,
-					goqu.Record{"value": ci.Value, "ts_updated": ci.UpdatedTime, "user_updated": ci.UserUpdated}))
-			if err := db.ExecuteOne(q); err != nil {
-				return translateDBErrors(err)
-			}
-
-			// Collect the saved keys
-			keys = append(keys, key)
+		// Prepare a row
+		row := goqu.Record{
+			"key":          key,
+			"value":        ci.Value,
+			"ts_updated":   ci.UpdatedTime,
+			"user_updated": ci.UserUpdated,
 		}
+
+		// Add the predefined key columns (if any)
+		for k, v := range extraKeyCols {
+			row[k] = v
+		}
+
+		// Accumulate the rows
+		rows = append(rows, row)
 	}
 
-	// Clean up all irrelevant items
-	q := db.Dialect().Delete(tableName).Where(extraKeyCols)
-	if len(keys) > 0 {
-		q = q.Where(goqu.C("key").NotIn(keys))
-	}
-	if err := db.Execute(q); err != nil {
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
+	// Remove and reinsert all items in scope
+	return translateDBErrors(
+		db.Execute(db.Dialect().Delete(tableName).Where(extraKeyCols)),
+		db.Execute(db.Dialect().Insert(tableName).Rows(rows...)))
 }
 
 // get returns a configuration item by its key, without locking
@@ -321,13 +309,11 @@ func (svc *dynConfigService) Update(curUserID *uuid.UUID, vals map[data.DynConfi
 	logger.Debugf("dynConfigService.Update(%s, %#v)", curUserID, vals)
 
 	// Update the specified items
-	for k, v := range vals {
-		if err := svc.s.Set(curUserID, k, v); err != nil {
-			return err
-		}
+	if err := svc.s.Update(curUserID, vals); err != nil {
+		return err
 	}
 
-	// Save the updated values
+	// Save the config
 	if err := svc.s.Save(); err != nil {
 		return err
 	}
