@@ -158,6 +158,12 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#integrations_useGravatar')                   .should('not.be.checked').clickLabel().should('be.checked');
             cy.get('@configEdit').find('#operation_newOwner_enabled')                 .should('not.be.checked').clickLabel().should('be.checked');
 
+            // Check reset buttons
+            cy.get('@configEdit').find('#domain_defaults_comments_showDeleted-revert').click().should('not.exist');
+            cy.get('@configEdit').find('#domain_defaults_comments_showDeleted').should('be.checked');
+            cy.get('@configEdit').find('#domain_defaults_signup_enableLocal-revert').click().should('not.exist');
+            cy.get('@configEdit').find('#domain_defaults_signup_enableLocal').should('be.checked');
+
             // Submit and get a success toast
             cy.get('@configEdit').find('button[type=submit]').should('have.text', 'Save').click();
             cy.isAt(pagePathDynamic);
@@ -170,7 +176,7 @@ context('Config Manager', () => {
                     ['New users must confirm their email',                  ''],
                     ['Enable registration of new users',                    ''],
                     ['Enable commenter registration via external provider', ''],
-                    ['Enable local commenter registration',                 ''],
+                    ['Enable local commenter registration',                 '✔'],
                     ['Enable commenter registration via SSO',               ''],
                 ['Comments'],
                     ['Allow comment authors to delete comments',            ''],
@@ -178,7 +184,7 @@ context('Config Manager', () => {
                     ['Allow comment authors to edit comments',              ''],
                     ['Allow moderators to edit comments',                   ''],
                     ['Enable voting on comments',                           ''],
-                    ['Show deleted comments',                               ''],
+                    ['Show deleted comments',                               '✔'],
                 ['Integrations'],
                     ['Use Gravatar for user avatars',                       '✔'],
                 ['Markdown'],

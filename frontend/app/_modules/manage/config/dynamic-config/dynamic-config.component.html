@@ -1,5 +1,8 @@
 <!-- Info block -->
-<app-info-block i18n>These parameters can be changed on-the-fly.</app-info-block>
+<app-info-block>
+    <ng-container i18n>These parameters can be changed on-the-fly.</ng-container>&ngsp;
+    <ng-container i18n>Items marked with <sup class="text-secondary"><fa-icon [icon]="faStarOfLife"/></sup> can also be changed at domain level.</ng-container>
+</app-info-block>
 
 @if (bySection) {
     <div class="row">
@@ -34,17 +37,17 @@
                     @for (item of secItems.value; track item.key) {
                         <div>
                             <dt class="fw-normal ms-md-3">
+                                <!-- Doc info icon -->
                                 <app-info-icon docLink="configuration/backend/dynamic/{{ item.key | lowercase }}/" class="me-2"/>
+                                <!-- Item name -->
                                 <ng-container>{{ item.key | dynConfigItemName }}</ng-container>
-                            </dt>
-                            <dd>
-                                <!-- Item value -->
-                                <app-dyn-config-item-value [item]="item"/>
                                 <!-- Overridable icon -->
                                 @if (item.key.startsWith(domainDefaultsPrefix)) {
-                                    <fa-icon [icon]="faDice" class="ms-2 opacity-25" title="Overridable at domain level" i18n-title/>
+                                    <sup class="text-secondary"><fa-icon [icon]="faStarOfLife"/></sup>
                                 }
-                            </dd>
+                            </dt>
+                            <!-- Item value -->
+                            <dd><app-dyn-config-item-value [item]="item"/></dd>
                         </div>
                     }
                 }

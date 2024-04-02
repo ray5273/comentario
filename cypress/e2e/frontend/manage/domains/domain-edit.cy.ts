@@ -402,6 +402,9 @@ context('Domain Edit page', () => {
                 cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
                 cy.get('@cfgMarkdownLinksEnabled')     .clickLabel();
                 cy.get('@cfgMarkdownTablesEnabled')    .clickLabel();
+                // -- Check reset button
+                cy.get('@domainEdit').find('#markdown_tables_enabled-revert').should('be.visible').click().should('not.exist');
+                cy.get('@cfgMarkdownTablesEnabled').should('be.checked').clickLabel();
 
                 // Auth
                 cy.get('@tabAuth').click();
@@ -410,6 +413,9 @@ context('Domain Edit page', () => {
                 cy.get('@cfgSignupEnableFederated').clickLabel();
                 cy.get('@cfgSignupEnableLocal')    .clickLabel();
                 cy.get('@cfgSignupEnableSso')      .clickLabel();
+                // -- Check reset button
+                cy.get('@domainEdit').find('#signup_enableSso-revert').should('be.visible').click().should('not.exist');
+                cy.get('@cfgSignupEnableSso').should('be.checked').clickLabel();
                 // -- Methods
                 cy.get('@authAnonymous').clickLabel();
                 cy.get('@authLocal')    .clickLabel();
@@ -631,6 +637,9 @@ context('Domain Edit page', () => {
                 cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
                 cy.get('@cfgMarkdownLinksEnabled')     .clickLabel();
                 cy.get('@cfgMarkdownTablesEnabled')    .clickLabel();
+                // -- Check reset button
+                cy.get('@domainEdit').find('#markdown_links_enabled-revert').should('be.visible').click().should('not.exist');
+                cy.get('@cfgMarkdownLinksEnabled').should('be.checked').clickLabel();
 
                 // Auth
                 cy.get('@tabAuth').click();
@@ -639,6 +648,9 @@ context('Domain Edit page', () => {
                 cy.get('@cfgSignupEnableFederated').clickLabel();
                 cy.get('@cfgSignupEnableLocal')    .clickLabel();
                 cy.get('@cfgSignupEnableSso')      .clickLabel();
+                // -- Check reset button
+                cy.get('@domainEdit').find('#signup_enableLocal-revert').should('be.visible').click().should('not.exist');
+                cy.get('@cfgSignupEnableLocal').should('be.checked').clickLabel();
                 // -- Methods
                 cy.get('@authAnonymous').clickLabel();
                 cy.get('@authLocal')    .clickLabel();

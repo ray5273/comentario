@@ -84,7 +84,12 @@ export class DynamicConfig {
         return new DynamicConfig(
             this.items
                 .filter(item => item.key.startsWith(ConfigKeyDomainDefaultsPrefix))
-                .map(item => JSON.parse(JSON.stringify({...item, key: item.key.substring(ConfigKeyDomainDefaultsPrefix.length)}))));
+                .map(item =>
+                    JSON.parse(JSON.stringify({
+                        ...item,
+                        defaultValue: item.value,
+                        key:          item.key.substring(ConfigKeyDomainDefaultsPrefix.length),
+                    }))));
     }
 
     /**

@@ -1,5 +1,6 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
+import { faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { DynamicConfig } from '../../../../_models/config';
 import { DynamicConfigItem } from '../../../../../generated-api';
 
@@ -27,6 +28,9 @@ export class ConfigSectionEditComponent implements OnChanges {
      */
     @Input()
     docsBasePath?: string;
+
+    // Icons
+    readonly faRotateLeft = faRotateLeft;
 
     constructor(
         private readonly fb: FormBuilder,
@@ -69,5 +73,13 @@ export class ConfigSectionEditComponent implements OnChanges {
             // Subscribe to the control's value changes to update the underlying config
             ctl.valueChanges.subscribe(v => item.value = String(v));
         });
+    }
+
+    /**
+     * Revert the value of a control with the given key value to the item's default.
+     */
+    revert(item: DynamicConfigItem, event?: Event) {
+        event?.preventDefault();
+        this.formGroup?.controls[this.ctlName(item.key)]?.setValue(item.defaultValue);
     }
 }

@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faDice, faPencil, faUndo } from '@fortawesome/free-solid-svg-icons';
+import { faPencil, faStarOfLife, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { ConfigService } from '../../../../_services/config.service';
 import { ApiGeneralService, DynamicConfigItem } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -21,9 +21,9 @@ export class DynamicConfigComponent implements OnInit {
     readonly domainDefaultsPrefix = ConfigKeyDomainDefaultsPrefix;
 
     // Icons
-    readonly faDice   = faDice;
-    readonly faPencil = faPencil;
-    readonly faUndo   = faUndo;
+    readonly faPencil     = faPencil;
+    readonly faStarOfLife = faStarOfLife;
+    readonly faUndo       = faUndo;
 
     constructor(
         private readonly configSvc: ConfigService,
