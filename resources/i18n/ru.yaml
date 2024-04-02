@@ -164,8 +164,6 @@
   translation: Комментарии на этой странице заблокированы, добавление комментариев недоступно.
 - id: pendingModeration
   translation: Ожидает модерации
-- id: permalink
-  translation: Постоянная ссылка
 - id: poweredBy
   translation: Работает на Comentario
 - id: previewFailed
@@ -204,6 +202,10 @@
   translation: Удалён модератором
 - id: statusDeletedUser
   translation: Удалённый пользователь
+- id: statusEditedByAuthor
+  translation: изменён автором
+- id: statusEditedByModerator
+  translation: изменён модератором
 - id: statusModerator
   translation: Модератор
 - id: statusPending
@@ -215,24 +217,24 @@
 - id: timeDaysAgo
   translation: дней назад
 - id: timeHourAgo
-  translation: Час назад
+  translation: час назад
 - id: timeHoursAgo
   translation: часов назад
 - id: timeJustNow
-  translation: Только что
+  translation: только что
 - id: timeMinuteAgo
-  translation: Минуту назад
+  translation: минуту назад
 - id: timeMinutesAgo
   translation: минут назад
 - id: timeMonthAgo
-  translation: Месяц назад
+  translation: месяц назад
 - id: timeMonthsAgo
   translation: месяцев назад
 - id: timeYearAgo
-  translation: Год назад
+  translation: год назад
 - id: timeYearsAgo
   translation: лет назад
 - id: timeYesterday
-  translation: Вчера
+  translation: вчера
 - id: unreadReply
   translation: Непрочитанный ответ

@@ -167,8 +167,6 @@
   translation: This thread is locked. You cannot add new comments.
 - id: pendingModeration
   translation: Pending moderation
-- id: permalink
-  translation: Permalink
 - id: poweredBy
   translation: Powered by Comentario
 - id: previewFailed
@@ -207,6 +205,10 @@
   translation: Deleted by moderator
 - id: statusDeletedUser
   translation: Deleted User
+- id: statusEditedByAuthor
+  translation: edited by author
+- id: statusEditedByModerator
+  translation: edited by moderator
 - id: statusModerator
   translation: Moderator
 - id: statusPending
@@ -218,24 +220,24 @@
 - id: timeDaysAgo
   translation: days ago
 - id: timeHourAgo
-  translation: An hour ago
+  translation: an hour ago
 - id: timeHoursAgo
   translation: hours ago
 - id: timeJustNow
-  translation: Just now
+  translation: just now
 - id: timeMinuteAgo
-  translation: A minute ago
+  translation: a minute ago
 - id: timeMinutesAgo
   translation: minutes ago
 - id: timeMonthAgo
-  translation: A month ago
+  translation: a month ago
 - id: timeMonthsAgo
   translation: months ago
 - id: timeYearAgo
-  translation: A year ago
+  translation: a year ago
 - id: timeYearsAgo
   translation: years ago
 - id: timeYesterday
-  translation: Yesterday
+  translation: yesterday
 - id: unreadReply
   translation: Unread reply

@@ -123,6 +123,20 @@
                             <dd><app-user-link [user]="userDeleted" [linkRoute]="userDeletedRoute"/></dd>
                         </div>
                     }
+                    <!-- Edited -->
+                    @if (comment.editedTime | datetime; as v) {
+                        <div>
+                            <dt i18n>Edited</dt>
+                            <dd>{{ v }}</dd>
+                        </div>
+                    }
+                    <!-- Edited by -->
+                    @if (userEdited) {
+                        <div>
+                            <dt i18n>Edited by</dt>
+                            <dd><app-user-link [user]="userEdited" [linkRoute]="userEditedRoute"/></dd>
+                        </div>
+                    }
                 </dl>
             </div>
         </div>

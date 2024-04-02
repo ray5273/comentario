@@ -21,3 +21,9 @@ update cm_configuration set key = 'integrations.useGravatar' where key = 'domain
 update cm_configuration set key = 'domain.defaults.markdown.images.enabled' where key = 'markdown.images.enabled';
 update cm_configuration set key = 'domain.defaults.markdown.links.enabled'  where key = 'markdown.links.enabled';
 update cm_configuration set key = 'domain.defaults.markdown.tables.enabled' where key = 'markdown.tables.enabled';
+
+------------------------------------------------------------------------------------------------------------------------
+-- Add edited fields to comments
+------------------------------------------------------------------------------------------------------------------------
+alter table cm_comments add column ts_edited timestamp;
+alter table cm_comments add column user_edited uuid references cm_users(id) on delete set null;

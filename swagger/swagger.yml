@@ -111,7 +111,11 @@ definitions:
       deletedTime:
         type: string
         format: date-time
-        description: When the comment was deleted, only provided for deleted comments and moderators and comment authors
+        description: When the comment was deleted, only provided for deleted comments and moderators/comment authors
+      editedTime:
+        type: string
+        format: date-time
+        description: When the comment was last edited, only provided for edited comments and moderators/comment authors
       userCreated:
         type: string
         format: uuid
@@ -129,6 +133,12 @@ definitions:
         description: >
           ID of the user who deleted the comment. Non-moderator users can only see a value of userCreated here, meaning
           the comment was deleted by its author; if it was deleted by someone else, the field will have no value
+      userEdited:
+        type: string
+        format: uuid
+        description: >
+          ID of the user who last edited the comment text. Non-moderator users can only see a value of userCreated here,
+          meaning the comment was edited by its author; if it was edited by someone else, the field will have no value
       pendingReason:
         type: string
         description: Reason for the pending state of the comment, visible to moderators only
@@ -2870,6 +2880,9 @@ paths:
               deleter:
                 $ref: "#/definitions/user"
                 description: User who authored the comment (only when the comment is deleted and the current user is owner or superuser)
+              editor:
+                $ref: "#/definitions/user"
+                description: User who edited the comment (only when the comment is edited and the current user is owner or superuser)
               page:
                 $ref: "#/definitions/domainPage"
                 description: Domain page the comment is on

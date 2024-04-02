@@ -164,8 +164,6 @@
   translation: Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.
 - id: pendingModeration
   translation: In afwachting van moderatie
-- id: permalink
-  translation: Permalink
 - id: poweredBy
   translation: Mogelijk gemaakt door Comentario
 - id: previewFailed
@@ -204,6 +202,10 @@
   translation: Verwijderd door moderator
 - id: statusDeletedUser
   translation: Verwijderde Gebruiker
+- id: statusEditedByAuthor
+  translation: bijgewerkt door auteur
+- id: statusEditedByModerator
+  translation: bijgewerkt door moderator
 - id: statusModerator
   translation: Moderator
 - id: statusPending
@@ -215,24 +217,24 @@
 - id: timeDaysAgo
   translation: dagen geleden
 - id: timeHourAgo
-  translation: Een uur geleden
+  translation: een uur geleden
 - id: timeHoursAgo
   translation: uur geleden
 - id: timeJustNow
-  translation: Zojuist
+  translation: zojuist
 - id: timeMinuteAgo
-  translation: Een minuut geleden
+  translation: een minuut geleden
 - id: timeMinutesAgo
   translation: minuten geleden
 - id: timeMonthAgo
-  translation: Een maand geleden
+  translation: een maand geleden
 - id: timeMonthsAgo
   translation: maanden geleden
 - id: timeYearAgo
-  translation: Een jaar geleden
+  translation: een jaar geleden
 - id: timeYearsAgo
   translation: jaar geleden
 - id: timeYesterday
-  translation: Gisteren
+  translation: gisteren
 - id: unreadReply
   translation: Ongelezen reactie

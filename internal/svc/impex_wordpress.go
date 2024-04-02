@@ -158,17 +158,15 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 					ID:            commentID,
 					ParentID:      parentCommentID,
 					PageID:        pageID,
-					Markdown:      comment.Content,
 					IsApproved:    true,
 					CreatedTime:   t,
 					ModeratedTime: sql.NullTime{Time: t, Valid: true},
 					UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
 					UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
-					HTML: util.MarkdownToHTML(comment.Content,
-						TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
-						TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
-						TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled)),
 				}
+
+				// Update the comment's markdown and render it into HTML
+				TheCommentService.SetMarkdown(c, comment.Content, &domain.ID, nil)
 
 				// File it under the appropriate parent ID
 				if l, ok := commentParentIDMap[pzID]; ok {

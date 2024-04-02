@@ -182,8 +182,10 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	}
 
 	// Register a view in page/domain statistics in the background, ignoring any error
-	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, 0, 1) }()
-	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, 0, 1) }()
+	go func() {
+		_ = svc.ThePageService.IncrementCounts(&page.ID, 0, 1)
+		_ = svc.TheDomainService.IncrementCounts(&domain.ID, 0, 1)
+	}()
 
 	// Succeeded
 	return api_embed.NewEmbedCommentListOK().WithPayload(&api_embed.EmbedCommentListOKBody{
@@ -268,22 +270,17 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 		CreatedTime: time.Now().UTC(),
 		UserCreated: uuid.NullUUID{UUID: user.ID, Valid: true},
 	}
-	comment.HTML = util.MarkdownToHTML(
-		comment.Markdown,
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled))
+	svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil)
 
 	// Determine comment state
 	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
 		return respServiceError(err)
 	} else if b {
 		// Comment needs to be approved
-		comment.IsPending = true
-		comment.PendingReason = reason
+		comment.WithModerated(nil, true, false, reason)
 	} else {
 		// No need for moderator approval
-		comment.MarkApprovedBy(&user.ID)
+		comment.WithModerated(&user.ID, false, true, "")
 	}
 
 	// Persist a new comment record
@@ -292,8 +289,10 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	}
 
 	// Increment page/domain comment counts in the background, ignoring any error
-	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, 1, 0) }()
-	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, 1, 0) }()
+	go func() {
+		_ = svc.ThePageService.IncrementCounts(&page.ID, 1, 0)
+		_ = svc.TheDomainService.IncrementCounts(&domain.ID, 1, 0)
+	}()
 
 	// Send an email notification to moderators, if we notify about every comment or comments pending moderation and
 	// the comment isn't approved yet, in the background
@@ -326,14 +325,11 @@ func EmbedCommentPreview(params api_embed.EmbedCommentPreviewParams) middleware.
 	}
 
 	// Render the passed markdown
-	html := util.MarkdownToHTML(
-		params.Body.Markdown,
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownLinksEnabled),
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownImagesEnabled),
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownTablesEnabled))
+	c := &data.Comment{}
+	svc.TheCommentService.SetMarkdown(c, params.Body.Markdown, domainID, nil)
 
 	// Succeeded
-	return api_embed.NewEmbedCommentPreviewOK().WithPayload(&api_embed.EmbedCommentPreviewOKBody{HTML: html})
+	return api_embed.NewEmbedCommentPreviewOK().WithPayload(&api_embed.EmbedCommentPreviewOKBody{HTML: c.HTML})
 }
 
 func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.User) middleware.Responder {
@@ -382,33 +378,25 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 
 	// If the comment was approved, check the need for moderation again
 	unapprove := false
-	reason := ""
 	if !comment.IsPending && comment.IsApproved {
 		// Run the approval rules
 		if b, s, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, true); err != nil {
 			return respServiceError(err)
 		} else if b {
 			unapprove = true
-			reason = s
+			comment.WithModerated(&user.ID, true, false, s)
 		}
 	}
 
-	// Render the comment into HTML
-	comment.Markdown = strings.TrimSpace(params.Body.Markdown)
-	comment.HTML = util.MarkdownToHTML(
-		comment.Markdown,
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled))
-
-	// Persist the edits in the database
-	if err := svc.TheCommentService.UpdateText(&comment.ID, comment.Markdown, comment.HTML); err != nil {
+	// Update the comment text/HTML
+	svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID)
+	if err := svc.TheCommentService.Edited(comment); err != nil {
 		return respServiceError(err)
 	}
 
-	// If the comment approval is to be revoked
+	// If the comment approval was revoked
 	if unapprove {
-		if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, true, false, reason); err != nil {
+		if err := svc.TheCommentService.Moderated(comment); err != nil {
 			return respServiceError(err)
 		}
 	}

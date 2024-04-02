@@ -265,7 +265,6 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			ID:            commentID,
 			ParentID:      parentCommentID,
 			PageID:        pageID,
-			Markdown:      util.If(del, "", comment.Markdown),
 			Score:         comment.Score,
 			IsApproved:    comment.State == "approved",
 			IsPending:     comment.State == "unapproved",
@@ -278,11 +277,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 
 		// Render Markdown into HTML (the latter doesn't get exported)
 		if !del {
-			c.HTML = util.MarkdownToHTML(
-				comment.Markdown,
-				TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
-				TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
-				TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled))
+			TheCommentService.SetMarkdown(c, comment.Markdown, &domain.ID, nil)
 		}
 
 		// File it under the appropriate parent ID
@@ -426,10 +421,11 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			pzID = id
 		}
 
-		// Try to map users who moderated/deleted the comment
-		var umID, udID uuid.NullUUID
+		// Try to map users who moderated/deleted/edited the comment
+		var umID, udID, ueID uuid.NullUUID
 		umID.UUID, umID.Valid = commenterIDMap[comment.UserModerated]
 		udID.UUID, udID.Valid = commenterIDMap[comment.UserDeleted]
+		ueID.UUID, ueID.Valid = commenterIDMap[comment.UserEdited]
 
 		// Create a new comment instance
 		c := &data.Comment{
@@ -449,6 +445,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
 			UserModerated: umID,
 			UserDeleted:   udID,
+			UserEdited:    ueID,
 		}
 
 		// File it under the appropriate parent ID

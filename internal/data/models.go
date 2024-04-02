@@ -861,9 +861,11 @@ type Comment struct {
 	CreatedTime   time.Time     // When the comment was created
 	ModeratedTime sql.NullTime  // When a moderation action has last been applied to the comment
 	DeletedTime   sql.NullTime  // When the comment was marked as deleted
+	EditedTime    sql.NullTime  // When the comment text was last updated
 	UserCreated   uuid.NullUUID // Reference to the user who created the comment
 	UserModerated uuid.NullUUID // Reference to the user who last moderated the comment
 	UserDeleted   uuid.NullUUID // Reference to the user who deleted the comment
+	UserEdited    uuid.NullUUID // Reference to the user who last updated the comment text
 	PendingReason string        // The reason for the pending status
 }
 
@@ -876,7 +878,7 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		return &cc
 	}
 
-	// Other users don't see the source Markdown and status/audit fields
+	// Other users don't see the source Markdown and status/audit fields, except for the edited time
 	cc := &Comment{
 		ID:          c.ID,
 		ParentID:    c.ParentID,
@@ -888,6 +890,7 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		IsDeleted:   c.IsDeleted,
 		CreatedTime: c.CreatedTime,
 		UserCreated: c.UserCreated,
+		EditedTime:  c.EditedTime,
 	}
 
 	if c.UserCreated.Valid {
@@ -906,6 +909,9 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		if c.UserDeleted.Valid && c.UserDeleted.UUID == c.UserCreated.UUID {
 			cc.UserDeleted = c.UserDeleted
 		}
+		if c.UserEdited.Valid && c.UserEdited.UUID == c.UserCreated.UUID {
+			cc.UserEdited = c.UserEdited
+		}
 	}
 	return cc
 }
@@ -920,15 +926,6 @@ func (c *Comment) IsRoot() bool {
 	return !c.ParentID.Valid
 }
 
-// MarkApprovedBy sets the value of Approved to true and updates related fields. Also removes any pending status
-func (c *Comment) MarkApprovedBy(userID *uuid.UUID) {
-	c.IsApproved = true
-	c.IsPending = false
-	c.PendingReason = ""
-	c.UserModerated = uuid.NullUUID{UUID: *userID, Valid: true}
-	c.ModeratedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
-}
-
 // ToDTO converts this model into an API model:
 //   - https is true for "https", false for "http"
 //   - host is the domain host
@@ -939,6 +936,7 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 	return &models.Comment{
 		CreatedTime:   strfmt.DateTime(c.CreatedTime),
 		DeletedTime:   NullDateTime(c.DeletedTime),
+		EditedTime:    NullDateTime(c.EditedTime),
 		HTML:          c.HTML,
 		ID:            strfmt.UUID(c.ID.String()),
 		IsApproved:    c.IsApproved,
@@ -954,6 +952,7 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 		URL:           strfmt.URI(c.URL(https, host, path)),
 		UserCreated:   NullUUIDStr(&c.UserCreated),
 		UserDeleted:   NullUUIDStr(&c.UserDeleted),
+		UserEdited:    NullUUIDStr(&c.UserEdited),
 		UserModerated: NullUUIDStr(&c.UserModerated),
 	}
 }
@@ -961,6 +960,18 @@ func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 // URL returns the absolute URL of the comment
 func (c *Comment) URL(https bool, host, path string) string {
 	return fmt.Sprintf("%s://%s%s#comentario-%s", util.If(https, "https", "http"), host, path, c.ID)
+}
+
+// WithModerated sets the moderation status values. userID can be nil
+func (c *Comment) WithModerated(userID *uuid.UUID, pending, approved bool, reason string) *Comment {
+	c.IsPending = pending
+	c.IsApproved = approved
+	c.PendingReason = reason
+	if userID != nil {
+		c.UserModerated = uuid.NullUUID{UUID: *userID, Valid: true}
+		c.ModeratedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+	}
+	return c
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

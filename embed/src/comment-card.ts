@@ -382,8 +382,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      * Render the content of the card.
      */
     private render(ctx: CommentRenderingContext): void {
-        const id = this._comment.id;
-        const commenter = this._comment.userCreated ? ctx.commenters[this._comment.userCreated] : undefined;
+        const c = this._comment;
+        const id = c.id;
+        const commenter = c.userCreated ? ctx.commenters[c.userCreated] : undefined;
 
         // Pick a color for the commenter
         let bgColor = 'deleted';
@@ -400,8 +401,21 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             .animated(ch => ch.hasClass('fade-out') && ch.classes('hidden'))
             .append(...CommentCard.renderChildComments(ctx, this.level + 1, id));
 
-        // Convert comment creation time to milliseconds
-        const ms = new Date(this._comment.createdTime).getTime();
+        // Comment creation time text
+        const createdText = UIToolkit.span()
+            .inner(Utils.timeAgo(this.t, ctx.curTimeMs, new Date(c.createdTime).getTime()))
+            .attr({title: c.createdTime});
+
+        // Comment edited time text
+        const editedText = Utils.isDateString(c.editedTime) ?
+            UIToolkit.span()
+                .inner(
+                    ', ' +
+                    this.t(c.userEdited === c.userCreated ? 'statusEditedByAuthor' : 'statusEditedByModerator') +
+                    ' ' +
+                    Utils.timeAgo(this.t, ctx.curTimeMs, new Date(c.editedTime).getTime()))
+                .attr({title: c.editedTime}) :
+            undefined;
 
         // Card self
         this.eCardSelf = UIToolkit.div('card-self')
@@ -430,9 +444,10 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                 // Subtitle
                                 UIToolkit.div('subtitle')
                                     .append(
-                                        // Permalink and the comment creation time
-                                        UIToolkit.a(Utils.timeAgo(this.t, ctx.curTimeMs, ms), `#${Wrap.idPrefix}${id}`)
-                                            .attr({title: `${this._comment.createdTime} — ${this.t('permalink')}`})))),
+                                        // Permalink to the comment, with creation/editing metadata
+                                        Wrap.new('a')
+                                            .attr({href: `#${Wrap.idPrefix}${id}`})
+                                            .append(createdText, editedText)))),
                 // Card body
                 this.eBody = UIToolkit.div('card-body'),
                 // Comment toolbar

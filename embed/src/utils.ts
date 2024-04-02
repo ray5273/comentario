@@ -8,6 +8,16 @@ export class Utils {
     static readonly cookieSrc = (parent as any)['Cypress'] ? parent.document : document;
 
     /**
+     * Return whether the passed value is a non-zero date.
+     * @param v Value to check.
+     */
+    static isDateString(v: any): boolean {
+        return typeof v === 'string' &&
+            v.length >= 10 && // yyyy-mm-dd
+            !v.startsWith('0001'); // Backend renders zero date as '0001-01-01T00:00:00.000Z'
+    }
+
+    /**
      * Return whether the passed value represents a valid UUID.
      * @param v Value to check.
      */

@@ -40,6 +40,12 @@ export class CommentPropertiesComponent implements OnInit {
     /** Link route for the user who deleted the comment. */
     userDeletedRoute?: string[];
 
+    /** User who edited the comment. */
+    userEdited?: User | Principal;
+
+    /** Link route for the user who edited the comment. */
+    userEditedRoute?: string[];
+
     /** Domain page the comment is on. */
     page?: DomainPage;
 
@@ -98,6 +104,7 @@ export class CommentPropertiesComponent implements OnInit {
                 this.commenter     = r.commenter;
                 this.userModerated = r.moderator;
                 this.userDeleted   = r.deleter;
+                this.userEdited    = r.editor;
                 this.page          = r.page;
 
                 // If the comment is anonymous, imitate the anonymous user
@@ -105,12 +112,15 @@ export class CommentPropertiesComponent implements OnInit {
                     this.commenter = AnonymousUser;
                 }
 
-                // If moderator/deleter refer to the current user, copy the principal into them
+                // If moderator/deleter/editor refer to the current user, copy the principal into them
                 if (!this.userModerated && r.comment?.userModerated === this.domainMeta?.principal?.id) {
                     this.userModerated = this.domainMeta?.principal;
                 }
                 if (!this.userDeleted && r.comment?.userDeleted === this.domainMeta?.principal?.id) {
                     this.userDeleted = this.domainMeta?.principal;
+                }
+                if (!this.userEdited && r.comment?.userEdited === this.domainMeta?.principal?.id) {
+                    this.userEdited = this.domainMeta?.principal;
                 }
 
                 // Prepare link routes for users (Anonymous has no domain user, so no link)
@@ -133,6 +143,9 @@ export class CommentPropertiesComponent implements OnInit {
                     }
                     if (this.userDeleted) {
                         this.userDeletedRoute = [Paths.manage.users, this.userDeleted.id!];
+                    }
+                    if (this.userEdited) {
+                        this.userEditedRoute = [Paths.manage.users, this.userEdited.id!];
                     }
                 }
 

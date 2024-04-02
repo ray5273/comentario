@@ -90,7 +90,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 	}
 
 	// If the current user is an owner or a superuser
-	var um, ud *models.User
+	var um, ud, ue *models.User
 	if user.IsSuperuser || domainUser != nil && domainUser.IsOwner {
 		// Fetch the user moderated, if any
 		if comment.UserModerated.Valid {
@@ -108,6 +108,14 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 				ud = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
 			}
 		}
+		// Fetch the user edited, if any
+		if comment.UserEdited.Valid {
+			if u, err := svc.TheUserService.FindUserByID(&comment.UserEdited.UUID); err != nil {
+				return respServiceError(err)
+			} else {
+				ue = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
+			}
+		}
 	}
 
 	// Succeeded
@@ -116,6 +124,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 			Comment:   comment.CloneWithClearance(user, domainUser).ToDTO(domain.IsHTTPS, domain.Host, page.Path),
 			Commenter: cr,
 			Deleter:   ud,
+			Editor:    ue,
 			Moderator: um,
 			Page:      page.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner).ToDTO(),
 		})
@@ -199,8 +208,10 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 	}
 
 	// Decrement page/domain comment count in the background, ignoring any errors
-	go func() { _ = svc.ThePageService.IncrementCounts(&page.ID, -1, 0) }()
-	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0) }()
+	go func() {
+		_ = svc.ThePageService.IncrementCounts(&page.ID, -1, 0)
+		_ = svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0)
+	}()
 
 	// Notify websocket subscribers
 	commentWebSocketNotify(page, comment, "delete")
@@ -254,7 +265,8 @@ func commentModerate(commentUUID strfmt.UUID, user *data.User, pending, approve 
 	}
 
 	// Update the comment's state in the database
-	if err := svc.TheCommentService.Moderate(&comment.ID, &user.ID, pending, approve, reason); err != nil {
+	comment.WithModerated(&user.ID, pending, approve, reason)
+	if err := svc.TheCommentService.Moderated(comment); err != nil {
 		return respServiceError(err)
 	}
 
