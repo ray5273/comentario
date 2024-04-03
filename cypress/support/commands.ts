@@ -10,16 +10,7 @@ const baseUrl = config('baseUrl');
 const testSiteUrl = Cypress.env('TEST_SITE_URL') || 'http://localhost:8000/';
 const testSiteHost = new URL(testSiteUrl).host;
 
-const commentDeepMap = (c: Cypress.Comment, props: (keyof Cypress.Comment)[]) => {
-    const x: any = {};
-    props.forEach(p => x[p] = c[p]);
-    if (c.children?.length) {
-        x.children = c.children.map(child => commentDeepMap(child, props));
-    }
-    return x;
-};
-
-const getChildComments = (root: Element): Cypress.Comment[] =>
+const getChildComments = (root: Element, props: { [p in keyof Cypress.Comment]: true }): Cypress.Comment[] =>
     // Query comment cards
     Array.from(root.children)
         // Filter comment cards
@@ -30,26 +21,28 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
             const $self    = $body.find('> .comentario-card-self');
             const $header  = $self.find('> .comentario-card-header');
             const $toolbar = $self.find('> .comentario-toolbar');
-            const sc       = $toolbar.find('.comentario-score').html();
-            const c: Cypress.Comment = {
-                id:        $self.attr('id')?.replace('comentario-', ''),
-                html:      $self.find(' > .comentario-card-body').html(),
-                author:    $header.find('.comentario-name').html(),
-                score:     sc ? Number(sc) : null,
-                upvoted:   $toolbar.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'),
-                downvoted: $toolbar.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'),
-                sticky:    !!$toolbar.find('.comentario-is-sticky').length,
-                buttons:   $toolbar.find('.comentario-btn')
-                               // Only keep visible buttons
-                               .filter((_, e) => !e.classList.contains('comentario-hidden'))
-                               .map((_, e: HTMLButtonElement) => e.title as CommentButton).get(),
-                pending:   $self.hasClass('comentario-pending'),
-            };
+            const c = {} as Cypress.Comment;
+            props.id        && (c.id        = $self.attr('id')?.replace('comentario-', ''));
+            props.html      && (c.html      = $self.find(' > .comentario-card-body').html());
+            props.author    && (c.author    = $header.find('.comentario-name').text());
+            props.subtitle  && (c.subtitle  = $header.find('.comentario-subtitle').text());
+            props.upvoted   && (c.upvoted   = $toolbar.find('.comentario-btn[title=Upvote]')  .hasClass('comentario-upvoted'));
+            props.downvoted && (c.downvoted = $toolbar.find('.comentario-btn[title=Downvote]').hasClass('comentario-downvoted'));
+            props.sticky    && (c.sticky    = !!$toolbar.find('.comentario-is-sticky').length);
+            props.buttons   && (c.buttons   = $toolbar.find('.comentario-btn')
+                .filter((_, e) => !e.classList.contains('comentario-hidden')) // Only keep visible buttons
+                .map((_, e: HTMLButtonElement) => e.title as CommentButton).get());
+            props.pending   && (c.pending   = $self.hasClass('comentario-pending'));
+
+            if (props.score) {
+                const sc = $toolbar.find('.comentario-score').text();
+                c.score = sc ? Number(sc) : null;
+            }
 
             // Recurse children, if any
             const $children = $body.find('> .comentario-card-children');
             if ($children.length) {
-                const ch = getChildComments($children[0]);
+                const ch = getChildComments($children[0], props);
                 if (ch.length) {
                     c.children = ch;
                 }
@@ -60,18 +53,23 @@ const getChildComments = (root: Element): Cypress.Comment[] =>
 Cypress.Commands.addQuery(
     'commentTree',
     function commentTree(...properties: (keyof Cypress.Comment)[]) {
-        return (element?: JQueryWithSelector) => {
-            // Collect the comments
-            let cc = (element ?? $('comentario-comments')).first()
+        // Turn the property list into an object
+        const props = properties.reduce(
+            (acc, p) => {
+                acc[p] = true;
+                return acc;
+            },
+            {} as { [p in keyof Cypress.Comment]: true });
+
+        // Recurse the comment tree
+        return (element?: JQueryWithSelector) =>
+            (element ?? $('comentario-comments')).first()
                 // Find the comment container
                 .find('.comentario-comments')
                 // Recurse into child comments
-                .map((_, c) => getChildComments(c))
+                .map((_, c) => getChildComments(c, props))
                 // Unwrap the Comment[]
                 .get();
-            // Map properties, if needed
-            return properties.length ? cc.map(c => commentDeepMap(c, properties)) : cc;
-        };
     });
 
 Cypress.Commands.add('isAt', (expected: string | RegExp | Cypress.IsAtObjectWithUnderscore, options?: Cypress.IsAtOptions) => cy.url().should((url) => {

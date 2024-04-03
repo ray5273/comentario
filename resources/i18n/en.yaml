@@ -198,11 +198,11 @@
 - id: ssoAuthFailed
   translation: SSO authentication failed.
 - id: statusDeleted
-  translation: Deleted
+  translation: deleted
 - id: statusDeletedByAuthor
-  translation: Deleted by author
+  translation: deleted by author
 - id: statusDeletedByModerator
-  translation: Deleted by moderator
+  translation: deleted by moderator
 - id: statusDeletedUser
   translation: Deleted User
 - id: statusEditedByAuthor

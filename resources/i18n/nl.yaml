@@ -195,11 +195,11 @@
 - id: ssoAuthFailed
   translation: SSO-authenticatie mislukt.
 - id: statusDeleted
-  translation: Verwijderd
+  translation: verwijderd
 - id: statusDeletedByAuthor
-  translation: Verwijderd door auteur
+  translation: verwijderd door auteur
 - id: statusDeletedByModerator
-  translation: Verwijderd door moderator
+  translation: verwijderd door moderator
 - id: statusDeletedUser
   translation: Verwijderde Gebruiker
 - id: statusEditedByAuthor

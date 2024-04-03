@@ -58,10 +58,11 @@ export class UIToolkit {
 
     /**
      * Create and return a new span element.
+     * @param text Optional inner text.
      * @param classes Classes to add to the span.
      */
-    static span(...classes: (false | null | undefined | string)[]): Wrap<HTMLSpanElement> {
-        return Wrap.new('span').classes(...classes);
+    static span(text?: string, ...classes: (false | null | undefined | string)[]): Wrap<HTMLSpanElement> {
+        return Wrap.new('span').inner(text ?? '').classes(...classes);
     }
 
     /**

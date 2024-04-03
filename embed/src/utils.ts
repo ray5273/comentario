@@ -8,13 +8,15 @@ export class Utils {
     static readonly cookieSrc = (parent as any)['Cypress'] ? parent.document : document;
 
     /**
-     * Return whether the passed value is a non-zero date.
-     * @param v Value to check.
+     * Return either a date parsed from the provided string, or undefined if the date is invalid or zero.
+     * @param v Value to parse.
      */
-    static isDateString(v: any): boolean {
+    static parseDate(v: any): Date | undefined {
         return typeof v === 'string' &&
-            v.length >= 10 && // yyyy-mm-dd
-            !v.startsWith('0001'); // Backend renders zero date as '0001-01-01T00:00:00.000Z'
+                v.length >= 10 && // yyyy-mm-dd
+                !v.startsWith('0001') ? // Backend renders zero date as '0001-01-01T00:00:00.000Z'
+            new Date(v) :
+            undefined;
     }
 
     /**
@@ -29,9 +31,14 @@ export class Utils {
      * Return a string representation of a time difference in the "time ago" notation.
      * @param t Function for obtaining translated messages.
      * @param current Current time in milliseconds.
-     * @param previous The past moment in milliseconds.
+     * @param previous The past moment in milliseconds. Optional, if not provided, an empty string is returned.
      */
-    static timeAgo(t: TranslateFunc, current: number, previous: number): string {
+    static timeAgo(t: TranslateFunc, current: number, previous: number | undefined): string {
+        if (!previous) {
+            return '';
+        }
+
+        // Calculate number of seconds between the two timestamps
         const seconds = Math.floor((current-previous) / 1000);
 
         // Years

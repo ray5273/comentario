@@ -878,7 +878,7 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		return &cc
 	}
 
-	// Other users don't see the source Markdown and status/audit fields, except for the edited time
+	// Other users don't see the source Markdown and status/audit fields, except for the edited/deleted time
 	cc := &Comment{
 		ID:          c.ID,
 		ParentID:    c.ParentID,
@@ -890,6 +890,7 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		IsDeleted:   c.IsDeleted,
 		CreatedTime: c.CreatedTime,
 		UserCreated: c.UserCreated,
+		DeletedTime: c.DeletedTime,
 		EditedTime:  c.EditedTime,
 	}
 
@@ -899,7 +900,6 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 			cc.Markdown = c.Markdown
 			cc.IsPending = c.IsPending
 			cc.ModeratedTime = c.ModeratedTime
-			cc.DeletedTime = c.DeletedTime
 		}
 
 		// Audit user fields are visible only if they point to the comment author

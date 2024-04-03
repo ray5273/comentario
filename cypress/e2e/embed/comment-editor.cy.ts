@@ -10,15 +10,17 @@ context('Comment Editor', () => {
             EmbedUtils.addComment(undefined, 'This is also a root', clickAnonymous);
 
             // New comment is added, in the Pending state since anonymous comments are to be moderated
-            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
+            cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
+                  subtitle: 3 hours ago
                   html: <p>This is a <b>root</b>, sticky comment</p>
                   score: 0
                   sticky: true
                   pending: false
                 - author: Anonymous
+                  subtitle: just now
                   html: <p>This is also a root</p>
                   score: 0
                   sticky: false
@@ -29,21 +31,24 @@ context('Comment Editor', () => {
             EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', false);
 
             // New comment is added, also in the Pending state
-            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
+            cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
+                  subtitle: 3 hours ago
                   html: <p>This is a <b>root</b>, sticky comment</p>
                   score: 0
                   sticky: true
                   pending: false
                   children:
                   - author: Anonymous
+                    subtitle: just now
                     html: <p>A reply here!</p>
                     score: 0
                     sticky: false
                     pending: true
                 - author: Anonymous
+                  subtitle: just now
                   html: <p>This is also a root</p>
                   score: 0
                   sticky: false
@@ -59,7 +64,7 @@ context('Comment Editor', () => {
             EmbedUtils.makeAliases({anonymous: true});
 
             // Verify comments
-            cy.commentTree('id').should('have.length', 1);
+            cy.commentTree().should('have.length', 1);
 
             // Focus the host, the editor should be inserted
             cy.get('@addCommentHost').focus()
@@ -72,7 +77,7 @@ context('Comment Editor', () => {
             cy.get('@addCommentHost').should('not.have.class', 'comentario-editor-inserted');
 
             // Still one comment
-            cy.commentTree('id').should('have.length', 1);
+            cy.commentTree().should('have.length', 1);
 
             // Open the editor by clicking it
             cy.get('@addCommentHost').click()
@@ -94,7 +99,7 @@ context('Comment Editor', () => {
             cy.get('@addCommentHost').should('not.have.class', 'comentario-editor-inserted');
 
             // Still one comment
-            cy.commentTree('id').should('have.length', 1);
+            cy.commentTree().should('have.length', 1);
         });
 
         it('submits anonymous comment, choosing Comment anonymously in Login dialog', () => {
@@ -128,15 +133,17 @@ context('Comment Editor', () => {
             EmbedUtils.addComment(undefined, 'Here goes', false);
 
             // New comment is added, in the Pending state since anonymous comments are to be moderated
-            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
+            cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
+                  subtitle: 3 hours ago
                   html: <p>This is a <b>root</b>, sticky comment</p>
                   score: 0
                   sticky: true
                   pending: false
                 - author: Commenter One
+                  subtitle: just now
                   html: <p>Here goes</p>
                   score: 0
                   sticky: false
@@ -147,21 +154,24 @@ context('Comment Editor', () => {
             EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply *here*!', false);
 
             // New comment is added, also in the Pending state
-            cy.commentTree('html', 'author', 'score', 'sticky', 'pending').should('yamlMatch',
+            cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
+                  subtitle: 3 hours ago
                   html: <p>This is a <b>root</b>, sticky comment</p>
                   score: 0
                   sticky: true
                   pending: false
                   children:
                   - author: Commenter One
+                    subtitle: just now
                     html: <p>A reply <em>here</em>!</p>
                     score: 0
                     sticky: false
                     pending: false
                 - author: Commenter One
+                  subtitle: just now
                   html: <p>Here goes</p>
                   score: 0
                   sticky: false

@@ -888,7 +888,6 @@ export class Comentario extends HTMLElement {
             modCommentDeletion: !!this.pageInfo?.commentDeletionModerator,
             ownCommentEditing:  !!this.pageInfo?.commentEditingAuthor,
             modCommentEditing:  !!this.pageInfo?.commentEditingModerator,
-            curTimeMs:          new Date().getTime(),
             maxLevel:           this.maxLevel,
             enableVoting:       !!this.pageInfo?.enableCommentVoting,
             t:                  this.i18n.t,

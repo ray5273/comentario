@@ -235,52 +235,68 @@ context('User Properties page', () => {
 
             // Verify comments' text is deleted as well
             cy.testSiteVisit(TEST_PATHS.home);
-            cy.commentTree('author', 'html').should('yamlMatch',
+            cy.commentTree('author', 'subtitle', 'html').should('yamlMatch',
                 // language=yaml
                 `
                 - author: '[Deleted User]'
-                  html: '(Deleted)'
+                  subtitle: 3 hours ago
+                  html: '(deleted)'
                   children:
                   - author: Engineer King
+                    subtitle: 2 hours ago
                     html: <p>What's on the agenda, captain?</p>
                     children:
                     - author: '[Deleted User]'
-                      html: '(Deleted)'
+                      subtitle: 2 hours ago
+                      html: '(deleted)'
                       children:
                       - author: Engineer King
+                        subtitle: 2 hours ago
                         html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
                       - author: Commenter Two
+                        subtitle: 2 hours ago
                         html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
                         children:
                         - author: '[Deleted User]'
-                          html: '(Deleted)'
+                          subtitle: 2 hours ago
+                          html: '(deleted)'
                     - author: '[Deleted User]'
-                      html: '(Deleted)'
+                      subtitle: 2 hours ago
+                      html: '(deleted)'
                       children:
                       - author: Cook Queen
+                        subtitle: 2 hours ago, edited by author 13 minutes ago
                         html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
                         children:
                         - author: '[Deleted User]'
-                          html: '(Deleted)'
+                          subtitle: 2 hours ago
+                          html: '(deleted)'
                 - author: '[Deleted User]'
-                  html: '(Deleted)'
+                  subtitle: 2 hours ago
+                  html: '(deleted)'
                   children:
                   - author: Engineer King
+                    subtitle: 2 hours ago
                     html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
                     children:
                     - author: '[Deleted User]'
-                      html: '(Deleted)'
+                      subtitle: 2 hours ago
+                      html: '(deleted)'
                   - author: Navigator Jack
+                    subtitle: 2 hours ago
                     html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
                     children:
                     - author: '[Deleted User]'
-                      html: '(Deleted)'
+                      subtitle: 2 hours ago
+                      html: '(deleted)'
                       children:
                       - author: Cook Queen
+                        subtitle: 2 hours ago
                         html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
                         children:
                         - author: '[Deleted User]'
-                          html: '(Deleted)'
+                          subtitle: 2 hours ago
+                          html: '(deleted)'
                 `);
         });
 
@@ -403,52 +419,68 @@ context('User Properties page', () => {
 
             // Verify comments text is gone
             cy.testSiteVisit(TEST_PATHS.home);
-            cy.commentTree('author', 'html').should('yamlMatch',
+            cy.commentTree('author', 'subtitle', 'html').should('yamlMatch',
                 // language=yaml
                 `
                 - author: Captain Ace
-                  html: (Deleted by moderator)
+                  subtitle: 3 hours ago, deleted by moderator just now
+                  html: (deleted)
                   children:
                   - author: Engineer King
+                    subtitle: 2 hours ago
                     html: <p>What's on the agenda, captain?</p>
                     children:
                     - author: Captain Ace
-                      html: (Deleted by moderator)
+                      subtitle: 2 hours ago, deleted by moderator just now
+                      html: (deleted)
                       children:
                       - author: Engineer King
+                        subtitle: 2 hours ago
                         html: <p>Nothing major, captain. Just some routine maintenance to do, but we should be good to go soon.</p>
                       - author: Commenter Two
+                        subtitle: 2 hours ago
                         html: <p>Captain, I've plotted our course, and I suggest we take the eastern route. It'll take us a bit longer, but we'll avoid any bad weather.</p>
                         children:
                         - author: Captain Ace
-                          html: (Deleted by moderator)
+                          subtitle: 2 hours ago, deleted by moderator just now
+                          html: (deleted)
                     - author: Captain Ace
-                      html: (Deleted by moderator)
+                      subtitle: 2 hours ago, deleted by moderator just now
+                      html: (deleted)
                       children:
                       - author: Cook Queen
+                        subtitle: 2 hours ago, edited by author 13 minutes ago
                         html: <p>We've got enough food 🍖 and water 🚰 to last us for the whole journey, captain. But I do have a request. Could we get some fresh vegetables 🥕🥔🍅 and fruit 🍎🍐🍌 at our next port stop? It'll help us avoid scurvy.</p>
                         children:
                         - author: Captain Ace
-                          html: (Deleted by moderator)
+                          subtitle: 2 hours ago, deleted by moderator just now
+                          html: (deleted)
                 - author: Captain Ace
-                  html: (Deleted by moderator)
+                  subtitle: 2 hours ago, deleted by moderator just now
+                  html: (deleted)
                   children:
                   - author: Engineer King
+                    subtitle: 2 hours ago
                     html: <p>Captain, I've been noticing some strange vibrations in the engine room. It's nothing too serious, but I'd like to take a look at it just to be safe.</p>
                     children:
                     - author: Captain Ace
-                      html: (Deleted by moderator)
+                      subtitle: 2 hours ago, deleted by moderator just now
+                      html: (deleted)
                   - author: Navigator Jack
+                    subtitle: 2 hours ago
                     html: <p><strong>Captain</strong>, one more thing. We'll be passing through some pirate-infested waters soon. Should we be concerned?</p>
                     children:
                     - author: Captain Ace
-                      html: (Deleted by moderator)
+                      subtitle: 2 hours ago, deleted by moderator just now
+                      html: (deleted)
                       children:
                       - author: Cook Queen
+                        subtitle: 2 hours ago
                         html: <p>I can whip up some extra spicy food to make sure any pirates who try to board us get a taste of their own medicine! 🤣</p>
                         children:
                         - author: Captain Ace
-                          html: (Deleted by moderator)
+                          subtitle: 2 hours ago, deleted by moderator just now
+                          html: (deleted)
                 `);
         });
 

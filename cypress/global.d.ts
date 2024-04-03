@@ -33,16 +33,17 @@ declare namespace Cypress {
 
     /** Rendered comment. */
     interface Comment {
-        id:        string;
-        html:      string;
-        author:    string;
-        score:     number | null;
-        upvoted:   boolean;
-        downvoted: boolean;
-        sticky:    boolean;
-        pending:   boolean;
-        buttons:   CommentButton[];
-        children?: Comment[];
+        id?:        string;
+        html?:      string;
+        author?:    string;
+        subtitle?:  string;
+        score?:     number | null;
+        upvoted?:   boolean;
+        downvoted?: boolean;
+        sticky?:    boolean;
+        pending?:   boolean;
+        buttons?:   CommentButton[];
+        children?:  Comment[];
     }
 
     interface MetricCardContent {
@@ -102,7 +103,7 @@ declare namespace Cypress {
          * desired Comentario instance, if no subject is provided, looks for the first <comentario-comments> tag.
          * @param properties Properties to keep for each comment. If not provided, keeps all properties.
          */
-        commentTree(...properties: (keyof Comment)[]): Chainable<Partial<Comment>[]>;
+        commentTree(...properties: (keyof Comment)[]): Chainable<Comment[]>;
 
         /**
          * Set an input's value directly.

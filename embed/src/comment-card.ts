@@ -161,8 +161,6 @@ export interface CommentRenderingContext {
     readonly ownCommentEditing: boolean;
     /** Whether moderators can edit others' comments on this page. */
     readonly modCommentEditing: boolean;
-    /** Current time in milliseconds. */
-    readonly curTimeMs: number;
     /** Max comment nesting level. */
     readonly maxLevel: number;
     /** Whether voting on comments is enabled. */
@@ -200,6 +198,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     private eModeratorBadge?: Wrap<HTMLSpanElement>;
     private ePendingBadge?: Wrap<HTMLSpanElement>;
     private eModNotice?: Wrap<HTMLDivElement>;
+    private eSubtitleLink?: Wrap<HTMLAnchorElement>;
     private btnApprove?: Wrap<HTMLButtonElement>;
     private btnReject?: Wrap<HTMLButtonElement>;
     private btnDelete?: Wrap<HTMLButtonElement>;
@@ -226,9 +225,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Render the content
         this.render(ctx);
 
-        // Update the card controls/text
+        // Update the card
         this.update();
-        this.updateText();
     }
 
     /**
@@ -269,9 +267,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         this._comment = c;
         this._comment.card = this;
 
-        // Update the controls and the text
+        // Update the card
         this.update();
-        this.updateText();
     }
 
     /**
@@ -289,93 +286,19 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // If the comment is deleted
         if (c.isDeleted) {
-            // Add the deleted class
-            this.eCardSelf?.classes('deleted');
+            this.updateAsDeleted();
 
-            // Remove all tool buttons
-            this.eScore?.remove();
-            this.btnApprove?.remove();
-            this.btnReject?.remove();
-            this.btnDelete?.remove();
-            this.btnDownvote?.remove();
-            this.btnEdit?.remove();
-            this.btnReply?.remove();
-            this.btnSticky?.remove();
-            this.btnUpvote?.remove();
-            return;
-        }
-        this.setClasses(c.isDeleted, 'deleted');
-
-        // Score
-        this.eScore
-            ?.inner(c.score?.toString() || '0')
-            .setClasses(c.score > 0, 'upvoted').setClasses(c.score < 0, 'downvoted');
-        this.btnUpvote?.setClasses(c.direction > 0, 'upvoted');
-        this.btnDownvote?.setClasses(c.direction < 0, 'downvoted');
-
-        // Pending approval
-        const pending = this._comment.isPending;
-        this.eCardSelf?.setClasses(pending, 'pending');
-        if (!pending) {
-            // If the comment is rejected
-            this.eCardSelf?.setClasses(!this._comment.isApproved, 'rejected');
-
-            // Remove the Pending badge and Approve/Reject buttons if the comment isn't pending
-            this.ePendingBadge?.remove();
-            this.ePendingBadge = undefined;
-            this.btnApprove?.remove();
-            this.btnApprove = undefined;
-            this.btnReject?.remove();
-            this.btnReject = undefined;
-
-        // Add a Pending badge otherwise
-        } else if (!this.ePendingBadge) {
-            this.eNameWrap?.append(this.ePendingBadge = UIToolkit.badge(this.t('statusPending'), 'badge-pending'));
-        }
-
-        // Sticky
-        const sticky = this._comment.isSticky;
-        this.btnSticky
-            ?.attr({title: this.t(sticky ? (this.isModerator ? 'actionUnsticky' : 'stickyComment') : 'actionSticky')})
-            .setClasses(sticky, 'is-sticky')
-            .setClasses(!this.isModerator && !sticky, 'hidden');
-
-        // Moderation notice
-        let mn: string | undefined;
-        if (c.isPending) {
-            mn = this.t('commentIsPending');
-        } else if (!c.isApproved) {
-            mn = this.t('commentIsRejected');
-        }
-        if (mn) {
-            // If there's something to display, make sure the notice element exists and appended to the header
-            if (!this.eModNotice) {
-                this.eModNotice = UIToolkit.div('moderation-notice').appendTo(this.eHeader!);
-            }
-            this.eModNotice.inner(mn);
-
+        // Update card elements
         } else {
-            // No moderation notice
-            this.eModNotice?.remove();
-            this.eModNotice = undefined;
+            this.updateVoteScore(c.score, c.direction);
+            this.updateStatus(c.isPending, c.isApproved);
+            this.updateSticky(c.isSticky);
+            this.updateModerationNotice(c.isPending, c.isApproved);
+            this.updateText(c.html);
         }
-    }
 
-    /**
-     * Update the current comment's text.
-     */
-    private updateText() {
-        if (this._comment.isDeleted) {
-            this.eBody?.inner(
-                '(' +
-                this.t(
-                    this._comment.userCreated ?
-                        this._comment.userCreated === this._comment.userDeleted ? 'statusDeletedByAuthor' : 'statusDeletedByModerator' :
-                        'statusDeleted') +
-                ')');
-        } else {
-            this.eBody!.html(this._comment.html || '');
-        }
+        // Update comment metadata text
+        this.updateSubtitle(c);
     }
 
     /**
@@ -400,22 +323,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
             // When children are collapsed, hide the element after the fade-out animation finished
             .animated(ch => ch.hasClass('fade-out') && ch.classes('hidden'))
             .append(...CommentCard.renderChildComments(ctx, this.level + 1, id));
-
-        // Comment creation time text
-        const createdText = UIToolkit.span()
-            .inner(Utils.timeAgo(this.t, ctx.curTimeMs, new Date(c.createdTime).getTime()))
-            .attr({title: c.createdTime});
-
-        // Comment edited time text
-        const editedText = Utils.isDateString(c.editedTime) ?
-            UIToolkit.span()
-                .inner(
-                    ', ' +
-                    this.t(c.userEdited === c.userCreated ? 'statusEditedByAuthor' : 'statusEditedByModerator') +
-                    ' ' +
-                    Utils.timeAgo(this.t, ctx.curTimeMs, new Date(c.editedTime).getTime()))
-                .attr({title: c.editedTime}) :
-            undefined;
 
         // Card self
         this.eCardSelf = UIToolkit.div('card-self')
@@ -443,11 +350,8 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                         this.eModeratorBadge),
                                 // Subtitle
                                 UIToolkit.div('subtitle')
-                                    .append(
-                                        // Permalink to the comment, with creation/editing metadata
-                                        Wrap.new('a')
-                                            .attr({href: `#${Wrap.idPrefix}${id}`})
-                                            .append(createdText, editedText)))),
+                                    // Permalink to the comment, with creation/editing metadata
+                                    .append(this.eSubtitleLink = Wrap.new('a').attr({href: `#${Wrap.idPrefix}${id}`})))),
                 // Card body
                 this.eBody = UIToolkit.div('card-body'),
                 // Comment toolbar
@@ -539,7 +443,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     /**
      * Collapse or expand the card's children.
      * @param c Whether to expand (false) or collapse (true) the child comments.
-     * @private
      */
     private collapse(c: boolean) {
         if (!this.children?.ok) {
@@ -558,8 +461,29 @@ export class CommentCard extends Wrap<HTMLDivElement> {
     }
 
     /**
+     * Make up the comment card for a deleted comment.
+     */
+    private updateAsDeleted() {
+        // Add the deleted class
+        this.eCardSelf?.classes('deleted');
+
+        // Remove all tool buttons
+        this.eScore?.remove();
+        this.btnApprove?.remove();
+        this.btnReject?.remove();
+        this.btnDelete?.remove();
+        this.btnDownvote?.remove();
+        this.btnEdit?.remove();
+        this.btnReply?.remove();
+        this.btnSticky?.remove();
+        this.btnUpvote?.remove();
+
+        // Update the card text
+        this.eBody?.inner(`(${this.t('statusDeleted')})`);
+    }
+
+    /**
      * Update the expand toggler's state.
-     * @private
      */
     private updateExpandToggler() {
         if (this.children?.ok) {
@@ -567,5 +491,117 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                 ?.setClasses(this.collapsed, 'collapsed')
                 .attr({title: this.t(this.collapsed ? 'actionExpandChildren' : 'actionCollapseChildren')});
         }
+    }
+
+    /**
+     * Update the card's score and voting buttons.
+     */
+    private updateVoteScore(score: number, direction: number) {
+        this.eScore
+            ?.inner(score.toString() || '0')
+            .setClasses(score > 0, 'upvoted').setClasses(score < 0, 'downvoted');
+        this.btnUpvote?.setClasses(direction > 0, 'upvoted');
+        this.btnDownvote?.setClasses(direction < 0, 'downvoted');
+    }
+
+    /**
+     * Update the card according to the comment's status.
+     */
+    private updateStatus(isPending: boolean, isApproved: boolean) {
+        this.eCardSelf?.setClasses(isPending, 'pending');
+        if (!isPending) {
+            // If the comment is rejected
+            this.eCardSelf?.setClasses(!isApproved, 'rejected');
+
+            // Remove the Pending badge and Approve/Reject buttons if the comment isn't pending
+            this.ePendingBadge?.remove();
+            this.ePendingBadge = undefined;
+            this.btnApprove?.remove();
+            this.btnApprove = undefined;
+            this.btnReject?.remove();
+            this.btnReject = undefined;
+
+        // Comment is pending: add a Pending badge
+        } else if (!this.ePendingBadge) {
+            this.eNameWrap?.append(this.ePendingBadge = UIToolkit.badge(this.t('statusPending'), 'badge-pending'));
+        }
+    }
+
+    /**
+     * Update the card according to the comment's stickiness.
+     */
+    private updateSticky(isSticky: boolean) {
+        this.btnSticky
+            ?.attr({title: this.t(isSticky ? (this.isModerator ? 'actionUnsticky' : 'stickyComment') : 'actionSticky')})
+            .setClasses(isSticky, 'is-sticky')
+            .setClasses(!this.isModerator && !isSticky, 'hidden');
+    }
+
+    /**
+     * Update the card's moderation notice.
+     */
+    private updateModerationNotice(isPending: boolean, isApproved: boolean) {
+        let notice = '';
+        if (isPending) {
+            notice = this.t('commentIsPending');
+        } else if (!isApproved) {
+            notice = this.t('commentIsRejected');
+        }
+        if (notice) {
+            // If there's something to display, make sure the notice element exists and appended to the header
+            if (!this.eModNotice) {
+                this.eModNotice = UIToolkit.div('moderation-notice').appendTo(this.eHeader!);
+            }
+            this.eModNotice.inner(notice);
+
+        } else {
+            // No moderation notice
+            this.eModNotice?.remove();
+            this.eModNotice = undefined;
+        }
+    }
+
+    /**
+     * Update the current comment's creation/deletion/editing times.
+     */
+    private updateSubtitle(c: Comment) {
+        const curTime     = new Date().getTime();
+        const createdTime = Utils.parseDate(c.createdTime)?.getTime();
+
+        this.eSubtitleLink!
+            // Replace the link content
+            .inner('')
+            .append(
+                // Comment creation time text
+                UIToolkit.span(Utils.timeAgo(this.t, curTime, createdTime)).attr({title: c.createdTime}));
+
+        /** Add a '[done] by [user] [time] ago' message to the subtitle, if the time value is provided. */
+        const addTime = (timeStr: string | undefined, byId: UUID | undefined, idByAuthor: string, idByMod: string) => {
+            const time = Utils.parseDate(timeStr)?.getTime();
+            if (time && c.userCreated) {
+                this.eSubtitleLink!.append(
+                    // "by …"
+                    UIToolkit.span(', ' + this.t(byId === c.userCreated ? idByAuthor : idByMod) + ' '),
+                    // Time ago
+                    UIToolkit.span(Utils.timeAgo(this.t, curTime, time)).attr({title: timeStr}));
+            }
+        };
+
+        // If the comment is deleted
+        if (c.isDeleted) {
+            // Comment deletion time text, if present
+            addTime(c.deletedTime, c.userDeleted, 'statusDeletedByAuthor', 'statusDeletedByModerator');
+
+        } else {
+            // Comment edited time text, if present
+            addTime(c.editedTime, c.userEdited, 'statusEditedByAuthor', 'statusEditedByModerator');
+        }
+    }
+
+    /**
+     * Update the current comment's text.
+     */
+    private updateText(html?: string) {
+        this.eBody!.html(html || '');
     }
 }

@@ -195,11 +195,11 @@
 - id: ssoAuthFailed
   translation: Аутентификация через SSO завершилась неудачно.
 - id: statusDeleted
-  translation: Удалён
+  translation: удалён
 - id: statusDeletedByAuthor
-  translation: Удалён автором
+  translation: удалён автором
 - id: statusDeletedByModerator
-  translation: Удалён модератором
+  translation: удалён модератором
 - id: statusDeletedUser
   translation: Удалённый пользователь
 - id: statusEditedByAuthor

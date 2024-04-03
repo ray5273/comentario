@@ -120,22 +120,25 @@ context('Live comment update', () => {
         // Delete the first comment
         cy.testSiteLoginViaApi(USERS.king);
         cy.commentDeleteViaApi('0b5e258b-ecc6-4a9c-9f31-f775d88a258b');
-        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+        cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (Deleted by moderator) # Text is gone
-                  score: null                   # No score anymore
-                  sticky: false                 # Not sticky anymore
+                  subtitle: 3 hours ago, deleted by moderator just now
+                  html: (deleted) # Text is gone
+                  score: null     # No score anymore
+                  sticky: false   # Not sticky anymore
                   pending: false
                   children:
                   - author: Engineer King
+                    subtitle: just now
                     html: <p>Foo comment</p>
                     score: 0
                     sticky: false
                     pending: false
                 - author: Anonymous
+                  subtitle: just now
                   html: <p>Bar comment</p>
                   score: 0
                   sticky: false
@@ -144,22 +147,25 @@ context('Live comment update', () => {
 
         // Approve the last added comment
         cy.get<string>('@anonCommentId').then(id => cy.commentModerateViaApi(id, true));
-        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+        cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (Deleted by moderator)
+                  subtitle: 3 hours ago, deleted by moderator just now
+                  html: (deleted) 
                   score: null
                   sticky: false
                   pending: false
                   children:
                   - author: Engineer King
+                    subtitle: just now
                     html: <p>Foo comment</p>
                     score: 0
                     sticky: false
                     pending: false
                 - author: Anonymous
+                  subtitle: just now
                   html: <p>Bar comment</p>
                   score: 0
                   sticky: false
@@ -168,22 +174,25 @@ context('Live comment update', () => {
 
         // Vote for the last comment
         cy.get<string>('@anonCommentId').then(id => cy.commentVoteViaApi(id, -1));
-        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+        cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (Deleted by moderator)
+                  subtitle: 3 hours ago, deleted by moderator just now
+                  html: (deleted)
                   score: null
                   sticky: false
                   pending: false
                   children:
                   - author: Engineer King
+                    subtitle: just now
                     html: <p>Foo comment</p>
                     score: 0
                     sticky: false
                     pending: false
                 - author: Anonymous
+                  subtitle: just now
                   html: <p>Bar comment</p>
                   score: -1  # Score is updated
                   sticky: false
@@ -192,22 +201,25 @@ context('Live comment update', () => {
 
         // Sticky the last comment
         cy.get<string>('@anonCommentId').then(id => cy.commentStickyViaApi(id, true));
-        cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
+        cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
                 `
                 - author: Anonymous
-                  html: (Deleted by moderator)
+                  subtitle: 3 hours ago, deleted by moderator just now
+                  html: (deleted)
                   score: null
                   sticky: false
                   pending: false
                   children:
                   - author: Engineer King
+                    subtitle: just now
                     html: <p>Foo comment</p>
                     score: 0
                     sticky: false
                     pending: false
                 - author: Anonymous
+                  subtitle: just now
                   html: <p>Bar comment</p>
                   score: -1
                   sticky: true # It's sticky now
@@ -218,22 +230,23 @@ context('Live comment update', () => {
     it('doesn\'t update comments when disabled', () => {
         // Navigate to the page that has live update disabled
         cy.testSiteLoginViaApi(USERS.ace, TEST_PATHS.attr.noLiveUpdate);
-        cy.commentTree('id').should('be.empty');
+        cy.commentTree().should('be.empty');
 
         // Submit a comment via API
         cy.commentAddViaApi(host, TEST_PATHS.attr.noLiveUpdate, null, 'Phew!');
 
         // Wait 2 seconds and there's still no comment
         cy.wait(2000);
-        cy.commentTree('id').should('be.empty');
+        cy.commentTree().should('be.empty');
 
         // Reload and the comment is there
         cy.reload();
-        cy.commentTree('html', 'author')
+        cy.commentTree('html', 'author', 'subtitle')
             .should('yamlMatch',
                 // language=yaml
                 `
                 - author: Captain Ace
+                  subtitle: just now
                   html: <p>Phew!</p>
                 `);
     });
