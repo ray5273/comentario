@@ -143,29 +143,34 @@ func (svc *userService) Create(u *data.User) error {
 		db.Dialect().
 			Insert("cm_users").
 			Rows(goqu.Record{
-				"id":             u.ID,
-				"email":          u.Email,
-				"name":           u.Name,
-				"lang_id":        u.LangID,
-				"password_hash":  u.PasswordHash,
-				"system_account": u.SystemAccount,
-				"is_superuser":   u.IsSuperuser,
-				"confirmed":      u.Confirmed,
-				"ts_confirmed":   u.ConfirmedTime,
-				"ts_created":     u.CreatedTime,
-				"user_created":   u.UserCreated,
-				"signup_ip":      config.MaskIP(u.SignupIP),
-				"signup_country": u.SignupCountry,
-				"signup_host":    u.SignupHost,
-				"banned":         u.Banned,
-				"ts_banned":      u.BannedTime,
-				"user_banned":    u.UserBanned,
-				"remarks":        u.Remarks,
-				"federated_idp":  u.FederatedIdPNullStr(),
-				"federated_sso":  u.FederatedSSO,
-				"federated_id":   u.FederatedID,
-				"website_url":    u.WebsiteURL,
-				"secret_token":   u.SecretToken,
+				"id":                    u.ID,
+				"email":                 u.Email,
+				"name":                  u.Name,
+				"lang_id":               u.LangID,
+				"password_hash":         u.PasswordHash,
+				"system_account":        u.SystemAccount,
+				"is_superuser":          u.IsSuperuser,
+				"confirmed":             u.Confirmed,
+				"ts_confirmed":          u.ConfirmedTime,
+				"ts_created":            u.CreatedTime,
+				"user_created":          u.UserCreated,
+				"signup_ip":             config.MaskIP(u.SignupIP),
+				"signup_country":        u.SignupCountry,
+				"signup_host":           u.SignupHost,
+				"banned":                u.Banned,
+				"ts_banned":             u.BannedTime,
+				"user_banned":           u.UserBanned,
+				"remarks":               u.Remarks,
+				"federated_idp":         u.FederatedIdPNullStr(),
+				"federated_sso":         u.FederatedSSO,
+				"federated_id":          u.FederatedID,
+				"website_url":           u.WebsiteURL,
+				"secret_token":          u.SecretToken,
+				"ts_last_login":         u.LastLoginTime,
+				"ts_last_failed_login":  u.LastFailedLoginTime,
+				"failed_login_attempts": u.FailedLoginAttempts,
+				"is_locked":             u.IsLocked,
+				"ts_locked":             u.LockedTime,
 			}),
 	); err != nil {
 		logger.Errorf("userService.Create: ExecuteOne() failed: %v", err)
@@ -302,7 +307,8 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id",
 			// DomainUser fields
@@ -332,7 +338,8 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		Where(goqu.Ex{"u.email": email}).
@@ -368,7 +375,8 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		Where(goqu.Ex{"u.id": id}).
@@ -400,7 +408,8 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id",
 			// User session fields
@@ -435,7 +444,8 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		// Outer-join user avatars
@@ -511,7 +521,8 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id",
 			// DomainUser fields
@@ -596,7 +607,8 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
+			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		// Join users
@@ -722,6 +734,11 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 		&u.FederatedID,
 		&u.WebsiteURL,
 		&u.SecretToken,
+		&u.LastFailedLoginTime,
+		&u.LastFailedLoginTime,
+		&u.FailedLoginAttempts,
+		&u.IsLocked,
+		&u.LockedTime,
 		// Avatar fields
 		&avatarID,
 		// DomainUser
@@ -792,6 +809,11 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		&u.FederatedID,
 		&u.WebsiteURL,
 		&u.SecretToken,
+		&u.LastFailedLoginTime,
+		&u.LastFailedLoginTime,
+		&u.FailedLoginAttempts,
+		&u.IsLocked,
+		&u.LockedTime,
 		&avatarID,
 	}
 

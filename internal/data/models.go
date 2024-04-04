@@ -183,30 +183,36 @@ func NewAuthSession(data, host string, token []byte) *AuthSession {
 
 // User represents an authenticated or an anonymous user
 type User struct {
-	ID            uuid.UUID     // Unique user ID
-	Email         string        // Unique user email
-	Name          string        // User's full name
-	LangID        string        // User's interface language ID
-	PasswordHash  string        // Password hash
-	SystemAccount bool          // Whether the user is a system account (cannot sign in)
-	IsSuperuser   bool          // Whether the user is a "superuser" (instance admin)
-	Confirmed     bool          // Whether the user's email has been confirmed
-	ConfirmedTime sql.NullTime  // When the user's email has been confirmed
-	CreatedTime   time.Time     // When the user was created
-	UserCreated   uuid.NullUUID // Reference to the user who created this one. null if the used signed up themselves
-	SignupIP      string        // IP address the user signed up or was created from
-	SignupCountry string        // 2-letter country code matching the SignupIP
-	SignupHost    string        // Host the user signed up on (only for commenter signup, empty for UI signup)
-	Banned        bool          // Whether the user is banned
-	BannedTime    sql.NullTime  // When the user was banned
-	UserBanned    uuid.NullUUID // Reference to the user who banned this one
-	Remarks       string        // Optional remarks for the user
-	FederatedIdP  string        // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
-	FederatedSSO  bool          // Whether the user is authenticated via SSO
-	FederatedID   string        // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
-	WebsiteURL    string        // Optional user's website URL
-	SecretToken   uuid.UUID     // User's secret token, for example, for unsubscribing from notifications
-	HasAvatar     bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB
+	ID                  uuid.UUID     // Unique user ID
+	Email               string        // Unique user email
+	Name                string        // User's full name
+	LangID              string        // User's interface language ID
+	PasswordHash        string        // Password hash
+	SystemAccount       bool          // Whether the user is a system account (cannot sign in)
+	IsSuperuser         bool          // Whether the user is a "superuser" (instance admin)
+	Confirmed           bool          // Whether the user's email has been confirmed
+	ConfirmedTime       sql.NullTime  // When the user's email has been confirmed
+	CreatedTime         time.Time     // When the user was created
+	UserCreated         uuid.NullUUID // Reference to the user who created this one. null if the used signed up themselves
+	SignupIP            string        // IP address the user signed up or was created from
+	SignupCountry       string        // 2-letter country code matching the SignupIP
+	SignupHost          string        // Host the user signed up on (only for commenter signup, empty for UI signup)
+	Banned              bool          // Whether the user is banned
+	BannedTime          sql.NullTime  // When the user was banned
+	UserBanned          uuid.NullUUID // Reference to the user who banned this one
+	Remarks             string        // Optional remarks for the user
+	FederatedIdP        string        // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
+	FederatedSSO        bool          // Whether the user is authenticated via SSO
+	FederatedID         string        // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
+	WebsiteURL          string        // Optional user's website URL
+	SecretToken         uuid.UUID     // User's secret token, for example, for unsubscribing from notifications
+	HasAvatar           bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB
+	LastLoginTime       sql.NullTime  // When the user last logged in successfully
+	LastFailedLoginTime sql.NullTime  // When the user last failed to log in due to wrong credentials
+	FailedLoginAttempts int           // Number of failed login attempts
+	IsLocked            bool          // Whether the user is locked out
+	LockedTime          sql.NullTime  // When the user was locked
+
 }
 
 // NewUser instantiates a new User
@@ -254,6 +260,9 @@ func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User 
 		// Owner
 		if isOwner {
 			user.Email = u.Email
+			user.LastLoginTime = u.LastLoginTime
+			user.IsLocked = u.IsLocked
+			user.LockedTime = u.LockedTime
 		}
 	}
 	return user
@@ -309,29 +318,34 @@ func (u *User) ToCommenter(isCommenter, isModerator bool) *models.Commenter {
 // ToDTO converts this user into an API model
 func (u *User) ToDTO() *models.User {
 	return &models.User{
-		Banned:        u.Banned,
-		BannedTime:    NullDateTime(u.BannedTime),
-		ColourIndex:   u.ColourIndex(),
-		Confirmed:     u.Confirmed,
-		ConfirmedTime: NullDateTime(u.ConfirmedTime),
-		CreatedTime:   strfmt.DateTime(u.CreatedTime),
-		Email:         strfmt.Email(u.Email),
-		FederatedID:   u.FederatedID,
-		FederatedIDP:  models.FederatedIdpID(u.FederatedIdP),
-		FederatedSso:  u.FederatedSSO,
-		HasAvatar:     u.HasAvatar,
-		ID:            strfmt.UUID(u.ID.String()),
-		IsSuperuser:   u.IsSuperuser,
-		LangID:        u.LangID,
-		Name:          u.Name,
-		Remarks:       u.Remarks,
-		SignupCountry: u.SignupCountry,
-		SignupHost:    u.SignupHost,
-		SignupIP:      u.SignupIP,
-		SystemAccount: u.SystemAccount,
-		UserBanned:    NullUUIDStr(&u.UserBanned),
-		UserCreated:   NullUUIDStr(&u.UserCreated),
-		WebsiteURL:    strfmt.URI(u.WebsiteURL),
+		Banned:              u.Banned,
+		BannedTime:          NullDateTime(u.BannedTime),
+		ColourIndex:         u.ColourIndex(),
+		Confirmed:           u.Confirmed,
+		ConfirmedTime:       NullDateTime(u.ConfirmedTime),
+		CreatedTime:         strfmt.DateTime(u.CreatedTime),
+		Email:               strfmt.Email(u.Email),
+		FailedLoginAttempts: int64(u.FailedLoginAttempts),
+		FederatedID:         u.FederatedID,
+		FederatedIDP:        models.FederatedIdpID(u.FederatedIdP),
+		FederatedSso:        u.FederatedSSO,
+		HasAvatar:           u.HasAvatar,
+		ID:                  strfmt.UUID(u.ID.String()),
+		IsLocked:            u.IsLocked,
+		IsSuperuser:         u.IsSuperuser,
+		LangID:              u.LangID,
+		LastFailedLoginTime: NullDateTime(u.LastFailedLoginTime),
+		LastLoginTime:       NullDateTime(u.LastLoginTime),
+		LockedTime:          NullDateTime(u.LockedTime),
+		Name:                u.Name,
+		Remarks:             u.Remarks,
+		SignupCountry:       u.SignupCountry,
+		SignupHost:          u.SignupHost,
+		SignupIP:            u.SignupIP,
+		SystemAccount:       u.SystemAccount,
+		UserBanned:          NullUUIDStr(&u.UserBanned),
+		UserCreated:         NullUUIDStr(&u.UserCreated),
+		WebsiteURL:          strfmt.URI(u.WebsiteURL),
 	}
 }
 

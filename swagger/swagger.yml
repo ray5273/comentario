@@ -1122,6 +1122,31 @@ definitions:
         readOnly: true
         description: Colour hash, number based on the user's ID
         x-omitempty: false
+      lastLoginTime:
+        type: string
+        format: datetime
+        readOnly: true
+        description: When the user last logged in successfully
+      lastFailedLoginTime:
+        type: string
+        format: datetime
+        readOnly: true
+        description: When the user last failed to log in due to wrong credentials. null if there was never a failed login
+      failedLoginAttempts:
+        type: integer
+        readOnly: true
+        description: Number of failed login attempts
+      isLocked:
+        type: boolean
+        readOnly: true
+        x-omitempty: false
+        x-isnullable: false
+        description: Whether the user is locked out
+      lockedTime:
+        type: string
+        format: datetime
+        readOnly: true
+        description: When the user was locked (only if isLocked is true)
 
 parameters:
 
