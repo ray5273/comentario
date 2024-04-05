@@ -161,6 +161,30 @@ func UserList(params api_general.UserListParams, user *data.User) middleware.Res
 		WithPayload(&api_general.UserListOKBody{Users: data.SliceToDTOs[*data.User, *models.User](us)})
 }
 
+func UserUnlock(params api_general.UserUnlockParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Fetch the user
+	u, r := userGet(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Don't bother if the user isn't locked
+	if u.IsLocked {
+		// Update the user
+		if err := svc.TheUserService.UpdateLoginLocked(u.WithLocked(false)); err != nil {
+			return respServiceError(err)
+		}
+	}
+
+	// Succeeded
+	return api_general.NewUserUnlockNoContent()
+}
+
 func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware.Responder {
 	// Verify the user is a superuser
 	if r := Verifier.UserIsSuperuser(user); r != nil {

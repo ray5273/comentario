@@ -72,14 +72,16 @@ context('User Properties page', () => {
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                ['ID',           USERS.root.id + 'YOU'],
-                ['Name',         USERS.root.name],
-                ['Email',        USERS.root.email],
-                ['Language',     'en'],
-                ['Website URL',  'https://comentario.app/'],
-                ['Confirmed',    REGEXES.checkDatetime],
-                ['Superuser',    '✔'],
-                ['Created',      REGEXES.datetime],
+                ['ID',                   USERS.root.id + 'YOU'],
+                ['Name',                 USERS.root.name],
+                ['Email',                USERS.root.email],
+                ['Language',             'en'],
+                ['Website URL',          'https://comentario.app/'],
+                ['Confirmed',            REGEXES.checkDatetime],
+                ['Superuser',            '✔'],
+                ['Created',              REGEXES.datetime],
+                ['Last password change', REGEXES.datetime],
+                ['Last login',           REGEXES.datetime],
             ]);
 
             // Verify domain roles
@@ -96,13 +98,15 @@ context('User Properties page', () => {
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                ['ID',        USERS.king.id],
-                ['Name',      USERS.king.name],
-                ['Email',     USERS.king.email],
-                ['Language',  'en'],
-                ['Remarks',   'Almighty king'],
-                ['Confirmed', REGEXES.checkDatetime],
-                ['Created',   REGEXES.datetime],
+                ['ID',                   USERS.king.id],
+                ['Name',                 USERS.king.name],
+                ['Email',                USERS.king.email],
+                ['Language',             'en'],
+                ['Remarks',              'Almighty king'],
+                ['Confirmed',            REGEXES.checkDatetime],
+                ['Created',              REGEXES.datetime],
+                ['Last password change', REGEXES.datetime],
+                ['Last login',           '(never)'],
             ]);
 
             // Verify domain roles
@@ -127,13 +131,15 @@ context('User Properties page', () => {
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                ['ID',        USERS.banned.id],
-                ['Name',      USERS.banned.name],
-                ['Email',     USERS.banned.email],
-                ['Language',  'en'],
-                ['Banned',    REGEXES.checkDatetime],
-                ['Confirmed', REGEXES.checkDatetime],
-                ['Created',   REGEXES.datetime],
+                ['ID',                   USERS.banned.id],
+                ['Name',                 USERS.banned.name],
+                ['Email',                USERS.banned.email],
+                ['Language',             'en'],
+                ['Banned',               REGEXES.checkDatetime],
+                ['Confirmed',            REGEXES.checkDatetime],
+                ['Created',              REGEXES.datetime],
+                ['Last password change', REGEXES.datetime],
+                ['Last login',           '(never)'],
             ]);
         });
     });

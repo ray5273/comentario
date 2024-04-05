@@ -84,11 +84,8 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 		} else {
 			// Convert to Commenter
 			cr = u.
-				CloneWithClearance(
-					user.IsSuperuser,
-					domainUser != nil && domainUser.IsOwner,
-					domainUser != nil && domainUser.IsModerator).
-				ToCommenter(du != nil && du.IsCommenter, du != nil && du.IsModerator)
+				CloneWithClearance(user.IsSuperuser, domainUser.IsAnOwner(), domainUser.IsAModerator()).
+				ToCommenter(du.IsACommenter(), du.IsAModerator())
 		}
 	}
 

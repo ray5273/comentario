@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { CanActivateFn, UrlTree } from '@angular/router';
 import { Observable, Subject } from 'rxjs';
 import { ManageGuard } from './manage.guard';
@@ -19,7 +19,7 @@ describe('ManageGuard', () => {
     beforeEach(() => {
         domainEmitter = new Subject<DomainMeta>();
         TestBed.configureTestingModule({
-            imports: [RouterTestingModule],
+            imports: [RouterModule.forRoot([])],
             providers: [
                 // Need to explicitly declare as provider because it's scoped to the module
                 ManageGuard,

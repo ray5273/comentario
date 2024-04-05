@@ -207,6 +207,7 @@ type User struct {
 	WebsiteURL          string        // Optional user's website URL
 	SecretToken         uuid.UUID     // User's secret token, for example, for unsubscribing from notifications
 	HasAvatar           bool          // Whether the user has an avatar image. Read-only field populated only while loading from the DB
+	PasswordChangeTime  time.Time     // When the user last changed their password
 	LastLoginTime       sql.NullTime  // When the user last logged in successfully
 	LastFailedLoginTime sql.NullTime  // When the user last failed to log in due to wrong credentials
 	FailedLoginAttempts int           // Number of failed login attempts
@@ -338,6 +339,7 @@ func (u *User) ToDTO() *models.User {
 		LastLoginTime:       NullDateTime(u.LastLoginTime),
 		LockedTime:          NullDateTime(u.LockedTime),
 		Name:                u.Name,
+		PasswordChangeTime:  strfmt.DateTime(u.PasswordChangeTime),
 		Remarks:             u.Remarks,
 		SignupCountry:       u.SignupCountry,
 		SignupHost:          u.SignupHost,
@@ -357,11 +359,11 @@ func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 		Email:           strfmt.Email(u.Email),
 		HasAvatar:       u.HasAvatar,
 		ID:              strfmt.UUID(u.ID.String()),
-		IsCommenter:     du != nil && du.IsCommenter,
+		IsCommenter:     du.IsACommenter(),
 		IsConfirmed:     u.Confirmed,
 		IsLocal:         u.IsLocal(),
 		IsModerator:     du.CanModerate(),
-		IsOwner:         du != nil && du.IsOwner,
+		IsOwner:         du.IsAnOwner(),
 		IsSso:           u.FederatedSSO,
 		IsSuperuser:     u.IsSuperuser,
 		LangID:          u.LangID,
@@ -382,7 +384,7 @@ func (u *User) WithConfirmed(b bool) *User {
 	if u.Confirmed != b {
 		u.Confirmed = b
 		if b {
-			u.ConfirmedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+			u.ConfirmedTime = NowNullable()
 		}
 	}
 	return u
@@ -409,6 +411,30 @@ func (u *User) WithFederated(id, idpID string) *User {
 	return u
 }
 
+// WithLastLogin updates the user's last login info (either successful or failed)
+func (u *User) WithLastLogin(successful bool) *User {
+	if successful {
+		u.LastLoginTime = NowNullable()
+		// Reset the failed attempt counter at the first successful auth
+		u.FailedLoginAttempts = 0
+	} else {
+		u.LastFailedLoginTime = NowNullable()
+		u.FailedLoginAttempts++
+	}
+	return u
+}
+
+// WithLocked sets the IsLocked/LockedTime values
+func (u *User) WithLocked(b bool) *User {
+	u.IsLocked = b
+	if b {
+		u.LockedTime = NowNullable()
+	} else {
+		u.LockedTime = sql.NullTime{}
+	}
+	return u
+}
+
 // WithName sets the Name value
 func (u *User) WithName(s string) *User {
 	u.Name = s
@@ -422,10 +448,14 @@ func (u *User) WithPassword(s string) *User {
 	if s == "" {
 		u.PasswordHash = ""
 
+		// Check if the password is actually changing
+	} else if !u.VerifyPassword(s) {
 		// Hash and save the password
-	} else if h, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost); err != nil {
-		panic(err)
-	} else {
+		h, err := bcrypt.GenerateFromPassword([]byte(s), bcrypt.DefaultCost)
+		if err != nil {
+			panic(err)
+		}
+		u.PasswordChangeTime = time.Now().UTC()
 		u.PasswordHash = string(h)
 	}
 	return u
@@ -771,6 +801,25 @@ func (du *DomainUser) CanModerate() bool {
 	return du != nil && (du.IsOwner || du.IsModerator)
 }
 
+// IsACommenter returns whether the domain user is a commenter. Can be called against a nil receiver, which is
+// interpreted as no domain user has been created yet for this specific user, so it returns true, because the user is
+// assumed to have the default (commenter) role
+func (du *DomainUser) IsACommenter() bool {
+	return du == nil || du.IsCommenter
+}
+
+// IsAModerator returns whether the domain user is a moderator. Can be called against a nil receiver, in which case
+// returns false
+func (du *DomainUser) IsAModerator() bool {
+	return du != nil && du.IsModerator
+}
+
+// IsAnOwner returns whether the domain user is an owner. Can be called against a nil receiver, in which case returns
+// false
+func (du *DomainUser) IsAnOwner() bool {
+	return du != nil && du.IsOwner
+}
+
 // IsReadonly returns whether the domain user is not allowed to comment (is readonly). Can be called against a nil
 // receiver, which is interpreted as no domain user has been created yet for this specific user hence they're NOT
 // readonly
@@ -983,7 +1032,7 @@ func (c *Comment) WithModerated(userID *uuid.UUID, pending, approved bool, reaso
 	c.PendingReason = reason
 	if userID != nil {
 		c.UserModerated = uuid.NullUUID{UUID: *userID, Valid: true}
-		c.ModeratedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+		c.ModeratedTime = NowNullable()
 	}
 	return c
 }

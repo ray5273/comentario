@@ -40,6 +40,7 @@ var (
 	ErrorUnauthorized          = &exmodels.Error{ID: "unauthorized", Message: "You are not allowed to perform this operation"}
 	ErrorUnknownHost           = &exmodels.Error{ID: "unknown-host", Message: "Unknown host"}
 	ErrorUserBanned            = &exmodels.Error{ID: "user-banned", Message: "User is banned"}
+	ErrorUserLocked            = &exmodels.Error{ID: "user-locked", Message: "User is locked"}
 	ErrorUserReadonly          = &exmodels.Error{ID: "user-readonly", Message: "This user is read-only on this domain"}
 	ErrorWrongCurPassword      = &exmodels.Error{ID: "wrong-cur-password", Message: "Wrong current password"}
 	ErrorXSRFTokenInvalid      = &exmodels.Error{ID: "xsrf-token-invalid", Message: "XSRF token is missing or invalid"}

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
@@ -18,7 +18,7 @@ describe('SignupComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [SignupComponent, MockComponents(PasswordInputComponent, FederatedLoginComponent)],
-            imports: [RouterTestingModule, FontAwesomeTestingModule],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig, dynamicConfig: of(new DynamicConfig())}),
                 MockProvider(ApiGeneralService),

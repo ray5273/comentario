@@ -35,7 +35,7 @@
 
             <!-- Details -->
             <div class="col-sm">
-                <app-user-details [user]="user" id="user-details"></app-user-details>
+                <app-user-details [user]="user" [canUnlock]="true" (unlocked)="reload()" id="user-details"/>
             </div>
         </div>
 

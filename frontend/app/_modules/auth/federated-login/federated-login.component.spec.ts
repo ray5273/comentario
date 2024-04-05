@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { MockProvider } from 'ng-mocks';
 import { FederatedLoginComponent } from './federated-login.component';
 import { ToolsModule } from '../../tools/tools.module';
@@ -16,7 +16,7 @@ describe('FederatedLoginComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [FederatedLoginComponent],
-            imports: [RouterTestingModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), ToolsModule],
             providers: [
                 {provide: Configuration, useValue: new Configuration()},
                 MockProvider(ApiGeneralService),

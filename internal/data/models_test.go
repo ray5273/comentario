@@ -169,6 +169,106 @@ func TestDomainUser_CanModerate(t *testing.T) {
 	}
 }
 
+func TestDomainUser_IsACommenter(t *testing.T) {
+	tests := []struct {
+		name string
+		du   *DomainUser
+		want bool
+	}{
+		{"nil                      ", nil, true},
+		{"owner                    ", &DomainUser{IsOwner: true}, false},
+		{"owner/moderator          ", &DomainUser{IsOwner: true, IsModerator: true}, false},
+		{"owner/commenter          ", &DomainUser{IsOwner: true, IsCommenter: true}, true},
+		{"owner/moderator/commenter", &DomainUser{IsOwner: true, IsModerator: true, IsCommenter: true}, true},
+		{"moderator                ", &DomainUser{IsModerator: true}, false},
+		{"moderator/commenter      ", &DomainUser{IsModerator: true, IsCommenter: true}, true},
+		{"commenter                ", &DomainUser{IsCommenter: true}, true},
+		{"readonly                 ", &DomainUser{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.du.IsACommenter(); got != tt.want {
+				t.Errorf("IsACommenter() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDomainUser_IsAModerator(t *testing.T) {
+	tests := []struct {
+		name string
+		du   *DomainUser
+		want bool
+	}{
+		{"nil                      ", nil, false},
+		{"owner                    ", &DomainUser{IsOwner: true}, false},
+		{"owner/moderator          ", &DomainUser{IsOwner: true, IsModerator: true}, true},
+		{"owner/commenter          ", &DomainUser{IsOwner: true, IsCommenter: true}, false},
+		{"owner/moderator/commenter", &DomainUser{IsOwner: true, IsModerator: true, IsCommenter: true}, true},
+		{"moderator                ", &DomainUser{IsModerator: true}, true},
+		{"moderator/commenter      ", &DomainUser{IsModerator: true, IsCommenter: true}, true},
+		{"commenter                ", &DomainUser{IsCommenter: true}, false},
+		{"readonly                 ", &DomainUser{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.du.IsAModerator(); got != tt.want {
+				t.Errorf("IsAModerator() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDomainUser_IsAnOwner(t *testing.T) {
+	tests := []struct {
+		name string
+		du   *DomainUser
+		want bool
+	}{
+		{"nil                      ", nil, false},
+		{"owner                    ", &DomainUser{IsOwner: true}, true},
+		{"owner/moderator          ", &DomainUser{IsOwner: true, IsModerator: true}, true},
+		{"owner/commenter          ", &DomainUser{IsOwner: true, IsCommenter: true}, true},
+		{"owner/moderator/commenter", &DomainUser{IsOwner: true, IsModerator: true, IsCommenter: true}, true},
+		{"moderator                ", &DomainUser{IsModerator: true}, false},
+		{"moderator/commenter      ", &DomainUser{IsModerator: true, IsCommenter: true}, false},
+		{"commenter                ", &DomainUser{IsCommenter: true}, false},
+		{"readonly                 ", &DomainUser{}, false},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.du.IsAnOwner(); got != tt.want {
+				t.Errorf("IsAnOwner() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestDomainUser_IsReadonly(t *testing.T) {
+	tests := []struct {
+		name string
+		du   *DomainUser
+		want bool
+	}{
+		{"nil                      ", nil, false},
+		{"owner                    ", &DomainUser{IsOwner: true}, false},
+		{"owner/moderator          ", &DomainUser{IsOwner: true, IsModerator: true}, false},
+		{"owner/commenter          ", &DomainUser{IsOwner: true, IsCommenter: true}, false},
+		{"owner/moderator/commenter", &DomainUser{IsOwner: true, IsModerator: true, IsCommenter: true}, false},
+		{"moderator                ", &DomainUser{IsModerator: true}, false},
+		{"moderator/commenter      ", &DomainUser{IsModerator: true, IsCommenter: true}, false},
+		{"commenter                ", &DomainUser{IsCommenter: true}, false},
+		{"readonly                 ", &DomainUser{}, true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := tt.du.IsReadonly(); got != tt.want {
+				t.Errorf("IsReadonly() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestDomain_CloneWithClearance(t *testing.T) {
 	d := Domain{
 		ID:                uuid.MustParse("12345678-1234-1234-1234-1234567890ab"),
@@ -228,31 +328,6 @@ func TestDomain_CloneWithClearance(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.domain.CloneWithClearance(tt.super, tt.owner); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("CloneWithClearance() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestDomainUser_IsReadonly(t *testing.T) {
-	tests := []struct {
-		name string
-		du   *DomainUser
-		want bool
-	}{
-		{"nil                      ", nil, false},
-		{"owner                    ", &DomainUser{IsOwner: true}, false},
-		{"owner/moderator          ", &DomainUser{IsOwner: true, IsModerator: true}, false},
-		{"owner/commenter          ", &DomainUser{IsOwner: true, IsCommenter: true}, false},
-		{"owner/moderator/commenter", &DomainUser{IsOwner: true, IsModerator: true, IsCommenter: true}, false},
-		{"moderator                ", &DomainUser{IsModerator: true}, false},
-		{"moderator/commenter      ", &DomainUser{IsModerator: true, IsCommenter: true}, false},
-		{"commenter                ", &DomainUser{IsCommenter: true}, false},
-		{"readonly                 ", &DomainUser{}, true},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.du.IsReadonly(); got != tt.want {
-				t.Errorf("IsReadonly() = %v, want %v", got, tt.want)
 			}
 		})
 	}

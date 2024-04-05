@@ -100,8 +100,6 @@ func domainUserGet(domainID, userID strfmt.UUID, curUser *data.User) (*data.User
 
 	} else {
 		// Succeeded
-		return u.CloneWithClearance(curUser.IsSuperuser, curDU != nil && curDU.IsOwner, curDU != nil && curDU.IsModerator),
-			du,
-			nil
+		return u.CloneWithClearance(curUser.IsSuperuser, curDU.IsAnOwner(), curDU.IsAModerator()), du, nil
 	}
 }

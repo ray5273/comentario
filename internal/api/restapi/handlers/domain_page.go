@@ -21,7 +21,7 @@ func DomainPageGet(params api_general.DomainPageGetParams, user *data.User) midd
 	return api_general.NewDomainPageGetOK().
 		WithPayload(&api_general.DomainPageGetOKBody{
 			// Apply the current user's authorisations
-			Page: page.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner).ToDTO(),
+			Page: page.CloneWithClearance(user.IsSuperuser, domainUser.IsAnOwner()).ToDTO(),
 		})
 }
 

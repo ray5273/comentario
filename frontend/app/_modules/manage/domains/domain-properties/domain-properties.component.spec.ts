@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
@@ -23,7 +23,7 @@ describe('DomainPropertiesComponent', () => {
                 DomainPropertiesComponent,
                 MockComponents(DomainBadgeComponent, NoDataComponent, InfoIconComponent),
             ],
-            imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig, extensions: of(undefined)}),
                 mockDomainSelector(),

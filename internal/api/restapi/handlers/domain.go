@@ -378,7 +378,7 @@ func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, checkCanManage b
 		}
 
 		// Apply the user's authorisations
-		domain = domain.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner)
+		domain = domain.CloneWithClearance(user.IsSuperuser, domainUser.IsAnOwner())
 
 		// Succeeded
 		return domain, domainUser, nil

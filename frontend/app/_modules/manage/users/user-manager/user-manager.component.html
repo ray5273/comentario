@@ -36,7 +36,7 @@
     @if (users?.length) {
         <div class="list-group" id="user-list">
             @for (u of users; track u.id) {
-                <a @fadeIn-slow [routerLink]="u.id" [class.text-muted]="u.banned"
+                <a @fadeIn-slow [routerLink]="u.id" [class.text-muted]="u.banned || u.isLocked"
                    class="list-group-item list-group-item-action d-flex">
                     <!-- Avatar -->
                     <div class="col-auto d-flex align-items-center pe-2"><app-user-avatar [user]="u" size="M"/></div>
@@ -54,7 +54,7 @@
                             }
                             <!-- Superuser badge -->
                             @if (u.isSuperuser) {
-                                <span class="badge rounded-pill bg-danger ms-2" i18n>Super</span>
+                                <span class="badge rounded-pill bg-success border border-dark ms-2" i18n>Super</span>
                             }
                             <!-- Banned badge -->
                             @if (u.banned) {
@@ -63,6 +63,13 @@
                                     <ng-container i18n>Banned</ng-container>
                                 </span>
                             }
+                            <!-- Locked badge -->
+                            @if (u.isLocked) {
+                                <span class="badge rounded-pill bg-danger border border-warning text-light ms-2">
+                                    <fa-icon [icon]="faUserLock" class="me-1"/>
+                                    <ng-container i18n>Locked</ng-container>
+                                </span>
+                        }
                             <!-- Current user badge -->
                             <app-current-user-badge [userId]="u.id" class="ms-2"/>
                         </div>

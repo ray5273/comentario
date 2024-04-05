@@ -37,6 +37,11 @@ func EmailToString(email strfmt.Email) string {
 	return strings.TrimSpace(string(email))
 }
 
+// NowNullable returns a nullable time object for the current instant
+func NowNullable() sql.NullTime {
+	return sql.NullTime{Time: time.Now().UTC(), Valid: true}
+}
+
 // NullDateTime converts a nullable Time value into strfmt.DateTime
 func NullDateTime(t sql.NullTime) strfmt.DateTime {
 	if !t.Valid {

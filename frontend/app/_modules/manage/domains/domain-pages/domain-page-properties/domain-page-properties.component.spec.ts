@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainPagePropertiesComponent } from './domain-page-properties.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
@@ -15,7 +15,7 @@ describe('DomainPagePropertiesComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [DomainPagePropertiesComponent, MockComponents(NoDataComponent)],
-            imports: [RouterTestingModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),

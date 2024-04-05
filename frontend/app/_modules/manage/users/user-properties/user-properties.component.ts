@@ -102,7 +102,7 @@ export class UserPropertiesComponent {
                         undefined,
                 );
                 // Reload the properties
-                this.refresh$.next();
+                this.reload();
             });
     }
 
@@ -120,5 +120,12 @@ export class UserPropertiesComponent {
                 // Navigate to the user list
                 this.router.navigate([Paths.manage.users]);
             });
+    }
+
+    /**
+     * Trigger a reload of the current user.
+     */
+    reload() {
+        this.refresh$.next();
     }
 }

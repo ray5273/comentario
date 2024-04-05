@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { MockComponents, MockDirective, MockProviders } from 'ng-mocks';
 import { AuthService } from '../../../_services/auth.service';
@@ -18,7 +18,7 @@ describe('LoginComponent', () => {
                 LoginComponent,
                 MockComponents(PasswordInputComponent, FederatedLoginComponent),
                 MockDirective(SpinnerDirective)],
-            imports: [RouterTestingModule, ReactiveFormsModule],
+            imports: [RouterModule.forRoot([]), ReactiveFormsModule],
             providers: [MockProviders(AuthService)],
         })
             .compileComponents();

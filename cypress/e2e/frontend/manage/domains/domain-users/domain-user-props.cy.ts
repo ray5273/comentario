@@ -70,20 +70,28 @@ context('Domain User Properties', () => {
                     ]);
 
                     // Check related user details
-                    const expectRUP: any[][] = [
-                        ['ID',        USERS.king.id],
-                        ['Name',      USERS.king.name],
-                        ['Email',     USERS.king.email],
-                        ['Language',  'en'],
-                    ];
-                    // -- Only superuser sees the remarks
-                    if (user.isSuper) {
-                        expectRUP.push(['Remarks', 'Almighty king']);
-                    }
-                    expectRUP.push(
-                        ['Confirmed', REGEXES.checkDatetime],
-                        ['Created',   REGEXES.datetime]);
-                    cy.get('@relatedUserDetails').dlTexts().should('matrixMatch', expectRUP);
+                    cy.get('@relatedUserDetails').dlTexts().should('matrixMatch',
+                        user.isSuper ?
+                            [
+                                ['ID',                   USERS.king.id],
+                                ['Name',                 USERS.king.name],
+                                ['Email',                USERS.king.email],
+                                ['Language',             'en'],
+                                ['Remarks',              'Almighty king'],
+                                ['Confirmed',            REGEXES.checkDatetime],
+                                ['Created',              REGEXES.datetime],
+                                ['Last password change', REGEXES.datetime],
+                                ['Last login',           '(never)'],
+                            ] :
+                            [
+                                ['ID',                   USERS.king.id],
+                                ['Name',                 USERS.king.name],
+                                ['Email',                USERS.king.email],
+                                ['Language',             'en'],
+                                ['Confirmed',            REGEXES.checkDatetime],
+                                ['Created',              REGEXES.datetime],
+                                ['Last login',           '(never)'],
+                            ]);
 
                     // Check comments
                     cy.get('@commentList').verifyListFooter(4, false);
@@ -108,12 +116,13 @@ context('Domain User Properties', () => {
 
             // Check related user details
             cy.get('@relatedUserDetails').dlTexts().should('matrixMatch', [
-                ['ID',        USERS.ace.id + 'YOU'],
-                ['Name',      USERS.ace.name],
-                ['Email',     USERS.ace.email],
-                ['Language',  'en'],
-                ['Confirmed', REGEXES.checkDatetime],
-                ['Created',   REGEXES.datetime]
+                ['ID',         USERS.ace.id + 'YOU'],
+                ['Name',       USERS.ace.name],
+                ['Email',      USERS.ace.email],
+                ['Language',   'en'],
+                ['Confirmed',  REGEXES.checkDatetime],
+                ['Created',    REGEXES.datetime],
+                ['Last login', REGEXES.datetime],
             ]);
         });
     });

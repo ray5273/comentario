@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
@@ -20,7 +20,7 @@ describe('DomainPageManagerComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [DomainPageManagerComponent, MockComponents(DomainBadgeComponent, SortSelectorComponent, SortPropertyComponent)],
-            imports: [RouterTestingModule, ReactiveFormsModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
                 mockDomainSelector(),

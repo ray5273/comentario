@@ -1,5 +1,5 @@
 import { TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { MockProviders } from 'ng-mocks';
 import { AuthGuard } from './auth.guard';
 import { AuthService } from '../_services/auth.service';
@@ -10,7 +10,7 @@ describe('AuthGuard', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
-            imports: [RouterTestingModule],
+            imports: [RouterModule.forRoot([])],
             providers: [MockProviders(AuthService)],
         });
         guard = TestBed.inject(AuthGuard);

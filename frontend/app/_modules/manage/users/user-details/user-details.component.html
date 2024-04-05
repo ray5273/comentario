@@ -116,5 +116,55 @@
                 <dd>{{ v }}</dd>
             </div>
         }
+        @if (!user.systemAccount) {
+            <!-- Last password change -->
+            @if (user.passwordChangeTime | datetime; as v) {
+                <div>
+                    <dt i18n>Last password change</dt>
+                    <dd>{{ v }}</dd>
+                </div>
+            }
+            <!-- Last login -->
+            <div>
+                <dt i18n>Last login</dt>
+                <dd>
+                    @if (user.lastLoginTime | datetime; as v) {
+                        <ng-container>{{ v }}</ng-container>
+                    } @else {
+                        <em i18n>(never)</em>
+                    }
+                </dd>
+            </div>
+            <!-- Last failed login -->
+            @if (user.lastFailedLoginTime | datetime; as v) {
+                <div>
+                    <dt i18n>Last failed login</dt>
+                    <dd>{{ v }}</dd>
+                </div>
+            }
+            <!-- Failed login attempts -->
+            @if (user.failedLoginAttempts | number; as v) {
+                <div>
+                    <dt i18n>Failed login attempts</dt>
+                    <dd>{{ v }}</dd>
+                </div>
+            }
+            <!-- Locked -->
+            @if (user.isLocked) {
+                <div>
+                    <dt i18n>Locked</dt>
+                    <dd>
+                        <app-checkmark/>
+                        @if (user.lockedTime; as v) {
+                            <span class="text-muted"> ({{ v | datetime }})</span>
+                        }
+                        @if (canUnlock) {
+                            <button [appSpinner]="unlocking.active" (click)="unlock()" type="button"
+                                    class="ms-2 btn btn-outline-secondary btn-sm" i18n>Unlock</button>
+                        }
+                    </dd>
+                </div>
+            }
+        }
     </dl>
 }

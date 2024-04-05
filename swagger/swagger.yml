@@ -1122,6 +1122,11 @@ definitions:
         readOnly: true
         description: Colour hash, number based on the user's ID
         x-omitempty: false
+      passwordChangeTime:
+        type: string
+        format: datetime
+        readOnly: true
+        description: When the user last changed their password
       lastLoginTime:
         type: string
         format: datetime
@@ -3197,6 +3202,18 @@ paths:
                 type: integer
                 description: Number of deleted comments (if opted in for deletion)
                 x-omitempty: false
+
+  /users/{uuid}/unlock:
+    post:
+      operationId: UserUnlock
+      summary: Unlock a user
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+      responses:
+        204:
+          description: User has been unlocked
 
   /users/{uuid}/avatar:
     get:

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockProviders } from 'ng-mocks';
 import { ToastComponent } from './toast.component';
@@ -14,7 +14,7 @@ describe('ToastComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [ToastComponent],
-            imports: [RouterTestingModule, NgbToastModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), NgbToastModule, ToolsModule],
             providers: [MockProviders(AuthService)],
         })
             .compileComponents();

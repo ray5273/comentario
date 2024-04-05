@@ -204,6 +204,10 @@ func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (
 	case user.SystemAccount || user.IsAnonymous():
 		return ErrorInvalidCredentials, respUnauthorized(ErrorInvalidCredentials)
 
+	// Check if the user is locked out
+	case user.IsLocked:
+		return ErrorUserLocked, respForbidden(ErrorUserLocked)
+
 	// Check if the user is banned
 	case user.Banned:
 		return ErrorUserBanned, respForbidden(ErrorUserBanned)
@@ -237,10 +241,10 @@ func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, do
 }
 
 func (v *verifier) UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
-	if !user.IsSuperuser && (domainUser == nil || !domainUser.IsOwner) {
-		return respForbidden(ErrorNotDomainOwner)
+	if user.IsSuperuser || domainUser.IsAnOwner() {
+		return nil
 	}
-	return nil
+	return respForbidden(ErrorNotDomainOwner)
 }
 
 func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {

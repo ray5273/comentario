@@ -43,7 +43,10 @@
                 <!-- Related user properties -->
                 <section>
                     <h2 i18n>Related user properties</h2>
-                    <app-user-details [user]="user" [userLink]="principal?.isSuperuser" id="user-details"/>
+                    <app-user-details [user]="user"
+                                      [userLink]="principal?.isSuperuser"
+                                      [canUnlock]="principal?.isSuperuser"
+                                      id="user-details"/>
                 </section>
             </div>
         </div>

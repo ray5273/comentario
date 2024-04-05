@@ -133,6 +133,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralUserDeleteHandler = api_general.UserDeleteHandlerFunc(handlers.UserDelete)
 	api.APIGeneralUserGetHandler = api_general.UserGetHandlerFunc(handlers.UserGet)
 	api.APIGeneralUserListHandler = api_general.UserListHandlerFunc(handlers.UserList)
+	api.APIGeneralUserUnlockHandler = api_general.UserUnlockHandlerFunc(handlers.UserUnlock)
 	api.APIGeneralUserUpdateHandler = api_general.UserUpdateHandlerFunc(handlers.UserUpdate)
 
 	//------------------------------------------------------------------------------------------------------------------

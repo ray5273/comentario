@@ -81,17 +81,14 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 			return respServiceError(err)
 		} else {
 			cr = u.
-				CloneWithClearance(
-					user.IsSuperuser,
-					domainUser != nil && domainUser.IsOwner,
-					domainUser != nil && domainUser.IsModerator).
-				ToCommenter(du != nil && du.IsCommenter, du != nil && du.IsModerator)
+				CloneWithClearance(user.IsSuperuser, domainUser.IsAnOwner(), domainUser.IsAModerator()).
+				ToCommenter(du.IsACommenter(), du.IsAModerator())
 		}
 	}
 
 	// If the current user is an owner or a superuser
 	var um, ud, ue *models.User
-	if user.IsSuperuser || domainUser != nil && domainUser.IsOwner {
+	if user.IsSuperuser || domainUser.IsAnOwner() {
 		// Fetch the user moderated, if any
 		if comment.UserModerated.Valid {
 			if u, err := svc.TheUserService.FindUserByID(&comment.UserModerated.UUID); err != nil {
@@ -126,7 +123,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 			Deleter:   ud,
 			Editor:    ue,
 			Moderator: um,
-			Page:      page.CloneWithClearance(user.IsSuperuser, domainUser != nil && domainUser.IsOwner).ToDTO(),
+			Page:      page.CloneWithClearance(user.IsSuperuser, domainUser.IsAnOwner()).ToDTO(),
 		})
 }
 

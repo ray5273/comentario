@@ -88,14 +88,16 @@ context('User Edit page', () => {
 
             // Verify user details
             cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                ['ID',        USERS.root.id + 'YOU'],
-                ['Name',      'I am the root!'],
-                ['Email',     'super@example.com'],
-                ['Language',  'en'],
-                ['Remarks',   'Twinkle twinkle little star'],
-                ['Confirmed', REGEXES.checkDatetime],
-                ['Superuser', '✔'],
-                ['Created',   REGEXES.datetime],
+                ['ID',                   USERS.root.id + 'YOU'],
+                ['Name',                 'I am the root!'],
+                ['Email',                'super@example.com'],
+                ['Language',             'en'],
+                ['Remarks',              'Twinkle twinkle little star'],
+                ['Confirmed',            REGEXES.checkDatetime],
+                ['Superuser',            '✔'],
+                ['Created',              REGEXES.datetime],
+                ['Last password change', REGEXES.datetime],
+                ['Last login',           REGEXES.datetime],
             ]);
         });
 
@@ -124,14 +126,16 @@ context('User Edit page', () => {
 
             // Verify user details
             cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                ['ID',          USERS.king.id],
-                ['Name',        'King Lear'],
-                ['Email',       'lear@example.com'],
-                ['Language',    'en'],
-                ['Remarks',     'Elderly and wanting to retire'],
-                ['Website URL', 'https://en.wikipedia.org/wiki/King_Lear'],
-                ['Superuser',   '✔'],
-                ['Created',     REGEXES.datetime],
+                ['ID',                   USERS.king.id],
+                ['Name',                 'King Lear'],
+                ['Email',                'lear@example.com'],
+                ['Language',             'en'],
+                ['Remarks',              'Elderly and wanting to retire'],
+                ['Website URL',          'https://en.wikipedia.org/wiki/King_Lear'],
+                ['Superuser',            '✔'],
+                ['Created',              REGEXES.datetime],
+                ['Last password change', REGEXES.datetime],
+                ['Last login',           '(never)'],
             ]);
         });
 

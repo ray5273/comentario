@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider } from 'ng-mocks';
 import { NavbarComponent } from './navbar.component';
@@ -13,7 +13,7 @@ describe('NavbarComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [NavbarComponent],
-            imports: [RouterTestingModule, FontAwesomeTestingModule],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
             providers: [
                 mockAuthService(),
                 MockProvider(DocsService),

@@ -73,6 +73,13 @@
                                         <ng-container i18n>Banned</ng-container>
                                     </span>
                                 }
+                                <!-- Locked badge -->
+                                @if (u.isLocked) {
+                                    <span class="badge rounded-pill bg-danger border border-warning text-light ms-2">
+                                        <fa-icon [icon]="faUserLock" class="me-1"/>
+                                        <ng-container i18n>Locked</ng-container>
+                                    </span>
+                                }
                                 <!-- Current user badge -->
                                 <app-current-user-badge [userId]="u.id" class="ms-2"/>
                             </div>

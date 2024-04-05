@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockComponents, MockProvider } from 'ng-mocks';
@@ -18,7 +18,7 @@ describe('CommentPropertiesComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [CommentPropertiesComponent, MockComponents(NoDataComponent, UserLinkComponent)],
-            imports: [RouterTestingModule, FontAwesomeTestingModule, NgbModalModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NgbModalModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),

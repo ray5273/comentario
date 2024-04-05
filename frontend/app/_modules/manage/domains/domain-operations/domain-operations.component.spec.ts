@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockComponent, MockModule, MockProvider } from 'ng-mocks';
@@ -18,7 +18,7 @@ describe('DomainOperationsComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [DomainOperationsComponent, MockComponent(DomainBadgeComponent)],
-            imports: [RouterTestingModule, FontAwesomeTestingModule, ToolsModule, MockModule(NgbCollapseModule)],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, ToolsModule, MockModule(NgbCollapseModule)],
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),

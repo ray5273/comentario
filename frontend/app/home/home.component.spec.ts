@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { MockDirectives, MockProvider } from 'ng-mocks';
 import { HomeComponent } from './home.component';
 import { DocEmbedDirective } from '../_directives/doc-embed.directive';
@@ -14,7 +14,7 @@ describe('HomeComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [HomeComponent, MockDirectives(DocEmbedDirective)],
-            imports: [RouterTestingModule],
+            imports: [RouterModule.forRoot([])],
             providers: [
                 mockAuthService(),
                 MockProvider(ConfigService, {staticConfig: {homeContentUrl: ''} as any}),

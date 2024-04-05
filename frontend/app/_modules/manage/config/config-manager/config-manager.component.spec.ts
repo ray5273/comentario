@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { ConfigManagerComponent } from './config-manager.component';
 
@@ -11,7 +11,7 @@ describe('ConfigManagerComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [ConfigManagerComponent],
-            imports: [RouterTestingModule, NgbNavModule],
+            imports: [RouterModule.forRoot([]), NgbNavModule],
         });
         fixture = TestBed.createComponent(ConfigManagerComponent);
         component = fixture.componentInstance;

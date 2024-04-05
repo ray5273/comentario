@@ -72,6 +72,8 @@ type UserService interface {
 	Update(user *data.User) error
 	// UpdateBanned updates the given user's banned status in the database
 	UpdateBanned(curUserID, userID *uuid.UUID, banned bool) error
+	// UpdateLoginLocked updates the given user's last login and lockout fields in the database
+	UpdateLoginLocked(user *data.User) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -166,6 +168,7 @@ func (svc *userService) Create(u *data.User) error {
 				"federated_id":          u.FederatedID,
 				"website_url":           u.WebsiteURL,
 				"secret_token":          u.SecretToken,
+				"ts_password_change":    u.PasswordChangeTime,
 				"ts_last_login":         u.LastLoginTime,
 				"ts_last_failed_login":  u.LastFailedLoginTime,
 				"failed_login_attempts": u.FailedLoginAttempts,
@@ -307,8 +310,8 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id",
 			// DomainUser fields
@@ -338,8 +341,8 @@ func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.Use
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		Where(goqu.Ex{"u.email": email}).
@@ -375,8 +378,8 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		Where(goqu.Ex{"u.id": id}).
@@ -408,8 +411,8 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id",
 			// User session fields
@@ -444,8 +447,8 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		// Outer-join user avatars
@@ -521,8 +524,8 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id",
 			// DomainUser fields
@@ -607,8 +610,8 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
 			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
 			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_last_login",
-			"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
+			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
 			// Avatar fields
 			"a.user_id").
 		// Join users
@@ -658,15 +661,16 @@ func (svc *userService) Update(user *data.User) error {
 		db.Dialect().
 			Update("cm_users").
 			Set(goqu.Record{
-				"email":         user.Email,
-				"name":          user.Name,
-				"password_hash": user.PasswordHash,
-				"is_superuser":  user.IsSuperuser,
-				"confirmed":     user.Confirmed,
-				"ts_confirmed":  user.ConfirmedTime,
-				"remarks":       user.Remarks,
-				"website_url":   user.WebsiteURL,
-				"federated_id":  user.FederatedID,
+				"email":              user.Email,
+				"name":               user.Name,
+				"password_hash":      user.PasswordHash,
+				"is_superuser":       user.IsSuperuser,
+				"confirmed":          user.Confirmed,
+				"ts_confirmed":       user.ConfirmedTime,
+				"remarks":            user.Remarks,
+				"website_url":        user.WebsiteURL,
+				"federated_id":       user.FederatedID,
+				"ts_password_change": user.PasswordChangeTime,
 			}).
 			Where(goqu.Ex{"id": &user.ID}),
 	); err != nil {
@@ -695,6 +699,34 @@ func (svc *userService) UpdateBanned(curUserID, userID *uuid.UUID, banned bool) 
 	}
 	if err := db.ExecuteOne(q); err != nil {
 		logger.Errorf("userService.UpdateBanned: ExecuteOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) UpdateLoginLocked(user *data.User) error {
+	logger.Debugf("userService.UpdateLoginLocked(%v)", user)
+
+	// User cannot be anonymous
+	if user.IsAnonymous() {
+		return ErrNotFound
+	}
+
+	// Update the record
+	q := db.Dialect().
+		Update("cm_users").
+		Set(goqu.Record{
+			"ts_last_login":         user.LastLoginTime,
+			"ts_last_failed_login":  user.LastFailedLoginTime,
+			"failed_login_attempts": user.FailedLoginAttempts,
+			"is_locked":             user.IsLocked,
+			"ts_locked":             user.LockedTime,
+		}).
+		Where(goqu.Ex{"id": &user.ID})
+	if err := db.ExecuteOne(q); err != nil {
+		logger.Errorf("userService.UpdateLoginLocked: ExecuteOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -734,7 +766,8 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 		&u.FederatedID,
 		&u.WebsiteURL,
 		&u.SecretToken,
-		&u.LastFailedLoginTime,
+		&u.PasswordChangeTime,
+		&u.LastLoginTime,
 		&u.LastFailedLoginTime,
 		&u.FailedLoginAttempts,
 		&u.IsLocked,
@@ -809,7 +842,8 @@ func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*da
 		&u.FederatedID,
 		&u.WebsiteURL,
 		&u.SecretToken,
-		&u.LastFailedLoginTime,
+		&u.PasswordChangeTime,
+		&u.LastLoginTime,
 		&u.LastFailedLoginTime,
 		&u.FailedLoginAttempts,
 		&u.IsLocked,

@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
@@ -38,7 +38,7 @@ describe('DomainEditComponent', () => {
                     DomainEditModerationComponent,
                     DomainEditExtensionsComponent),
             ],
-            imports: [RouterTestingModule, FormsModule, ReactiveFormsModule, NgbNavModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), FormsModule, ReactiveFormsModule, NgbNavModule, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
                 MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),

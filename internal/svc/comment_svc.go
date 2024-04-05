@@ -530,10 +530,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 
 				// Convert the user into a commenter and add it to the map
 				commenterMap[uID.UUID] = u.
-					CloneWithClearance(
-						curUser.IsSuperuser,
-						curDomainUser != nil && curDomainUser.IsOwner,
-						curDomainUser != nil && curDomainUser.IsModerator).
+					CloneWithClearance(curUser.IsSuperuser, curDomainUser.IsAnOwner(), curDomainUser.IsAModerator()).
 					ToCommenter(uIsModerator || !duIsCommenter.Valid || duIsCommenter.Bool, uIsModerator)
 			}
 		}
@@ -693,7 +690,7 @@ func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, d
 	// Update the audit fields, if required
 	if editedUserID != nil {
 		comment.UserEdited = uuid.NullUUID{UUID: *editedUserID, Valid: true}
-		comment.EditedTime = sql.NullTime{Time: time.Now().UTC(), Valid: true}
+		comment.EditedTime = data.NowNullable()
 	}
 }
 

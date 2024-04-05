@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBan, faLock } from '@fortawesome/free-solid-svg-icons';
+import { faBan, faLock, faUserLock } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, User } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -34,8 +34,9 @@ export class UserManagerComponent implements OnInit {
     });
 
     // Icons
-    readonly faBan  = faBan;
-    readonly faLock = faLock;
+    readonly faBan      = faBan;
+    readonly faLock     = faLock;
+    readonly faUserLock = faUserLock;
 
     private loadedPageNum = 0;
 

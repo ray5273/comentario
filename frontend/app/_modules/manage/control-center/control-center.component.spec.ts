@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockDirective, MockProvider } from 'ng-mocks';
@@ -17,7 +17,7 @@ describe('ControlCenterComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [ControlCenterComponent, MockDirective(ConfirmDirective), MockComponents(UserAvatarComponent)],
-            imports: [RouterTestingModule, FontAwesomeTestingModule],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
             providers: [
                 mockAuthService(),
                 mockDomainSelector(),

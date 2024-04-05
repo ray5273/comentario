@@ -15,7 +15,8 @@ const (
 
 	OneDay = 24 * time.Hour // Time unit representing one day
 
-	DBMaxAttempts = 10 // Max number of attempts to connect to the database
+	DBMaxAttempts          = 10 // Max number of attempts to connect to the database
+	MaxFailedLoginAttempts = 10 // Max number of failed login attempts, on exceeding which the user will be locked out
 
 	ResultPageSize = 25 // Max number of database rows to return
 

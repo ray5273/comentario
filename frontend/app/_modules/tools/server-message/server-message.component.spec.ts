@@ -1,5 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { RouterTestingModule } from '@angular/router/testing';
+import { RouterModule } from '@angular/router';
 import { ServerMessageComponent } from './server-message.component';
 
 describe('ServerMessageComponent', () => {
@@ -9,7 +9,7 @@ describe('ServerMessageComponent', () => {
     beforeEach(async () => {
         await TestBed.configureTestingModule({
             declarations: [ServerMessageComponent],
-            imports: [RouterTestingModule],
+            imports: [RouterModule.forRoot([])],
         })
         .compileComponents();
     });

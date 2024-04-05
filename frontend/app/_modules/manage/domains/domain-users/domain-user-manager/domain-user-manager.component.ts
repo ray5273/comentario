@@ -3,7 +3,7 @@ import { FormBuilder } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faBan } from '@fortawesome/free-solid-svg-icons';
+import { faBan, faUserLock } from '@fortawesome/free-solid-svg-icons';
 import { Sort } from '../../../_models/sort';
 import { ApiGeneralService, DomainUser, User } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
@@ -44,7 +44,8 @@ export class DomainUserManagerComponent implements OnInit {
     private loadedPageNum = 0;
 
     // Icons
-    readonly faBan = faBan;
+    readonly faBan      = faBan;
+    readonly faUserLock = faUserLock;
 
     constructor(
         private readonly fb: FormBuilder,

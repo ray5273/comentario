@@ -28,7 +28,8 @@ type PrincipalResponder interface {
 	SetPayload(*models.Principal)
 }
 
-// AuthBearerToken inspects the header and determines if the token is of one of the provided scopes
+// AuthBearerToken inspects the token (usually provided in a header) and determines if the token is of one of the
+// provided scopes
 func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
 	// Try to find the token
 	token, err := svc.TheTokenService.FindByStrValue(tokenStr, false)
@@ -160,7 +161,7 @@ func AuthLogin(params api_general.AuthLoginParams) middleware.Responder {
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return authCreateUserSession(api_general.NewAuthLoginOK(), user, us, nil)
+	return authAddUserSessionToResponse(api_general.NewAuthLoginOK(), user, us)
 }
 
 func AuthLoginTokenNew(_ api_general.AuthLoginTokenNewParams) middleware.Responder {
@@ -181,7 +182,7 @@ func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *d
 	}
 
 	// Succeeded. Return a principal and a session cookie
-	return authCreateUserSession(api_general.NewAuthLoginTokenRedeemOK(), user, us, nil)
+	return authAddUserSessionToResponse(api_general.NewAuthLoginTokenRedeemOK(), user, us)
 }
 
 func AuthLogout(params api_general.AuthLogoutParams, _ *data.User) middleware.Responder {
@@ -223,7 +224,11 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 		// Any other error
 		return respServiceError(err)
 
-		// User found. Generate a random password-reset token
+		// User found. Check if the account is locked
+	} else if user.IsLocked {
+		return respForbidden(ErrorUserLocked)
+
+		// Generate a random password-reset token
 	} else if token, err := data.NewToken(&user.ID, data.TokenScopeResetPassword, util.UserPwdResetDuration, false); err != nil {
 		return respServiceError(err)
 
@@ -411,11 +416,10 @@ func authCreateLoginToken() (*data.Token, error) {
 	}
 }
 
-// authCreateUserSession returns a responder that sets a session cookie for the given session and user. du is the
-// related domain user and is only required for a commenter (embedded) login
-func authCreateUserSession(resp PrincipalResponder, user *data.User, us *data.UserSession, du *data.DomainUser) middleware.Responder {
+// authAddUserSessionToResponse returns a responder that sets a session cookie for the given session and user
+func authAddUserSessionToResponse(resp PrincipalResponder, user *data.User, us *data.UserSession) middleware.Responder {
 	// Set the principal as the responder's payload
-	resp.SetPayload(user.ToPrincipal(du))
+	resp.SetPayload(user.ToPrincipal(nil))
 
 	// Respond with the session cookie
 	return NewCookieResponder(resp).
@@ -442,6 +446,14 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 
 	// Verify the provided password
 	if !user.VerifyPassword(password) {
+		// Wrong password. Register the failure, while ignoring possible errors
+		_ = svc.TheUserService.UpdateLoginLocked(
+			user.
+				// Register the failed login attempt
+				WithLastLogin(false).
+				// Lock the user out if they exhausted the allowed attempts
+				WithLocked(user.FailedLoginAttempts > util.MaxFailedLoginAttempts))
+		// Pause for a random while
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
 	}
@@ -466,6 +478,11 @@ func loginUser(user *data.User, host string, req *http.Request) (*data.UserSessi
 	// Create a new session
 	us := data.NewUserSession(&user.ID, host, req)
 	if err := svc.TheUserService.CreateUserSession(us); err != nil {
+		return nil, respServiceError(err)
+	}
+
+	// Update the user's last login timestamp
+	if err := svc.TheUserService.UpdateLoginLocked(user.WithLastLogin(true)); err != nil {
 		return nil, respServiceError(err)
 	}
 
