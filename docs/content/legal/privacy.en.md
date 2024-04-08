@@ -27,7 +27,7 @@ In this Policy, **Comentario** refers to the service offered by [Yktoo Solutions
 
 ## 1. Controller and Processor
 
-Data protection laws and privacy laws in certain jurisdictions differentiate between *controllers* and *processors* of personal information. A *controller* decides why and how to process personal information. A *processor* processes personal information on behalf of a controller and following the controller's specification. When you create a link on Comentario, hence becoming a User, we are acting as a controller. When you click on a link created by a User and served by Comentario, we are acting as a processor.
+Data protection laws and privacy laws in certain jurisdictions differentiate between *controllers* and *processors* of personal information. A *controller* decides why and how to process personal information. A *processor* processes personal information on behalf of a controller and following the controller's specification. When you create a comment on a website embedding Comentario, hence becoming a User, we are acting as a controller. When you open a website owned by a User and embedding Comentario, we are acting as a processor.
 
 Our use of Personal Information is to further our legitimate interests to:
 
@@ -55,7 +55,7 @@ While using our Service we may collect information that identifies, relates to, 
 ### 2.2. Data collected automatically
 
 * **Logging data**\
-  When you use the Service, whether as an authenticated or an anonymous User, we may automatically record information that your browser sends whenever you view or write Comentario comments ("Logging data"). This Logging data may include information such as your IP address, device settings (such as device and browser type, operating system, language preferences), the time and date of each access. We use this information to monitor and analyse the use of the Service and to maintain the required service level.
+  When you use the Service, whether as an authenticated or an anonymous User, we may automatically record information that your browser sends whenever you view or write Comentario comments ("Logging data"). This Logging data may include information such as your IP address, device settings (such as device and browser type, operating system, language preferences), the time and date of each access. We use this information to monitor and analyse the use of the Service, to fend off malicious activity, and to maintain the required service level.
 * **Cookies and local storage**\
   We use cookies and other forms of local data storage provided by your browser for record-keeping purposes, such as storing your Service session identifier and your preferences in the Service. We may also use cookies and other forms of local data storage provided by your browser, in depersonalised form, for analysing the performance of the Service, including third-party analytical engines such as Google Analytics.
 
@@ -127,11 +127,13 @@ When you use our Service, your Personal Information may be transferred to our se
 
 We will retain your Personal Information only for as long as is necessary for the purposes set out in this Policy. We will retain and use your Personal Information to the extent necessary to comply with our legal obligations (for example, if we are required to retain your Personal Information to comply with applicable laws), resolve disputes, and enforce our legal agreements and policies.
 
-When you choose to delete your account through the Service's web interface, all derived information related to the account (including, but not limited to, short links, connected domains, and usage data) is permanently deleted from all servers. The account itself is kept in our registry for the duration of up to one year. Deleted data may be retained in our backups for another 30 days.
+When you choose to delete your account through the Service's web interface, all derived information related to the account (including, but not limited to, comments, connected domains, and usage data) is permanently deleted from all servers. The account itself is kept in our registry for the duration of up to one year. Deleted data may be retained in our backups for another 30 days.
 
 ### 6.4. Data cleanup
 
 In order to maintain the level of performance of the service, we execute periodic data cleanup routines to remove data that we deem either obsolete or irrelevant. These data items are in general removed within 90 days, or less.
+
+Our cleanup routines are laid out in the Addendum I to this privacy policy.
 
 ### 6.5. Your data rights
 
@@ -171,3 +173,12 @@ We reserve the right to periodically review and change this policy from time to 
 If you have any questions about this Privacy Policy, please contact us via the [contact form](/about/contact).
 
 Because email communications are not always secure, please do not include credit card or other sensitive data (such as racial or ethnic origin, political opinions, religion, health, or the like) in your messages to us.
+
+## Addendum I: Data Cleanup Policy
+
+| Data subject to removal | Retention period |
+|-------------------------|------------------|
+| Comments                | Until deleted    |
+| User sessions           | 28 days          |
+| Page views              | 45 days          |
+{.table .table-striped}
