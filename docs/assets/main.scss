@@ -89,6 +89,7 @@ $mark-padding: 0;
 @import "@fortawesome/fontawesome-free/scss/solid";
 @import "@fortawesome/fontawesome-free/scss/brands";
 
+$sidebar-width: 320px;
 $sidebar-color: adjust-color($primary, $saturation: -33%, $lightness: +28%);
 $footer-color:  adjust-color($primary, $saturation: -33%, $lightness: 0%);
 
@@ -189,7 +190,7 @@ a {
         z-index: 110;
         padding-left: 0;
         padding-right: 0;
-        width: 280px;
+        width: $sidebar-width;
         box-shadow: 4px 0 10px #33333340;
         transition: left 0.3s ease;
         overflow-y: auto;
@@ -204,6 +205,7 @@ a {
             // All items
             .nav-item {
                 padding-left: 0.5rem;
+                width: 100%;
             }
 
             // All links
@@ -214,6 +216,10 @@ a {
 
                 display: inline-block;
                 border-radius: 0.25rem;
+                width: 100%;
+                overflow-x: hidden;
+                white-space: nowrap;
+                text-overflow: ellipsis;
 
                 &.active {
                     color: $light;
@@ -259,6 +265,16 @@ a {
                 .nav-link {
                     --bs-nav-link-font-weight: null;
                 }
+
+                // Third+ level links
+                ul {
+                    font-size: 0.925rem;
+
+                    // Fourth+ level links
+                    ul {
+                        font-size: 0.875rem;
+                    }
+                }
             }
         }
     }
@@ -270,7 +286,7 @@ a {
         }
 
         .sidebar {
-            left: -281px;
+            left: -$sidebar-width;
             box-shadow: none;
 
             @include media-breakpoint-up(md) {
@@ -320,7 +336,7 @@ footer {
     z-index: 20;
 
     @include media-breakpoint-up(md) {
-        padding-left: 280px;
+        padding-left: $sidebar-width;
     }
 
     a {
@@ -346,7 +362,7 @@ footer {
 
     @include media-breakpoint-up(md) {
         display: block;
-        padding-left: 280px;
+        padding-left: $sidebar-width;
     }
 }
 
