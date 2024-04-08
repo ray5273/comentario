@@ -154,6 +154,7 @@ export enum DomainConfigKey {
 
 /** Instance dynamic config item keys. */
 export enum InstanceConfigKey {
+    authLoginLocalMaxAttempts              = "auth.login.local.maxAttempts",
     authSignupConfirmCommenter             = 'auth.signup.confirm.commenter',
     authSignupConfirmUser                  = 'auth.signup.confirm.user',
     authSignupEnabled                      = 'auth.signup.enabled',

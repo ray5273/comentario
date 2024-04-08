@@ -6,6 +6,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"strconv"
 	"time"
 )
 
@@ -26,11 +27,34 @@ type DynConfigItem struct {
 	UserUpdated  uuid.NullUUID           // Reference to the user who last updated the item in the database
 	DefaultValue string                  // Item's default value
 	Section      DynConfigItemSectionKey // Key of the section the item belongs to
+	Min          int                     // Minimum allowed value of the setting
+	Max          int                     // Maximum allowed value of the setting
 }
 
 // AsBool returns the value converted to a boolean
 func (ci *DynConfigItem) AsBool() bool {
 	return ci.Value == "true"
+}
+
+// AsInt returns the value converted to an int
+func (ci *DynConfigItem) AsInt() int {
+	// Use the converted numeric value if it's valid
+	i, err := strconv.Atoi(ci.Value)
+
+	// Use the converted default value if the value is invalid
+	if err != nil {
+		i, err = strconv.Atoi(ci.DefaultValue)
+	}
+
+	// Fall back to the min value in case of error, otherwise enforce the allowed range
+	if err != nil {
+		i = ci.Min
+	} else if i < ci.Min {
+		i = ci.Min
+	} else if i > ci.Max {
+		i = ci.Max
+	}
+	return i
 }
 
 // ToDTO converts this model into an API model
@@ -43,6 +67,8 @@ func (ci *DynConfigItem) ToDTO(key DynConfigItemKey) *models.DynamicConfigItem {
 		UpdatedTime:  strfmt.DateTime(ci.UpdatedTime),
 		UserUpdated:  strfmt.UUID(ci.UserUpdated.UUID.String()),
 		Value:        swag.String(ci.Value),
+		Min:          int64(ci.Min),
+		Max:          int64(ci.Max),
 	}
 }
 
@@ -55,9 +81,17 @@ func (ci *DynConfigItem) ValidateValue(value string) error {
 
 	// Validate according to the datatype
 	switch ci.Datatype {
-	case ConfigDatatypeBoolean:
+	case ConfigDatatypeBool:
 		if value != "false" && value != "true" {
-			return fmt.Errorf("invalid boolean item value: %q", value)
+			return fmt.Errorf("invalid bool item value (%q)", value)
+		}
+	case ConfigDatatypeInt:
+		if i, err := strconv.Atoi(value); err != nil {
+			return fmt.Errorf("invalid int item value (%q): %w", value, err)
+		} else if i < ci.Min {
+			return fmt.Errorf("int item value (%d) is less than allowed minimum (%d)", i, ci.Min)
+		} else if i > ci.Max {
+			return fmt.Errorf("int item value (%d) is greater than allowed maximum (%d)", i, ci.Max)
 		}
 	}
 	return nil
@@ -82,7 +116,8 @@ func DynConfigMapToDTOs(config map[DynConfigItemKey]*DynConfigItem) []*models.Dy
 }
 
 const (
-	ConfigDatatypeBoolean DynConfigItemDatatype = "boolean"
+	ConfigDatatypeBool DynConfigItemDatatype = "bool"
+	ConfigDatatypeInt  DynConfigItemDatatype = "int"
 )
 
 // Item section keys
@@ -96,6 +131,7 @@ const (
 
 // Instance (global) settings
 const (
+	ConfigKeyAuthLoginLocalMaxAttempts  DynConfigItemKey = "auth.login.local.maxAttempts"
 	ConfigKeyAuthSignupConfirmCommenter DynConfigItemKey = "auth.signup.confirm.commenter"
 	ConfigKeyAuthSignupConfirmUser      DynConfigItemKey = "auth.signup.confirm.user"
 	ConfigKeyAuthSignupEnabled          DynConfigItemKey = "auth.signup.enabled"
@@ -124,21 +160,22 @@ const ConfigKeyDomainDefaultsPrefix = "domain.defaults."
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
 var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
-	ConfigKeyAuthSignupConfirmCommenter:                                     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionAuth},
-	ConfigKeyAuthSignupConfirmUser:                                          {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionAuth},
-	ConfigKeyAuthSignupEnabled:                                              {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionAuth},
-	ConfigKeyIntegrationsUseGravatar:                                        {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionIntegrations},
-	ConfigKeyOperationNewOwnerEnabled:                                       {DefaultValue: "false", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionMisc},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentDeletionAuthor:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentDeletionModerator: {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingAuthor:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingModerator:  {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyEnableCommentVoting:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyShowDeletedComments:      {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionMarkdown},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownLinksEnabled:     {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionMarkdown},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownTablesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionMarkdown},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionAuth},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyFederatedSignupEnabled:   {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionAuth},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeySsoSignupEnabled:         {DefaultValue: "true", Datatype: ConfigDatatypeBoolean, Section: DynConfigItemSectionAuth},
+	ConfigKeyAuthLoginLocalMaxAttempts:                                      {DefaultValue: "10", Datatype: ConfigDatatypeInt, Section: DynConfigItemSectionAuth, Min: 0, Max: 2 << 30},
+	ConfigKeyAuthSignupConfirmCommenter:                                     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
+	ConfigKeyAuthSignupConfirmUser:                                          {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
+	ConfigKeyAuthSignupEnabled:                                              {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
+	ConfigKeyIntegrationsUseGravatar:                                        {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionIntegrations},
+	ConfigKeyOperationNewOwnerEnabled:                                       {DefaultValue: "false", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMisc},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentDeletionAuthor:    {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentDeletionModerator: {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingAuthor:     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingModerator:  {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyEnableCommentVoting:      {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyShowDeletedComments:      {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownLinksEnabled:     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownTablesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyFederatedSignupEnabled:   {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeySsoSignupEnabled:         {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 }

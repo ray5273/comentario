@@ -1,4 +1,4 @@
-import { PATHS, USERS } from '../../../support/cy-utils';
+import { InstanceConfigKey, PATHS, USERS } from '../../../support/cy-utils';
 
 context('Login', () => {
 
@@ -81,5 +81,33 @@ context('Login', () => {
         // Try to log in with the wrong password and fail
         cy.login(USERS.ace.withPassword('wrong'), {goTo: false, succeeds: false, errToast: 'invalid-credentials'});
         cy.isAt(PATHS.auth.login);
+    });
+
+    it('locks user after too many attempts', () => {
+        // Set max allowed failed attempts to 1
+        cy.backendUpdateDynConfig({[InstanceConfigKey.authLoginLocalMaxAttempts]: 1});
+
+        // Try to login with an invalid password, twice
+        for (const {} of [1, 2]) {
+            cy.login(USERS.ace.withPassword('wrong'), {goTo: false, succeeds: false, errToast: 'invalid-credentials'});
+        }
+
+        // Now try to login again with the correct password: the user is locked
+        cy.login(USERS.ace, {goTo: false, succeeds: false, errToast: 'user-locked'});
+    });
+
+    it('doesn\'t lock user with unlimited failed attempts', () => {
+        // Disable locking by setting max allowed failed attempts to 0
+        cy.backendUpdateDynConfig({[InstanceConfigKey.authLoginLocalMaxAttempts]: 0});
+
+        // Try to login with an invalid password multiple times
+        cy.login(USERS.ace.withPassword('wrong'), {goTo: false, succeeds: false, errToast: 'invalid-credentials'});
+        for (let i = 0; i < 20; i++) {
+            cy.get('@submit').click();
+            cy.toastCheckAndClose('invalid-credentials');
+        }
+
+        // Still able to login with the correct credentials
+        cy.login(USERS.ace);
     });
 });

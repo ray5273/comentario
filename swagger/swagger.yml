@@ -472,12 +472,23 @@ definitions:
       section:
         type: string
         description: Key of the section the item belongs to
+      min:
+        type: integer
+        readOnly: true
+        description: Minimum allowed value of the setting
+        x-omitempty: false
+      max:
+        type: integer
+        readOnly: true
+        description: Maximum allowed value of the setting
+        x-omitempty: false
 
   dynamicConfigItemDatatype:
     description: Dynamic configuration item datatype
     type: string
     enum:
-      - boolean
+      - bool
+      - int
 
   federatedIdentityProvider:
     description: Federated identity provider info

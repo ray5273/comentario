@@ -106,6 +106,7 @@ context('Config Manager', () => {
             // Check the items
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch', [
                 ['Authentication'],
+                    ['Max. failed login attempts',                          '5'],
                     ['New commenters must confirm their email',             ''],
                     ['New users must confirm their email',                  '✔'],
                     ['Enable registration of new users',                    '✔'],
@@ -140,6 +141,7 @@ context('Config Manager', () => {
             // Edit again and toggle config items
             cy.contains('app-dynamic-config a', 'Edit').click();
             cy.get('app-config-edit').as('configEdit');
+            cy.get('@configEdit').find('#auth_login_local_maxAttempts')               .should('have.value', '5').setValue('42');
             cy.get('@configEdit').find('#auth_signup_confirm_commenter')              .should('not.be.checked').clickLabel().should('be.checked');
             cy.get('@configEdit').find('#auth_signup_confirm_user')                   .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#auth_signup_enabled')                        .should('be.checked')    .clickLabel().should('not.be.checked');
@@ -172,6 +174,7 @@ context('Config Manager', () => {
             // Verify the updated config
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch', [
                 ['Authentication'],
+                    ['Max. failed login attempts',                          '42'],
                     ['New commenters must confirm their email',             '✔'],
                     ['New users must confirm their email',                  ''],
                     ['Enable registration of new users',                    ''],
@@ -201,6 +204,7 @@ context('Config Manager', () => {
             cy.toastCheckAndClose('data-updated');
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
                 ['Authentication'],
+                    ['Max. failed login attempts',                          '10'],
                     ['New commenters must confirm their email',             '✔'],
                     ['New users must confirm their email',                  '✔'],
                     ['Enable registration of new users',                    '✔'],
@@ -226,6 +230,7 @@ context('Config Manager', () => {
 
             // Tweak the config using backend calls
             cy.backendUpdateDynConfig({
+                [InstanceConfigKey.authLoginLocalMaxAttempts]:              3,
                 [InstanceConfigKey.authSignupConfirmCommenter]:             false,
                 [InstanceConfigKey.authSignupConfirmUser]:                  false,
                 [InstanceConfigKey.authSignupEnabled]:                      false,
@@ -249,6 +254,7 @@ context('Config Manager', () => {
             cy.reload();
             cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
                 ['Authentication'],
+                    ['Max. failed login attempts',                          '3'],
                     ['New commenters must confirm their email',             ''],
                     ['New users must confirm their email',                  ''],
                     ['Enable registration of new users',                    ''],

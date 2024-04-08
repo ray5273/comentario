@@ -1,4 +1,4 @@
-import { DomainConfigKey, DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Login dialog', () => {
@@ -201,6 +201,26 @@ context('Login dialog', () => {
                         cy.get('@submit').click();
                         cy.testSiteCheckMessage(err);
                     }));
+
+                it('locked user', () => {
+                    // Set max allowed failed attempts to 1
+                    cy.backendUpdateDynConfig({[InstanceConfigKey.authLoginLocalMaxAttempts]: 1});
+
+                    // Try to login with invalid password, twice
+                    for (const {} of [1, 2]) {
+                        cy.get('@email').setValue(USERS.ace.email);
+                        cy.get('@password').setValue('whatevva');
+                        cy.get('@submit').click();
+                        cy.testSiteCheckMessage('Wrong password or user doesn\'t exist');
+                        openLoginDlg();
+                    }
+
+                    // Try to login again with the correct password: the user is locked
+                    cy.get('@email')   .setValue(USERS.ace.email);
+                    cy.get('@password').setValue(USERS.ace.password);
+                    cy.get('@submit').click();
+                    cy.testSiteCheckMessage('User is locked');
+                });
             });
         });
     });

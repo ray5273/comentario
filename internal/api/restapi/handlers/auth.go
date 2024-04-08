@@ -447,12 +447,13 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 	// Verify the provided password
 	if !user.VerifyPassword(password) {
 		// Wrong password. Register the failure, while ignoring possible errors
+		maxAttempts := svc.TheDynConfigService.GetInt(data.ConfigKeyAuthLoginLocalMaxAttempts)
 		_ = svc.TheUserService.UpdateLoginLocked(
 			user.
 				// Register the failed login attempt
 				WithLastLogin(false).
-				// Lock the user out if they exhausted the allowed attempts
-				WithLocked(user.FailedLoginAttempts > util.MaxFailedLoginAttempts))
+				// Lock the user out if they exhausted the allowed attempts (and maxAttempts > 0)
+				WithLocked(maxAttempts > 0 && user.FailedLoginAttempts > maxAttempts))
 		// Pause for a random while
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
