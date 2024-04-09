@@ -119,6 +119,9 @@ export class Comentario extends HTMLElement {
     /** Whether to automatically initialise the Comentario engine on the current page. */
     private readonly autoInit = this.getAttribute('auto-init') !== 'false';
 
+    /** Whether to automatically trigger non-interactive SSO upon initialisation. */
+    private readonly autoNonIntSso = this.getAttribute('auto-non-interactive-sso') === 'true';
+
     /** Maximum visual nesting level for comments. */
     private readonly maxLevel = Number(this.getAttribute('max-level')) || 10;
 
@@ -223,7 +226,13 @@ export class Comentario extends HTMLElement {
             new WebSocketClient(this.origin, this.pageInfo.domainId, this.pagePath, msg => this.handleLiveUpdate(msg));
         }
 
+        // Initialisation is finished at this point
         console.info(`Initialised Comentario ${this.pageInfo?.version || '(?)'}`);
+
+        // Initiate non-interactive SSO, if necessary, but only if not logged in yet
+        if (this.autoNonIntSso) {
+            await this.nonInteractiveSsoLogin();
+        }
     }
 
     /**
@@ -252,18 +261,32 @@ export class Comentario extends HTMLElement {
             });
     }
 
-    // noinspection JSUnusedGlobalSymbols
     /**
-     * Explicitly initiate non-interactive SSO login. Supposed to be called externally, for example:
-     * ```
-     * $('comentario-comments').nonInteractiveSsoLogin();
-     * ```
+     * Initiate a non-interactive SSO login. Can be called either automatically upon initialisation by setting
+     * the attribute `auto-non-interactive-sso="true", or externally after the initialisation has finished.
+     * @param options Object specifying additional options for the method:
+     * * `force` Whether to force relogin even if the user is already logged in (default is `false`).
      * @public
      */
-    async nonInteractiveSsoLogin(): Promise<void> {
+    async nonInteractiveSsoLogin(options?: {force: boolean}): Promise<void> {
+        // Verify initialisation is over
+        if (!this.pageInfo) {
+            return this.reject('Initialisation hasn\'t finished yet.');
+        }
+
         // Verify non-interactive SSO is enabled
-        if (!this.pageInfo?.authSso || !this.pageInfo.ssoNonInteractive) {
+        if (!this.pageInfo.authSso || !this.pageInfo.ssoNonInteractive) {
             return this.reject('Non-interactive SSO is not enabled.');
+        }
+
+        // Don't bother if the user is already signed in and no relogin is requested
+        if (this.principal) {
+            if (!options?.force) {
+                return;
+            }
+
+            // Otherwise, log out first
+            await this.logout();
         }
 
         // Hand over to the login routine

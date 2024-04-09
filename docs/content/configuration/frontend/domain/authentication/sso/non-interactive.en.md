@@ -13,6 +13,7 @@ tags:
 seeAlso:
     - interactive
     - multiple-domains
+    - /configuration/embedding/comments-tag/auto-non-interactive-sso
     - /configuration/frontend/domain/authentication/sso
 ---
 
@@ -22,13 +23,38 @@ Non-interactive [SSO authentication](/configuration/frontend/domain/authenticati
 
 When activated, the `Non-interactive` switch changes the behaviour of the SSO authentication. The user won't see any login popup, but the whole process will be executed in the background.
 
-## Initiating the flow
+## Triggering non-interactive SSO flow
 
-One of the crucial differences with the interactive flow is that the authentication must be triggered externally. There must be some Javascript code added to the page, which activates the SSO flow upon page load by calling the `nonInteractiveSsoLogin()` method of the `<comentario-comments>` HTML element.
+One of the crucial differences with the interactive flow is that the authentication must be triggered either externally, or automatically by using the [`auto-non-interactive-sso` attribute](/configuration/embedding/comments-tag/auto-non-interactive-sso) — which is by far the simplest way. 
+
+### Triggering externally
+
+If you chose not to enable automatic SSO login by adding `auto-non-interactive-sso="true"`, you'll need to add some code to the page that triggers that process after the page has finished loading. That code should contain a call to the `nonInteractiveSsoLogin()` method of the `<comentario-comments>` HTML element.
+
+Please be mindful of the following:
+
+1. Non-interactive SSO **must be enabled and configured** in the [domain properties](/configuration/frontend/domain/authentication); otherwise, a rejected `Promise` with the string `Non-interactive SSO is not enabled.` will be returned.
+2. Comentario **initialisation has to finish** before `nonInteractiveSsoLogin()` can be called; otherwise, a rejected `Promise` with the string `Initialisation hasn't finished yet.` will be returned.
+
+Because of the second item, the only reliable way to trigger SSO login externally is [disabling automatic initialisation](/configuration/embedding/comments-tag/auto-init), then using the `Promise` returned by the `main()` method to synchronise with the init process.
+
+Below is an example of how it might look like:
+
+```html
+<comentario-comments id="comments" auto-init="false"></comentario-comments>
+<script>
+    window.onload = () => {
+        const cc = document.getElementById('comments');
+        cc.main().then(() => cc.nonInteractiveSsoLogin());
+    };
+</script>
+```
+
+See [below](#noninteractivessologin-method) for more details about the `nonInteractiveSsoLogin()` method.
 
 ## Login redirect in iframe
 
-After calling the above method, Comentario will create a hidden iframe and point it to the SSO URL, providing the following two query parameters:
+After the SSO login flow is triggered, Comentario will create a hidden iframe and point it to the SSO URL, providing the following two query parameters:
 
 * `token`, a value consisting of 64 hexadecimal digits representing a user session token, and
 * `hmac`, a value consisting of 64 hexadecimal digits, which is a SHA256 HMAC signature of the `token`. The signature is created using the [shared SSO secret](/configuration/frontend/domain/authentication/sso#sso-secret).
@@ -61,3 +87,19 @@ For example:
 }
 ```
 
+## `nonInteractiveSsoLogin()` method
+
+### Synopsis
+
+`nonInteractiveSsoLogin(options?)`
+
+### Return value
+
+`Promise<void>`
+
+The return value can be used to check the outcome of the SSO login process.
+
+### Arguments
+
+* `options` *optional* — Object containing additional options:
+    * `force: boolean` — If `true`, the flow will be triggered even if the user is already logged in, in which case a logout sequence will be executed first. If `false`, the call is a no-op in the case the user is signed in.

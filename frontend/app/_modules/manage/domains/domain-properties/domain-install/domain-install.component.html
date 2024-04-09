@@ -40,6 +40,12 @@
                         <label class="form-check-label" for="opt-auto-init" i18n>Initialise Comentario automatically</label>
                         <app-info-icon docLink="configuration/embedding/comments-tag/auto-init/" class="ms-2"/>
                     </div>
+                    <!-- Automatically trigger non-interactive SSO -->
+                    <div class="form-check">
+                        <input formControlName="autoNonInteractiveSso" class="form-check-input" type="checkbox" id="opt-auto-non-interactive-sso">
+                        <label class="form-check-label" for="opt-auto-non-interactive-sso" i18n>Automatically trigger non-interactive SSO</label>
+                        <app-info-icon docLink="configuration/embedding/comments-tag/auto-non-interactive-sso/" class="ms-2"/>
+                    </div>
                     <!-- Live comment updates -->
                     <div class="form-check">
                         <input formControlName="liveUpdate" class="form-check-input" type="checkbox" id="opt-live-update">

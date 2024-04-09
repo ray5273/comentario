@@ -227,20 +227,26 @@ context('Domain Properties page', () => {
             cy.get('#install-snippet-options').should('be.visible');
 
             // Check option defaults
-            cy.get('#opt-auto-init')   .as('optAutoInit')   .should('be.visible').and('be.checked');
-            cy.get('#opt-live-update') .as('optLiveUpdate') .should('be.visible').and('be.checked');
-            cy.get('#opt-no-fonts')    .as('optNoFonts')    .should('be.visible').and('not.be.checked');
-            cy.get('#opt-no-css')      .as('optNoCss')      .should('be.visible').and('not.be.checked');
-            cy.get('#opt-lang')        .as('optLang')       .should('be.visible').and('have.value', '').and('be.enabled');
-            cy.get('#opt-css-override').as('optCssOverride').should('be.visible').and('have.value', '').and('be.enabled');
-            cy.get('#opt-max-level')   .as('optMaxLevel')   .should('be.visible').and('have.value', '10');
-            cy.get('#opt-page-id')     .as('optPageId')     .should('be.visible').and('have.value', '');
+            cy.get('#opt-auto-init')               .as('optAutoInit')             .should('be.visible').and('be.checked');
+            cy.get('#opt-auto-non-interactive-sso').as('optAutoNonInteractiveSso').should('be.visible').and('not.be.checked');
+            cy.get('#opt-live-update')             .as('optLiveUpdate')           .should('be.visible').and('be.checked');
+            cy.get('#opt-no-fonts')                .as('optNoFonts')              .should('be.visible').and('not.be.checked');
+            cy.get('#opt-no-css')                  .as('optNoCss')                .should('be.visible').and('not.be.checked');
+            cy.get('#opt-lang')                    .as('optLang')                 .should('be.visible').and('have.value', '').and('be.enabled');
+            cy.get('#opt-css-override')            .as('optCssOverride')          .should('be.visible').and('have.value', '').and('be.enabled');
+            cy.get('#opt-max-level')               .as('optMaxLevel')             .should('be.visible').and('have.value', '10');
+            cy.get('#opt-page-id')                 .as('optPageId')               .should('be.visible').and('have.value', '');
 
             // Change options
             // -- auto-init
             cy.get('@optAutoInit').clickLabel().should('not.be.checked');
             checkSnippet(' auto-init="false"');
             cy.get('@optAutoInit').clickLabel();
+            checkSnippet('');
+            // -- auto-non-interactive-sso
+            cy.get('@optAutoNonInteractiveSso').clickLabel().should('be.checked');
+            checkSnippet(' auto-non-interactive-sso="true"');
+            cy.get('@optAutoNonInteractiveSso').clickLabel();
             checkSnippet('');
             // -- live-update
             cy.get('@optLiveUpdate').clickLabel().should('not.be.checked');
@@ -292,6 +298,7 @@ context('Domain Properties page', () => {
 
             // Multiple options as once
             cy.get('@optAutoInit').clickLabel();
+            cy.get('@optAutoNonInteractiveSso').clickLabel();
             cy.get('@optLiveUpdate').clickLabel();
             cy.get('@optNoFonts').clickLabel();
             cy.get('@optLang').select('Nederlands (Dutch)');
@@ -300,6 +307,7 @@ context('Domain Properties page', () => {
             cy.get('@optPageId').setValue('/path/1');
             checkSnippet(
                 ' auto-init="false"' +
+                ' auto-non-interactive-sso="true"' +
                 ' live-update="false"' +
                 ' no-fonts="true"' +
                 ' lang="nl"' +

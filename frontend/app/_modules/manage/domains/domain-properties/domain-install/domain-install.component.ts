@@ -17,14 +17,15 @@ export class DomainInstallComponent implements OnInit {
     collapseSnippetOptions = true;
 
     readonly form = this.fb.nonNullable.group({
-        autoInit:    true,
-        liveUpdate:  true,
-        noFonts:     false,
-        noCss:       false,
-        lang:        '',
-        cssOverride: ['', [XtraValidators.url(false)]],
-        maxLevel:    [10, [Validators.min(1), Validators.max(99)]],
-        pageId:      ['', Validators.maxLength(2076)], // 2083 - length of 'http://'
+        autoInit:              true,
+        autoNonInteractiveSso: false,
+        liveUpdate:            true,
+        noFonts:               false,
+        noCss:                 false,
+        lang:                  '',
+        cssOverride:           ['', [XtraValidators.url(false)]],
+        maxLevel:              [10, [Validators.min(1), Validators.max(99)]],
+        pageId:                ['', Validators.maxLength(2076)], // 2083 - length of 'http://'
     });
 
     readonly languages = this.cfgSvc.staticConfig.uiLanguages;
@@ -47,6 +48,9 @@ export class DomainInstallComponent implements OnInit {
 
         if (!val.autoInit) {
             opts += ' auto-init="false"';
+        }
+        if (val.autoNonInteractiveSso) {
+            opts += ' auto-non-interactive-sso="true"';
         }
         if (!val.liveUpdate) {
             opts += ' live-update="false"';
