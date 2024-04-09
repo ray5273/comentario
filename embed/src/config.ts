@@ -1,6 +1,4 @@
-import { CommentSort, DynamicConfigItem, InstanceStaticConfig } from './models';
-import { ApiConfigResponse } from './api';
-import { Utils } from './utils';
+import { CommentSort } from './models';
 
 /**
  * Comentario configuration kept in the local storage.
@@ -62,52 +60,5 @@ export class LocalConfig {
                 anonymousCommenting: this._anonymousCommenting,
                 commentSort:         this._commentSort,
             }));
-    }
-}
-
-/** Instance configuration. */
-export class InstanceConfig {
-
-    constructor(
-        /** Static config (named "statics" to avoid a clash with the "static" keyword). */
-        readonly statics: InstanceStaticConfig,
-        /** Dynamic config. */
-        readonly dynamic: DynamicConfigItem[],
-    ) {}
-
-    /**
-     * Instantiates and returns a new default instance config.
-     */
-    static default() {
-        return new this(
-            {
-                baseUrl:           'https://comentario.app',
-                baseDocsUrl:       'https://docs.comentario.app',
-                termsOfServiceUrl: '',
-                privacyPolicyUrl:  '',
-                version:           '',
-                buildDate:         '',
-                serverTime:        '',
-                defaultLangId:     'en',
-                homeContentUrl:    'https://docs.comentario.app/en/embed/front-page/',
-                resultPageSize:    25,
-                liveUpdateEnabled: false,
-            },
-            []);
-    }
-
-    /**
-     * Instantiates and returns a new instance config based on the provided API response.
-     */
-    static of(r: ApiConfigResponse) {
-        return new this(r.staticConfig, r.dynamicConfig || []);
-    }
-
-    /**
-     * Build a documentation URL from the provided parts.
-     * @param parts
-     */
-    docsUrl(...parts: string[]): string {
-        return Utils.joinUrl(this.statics.baseDocsUrl, this.statics.defaultLangId, ...parts);
     }
 }

@@ -16,9 +16,10 @@ export class I18nService {
 
     /**
      * Initialise the service with the given language.
-     * @param lang Language ID to use.
+     * @param lang Language ID to use. If not provided or not recognised, the default UI language will be used as
+     * fallback.
      */
-    async init(lang: string): Promise<void> {
+    async init(lang: string | null | undefined): Promise<void> {
         const ms = await this.api.i18nMessages(lang);
         this.messages.clear();
         ms.forEach(m => this.messages.set(m.id, m.translation));

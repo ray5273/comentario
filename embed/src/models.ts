@@ -7,13 +7,6 @@ export type TranslateFunc = (id: string) => string;
 
 export type StringBooleanMap = { [k: string]: boolean };
 
-/** UI language. **/
-export interface UILanguage {
-    readonly id:          string; // Language ID, such as 'en' or 'zh_CN'
-    readonly nameEnglish: string; // Language name in English
-    readonly nameNative:  string; // Language name in the language self
-}
-
 /** Federated identity provider ID */
 export type FederatedIdpId = 'facebook' | 'github' | 'gitlab' | 'google' | 'linkedin' | 'twitter';
 
@@ -25,55 +18,6 @@ export interface FederatedIdentityProvider {
     readonly name: string;
     /** Provider icon name */
     readonly icon: string;
-}
-
-/** Static instance configuration. */
-export interface InstanceStaticConfig {
-    /** Base Comentario URL */
-    readonly baseUrl: string;
-    /** Base Documentation URL */
-    readonly baseDocsUrl: string;
-    /** Terms of Service page URL */
-    readonly termsOfServiceUrl: string;
-    /** Privacy Policy page URL */
-    readonly privacyPolicyUrl: string;
-    /** Comentario version */
-    readonly version: string;
-    /** Server build date */
-    readonly buildDate: string;
-    /** Current server date and time */
-    readonly serverTime: string;
-    /** Default interface language ID */
-    readonly defaultLangId: string;
-    /** URL of a HTML page to display on the homepage. If not provided, the homepage will redirect to login (for  unauthenticated user) or dashboard (for authenticated) */
-    readonly homeContentUrl?: string;
-    /** Configured federated identity providers */
-    readonly federatedIdps?: FederatedIdentityProvider[];
-    /** Max number of database rows returned per page */
-    readonly resultPageSize: number;
-    /** Available UI languages */
-    readonly uiLanguages?: UILanguage[];
-    /** Whether the Live update is enabled globally */
-    readonly liveUpdateEnabled: boolean;
-}
-
-/** Dynamic configuration item datatype. */
-export type DynamicConfigItemDatatype = 'boolean';
-
-/** Dynamic configuration item. */
-export interface DynamicConfigItem {
-    /** Item key */
-    readonly key: string;
-    /** Item value */
-    readonly value: string;
-    /** Item datatype */
-    readonly datatype?: DynamicConfigItemDatatype;
-    /** Timestamp when the item was last updated in the database */
-    readonly updatedTime?: string;
-    /** Reference to the user who last updated the item in the database */
-    readonly userUpdated?: string;
-    /** Item's default value */
-    readonly defaultValue?: string;
 }
 
 /** User abstraction. **/
@@ -127,6 +71,18 @@ export type Commenter = User;
 
 /** Information about a page displaying comments */
 export interface PageInfo {
+    /** Base Documentation URL */
+    readonly baseDocsUrl: string;
+    /** Terms of Service page URL */
+    readonly termsOfServiceUrl: string;
+    /** Privacy Policy page URL */
+    readonly privacyPolicyUrl: string;
+    /** Comentario version */
+    readonly version: string;
+    /** Default interface language ID */
+    readonly defaultLangId: string;
+    /** Whether the Live update is enabled globally */
+    readonly liveUpdateEnabled: boolean;
     /** Domain ID */
     readonly domainId: string;
     /** Domain display name */

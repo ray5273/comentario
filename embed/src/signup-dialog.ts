@@ -1,8 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { SignupData, TranslateFunc } from './models';
-import { InstanceConfig } from './config';
+import { PageInfo, SignupData, TranslateFunc } from './models';
 
 export class SignupDialog extends Dialog {
 
@@ -11,7 +10,7 @@ export class SignupDialog extends Dialog {
     private _email?: Wrap<HTMLInputElement>;
     private _pwd?: Wrap<HTMLInputElement>;
 
-    private constructor(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, private readonly config: InstanceConfig) {
+    private constructor(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, private readonly pageInfo: PageInfo) {
         super(t, parent, t('dlgTitleCreateAccount'), pos);
     }
 
@@ -20,10 +19,10 @@ export class SignupDialog extends Dialog {
      * @param t Function for obtaining translated messages.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
-     * @param config Comentario configuration obtained from the backend.
+     * @param pageInfo Current page data.
      */
-    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, config: InstanceConfig): Promise<SignupDialog> {
-        const dlg = new SignupDialog(t, parent, pos, config);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, pageInfo: PageInfo): Promise<SignupDialog> {
+        const dlg = new SignupDialog(t, parent, pos, pageInfo);
         return dlg.run(dlg);
     }
 
@@ -57,10 +56,10 @@ export class SignupDialog extends Dialog {
                 UIToolkit.div('dialog-centered')
                     .append(
                         UIToolkit.span(this.t('signUpAgreeTo') + ' '),
-                        UIToolkit.a(this.t('signUpAgreeTerms'), this.config.statics.termsOfServiceUrl)
+                        UIToolkit.a(this.t('signUpAgreeTerms'), this.pageInfo.termsOfServiceUrl)
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span(' ' + this.t('signUpAgreeAnd') + ' '),
-                        UIToolkit.a(this.t('signUpAgreePrivacyPolicy'), this.config.statics.privacyPolicyUrl)
+                        UIToolkit.a(this.t('signUpAgreePrivacyPolicy'), this.pageInfo.privacyPolicyUrl)
                             .append(UIToolkit.icon('newTab').classes('ms-1')),
                         UIToolkit.span('.')),
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit(this.t('actionSignUp'), false)),

@@ -1,4 +1,4 @@
-import { Comment, Commenter, DynamicConfigItem, InstanceStaticConfig, PageInfo, Principal, UUID } from './models';
+import { Comment, Commenter, PageInfo, Principal, UUID } from './models';
 import { HttpClient, HttpHeaders } from './http-client';
 import { Utils } from './utils';
 
@@ -47,11 +47,6 @@ export interface ApiCommentUpdateResponse {
 
 export interface ApiCommentVoteResponse {
     readonly score: number;
-}
-
-export interface ApiConfigResponse {
-    staticConfig:   InstanceStaticConfig;
-    dynamicConfig?: DynamicConfigItem[];
 }
 
 export interface ApiAuthSignupResponse {
@@ -155,8 +150,8 @@ export class ApiService {
         }
     }
 
-    async i18nMessages(lang: string): Promise<ApiI18nMessageResponse[]> {
-        return await this.httpClient.get<ApiI18nMessageResponse[]>(`embed/i18n/${lang}/messages`);
+    async i18nMessages(lang: string | null | undefined): Promise<ApiI18nMessageResponse[]> {
+        return await this.httpClient.get<ApiI18nMessageResponse[]>(`embed/i18n/${lang || 'unknown'}/messages`);
     }
 
     /**
@@ -305,13 +300,6 @@ export class ApiService {
      */
     async commentVote(id: UUID, direction: -1 | 0 | 1): Promise<ApiCommentVoteResponse> {
         return this.httpClient.post<ApiCommentVoteResponse>(`embed/comments/${id}/vote`, {direction}, this.addAuth());
-    }
-
-    /**
-     * Obtain instance configuration.
-     */
-    async configGet(): Promise<ApiConfigResponse> {
-        return this.httpClient.get<ApiConfigResponse>('config');
     }
 
     /**

@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -124,10 +125,12 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		AuthAnonymous:            domain.AuthAnonymous,
 		AuthLocal:                domain.AuthLocal,
 		AuthSso:                  domain.AuthSSO,
+		BaseDocsURL:              config.CLIFlags.BaseDocsURL,
 		CommentDeletionAuthor:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionAuthor),
 		CommentDeletionModerator: svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionModerator),
 		CommentEditingAuthor:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingAuthor),
 		CommentEditingModerator:  svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingModerator),
+		DefaultLangID:            util.DefaultLanguage.String(),
 		DefaultSort:              models.CommentSort(domain.DefaultSort),
 		DomainID:                 strfmt.UUID(domain.ID.String()),
 		DomainName:               domain.DisplayName(),
@@ -135,15 +138,19 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		FederatedSignupEnabled:   svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled),
 		IsDomainReadonly:         domain.IsReadonly,
 		IsPageReadonly:           page.IsReadonly,
+		LiveUpdateEnabled:        svc.TheWebSocketsService.Active(),
 		LocalSignupEnabled:       svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyLocalSignupEnabled),
 		MarkdownImagesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
 		MarkdownLinksEnabled:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
 		MarkdownTablesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled),
 		PageID:                   strfmt.UUID(page.ID.String()),
+		PrivacyPolicyURL:         config.PrivacyPolicyURL,
 		ShowDeletedComments:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
 		SsoNonInteractive:        domain.SSONonInteractive,
 		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
 		SsoURL:                   domain.SSOURL,
+		TermsOfServiceURL:        config.TermsOfServiceURL,
+		Version:                  config.AppVersion,
 	}
 
 	// Fetch the domain's identity providers

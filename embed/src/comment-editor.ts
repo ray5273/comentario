@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { InstanceConfig } from './config';
 import { PageInfo, TranslateFunc } from './models';
+import { Utils } from './utils';
 
 export type CommentEditorCallback = (ce: CommentEditor) => void;
 export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
@@ -21,7 +21,6 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
      * @param isEdit Whether it's adding a new comment (false) or editing an existing one (true).
      * @param initialText Initial text to insert into the editor.
      * @param pageInfo Current page data.
-     * @param config Comentario configuration obtained from the backend.
      * @param onCancel Cancel callback.
      * @param onSubmit Submit callback.
      * @param onPreview Preview callback.
@@ -32,7 +31,6 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         isEdit: boolean,
         initialText: string,
         private readonly pageInfo: PageInfo,
-        private readonly config: InstanceConfig,
         onCancel: CommentEditorCallback,
         onSubmit: CommentEditorCallback,
         private readonly onPreview: CommentEditorPreviewCallback,
@@ -232,7 +230,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
             // Right section
             UIToolkit.div('toolbar-section').append(
                 // Markdown help link
-                UIToolkit.a('', this.config.docsUrl('kb/markdown/'))
+                UIToolkit.a('', Utils.joinUrl(this.pageInfo.baseDocsUrl, this.pageInfo.defaultLangId, 'kb/markdown/'))
                     .classes('btn', 'btn-tool')
                     .attr({title: this.t('btnMarkdownHelp')})
                     .append(UIToolkit.icon('help')),

@@ -687,6 +687,12 @@ definitions:
     type: object
     readOnly: true
     required:
+      - baseDocsUrl
+      - termsOfServiceUrl
+      - privacyPolicyUrl
+      - version
+      - defaultLangId
+      - liveUpdateEnabled
       - domainId
       - domainName
       - pageId
@@ -711,6 +717,31 @@ definitions:
       - markdownLinksEnabled
       - markdownTablesEnabled
     properties:
+      baseDocsUrl:
+        type: string
+        description: Base Documentation URL
+        x-isnullable: false
+      termsOfServiceUrl:
+        type: string
+        description: Terms of Service page URL
+        x-isnullable: false
+      privacyPolicyUrl:
+        type: string
+        description: Privacy Policy page URL
+        x-isnullable: false
+      version:
+        type: string
+        description: Comentario version
+        x-isnullable: false
+      defaultLangId:
+        type: string
+        description: Default interface language ID
+        x-isnullable: false
+      liveUpdateEnabled:
+        type: boolean
+        description: Whether the Live update is enabled globally
+        x-isnullable: false
+        x-omitempty: false
       domainId:
         type: string
         format: uuid

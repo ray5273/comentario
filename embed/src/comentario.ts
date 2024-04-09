@@ -24,7 +24,7 @@ import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
 import { SortBar } from './sort-bar';
 import { Utils } from './utils';
-import { InstanceConfig, LocalConfig } from './config';
+import { LocalConfig } from './config';
 import { WebSocketClient, WebSocketMessage } from './ws-client';
 import { I18nService } from './i18n';
 
@@ -55,9 +55,6 @@ export class Comentario extends HTMLElement {
 
     /** The root element of Comentario embed. */
     private root!: Wrap<HTMLDivElement>;
-
-    /** Comentario config obtained from the backend. */
-    private config = InstanceConfig.default();
 
     /** Local configuration. */
     private readonly localConfig = new LocalConfig();
@@ -167,6 +164,9 @@ export class Comentario extends HTMLElement {
      * @return Promise that resolves as soon as Comentario setup is complete
      */
     async main(): Promise<void> {
+        // Init i18n as the very first step because it may be needed for displaying (translated) error messages
+        await this.initI18n();
+
         // Load local configuration
         this.localConfig.load();
 
@@ -186,12 +186,6 @@ export class Comentario extends HTMLElement {
             }
         }
 
-        // Load Comentario configuration
-        this.config = InstanceConfig.of(await this.apiService.configGet());
-
-        // Init i18n
-        await this.initI18n();
-
         // Set up the root content
         this.root
             .inner('')
@@ -202,7 +196,6 @@ export class Comentario extends HTMLElement {
                     this.i18n.t,
                     this.origin,
                     this.root,
-                    this.config,
                     () => this.createAvatarElement(this.principal),
                     () => this.localConfig.anonymousCommenting = true,
                     (email, password) => this.authenticateLocally(email, password),
@@ -226,11 +219,11 @@ export class Comentario extends HTMLElement {
         this.scrollToCommentHash();
 
         // Initiate live updates, if enabled
-        if (this.config.statics.liveUpdateEnabled && this.liveUpdate && this.pageInfo) {
+        if (this.pageInfo?.liveUpdateEnabled && this.liveUpdate) {
             new WebSocketClient(this.origin, this.pageInfo.domainId, this.pagePath, msg => this.handleLiveUpdate(msg));
         }
 
-        console.info(`Initialised Comentario ${this.config.statics.version}`);
+        console.info(`Initialised Comentario ${this.pageInfo?.version || '(?)'}`);
     }
 
     /**
@@ -292,9 +285,9 @@ export class Comentario extends HTMLElement {
     }
 
     private async initI18n(): Promise<void> {
-        // Determine the language to use: first try the lang attribute, then the language of the document, then fall
-        // back to the default Comentario UI language
-        const lang = this.getAttribute('lang') || this.ownerDocument.documentElement.lang || this.config.statics.defaultLangId;
+        // Determine the language to use: first try the lang attribute, then the language of the document. If the
+        // language cannot be determined or not set ('unknown'), Comentario fall back to its default UI language
+        const lang = this.getAttribute('lang') || this.ownerDocument.documentElement.lang;
 
         // Load the messages
         return this.i18n.init(lang);
@@ -486,7 +479,6 @@ export class Comentario extends HTMLElement {
             false,
             '',
             this.pageInfo!,
-            this.config,
             () => this.cancelCommentEdits(),
             async editor => await this.submitNewComment(parentCard, editor.markdown),
             s => this.apiService.commentPreview(this.pageInfo!.domainId, s));
@@ -507,7 +499,6 @@ export class Comentario extends HTMLElement {
             true,
             card.comment.markdown!,
             this.pageInfo!,
-            this.config,
             () => this.cancelCommentEdits(),
             async editor => await this.submitCommentEdits(card, editor.markdown),
             s => this.apiService.commentPreview(this.pageInfo!.domainId, s));

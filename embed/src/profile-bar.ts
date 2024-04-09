@@ -4,7 +4,6 @@ import { PageInfo, Principal, SignupData, TranslateFunc, UserSettings } from './
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
-import { InstanceConfig } from './config';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 
@@ -17,7 +16,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param t Function for obtaining translated messages.
      * @param baseUrl Base URL of the Comentario instance
      * @param root Root element (for showing popups).
-     * @param config Comentario configuration obtained from the backend.
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
      * @param onAnonymousAuth Callback invoked when user chose to comment anonymously.
      * @param onLocalAuth Callback for executing a local authentication.
@@ -31,7 +29,6 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly t: TranslateFunc,
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
-        private readonly config: InstanceConfig,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
         private readonly onAnonymousAuth: () => void,
         private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
@@ -113,7 +110,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a signup dialog and return a promise that's resolved when the dialog is closed.
      */
     private async signupUser(): Promise<void> {
-        const dlg = await SignupDialog.run(this.t, this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this.config);
+        const dlg = await SignupDialog.run(this.t, this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this._pageInfo!);
         if (dlg.confirmed) {
             await this.onSignup(dlg.data);
         }
