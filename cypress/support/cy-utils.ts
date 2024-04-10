@@ -74,13 +74,14 @@ export const TEST_PATHS = {
     readonly:  '/readonly/',
 
     attr: {
-        autoInit:         '/attr/auto-init/',
-        noFonts:          '/attr/no-fonts/',
-        cssOverride:      '/attr/css-override/',
-        cssOverrideFalse: '/attr/css-override-false/',
-        pageId:           '/attr/page-id/',
-        maxLevel:         '/attr/max-level/',
-        noLiveUpdate:     '/attr/live-update/',
+        autoInit:              '/attr/auto-init/',
+        autoNonInteractiveSso: '/attr/auto-non-interactive-sso/',
+        noFonts:               '/attr/no-fonts/',
+        cssOverride:           '/attr/css-override/',
+        cssOverrideFalse:      '/attr/css-override-false/',
+        pageId:                '/attr/page-id/',
+        maxLevel:              '/attr/max-level/',
+        noLiveUpdate:          '/attr/live-update/',
     },
 };
 

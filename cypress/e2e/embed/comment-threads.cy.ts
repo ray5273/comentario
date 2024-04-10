@@ -485,4 +485,52 @@ context('Comment threads', () => {
             notice:    'This domain has no authentication method available. You cannot add new comments.',
         });
     });
+
+    context('non-interactive SSO', () => {
+
+        before(cy.backendReset);
+
+        context('when automatic SSO login is enabled', () => {
+
+            it('triggers SSO login upon load', () => {
+                // Go to the auto-non-interactive-sso-page
+                cy.testSiteVisit(TEST_PATHS.attr.autoNonInteractiveSso);
+
+                // Automatically logged in as SSO user
+                cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+                cy.commentTree().should('be.empty');
+            });
+
+            it('doesn\'t trigger SSO login if already logged in', () => {
+                // Login as another user first, then visit the auto-SSO page (username is checked automatically)
+                cy.testSiteLoginViaApi(USERS.ace, TEST_PATHS.attr.autoNonInteractiveSso);
+                cy.commentTree().should('be.empty');
+            });
+        });
+
+        context('when automatic initialisation is disabled', () => {
+
+            it('triggers SSO login upon load', () => {
+                // Go to the manual init page
+                cy.testSiteVisit(TEST_PATHS.attr.autoInit);
+
+                // Click "insert with SSO"
+                cy.contains('button', 'Run with non-interactive SSO login').click();
+
+                // Automatically logged in as SSO user
+                cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+            });
+
+            it('doesn\'t trigger SSO login if already logged in', () => {
+                // Login as another user first, then visit the auto-init page
+                cy.testSiteLoginViaApi(USERS.ace, TEST_PATHS.attr.autoInit, {verify: false});
+
+                // Click "insert with SSO"
+                cy.contains('button', 'Run with non-interactive SSO login').click();
+
+                // Still logged in as Ace
+                cy.testSiteIsLoggedIn(USERS.ace.name);
+            });
+        });
+    });
 });
