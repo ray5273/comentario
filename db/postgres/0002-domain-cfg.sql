@@ -40,3 +40,9 @@ alter table cm_users add column ts_last_failed_login  timestamp;                
 alter table cm_users add column failed_login_attempts integer default 0 not null;                   -- Number of failed login attempts
 alter table cm_users add column is_locked             boolean default false not null;               -- Whether the user is locked out
 alter table cm_users add column ts_locked             timestamp;                                    -- When the user was locked. null if the user isn't locked
+
+------------------------------------------------------------------------------------------------------------------------
+-- Enlarge IP address fields to accommodate IPv6
+------------------------------------------------------------------------------------------------------------------------
+alter table cm_user_sessions     alter column ip type varchar(39);
+alter table cm_domain_page_views alter column ip type varchar(39);

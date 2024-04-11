@@ -63,6 +63,7 @@ type PathRegistry interface {
 var logger = logging.MustGetLogger("persistence")
 
 var (
+	reIPLike         = regexp.MustCompile(`^\d+\.\d+\.\d+\.\d+$`)
 	reDNSHostname    = regexp.MustCompile(`^([a-z\d][-a-z\d]{0,62})(\.[a-z\d][-a-z\d]{0,62})*$`) // Minimum one part
 	reEmailAddress   = regexp.MustCompile(`^[^<>()[\]\\.,;:\s@"%]+(\.[^<>()[\]\\.,;:\s@"%]+)*@`) // Only the part up to the '@'
 	rePortInHostname = regexp.MustCompile(`:\d+$`)
@@ -345,15 +346,23 @@ func IsValidEmail(s string) bool {
 	return false
 }
 
-// IsValidHostname returns true if the passed string is a valid domain hostname
+// IsValidHostname returns true if the passed string is a valid domain hostname. This function explicitly denies IP
+// addresses and strings that look like them
 func IsValidHostname(s string) bool {
-	return s != "" && len(s) <= 253 && reDNSHostname.MatchString(s)
+	return s != "" && len(s) <= 253 && !reIPLike.MatchString(s) && reDNSHostname.MatchString(s)
 }
 
-// IsValidHostPort returns whether the passed string is a valid 'host' or 'host:port' spec, and its host and port values
+// IsValidHostPort returns whether the passed string is a valid 'host' or 'host:port' spec, and its host and port
+// values. We expressly DON'T support IPv6 addresses (such as '[8234:fa06:f21c:f78f:1aab:84a3:ec1b:174a]:1234') in this
+// function
 func IsValidHostPort(s string) (bool, string, string) {
-	// If there's a ':' in the string, we consider it the 'host:port' format (we ignore IPv6 colon-separated addresses
-	// for now). Otherwise, the entire string is considered a hostname
+	// Check for a possible IPv6 host:port spec - they are not supported
+	if strings.ContainsAny(s, "[]") {
+		return false, "", ""
+	}
+
+	// If there's a ':' in the string, we consider it the 'host:port' format. Otherwise, the entire string is considered
+	// a hostname
 	host := s
 	port := ""
 	if i := strings.LastIndex(s, ":"); i >= 0 {
@@ -375,6 +384,11 @@ func IsValidHostPort(s string) (bool, string, string) {
 // IsValidIPv4 returns true if the passed string is a valid IPv4 address
 func IsValidIPv4(s string) bool {
 	return s != "" && net.ParseIP(s).To4() != nil
+}
+
+// IsValidIP returns true if the passed string is a valid IPv4 or IPv6 address
+func IsValidIP(s string) bool {
+	return s != "" && net.ParseIP(s) != nil
 }
 
 // IsValidPort returns true if the passed string represents a valid port
@@ -517,7 +531,13 @@ func RandomSleep(min, max time.Duration) {
 
 // StripPort returns the provided hostname or IP address string with any port number part (':xxxx') removed
 func StripPort(hostOrIP string) string {
-	return rePortInHostname.ReplaceAllString(hostOrIP, "")
+	s := rePortInHostname.ReplaceAllString(hostOrIP, "")
+
+	// Unwrap bracketed IPv6
+	if strings.HasPrefix(s, "[") && strings.HasSuffix(s, "]") {
+		s = s[1 : len(s)-1]
+	}
+	return s
 }
 
 // StrToFloatDef converts a string to a float64. If conversion fails, returns the given default
@@ -560,24 +580,23 @@ func UserAgent(r *http.Request) string {
 	return r.Header.Get("User-Agent")
 }
 
-// UserIP tries to determine the user IP, returning either a valid IPv4 address or an empty string. We only support IPv4
-// addresses for now, see https://gitlab.com/comentario/comentario/-/issues/69
+// UserIP tries to determine the user IP, returning either a valid IPv4/IPv6 address or an empty string
 func UserIP(r *http.Request) string {
 	// First, try the X-Forwarded-For
 	if s := r.Header.Get("X-Forwarded-For"); s != "" {
 		// This header may contain multiple, comma-separated values. We're interested in the first one (client IP)
-		if ip, _, _ := strings.Cut(s, ","); IsValidIPv4(ip) {
+		if ip, _, _ := strings.Cut(s, ","); IsValidIP(ip) {
 			return ip
 		}
 	}
 
 	// Next, the X-Real-Ip
-	if ip := r.Header.Get("X-Real-Ip"); IsValidIPv4(ip) {
+	if ip := r.Header.Get("X-Real-Ip"); IsValidIP(ip) {
 		return ip
 	}
 
 	// Fall back to the remote IP from the request
-	if ip := StripPort(r.RemoteAddr); IsValidIPv4(ip) {
+	if ip := StripPort(r.RemoteAddr); IsValidIP(ip) {
 		return ip
 	}
 

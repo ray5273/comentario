@@ -124,7 +124,7 @@ func CLIParsed() error {
 	return nil
 }
 
-// MaskIP hides the second half of the given IP address if full IP logging isn't enabled, otherwise returns the IP as-is
+// MaskIP hides a part of the given IPv4/IPv6 address if full IP logging isn't enabled, otherwise returns the IP as-is
 func MaskIP(ip string) string {
 	if !CLIFlags.LogFullIPs {
 		// Find the second dot
@@ -135,6 +135,12 @@ func MaskIP(ip string) string {
 				if idx == 2 {
 					// Second dot found, replace the rest of the string
 					return ip[:i] + ".x.x"
+				}
+			} else if c == ':' {
+				idx++
+				if idx == 2 {
+					// Second colon found, replace the rest of the string
+					return ip[:i] + ":x:x:x:x:x:x"
 				}
 			}
 		}

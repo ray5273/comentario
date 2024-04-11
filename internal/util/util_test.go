@@ -521,6 +521,10 @@ func TestIsValidHostname(t *testing.T) {
 		{"many parts, length 254 chars     ", "a.very.very.very.loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong.doooooooooooooooooooooooooooooooomain.name.nl", false},
 		{"google.com                       ", "google.com", true},
 		{"google.com:80                    ", "google.com:80", false},
+		{"IP address                       ", "165.137.231.157", false},
+		{"IP address, with port            ", "21.117.215.106:80", false},
+		{"IP-like                          ", "765.137.231.157", false},
+		{"IP-like, with port               ", "21.19107.5.000:80", false},
 	}
 	for _, tt := range tests {
 		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
@@ -579,6 +583,13 @@ func TestIsValidHostPort(t *testing.T) {
 		{"with port, many parts                       ", "ex.a.m.p.l.e.h.a.s.d.i.f.j.h.a.k.d.h.f.a.k.j.h.d.fgk.ajl.fhgam.pl.eh.a.sdi.fjh.akdh.fa.kj.h.dfgkajlfhg.nl:3128", true, "ex.a.m.p.l.e.h.a.s.d.i.f.j.h.a.k.d.h.f.a.k.j.h.d.fgk.ajl.fhgam.pl.eh.a.sdi.fjh.akdh.fa.kj.h.dfgkajlfhg.nl", "3128"},
 		{"no port, comentario.app                     ", "comentario.app", true, "comentario.app", ""},
 		{"with port, comentario.app                   ", "comentario.app:3128", true, "comentario.app", "3128"},
+		{"valid IPv4, no port                         ", "125.0.129.121", true, "125.0.129.121", ""},
+		{"valid IPv4, with port                       ", "55.192.237.68:3128", true, "55.192.237.68", "3128"},
+		{"invalid IPv4, no port                       ", "256.0.129.121", false, "", ""},
+		{"invalid IPv4, with port                     ", "55.192.337.68:3128", false, "", ""},
+		{"valid IPv6, no port                         ", "06b7:e637:e9cc:f40b:7c5f:61ab:dbb0:ffee", false, "", ""},
+		{"valid IPv6, with port                       ", "[6eaf:97a8:52c7:0e16:6c44:730c:b42c:bac2]:3128", false, "", ""},
+		{"random garbage                              ", "lx2jkh45nc285yh2c64u35UIGV^u25hc215cg@#$C!", false, "", ""},
 	}
 	for _, tt := range tests {
 		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
@@ -600,12 +611,39 @@ func TestIsValidIPv4(t *testing.T) {
 		{"partial IPv4  ", "123.32.16.", false},
 		{"localhost IPv4", "127.0.0.1", true},
 		{"valid IPv4    ", "214.31.117.6", true},
+		{"invalid IPv4  ", "256.31.117.6", false},
 		{"valid IPv6    ", "4c63:f372:8d3f:98d9:cc04:c082:898f:55a5", false},
+		{"invalid IPv6  ", "4cz3:f372:8d3f:98d9:cc04:c082:898f:55a5", false},
 	}
 	for _, tt := range tests {
 		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
 			if got := IsValidIPv4(tt.s); got != tt.want {
 				t.Errorf("IsValidIPv4() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsValidIP(t *testing.T) {
+	tests := []struct {
+		name string
+		s    string
+		want bool
+	}{
+		{"empty         ", "", false},
+		{"garbage       ", "foo2$%^@#$^%2bar", false},
+		{"partial IPv4  ", "123.32.16.", false},
+		{"localhost IPv4", "127.0.0.1", true},
+		{"valid IPv4    ", "214.31.117.6", true},
+		{"localhost IPv6", "::1", true},
+		{"invalid IPv4  ", "256.31.117.6", false},
+		{"valid IPv6    ", "4c63:f372:8d3f:98d9:cc04:c082:898f:55a5", true},
+		{"invalid IPv6  ", "4cz3:f372:8d3f:98d9:cc04:c082:898f:55a5", false},
+	}
+	for _, tt := range tests {
+		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
+			if got := IsValidIP(tt.s); got != tt.want {
+				t.Errorf("IsValidIP() = %v, want %v", got, tt.want)
 			}
 		})
 	}
@@ -768,7 +806,7 @@ func TestStripPort(t *testing.T) {
 		{"IPv4 with port                ", "45.225.79.163:23948", "45.225.79.163"},
 		{"IPv4 with non-digits a-la port", "158.202.241.6:0m", "158.202.241.6:0m"},
 		{"IPv6 only                     ", "15b4:d551:8471:216e:3171:4d02:f439:6f97", "15b4:d551:8471:216e:3171:4d02:f439:6f97"},
-		{"IPv6 with port                ", "[80b6:feba:f94d:dcf2:3e9d:f27a:a338:0233]:23948", "[80b6:feba:f94d:dcf2:3e9d:f27a:a338:0233]"},
+		{"IPv6 with port                ", "[80b6:feba:f94d:dcf2:3e9d:f27a:a338:0233]:23948", "80b6:feba:f94d:dcf2:3e9d:f27a:a338:0233"},
 		{"IPv6 with non-digits a-la port", "[76dc:654e:c239:9143:5ac3:3bd1:9250:ecb5]:0m", "[76dc:654e:c239:9143:5ac3:3bd1:9250:ecb5]:0m"},
 		{"garbage in garbage out        ", "SErc2%4G23Gb@t5g@x6hj4z<j37x3Q", "SErc2%4G23Gb@t5g@x6hj4z<j37x3Q"},
 	}
@@ -851,21 +889,21 @@ func TestUserIP(t *testing.T) {
 		{"remote ipv4, invalid                                    ", "892.0.142.86", nil, ""},
 		{"remote ipv4 + port                                      ", "89.0.142.86:12345", nil, "89.0.142.86"},
 		{"remote ipv4 + port, invalid                             ", "89.0.342.86:12345", nil, ""},
-		{"remote ipv6                                             ", "[f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8]", nil, ""},
-		{"remote ipv6 + port                                      ", "[f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8]:12345", nil, ""},
+		{"remote ipv6                                             ", "[f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8]", nil, "f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"},
+		{"remote ipv6 + port                                      ", "[f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8]:12345", nil, "f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"},
 		{"remote ipv4 + empty X-Forwarded-For                     ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{""}}, "89.0.142.86"},
 		{"remote ipv4 + lacking X-Forwarded-For                   ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{",15.47.231.14"}}, "89.0.142.86"},
 		{"remote ipv4 + single X-Forwarded-For                    ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{"15.47.231.14"}}, "15.47.231.14"},
 		{"remote ipv4 + multiple X-Forwarded-For                  ", "89.0.142.86", http.Header{"X-Forwarded-For": []string{"242.213.47.98,15.47.231.14,16.47.231.14"}}, "242.213.47.98"},
 		{"remote ipv4 + empty X-Real-Ip                           ", "89.0.142.86", http.Header{"X-Real-Ip": []string{""}}, "89.0.142.86"},
 		{"remote ipv4 + valid X-Real-Ip                           ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}}, "11.22.33.44"},
-		{"remote ipv4 + IPv6 X-Real-Ip                            ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"}}, "89.0.142.86"},
+		{"remote ipv4 + IPv6 X-Real-Ip                            ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"}}, "f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"},
 		{"remote ipv4 + valid X-Real-Ip + empty X-Forwarded-For   ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{""}}, "11.22.33.44"},
 		{"remote ipv4 + valid X-Real-Ip + lacking X-Forwarded-For ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{",15.47.231.14"}}, "11.22.33.44"},
 		{"remote ipv4 + valid X-Real-Ip + single X-Forwarded-For  ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"15.47.231.14"}}, "15.47.231.14"},
 		{"remote ipv4 + valid X-Real-Ip + multiple X-Forwarded-For", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"242.213.47.98,15.47.231.14,16.47.231.14"}}, "242.213.47.98"},
-		{"remote ipv4 + valid X-Real-Ip + IPv6 X-Forwarded-For    ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"be4f:c05d:32c3:b007:0afb:6691:12fa:55b5,242.213.47.98,15.47.231.14,16.47.231.14"}}, "11.22.33.44"},
-		{"remote ipv4 + IPv6 X-Real-Ip + IPv6 X-Forwarded-For     ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"1637:4bf3:42cd:7980:220b:feb2:98e8:ff82"}, "X-Forwarded-For": []string{"f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8,242.213.47.98,15.47.231.14,16.47.231.14"}}, "89.0.142.86"},
+		{"remote ipv4 + valid X-Real-Ip + IPv6 X-Forwarded-For    ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"11.22.33.44"}, "X-Forwarded-For": []string{"be4f:c05d:32c3:b007:0afb:6691:12fa:55b5,242.213.47.98,15.47.231.14,16.47.231.14"}}, "be4f:c05d:32c3:b007:0afb:6691:12fa:55b5"},
+		{"remote ipv4 + IPv6 X-Real-Ip + IPv6 X-Forwarded-For     ", "89.0.142.86", http.Header{"X-Real-Ip": []string{"1637:4bf3:42cd:7980:220b:feb2:98e8:ff82"}, "X-Forwarded-For": []string{"f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8,242.213.47.98,15.47.231.14,16.47.231.14"}}, "f16c:f7ec:cfa2:e1c5:9a3c:cb08:801f:36b8"},
 	}
 	for _, tt := range tests {
 		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
