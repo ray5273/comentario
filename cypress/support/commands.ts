@@ -378,7 +378,7 @@ Cypress.Commands.add(
     'verifyListFooter',
     {prevSubject: 'optional'},
     (element: JQueryWithSelector, count: number, more: boolean, noDataText?: string) =>
-        (element ? cy.wrap(element) : cy).get('app-list-footer').should(footer => {
+        (element ? cy.wrap(element).find('app-list-footer') : cy.get('app-list-footer')).should(footer => {
             // Verify footer text
             switch (count) {
                 case 0:
@@ -620,6 +620,7 @@ Cypress.Commands.add(
                 url:              '/api/embed/auth/login',
                 body:             {email: creds.email, password: creds.password, host: testSiteHost},
                 failOnStatusCode: options?.succeeds ?? true,
+                headers:          options?.headers,
             })
             .then(resp => {
                 if (options?.succeeds ?? true) {

@@ -5,7 +5,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -135,8 +134,8 @@ func UserGet(params api_general.UserGetParams, user *data.User) middleware.Respo
 	return api_general.NewUserGetOK().
 		WithPayload(&api_general.UserGetOKBody{
 			User:        u.ToDTO(),
-			DomainUsers: data.SliceToDTOs[*data.DomainUser, *models.DomainUser](dus),
-			Domains:     data.SliceToDTOs[*data.Domain, *models.Domain](ds),
+			DomainUsers: data.SliceToDTOs(dus),
+			Domains:     data.SliceToDTOs(ds),
 		})
 }
 
@@ -151,14 +150,57 @@ func UserList(params api_general.UserListParams, user *data.User) middleware.Res
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),
-		int(swag.Uint64Value(params.Page)-1))
+		data.PageIndex(params.Page))
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
 	return api_general.NewUserListOK().
-		WithPayload(&api_general.UserListOKBody{Users: data.SliceToDTOs[*data.User, *models.User](us)})
+		WithPayload(&api_general.UserListOKBody{Users: data.SliceToDTOs(us)})
+}
+
+func UserSessionList(params api_general.UserSessionListParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Extract user ID
+	userID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Fetch user sessions
+	uss, err := svc.TheUserService.ListUserSessions(userID, data.PageIndex(params.Page))
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewUserSessionListOK().WithPayload(data.SliceToDTOs(uss))
+}
+
+func UserSessionsExpire(params api_general.UserSessionsExpireParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	// Extract user ID
+	userID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Expire user sessions
+	if err := svc.TheUserService.ExpireUserSessions(userID); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewUserSessionsExpireNoContent()
 }
 
 func UserUnlock(params api_general.UserUnlockParams, user *data.User) middleware.Responder {

@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"reflect"
+	"strings"
 	"testing"
 )
 
@@ -142,6 +143,29 @@ func TestNullUUIDStr(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := NullUUIDStr(tt.id); got != tt.want {
 				t.Errorf("NullUUIDStr() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestPageIndex(t *testing.T) {
+	i0 := uint64(0)
+	i1 := uint64(1)
+	i2 := uint64(42)
+	tests := []struct {
+		name string
+		v    *uint64
+		want int
+	}{
+		{"nil", nil, -1},
+		{"0  ", &i0, -1},
+		{"1  ", &i1, 0},
+		{"42 ", &i2, 41},
+	}
+	for _, tt := range tests {
+		t.Run(strings.TrimSpace(tt.name), func(t *testing.T) {
+			if got := PageIndex(tt.v); got != tt.want {
+				t.Errorf("PageIndex() = %v, want %v", got, tt.want)
 			}
 		})
 	}

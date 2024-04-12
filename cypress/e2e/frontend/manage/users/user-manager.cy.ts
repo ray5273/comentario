@@ -73,37 +73,37 @@ context('User Manager', () => {
         //--------------------------------------------------------------------------------------------------------------
 
         // Check items: default sort is email ASC
-        cy.get('@userList').verifyListFooter(usersByEmail.length, false);
+        cy.get('@userManager').verifyListFooter(usersByEmail.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByEmail.map(u => u.name));
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByEmail.map(u => u.email));
 
         // Sort by email DESC
         cy.get('@userManager').changeListSort('Email', 'desc');
-        cy.get('@userList').verifyListFooter(usersByEmail.length, false);
+        cy.get('@userManager').verifyListFooter(usersByEmail.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByEmail.map(u => u.name).reverse());
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByEmail.map(u => u.email).reverse());
 
         // Sort by name ASC
         cy.get('@userManager').changeListSort('Name', 'asc');
-        cy.get('@userList').verifyListFooter(usersByName.length, false);
+        cy.get('@userManager').verifyListFooter(usersByName.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByName.map(u => u.name));
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByName.map(u => u.email));
 
         // Sort by name DESC
         cy.get('@userManager').changeListSort('Name', 'desc');
-        cy.get('@userList').verifyListFooter(usersByName.length, false);
+        cy.get('@userManager').verifyListFooter(usersByName.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByName.map(u => u.name).reverse());
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByName.map(u => u.email).reverse());
 
         // Sort by created ASC
         cy.get('@userManager').changeListSort('Created', 'asc');
-        cy.get('@userList').verifyListFooter(users.length, false);
+        cy.get('@userManager').verifyListFooter(users.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', users.map(u => u.name));
         cy.get('@userList').texts('.user-email').should('arrayMatch', users.map(u => u.email));
 
         // Sort by created DESC
         cy.get('@userManager').changeListSort('Created', 'desc');
-        cy.get('@userList').verifyListFooter(users.length, false);
+        cy.get('@userManager').verifyListFooter(users.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', users.map(u => u.name).reverse());
         cy.get('@userList').texts('.user-email').should('arrayMatch', users.map(u => u.email).reverse());
 
@@ -119,17 +119,17 @@ context('User Manager', () => {
 
         // Test filtering by email
         cy.get('@filterString').setValue('bLoG');
-        cy.get('@userList').verifyListFooter(3, false);
+        cy.get('@userManager').verifyListFooter(3, false);
         cy.get('@userList').texts('.user-email').should('arrayMatch', [USERS.commenterOne.email, USERS.commenterThree.email, USERS.commenterTwo.email]);
 
         // Test filtering by name
         cy.get('@filterString').setValue('een');
-        cy.get('@userList').verifyListFooter(1, false);
+        cy.get('@userManager').verifyListFooter(1, false);
         cy.get('@userList').texts('.user-email').should('arrayMatch', [USERS.queen.email]);
 
         // Test filtering by remarks
         cy.get('@filterString').setValue('aL');
-        cy.get('@userList').verifyListFooter(2, false);
+        cy.get('@userManager').verifyListFooter(2, false);
         cy.get('@userList').texts('.user-email').should('arrayMatch', [USERS.jack.email, USERS.king.email]);
 
         //--------------------------------------------------------------------------------------------------------------

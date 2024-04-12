@@ -66,6 +66,11 @@ func NullUUIDStr(u *uuid.NullUUID) strfmt.UUID {
 	return strfmt.UUID(u.UUID.String())
 }
 
+// PageIndex converts the standard, 1-based, queryPageNumber parameter into a 0-based int index
+func PageIndex(pageNumber *uint64) int {
+	return int(swag.Uint64Value(pageNumber) - 1)
+}
+
 // PasswordPtrToString converts a value of *strfmt.Password into a string
 func PasswordPtrToString(pwd *strfmt.Password) string {
 	return swag.StringValue((*string)(pwd))

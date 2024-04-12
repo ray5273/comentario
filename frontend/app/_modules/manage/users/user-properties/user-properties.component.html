@@ -68,6 +68,106 @@
             <!-- List footer -->
             <app-list-footer [count]="domainUsers?.length"/>
         </section>
+
+        <!-- User sessions -->
+        <section [appSpinner]="loadingSessions.active" spinnerSize="lg" id="user-sessions">
+            <div class="row">
+                <div class="col-sm">
+                    <!-- Heading -->
+                    <h2 class="mb-0" i18n>User sessions</h2>
+                    <!-- Info -->
+                    <app-info-block i18n>Expired sessions are cleaned up automatically on a daily basis.</app-info-block>
+                </div>
+
+                <!-- Buttons -->
+                <div class="col-sm-auto d-flex align-items-sm-end">
+                    <!-- Expire all sessions button -->
+                    <button [appSpinner]="expiringSessions.active" [disable]="!userSessions?.length"
+                            (confirmed)="expireSessions()"
+                            appConfirm="Are you sure you want to expire all user's sessions?"
+                            confirmAction="Expire all sessions"
+                            confirmActionType="warning"
+                            type="button" class="btn btn-warning w-100 mb-2" i18n-appConfirm i18n-confirmAction>
+                        <fa-icon [icon]="faCalendarXmark" class="me-1"/>
+                        <ng-container i18n>Expire all sessions</ng-container>
+                    </button>
+                </div>
+            </div>
+
+            <!-- User session list -->
+            @if (userSessions) {
+                <div class="list-group">
+                    @for (us of userSessions; track us.id) {
+                        <div @fadeIn-slow [class.text-muted]="isSessionExpired(us)" class="list-group-item">
+                            <!-- 1st line -->
+                            <div>
+                                <!-- Creation time -->
+                                <span class="user-session-created">{{ us.createdTime | datetime }}</span>
+                                <!-- Expiry time -->
+                                <span class="user-session-expires">
+                                    <span class="px-2">·</span>
+                                    <span class="text-info colon me-1" i18n>Expires</span>
+                                    <ng-container>{{ us.expiresTime | datetime }}</ng-container>
+                                </span>
+                                <!-- Expired badge -->
+                                @if (isSessionExpired(us)) {
+                                    <span class="badge bg-secondary ms-2" i18n>Expired</span>
+                                }
+                            </div>
+
+                            <!-- 2nd line -->
+                            <div class="small">
+                                <!-- Host -->
+                                @if (us.host; as v) {
+                                    <span class="user-session-host">
+                                        <span class="text-info colon me-1" i18n>Host</span>
+                                        <ng-container>{{ v }}</ng-container>
+                                    </span>
+                                    <span class="px-2">·</span>
+                                }
+                                <!-- IP and country -->
+                                <span class="user-session-ip-country">
+                                    <span class="text-info colon me-1" i18n>IP</span>
+                                    <ng-container>{{ us.ip }}</ng-container>
+                                    @if (us.country; as v) {&ngsp;({{ v }})}
+                                </span>
+                                <span class="px-2">·</span>
+                                <!-- Protocol -->
+                                <span class="user-session-proto">
+                                    <span class="text-info colon me-1" i18n>Protocol</span>
+                                    <ng-container>{{ us.proto }}</ng-container>
+                                </span>
+                            </div>
+
+                            <!-- 3rd line -->
+                            <div class="small">
+                                <!-- Browser -->
+                                <span class="user-session-browser">
+                                    <span class="text-info colon me-1" i18n>Browser</span>
+                                    <ng-container>{{ us.browserName }} {{ us.browserVersion }}</ng-container>
+                                </span>
+                                <span class="px-2">·</span>
+                                <!-- OS -->
+                                <span class="user-session-os">
+                                    <span class="text-info colon me-1" i18n>OS</span>
+                                    <ng-container>{{ us.osName }} {{ us.osVersion }}</ng-container>
+                                </span>
+                                <span class="px-2">·</span>
+                                <!-- Device -->
+                                <span class="user-session-device">
+                                    <span class="text-info colon me-1" i18n>Device</span>
+                                    <ng-container>{{ us.device }}</ng-container>
+                                </span>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+
+            <!-- List footer -->
+            <app-list-footer [canLoadMore]="canLoadMoreSessions" [loading]="loadingSessions.active"
+                             [count]="userSessions?.length" (loadMore)="loadSessions$.next(false)"/>
+        </section>
     }
     <!-- Placeholder when no data -->
     @if (!user) { <app-no-data/> }

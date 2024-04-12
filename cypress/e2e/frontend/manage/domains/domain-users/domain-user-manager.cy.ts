@@ -71,7 +71,7 @@ context('Domain User Manager', () => {
 
             it('shows domain user list', () => {
                 // Check items: default sort is email ASC
-                cy.get('@domainUserList').verifyListFooter(usersByEmail.length, false);
+                cy.get('@domainUserManager').verifyListFooter(usersByEmail.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', usersByEmail.map(u => u.name));
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', usersByEmail.map(u => u.email));
 
@@ -92,31 +92,31 @@ context('Domain User Manager', () => {
 
                 // Sort by email DESC
                 cy.get('@domainUserManager').changeListSort('Email', 'desc');
-                cy.get('@domainUserList').verifyListFooter(usersByEmail.length, false);
+                cy.get('@domainUserManager').verifyListFooter(usersByEmail.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', usersByEmail.map(u => u.name).reverse());
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', usersByEmail.map(u => u.email).reverse());
 
                 // Sort by name ASC
                 cy.get('@domainUserManager').changeListSort('Name', 'asc');
-                cy.get('@domainUserList').verifyListFooter(usersByName.length, false);
+                cy.get('@domainUserManager').verifyListFooter(usersByName.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', usersByName.map(u => u.name));
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', usersByName.map(u => u.email));
 
                 // Sort by name DESC
                 cy.get('@domainUserManager').changeListSort('Name', 'desc');
-                cy.get('@domainUserList').verifyListFooter(usersByName.length, false);
+                cy.get('@domainUserManager').verifyListFooter(usersByName.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', usersByName.map(u => u.name).reverse());
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', usersByName.map(u => u.email).reverse());
 
                 // Sort by created ASC
                 cy.get('@domainUserManager').changeListSort('Created', 'asc');
-                cy.get('@domainUserList').verifyListFooter(users.length, false);
+                cy.get('@domainUserManager').verifyListFooter(users.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', users.map(u => u.name));
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', users.map(u => u.email));
 
                 // Sort by created DESC
                 cy.get('@domainUserManager').changeListSort('Created', 'desc');
-                cy.get('@domainUserList').verifyListFooter(users.length, false);
+                cy.get('@domainUserManager').verifyListFooter(users.length, false);
                 cy.get('@domainUserList').texts('.domain-user-name') .should('arrayMatch', users.map(u => u.name).reverse());
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', users.map(u => u.email).reverse());
             });
@@ -124,17 +124,17 @@ context('Domain User Manager', () => {
             it('filters items', () => {
                 // Test filtering by email
                 cy.get('@filterString').setValue('bLoG');
-                cy.get('@domainUserList').verifyListFooter(2, false);
+                cy.get('@domainUserManager').verifyListFooter(2, false);
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', [USERS.commenterThree.email, USERS.commenterTwo.email]);
 
                 // Test filtering by name
                 cy.get('@filterString').setValue('een');
-                cy.get('@domainUserList').verifyListFooter(1, false);
+                cy.get('@domainUserManager').verifyListFooter(1, false);
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', [USERS.queen.email]);
 
                 // Test filtering by remarks
                 cy.get('@filterString').setValue('aL');
-                cy.get('@domainUserList').verifyListFooter(2, false);
+                cy.get('@domainUserManager').verifyListFooter(2, false);
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', [USERS.jack.email, USERS.king.email]);
             });
 

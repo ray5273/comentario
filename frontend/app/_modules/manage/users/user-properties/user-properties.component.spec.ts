@@ -7,6 +7,7 @@ import { ToolsModule } from '../../../tools/tools.module';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
 import { mockAuthService } from '../../../../_utils/_mocks.spec';
+import { ConfigService } from '../../../../_services/config.service';
 
 describe('UserPropertiesComponent', () => {
 
@@ -20,6 +21,7 @@ describe('UserPropertiesComponent', () => {
             providers: [
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),
+                MockProvider(ConfigService),
                 mockAuthService(),
             ],
         });

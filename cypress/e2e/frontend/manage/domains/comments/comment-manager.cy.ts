@@ -138,43 +138,43 @@ context('Comment Manager', () => {
 
             it('shows comment list', () => {
                 // Check page list: initial sorting is Created DESC
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.author.name));
                 cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.slice(0, 25).map(c => c.text));
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(38, false);
+                cy.get('@commentManager').verifyListFooter(38, false);
                 cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.map(c => c.author.name));
                 cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.map(c => c.text));
 
                 // Sort by Created ASC
                 cy.get('@commentManager').changeListSort('Created', 'asc');
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.author.name));
                 cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.slice(13, 38).reverse().map(c => c.text));
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(38, false);
+                cy.get('@commentManager').verifyListFooter(38, false);
                 cy.get('@commentList').texts('app-user-link .user-name').should('arrayMatch', undeletedComments.slice().reverse().map(c => c.author.name));
                 cy.get('@commentList').texts('.comment-text')           .should('arrayMatch', undeletedComments.slice().reverse().map(c => c.text));
 
                 // Sort by Score ASC
                 const commentsScore = undeletedComments.slice().sort((a, b) => a.score - b.score).map(c => c.score.toString());
                 cy.get('@commentManager').changeListSort('Score', 'asc');
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(0, 25));
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(38, false);
+                cy.get('@commentManager').verifyListFooter(38, false);
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice());
 
                 // Sort by Score DESC
                 cy.get('@commentManager').changeListSort('Score', 'desc');
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice(13, 38).reverse());
                 // Add more
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(38, false);
+                cy.get('@commentManager').verifyListFooter(38, false);
                 cy.get('@commentList').texts('.comment-score').should('arrayMatch', commentsScore.slice().reverse());
 
                 // Click on a comment body and land in comment properties
@@ -197,7 +197,7 @@ context('Comment Manager', () => {
 
                 // Test filtering by markdown source
                 filterOn('css');
-                cy.get('@commentList').verifyListFooter(4, false);
+                cy.get('@commentManager').verifyListFooter(4, false);
                 cy.get('@commentList').texts('.comment-text')
                     .should('arrayMatch', [
                         'CSS override disabled child',
@@ -208,42 +208,42 @@ context('Comment Manager', () => {
 
                 // Test filtering by commenter name
                 filterOn('apTaiN aCe');
-                cy.get('@commentList').verifyListFooter(17, false);
+                cy.get('@commentManager').verifyListFooter(17, false);
 
                 // Test quick filters
                 // -- All
                 cy.get('@quickFilterAll').click();
                 checkFilter(true, true, true, true);
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(39, false);
+                cy.get('@commentManager').verifyListFooter(39, false);
                 // -- Pending
                 cy.get('@quickFilterPending').click();
                 checkFilter(false, true, false, false);
-                cy.get('@commentList').verifyListFooter(1, false);
+                cy.get('@commentManager').verifyListFooter(1, false);
                 // -- Undeleted
                 cy.get('@quickFilterUndeleted').click();
                 checkFilter(true, true, true, false);
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 cy.get('@loadMore').click();
-                cy.get('@commentList').verifyListFooter(38, false);
+                cy.get('@commentManager').verifyListFooter(38, false);
 
                 // Enable Deleted, switch off Approved
                 cy.get('@filterApprovedBtn').clickLabel();
                 cy.get('@filterDeletedBtn') .clickLabel();
                 checkFilter(false, true, true, true);
-                cy.get('@commentList').verifyListFooter(3, false);
+                cy.get('@commentManager').verifyListFooter(3, false);
 
                 // Switch off Pending
                 cy.get('@filterPendingBtn') .clickLabel();
                 checkFilter(false, false, true, true);
-                cy.get('@commentList').verifyListFooter(2, false);
+                cy.get('@commentManager').verifyListFooter(2, false);
                 cy.get('@commentList').texts('.comment-deleted').should('arrayMatch', ['(deleted)']);
                 cy.get('@commentList').texts('.comment-text')   .should('arrayMatch', ['Rejected reply']);
 
                 // Add filter string
                 filterOn('ly');
-                cy.get('@commentList').verifyListFooter(1, false);
+                cy.get('@commentManager').verifyListFooter(1, false);
                 cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Rejected reply']);
             });
 
@@ -268,7 +268,7 @@ context('Comment Manager', () => {
 
                 // Show pending only
                 cy.get('@quickFilterPending').click();
-                cy.get('@commentList').verifyListFooter(2, false);
+                cy.get('@commentManager').verifyListFooter(2, false);
                 checkFlags('deleted',  [false, false]);
                 checkFlags('pending',  [true, true]);
                 checkFlags('rejected', [false, false]);
@@ -287,17 +287,17 @@ context('Comment Manager', () => {
             it('allows to delete comments', () => {
                 // Test deletion when deleted are hidden
                 commentAction('Delete', 14);
-                cy.get('@commentList').verifyListFooter(24, true);
+                cy.get('@commentManager').verifyListFooter(24, true);
                 checkFlags('deleted', Array(24).fill(false));
 
                 // Show deleted
                 cy.get('@filterDeletedBtn').clickLabel();
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 checkFlags('deleted', [...Array(14).fill(false), true, ...Array(10).fill(false)]);
 
                 // Delete another comment: item doesn't disappear but is rather marked as deleted
                 commentAction('Delete', 3);
-                cy.get('@commentList').verifyListFooter(25, true);
+                cy.get('@commentManager').verifyListFooter(25, true);
                 checkFlags('deleted', [false, false, false, true, ...Array(10).fill(false), true, ...Array(10).fill(false)]);
             });
         }));
@@ -305,7 +305,7 @@ context('Comment Manager', () => {
     it('shows comment list for commenter user', () => {
         cy.loginViaApi(USERS.commenterTwo, pagePath);
         makeAliases(true, false, false);
-        cy.get('@commentList').verifyListFooter(3, false);
+        cy.get('@commentManager').verifyListFooter(3, false);
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', [
             'Captain, I\'ve plotted our course, and I suggest we take the eastern route. It\'ll take us a bit longer, but we\'ll avoid any bad weather.',
             '6th level comment',
@@ -314,12 +314,12 @@ context('Comment Manager', () => {
 
         // Test filtering
         filterOn('tOo');
-        cy.get('@commentList').verifyListFooter(1, false);
+        cy.get('@commentManager').verifyListFooter(1, false);
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Children double, too']);
 
         // Test deleting comment
         commentAction('Delete', 0);
-        cy.get('@commentList').verifyListFooter(1, false);
+        cy.get('@commentManager').verifyListFooter(1, false);
         checkFlags('deleted', [true]);
 
         // Click on comment body and land in comment properties
@@ -330,12 +330,12 @@ context('Comment Manager', () => {
     it('shows comment list for readonly user', () => {
         cy.loginViaApi(USERS.commenterThree, pagePath);
         makeAliases(true, false, false);
-        cy.get('@commentList').verifyListFooter(1, false);
+        cy.get('@commentManager').verifyListFooter(1, false);
         cy.get('@commentList').texts('.comment-text').should('arrayMatch', ['Auto-init child']);
 
         // Test deleting comment
         commentAction('Delete', 0);
-        cy.get('@commentList').verifyListFooter(1, false);
+        cy.get('@commentManager').verifyListFooter(1, false);
         checkFlags('deleted', [true]);
 
         // Click on comment body and land in comment properties

@@ -1195,6 +1195,91 @@ definitions:
         readOnly: true
         description: When the user was locked (only if isLocked is true)
 
+  userSession:
+    description: User session
+    type: object
+    readOnly: true
+    required:
+      - id
+      - userId
+      - createdTime
+      - expiresTime
+      - host
+      - proto
+      - ip
+      - country
+      - browserName
+      - browserVersion
+      - osName
+      - osVersion
+      - device
+    properties:
+      id:
+        type: string
+        format: uuid
+        description: Unique session ID
+        x-isnullable: false
+      userId:
+        type: string
+        format: uuid
+        description: ID of the user who owns the session
+        x-isnullable: false
+      createdTime:
+        type: string
+        format: datetime
+        description: When the session was created
+        x-isnullable: false
+      expiresTime:
+        type: string
+        format: datetime
+        description: When the session expires
+        x-isnullable: false
+      host:
+        type: string
+        description: Host the session was created on (only for commenter login, empty for UI login)
+        x-isnullable: false
+        x-omitempty: false
+      proto:
+        type: string
+        description: The protocol version, like "HTTP/1.0"
+        x-isnullable: false
+        x-omitempty: false
+      ip:
+        type: string
+        description: (Part of) IP address the session was created from
+        x-isnullable: false
+        x-omitempty: false
+      country:
+        type: string
+        description: 2-letter country code matching the ip
+        x-isnullable: false
+        x-omitempty: false
+      browserName:
+        type: string
+        description: Name of the user's browser
+        x-isnullable: false
+        x-omitempty: false
+      browserVersion:
+        type: string
+        description: Version of the user's browser
+        x-isnullable: false
+        x-omitempty: false
+      osName:
+        type: string
+        description: Name of the user's OS
+        x-isnullable: false
+        x-omitempty: false
+      osVersion:
+        type: string
+        description: Version of the user's OS
+        x-isnullable: false
+        x-omitempty: false
+      device:
+        type: string
+        description: User's device type
+        x-isnullable: false
+        x-omitempty: false
+
 parameters:
 
   federatedIdpId:
@@ -3208,6 +3293,34 @@ paths:
                 type: integer
                 description: Number of deleted comments (if opted in for deletion)
                 x-omitempty: false
+
+  /users/{uuid}/sessions:
+    parameters:
+      - $ref: "#/parameters/pathUuid"
+
+    get:
+      operationId: UserSessionList
+      summary: List all sessions of a user
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryPageNumber"
+      responses:
+        200:
+          description: User sessions
+          schema:
+            type: array
+            items:
+              $ref: "#/definitions/userSession"
+
+    put:
+      operationId: UserSessionsExpire
+      summary: Expire all user's sessions
+      tags:
+        - ApiGeneral
+      responses:
+        204:
+          description: All sessions have been expired
 
   /users/{uuid}/ban:
     post:

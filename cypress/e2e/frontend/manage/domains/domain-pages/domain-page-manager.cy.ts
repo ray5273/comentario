@@ -71,7 +71,7 @@ context('Domain Page Manager', () => {
 
         it('shows page list', () => {
             // Check page list
-            cy.get('@pageList').verifyListFooter(pages.length, false);
+            cy.get('@pageManager').verifyListFooter(pages.length, false);
 
             // Check items: default sort is Path ASC
             cy.get('@pageList').texts('.domain-page-domain').should('arrayMatch', Array(pages.length).fill(DOMAINS.localhost.host));
@@ -126,13 +126,13 @@ context('Domain Page Manager', () => {
 
             // Test filtering by path
             filterOn('tr/');
-            cy.get('@pageList').verifyListFooter(5, false);
+            cy.get('@pageManager').verifyListFooter(5, false);
             cy.get('@pageList').texts('.domain-page-path')
                 .should('arrayMatch', ['/attr/auto-init/', '/attr/css-override-false/', '/attr/css-override/', '/attr/max-level/', '/attr/no-fonts/']);
 
             // Test filtering by title
             filterOn('cOmEnT');
-            cy.get('@pageList').verifyListFooter(1, false);
+            cy.get('@pageManager').verifyListFooter(1, false);
             cy.get('@pageList').texts('.domain-page-title')
                 .should('arrayMatch', ['Double Comentario']);
         });
@@ -147,7 +147,7 @@ context('Domain Page Manager', () => {
         cy.loginViaApi(USERS.commenterTwo, pagePath);
         makeAliases(true);
 
-        cy.get('@pageList').verifyListFooter(3, false);
+        cy.get('@pageManager').verifyListFooter(3, false);
         cy.get('@pageList').texts('.domain-page-domain').should('arrayMatch', Array(3).fill(DOMAINS.localhost.host));
         cy.get('@pageList').texts('.domain-page-path')  .should('arrayMatch', ['/', '/attr/max-level/', '/double/']);
         cy.get('@pageList').texts('.domain-page-title') .should('arrayMatch', ['Home', 'Attribute: max-level=2', 'Double Comentario']);

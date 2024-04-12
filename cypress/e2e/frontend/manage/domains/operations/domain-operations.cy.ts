@@ -132,7 +132,7 @@ context('Domain Operations page', () => {
                         cy.get('app-comment-manager #comments-filter-rejected')             .should('be.checked');
                         cy.get('app-comment-manager #comments-filter-deleted') .clickLabel().should('be.checked');
                         // Only 1 rejected comment is shown
-                        cy.get('app-comment-manager #comment-list').verifyListFooter(1, false);
+                        cy.get('app-comment-manager').verifyListFooter(1, false);
                     });
 
                     it('allows to purge comments by deleted users', () => {
@@ -156,7 +156,7 @@ context('Domain Operations page', () => {
 
                         // Verify comments left
                         cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
-                        cy.get('app-comment-manager #comment-list').verifyListFooter(23, false);
+                        cy.get('app-comment-manager').verifyListFooter(23, false);
                     });
                 });
 

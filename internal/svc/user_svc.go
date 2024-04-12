@@ -41,6 +41,8 @@ type UserService interface {
 	DeleteUserSession(id *uuid.UUID) error
 	// EnsureSuperuser ensures that the user with the given ID or email is a superuser
 	EnsureSuperuser(idOrEmail string) error
+	// ExpireUserSessions expires all sessions of the given user
+	ExpireUserSessions(userID *uuid.UUID) error
 	// FindDomainUserByID fetches and returns a User and DomainUser by domain and user IDs. If the user exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error)
@@ -68,6 +70,10 @@ type UserService interface {
 	// ListDomainModerators fetches and returns a list of moderator users for the domain with the given ID. If
 	// enabledNotifyOnly is true, only includes users who have moderator notifications enabled for that domain
 	ListDomainModerators(domainID *uuid.UUID, enabledNotifyOnly bool) ([]*data.User, error)
+	// ListUserSessions returns all sessions of a user, sorted in reverse chronological order
+	//   - userID is ID of the user to fetch sessions for
+	//   - pageIndex is the page index, if negative, no pagination is applied.
+	ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*data.UserSession, error)
 	// Update updates the given user's data in the database
 	Update(user *data.User) error
 	// UpdateBanned updates the given user's banned status in the database
@@ -287,6 +293,24 @@ func (svc *userService) EnsureSuperuser(idOrEmail string) error {
 	// Update the user
 	if err := db.ExecuteOne(db.Dialect().Update("cm_users").Set(goqu.Record{"is_superuser": true}).Where(where)); err != nil {
 		logger.Errorf("userService.EnsureSuperuser: ExecuteOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (svc *userService) ExpireUserSessions(userID *uuid.UUID) error {
+	logger.Debugf("userService.ExpireUserSessions(%s)", userID)
+
+	// Update all user's sessions
+	if err := db.Execute(
+		db.Dialect().
+			Update("cm_user_sessions").
+			Set(goqu.Record{"ts_expires": time.Now().UTC()}).
+			Where(goqu.Ex{"user_id": userID}),
+	); err != nil {
+		logger.Errorf("userService.ExpireUserSessions: Execute() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -646,6 +670,66 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	// Verify Next() didn't error
 	if err := rows.Err(); err != nil {
 		logger.Errorf("userService.ListDomainModerators: rows.Next() failed: %v", err)
+		return nil, err
+	}
+
+	// Succeeded
+	return res, nil
+}
+
+func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*data.UserSession, error) {
+	logger.Debugf("userService.ListUserSessions(%s, %d)", userID, pageIndex)
+
+	// Prepare a query
+	q := db.Dialect().
+		From("cm_user_sessions").
+		Select(
+			"id", "user_id", "ts_created", "ts_expires", "host", "proto", "ip", "country", "ua_browser_name",
+			"ua_browser_version", "ua_os_name", "ua_os_version", "ua_device").
+		Where(goqu.Ex{"user_id": userID}).
+		Order(goqu.I("ts_created").Desc())
+
+	// Paginate if required
+	if pageIndex >= 0 {
+		q = q.Limit(util.ResultPageSize).Offset(uint(pageIndex) * util.ResultPageSize)
+	}
+
+	// Query user sessions
+	rows, err := db.Select(q)
+	if err != nil {
+		logger.Errorf("userService.ListUserSessions: Select() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	defer rows.Close()
+
+	// Fetch the sessions
+	var res []*data.UserSession
+	for rows.Next() {
+		var us data.UserSession
+		err := rows.Scan(
+			&us.ID,
+			&us.UserID,
+			&us.CreatedTime,
+			&us.ExpiresTime,
+			&us.Host,
+			&us.Proto,
+			&us.IP,
+			&us.Country,
+			&us.BrowserName,
+			&us.BrowserVersion,
+			&us.OSName,
+			&us.OSVersion,
+			&us.Device)
+		if err != nil {
+			logger.Errorf("userService.ListUserSessions: Scan() failed: %v", err)
+			return nil, translateDBErrors(err)
+		}
+		res = append(res, &us)
+	}
+
+	// Verify Next() didn't error
+	if err := rows.Err(); err != nil {
+		logger.Errorf("userService.ListUserSessions: rows.Next() failed: %v", err)
 		return nil, err
 	}
 

@@ -40,7 +40,7 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 		swag.StringValue(params.Filter),
 		swag.StringValue(params.SortBy),
 		data.SortDirection(swag.BoolValue(params.SortDesc)),
-		int(swag.Uint64Value(params.Page)-1))
+		data.PageIndex(params.Page))
 	if err != nil {
 		return respServiceError(err)
 	}

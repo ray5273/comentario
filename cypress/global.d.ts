@@ -70,6 +70,8 @@ declare namespace Cypress {
         succeeds?: boolean;
         /** Error notification shown after login fails. Ignored unless succeeds is false, otherwise mandatory. */
         errMessage?: string;
+        /** Custom headers to use (only when logging via API). */
+        headers?: { [k: string]: string };
     }
 
     interface IsAtObjectWithUnderscore {

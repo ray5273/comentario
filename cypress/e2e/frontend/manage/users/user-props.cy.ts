@@ -5,7 +5,7 @@ context('User Properties page', () => {
     const pagePathKing = PATHS.manage.users.id(USERS.king.id).props;
     const pagePathAce  = PATHS.manage.users.id(USERS.ace.id).props;
 
-    const makeAliases = (canEdit: boolean, canBan: boolean, canDelete: boolean, isBanned: boolean, hasAvatar: boolean) => {
+    const makeAliases = (canEdit: boolean, canBan: boolean, canDelete: boolean, isBanned: boolean, hasAvatar: boolean, numSessions: number) => {
         cy.get('app-user-properties').as('userProps');
 
         // Check heading
@@ -32,6 +32,13 @@ context('User Properties page', () => {
         // Domain roles
         cy.get('@userProps').find('#user-domain-roles').as('domainRoles')
             .contains('h2', 'Domain roles').should('be.visible');
+
+        // Sessions
+        cy.get('@userProps').find('#user-sessions').as('sessions')
+            .contains('h2', 'User sessions').should('be.visible');
+        cy.get('@sessions').contains('button', 'Expire all sessions').as('btnExpireAll')
+            .should('be.visible').and(numSessions ? 'be.enabled' : 'be.disabled');
+        cy.get('@sessions').verifyListFooter(numSessions, false);
     };
 
     //------------------------------------------------------------------------------------------------------------------
@@ -53,7 +60,7 @@ context('User Properties page', () => {
 
         it('of Anonymous user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.anonymous.id).props);
-            makeAliases(false, false, false, false, false);
+            makeAliases(false, false, false, false, false, 0);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -68,7 +75,7 @@ context('User Properties page', () => {
 
         it('of self-user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.root.id).props);
-            makeAliases(true, false, false, false, false);
+            makeAliases(true, false, false, false, false, 1);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -87,14 +94,97 @@ context('User Properties page', () => {
             // Verify domain roles
             cy.get('@domainRoles').verifyListFooter(0, false);
 
+            // Verify sessions
+            cy.get('@sessions').find('.list-group-item').should('have.length', 1)
+                .eq(0)
+                .should('contain.text', 'Expires')
+                .and   ('contain.text', 'IP' + '127.0.x.x')
+                .and   ('contain.text', 'Protocol' + 'HTTP/1.1')
+                .and   ('contain.text', 'Browser')
+                .and   ('contain.text', 'OS')
+                .and   ('contain.text', 'Device');
+
+            // Add a number of sessions, also verify IPv4/IPv6 handling
+            const ips = [
+                {ip: '25a1:69f4:7549:aede:dcb4:eeb2:a5b9:fb39', masked: '25a1:69f4:x:x:x:x:x:x'},
+                {ip: '2f39:d1bf:3f46:804a:e0d5:d363:58ad:7505', masked: '2f39:d1bf:x:x:x:x:x:x'},
+                {ip: '9add:7020:8b78:a0e9:08d7:8448:cc93:7463', masked: '9add:7020:x:x:x:x:x:x'},
+                {ip: '100.18.128.203',                          masked: '100.18.x.x'},
+                {ip: '144.88.212.207',                          masked: '144.88.x.x'},
+                {ip: '99f1:3b39:a9ca:8ee7:1487:44d7:f172:0041', masked: '99f1:3b39:x:x:x:x:x:x'},
+                {ip: '14e6:e493:f7d5:37f0:acff:97cf:5231:69e4', masked: '14e6:e493:x:x:x:x:x:x'},
+                {ip: '692e:eace:c2a6:2578:0feb:c881:ab4a:2e14', masked: '692e:eace:x:x:x:x:x:x'},
+                {ip: '253.163.62.29',                           masked: '253.163.x.x'},
+                {ip: '3f3a:d69d:4f32:7e2f:2fea:fd8a:f675:52c9', masked: '3f3a:d69d:x:x:x:x:x:x'},
+                {ip: 'd3bb:7047:0575:07f0:5f7d:24ca:a8dc:0acd', masked: 'd3bb:7047:x:x:x:x:x:x'},
+                {ip: '95.152.88.191',                           masked: '95.152.x.x'},
+                {ip: '1aa1:68ef:cb4d:6aa3:5c46:7c02:b22d:11ca', masked: '1aa1:68ef:x:x:x:x:x:x'},
+                {ip: '13.236.68.193',                           masked: '13.236.x.x'},
+                {ip: '246.135.197.133',                         masked: '246.135.x.x'},
+                {ip: '196.200.212.51',                          masked: '196.200.x.x'},
+                {ip: '28.203.37.94',                            masked: '28.203.x.x'},
+                {ip: 'e00b:c94a:6bd9:43cb:1d0b:e906:e4df:8d65', masked: 'e00b:c94a:x:x:x:x:x:x'},
+                {ip: '36.149.107.250',                          masked: '36.149.x.x'},
+                {ip: 'e094:34ab:1f74:73ec:01c1:9589:6de0:0beb', masked: 'e094:34ab:x:x:x:x:x:x'},
+                {ip: '00d1:5e11:f55e:4185:a085:b394:c9a1:cb40', masked: '00d1:5e11:x:x:x:x:x:x'},
+                {ip: '241.106.249.173',                         masked: '241.106.x.x'},
+                {ip: '16.20.108.170',                           masked: '16.20.x.x'},
+                {ip: '40.94.28.67',                             masked: '40.94.x.x'},
+                {ip: '4f77:8a4e:743f:3f6e:295d:fc89:5c33:5838', masked: '4f77:8a4e:x:x:x:x:x:x'},
+                {ip: 'd0c7:89e2:769e:16e6:587d:b0e1:69d0:4758', masked: 'd0c7:89e2:x:x:x:x:x:x'},
+                {ip: '41.89.5.20',                              masked: '41.89.x.x'},
+                {ip: '6.167.244.55',                            masked: '6.167.x.x'},
+                {ip: '184.120.226.0',                           masked: '184.120.x.x'},
+                {ip: 'f9d3:69ce:cd25:4d98:58f8:e91e:84f3:6109', masked: 'f9d3:69ce:x:x:x:x:x:x'},
+            ];
+            ips.forEach(ip =>
+                cy.testSiteLoginViaApi(
+                    USERS.root,
+                    undefined,
+                    {headers: {[Math.random() < 0.5 ? 'X-Forwarded-For' : 'X-Real-Ip']: ip.ip}}));
+
             // Click on Edit user and land on the Edit User page
             cy.get('@btnEdit').click();
             cy.isAt(PATHS.manage.users.id(USERS.root.id).edit);
+
+            // Cancel edit and get back
+            cy.contains('app-user-edit .form-footer a', 'Cancel').click();
+            cy.isAt(PATHS.manage.users.id(USERS.root.id).props);
+
+            // We see the new sessions
+            cy.get('@sessions').verifyListFooter(25, true);
+            cy.get('@sessions').contains('app-list-footer button', 'Load more').click();
+            cy.get('@sessions').verifyListFooter(31, false);
+            cy.get('@sessions').find('.list-group-item').should('have.length', 31)
+                // All sessions but the last one refer to the test site
+                .each((item, idx) => {
+                    const s = item.text();
+                    if (idx < 30) {
+                        expect(s).contains(DOMAINS.localhost.host);
+                        expect(s).contains('IP' + ips[29-idx].masked); // Items are sorted in reverse chronological order
+                    } else {
+                        expect(s).not.contains(DOMAINS.localhost.host);
+                        expect(s).contains('IP' + '127.0.x.x');
+                    }
+                });
+
+            // Expire all sessions
+            cy.get('@btnExpireAll').click();
+            cy.confirmationDialog('Are you sure you want to expire all user\'s sessions?')
+                .dlgButtonClick('Expire all sessions');
+
+            // We're logged out
+            cy.toastCheckAndClose('401');
         });
 
         it('of other user', () => {
+            // Generate a few sessions
+            cy.testSiteLoginViaApi(USERS.king, undefined, {headers: {'X-Real-Ip': '6.167.244.55'}});
+            cy.testSiteLoginViaApi(USERS.king, undefined, {headers: {'X-Forwarded-For': 'd0c7:89e2:769e:16e6:587d:b0e1:69d0:4758,152.16.93.25'}});
+            cy.testSiteLoginViaApi(USERS.king);
+
             cy.loginViaApi(USERS.root, pagePathKing);
-            makeAliases(true, true, true, false, false);
+            makeAliases(true, true, true, false, false, 3);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -106,7 +196,7 @@ context('User Properties page', () => {
                 ['Confirmed',            REGEXES.checkDatetime],
                 ['Created',              REGEXES.datetime],
                 ['Last password change', REGEXES.datetime],
-                ['Last login',           '(never)'],
+                ['Last login',           REGEXES.datetime],
             ]);
 
             // Verify domain roles
@@ -123,11 +213,35 @@ context('User Properties page', () => {
             // Click on Edit user and land on the Edit User page
             cy.get('@btnEdit').click();
             cy.isAt(PATHS.manage.users.id(USERS.king.id).edit);
+
+            // Cancel edit and get back
+            cy.contains('app-user-edit .form-footer a', 'Cancel').click();
+            cy.isAt(pagePathKing);
+
+            // Check the sessions: they all refer to the test site
+            cy.get('@sessions').find('.list-group-item').should('have.length', 3)
+                .texts()
+                .should(tx => {
+                    tx.forEach(s => expect(s).contains(DOMAINS.localhost.host).and.not.contains('Expired'));
+                    expect(tx[0]).contains('IP' + '127.0.x.x');
+                    expect(tx[1]).contains('IP' + 'd0c7:89e2:x:x:x:x:x:x');
+                    expect(tx[2]).contains('IP' + '6.167.x.x');
+                });
+
+            // Expire all sessions
+            cy.get('@btnExpireAll').click();
+            cy.confirmationDialog('Are you sure you want to expire all user\'s sessions?')
+                .dlgButtonClick('Expire all sessions');
+
+            // All sessions are expired now
+            cy.get('@sessions').find('.list-group-item').should('have.length', 3)
+                .texts()
+                .each(s => expect(s).contains('Expired'));
         });
 
         it('of banned user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.banned.id).props);
-            makeAliases(true, true, true, true, false);
+            makeAliases(true, true, true, true, false, 0);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -148,7 +262,7 @@ context('User Properties page', () => {
 
         const delUser = (delComments: boolean, purge: boolean) => {
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, false, true);
+            makeAliases(true, true, true, false, true, 0);
 
             // Click on Delete user
             cy.get('@btnDelete').click();
@@ -175,7 +289,7 @@ context('User Properties page', () => {
             cy.toastCheckAndClose('user-is-deleted');
 
             // One fewer user on the list
-            cy.get('app-user-manager #user-list').verifyListFooter(16, false);
+            cy.get('app-user-manager').verifyListFooter(16, false);
 
             // The user is unable to log in
             cy.logout();
@@ -319,7 +433,7 @@ context('User Properties page', () => {
 
         const banUser = (delComments: boolean, purge: boolean) => {
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, false, true);
+            makeAliases(true, true, true, false, true, 0);
 
             // Click on Ban user
             cy.get('@btnBan').click();
@@ -406,7 +520,7 @@ context('User Properties page', () => {
 
             // Relogin as root and unban the user
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, true, true);
+            makeAliases(true, true, true, true, true, 0);
             cy.get('@btnBan').click();
             cy.confirmationDialog('Are you sure you want to unban this user?').dlgButtonClick('Proceed');
 

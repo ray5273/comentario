@@ -597,6 +597,25 @@ func (us *UserSession) EncodeIDs() string {
 	return base64.RawURLEncoding.EncodeToString(append(us.UserID[:], us.ID[:]...))
 }
 
+// ToDTO converts this user session into an API model
+func (us *UserSession) ToDTO() *models.UserSession {
+	return &models.UserSession{
+		BrowserName:    us.BrowserName,
+		BrowserVersion: us.BrowserVersion,
+		Country:        us.Country,
+		CreatedTime:    strfmt.DateTime(us.CreatedTime),
+		Device:         us.Device,
+		ExpiresTime:    strfmt.DateTime(us.ExpiresTime),
+		Host:           us.Host,
+		ID:             strfmt.UUID(us.ID.String()),
+		IP:             us.IP,
+		OsName:         us.OSName,
+		OsVersion:      us.OSVersion,
+		Proto:          us.Proto,
+		UserID:         strfmt.UUID(us.UserID.String()),
+	}
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // DomainModNotifyPolicy describes moderator notification policy on a specific domain
