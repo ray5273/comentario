@@ -1,0 +1,3 @@
+@if (userId && userId === (principal | async)?.id) {
+    <span [ngClass]="badgeClasses" class="badge rounded-pill bg-light border border-success text-success text-uppercase" i18n>You</span>
+}

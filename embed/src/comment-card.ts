@@ -341,7 +341,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
                                     .append(
                                         // Name
                                         Wrap.new(commenter?.websiteUrl ? 'a' : 'div')
-                                            .inner(commenter?.name ?? `[${this.t('statusDeletedUser')}]`)
+                                            .inner(c.authorName || commenter?.name || `[${this.t('statusDeletedUser')}]`)
                                             .classes('name')
                                             .attr(commenter?.websiteUrl ?
                                                 {href: commenter.websiteUrl, rel: 'nofollow noopener noreferrer'} :

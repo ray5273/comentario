@@ -23,11 +23,13 @@ update cm_configuration set key = 'domain.defaults.markdown.links.enabled'  wher
 update cm_configuration set key = 'domain.defaults.markdown.tables.enabled' where key = 'markdown.tables.enabled';
 
 ------------------------------------------------------------------------------------------------------------------------
--- Add edited fields to comments
+-- Add comment fields
 ------------------------------------------------------------------------------------------------------------------------
-alter table cm_comments add column ts_edited timestamp; -- When the comment text was last edited. null if it's never been edited
-alter table cm_comments add column user_edited uuid     -- Reference to the user who last edited the comment
-    references cm_users(id) on delete set null;
+alter table cm_comments add column ts_edited      timestamp;                                       -- When the comment text was last edited. null if it's never been edited
+alter table cm_comments add column user_edited    uuid references cm_users(id) on delete set null; -- Reference to the user who last edited the comment
+alter table cm_comments add column author_name    varchar(63) default '' not null;                 -- Name of the author, in case the user isn't registered
+alter table cm_comments add column author_ip      varchar(15) default '' not null;                 -- IP address of the author
+alter table cm_comments add column author_country varchar(2)  default '' not null;                 -- 2-letter country code matching the author_ip
 
 ------------------------------------------------------------------------------------------------------------------------
 -- Add login audit columns for users

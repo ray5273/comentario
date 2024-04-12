@@ -63,6 +63,7 @@ export interface Comment {
     readonly userModerated?: UUID;    // ID of the user who moderated the comment. Undefined if the comment was moderated by another user and the current user isn't a moderator
     readonly userDeleted?:   UUID;    // ID of the user who deleted the comment (deleted comment only). Undefined if the comment was deleted by another user and the current user isn't a moderator
     readonly userEdited?:    UUID;    // ID of the user who last edited the comment (edited comment only). Undefined if the comment was edited by another user and the current user isn't a moderator
+    readonly authorName?:    string;  // Name of the author, in case the user isn't registered
     readonly direction:      number;  // Vote direction for the current user
 }
 

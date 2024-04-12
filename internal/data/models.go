@@ -949,14 +949,20 @@ type Comment struct {
 	UserDeleted   uuid.NullUUID // Reference to the user who deleted the comment
 	UserEdited    uuid.NullUUID // Reference to the user who last updated the comment text
 	PendingReason string        // The reason for the pending status
+	AuthorName    string        // Name of the author, in case the user isn't registered
+	AuthorIP      string        // IP address of the author
+	AuthorCountry string        // 2-letter country code matching the AuthorIP
 }
 
 // CloneWithClearance returns a clone of the comment with a limited set of properties, depending on the specified
 // authorisations. domainUser can be nil
 func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Comment {
-	// Superuser and domain owner/moderator see everything: make a perfect clone
+	// Superuser sees everything, domain owner/moderator everything except the IP
 	if user.IsSuperuser || domainUser.CanModerate() {
 		cc := *c
+		if !user.IsSuperuser {
+			cc.AuthorIP = ""
+		}
 		return &cc
 	}
 
@@ -974,6 +980,7 @@ func (c *Comment) CloneWithClearance(user *User, domainUser *DomainUser) *Commen
 		UserCreated: c.UserCreated,
 		DeletedTime: c.DeletedTime,
 		EditedTime:  c.EditedTime,
+		AuthorName:  c.AuthorName,
 	}
 
 	if c.UserCreated.Valid {
@@ -1016,6 +1023,7 @@ func (c *Comment) IsRoot() bool {
 // NB: leaves the Direction at 0
 func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 	return &models.Comment{
+		AuthorName:    c.AuthorName,
 		CreatedTime:   strfmt.DateTime(c.CreatedTime),
 		DeletedTime:   NullDateTime(c.DeletedTime),
 		EditedTime:    NullDateTime(c.EditedTime),

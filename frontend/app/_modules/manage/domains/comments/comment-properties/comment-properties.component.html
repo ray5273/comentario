@@ -93,7 +93,12 @@
                     <!-- Created by -->
                     <div>
                         <dt i18n>Created by</dt>
-                        <dd><app-user-link [user]="commenter" [linkRoute]="commenterRoute"/></dd>
+                        <dd>
+                            <app-user-link [user]="commenter" [userName]="comment.authorName" [linkRoute]="commenterRoute"/>
+                            @if (comment.userCreated === AnonymousUser.id) {
+                                <em class="ms-2" i18n>(unregistered user)</em>
+                            }
+                        </dd>
                     </div>
                     <!-- Moderated -->
                     @if (comment.moderatedTime | datetime; as v) {

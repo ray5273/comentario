@@ -142,6 +142,9 @@ definitions:
       pendingReason:
         type: string
         description: Reason for the pending state of the comment, visible to moderators only
+      authorName:
+        type: string
+        description: Name of the author, in case the user isn't registered
       direction:
         type: integer
         format: int8

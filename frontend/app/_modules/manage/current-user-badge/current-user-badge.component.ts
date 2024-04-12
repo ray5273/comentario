@@ -7,13 +7,17 @@ import { AuthService } from '../../../_services/auth.service';
  */
 @Component({
     selector: 'app-current-user-badge',
-    template: '@if (userId && userId === (principal | async)?.id) {<span class="badge rounded-pill bg-light border border-success text-success text-uppercase" i18n>You</span>}',
+    templateUrl: './current-user-badge.component.html',
 })
 export class CurrentUserBadgeComponent {
 
     /** ID of the user to render a badge (or no badge) for. */
     @Input({required: true})
     userId?: string;
+
+    /** Additional classes to add to the badge if it's visible. */
+    @Input()
+    badgeClasses?: string | string[];
 
     /** Observable of the currently authenticated principal. */
     readonly principal = this.authSvc.principal;

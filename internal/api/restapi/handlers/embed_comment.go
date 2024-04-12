@@ -275,6 +275,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 		UserCreated: uuid.NullUUID{UUID: user.ID, Valid: true},
 	}
 	svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil)
+	comment.AuthorIP, comment.AuthorCountry = util.UserIPCountry(params.HTTPRequest)
 
 	// Determine comment state
 	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {

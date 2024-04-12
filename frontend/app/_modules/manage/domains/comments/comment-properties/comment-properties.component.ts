@@ -56,6 +56,7 @@ export class CommentPropertiesComponent implements OnInit {
     action?: string;
 
     readonly Paths = Paths;
+    readonly AnonymousUser = AnonymousUser;
 
     readonly loading  = new ProcessingStatus();
     readonly deleting = new ProcessingStatus();

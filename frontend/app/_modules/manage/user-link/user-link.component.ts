@@ -14,6 +14,10 @@ export class UserLinkComponent {
     @Input({required: true})
     user?: User | Principal | Commenter;
 
+    /** Name of the user, in case the user isn't registered (anonymous). */
+    @Input()
+    userName?: string;
+
     /** Optional route for the user. If not provided, the rendered user won't be clickable. */
     @Input()
     linkRoute?: string | string[];

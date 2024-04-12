@@ -93,7 +93,7 @@
                         <!-- User created and status badge -->
                         <div class="col-12 col-sm ps-0 d-flex align-items-center">
                             <!-- User avatar and name -->
-                            <app-user-link [user]="commenters.get(c.userCreated!)" class="text-truncate"/>
+                            <app-user-link [user]="commenters.get(c.userCreated!)" [userName]="c.authorName" class="text-truncate"/>
 
                             <!-- Status badge, sm+ -->
                             <app-comment-status-badge [comment]="c" [subtle]="true" class="ms-2 d-none d-sm-inline"/>
