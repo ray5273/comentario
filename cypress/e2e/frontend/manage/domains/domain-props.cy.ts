@@ -68,7 +68,7 @@ context('Domain Properties page', () => {
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',
                 [
-                    'Anonymous comments',
+                    'Commenting without registration',
                     'Local (password-based)',
                     'Facebook',
                     'GitHub',
@@ -79,7 +79,7 @@ context('Domain Properties page', () => {
                         `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
                 ],
             ],
-            ['Require moderator approval on comment, if', 'Author is anonymous'],
+            ['Require moderator approval on comment, if', 'Author is unregistered'],
             ['Email moderators',                          'For comments pending moderation'],
             ['Created',                                   REGEXES.datetime],
             ['Number of comments',                        '16'],
@@ -130,7 +130,7 @@ context('Domain Properties page', () => {
                 ['Enable images in comments',                           '✔'],
                 ['Enable links in comments',                            '✔'],
                 ['Enable tables in comments',                           '✔'],
-            ['Authentication methods',                                  ['Anonymous comments', 'Local (password-based)']],
+            ['Authentication methods',                                  ['Commenting without registration', 'Local (password-based)']],
         ]);
     });
 
@@ -184,7 +184,7 @@ context('Domain Properties page', () => {
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',
                 [
-                    'Anonymous comments',
+                    'Commenting without registration',
                     'Local (password-based)',
                     'Facebook',
                     'GitHub',

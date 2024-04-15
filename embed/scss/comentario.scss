@@ -86,7 +86,7 @@
         }
     }
 
-    // Anonymous is a special case
+    // Anonymous (unregistered) is a special case
     .comentario-border-anonymous {
         border-left: 2px dashed $gray-5 !important;
     }

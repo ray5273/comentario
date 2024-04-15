@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { PageInfo, Principal, SignupData, TranslateFunc, UserSettings } from './models';
+import { LoginChoice, LoginData, PageInfo, Principal, SignupData, TranslateFunc, UserSettings } from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -17,9 +17,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param baseUrl Base URL of the Comentario instance
      * @param root Root element (for showing popups).
      * @param onGetAvatar Callback for obtaining an element for the user's avatar.
-     * @param onAnonymousAuth Callback invoked when user chose to comment anonymously.
-     * @param onLocalAuth Callback for executing a local authentication.
-     * @param onOAuth Callback for executing external (OAuth) authentication.
+     * @param onLogin Callback invoked when user made a choice in the Login dialog (opened from the profile bar)
      * @param onLogout Callback for executing logout.
      * @param onSignup Callback for executing user registration.
      * @param onSaveSettings Callback for saving user settings.
@@ -30,9 +28,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
-        private readonly onAnonymousAuth: () => void,
-        private readonly onLocalAuth: (email: string, password: string) => Promise<void>,
-        private readonly onOAuth: (idp: string) => Promise<void>,
+        private readonly onLogin: (data: LoginData) => void,
         private readonly onLogout: () => void,
         private readonly onSignup: (data: SignupData) => Promise<void>,
         private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
@@ -67,13 +63,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // If only SSO is enabled: trigger an SSO login
                 case 0:
                     if (this._pageInfo?.authSso) {
-                        return this.onOAuth('sso');
+                        return this.onLogin({choice: LoginChoice.federatedAuth, idp: 'sso'});
                     }
                     break;
 
                 // A single federated IdP is enabled: turn to that IdP
                 case 1:
-                    return this.onOAuth(this._pageInfo!.idps![0].id);
+                    return this.onLogin({choice: LoginChoice.federatedAuth, idp: this._pageInfo!.idps![0].id});
             }
         }
 
@@ -84,25 +80,11 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             {ref: this.btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
             this._pageInfo!);
+
+        // IF the dialog is confirmed, either switch to signup or execute a login, depending on the user's choice
         if (dlg.confirmed) {
-            switch (dlg.result) {
-                case null:
-                    // Local auth
-                    return this.onLocalAuth(dlg.email, dlg.password);
-
-                case 'anonymous':
-                    // User chose "Comment anonymously"
-                    this.onAnonymousAuth();
-                    return;
-
-                case 'signup':
-                    // Switch to signup
-                    return this.signupUser();
-
-                default:
-                    // External auth
-                    return this.onOAuth(dlg.result);
-            }
+            const data = dlg.data;
+            return data.choice === LoginChoice.signup ? this.signupUser() : this.onLogin(data);
         }
     }
 
@@ -176,7 +158,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             return;
         }
 
-        // User is anonymous. Add a login button, but only if there's an auth method available
+        // User is unauthenticated. Add a login button, but only if there's an auth method available
         if (this._pageInfo?.authLocal || (this._pageInfo?.authSso && !this._pageInfo.ssoNonInteractive) || this._pageInfo?.idps?.length) {
             this.append(
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')

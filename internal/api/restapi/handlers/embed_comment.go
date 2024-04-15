@@ -212,8 +212,8 @@ func EmbedCommentModerate(params api_embed.EmbedCommentModerateParams, user *dat
 func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responder {
 	user := data.AnonymousUser
 
-	// If the comment is submitted as non-anonymous, authenticate the user
-	if !params.Body.Anonymous {
+	// If the comment isn't submitted as a unregistered, authenticate the user
+	if !params.Body.Unregistered {
 		if u, _, err := GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
 			return respUnauthorized(ErrorUnauthenticated)
 		} else {
@@ -273,6 +273,9 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 		Markdown:    strings.TrimSpace(params.Body.Markdown),
 		CreatedTime: time.Now().UTC(),
 		UserCreated: uuid.NullUUID{UUID: user.ID, Valid: true},
+	}
+	if params.Body.Unregistered {
+		comment.AuthorName = params.Body.AuthorName
 	}
 	svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil)
 	comment.AuthorIP, comment.AuthorCountry = util.UserIPCountry(params.HTTPRequest)

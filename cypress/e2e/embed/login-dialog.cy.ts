@@ -124,9 +124,7 @@ context('Login dialog', () => {
         it('shows no login form when disabled', () => {
             cy.backendPatchDomain(DOMAINS.localhost.id, {authLocal: false});
             openLoginDlg();
-            cy.get('@loginDialog').find('input[name=email]')   .should('not.exist');
-            cy.get('@loginDialog').find('input[name=password]').should('not.exist');
-            cy.get('@loginDialog').find('button[type=submit]') .should('not.exist');
+            cy.get('@loginDialog').find('#comentario-login-form').should('not.exist');
         });
 
         context('when enabled', () => {
@@ -135,9 +133,10 @@ context('Login dialog', () => {
                 openLoginDlg();
 
                 // Aliases for the login form
-                cy.get('@loginDialog').find('input[name=email]')   .as('email')   .should('be.visible');
-                cy.get('@loginDialog').find('input[name=password]').as('password').should('be.visible');
-                cy.get('@loginDialog').find('button[type=submit]') .as('submit')  .should('be.visible').and('be.enabled');
+                cy.get('@loginDialog').find('#comentario-login-form').as('loginForm');
+                cy.get('@loginForm').find('input[name=email]')   .as('email')   .should('be.visible');
+                cy.get('@loginForm').find('input[name=password]').as('password').should('be.visible');
+                cy.get('@loginForm').find('button[type=submit]') .as('submit')  .should('be.visible').and('be.enabled');
             });
 
             it('validates input', () => {
@@ -230,27 +229,27 @@ context('Login dialog', () => {
         it('shows no button when disabled', () => {
             cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.localSignupEnabled]: false});
             openLoginDlg();
-            cy.get('@loginDialog').contains('button', 'Sign up').should('not.exist');
+            cy.get('@loginDialog').contains('button', 'Sign up here').should('not.exist');
         });
 
         it('open Signup dialog when enabled', () => {
             openLoginDlg();
-            cy.get('@loginDialog').contains('button', 'Sign up').click();
+            cy.get('@loginDialog').contains('button', 'Sign up here').click();
             cy.get('@root').contains('.comentario-dialog .comentario-dialog-header', 'Create an account').should('be.visible');
         });
     });
 
-    context('anonymous auth', () => {
+    context('unregistered commenting', () => {
 
         it('shows no button when disabled', () => {
             cy.backendPatchDomain(DOMAINS.localhost.id, {authAnonymous: false});
             openLoginDlg();
-            cy.get('@loginDialog').contains('button', 'Comment anonymously').should('not.exist');
+            cy.get('@loginDialog').find('#comentario-unregistered-form').should('not.exist');
         });
 
         it('hides dialog when enabled', () => {
             openLoginDlg();
-            cy.get('@loginDialog').contains('button', 'Comment anonymously').click();
+            cy.get('@loginDialog').find('#comentario-unregistered-form button[type=submit]').click();
             cy.get('@loginDialog').should('not.exist');
         });
     });

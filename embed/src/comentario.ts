@@ -4,7 +4,7 @@ import {
     Commenter,
     CommenterMap,
     CommentSort,
-    ErrorMessage,
+    ErrorMessage, LoginChoice, LoginData,
     Message,
     OkMessage,
     PageInfo,
@@ -200,9 +200,7 @@ export class Comentario extends HTMLElement {
                     this.origin,
                     this.root,
                     () => this.createAvatarElement(this.principal),
-                    () => this.localConfig.anonymousCommenting = true,
-                    (email, password) => this.authenticateLocally(email, password),
-                    idp => this.oAuthLogin(idp),
+                    data => this.login(data),
                     () => this.logout(),
                     data => this.signup(data),
                     data => this.saveUserSettings(data),
@@ -438,9 +436,9 @@ export class Comentario extends HTMLElement {
     private async updateAuthStatus(): Promise<void> {
         this.principal = await this.apiService.getPrincipal();
 
-        // If the user is logged in, remove any stored anonymous status
+        // If the user is logged in, remove any stored unregistered commenting status
         if (this.principal) {
-            this.localConfig.anonymousCommenting = false;
+            this.localConfig.setUnregisteredCommenting(false, undefined);
         }
 
         // Update the profile bar
@@ -533,16 +531,22 @@ export class Comentario extends HTMLElement {
      * @param markdown Markdown text entered by the user.
      */
     private async submitNewComment(parentCard: CommentCard | undefined, markdown: string): Promise<void> {
-        // Check if the user deliberately chose to comment anonymously. If not and not authenticated yet, show them a
+        // Check if the user deliberately chose to comment unregistered. If not and not authenticated yet, show them a
         // login dialog
-        if (!this.principal && !this.localConfig.anonymousCommenting) {
+        if (!this.principal && !this.localConfig.unregisteredCommenting) {
             await this.profileBar!.loginUser();
         }
 
         // If we can proceed: user logged in or that wasn't required
-        if (this.principal || this.localConfig.anonymousCommenting) {
+        if (this.principal || this.localConfig.unregisteredCommenting) {
             // Submit the comment to the backend
-            const r = await this.apiService.commentNew(this.location.host, this.pagePath, !this.principal, parentCard?.comment.id, markdown);
+            const r = await this.apiService.commentNew(
+                this.location.host,
+                this.pagePath,
+                !this.principal,
+                this.localConfig.unregisteredName,
+                parentCard?.comment.id,
+                markdown);
             this.lastCommentId = r.comment.id;
 
             // Add the comment to the parent map
@@ -604,6 +608,28 @@ export class Comentario extends HTMLElement {
         } else {
             // Otherwise, show a message that the user should confirm their email
             this.setMessage(new OkMessage(this.i18n.t('accountCreatedConfirmEmail')));
+        }
+    }
+
+    /**
+     * Log the user in using the provided data.
+     * @param data User's login data.
+     */
+    private async login(data: LoginData): Promise<void> {
+        switch (data.choice) {
+            // Local auth
+            case LoginChoice.localAuth:
+                return this.authenticateLocally(data.email!, data.password!);
+
+            // Federated auth + SSO
+            case LoginChoice.federatedAuth:
+                return this.oAuthLogin(data.idp!);
+
+            // Commenting without registration
+            case LoginChoice.unregistered:
+                this.localConfig.setUnregisteredCommenting(true, data.userName);
+
+            // LoginChoice.signup - handled by the profile bar itself
         }
     }
 
@@ -760,14 +786,15 @@ export class Comentario extends HTMLElement {
             throw err;
         }
 
-        // Update the anonymous commenting status
-        this.localConfig.anonymousCommenting =
+        // Update the unregistered commenting status
+        const unreg =
             // User cannot be authenticated
             !this.principal && (
                 // True if anonymous is the only option
                 (!this.pageInfo!.authLocal && (!this.pageInfo!.authSso || this.pageInfo.ssoNonInteractive) && !this.pageInfo!.idps?.length) ||
                 // Otherwise restore the user choice
-                (this.pageInfo!.authAnonymous && this.localConfig.anonymousCommenting === true));
+                (this.pageInfo!.authAnonymous && this.localConfig.unregisteredCommenting === true));
+        this.localConfig.setUnregisteredCommenting(unreg, this.localConfig.unregisteredName);
 
         // Rebuild the parent map
         this.parentMap.refill(r.comments);

@@ -26,7 +26,7 @@ Configure each [domain](/kb/domain) separately, including its moderation and aut
 {{< /card >}}
 
 {{< card title="Anonymous or logged-in" image="/img/home/cd-auth.jpg" >}}
-You can choose whether [anonymous or only authenticated](/configuration/frontend/domain/authentication) users can leave comments. We also support social login.
+You can choose whether [users have to register](/configuration/frontend/domain/authentication) to leave comments. We also support social login and Single Sign-On.
 {{< /card >}}
 
 {{< card title="Keep it clean" image="/img/home/cd-clean.jpg" >}}

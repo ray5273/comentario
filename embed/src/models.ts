@@ -94,7 +94,7 @@ export interface PageInfo {
     readonly isDomainReadonly: boolean;
     /** Whether the page is readonly (no new comments are allowed) */
     readonly isPageReadonly: boolean;
-    /** Whether anonymous comments are allowed */
+    /** Whether anonymous/unregistered comments are allowed */
     readonly authAnonymous: boolean;
     /** Whether local authentication is allowed */
     readonly authLocal: boolean;
@@ -142,6 +142,36 @@ export type ComparatorFunc<T> = (a: T, b: T) => number;
 /** Comment sorting. 1st letter defines the property, 2nd letter the direction. */
 export type CommentSort = 'ta' | 'td' | 'sa' | 'sd';
 
+/** Login choices available for the user in the Login dialog. */
+export enum LoginChoice {
+    /** Signup (registration) instead of login. */
+    signup,
+    /** Authentication with email and password. */
+    localAuth,
+    /** Federated (external) authentication, which includes SSO. */
+    federatedAuth,
+    /** Unregistered commenting, with an optional name. */
+    unregistered,
+}
+
+/** ID of a federated provider available for login, which includes 'sso'. */
+export type LoginIdPId = FederatedIdpId | 'sso';
+
+/** The result of running the Login dialog. */
+export interface LoginData {
+    /** User's choice in the dialog. */
+    readonly choice: LoginChoice;
+    /** Federated ID provider ID in case choice === federatedAuth. */
+    readonly idp?: LoginIdPId;
+    /** User's email in case choice === localAuth. */
+    readonly email?: string;
+    /** User's password in case choice === localAuth. */
+    readonly password?: string;
+    /** User name in case choice === unregistered. */
+    readonly userName?: string;
+}
+
+/** The result of running the Signup dialog. */
 export interface SignupData {
     readonly email:       string;
     readonly name:        string;

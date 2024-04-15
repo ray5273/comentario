@@ -369,7 +369,7 @@ context('Domain Edit page', () => {
                     ],
                     ['Require moderator approval on comment, if',
                         [
-                            'Author is anonymous',
+                            'Author is unregistered',
                             'Comment contains link',
                             'Comment contains image',
                         ],
@@ -480,7 +480,7 @@ context('Domain Edit page', () => {
                         ['Enable tables in comments',                           ''],
                     ['Authentication methods',
                         [
-                            'Anonymous comments',
+                            'Commenting without registration',
                             'Non-interactive Single Sign-On',
                                 'via https://sso.facebook.com',
                         ],

@@ -10,6 +10,7 @@ tags:
     - authentication
     - local authentication
     - anonymous
+    - unregistered
     - Facebook
     - GitHub
     - GitLab
@@ -33,7 +34,7 @@ The `Authentication` tab allows to configure commenter authentication options fo
 
 These options include:
 
-* Anonymous comments
+* Commenting without registration
 * Local (password-based)
 * Social login via external identity providers:
     * [Facebook](/configuration/idps/facebook)

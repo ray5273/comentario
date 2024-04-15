@@ -10,7 +10,7 @@ import { ConfigService } from '../../../../../_services/config.service';
 import { Sort } from '../../../_models/sort';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Utils } from '../../../../../_utils/utils';
-import { AnonymousUser, Paths } from '../../../../../_utils/consts';
+import { Paths } from '../../../../../_utils/consts';
 import { CommentService } from '../../../_services/comment.service';
 import { Animations } from '../../../../../_utils/animations';
 
@@ -49,11 +49,7 @@ export class CommentListComponent implements OnInit, OnChanges {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
-    /** Anonymous user ID. */
-    readonly anonUserId = AnonymousUser.id;
-
     readonly Paths = Paths;
-
     readonly sort = new Sort('created', true);
     readonly commentsLoading = new ProcessingStatus();
     readonly commentUpdating = new ProcessingStatus();

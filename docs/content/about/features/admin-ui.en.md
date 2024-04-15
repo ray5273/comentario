@@ -17,7 +17,7 @@ There's also the Profile section, where users can edit their profile, change the
 The functionality available in the Administration UI depends on [user roles](/kb/permissions) and includes:
 
 * Managing domain settings:
-    * [Authentication](/configuration/frontend/domain/authentication) (anonymous comment, social login, [SSO](/configuration/frontend/domain/authentication/sso))
+    * [Authentication](/configuration/frontend/domain/authentication) (commenting without registration, social login, [SSO](/configuration/frontend/domain/authentication/sso))
     * [Moderation](/configuration/frontend/domain/moderation) (which comments are to be queued for moderation)
     * [Extensions](/configuration/frontend/domain/extensions) capable of spam and toxicity detection
     * Domain user management

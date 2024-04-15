@@ -2,7 +2,7 @@
 export interface LayoutSettings {
     /** Root selector for Comentario, defaults to 'comentario-comments'. */
     rootSelector?: string;
-    /** Whether the user is anonymous. */
+    /** Whether the user is not logged in. */
     anonymous?: boolean;
     /** Whether login button is available (only when anonymous is true). Defaults to true. */
     login?: boolean;
@@ -83,9 +83,9 @@ export class EmbedUtils {
      * Add a root comment or reply on the current page.
      * @param parentId Parent comment ID. If undefined, a root comment is created.
      * @param markdown Markdown text of the comment.
-     * @param clickAnonymous Whether the user will be given an option to submit the comment anonymously in the Login dialog.
+     * @param clickUnregistered Whether the user will be given an option to submit the comment without registration in the Login dialog.
      */
-    static addComment(parentId: string | undefined, markdown: string, clickAnonymous: boolean) {
+    static addComment(parentId: string | undefined, markdown: string, clickUnregistered: boolean) {
         // Focus the add host or click the reply button
         if (parentId) {
             this.commentToolbarButton(parentId, 'Reply').click();
@@ -104,10 +104,10 @@ export class EmbedUtils {
             .should('have.text', 'Add Comment')
             .click();
 
-        // If we're to comment anonymously, the Login dialog must appear
-        if (clickAnonymous) {
+        // If we're to comment unregistered, the Login dialog must appear
+        if (clickUnregistered) {
             cy.get('.comentario-root .comentario-dialog').should('be.visible')
-                .contains('button', 'Comment anonymously').click();
+                .find('#comentario-unregistered-form button[type=submit]').click();
         }
     }
 }

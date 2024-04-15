@@ -5,9 +5,9 @@ context('Comment Editor', () => {
 
     context('comment editing', () => {
 
-        const addAnonymousComment = (clickAnonymous: boolean) => {
+        const addUnregisteredComment = (clickUnregistered: boolean) => {
             // Submit a root comment. First time a Login dialog may appear
-            EmbedUtils.addComment(undefined, 'This is also a root', clickAnonymous);
+            EmbedUtils.addComment(undefined, 'This is also a root', clickUnregistered);
 
             // New comment is added, in the Pending state since anonymous comments are to be moderated
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
@@ -102,16 +102,16 @@ context('Comment Editor', () => {
             cy.commentTree().should('have.length', 1);
         });
 
-        it('submits anonymous comment, choosing Comment anonymously in Login dialog', () => {
+        it('submits comment without registration by choosing option in Login dialog', () => {
             // Visit the page as anonymous
             cy.testSiteVisit(TEST_PATHS.comments);
             EmbedUtils.makeAliases({anonymous: true});
 
             // Add comment
-            addAnonymousComment(true);
+            addUnregisteredComment(true);
         });
 
-        it('submits anonymous comment directly when only anonymous is enabled', () => {
+        it('submits comment without registration directly when only unregistered is enabled', () => {
             // Allow only anonymous comments
             cy.backendPatchDomain(DOMAINS.localhost.id, {authLocal: false, authSso: false});
             cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
@@ -121,7 +121,7 @@ context('Comment Editor', () => {
             EmbedUtils.makeAliases({anonymous: true, login: false});
 
             // Add comment
-            addAnonymousComment(false);
+            addUnregisteredComment(false);
         });
 
         it('submits non-anonymous comment', () => {

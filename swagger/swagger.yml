@@ -251,7 +251,7 @@ definitions:
         x-isnullable: false
       authAnonymous:
         type: boolean
-        description: Whether anonymous comments are allowed
+        description: Whether commenting by unregistered users is allowed
         x-omitempty: false
       authLocal:
         type: boolean
@@ -277,11 +277,11 @@ definitions:
         x-isnullable: false
       modAnonymous:
         type: boolean
-        description: Whether all anonymous comments are to be approved by a moderator
+        description: Whether all comments by unregistered users are to be approved by a moderator
         x-omitempty: false
       modAuthenticated:
         type: boolean
-        description: Whether all non-anonymous comments are to be approved by a moderator
+        description: Whether all comments by authenticated users are to be approved by a moderator
         x-omitempty: false
       modNumComments:
         type: integer
@@ -771,7 +771,7 @@ definitions:
         x-omitempty: false
       authAnonymous:
         type: boolean
-        description: Whether anonymous comments are allowed
+        description: Whether commenting by unregistered users is allowed
         x-isnullable: false
         x-omitempty: false
       authLocal:
@@ -2173,9 +2173,13 @@ paths:
               path:
                 description: Path to the page to create a comment on
                 $ref: "#/definitions/path"
-              anonymous:
-                description: Whether the comment is submitted anonymously. If false, valid authentication must be provided with the request
+              unregistered:
                 type: boolean
+                description: Whether the comment is submitted without registration. If false, valid authentication must be provided with the request
+              authorName:
+                type: string
+                maxLength: 63
+                description: Optional name of the author in case unregistered is true, otherwise ignored
               parentId:
                 description: Optional ID of the parent comment for the new one. If omitted, a root comment will be added
                 type: string
@@ -2205,7 +2209,7 @@ paths:
       summary: Render the passed comment text in markdown and return as HTML
       tags:
         - ApiEmbed
-      # Can also be called anonymously
+      # Can also be called without authentication
       security: []
       parameters:
         - in: body

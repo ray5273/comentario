@@ -126,7 +126,7 @@ func (svc *perlustrationService) NeedsModeration(
 		// Anonymous user
 		case true:
 			if domain.ModAnonymous {
-				return true, "Domain policy requires moderation on comments by anonymous users", nil
+				return true, "Domain policy requires moderation on comments by unregistered users", nil
 			}
 		}
 	}

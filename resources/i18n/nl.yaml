@@ -10,6 +10,8 @@
   translation: Sluiten
 - id: actionCollapseChildren
   translation: Reacties inklappen
+- id: actionCommentUnreg
+  translation: Reageren zonder registratie
 - id: actionConfirmEmail
   translation: Bevestig je e-mailadres
 - id: actionContext
@@ -42,6 +44,8 @@
   translation: Inloggen
 - id: actionSignUp
   translation: Registreren
+- id: actionSignUpLink
+  translation: Registreer hier
 - id: actionSso
   translation: Single Sign-On
 - id: actionSticky
@@ -86,8 +90,6 @@
   translation: Ontgrendelen
 - id: clickButtonBelow
   translation: Klik hiervoor op de onderstaande knop.
-- id: commentAnonymously
-  translation: Anoniem reageren
 - id: commentIsPending
   translation: Dit comment moet nog worden goedgekeurd door de moderator.
 - id: commentIsRejected
@@ -134,6 +136,8 @@
   translation: Reactie-notificaties
 - id: fieldWebsiteOpt
   translation: Website (optioneel)
+- id: fieldYourNameOptional
+  translation: Je naam (optioneel)
 - id: forgotPasswordLink
   translation: Wachtwoord vergeten?
 - id: helloName
@@ -159,7 +163,7 @@
 - id: notificationNewReply
   translation: Je hebt deze e-mail ontvangen omdat je ervoor hebt gekozen om e-mailnotificaties te ontvangen voor reacties op comments.
 - id: notWillingToLogin
-  translation: Wil je niet inloggen?
+  translation: Wil je niet inloggen? Je kunt reageren zonder te registreren.
 - id: pageIsReadonly
   translation: Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.
 - id: pendingModeration

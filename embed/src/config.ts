@@ -6,17 +6,24 @@ import { CommentSort } from './models';
 export class LocalConfig {
 
     private static readonly StorageKey = 'comentario_settings';
-    private _anonymousCommenting?: boolean;
+    private _unregisteredCommenting?: boolean;
+    private _unregisteredName?: string;
     private _commentSort?: CommentSort;
 
-    /** Whether the user has opted to comment anonymously. */
-    get anonymousCommenting(): boolean | undefined {
-        return this._anonymousCommenting;
+    /** Whether the user has opted to comment without registration. */
+    get unregisteredCommenting(): boolean | undefined {
+        return this._unregisteredCommenting;
     }
 
-    set anonymousCommenting(b: boolean) {
-        if (this._anonymousCommenting !== b) {
-            this._anonymousCommenting = b;
+    /** Optional name of the user, in case they opted to comment without registration. */
+    get unregisteredName(): string | undefined {
+        return this._unregisteredName;
+    }
+
+    setUnregisteredCommenting(b: boolean, name: string | undefined) {
+        if (this._unregisteredCommenting !== b || this._unregisteredName !== name) {
+            this._unregisteredCommenting = b;
+            this._unregisteredName       = b ? name : undefined;
             this.save();
         }
     }
@@ -41,8 +48,9 @@ export class LocalConfig {
         if (s) {
             try {
                 const data = JSON.parse(s);
-                this._anonymousCommenting = data.anonymousCommenting;
-                this._commentSort         = data.commentSort;
+                this._unregisteredCommenting = data.unregisteredCommenting;
+                this._unregisteredName       = data.unregisteredName;
+                this._commentSort            = data.commentSort;
             } catch (e) {
                 // Ignore
             }
@@ -57,8 +65,9 @@ export class LocalConfig {
         localStorage.setItem(
             LocalConfig.StorageKey,
             JSON.stringify({
-                anonymousCommenting: this._anonymousCommenting,
-                commentSort:         this._commentSort,
+                unregisteredCommenting: this._unregisteredCommenting,
+                unregisteredName:       this._unregisteredName,
+                commentSort:            this._commentSort,
             }));
     }
 }

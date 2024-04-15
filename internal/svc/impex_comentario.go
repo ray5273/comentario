@@ -446,6 +446,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			UserModerated: umID,
 			UserDeleted:   udID,
 			UserEdited:    ueID,
+			AuthorName:    comment.AuthorName,
 		}
 
 		// File it under the appropriate parent ID

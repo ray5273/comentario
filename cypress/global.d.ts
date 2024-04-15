@@ -302,13 +302,14 @@ declare namespace Cypress {
 
         /**
          * Submit a new comment via an API call. If the user is logged in (i.e. the commenter session cookie exists),
-         * the comment is submitted as that user, otherwise anonymously.
+         * the comment is submitted as that user, otherwise as unregistered author.
          * @param host Host to submit comment on.
          * @param path Path on the host.
          * @param parentId Optional parent comment ID. If null/undefined, a root comment will be added.
          * @param markdown Comment text in markdown.
+         * @param authorName Optional name of the author in case the user isn't logged in.
          */
-        commentAddViaApi(host: string, path: string, parentId: string | null | undefined, markdown: string): Chainable<Response<any>>;
+        commentAddViaApi(host: string, path: string, parentId: string | null | undefined, markdown: string, authorName?: string): Chainable<Response<any>>;
 
         /**
          * Delete an existing comment via an API call. The user must be logged in.

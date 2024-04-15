@@ -113,10 +113,11 @@ func disqusImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportRe
 
 		// Find the user ID by their email
 		uid := data.AnonymousUser.ID
-		email := disqusAuthorEmail(&post.Author)
-		if email != "" {
+		authorName := post.Author.Name
+		if email := disqusAuthorEmail(&post.Author); email != "" {
 			if id, ok := userIDMap[email]; ok {
 				uid = id
+				authorName = ""
 			}
 		}
 
@@ -172,6 +173,7 @@ func disqusImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportRe
 			ModeratedTime: sql.NullTime{Time: post.CreationDate, Valid: true},
 			UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
 			UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+			AuthorName:    authorName,
 		}
 
 		// File it under the appropriate parent ID

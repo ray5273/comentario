@@ -48,14 +48,14 @@ While using our Service we may collect information that identifies, relates to, 
 * **Viewing comments**\
   When you as a Visitor view a page embedding Comentario, Comentario collects and stores the page's URL and depersonalised properties of your web browser, as well as your country.
 * **Leaving a comment**\
-  When you as a User write a comment on a website embedding Comentario, Comentario collects and stores user session information. This applies to both authenticated and anonymous Users.
+  When you as a User write a comment on a website embedding Comentario, Comentario collects and stores user session information. This applies to both authenticated and unregistered Users.
 * **Misuse and abuse prevention**\
   We are required to take certain measures in order to prevent malicious users (such as spammers and bots) from excessively creating new accounts. This is to prevent an unfair degradation of service to non-malicious users, which might arise from a consistent attack from bots or human users. The Service may use CAPTCHA and email verification to mitigate such issues, record your IP address at any point for blacklisting if found to be in violation of our terms, as well as other techniques.
 
 ### 2.2. Data collected automatically
 
 * **Logging data**\
-  When you use the Service, whether as an authenticated or an anonymous User, we may automatically record information that your browser sends whenever you view or write Comentario comments ("Logging data"). This Logging data may include information such as your IP address, device settings (such as device and browser type, operating system, language preferences), the time and date of each access. We use this information to monitor and analyse the use of the Service, to fend off malicious activity, and to maintain the required service level.
+  When you use the Service, whether as an authenticated or an unregistered User, we may automatically record information that your browser sends whenever you view or write Comentario comments ("Logging data"). This Logging data may include information such as your IP address, device settings (such as device and browser type, operating system, language preferences), the time and date of each access. We use this information to monitor and analyse the use of the Service, to fend off malicious activity, and to maintain the required service level.
 * **Cookies and local storage**\
   We use cookies and other forms of local data storage provided by your browser for record-keeping purposes, such as storing your Service session identifier and your preferences in the Service. We may also use cookies and other forms of local data storage provided by your browser, in depersonalised form, for analysing the performance of the Service, including third-party analytical engines such as Google Analytics.
 

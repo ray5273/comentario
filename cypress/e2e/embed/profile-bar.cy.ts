@@ -33,7 +33,7 @@ context('Profile bar', () => {
                 notice:   undefined,
                 props:    {authLocal: false, authAnonymous: false}},
             {
-                name:     'only anonymous is enabled',
+                name:     'only unregistered is enabled',
                 readonly: false,
                 notice:   undefined,
                 props:    {authLocal: false, authSso: false}},

@@ -137,9 +137,11 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 
 				// Find the user ID by their email
 				uid := data.AnonymousUser.ID
+				authorName := comment.Author
 				if comment.AuthorEmail != "" {
 					if id, ok := userIDMap[comment.AuthorEmail]; ok {
 						uid = id
+						authorName = ""
 					}
 				}
 
@@ -163,6 +165,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 					ModeratedTime: sql.NullTime{Time: t, Valid: true},
 					UserCreated:   uuid.NullUUID{UUID: uid, Valid: true},
 					UserModerated: uuid.NullUUID{UUID: curUser.ID, Valid: true},
+					AuthorName:    authorName,
 				}
 
 				// Update the comment's markdown and render it into HTML

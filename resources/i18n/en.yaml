@@ -13,6 +13,8 @@
   translation: Close
 - id: actionCollapseChildren
   translation: Collapse children
+- id: actionCommentUnreg
+  translation: Comment without registration
 - id: actionConfirmEmail
   translation: Confirm Your Email
 - id: actionContext
@@ -45,6 +47,8 @@
   translation: Sign in
 - id: actionSignUp
   translation: Sign up
+- id: actionSignUpLink
+  translation: Sign up here
 - id: actionSso
   translation: Single Sign-On
 - id: actionSticky
@@ -89,8 +93,6 @@
   translation: Unlock
 - id: clickButtonBelow
   translation: To do that, please click the button below.
-- id: commentAnonymously
-  translation: Comment anonymously
 - id: commentIsPending
   translation: This comment is awaiting moderator approval.
 - id: commentIsRejected
@@ -137,6 +139,8 @@
   translation: Reply notifications
 - id: fieldWebsiteOpt
   translation: Website (optional)
+- id: fieldYourNameOptional
+  translation: Your name (optional)
 - id: forgotPasswordLink
   translation: Forgot your password?
 - id: helloName
@@ -162,7 +166,7 @@
 - id: notificationNewReply
   translation: You've received this email because you opted in to receive email notifications for comment replies.
 - id: notWillingToLogin
-  translation: Not willing to login?
+  translation: Not willing to login? You can comment without registration.
 - id: pageIsReadonly
   translation: This thread is locked. You cannot add new comments.
 - id: pendingModeration

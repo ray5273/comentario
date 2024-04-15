@@ -505,14 +505,14 @@ Cypress.Commands.add(
 Cypress.Commands.add(
     'commentAddViaApi',
     {prevSubject: false},
-    (host: string, path: string, parentId: string | null | undefined, markdown: string) =>
+    (host: string, path: string, parentId: string | null | undefined, markdown: string, authorName?: string) =>
         // Try to fetch the user session cookie
         cy.getCookie(COOKIES.embedCommenterSession)
             // Then issue an API request
             .then(token => cy.request({
                 method:  'PUT',
                 url:     '/api/embed/comments',
-                body:    {host, path, parentId, markdown, anonymous: !token?.value},
+                body:    {host, path, parentId, markdown, unregistered: !token?.value, authorName},
                 headers: token ? {'X-User-Session': token.value} : undefined,
             })));
 
@@ -596,8 +596,8 @@ Cypress.Commands.add(
         cy.get('.comentario-root .comentario-dialog').should('be.visible');
 
         // Fill out the login form and submit
-        cy.get('.comentario-root .comentario-dialog form').find('input[name=email]')   .setValue(creds.email);
-        cy.get('.comentario-root .comentario-dialog form').find('input[name=password]').setValue(creds.password).type('{enter}');
+        cy.get('.comentario-root .comentario-dialog #comentario-login-form input[name=email]')   .setValue(creds.email);
+        cy.get('.comentario-root .comentario-dialog #comentario-login-form input[name=password]').setValue(creds.password).type('{enter}');
 
         // Verify the outcome
         if (options?.verify ?? true) {
@@ -654,10 +654,9 @@ Cypress.Commands.add(
 Cypress.Commands.add('testSiteSsoLogin', {prevSubject: false}, () => {
     // Click on "Sign in": a popup dialog appears
     cy.contains('.comentario-root .comentario-profile-bar button', 'Sign in').click();
-    cy.get('.comentario-root .comentario-dialog').should('be.visible');
-
-    // Click on the SSO login button: the process runs in the background
-    cy.contains('.comentario-root .comentario-dialog form button', 'Single Sign-On').click();
+    cy.get('.comentario-root .comentario-dialog').should('be.visible')
+        // Click on the SSO login button: the process runs in the background
+        .contains('button', 'Single Sign-On').click();
 
     // Verify user name in the profile bar
     cy.testSiteIsLoggedIn('John Doe');

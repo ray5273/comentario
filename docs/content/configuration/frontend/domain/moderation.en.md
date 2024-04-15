@@ -21,7 +21,7 @@ The `Moderation` tab defines moderation and moderator notification policies for 
 
 The moderation policy outlines situations the comment doesn't get automatically the `Approved` status in, queueing for moderation instead:
 
-* Author is anonymous
+* Author is unregistered
 * Author is authenticated
 * Author has less than N of approved comments
 * Author is registered less than N days ago

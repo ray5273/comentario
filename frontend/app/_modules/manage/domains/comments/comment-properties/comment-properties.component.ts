@@ -108,7 +108,7 @@ export class CommentPropertiesComponent implements OnInit {
                 this.userEdited    = r.editor;
                 this.page          = r.page;
 
-                // If the comment is anonymous, imitate the anonymous user
+                // If the comment is by an unregistered user, imitate the anonymous user
                 if (!this.commenter && this.comment?.userCreated === AnonymousUser.id) {
                     this.commenter = AnonymousUser;
                 }

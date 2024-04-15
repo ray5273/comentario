@@ -257,12 +257,16 @@ export class ApiService {
      * Add a new comment.
      * @param host Host the page resides on.
      * @param path Path to the page to create a comment on.
-     * @param anonymous Whether the user chose to comment anonymously.
+     * @param unregistered Whether the user chose to comment without registration.
+     * @param authorName Name of the author in case unregistered is true.
      * @param parentId Optional ID of the parent comment for the new one. If omitted, a root comment will be added.
      * @param markdown Comment text in the Markdown format.
      */
-    async commentNew(host: string, path: string, anonymous: boolean, parentId: UUID | undefined, markdown: string): Promise<ApiCommentNewResponse> {
-        return this.httpClient.put<ApiCommentNewResponse>('embed/comments', {host, path, anonymous, parentId, markdown}, this.addAuth());
+    async commentNew(host: string, path: string, unregistered: boolean, authorName: string | undefined, parentId: UUID | undefined, markdown: string): Promise<ApiCommentNewResponse> {
+        return this.httpClient.put<ApiCommentNewResponse>(
+            'embed/comments',
+            {host, path, unregistered, authorName, parentId, markdown},
+            this.addAuth());
     }
 
     /**

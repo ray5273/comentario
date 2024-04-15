@@ -16,7 +16,7 @@ tags:
 * **Role-based access**\
   Every user gets a [role](/kb/permissions/roles) (Owner, Moderator, Commenter, or Read-only) within a specific [domain](/kb/domain). There's also the global [superuser](/kb/permissions/superuser) privilege.
 * **Multiple login options**
-    * Optional anonymous comments;
+    * Optional commenting without registration, including anonymous comments;
     * Local authentication with email and password;
     * Social login via Google, Twitter/X, Facebook, GitHub, GitLab;
     * Single Sign-On ([interactive](/configuration/frontend/domain/authentication/sso/interactive) and [non-interactive](/configuration/frontend/domain/authentication/sso/non-interactive)).
@@ -41,7 +41,7 @@ tags:
 * **Multiple domains in one UI**\
   Comentario offers the so-called [Administration UI](admin-ui), allowing to manage all your [domains](/kb/domain), [pages](/kb/domain-page), comments, users in a single interface.
 * **Flexible moderation rules**\
-  Each domain has own [settings](/configuration/frontend/domain/moderation), automatically flagging comments for moderation based on whether the user is anonymous, how many approved comments they have, how long ago they registered, whether the comment contains a link etc. 
+  Each domain has own [settings](/configuration/frontend/domain/moderation), automatically flagging comments for moderation based on whether the user is registered, how many approved comments they have, how long ago they registered, whether the comment contains a link etc. 
 * **Extensions**\
   The so-called [extensions](/configuration/frontend/domain/extensions) link Comentario to external services that check comment text for spam, offensive language, or toxic content. Those services include [Akismet](/configuration/frontend/domain/extensions/akismet), [APILayer](/configuration/frontend/domain/extensions/api-layer-spam-checker), and [Perspective](/configuration/frontend/domain/extensions/perspective), and they are configured separately for each domain.
 * **Statistics**\

@@ -89,7 +89,7 @@
                         <dd>
                             <ul class="list-unstyled">
                                 @if (domain.authAnonymous) {
-                                    <li i18n>Anonymous comments</li>
+                                    <li i18n>Commenting without registration</li>
                                 }
                                 @if (domain.authLocal) {
                                     <li i18n>Local (password-based)</li>
@@ -119,7 +119,7 @@
                             <dd>
                                 <ul class="ps-3 mb-0">
                                     @if (domain.modAnonymous) {
-                                        <li i18n>Author is anonymous</li>
+                                        <li i18n>Author is unregistered</li>
                                     }
                                     @if (domain.modAuthenticated) {
                                         <li i18n>Author is authenticated</li>

@@ -14,7 +14,7 @@ export class UserLinkComponent {
     @Input({required: true})
     user?: User | Principal | Commenter;
 
-    /** Name of the user, in case the user isn't registered (anonymous). */
+    /** Name of the user, in case the user isn't registered. */
     @Input()
     userName?: string;
 
