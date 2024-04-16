@@ -124,8 +124,6 @@
   translation: Неизвестная ошибка
 - id: errorUnknownHost
   translation: Этот домен не зарегистрирован в Comentario
-- id: fieldEmail
-  translation: Емэйл
 - id: fieldModNotifications
   translation: Уведомления о модерации
 - id: fieldPassword
@@ -146,10 +144,8 @@
   translation: Если вы этого не делали, пожалуйста, игнорируйте это письмо.
 - id: loginViaLocalAuth
   translation: Вход с емэйлом и паролем
-- id: loginViaSocial
-  translation: Вход через соцсети
-- id: loginViaSso
-  translation: Войти через
+- id: loginWith
+  translation: Вход через
 - id: newComment
   translation: Новый комментарий
 - id: newCommentOn
@@ -162,8 +158,8 @@
   translation: Вы получили это письмо, потому что владелец домена решил уведомлять модераторов о комментариях, ожидающих модерации.
 - id: notificationNewReply
   translation: Вы получили это письмо, потому что включили емэйл-уведомления о новых ответах на ваши комментарии.
-- id: notWillingToLogin
-  translation: Неохота регистрироваться? Комментируйте без создания аккаунта.
+- id: notWillingToSignup
+  translation: Неохота регистрироваться? Комментируйте без создания аккаунта
 - id: pageIsReadonly
   translation: Комментарии на этой странице заблокированы, добавление комментариев недоступно.
 - id: pendingModeration

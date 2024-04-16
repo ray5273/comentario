@@ -62,94 +62,77 @@ export class LoginDialog extends Dialog {
     }
 
     override renderContent(): Wrap<any> {
-        const container = UIToolkit.div();
-        let hasSections = false;
+        const sections: Wrap<any>[] = [];
 
-        // SSO auth
-        if (this.pageInfo.authSso) {
-            container.append(
+        // SSO/OAuth buttons
+        if (this.pageInfo.authSso || this.pageInfo.idps?.length) {
+            sections.push(
                 // Subtitle
                 UIToolkit.div('dialog-centered')
-                    .inner(`${this.t('loginViaSso')} ${this.pageInfo.ssoUrl?.replace(/^.+:\/\/([^/]+).*$/, '$1')}`),
-                // SSO button
-                UIToolkit.div('oauth-buttons')
-                    .append(UIToolkit.button(this.t('actionSso'), () => this.dismissWith(LoginChoice.federatedAuth, 'sso'), 'btn-sso')));
-            hasSections = true;
-        }
-
-        // Add OAuth buttons, if applicable
-        if (this.pageInfo.idps?.length) {
-            container.append(
-                // Separator
-                hasSections && Wrap.new('hr'),
-                // Subtitle
-                UIToolkit.div('dialog-centered').inner(this.t('loginViaSocial')),
-                // OAuth buttons
-                UIToolkit.div('oauth-buttons')
+                    .inner(this.t('loginWith'))
                     .append(
-                        ...this.pageInfo.idps.map(idp =>
-                            UIToolkit.button(idp.name, () => this.dismissWith(LoginChoice.federatedAuth, idp.id), `btn-${idp.id}`))));
-            hasSections = true;
+                        UIToolkit.div('oauth-buttons')
+                            .append(
+                                // SSO button
+                                this.pageInfo.authSso &&
+                                    UIToolkit.button(this.t('actionSso'), () => this.dismissWith(LoginChoice.federatedAuth, 'sso'), 'btn-sso'),
+                                // OAuth buttons
+                                ...this.pageInfo.idps?.map(idp =>
+                                    UIToolkit.button(idp.name, () => this.dismissWith(LoginChoice.federatedAuth, idp.id), `btn-${idp.id}`)) ?? [])));
         }
 
         // If there's a local login option, create a login form
         if (this.pageInfo.authLocal) {
             // Create inputs
-            this._email = UIToolkit.input('email',    'email',    this.t('fieldEmail'),    'email',            true).attr({maxlength: '254'});
+            this._email = UIToolkit.input('email',    'email',    'email@example.com',     'email',            true).attr({maxlength: '254'});
             this._pwd   = UIToolkit.input('password', 'password', this.t('fieldPassword'), 'current-password', true).attr({maxlength: '63'});
 
             // Add a form with the inputs to the dialog
-            UIToolkit.form(() => this.dismiss(true), () => this.dismiss())
-                .id('login-form')
-                .appendTo(container)
-                .append(
-                    // Separator
-                    hasSections && Wrap.new('hr'),
-                    // Subtitle
-                    UIToolkit.div('dialog-centered').inner(this.t('loginViaLocalAuth')),
-                    // Email
-                    UIToolkit.div('input-group').append(this._email),
-                    // Password
-                    UIToolkit.div('input-group').append(this._pwd, UIToolkit.submit(this.t('actionLogIn'), true)),
-                    // Forgot password link
-                    UIToolkit.div('dialog-centered')
-                        .append(
-                            UIToolkit.a(this.t('forgotPasswordLink'), `${this.baseUrl}/en/auth/forgotPassword`)
-                                .append(UIToolkit.icon('newTab').classes('ms-1'))));
-            hasSections = true;
+            sections.push(
+                UIToolkit.form(() => this.dismiss(true), () => this.dismiss())
+                    .id('login-form')
+                    .append(
+                        // Subtitle
+                        UIToolkit.div('dialog-centered').inner(this.t('loginViaLocalAuth')),
+                        // Email
+                        UIToolkit.div('input-group').append(this._email),
+                        // Password
+                        UIToolkit.div('input-group').append(this._pwd, UIToolkit.submit(this.t('actionLogIn'), true)),
+                        // Forgot password link
+                        UIToolkit.div('dialog-centered')
+                            .append(
+                                UIToolkit.a(this.t('forgotPasswordLink'), `${this.baseUrl}/en/auth/forgotPassword`)
+                                    .append(UIToolkit.icon('newTab').classes('ms-1')))));
+        }
+
+        // Signup
+        if (this.pageInfo.localSignupEnabled) {
+            sections.push(
+                UIToolkit.div('dialog-centered')
+                    .inner(this.t('noAccountYet'))
+                    .append(UIToolkit.button(this.t('actionSignUpLink'), () => this.dismissWith(LoginChoice.signup), 'btn-secondary', 'ms-2')));
         }
 
         // Unregistered commenting
         if (this.pageInfo.authAnonymous) {
             // Put the input on another form to allow submission with Enter/Ctrl+Enter
-            UIToolkit.form(() => this.dismissWith(LoginChoice.unregistered), () => this.dismiss())
-                .id('unregistered-form')
-                .appendTo(container)
-                .append(
-                    // Separator
-                    hasSections && Wrap.new('hr'),
-                    // Unregistered commenting text
-                    UIToolkit.div('dialog-centered').inner(this.t('notWillingToLogin')),
-                    // Commenter name
-                    UIToolkit.div('input-group')
-                        .append(
-                            this._userName = UIToolkit.input('userName', 'text', this.t('fieldYourNameOptional'), 'name', false)
-                                .attr({maxlength: '63'}),
-                            UIToolkit.submit(this.t('actionCommentUnreg'), true)));
-            hasSections = true;
+            sections.push(
+                UIToolkit.form(() => this.dismissWith(LoginChoice.unregistered), () => this.dismiss())
+                    .id('unregistered-form')
+                    .append(
+                        // Unregistered commenting text
+                        UIToolkit.div('dialog-centered').inner(this.t('notWillingToSignup')),
+                        // Commenter name
+                        UIToolkit.div('input-group')
+                            .append(
+                                this._userName = UIToolkit.input('userName', 'text', this.t('fieldYourNameOptional'), 'name', false)
+                                    .attr({maxlength: '63'}),
+                                UIToolkit.submit(this.t('actionCommentUnreg'), true))));
         }
 
-        // Signup
-        if (this.pageInfo.localSignupEnabled) {
-            container.append(
-                // Separator
-                hasSections && Wrap.new('hr'),
-                // Signup text
-                UIToolkit.div('dialog-centered')
-                    .inner(this.t('noAccountYet'))
-                    // Signup button
-                    .append(UIToolkit.button(this.t('actionSignUpLink'), () => this.dismissWith(LoginChoice.signup), 'btn-secondary', 'ms-2')));
-        }
+        // Add section elements, all separated by an <hr>
+        const container = UIToolkit.div();
+        sections.forEach((w, i) => container.append(i > 0 && Wrap.new('hr'), w));
         return container;
     }
 

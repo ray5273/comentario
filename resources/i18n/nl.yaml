@@ -124,8 +124,6 @@
   translation: Onbekende fout
 - id: errorUnknownHost
   translation: Dit domein is niet geregistreerd in Comentario
-- id: fieldEmail
-  translation: E-mailadres
 - id: fieldModNotifications
   translation: Moderator-notificaties
 - id: fieldPassword
@@ -146,10 +144,8 @@
   translation: Als je dit niet hebt gedaan, negeer dan deze e-mail.
 - id: loginViaLocalAuth
   translation: Log in met je e-mailadres en wachtwoord
-- id: loginViaSocial
-  translation: Ga verder met social login
-- id: loginViaSso
-  translation: Log in via
+- id: loginWith
+  translation: Log in met
 - id: newComment
   translation: Nieuw comment
 - id: newCommentOn
@@ -162,8 +158,8 @@
   translation: Je hebt deze e-mail ontvangen omdat de domeineigenaar ervoor heeft gekozen moderators per e-mail op de hoogte te stellen van comments die nog gemodereerd moeten worden.
 - id: notificationNewReply
   translation: Je hebt deze e-mail ontvangen omdat je ervoor hebt gekozen om e-mailnotificaties te ontvangen voor reacties op comments.
-- id: notWillingToLogin
-  translation: Wil je niet inloggen? Je kunt reageren zonder te registreren.
+- id: notWillingToSignup
+  translation: Wil je je niet aanmelden? Je kunt reageren zonder te registreren
 - id: pageIsReadonly
   translation: Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.
 - id: pendingModeration

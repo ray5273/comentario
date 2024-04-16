@@ -40,7 +40,7 @@ export class SignupDialog extends Dialog {
 
     override renderContent(): Wrap<any> {
         // Create inputs
-        this._email   = UIToolkit.input('email',    'email',    this.t('fieldEmail'),      'email',            true).attr({minlength: '6', maxlength: '254'});
+        this._email   = UIToolkit.input('email',    'email',    'email@example.com',       'email',            true).attr({minlength: '6', maxlength: '254'});
         this._name    = UIToolkit.input('name',     'text',     this.t('fieldRealName'),   'name',             true).attr({pattern: '^.{2,63}$', maxlength: '63'});
         this._pwd     = UIToolkit.input('password', 'password', this.t('fieldPassword'),   'current-password', true).attr({pattern: '^(?=.*[a-z])(?=.*[A-Z])(?=.*[\\d\\W]).{8,63}$', maxlength: '63'});
         this._website = UIToolkit.input('website',  'url',      this.t('fieldWebsiteOpt'), 'url')                   .attr({minlength: '8', maxlength: '2083'});

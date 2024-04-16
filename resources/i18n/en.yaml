@@ -127,8 +127,6 @@
   translation: Unknown error
 - id: errorUnknownHost
   translation: This domain is not registered in Comentario
-- id: fieldEmail
-  translation: Email
 - id: fieldModNotifications
   translation: Moderator notifications
 - id: fieldPassword
@@ -149,10 +147,8 @@
   translation: If you didn't do this, please ignore this email.
 - id: loginViaLocalAuth
   translation: Log in with your email and password
-- id: loginViaSocial
-  translation: Proceed with social login
-- id: loginViaSso
-  translation: Log in via
+- id: loginWith
+  translation: Log in with
 - id: newComment
   translation: New comment
 - id: newCommentOn
@@ -165,8 +161,8 @@
   translation: You've received this email because the domain owner chose to notify moderators of comments pending moderation by email.
 - id: notificationNewReply
   translation: You've received this email because you opted in to receive email notifications for comment replies.
-- id: notWillingToLogin
-  translation: Not willing to login? You can comment without registration.
+- id: notWillingToSignup
+  translation: Not willing to sign up? You can comment without registration
 - id: pageIsReadonly
   translation: This thread is locked. You cannot add new comments.
 - id: pendingModeration

@@ -44,16 +44,14 @@ context('Login dialog', () => {
         it('shows no login button when disabled', () => {
             cy.backendPatchDomain(DOMAINS.localhost.id, {authSso: false});
             openLoginDlg();
-            cy.get('@loginDialog').contains('Log in via localhost:8080').should('not.exist');
-            cy.get('@loginDialog').contains('button', 'Single Sign-On') .should('not.exist');
+            cy.get('@loginDialog').contains('button', 'Single Sign-On').should('not.exist');
         });
 
         context('when initially enabled', () => {
 
             beforeEach(() => {
                 openLoginDlg();
-                cy.get('@loginDialog').contains('Log in via localhost:8080').next()
-                    .contains('button', 'Single Sign-On').as('btnSso').should('be.visible').and('be.enabled');
+                cy.get('@loginDialog').contains('button', 'Single Sign-On').as('btnSso').should('be.visible').and('be.enabled');
             });
 
             it('allows to login new user', () => {
@@ -100,22 +98,21 @@ context('Login dialog', () => {
         it('shows no login buttons when no IdP enabled', () => {
             cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
             openLoginDlg();
-            cy.get('@loginDialog').contains('Proceed with social login').should('not.exist');
             knownIdps.forEach(idp => cy.get('@loginDialog').contains('button', idp.label).should('not.exist'));
         });
 
         it('shows login buttons for all enabled IdPs', () => {
             openLoginDlg();
-            cy.get('@loginDialog').contains('Proceed with social login').next()
-                .texts('button').should('arrayMatch', knownIdps.map(idp => idp.label));
+            cy.get('@loginDialog').texts('.comentario-oauth-buttons button')
+                .should('arrayMatch', ['Single Sign-On', ...knownIdps.map(idp => idp.label)]);
         });
 
         knownIdps.forEach(idp =>
             it(`shows login button for ${idp.label} only`, () => {
                 cy.backendUpdateDomainIdps(DOMAINS.localhost.id, [idp.id]);
                 openLoginDlg();
-                cy.get('@loginDialog').contains('Proceed with social login').next()
-                    .texts('button').should('arrayMatch', [idp.label]);
+                cy.get('@loginDialog').texts('.comentario-oauth-buttons button')
+                    .should('arrayMatch', ['Single Sign-On', idp.label]);
             }));
     });
 
