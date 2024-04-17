@@ -20,7 +20,7 @@ export class LocalConfig {
         return this._unregisteredName;
     }
 
-    setUnregisteredCommenting(b: boolean, name: string | undefined) {
+    setUnregisteredCommenting(b: boolean, name?: string) {
         if (this._unregisteredCommenting !== b || this._unregisteredName !== name) {
             this._unregisteredCommenting = b;
             this._unregisteredName       = b ? name : undefined;

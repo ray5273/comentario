@@ -84,8 +84,9 @@ export class EmbedUtils {
      * @param parentId Parent comment ID. If undefined, a root comment is created.
      * @param markdown Markdown text of the comment.
      * @param clickUnregistered Whether the user will be given an option to submit the comment without registration in the Login dialog.
+     * @param authorName Optional name of the (unregistered) author in case clickUnregistered is true.
      */
-    static addComment(parentId: string | undefined, markdown: string, clickUnregistered: boolean) {
+    static addComment(parentId: string | undefined, markdown: string, clickUnregistered: boolean, authorName?: string) {
         // Focus the add host or click the reply button
         if (parentId) {
             this.commentToolbarButton(parentId, 'Reply').click();
@@ -106,8 +107,10 @@ export class EmbedUtils {
 
         // If we're to comment unregistered, the Login dialog must appear
         if (clickUnregistered) {
-            cy.get('.comentario-root .comentario-dialog').should('be.visible')
-                .find('#comentario-unregistered-form button[type=submit]').click();
+            cy.get('.comentario-root .comentario-dialog #comentario-unregistered-form').as('addCommentUnregForm')
+                .should('be.visible');
+            cy.get('@addCommentUnregForm').find('input[name=userName]').setValue(authorName ?? '');
+            cy.get('@addCommentUnregForm').find('button[type=submit]').click();
         }
     }
 }

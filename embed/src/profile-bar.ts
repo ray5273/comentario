@@ -57,19 +57,23 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a login dialog and return a promise that's resolved when the dialog is closed.
      */
     async loginUser(): Promise<void> {
+        if (!this._pageInfo?.hasAuthMethod(true)) {
+            return Promise.reject();
+        }
+
         // If there's only one external auth method available, use it right away
-        if (!this._pageInfo?.authLocal && !this._pageInfo?.authAnonymous) {
-            switch (this._pageInfo?.idps?.length || 0) {
+        if (!this._pageInfo.authLocal && !this._pageInfo.authAnonymous) {
+            switch (this._pageInfo.idps?.length || 0) {
                 // If only SSO is enabled: trigger an SSO login
                 case 0:
-                    if (this._pageInfo?.authSso) {
+                    if (this._pageInfo.authSso) {
                         return this.onLogin({choice: LoginChoice.federatedAuth, idp: 'sso'});
                     }
                     break;
 
                 // A single federated IdP is enabled: turn to that IdP
                 case 1:
-                    return this.onLogin({choice: LoginChoice.federatedAuth, idp: this._pageInfo!.idps![0].id});
+                    return this.onLogin({choice: LoginChoice.federatedAuth, idp: this._pageInfo.idps![0].id});
             }
         }
 
@@ -79,7 +83,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             this.root,
             {ref: this.btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
-            this._pageInfo!);
+            this._pageInfo);
 
         // IF the dialog is confirmed, either switch to signup or execute a login, depending on the user's choice
         if (dlg.confirmed) {
@@ -126,7 +130,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         if (this._principal) {
             const isMod = this._principal.isSuperuser || this._principal.isOwner || this._principal.isModerator;
             const isDomainRO = this._pageInfo?.isDomainReadonly;
-            const isPageRO = this._pageInfo?.isPageReadonly;
+            const isPageRO   = this._pageInfo?.isPageReadonly;
             this.append(
                 // Commenter avatar and name
                 UIToolkit.div('toolbar-section')
@@ -158,8 +162,8 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             return;
         }
 
-        // User is unauthenticated. Add a login button, but only if there's an auth method available
-        if (this._pageInfo?.authLocal || (this._pageInfo?.authSso && !this._pageInfo.ssoNonInteractive) || this._pageInfo?.idps?.length) {
+        // User is unauthenticated. Add a Sign in button, but only if there's an interactive auth method available
+        if (this._pageInfo?.hasAuthMethod(true)) {
             this.append(
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
                 UIToolkit.div(),

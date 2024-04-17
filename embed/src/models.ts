@@ -71,6 +71,7 @@ export interface Comment {
 export type Commenter = User;
 
 /** Information about a page displaying comments */
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
 export interface PageInfo {
     /** Base Documentation URL */
     readonly baseDocsUrl: string;
@@ -132,6 +133,35 @@ export interface PageInfo {
     readonly markdownLinksEnabled: boolean;
     /** Whether tables are enabled in Markdown */
     readonly markdownTablesEnabled: boolean;
+}
+
+// eslint-disable-next-line @typescript-eslint/no-unsafe-declaration-merging
+export class PageInfo {
+
+    constructor(src: PageInfo) {
+        Object.assign(this, src);
+    }
+
+    /** Whether the page is read-only. */
+    get isReadonly(): boolean {
+        return this.isDomainReadonly || this.isPageReadonly;
+    }
+
+    /**
+     * Whether there's any auth method enabled.
+     * @param interactiveOnly Whether only interactive login methods are in scope.
+     */
+    hasAuthMethod(interactiveOnly: boolean): boolean {
+        return this.authAnonymous ||
+            this.authLocal ||
+            this.authSso && !(interactiveOnly && this.ssoNonInteractive) ||
+            !!this.idps?.length;
+    }
+
+    /** Whether non-interactive SSO is enabled. */
+    get hasNonInteractiveSso(): boolean {
+        return this.authSso && this.ssoNonInteractive;
+    }
 }
 
 /** Commenter users mapped by their IDs. There will be no entry for a commenter that corresponds to a deleted user. */

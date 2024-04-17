@@ -152,17 +152,6 @@ export class Comentario extends HTMLElement {
     }
 
     /**
-     * Whether there's any auth method available on the current page.
-     */
-    get authAvailable(): boolean {
-        return !!(
-            this.pageInfo?.authAnonymous ||
-            this.pageInfo?.authLocal ||
-            this.pageInfo?.authSso ||
-            this.pageInfo?.idps?.length);
-    }
-
-    /**
      * The main worker routine of Comentario
      * @return Promise that resolves as soon as Comentario setup is complete
      */
@@ -273,7 +262,7 @@ export class Comentario extends HTMLElement {
         }
 
         // Verify non-interactive SSO is enabled
-        if (!this.pageInfo.authSso || !this.pageInfo.ssoNonInteractive) {
+        if (!this.pageInfo.hasNonInteractiveSso) {
             return this.reject('Non-interactive SSO is not enabled.');
         }
 
@@ -438,7 +427,7 @@ export class Comentario extends HTMLElement {
 
         // If the user is logged in, remove any stored unregistered commenting status
         if (this.principal) {
-            this.localConfig.setUnregisteredCommenting(false, undefined);
+            this.localConfig.setUnregisteredCommenting(false);
         }
 
         // Update the profile bar
@@ -454,12 +443,12 @@ export class Comentario extends HTMLElement {
         this.commentsArea = undefined;
 
         // If the domain or the page are readonly, add a corresponding message
-        if (this.pageInfo?.isDomainReadonly || this.pageInfo?.isPageReadonly) {
+        if (this.pageInfo?.isReadonly) {
             this.mainArea!.append(
                 UIToolkit.div('page-moderation-notice').inner(this.i18n.t('pageIsReadonly')));
 
         // If no auth method available, also add a message
-        } else if (!this.authAvailable) {
+        } else if (!this.pageInfo?.hasAuthMethod(false)) {
             this.mainArea!.append(
                 UIToolkit.div('page-moderation-notice').inner(this.i18n.t('domainAuthUnconfigured')));
 
@@ -663,7 +652,7 @@ export class Comentario extends HTMLElement {
         const url = this.apiService.getOAuthInitUrl(idp, this.location.host, token);
 
         // If non-interactive SSO is triggered
-        if (idp === 'sso' && this.pageInfo?.ssoNonInteractive) {
+        if (idp === 'sso' && this.pageInfo?.hasNonInteractiveSso) {
             await this.loginSsoNonInteractive(url);
 
         } else {
@@ -772,29 +761,19 @@ export class Comentario extends HTMLElement {
             r = await this.apiService.commentList(this.location.host, this.pagePath);
 
             // Store page- and backend-related properties
-            this.pageInfo = r.pageInfo;
+            this.pageInfo = new PageInfo(r.pageInfo);
             if (!this.localConfig.commentSort) {
-                this.localConfig.commentSort = r.pageInfo.defaultSort;
+                this.localConfig.commentSort = this.pageInfo.defaultSort;
             }
 
             // Configure the page in the profile bar
-            this.profileBar!.pageInfo = r.pageInfo;
+            this.profileBar!.pageInfo = this.pageInfo;
 
         } catch (err) {
             // Remove the page from the profile bar on error: this will disable login
             this.profileBar!.pageInfo = undefined;
             throw err;
         }
-
-        // Update the unregistered commenting status
-        const unreg =
-            // User cannot be authenticated
-            !this.principal && (
-                // True if anonymous is the only option
-                (!this.pageInfo!.authLocal && (!this.pageInfo!.authSso || this.pageInfo.ssoNonInteractive) && !this.pageInfo!.idps?.length) ||
-                // Otherwise restore the user choice
-                (this.pageInfo!.authAnonymous && this.localConfig.unregisteredCommenting === true));
-        this.localConfig.setUnregisteredCommenting(unreg, this.localConfig.unregisteredName);
 
         // Rebuild the parent map
         this.parentMap.refill(r.comments);
@@ -808,7 +787,7 @@ export class Comentario extends HTMLElement {
      */
     private async pageReadonlyToggle(): Promise<void> {
         // Run the status toggle with the backend
-        await this.apiService.pageUpdate(this.pageInfo!.pageId, !this.pageInfo?.isPageReadonly);
+        await this.apiService.pageUpdate(this.pageInfo!.pageId, !this.pageInfo!.isPageReadonly);
 
         // Reload the page to reflect the state change
         return this.reload();
@@ -924,7 +903,7 @@ export class Comentario extends HTMLElement {
             commenters:         this.commenters,
             principal:          this.principal,
             commentSort:        this.localConfig.commentSort || 'ta',
-            canAddComments:     !this.pageInfo?.isDomainReadonly && !this.pageInfo?.isPageReadonly && this.authAvailable,
+            canAddComments:     !this.pageInfo?.isReadonly && this.pageInfo!.hasAuthMethod(false),
             ownCommentDeletion: !!this.pageInfo?.commentDeletionAuthor,
             modCommentDeletion: !!this.pageInfo?.commentDeletionModerator,
             ownCommentEditing:  !!this.pageInfo?.commentEditingAuthor,

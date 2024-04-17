@@ -5,9 +5,9 @@ context('Comment Editor', () => {
 
     context('comment editing', () => {
 
-        const addUnregisteredComment = (clickUnregistered: boolean) => {
+        const addUnregisteredComment = (authorName?: string) => {
             // Submit a root comment. First time a Login dialog may appear
-            EmbedUtils.addComment(undefined, 'This is also a root', clickUnregistered);
+            EmbedUtils.addComment(undefined, 'This is also a root', true, authorName);
 
             // New comment is added, in the Pending state since anonymous comments are to be moderated
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
@@ -19,7 +19,7 @@ context('Comment Editor', () => {
                   score: 0
                   sticky: true
                   pending: false
-                - author: Anonymous
+                - author: ${authorName ?? 'Anonymous'}
                   subtitle: just now
                   html: <p>This is also a root</p>
                   score: 0
@@ -28,7 +28,7 @@ context('Comment Editor', () => {
                 `);
 
             // Add a reply: no login dialog will appear second time
-            EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', false);
+            EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply here!', false, authorName);
 
             // New comment is added, also in the Pending state
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
@@ -41,13 +41,13 @@ context('Comment Editor', () => {
                   sticky: true
                   pending: false
                   children:
-                  - author: Anonymous
+                  - author: ${authorName ?? 'Anonymous'}
                     subtitle: just now
                     html: <p>A reply here!</p>
                     score: 0
                     sticky: false
                     pending: true
-                - author: Anonymous
+                - author: ${authorName ?? 'Anonymous'}
                   subtitle: just now
                   html: <p>This is also a root</p>
                   score: 0
@@ -102,26 +102,68 @@ context('Comment Editor', () => {
             cy.commentTree().should('have.length', 1);
         });
 
-        it('submits comment without registration by choosing option in Login dialog', () => {
-            // Visit the page as anonymous
-            cy.testSiteVisit(TEST_PATHS.comments);
-            EmbedUtils.makeAliases({anonymous: true});
+        context('without registration', () => {
 
-            // Add comment
-            addUnregisteredComment(true);
-        });
+            it('submits comment anonymously', () => {
+                cy.testSiteVisit(TEST_PATHS.comments);
+                EmbedUtils.makeAliases({anonymous: true});
+                addUnregisteredComment();
+            });
 
-        it('submits comment without registration directly when only unregistered is enabled', () => {
-            // Allow only anonymous comments
-            cy.backendPatchDomain(DOMAINS.localhost.id, {authLocal: false, authSso: false});
-            cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
+            it('submits comment with a name', () => {
+                cy.testSiteVisit(TEST_PATHS.comments);
+                EmbedUtils.makeAliases({anonymous: true});
+                addUnregisteredComment('Bambarbia Kirgudu');
+            });
 
-            // Visit the page as anonymous: there's no Login button
-            cy.testSiteVisit(TEST_PATHS.comments);
-            EmbedUtils.makeAliases({anonymous: true, login: false});
+            it('submits comment with a name when only unregistered is enabled', () => {
+                // Allow only anonymous comments
+                cy.backendPatchDomain(DOMAINS.localhost.id, {authLocal: false, authSso: false});
+                cy.backendUpdateDomainIdps(DOMAINS.localhost.id, []);
 
-            // Add comment
-            addUnregisteredComment(false);
+                // Visit the page as anonymous
+                cy.testSiteVisit(TEST_PATHS.comments);
+                EmbedUtils.makeAliases({anonymous: true});
+                addUnregisteredComment('Bambarbia Kirgudu');
+            });
+
+            it('allows to preview comment text', () => {
+                // Visit the page as anonymous
+                cy.testSiteVisit(TEST_PATHS.comments);
+                EmbedUtils.makeAliases({anonymous: true});
+
+                // Open editor and add text
+                const text = '## Apples and oranges\n\n' +
+                    '* Apples\n' +
+                    '* Oranges\n\n' +
+                    '```bash\n' +
+                    'echo "I\'m a code block"\n' +
+                    '```';
+                cy.get('.comentario-root .comentario-add-comment-host').focus();
+                cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+                cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(text);
+
+                // Click on "Preview"
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview').as('previewBtn').click()
+                    .should('have.class', 'comentario-btn-active');
+
+                // The textarea is gone and a preview pane is visible
+                cy.get('@textarea').should('not.be.visible');
+                cy.get('@editor').find('.comentario-comment-editor-preview').as('preview')
+                    .should('be.visible')
+                    .invoke('html').should('eq',
+                    '<h2>Apples and oranges</h2>\n' +
+                    '<ul>\n' +
+                    '<li>Apples</li>\n' +
+                    '<li>Oranges</li>\n' +
+                    '</ul>\n' +
+                    '<pre><code>echo "I\'m a code block"\n</code></pre>\n');
+
+                // Deactivate the preview: the editor's back and the preview gone
+                cy.get('@previewBtn').click().should('not.have.class', 'comentario-btn-active');
+                cy.get('@preview') .should('not.be.visible');
+                cy.get('@textarea').should('be.visible').and('be.focused').and('have.value', text);
+            });
         });
 
         it('submits non-anonymous comment', () => {
@@ -177,44 +219,6 @@ context('Comment Editor', () => {
                   sticky: false
                   pending: false
                 `);
-        });
-
-        it('allows to preview comment text', () => {
-            // Visit the page as anonymous
-            cy.testSiteVisit(TEST_PATHS.comments);
-            EmbedUtils.makeAliases({anonymous: true});
-
-            // Open editor and add text
-            const text = '## Apples and oranges\n\n' +
-                '* Apples\n' +
-                '* Oranges\n\n' +
-                '```bash\n' +
-                'echo "I\'m a code block"\n' +
-                '```';
-            cy.get('.comentario-root .comentario-add-comment-host').focus();
-            cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
-            cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(text);
-
-            // Click on "Preview"
-            cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview').as('previewBtn').click()
-                .should('have.class', 'comentario-btn-active');
-
-            // The textarea is gone and a preview pane is visible
-            cy.get('@textarea').should('not.be.visible');
-            cy.get('@editor').find('.comentario-comment-editor-preview').as('preview')
-                .should('be.visible')
-                .invoke('html').should('eq',
-                    '<h2>Apples and oranges</h2>\n' +
-                    '<ul>\n' +
-                    '<li>Apples</li>\n' +
-                    '<li>Oranges</li>\n' +
-                    '</ul>\n' +
-                    '<pre><code>echo "I\'m a code block"\n</code></pre>\n');
-
-            // Deactivate the preview: the editor's back and the preview gone
-            cy.get('@previewBtn').click().should('not.have.class', 'comentario-btn-active');
-            cy.get('@preview') .should('not.be.visible');
-            cy.get('@textarea').should('be.visible').and('be.focused').and('have.value', text);
         });
     });
 
