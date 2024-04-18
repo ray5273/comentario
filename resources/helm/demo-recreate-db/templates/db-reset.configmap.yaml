@@ -143,18 +143,19 @@ data:
         ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '39a71854-bcfd-42d5-af62-5e931d7a72d8'),
         ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '0ae8c474-ff4c-4950-baf3-975c370dc205'),
         ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '60bfb728-340e-44d5-9e53-149f7d2f6e6a'));
-    insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
+    insert into cm_domains_users(domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, notify_comment_status, ts_created)
         values
-            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '39a71854-bcfd-42d5-af62-5e931d7a72d8', true,   true,   true,  false, false, '2023-01-17 17:55:47'),
-            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '0ae8c474-ff4c-4950-baf3-975c370dc205', false,  true,   true,  false, false, '2023-10-27 08:29:37'),
-            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '60bfb728-340e-44d5-9e53-149f7d2f6e6a', false,  false,  true,  false, false, '2023-10-27 08:29:44')
+            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '39a71854-bcfd-42d5-af62-5e931d7a72d8', true,   true,   true,  false, false, false, '2023-01-17 17:55:47'),
+            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '0ae8c474-ff4c-4950-baf3-975c370dc205', false,  true,   true,  false, false, false, '2023-10-27 08:29:37'),
+            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', '60bfb728-340e-44d5-9e53-149f7d2f6e6a', false,  false,  true,  false, false, false, '2023-10-27 08:29:44')
         on conflict (domain_id, user_id) do update
             set
-                is_owner         = excluded.is_owner,
-                is_moderator     = excluded.is_moderator,
-                is_commenter     = excluded.is_commenter,
-                notify_replies   = excluded.notify_replies,
-                notify_moderator = excluded.notify_moderator;
+                is_owner              = excluded.is_owner,
+                is_moderator          = excluded.is_moderator,
+                is_commenter          = excluded.is_commenter,
+                notify_replies        = excluded.notify_replies,
+                notify_moderator      = excluded.notify_moderator,
+                notify_comment_status = excluded.notify_comment_status;
 
     -- Remove all pages except the root one
     delete from cm_domain_pages where id not in ('f88fffb2-c354-494b-94f4-aae1a84653c3', '86c5e9b9-c4c2-4c26-accc-0f221da08ae4', '97c872de-cfbb-4d9c-a41c-a5840559ec44');

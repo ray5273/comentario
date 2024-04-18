@@ -55,7 +55,7 @@ context('Forgot password', () => {
 
             // Verify the email's headers
             const m = mails[0];
-            expect(m.headers['Subject']).eq('Comentario: Reset your password');
+            expect(m.headers['Subject']).eq('Comentario: Reset Your Password');
             expect(m.headers['From'])   .eq('noreply@localhost');
             expect(m.headers['To'])     .eq(USERS.commenterOne.email);
 

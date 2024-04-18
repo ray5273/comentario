@@ -355,22 +355,23 @@ func (u *User) ToDTO() *models.User {
 // commenter authentication; should be nil for UI authentication
 func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
 	return &models.Principal{
-		ColourIndex:     u.ColourIndex(),
-		Email:           strfmt.Email(u.Email),
-		HasAvatar:       u.HasAvatar,
-		ID:              strfmt.UUID(u.ID.String()),
-		IsCommenter:     du.IsACommenter(),
-		IsConfirmed:     u.Confirmed,
-		IsLocal:         u.IsLocal(),
-		IsModerator:     du.CanModerate(),
-		IsOwner:         du.IsAnOwner(),
-		IsSso:           u.FederatedSSO,
-		IsSuperuser:     u.IsSuperuser,
-		LangID:          u.LangID,
-		Name:            u.Name,
-		NotifyModerator: du != nil && du.NotifyModerator,
-		NotifyReplies:   du != nil && du.NotifyReplies,
-		WebsiteURL:      strfmt.URI(u.WebsiteURL),
+		ColourIndex:         u.ColourIndex(),
+		Email:               strfmt.Email(u.Email),
+		HasAvatar:           u.HasAvatar,
+		ID:                  strfmt.UUID(u.ID.String()),
+		IsCommenter:         du.IsACommenter(),
+		IsConfirmed:         u.Confirmed,
+		IsLocal:             u.IsLocal(),
+		IsModerator:         du.CanModerate(),
+		IsOwner:             du.IsAnOwner(),
+		IsSso:               u.FederatedSSO,
+		IsSuperuser:         u.IsSuperuser,
+		LangID:              u.LangID,
+		Name:                u.Name,
+		NotifyCommentStatus: du != nil && du.NotifyCommentStatus,
+		NotifyModerator:     du != nil && du.NotifyModerator,
+		NotifyReplies:       du != nil && du.NotifyReplies,
+		WebsiteURL:          strfmt.URI(u.WebsiteURL),
 	}
 }
 
@@ -796,14 +797,15 @@ func (d *Domain) ToDTO() *models.Domain {
 
 // DomainUser represents user configuration in a specific domain
 type DomainUser struct {
-	DomainID        uuid.UUID // ID of the domain
-	UserID          uuid.UUID // ID of the user
-	IsOwner         bool      // Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
-	IsModerator     bool      // Whether the user is a moderator of the domain (assumes is_commenter)
-	IsCommenter     bool      // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
-	NotifyReplies   bool      // Whether the user is to be notified about replies to their comments
-	NotifyModerator bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
-	CreatedTime     time.Time // When the domain user was created
+	DomainID            uuid.UUID // ID of the domain
+	UserID              uuid.UUID // ID of the user
+	IsOwner             bool      // Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
+	IsModerator         bool      // Whether the user is a moderator of the domain (assumes is_commenter)
+	IsCommenter         bool      // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+	NotifyReplies       bool      // Whether the user is to be notified about replies to their comments
+	NotifyModerator     bool      // Whether the user is to receive moderator notifications (only when is_moderator is true)
+	NotifyCommentStatus bool      // Whether the user is to be notified about status changes (approved/rejected) of their comments
+	CreatedTime         time.Time // When the domain user was created
 }
 
 // AgeInDays returns the number of full days passed since the user was created. Can be called against a nil receiver
@@ -852,14 +854,15 @@ func (du *DomainUser) ToDTO() *models.DomainUser {
 		return nil
 	}
 	return &models.DomainUser{
-		CreatedTime:     strfmt.DateTime(du.CreatedTime),
-		DomainID:        strfmt.UUID(du.DomainID.String()),
-		IsCommenter:     du.IsCommenter,
-		IsModerator:     du.IsModerator,
-		IsOwner:         du.IsOwner,
-		NotifyModerator: du.NotifyModerator,
-		NotifyReplies:   du.NotifyReplies,
-		UserID:          strfmt.UUID(du.UserID.String()),
+		CreatedTime:         strfmt.DateTime(du.CreatedTime),
+		DomainID:            strfmt.UUID(du.DomainID.String()),
+		IsCommenter:         du.IsCommenter,
+		IsModerator:         du.IsModerator,
+		IsOwner:             du.IsOwner,
+		NotifyCommentStatus: du.NotifyCommentStatus,
+		NotifyModerator:     du.NotifyModerator,
+		NotifyReplies:       du.NotifyReplies,
+		UserID:              strfmt.UUID(du.UserID.String()),
 	}
 }
 

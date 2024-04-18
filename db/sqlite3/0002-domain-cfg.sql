@@ -95,3 +95,8 @@ create index idx_domain_page_views_ts_created on cm_domain_page_views(ts_created
 insert into cm_domain_page_views(page_id, ts_created, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device)
     select page_id, ts_created, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device
         from temp_cm_domain_page_views;
+
+------------------------------------------------------------------------------------------------------------------------
+-- Add status notification setting to domain users
+------------------------------------------------------------------------------------------------------------------------
+alter table cm_domains_users add column notify_comment_status boolean default true not null; -- Whether the user is to be notified about status changes (approved/rejected) of their comments

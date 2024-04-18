@@ -166,17 +166,17 @@ values
     ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'linkedin'),
     ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'twitter');
 
-insert into cm_domains_users (domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, ts_created)
+insert into cm_domains_users (domain_id, user_id, is_owner, is_moderator, is_commenter, notify_replies, notify_moderator, notify_comment_status, ts_created)
 values
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866edc4867', true,  true,  true,  true, true, SEED_NOW('-1000000810 seconds')),
-    ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '2af9ecd2-a32a-4332-8717-396e9af28639', true,  true,  true,  true, true, SEED_NOW('-300000800 seconds')),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, true,  true,  true, true, SEED_NOW('-300000790 seconds')),
-    ('0272e06c-1568-46c6-b973-e2f1dd5bf3cc', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true,  true, true, SEED_NOW('-300000780 seconds')),
-    ('6fcb3173-3a00-4aa5-8113-e39767b469a7', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, false, true, true, SEED_NOW('-200000770 seconds')),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, true,  true,  true, true, SEED_NOW('-100000760 seconds')),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, true,  true,  true, true, SEED_NOW('-100000750 seconds')),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true,  true, true, SEED_NOW('-100000740 seconds')),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'a7ab1d55-cfaa-4f26-a1a6-88cc4c6ce96d', false, false, false, true, true, SEED_NOW('-100000730 seconds'));
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '5787eece-7aa3-44d7-bbba-51866edc4867', true,  true,  true,  true, true, true, SEED_NOW('-1000000810 seconds')),
+    ('6c1be150-ea21-4ffd-b6ca-c18981d7d6eb', '2af9ecd2-a32a-4332-8717-396e9af28639', true,  true,  true,  true, true, true, SEED_NOW('-300000800 seconds')),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2af9ecd2-a32a-4332-8717-396e9af28639', false, true,  true,  true, true, true, SEED_NOW('-300000790 seconds')),
+    ('0272e06c-1568-46c6-b973-e2f1dd5bf3cc', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, true,  true, true, true, SEED_NOW('-300000780 seconds')),
+    ('6fcb3173-3a00-4aa5-8113-e39767b469a7', '2af9ecd2-a32a-4332-8717-396e9af28639', false, false, false, true, true, true, SEED_NOW('-200000770 seconds')),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '98732142-bc83-48e0-be92-f6dbd6976702', false, true,  true,  true, true, true, SEED_NOW('-100000760 seconds')),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', false, true,  true,  true, true, true, SEED_NOW('-100000750 seconds')),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, false, true,  true, true, true, SEED_NOW('-100000740 seconds')),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'a7ab1d55-cfaa-4f26-a1a6-88cc4c6ce96d', false, false, false, true, true, true, SEED_NOW('-100000730 seconds'));
 
 insert into cm_domain_pages (id, domain_id, path, title, is_readonly, ts_created, count_comments, count_views)
 values

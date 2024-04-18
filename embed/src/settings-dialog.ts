@@ -7,6 +7,7 @@ export class SettingsDialog extends Dialog {
 
     private _cbNotifyModerator?: Wrap<HTMLInputElement>;
     private _cbNotifyReplies?: Wrap<HTMLInputElement>;
+    private _cbNotifyCommentStatus?: Wrap<HTMLInputElement>;
 
     private constructor(
         t: TranslateFunc,
@@ -36,8 +37,9 @@ export class SettingsDialog extends Dialog {
      */
     get data(): UserSettings {
         return {
-            notifyModerator: !!this._cbNotifyModerator?.isChecked,
-            notifyReplies:   !!this._cbNotifyReplies?.isChecked,
+            notifyModerator:     !!this._cbNotifyModerator?.isChecked,
+            notifyReplies:       !!this._cbNotifyReplies?.isChecked,
+            notifyCommentStatus: !!this._cbNotifyCommentStatus?.isChecked,
         };
     }
 
@@ -62,7 +64,15 @@ export class SettingsDialog extends Dialog {
                                 .id('cb-notify-replies')
                                 .attr({type: 'checkbox'})
                                 .checked(this.principal.notifyReplies),
-                            Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner(this.t('fieldReplyNotifications')))),
+                            Wrap.new('label').attr({for: this._cbNotifyReplies.getAttr('id')}).inner(this.t('fieldReplyNotifications'))),
+                    // Comment status notifications checkbox
+                    UIToolkit.div('checkbox-container')
+                        .append(
+                            this._cbNotifyCommentStatus = Wrap.new('input')
+                                .id('cb-notify-comment-status')
+                                .attr({type: 'checkbox'})
+                                .checked(this.principal.notifyCommentStatus),
+                            Wrap.new('label').attr({for: this._cbNotifyCommentStatus.getAttr('id')}).inner(this.t('fieldComStatusNotifications')))),
                 // Submit button
                 UIToolkit.div('dialog-centered').append(UIToolkit.submit(this.t('actionSave'), false)),
                 // Edit profile link (non-SSO only)

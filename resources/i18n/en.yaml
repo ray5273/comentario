@@ -1,249 +1,129 @@
 # This is the default, English, message file for Comentario. It has to include every message ID in use, because it also
 # serves as fallback for every other language if a certain message isn't found there.
 
-- id: accountCreatedConfirmEmail
-  translation: Account is successfully created. Please check your email and click the confirmation link it contains.
-- id: actionAddComment
-  translation: Add Comment
-- id: actionApprove
-  translation: Approve
-- id: actionCancel
-  translation: Cancel
-- id: actionClose
-  translation: Close
-- id: actionCollapseChildren
-  translation: Collapse children
-- id: actionCommentUnreg
-  translation: Comment without registration
-- id: actionConfirmEmail
-  translation: Confirm Your Email
-- id: actionContext
-  translation: Context
-- id: actionDelete
-  translation: Delete
-- id: actionDownvote
-  translation: Downvote
-- id: actionEdit
-  translation: Edit
-- id: actionEditComentarioProfile
-  translation: Edit Comentario profile
-- id: actionExpandChildren
-  translation: Expand children
-- id: actionLogIn
-  translation: Log in
-- id: actionOk
-  translation: OK
-- id: actionPreview
-  translation: Preview
-- id: actionReject
-  translation: Reject
-- id: actionReply
-  translation: Reply
-- id: actionResetPassword
-  translation: Reset Your Password
-- id: actionRetry
-  translation: Retry
-- id: actionSave
-  translation: Save
-- id: actionSignIn
-  translation: Sign in
-- id: actionSignUp
-  translation: Sign up
-- id: actionSignUpLink
-  translation: Sign up here
-- id: actionSso
-  translation: Single Sign-On
-- id: actionSticky
-  translation: Sticky
-- id: actionUnsticky
-  translation: Unsticky
-- id: actionUnsubscribe
-  translation: Unsubscribe
-- id: actionUpvote
-  translation: Upvote
-- id: addCommentPlaceholder
-  translation: Add a comment
-- id: btnBold
-  translation: Bold
-- id: btnBulletList
-  translation: Bullet list
-- id: btnCode
-  translation: Code
-- id: btnImage
-  translation: Image
-- id: btnItalic
-  translation: Italic
-- id: btnLink
-  translation: Link
-- id: btnLock
-  translation: Lock
-- id: btnLogout
-  translation: Logout
-- id: btnMarkdownHelp
-  translation: Markdown help
-- id: btnNumberedList
-  translation: Numbered list
-- id: btnQuote
-  translation: Quote
-- id: btnSettings
-  translation: Settings
-- id: btnStrikethrough
-  translation: Strikethrough
-- id: btnTable
-  translation: Table
-- id: btnUnlock
-  translation: Unlock
-- id: clickButtonBelow
-  translation: To do that, please click the button below.
-- id: commentIsPending
-  translation: This comment is awaiting moderator approval.
-- id: commentIsRejected
-  translation: This comment was rejected because it's spam or inappropriate.
-- id: commentNotFound
-  translation: The comment you're looking for doesn't exist; possibly it was deleted.
-- id: commentScore
-  translation: Comment score
-- id: confirmCommentDeletion
-  translation: Are you sure you want to delete this comment?
-- id: confirmEmailAct
-  translation: If you wish to complete registration, please click the button below.
-- id: confirmEmailExplanation
-  translation: You've received this email because you (or someone else) registered this email address in our service.
-- id: confirmEmailRequest
-  translation: You recently registered a new Comentario account with this email address.
-- id: confirmYourEmail
-  translation: Confirm Your Email
-- id: dlgTitleConfirm
-  translation: Confirm
-- id: dlgTitleCreateAccount
-  translation: Create an account
-- id: dlgTitleLogIn
-  translation: Log in
-- id: dlgTitlePopupBlocked
-  translation: Popup blocked
-- id: dlgTitleUserSettings
-  translation: User settings
-- id: domainAuthUnconfigured
-  translation: This domain has no authentication method available. You cannot add new comments.
-- id: error
-  translation: Error
-- id: errorUnknown
-  translation: Unknown error
-- id: errorUnknownHost
-  translation: This domain is not registered in Comentario
-- id: fieldModNotifications
-  translation: Moderator notifications
-- id: fieldPassword
-  translation: Password
-- id: fieldRealName
-  translation: Real name
-- id: fieldReplyNotifications
-  translation: Reply notifications
-- id: fieldWebsiteOpt
-  translation: Website (optional)
-- id: fieldYourNameOptional
-  translation: Your name (optional)
-- id: forgotPasswordLink
-  translation: Forgot your password?
-- id: helloName
-  translation: Hello {{ index . 0 }}!
-- id: ignoreEmail
-  translation: If you didn't do this, please ignore this email.
-- id: loginViaLocalAuth
-  translation: Log in with your email and password
-- id: loginWith
-  translation: Log in with
-- id: newComment
-  translation: New comment
-- id: newCommentOn
-  translation: New comment on {{ index . 0 }}
-- id: noAccountYet
-  translation: Don't have an account?
-- id: notificationModAll
-  translation: You've received this email because the domain owner chose to notify moderators for all new comments by email.
-- id: notificationModPending
-  translation: You've received this email because the domain owner chose to notify moderators of comments pending moderation by email.
-- id: notificationNewReply
-  translation: You've received this email because you opted in to receive email notifications for comment replies.
-- id: notWillingToSignup
-  translation: Not willing to sign up? You can comment without registration
-- id: pageIsReadonly
-  translation: This thread is locked. You cannot add new comments.
-- id: pendingModeration
-  translation: Pending moderation
-- id: popupWasBlocked
-  translation: Login popup window was blocked by your browser. Please allow popups on this website, then click the Retry button below.
-- id: poweredBy
-  translation: Powered by Comentario
-- id: previewFailed
-  translation: Preview failed
-- id: pwdResetExplanation
-  translation: You've received this email because you (or someone else) requested a password reset in our service.
-- id: pwdResetRequest
-  translation: You recently initiated the procedure to reset your Comentario account password.
-- id: pwdStrengthExplained
-  translation: Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, and a digit or symbol.
-- id: resetYourPassword
-  translation: Reset Your Password
-- id: sampleText
-  translation: text
-- id: signUpAgreeAnd
-  translation: and
-- id: signUpAgreePrivacyPolicy
-  translation: Privacy Policy
-- id: signUpAgreeTerms
-  translation: Terms of Service
-- id: signUpAgreeTo
-  translation: By signing up, you agree to our
-- id: sortNewest
-  translation: Newest
-- id: sortOldest
-  translation: Oldest
-- id: sortVotes
-  translation: Votes
-- id: ssoAuthFailed
-  translation: SSO authentication failed.
-- id: statusDeleted
-  translation: deleted
-- id: statusDeletedByAuthor
-  translation: deleted by author
-- id: statusDeletedByModerator
-  translation: deleted by moderator
-- id: statusDeletedUser
-  translation: Deleted User
-- id: statusEditedByAuthor
-  translation: edited by author
-- id: statusEditedByModerator
-  translation: edited by moderator
-- id: statusModerator
-  translation: Moderator
-- id: statusPending
-  translation: Pending
-- id: stickyComment
-  translation: Sticky comment
-- id: technicalDetails
-  translation: Technical details
-- id: timeDaysAgo
-  translation: days ago
-- id: timeHourAgo
-  translation: an hour ago
-- id: timeHoursAgo
-  translation: hours ago
-- id: timeJustNow
-  translation: just now
-- id: timeMinuteAgo
-  translation: a minute ago
-- id: timeMinutesAgo
-  translation: minutes ago
-- id: timeMonthAgo
-  translation: a month ago
-- id: timeMonthsAgo
-  translation: months ago
-- id: timeYearAgo
-  translation: a year ago
-- id: timeYearsAgo
-  translation: years ago
-- id: timeYesterday
-  translation: yesterday
-- id: unreadReply
-  translation: Unread reply
+- {id: accountCreatedConfirmEmail,  translation: 'Account is successfully created. Please check your email and click the confirmation link it contains.'}
+- {id: actionAddComment,            translation: 'Add Comment'}
+- {id: actionApprove,               translation: 'Approve'}
+- {id: actionCancel,                translation: 'Cancel'}
+- {id: actionClose,                 translation: 'Close'}
+- {id: actionCollapseChildren,      translation: 'Collapse children'}
+- {id: actionCommentUnreg,          translation: 'Comment without registration'}
+- {id: actionConfirmEmail,          translation: 'Confirm Your Email'}
+- {id: actionContext,               translation: 'Context'}
+- {id: actionDelete,                translation: 'Delete'}
+- {id: actionDownvote,              translation: 'Downvote'}
+- {id: actionEdit,                  translation: 'Edit'}
+- {id: actionEditComentarioProfile, translation: 'Edit Comentario profile'}
+- {id: actionExpandChildren,        translation: 'Expand children'}
+- {id: actionLogIn,                 translation: 'Log in'}
+- {id: actionOk,                    translation: 'OK'}
+- {id: actionPreview,               translation: 'Preview'}
+- {id: actionReject,                translation: 'Reject'}
+- {id: actionReply,                 translation: 'Reply'}
+- {id: actionResetPassword,         translation: 'Reset Your Password'}
+- {id: actionRetry,                 translation: 'Retry'}
+- {id: actionSave,                  translation: 'Save'}
+- {id: actionSignIn,                translation: 'Sign in'}
+- {id: actionSignUp,                translation: 'Sign up'}
+- {id: actionSignUpLink,            translation: 'Sign up here'}
+- {id: actionSso,                   translation: 'Single Sign-On'}
+- {id: actionSticky,                translation: 'Sticky'}
+- {id: actionUnsticky,              translation: 'Unsticky'}
+- {id: actionUnsubscribe,           translation: 'Unsubscribe'}
+- {id: actionUpvote,                translation: 'Upvote'}
+- {id: addCommentPlaceholder,       translation: 'Add a comment'}
+- {id: btnBold,                     translation: 'Bold'}
+- {id: btnBulletList,               translation: 'Bullet list'}
+- {id: btnCode,                     translation: 'Code'}
+- {id: btnImage,                    translation: 'Image'}
+- {id: btnItalic,                   translation: 'Italic'}
+- {id: btnLink,                     translation: 'Link'}
+- {id: btnLock,                     translation: 'Lock'}
+- {id: btnLogout,                   translation: 'Logout'}
+- {id: btnMarkdownHelp,             translation: 'Markdown help'}
+- {id: btnNumberedList,             translation: 'Numbered list'}
+- {id: btnQuote,                    translation: 'Quote'}
+- {id: btnSettings,                 translation: 'Settings'}
+- {id: btnStrikethrough,            translation: 'Strikethrough'}
+- {id: btnTable,                    translation: 'Table'}
+- {id: btnUnlock,                   translation: 'Unlock'}
+- {id: clickButtonBelow,            translation: 'To do that, please click the button below.'}
+- {id: commentIsApproved,           translation: 'This comment has been approved by a moderator.'}
+- {id: commentIsPending,            translation: 'This comment is awaiting moderator approval.'}
+- {id: commentIsRejected,           translation: 'This comment was rejected by a moderator because it''s spam or inappropriate.'}
+- {id: commentNotFound,             translation: 'The comment you''re looking for doesn''t exist; possibly it was deleted.'}
+- {id: commentScore,                translation: 'Comment score'}
+- {id: commentStatusChanged,        translation: 'Comment status changed'}
+- {id: confirmCommentDeletion,      translation: 'Are you sure you want to delete this comment?'}
+- {id: confirmEmailAct,             translation: 'If you wish to complete registration, please click the button below.'}
+- {id: confirmEmailExplanation,     translation: 'You''ve received this email because you (or someone else) registered this email address in our service.'}
+- {id: confirmEmailRequest,         translation: 'You recently registered a new Comentario account with this email address.'}
+- {id: confirmYourEmail,            translation: 'Confirm Your Email'}
+- {id: dlgTitleConfirm,             translation: 'Confirm'}
+- {id: dlgTitleCreateAccount,       translation: 'Create an account'}
+- {id: dlgTitleLogIn,               translation: 'Log in'}
+- {id: dlgTitlePopupBlocked,        translation: 'Popup blocked'}
+- {id: dlgTitleUserSettings,        translation: 'User settings'}
+- {id: domainAuthUnconfigured,      translation: 'This domain has no authentication method available. You cannot add new comments.'}
+- {id: error,                       translation: 'Error'}
+- {id: errorUnknown,                translation: 'Unknown error'}
+- {id: errorUnknownHost,            translation: 'This domain is not registered in Comentario'}
+- {id: fieldComStatusNotifications, translation: 'Comment status notifications'}
+- {id: fieldModNotifications,       translation: 'Moderator notifications'}
+- {id: fieldPassword,               translation: 'Password'}
+- {id: fieldRealName,               translation: 'Real name'}
+- {id: fieldReplyNotifications,     translation: 'Reply notifications'}
+- {id: fieldWebsiteOpt,             translation: 'Website (optional)'}
+- {id: fieldYourNameOptional,       translation: 'Your name (optional)'}
+- {id: forgotPasswordLink,          translation: 'Forgot your password?'}
+- {id: helloName,                   translation: 'Hello {{ index . 0 }}!'}
+- {id: ignoreEmail,                 translation: 'If you didn''t do this, please ignore this email.'}
+- {id: loginViaLocalAuth,           translation: 'Log in with your email and password'}
+- {id: loginWith,                   translation: 'Log in with'}
+- {id: newComment,                  translation: 'New comment'}
+- {id: newCommentOn,                translation: 'New comment on {{ index . 0 }}'}
+- {id: noAccountYet,                translation: 'Don''t have an account?'}
+- {id: notificationCommentStatus,   translation: 'You''ve received this email because you opted in to receive email notifications for comment status updates.'}
+- {id: notificationModAll,          translation: 'You''ve received this email because the domain owner chose to notify moderators for all new comments by email.'}
+- {id: notificationModPending,      translation: 'You''ve received this email because the domain owner chose to notify moderators of comments pending moderation by email.'}
+- {id: notificationNewReply,        translation: 'You''ve received this email because you opted in to receive email notifications for comment replies.'}
+- {id: notWillingToSignup,          translation: 'Not willing to sign up? You can comment without registration'}
+- {id: pageIsReadonly,              translation: 'This thread is locked. You cannot add new comments.'}
+- {id: popupWasBlocked,             translation: 'Login popup window was blocked by your browser. Please allow popups on this website, then click the Retry button below.'}
+- {id: poweredBy,                   translation: 'Powered by Comentario'}
+- {id: previewFailed,               translation: 'Preview failed'}
+- {id: pwdResetExplanation,         translation: 'You''ve received this email because you (or someone else) requested a password reset in our service.'}
+- {id: pwdResetRequest,             translation: 'You recently initiated the procedure to reset your Comentario account password.'}
+- {id: pwdStrengthExplained,        translation: 'Password must be at least 8 characters long and contain an uppercase letter, a lowercase letter, and a digit or symbol.'}
+- {id: resetYourPassword,           translation: 'Reset Your Password'}
+- {id: sampleText,                  translation: 'text'}
+- {id: signUpAgreeAnd,              translation: 'and'}
+- {id: signUpAgreePrivacyPolicy,    translation: 'Privacy Policy'}
+- {id: signUpAgreeTerms,            translation: 'Terms of Service'}
+- {id: signUpAgreeTo,               translation: 'By signing up, you agree to our'}
+- {id: sortNewest,                  translation: 'Newest'}
+- {id: sortOldest,                  translation: 'Oldest'}
+- {id: sortVotes,                   translation: 'Votes'}
+- {id: ssoAuthFailed,               translation: 'SSO authentication failed.'}
+- {id: statusDeleted,               translation: 'deleted'}
+- {id: statusDeletedByAuthor,       translation: 'deleted by author'}
+- {id: statusDeletedByModerator,    translation: 'deleted by moderator'}
+- {id: statusDeletedUser,           translation: 'Deleted User'}
+- {id: statusEditedByAuthor,        translation: 'edited by author'}
+- {id: statusEditedByModerator,     translation: 'edited by moderator'}
+- {id: statusModerator,             translation: 'Moderator'}
+- {id: statusPending,               translation: 'Pending'}
+- {id: stickyComment,               translation: 'Sticky comment'}
+- {id: technicalDetails,            translation: 'Technical details'}
+- {id: timeDaysAgo,                 translation: 'days ago'}
+- {id: timeHourAgo,                 translation: 'an hour ago'}
+- {id: timeHoursAgo,                translation: 'hours ago'}
+- {id: timeJustNow,                 translation: 'just now'}
+- {id: timeMinuteAgo,               translation: 'a minute ago'}
+- {id: timeMinutesAgo,              translation: 'minutes ago'}
+- {id: timeMonthAgo,                translation: 'a month ago'}
+- {id: timeMonthsAgo,               translation: 'months ago'}
+- {id: timeYearAgo,                 translation: 'a year ago'}
+- {id: timeYearsAgo,                translation: 'years ago'}
+- {id: timeYesterday,               translation: 'yesterday'}
+- {id: unreadReply,                 translation: 'Unread reply'}

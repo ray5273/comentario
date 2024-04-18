@@ -165,12 +165,13 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 
 	// Add a domain user as well
 	du := &data.DomainUser{
-		DomainID:        *domainID,
-		UserID:          user.ID,
-		IsCommenter:     true,
-		NotifyReplies:   true,
-		NotifyModerator: true,
-		CreatedTime:     creationTime,
+		DomainID:            *domainID,
+		UserID:              user.ID,
+		IsCommenter:         true,
+		NotifyReplies:       true,
+		NotifyModerator:     true,
+		NotifyCommentStatus: true,
+		CreatedTime:         creationTime,
 	}
 	if err := TheDomainService.UserAdd(du); err != nil {
 		return user, userAdded, false, err

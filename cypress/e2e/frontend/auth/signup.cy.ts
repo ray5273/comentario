@@ -112,7 +112,7 @@ context('Signup', () => {
 
                 // Verify the email's headers
                 const m = mails[0];
-                expect(m.headers['Subject']).eq('Comentario: Please confirm your email address');
+                expect(m.headers['Subject']).eq('Comentario: Confirm Your Email');
                 expect(m.headers['From'])   .eq('noreply@localhost');
                 expect(m.headers['To'])     .eq('test@example');
 

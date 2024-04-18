@@ -51,3 +51,8 @@ alter table cm_users add column ts_locked             timestamp;                
 ------------------------------------------------------------------------------------------------------------------------
 alter table cm_user_sessions     alter column ip type varchar(39);
 alter table cm_domain_page_views alter column ip type varchar(39);
+
+------------------------------------------------------------------------------------------------------------------------
+-- Add status notification setting to domain users
+------------------------------------------------------------------------------------------------------------------------
+alter table cm_domains_users add column notify_comment_status boolean default true not null; -- Whether the user is to be notified about status changes (approved/rejected) of their comments

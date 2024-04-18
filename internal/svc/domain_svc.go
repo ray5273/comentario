@@ -168,14 +168,15 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
 
 	// Register the user as domain owner
 	if err := svc.UserAdd(&data.DomainUser{
-		DomainID:        domain.ID,
-		UserID:          *userID,
-		IsOwner:         true,
-		IsModerator:     true,
-		IsCommenter:     true,
-		NotifyReplies:   true,
-		NotifyModerator: true,
-		CreatedTime:     time.Now().UTC(),
+		DomainID:            domain.ID,
+		UserID:              *userID,
+		IsOwner:             true,
+		IsModerator:         true,
+		IsCommenter:         true,
+		NotifyReplies:       true,
+		NotifyModerator:     true,
+		NotifyCommentStatus: true,
+		CreatedTime:         time.Now().UTC(),
 	}); err != nil {
 		return err
 	}
@@ -253,7 +254,7 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 			"d.mod_notify_policy", "d.default_sort", "d.count_comments", "d.count_views",
 			// Domain user fields
 			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created").
+			"du.notify_moderator", "du.notify_comment_status", "du.ts_created").
 		LeftJoin(
 			goqu.T("cm_domains_users").As("du"),
 			goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})).
@@ -268,12 +269,13 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 	// If no domain user found, and we need to create one
 	if du == nil && createIfMissing {
 		du = &data.DomainUser{
-			DomainID:        d.ID,
-			UserID:          *userID,
-			IsCommenter:     true, // User can comment by default, until made readonly
-			NotifyReplies:   true,
-			NotifyModerator: true,
-			CreatedTime:     time.Now().UTC(),
+			DomainID:            d.ID,
+			UserID:              *userID,
+			IsCommenter:         true, // User can comment by default, until made readonly
+			NotifyReplies:       true,
+			NotifyModerator:     true,
+			NotifyCommentStatus: true,
+			CreatedTime:         time.Now().UTC(),
 		}
 
 		if err := svc.UserAdd(du); err != nil {
@@ -299,7 +301,7 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 			"d.mod_notify_policy", "d.default_sort", "d.count_comments", "d.count_views",
 			// Domain user fields
 			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created").
+			"du.notify_moderator", "du.notify_comment_status", "du.ts_created").
 		LeftJoin(
 			goqu.T("cm_domains_users").As("du"),
 			goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})).
@@ -370,7 +372,7 @@ func (svc *domainService) ListByDomainUser(userID, curUserID *uuid.UUID, superus
 			"d.mod_notify_policy", "d.default_sort", "d.count_comments", "d.count_views",
 			// Domain user fields for userID
 			"du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created",
+			"du.notify_moderator", "du.notify_comment_status", "du.ts_created",
 			// Domain user fields for curUserID
 			"duc.is_owner")
 
@@ -706,14 +708,15 @@ func (svc *domainService) UserAdd(du *data.DomainUser) error {
 			db.Dialect().
 				Insert("cm_domains_users").
 				Rows(goqu.Record{
-					"domain_id":        &du.DomainID,
-					"user_id":          &du.UserID,
-					"is_owner":         du.IsOwner,
-					"is_moderator":     du.IsModerator,
-					"is_commenter":     du.IsCommenter,
-					"notify_replies":   du.NotifyReplies,
-					"notify_moderator": du.NotifyModerator,
-					"ts_created":       du.CreatedTime,
+					"domain_id":             &du.DomainID,
+					"user_id":               &du.UserID,
+					"is_owner":              du.IsOwner,
+					"is_moderator":          du.IsModerator,
+					"is_commenter":          du.IsCommenter,
+					"notify_replies":        du.NotifyReplies,
+					"notify_moderator":      du.NotifyModerator,
+					"notify_comment_status": du.NotifyCommentStatus,
+					"ts_created":            du.CreatedTime,
 				}),
 		); err != nil {
 			logger.Errorf("domainService.UserAdd: ExecuteOne() failed: %v", err)
@@ -735,11 +738,12 @@ func (svc *domainService) UserModify(du *data.DomainUser) error {
 			db.Dialect().
 				Update("cm_domains_users").
 				Set(goqu.Record{
-					"is_owner":         du.IsOwner,
-					"is_moderator":     du.IsModerator,
-					"is_commenter":     du.IsCommenter,
-					"notify_replies":   du.NotifyReplies,
-					"notify_moderator": du.NotifyModerator,
+					"is_owner":              du.IsOwner,
+					"is_moderator":          du.IsModerator,
+					"is_commenter":          du.IsCommenter,
+					"notify_replies":        du.NotifyReplies,
+					"notify_moderator":      du.NotifyModerator,
+					"notify_comment_status": du.NotifyCommentStatus,
 				}).
 				Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID}),
 		); err != nil {
@@ -812,7 +816,7 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*d
 	var d data.Domain
 	var ssoSecret sql.NullString
 	var duID uuid.NullUUID
-	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator sql.NullBool
+	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator, duNotifyCStatus sql.NullBool
 	var duCreatedTime sql.NullTime
 
 	// Prepare result columns
@@ -845,6 +849,7 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*d
 		&duIsCommenter,
 		&duNotifyReplies,
 		&duNotifyModerator,
+		&duNotifyCStatus,
 		&duCreatedTime,
 	}
 
@@ -864,14 +869,15 @@ func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*d
 	var pdu *data.DomainUser
 	if duID.Valid {
 		pdu = &data.DomainUser{
-			DomainID:        d.ID,
-			UserID:          duID.UUID,
-			IsOwner:         duIsOwner.Bool,
-			IsModerator:     duIsModerator.Bool,
-			IsCommenter:     duIsCommenter.Bool,
-			NotifyReplies:   duNotifyReplies.Bool,
-			NotifyModerator: duNotifyModerator.Bool,
-			CreatedTime:     duCreatedTime.Time,
+			DomainID:            d.ID,
+			UserID:              duID.UUID,
+			IsOwner:             duIsOwner.Bool,
+			IsModerator:         duIsModerator.Bool,
+			IsCommenter:         duIsCommenter.Bool,
+			NotifyReplies:       duNotifyReplies.Bool,
+			NotifyModerator:     duNotifyModerator.Bool,
+			NotifyCommentStatus: duNotifyCStatus.Bool,
+			CreatedTime:         duCreatedTime.Time,
 		}
 	}
 

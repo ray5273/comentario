@@ -43,14 +43,21 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 
 	// Update the domain user properties
 	var changed bool
-	if params.Kind == "moderator" {
-		// Moderator notifications
+	switch svc.MailNotificationKind(params.Kind) {
+	// Moderator notifications
+	case svc.MailNotificationKindModerator:
 		changed = domainUser.NotifyModerator
 		domainUser.NotifyModerator = false
-	} else {
-		// Reply notifications
+
+	// Reply notifications
+	case svc.MailNotificationKindReply:
 		changed = domainUser.NotifyReplies
 		domainUser.NotifyReplies = false
+
+	// Comment status notifications
+	case svc.MailNotificationKindCommentStatus:
+		changed = domainUser.NotifyCommentStatus
+		domainUser.NotifyCommentStatus = false
 	}
 
 	// Persist the changes, if any
@@ -109,6 +116,33 @@ func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, c
 			svc.MailNotificationKindReply,
 			parentUser,
 			parentUser.IsSuperuser || parentDomainUser.CanModerate(),
+			domain,
+			page,
+			comment,
+			commenter.Name)
+	}
+}
+
+// sendCommentStatusNotifications sends a notification about comment status change
+func sendCommentStatusNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment) error {
+	// No notifications for anonymous comments
+	if comment.IsAnonymous() {
+		return nil
+
+		// Find the commenter user and the corresponding domain user
+	} else if commenter, domainUser, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
+		return err
+
+		// Don't send notification if comment status notifications are turned off
+	} else if domainUser != nil && !domainUser.NotifyCommentStatus {
+		return nil
+
+		// Send a comment status notification
+	} else {
+		return svc.TheMailService.SendCommentNotification(
+			svc.MailNotificationKindCommentStatus,
+			commenter,
+			false,
 			domain,
 			page,
 			comment,

@@ -1,246 +1,126 @@
-- id: accountCreatedConfirmEmail
-  translation: Account is succesvol aangemaakt. Controleer je e-mail en klik op de bevestigingslink die erin staat.
-- id: actionAddComment
-  translation: Comment toevoegen
-- id: actionApprove
-  translation: Goedkeuren
-- id: actionCancel
-  translation: Annuleren
-- id: actionClose
-  translation: Sluiten
-- id: actionCollapseChildren
-  translation: Reacties inklappen
-- id: actionCommentUnreg
-  translation: Reageren zonder registratie
-- id: actionConfirmEmail
-  translation: Bevestig je e-mailadres
-- id: actionContext
-  translation: Context
-- id: actionDelete
-  translation: Verwijderen
-- id: actionDownvote
-  translation: Slecht comment
-- id: actionEdit
-  translation: Bijwerken
-- id: actionEditComentarioProfile
-  translation: Comentario-profiel bijwerken
-- id: actionExpandChildren
-  translation: Reacties uitklappen
-- id: actionLogIn
-  translation: Inloggen
-- id: actionOk
-  translation: OK
-- id: actionPreview
-  translation: Voorbeeld
-- id: actionReject
-  translation: Afwijzen
-- id: actionReply
-  translation: Reageren
-- id: actionResetPassword
-  translation: Wachtwoord resetten
-- id: actionRetry
-  translation: Opnieuw proberen
-- id: actionSave
-  translation: Opslaan
-- id: actionSignIn
-  translation: Inloggen
-- id: actionSignUp
-  translation: Registreren
-- id: actionSignUpLink
-  translation: Registreer hier
-- id: actionSso
-  translation: Single Sign-On
-- id: actionSticky
-  translation: Sticky
-- id: actionUnsticky
-  translation: Unsticky
-- id: actionUnsubscribe
-  translation: Afmelden
-- id: actionUpvote
-  translation: Goed comment
-- id: addCommentPlaceholder
-  translation: Voeg een comment toe
-- id: btnBold
-  translation: Vetgedrukt
-- id: btnBulletList
-  translation: Bulletlist
-- id: btnCode
-  translation: Code
-- id: btnImage
-  translation: Afbeelding
-- id: btnItalic
-  translation: Cursief
-- id: btnLink
-  translation: Link
-- id: btnLock
-  translation: Vergrendelen
-- id: btnLogout
-  translation: Uitloggen
-- id: btnMarkdownHelp
-  translation: Markdown-help
-- id: btnNumberedList
-  translation: Genummerde lijst
-- id: btnQuote
-  translation: Citaat
-- id: btnSettings
-  translation: Instellingen
-- id: btnStrikethrough
-  translation: Doorgestreept
-- id: btnTable
-  translation: Tabel
-- id: btnUnlock
-  translation: Ontgrendelen
-- id: clickButtonBelow
-  translation: Klik hiervoor op de onderstaande knop.
-- id: commentIsPending
-  translation: Dit comment moet nog worden goedgekeurd door de moderator.
-- id: commentIsRejected
-  translation: Dit comment is geweigerd omdat het spam of ongepast is.
-- id: commentNotFound
-  translation: Het comment waar je naar op zoek bent bestaat niet; mogelijk is het verwijderd.
-- id: commentScore
-  translation: Commentscore
-- id: confirmCommentDeletion
-  translation: Weet je zeker dat je dit comment wilt verwijderen?
-- id: confirmEmailAct
-  translation: Klik op de knop hieronder om je registratie te voltooien.
-- id: confirmEmailExplanation
-  translation: Je hebt deze e-mail ontvangen omdat jij (of iemand anders) dit e-mailadres bij onze service hebt geregistreerd.
-- id: confirmEmailRequest
-  translation: Je hebt onlangs een nieuw Comentario-account geregistreerd met dit e-mailadres.
-- id: confirmYourEmail
-  translation: Bevestig je e-mailadres
-- id: dlgTitleConfirm
-  translation: Bevestiging
-- id: dlgTitleCreateAccount
-  translation: Account aanmaken
-- id: dlgTitleLogIn
-  translation: Inloggen
-- id: dlgTitlePopupBlocked
-  translation: Popup geblokkeerd
-- id: dlgTitleUserSettings
-  translation: Gebruikersinstellingen
-- id: domainAuthUnconfigured
-  translation: Dit domein heeft geen authenticatiemethode beschikbaar. Er kan geen nieuw comment worden toegevoegd.
-- id: error
-  translation: Fout
-- id: errorUnknown
-  translation: Onbekende fout
-- id: errorUnknownHost
-  translation: Dit domein is niet geregistreerd in Comentario
-- id: fieldModNotifications
-  translation: Moderator-notificaties
-- id: fieldPassword
-  translation: Wachtwoord
-- id: fieldRealName
-  translation: Echte naam
-- id: fieldReplyNotifications
-  translation: Reactie-notificaties
-- id: fieldWebsiteOpt
-  translation: Website (optioneel)
-- id: fieldYourNameOptional
-  translation: Je naam (optioneel)
-- id: forgotPasswordLink
-  translation: Wachtwoord vergeten?
-- id: helloName
-  translation: Hallo {{ index . 0 }}!
-- id: ignoreEmail
-  translation: Als je dit niet hebt gedaan, negeer dan deze e-mail.
-- id: loginViaLocalAuth
-  translation: Log in met je e-mailadres en wachtwoord
-- id: loginWith
-  translation: Log in met
-- id: newComment
-  translation: Nieuw comment
-- id: newCommentOn
-  translation: Nieuw comment op {{ index . 0 }}
-- id: noAccountYet
-  translation: Nog geen account?
-- id: notificationModAll
-  translation: Je hebt deze e-mail ontvangen omdat de domeineigenaar ervoor heeft gekozen om moderators per e-mail op de hoogte te stellen van alle nieuwe comments.
-- id: notificationModPending
-  translation: Je hebt deze e-mail ontvangen omdat de domeineigenaar ervoor heeft gekozen moderators per e-mail op de hoogte te stellen van comments die nog gemodereerd moeten worden.
-- id: notificationNewReply
-  translation: Je hebt deze e-mail ontvangen omdat je ervoor hebt gekozen om e-mailnotificaties te ontvangen voor reacties op comments.
-- id: notWillingToSignup
-  translation: Wil je je niet aanmelden? Je kunt reageren zonder te registreren
-- id: pageIsReadonly
-  translation: Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.
-- id: pendingModeration
-  translation: In afwachting van moderatie
-- id: popupWasBlocked
-  translation: Het popupvenster voor het inloggen is geblokkeerd door jouw browser. Sta pop-ups toe op deze website en klik op de knop Opnieuw proberen hieronder.
-- id: poweredBy
-  translation: Mogelijk gemaakt door Comentario
-- id: previewFailed
-  translation: Tonen voorbeeld mislukt
-- id: pwdResetExplanation
-  translation: Je hebt deze e-mail ontvangen omdat jij (of iemand anders) een wachtwoordreset hebt aangevraagd in onze service.
-- id: pwdResetRequest
-  translation: Je hebt onlangs de procedure gestart om het wachtwoord van je Comentario-account opnieuw in te stellen.
-- id: pwdStrengthExplained
-  translation: Het wachtwoord moet minstens 8 tekens lang zijn en een hoofdletter, een kleine letter en een cijfer of symbool bevatten.
-- id: resetYourPassword
-  translation: Reset je wachtwoord
-- id: sampleText
-  translation: tekst
-- id: signUpAgreeAnd
-  translation: en
-- id: signUpAgreePrivacyPolicy
-  translation: Privacybeleid
-- id: signUpAgreeTerms
-  translation: Algemene voorwaarden
-- id: signUpAgreeTo
-  translation: Door je aan te melden, ga je akkoord met onze
-- id: sortNewest
-  translation: Nieuwste
-- id: sortOldest
-  translation: Oudste
-- id: sortVotes
-  translation: Stemmen
-- id: ssoAuthFailed
-  translation: SSO-authenticatie mislukt.
-- id: statusDeleted
-  translation: verwijderd
-- id: statusDeletedByAuthor
-  translation: verwijderd door auteur
-- id: statusDeletedByModerator
-  translation: verwijderd door moderator
-- id: statusDeletedUser
-  translation: Verwijderde Gebruiker
-- id: statusEditedByAuthor
-  translation: bijgewerkt door auteur
-- id: statusEditedByModerator
-  translation: bijgewerkt door moderator
-- id: statusModerator
-  translation: Moderator
-- id: statusPending
-  translation: In afwachting
-- id: stickyComment
-  translation: Sticky-comment
-- id: technicalDetails
-  translation: Technische details
-- id: timeDaysAgo
-  translation: dagen geleden
-- id: timeHourAgo
-  translation: een uur geleden
-- id: timeHoursAgo
-  translation: uur geleden
-- id: timeJustNow
-  translation: zojuist
-- id: timeMinuteAgo
-  translation: een minuut geleden
-- id: timeMinutesAgo
-  translation: minuten geleden
-- id: timeMonthAgo
-  translation: een maand geleden
-- id: timeMonthsAgo
-  translation: maanden geleden
-- id: timeYearAgo
-  translation: een jaar geleden
-- id: timeYearsAgo
-  translation: jaar geleden
-- id: timeYesterday
-  translation: gisteren
-- id: unreadReply
-  translation: Ongelezen reactie
+- {id: accountCreatedConfirmEmail,  translation: 'Account is succesvol aangemaakt. Controleer je e-mail en klik op de bevestigingslink die erin staat.'}
+- {id: actionAddComment,            translation: 'Comment toevoegen'}
+- {id: actionApprove,               translation: 'Goedkeuren'}
+- {id: actionCancel,                translation: 'Annuleren'}
+- {id: actionClose,                 translation: 'Sluiten'}
+- {id: actionCollapseChildren,      translation: 'Reacties inklappen'}
+- {id: actionCommentUnreg,          translation: 'Reageren zonder registratie'}
+- {id: actionConfirmEmail,          translation: 'Bevestig je e-mailadres'}
+- {id: actionContext,               translation: 'Context'}
+- {id: actionDelete,                translation: 'Verwijderen'}
+- {id: actionDownvote,              translation: 'Slecht comment'}
+- {id: actionEdit,                  translation: 'Bijwerken'}
+- {id: actionEditComentarioProfile, translation: 'Comentario-profiel bijwerken'}
+- {id: actionExpandChildren,        translation: 'Reacties uitklappen'}
+- {id: actionLogIn,                 translation: 'Inloggen'}
+- {id: actionOk,                    translation: 'OK'}
+- {id: actionPreview,               translation: 'Voorbeeld'}
+- {id: actionReject,                translation: 'Afwijzen'}
+- {id: actionReply,                 translation: 'Reageren'}
+- {id: actionResetPassword,         translation: 'Wachtwoord resetten'}
+- {id: actionRetry,                 translation: 'Opnieuw proberen'}
+- {id: actionSave,                  translation: 'Opslaan'}
+- {id: actionSignIn,                translation: 'Inloggen'}
+- {id: actionSignUp,                translation: 'Registreren'}
+- {id: actionSignUpLink,            translation: 'Registreer hier'}
+- {id: actionSso,                   translation: 'Single Sign-On'}
+- {id: actionSticky,                translation: 'Sticky'}
+- {id: actionUnsticky,              translation: 'Unsticky'}
+- {id: actionUnsubscribe,           translation: 'Afmelden'}
+- {id: actionUpvote,                translation: 'Goed comment'}
+- {id: addCommentPlaceholder,       translation: 'Voeg een comment toe'}
+- {id: btnBold,                     translation: 'Vetgedrukt'}
+- {id: btnBulletList,               translation: 'Bulletlist'}
+- {id: btnCode,                     translation: 'Code'}
+- {id: btnImage,                    translation: 'Afbeelding'}
+- {id: btnItalic,                   translation: 'Cursief'}
+- {id: btnLink,                     translation: 'Link'}
+- {id: btnLock,                     translation: 'Vergrendelen'}
+- {id: btnLogout,                   translation: 'Uitloggen'}
+- {id: btnMarkdownHelp,             translation: 'Markdown-help'}
+- {id: btnNumberedList,             translation: 'Genummerde lijst'}
+- {id: btnQuote,                    translation: 'Citaat'}
+- {id: btnSettings,                 translation: 'Instellingen'}
+- {id: btnStrikethrough,            translation: 'Doorgestreept'}
+- {id: btnTable,                    translation: 'Tabel'}
+- {id: btnUnlock,                   translation: 'Ontgrendelen'}
+- {id: clickButtonBelow,            translation: 'Klik hiervoor op de onderstaande knop.'}
+- {id: commentIsApproved,           translation: 'Dit comment is goedgekeurd door een moderator.'}
+- {id: commentIsPending,            translation: 'Dit comment moet nog worden goedgekeurd door een moderator.'}
+- {id: commentIsRejected,           translation: 'Dit comment is geweigerd door een moderator omdat het spam of ongepast is.'}
+- {id: commentNotFound,             translation: 'Het comment waar je naar op zoek bent bestaat niet; mogelijk is het verwijderd.'}
+- {id: commentScore,                translation: 'Commentscore'}
+- {id: commentStatusChanged,        translation: 'Commentstatus is gewijzigd'}
+- {id: confirmCommentDeletion,      translation: 'Weet je zeker dat je dit comment wilt verwijderen?'}
+- {id: confirmEmailAct,             translation: 'Klik op de knop hieronder om je registratie te voltooien.'}
+- {id: confirmEmailExplanation,     translation: 'Je hebt deze e-mail ontvangen omdat jij (of iemand anders) dit e-mailadres bij onze service hebt geregistreerd.'}
+- {id: confirmEmailRequest,         translation: 'Je hebt onlangs een nieuw Comentario-account geregistreerd met dit e-mailadres.'}
+- {id: confirmYourEmail,            translation: 'Bevestig je e-mailadres'}
+- {id: dlgTitleConfirm,             translation: 'Bevestiging'}
+- {id: dlgTitleCreateAccount,       translation: 'Account aanmaken'}
+- {id: dlgTitleLogIn,               translation: 'Inloggen'}
+- {id: dlgTitlePopupBlocked,        translation: 'Popup geblokkeerd'}
+- {id: dlgTitleUserSettings,        translation: 'Gebruikersinstellingen'}
+- {id: domainAuthUnconfigured,      translation: 'Dit domein heeft geen authenticatiemethode beschikbaar. Er kan geen nieuw comment worden toegevoegd.'}
+- {id: error,                       translation: 'Fout'}
+- {id: errorUnknown,                translation: 'Onbekende fout'}
+- {id: errorUnknownHost,            translation: 'Dit domein is niet geregistreerd in Comentario'}
+- {id: fieldComStatusNotifications, translation: 'Commentstatus-notificaties'}
+- {id: fieldModNotifications,       translation: 'Moderator-notificaties'}
+- {id: fieldPassword,               translation: 'Wachtwoord'}
+- {id: fieldRealName,               translation: 'Echte naam'}
+- {id: fieldReplyNotifications,     translation: 'Reactie-notificaties'}
+- {id: fieldWebsiteOpt,             translation: 'Website (optioneel)'}
+- {id: fieldYourNameOptional,       translation: 'Je naam (optioneel)'}
+- {id: forgotPasswordLink,          translation: 'Wachtwoord vergeten?'}
+- {id: helloName,                   translation: 'Hallo {{ index . 0 }}!'}
+- {id: ignoreEmail,                 translation: 'Als je dit niet hebt gedaan, negeer dan deze e-mail.'}
+- {id: loginViaLocalAuth,           translation: 'Log in met je e-mailadres en wachtwoord'}
+- {id: loginWith,                   translation: 'Log in met'}
+- {id: newComment,                  translation: 'Nieuw comment'}
+- {id: newCommentOn,                translation: 'Nieuw comment op {{ index . 0 }}'}
+- {id: noAccountYet,                translation: 'Nog geen account?'}
+- {id: notificationCommentStatus,   translation: 'Je hebt deze e-mail ontvangen omdat je ervoor hebt gekozen om e-mailnotificaties te ontvangen voor wijzigingen in commentstatus.'}
+- {id: notificationModAll,          translation: 'Je hebt deze e-mail ontvangen omdat de domeineigenaar ervoor heeft gekozen om moderators per e-mail op de hoogte te stellen van alle nieuwe comments.'}
+- {id: notificationModPending,      translation: 'Je hebt deze e-mail ontvangen omdat de domeineigenaar ervoor heeft gekozen moderators per e-mail op de hoogte te stellen van comments die nog gemodereerd moeten worden.'}
+- {id: notificationNewReply,        translation: 'Je hebt deze e-mail ontvangen omdat je ervoor hebt gekozen om e-mailnotificaties te ontvangen voor reacties op comments.'}
+- {id: notWillingToSignup,          translation: 'Wil je je niet aanmelden? Je kunt reageren zonder te registreren'}
+- {id: pageIsReadonly,              translation: 'Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.'}
+- {id: popupWasBlocked,             translation: 'Het popupvenster voor het inloggen is geblokkeerd door jouw browser. Sta pop-ups toe op deze website en klik op de knop Opnieuw proberen hieronder.'}
+- {id: poweredBy,                   translation: 'Mogelijk gemaakt door Comentario'}
+- {id: previewFailed,               translation: 'Tonen voorbeeld mislukt'}
+- {id: pwdResetExplanation,         translation: 'Je hebt deze e-mail ontvangen omdat jij (of iemand anders) een wachtwoordreset hebt aangevraagd in onze service.'}
+- {id: pwdResetRequest,             translation: 'Je hebt onlangs de procedure gestart om het wachtwoord van je Comentario-account opnieuw in te stellen.'}
+- {id: pwdStrengthExplained,        translation: 'Het wachtwoord moet minstens 8 tekens lang zijn en een hoofdletter, een kleine letter en een cijfer of symbool bevatten.'}
+- {id: resetYourPassword,           translation: 'Reset je wachtwoord'}
+- {id: sampleText,                  translation: 'tekst'}
+- {id: signUpAgreeAnd,              translation: 'en'}
+- {id: signUpAgreePrivacyPolicy,    translation: 'Privacybeleid'}
+- {id: signUpAgreeTerms,            translation: 'Algemene voorwaarden'}
+- {id: signUpAgreeTo,               translation: 'Door je aan te melden, ga je akkoord met onze'}
+- {id: sortNewest,                  translation: 'Nieuwste'}
+- {id: sortOldest,                  translation: 'Oudste'}
+- {id: sortVotes,                   translation: 'Stemmen'}
+- {id: ssoAuthFailed,               translation: 'SSO-authenticatie mislukt.'}
+- {id: statusDeleted,               translation: 'verwijderd'}
+- {id: statusDeletedByAuthor,       translation: 'verwijderd door auteur'}
+- {id: statusDeletedByModerator,    translation: 'verwijderd door moderator'}
+- {id: statusDeletedUser,           translation: 'Verwijderde Gebruiker'}
+- {id: statusEditedByAuthor,        translation: 'bijgewerkt door auteur'}
+- {id: statusEditedByModerator,     translation: 'bijgewerkt door moderator'}
+- {id: statusModerator,             translation: 'Moderator'}
+- {id: statusPending,               translation: 'In afwachting'}
+- {id: stickyComment,               translation: 'Sticky-comment'}
+- {id: technicalDetails,            translation: 'Technische details'}
+- {id: timeDaysAgo,                 translation: 'dagen geleden'}
+- {id: timeHourAgo,                 translation: 'een uur geleden'}
+- {id: timeHoursAgo,                translation: 'uur geleden'}
+- {id: timeJustNow,                 translation: 'zojuist'}
+- {id: timeMinuteAgo,               translation: 'een minuut geleden'}
+- {id: timeMinutesAgo,              translation: 'minuten geleden'}
+- {id: timeMonthAgo,                translation: 'een maand geleden'}
+- {id: timeMonthsAgo,               translation: 'maanden geleden'}
+- {id: timeYearAgo,                 translation: 'een jaar geleden'}
+- {id: timeYearsAgo,                translation: 'jaar geleden'}
+- {id: timeYesterday,               translation: 'gisteren'}
+- {id: unreadReply,                 translation: 'Ongelezen reactie'}

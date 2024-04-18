@@ -340,7 +340,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			"a.user_id",
 			// DomainUser fields
 			"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created").
+			"du.notify_moderator", "du.notify_comment_status", "du.ts_created").
 		LeftJoin(
 			goqu.T("cm_domains_users").As("du"),
 			goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID})).
@@ -554,7 +554,7 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 			"a.user_id",
 			// DomainUser fields
 			"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.ts_created").
+			"du.notify_moderator", "du.notify_comment_status", "du.ts_created").
 		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("du.user_id")})).
 		Where(goqu.Ex{"du.domain_id": domainID})
@@ -823,7 +823,7 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 	var u data.User
 	var fidp sql.NullString
 	var duUID, duDID, avatarID uuid.NullUUID
-	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator sql.NullBool
+	var duIsOwner, duIsModerator, duIsCommenter, duNotifyReplies, duNotifyModerator, duNotifyCStatus sql.NullBool
 	var duCreated sql.NullTime
 	if err := s.Scan(
 		// User
@@ -866,6 +866,7 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 		&duIsCommenter,
 		&duNotifyReplies,
 		&duNotifyModerator,
+		&duNotifyCStatus,
 		&duCreated,
 	); err != nil {
 		logger.Errorf("userService.fetchUserDomainUser: Scan() failed: %v", err)
@@ -880,14 +881,15 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 	var pdu *data.DomainUser
 	if duDID.Valid && duUID.Valid {
 		pdu = &data.DomainUser{
-			DomainID:        duDID.UUID,
-			UserID:          duUID.UUID,
-			IsOwner:         duIsOwner.Bool,
-			IsModerator:     duIsModerator.Bool,
-			IsCommenter:     duIsCommenter.Bool,
-			NotifyReplies:   duNotifyReplies.Bool,
-			NotifyModerator: duNotifyModerator.Bool,
-			CreatedTime:     duCreated.Time,
+			DomainID:            duDID.UUID,
+			UserID:              duUID.UUID,
+			IsOwner:             duIsOwner.Bool,
+			IsModerator:         duIsModerator.Bool,
+			IsCommenter:         duIsCommenter.Bool,
+			NotifyReplies:       duNotifyReplies.Bool,
+			NotifyModerator:     duNotifyModerator.Bool,
+			NotifyCommentStatus: duNotifyCStatus.Bool,
+			CreatedTime:         duCreated.Time,
 		}
 	}
 

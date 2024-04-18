@@ -155,9 +155,10 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 	}
 
 	// Update the domain user, if needed
-	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator {
+	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
 		du.NotifyReplies = params.Body.NotifyReplies
 		du.NotifyModerator = params.Body.NotifyModerator
+		du.NotifyCommentStatus = params.Body.NotifyCommentStatus
 		if err := svc.TheDomainService.UserModify(du); err != nil {
 			return respServiceError(err)
 		}

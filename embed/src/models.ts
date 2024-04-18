@@ -34,13 +34,14 @@ export interface User {
 
 /** Authenticated or anonymous user. */
 export interface Principal extends User {
-    readonly isSuperuser:     boolean; // Whether the user is a "superuser" (instance admin)
-    readonly isLocal:         boolean; // Whether the user is authenticated locally (as opposed to via a federated identity provider)
-    readonly isSso:           boolean; // Whether the user is authenticated via SSO
-    readonly isConfirmed:     boolean; // Whether the user has confirmed their email address
-    readonly isOwner:         boolean; // Whether the user is an owner of the domain
-    readonly notifyReplies:   boolean; // Whether the user is to be notified about replies to their comments
-    readonly notifyModerator: boolean; // Whether the user is to receive moderator notifications
+    readonly isSuperuser:         boolean; // Whether the user is a "superuser" (instance admin)
+    readonly isLocal:             boolean; // Whether the user is authenticated locally (as opposed to via a federated identity provider)
+    readonly isSso:               boolean; // Whether the user is authenticated via SSO
+    readonly isConfirmed:         boolean; // Whether the user has confirmed their email address
+    readonly isOwner:             boolean; // Whether the user is an owner of the domain
+    readonly notifyReplies:       boolean; // Whether the user is to be notified about replies to their comments
+    readonly notifyModerator:     boolean; // Whether the user is to receive moderator notifications
+    readonly notifyCommentStatus: boolean; // Whether the user is to be notified about status changes (approved/rejected) of their comments
 }
 
 /** Comment residing on a page. */
@@ -210,8 +211,9 @@ export interface SignupData {
 }
 
 export interface UserSettings {
-    notifyModerator: boolean; // Whether to send moderator notifications to the user
-    notifyReplies:   boolean; // Whether to send reply notifications to the user
+    notifyModerator:     boolean; // Whether to send moderator notifications to the user
+    notifyReplies:       boolean; // Whether to send reply notifications to the user
+    notifyCommentStatus: boolean; // Whether to send comment status notifications to the user
 }
 
 export const ANONYMOUS_ID: UUID = '00000000-0000-0000-0000-000000000000';

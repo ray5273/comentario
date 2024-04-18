@@ -63,10 +63,11 @@ context('Domain User Properties', () => {
 
                     // Check user details
                     cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                        ['Role',                    'Moderator'],
-                        ['Reply notifications',     '✔'],
-                        ['Moderator notifications', '✔'],
-                        ['Created',                 REGEXES.datetime],
+                        ['Role',                         'Moderator'],
+                        ['Reply notifications',          '✔'],
+                        ['Moderator notifications',      '✔'],
+                        ['Comment status notifications', '✔'],
+                        ['Created',                      REGEXES.datetime],
                     ]);
 
                     // Check related user details
@@ -108,10 +109,11 @@ context('Domain User Properties', () => {
 
             // Check user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                ['Role',                    'Owner'],
-                ['Reply notifications',     '✔'],
-                ['Moderator notifications', '✔'],
-                ['Created',                 REGEXES.datetime],
+                ['Role',                         'Owner'],
+                ['Reply notifications',          '✔'],
+                ['Moderator notifications',      '✔'],
+                ['Comment status notifications', '✔'],
+                ['Created',                      REGEXES.datetime],
             ]);
 
             // Check related user details

@@ -434,6 +434,10 @@ definitions:
         type: boolean
         description: Whether the user is to receive moderator notifications (only when is_moderator is true)
         x-omitempty: false
+      notifyCommentStatus:
+        type: boolean
+        description: Whether the user is to be notified about status changes (approved/rejected) of their comments
+        x-omitempty: false
       createdTime:
         type: string
         format: date-time
@@ -933,6 +937,10 @@ definitions:
       notifyModerator:
         type: boolean
         description: Whether the user is to receive moderator notifications (only for commenter auth)
+        x-omitempty: false
+      notifyCommentStatus:
+        type: boolean
+        description: Whether the user is to be notified about status changes (approved/rejected) of their comments (only for commenter auth)
         x-omitempty: false
       colourIndex:
         type: integer
@@ -1532,6 +1540,7 @@ paths:
           enum:
             - reply
             - moderator
+            - commentStatus
       responses:
         307:
           description: The user has been unsubscribed from notifications, redirecting to the UI
@@ -2099,6 +2108,9 @@ paths:
               notifyModerator:
                 type: boolean
                 description: Whether the user is to receive moderator notifications
+              notifyCommentStatus:
+                type: boolean
+                description: Whether the user is to be notified about status changes (approved/rejected) of their comments
       responses:
         204:
           description: Commenter details haven been updated

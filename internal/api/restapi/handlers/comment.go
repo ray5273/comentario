@@ -217,9 +217,9 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 	return nil
 }
 
-// commentGetCommentPageDomainUser finds and returns a Comment, DomainPage, Domain, and DomainUser by a string comment
-// ID
-func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
+// commentGetCommentPageDomainUser finds and returns a Comment, DomainPage and Domain by a string comment ID. Also tries
+// to find and return a DomainUser that corresponds to the given curUserID, returning nil if no such domain user exists
+func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, curUserID *uuid.UUID) (*data.Comment, *data.DomainPage, *data.Domain, *data.DomainUser, middleware.Responder) {
 	// Parse comment ID
 	if commentID, r := parseUUID(commentUUID); r != nil {
 		return nil, nil, nil, nil, r
@@ -233,39 +233,42 @@ func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, userID *uuid.UUID)
 		return nil, nil, nil, nil, respServiceError(err)
 
 		// Fetch the domain and the user
-	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, userID); err != nil {
+	} else if domain, curDomainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, curUserID); err != nil {
 		return nil, nil, nil, nil, respServiceError(err)
 
 	} else {
 		// Succeeded
-		return comment, page, domain, domainUser, nil
+		return comment, page, domain, curDomainUser, nil
 	}
 }
 
 // commentModerate verifies the user is allowed to moderate a comment (specified by its ID) and updates it
-func commentModerate(commentUUID strfmt.UUID, user *data.User, pending, approve bool) middleware.Responder {
+func commentModerate(commentUUID strfmt.UUID, curUser *data.User, pending, approve bool) middleware.Responder {
 	// Find the comment and related objects
-	comment, page, _, domainUser, r := commentGetCommentPageDomainUser(commentUUID, &user.ID)
+	comment, page, domain, curDomainUser, r := commentGetCommentPageDomainUser(commentUUID, &curUser.ID)
 	if r != nil {
 		return r
 	}
 
 	// Verify the user is a domain moderator
-	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+	if r := Verifier.UserCanModerateDomain(curUser, curDomainUser); r != nil {
 		return r
 	}
 
 	// Determine the pending reason (if pending)
 	reason := ""
 	if pending {
-		reason = fmt.Sprintf("Set to pending by %s <%s>", user.Name, user.Email)
+		reason = fmt.Sprintf("Set to pending by %s <%s>", curUser.Name, curUser.Email)
 	}
 
 	// Update the comment's state in the database
-	comment.WithModerated(&user.ID, pending, approve, reason)
+	comment.WithModerated(&curUser.ID, pending, approve, reason)
 	if err := svc.TheCommentService.Moderated(comment); err != nil {
 		return respServiceError(err)
 	}
+
+	// Notify the comment author about the status change, in the background
+	go func() { _ = sendCommentStatusNotifications(domain, page, comment) }()
 
 	// Notify websocket subscribers
 	commentWebSocketNotify(page, comment, "update")

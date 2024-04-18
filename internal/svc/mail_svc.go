@@ -20,8 +20,9 @@ var TheMailService MailService = &mailService{
 type MailNotificationKind string
 
 const (
-	MailNotificationKindReply     = MailNotificationKind("reply")
-	MailNotificationKindModerator = MailNotificationKind("moderator")
+	MailNotificationKindReply         = MailNotificationKind("reply")
+	MailNotificationKindModerator     = MailNotificationKind("moderator")
+	MailNotificationKindCommentStatus = MailNotificationKind("commentStatus")
 )
 
 // MailService is a service interface for sending mails
@@ -51,6 +52,7 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 		"CommentURL":    comment.URL(domain.IsHTTPS, domain.Host, page.Path),
 		"HTML":          template.HTML(comment.HTML),
 		"IsPending":     comment.IsPending,
+		"IsApproved":    comment.IsApproved,
 		"PageTitle":     page.DisplayTitle(domain),
 		"PageURL":       domain.RootURL() + page.Path,
 		"UnsubscribeURL": config.URLForAPI(
@@ -79,14 +81,16 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 		params["DeleteURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "delete"})
 	}
 
+	// Figure out the email subject
+	var subject string
+	if kind == MailNotificationKindCommentStatus {
+		subject = TheI18nService.Translate(recipient.LangID, "commentStatusChanged")
+	} else {
+		subject = TheI18nService.Translate(recipient.LangID, "newCommentOn", reflect.ValueOf(page.DisplayTitle(domain)))
+	}
+
 	// Send out a notification email
-	return svc.sendFromTemplate(
-		recipient.LangID,
-		"",
-		recipient.Email,
-		"Comentario: New comment on "+page.DisplayTitle(domain),
-		"comment-notification.gohtml",
-		params)
+	return svc.sendFromTemplate(recipient.LangID, "", recipient.Email, subject, "comment-notification.gohtml", params)
 }
 
 func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) error {
@@ -94,7 +98,7 @@ func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) err
 		user.LangID,
 		"",
 		user.Email,
-		"Comentario: Please confirm your email address",
+		TheI18nService.Translate(user.LangID, "confirmYourEmail"),
 		"confirm-email.gohtml",
 		map[string]any{
 			"ConfirmURL": config.URLForAPI("auth/confirm", map[string]string{"access_token": token.String()}),
@@ -107,7 +111,7 @@ func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) er
 		user.LangID,
 		"",
 		user.Email,
-		"Comentario: Reset your password",
+		TheI18nService.Translate(user.LangID, "resetYourPassword"),
 		"reset-password.gohtml",
 		map[string]any{
 			"ResetURL": TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.String()}),
@@ -184,6 +188,6 @@ func (svc *mailService) sendFromTemplate(lang, replyTo, recipient, subject, temp
 		return err
 	}
 
-	// Send the mail, embedding the logo
-	return svc.send(replyTo, recipient, subject, body, path.Join(config.CLIFlags.TemplatePath, "images", "logo.png"))
+	// Send the mail, prepending the subject with the app name and embedding the logo
+	return svc.send(replyTo, recipient, "Comentario: "+subject, body, path.Join(config.CLIFlags.TemplatePath, "images", "logo.png"))
 }

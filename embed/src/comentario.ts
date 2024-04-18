@@ -930,7 +930,7 @@ export class Comentario extends HTMLElement {
      */
     private async saveUserSettings(data: UserSettings): Promise<void> {
         // Run the update with the backend
-        await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.notifyReplies, data.notifyModerator);
+        await this.apiService.authProfileUpdate(this.pageInfo!.pageId, data.notifyReplies, data.notifyModerator, data.notifyCommentStatus);
 
         // Refresh the principal (it holds the profile settings) and update the profile bar
         await this.updateAuthStatus();

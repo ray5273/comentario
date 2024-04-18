@@ -31,6 +31,11 @@
                         <dt i18n>Moderator notifications</dt>
                         <dd><app-checkmark [value]="domainUser.notifyModerator"/></dd>
                     </div>
+                    <!-- Comment status notifications -->
+                    <div>
+                        <dt i18n>Comment status notifications</dt>
+                        <dd><app-checkmark [value]="domainUser.notifyCommentStatus"/></dd>
+                    </div>
                     <!-- Created -->
                     @if (domainUser.createdTime | datetime; as v) {
                         <div>
