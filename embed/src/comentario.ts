@@ -27,6 +27,7 @@ import { Utils } from './utils';
 import { LocalConfig } from './config';
 import { WebSocketClient, WebSocketMessage } from './ws-client';
 import { I18nService } from './i18n';
+import { PopupBlockedDialog } from './popup-blocked-dialog';
 
 export class Comentario extends HTMLElement {
 
@@ -723,7 +724,10 @@ export class Comentario extends HTMLElement {
         // Open a new popup window
         const popup = window.open(url, '_blank', 'popup,width=800,height=600');
         if (!popup) {
-            return this.reject('Failed to open OAuth popup');
+            // Failed to open popup: show a Popup blocked dialog
+            return await PopupBlockedDialog.run(this.i18n.t, this.root, {ref: this.profileBar!.btnLogin!, placement: 'bottom-end'}) ?
+                this.loginOAuthPopup(url) :
+                this.reject('Failed to open OAuth popup');
         }
 
         // Wait until the popup is closed

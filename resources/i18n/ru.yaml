@@ -38,6 +38,8 @@
   translation: Ответить
 - id: actionResetPassword
   translation: Сбросить пароль
+- id: actionRetry
+  translation: Попробовать снова
 - id: actionSave
   translation: Сохранить
 - id: actionSignIn
@@ -114,6 +116,8 @@
   translation: Создать аккаунт
 - id: dlgTitleLogIn
   translation: Войти
+- id: dlgTitlePopupBlocked
+  translation: Всплывающее окно заблокировано
 - id: dlgTitleUserSettings
   translation: Настройки пользователя
 - id: domainAuthUnconfigured
@@ -164,6 +168,8 @@
   translation: Комментарии на этой странице заблокированы, добавление комментариев недоступно.
 - id: pendingModeration
   translation: Ожидает модерации
+- id: popupWasBlocked
+  translation: Всплывающее окно логина было заблокировано браузером. Разрешите открывать всплывающие окна на этом сайте в настройках браузера, после чего нажмите кнопку «Попробовать снова» ниже.
 - id: poweredBy
   translation: Работает на Comentario
 - id: previewFailed

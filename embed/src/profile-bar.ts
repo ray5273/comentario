@@ -7,8 +7,8 @@ import { SettingsDialog } from './settings-dialog';
 
 export class ProfileBar extends Wrap<HTMLDivElement> {
 
-    private btnSettings?: Wrap<HTMLButtonElement>;
-    private btnLogin?: Wrap<HTMLButtonElement>;
+    private _btnSettings?: Wrap<HTMLButtonElement>;
+    private _btnLogin?: Wrap<HTMLButtonElement>;
     private _principal?: Principal;
     private _pageInfo?: PageInfo;
 
@@ -35,6 +35,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly onToggleLock: () => Promise<void>,
     ) {
         super(UIToolkit.div('profile-bar', 'toolbar', 'py-2').element);
+    }
+
+    /**
+     * The Login button element, for positioning dialogs.
+     */
+    get btnLogin(): Wrap<any> | undefined {
+        return this._btnLogin;
     }
 
     /**
@@ -81,7 +88,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         const dlg = await LoginDialog.run(
             this.t,
             this.root,
-            {ref: this.btnLogin!, placement: 'bottom-end'},
+            {ref: this._btnLogin!, placement: 'bottom-end'},
             this.baseUrl,
             this._pageInfo);
 
@@ -96,7 +103,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * Show a signup dialog and return a promise that's resolved when the dialog is closed.
      */
     private async signupUser(): Promise<void> {
-        const dlg = await SignupDialog.run(this.t, this.root, {ref: this.btnLogin!, placement: 'bottom-end'}, this._pageInfo!);
+        const dlg = await SignupDialog.run(this.t, this.root, {ref: this._btnLogin!, placement: 'bottom-end'}, this._pageInfo!);
         if (dlg.confirmed) {
             await this.onSignup(dlg.data);
         }
@@ -109,7 +116,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         const dlg = await SettingsDialog.run(
             this.t,
             this.root,
-            {ref: this.btnSettings!, placement: 'bottom-end'},
+            {ref: this._btnSettings!, placement: 'bottom-end'},
             this.baseUrl,
             this._principal!);
         if (dlg.confirmed) {
@@ -123,8 +130,8 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     private render() {
         // Remove all content
         this.html('');
-        this.btnSettings = undefined;
-        this.btnLogin    = undefined;
+        this._btnSettings = undefined;
+        this._btnLogin    = undefined;
 
         // If the user is authenticated
         if (this._principal) {
@@ -156,7 +163,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                                 () => this.onToggleLock(),
                                 'btn-lg'),
                         // Settings button
-                        this.btnSettings = UIToolkit.toolButton('gear', this.t('btnSettings'), () => this.editSettings(), 'btn-lg'),
+                        this._btnSettings = UIToolkit.toolButton('gear', this.t('btnSettings'), () => this.editSettings(), 'btn-lg'),
                         // Logout button
                         UIToolkit.toolButton('exit', this.t('btnLogout'), () => this.onLogout(), 'btn-lg')));
             return;
@@ -168,7 +175,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // Add an empty div to push the button to the right (profile bar uses 'justify-content: space-between')
                 UIToolkit.div(),
                 // Add a Login button
-                this.btnLogin = UIToolkit.button(this.t('actionSignIn'), () => this.loginUser(), 'btn-primary', 'fw-bold'));
+                this._btnLogin = UIToolkit.button(this.t('actionSignIn'), () => this.loginUser(), 'btn-primary', 'fw-bold'));
         }
     }
 }

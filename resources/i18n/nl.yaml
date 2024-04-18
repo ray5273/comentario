@@ -38,6 +38,8 @@
   translation: Reageren
 - id: actionResetPassword
   translation: Wachtwoord resetten
+- id: actionRetry
+  translation: Opnieuw proberen
 - id: actionSave
   translation: Opslaan
 - id: actionSignIn
@@ -114,6 +116,8 @@
   translation: Account aanmaken
 - id: dlgTitleLogIn
   translation: Inloggen
+- id: dlgTitlePopupBlocked
+  translation: Popup geblokkeerd
 - id: dlgTitleUserSettings
   translation: Gebruikersinstellingen
 - id: domainAuthUnconfigured
@@ -164,6 +168,8 @@
   translation: Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.
 - id: pendingModeration
   translation: In afwachting van moderatie
+- id: popupWasBlocked
+  translation: Het popupvenster voor het inloggen is geblokkeerd door jouw browser. Sta pop-ups toe op deze website en klik op de knop Opnieuw proberen hieronder.
 - id: poweredBy
   translation: Mogelijk gemaakt door Comentario
 - id: previewFailed

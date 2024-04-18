@@ -41,6 +41,8 @@
   translation: Reply
 - id: actionResetPassword
   translation: Reset Your Password
+- id: actionRetry
+  translation: Retry
 - id: actionSave
   translation: Save
 - id: actionSignIn
@@ -117,6 +119,8 @@
   translation: Create an account
 - id: dlgTitleLogIn
   translation: Log in
+- id: dlgTitlePopupBlocked
+  translation: Popup blocked
 - id: dlgTitleUserSettings
   translation: User settings
 - id: domainAuthUnconfigured
@@ -167,6 +171,8 @@
   translation: This thread is locked. You cannot add new comments.
 - id: pendingModeration
   translation: Pending moderation
+- id: popupWasBlocked
+  translation: Login popup window was blocked by your browser. Please allow popups on this website, then click the Retry button below.
 - id: poweredBy
   translation: Powered by Comentario
 - id: previewFailed
