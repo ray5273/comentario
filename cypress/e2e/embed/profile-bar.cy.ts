@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 // eslint-disable-next-line no-only-or-skip-tests/no-skip-tests
@@ -91,53 +91,6 @@ context('Profile bar', () => {
                         EmbedUtils.makeAliases({anonymous: true});
                     });
 
-                    it('allows to update settings', () => {
-                        // Click on the gear button: the Settings dialog appears
-                        cy.get('@btnSettings').click();
-                        cy.get('@root').find('.comentario-dialog').as('settingsDialog').should('be.visible')
-                            .contains('.comentario-dialog-header', 'User settings').should('be.visible');
-
-                        // Check moderator notifications
-                        if (test.isModerator) {
-                            cy.get('@settingsDialog').find('#comentario-cb-notify-moderator')
-                                .should('be.visible').and('be.checked')
-                                .clickLabel()
-                                .should('not.be.checked');
-                        } else {
-                            cy.get('@settingsDialog').find('#comentario-cb-notify-moderator').should('not.exist');
-                        }
-
-                        // Check reply notifications
-                        cy.get('@settingsDialog').find('#comentario-cb-notify-replies')
-                            .should('be.visible').and('be.checked')
-                            .clickLabel()
-                            .should('not.be.checked');
-
-                        // Check profile link
-                        cy.get('@settingsDialog').contains('Edit Comentario profile')
-                            .should(
-                                'be.anchor',
-                                Cypress.config().baseUrl + PATHS.manage.account.profile,
-                                {newTab: true, noOpener: true});
-
-                        // Click "Save" and the dialog disappears
-                        cy.intercept('POST', '/api/embed/auth/user').as('fetchPrincipal');
-                        cy.get('@settingsDialog').find('button[type=submit]').should('have.text', 'Save').click();
-                        cy.get('@settingsDialog').should('not.exist');
-
-                        // Wait for the principal to get re-fetched
-                        cy.wait('@fetchPrincipal');
-
-                        // Open the dialog again and check the settings
-                        cy.get('@btnSettings').click();
-                        cy.get('@root').find('.comentario-dialog').as('settingsDialog').should('be.visible');
-                        cy.get('@settingsDialog').find('#comentario-cb-notify-moderator').should(test.isModerator ? 'not.be.checked' : 'not.exist');
-                        cy.get('@settingsDialog').find('#comentario-cb-notify-replies')  .should('not.be.checked')
-                            // Click on Escape and it's gone again
-                            .type('{esc}');
-                        cy.get('@settingsDialog').should('not.exist');
-                    });
-
                     if (test.isModerator) {
                         it('allows to toggle page lock', () => {
                             // Click on Lock and the page gets read-only
@@ -155,6 +108,5 @@ context('Profile bar', () => {
                         });
                     }
                 }));
-
     });
 });

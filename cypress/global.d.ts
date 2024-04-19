@@ -338,6 +338,16 @@ declare namespace Cypress {
          */
         commentVoteViaApi(id: string, direction: -1 | 0 | 1): Chainable<Response<void>>;
 
+        /**
+         * Update the setting of the currently logged-in commenter (domain user) for a specific domain directly via API.
+         * The user must be authenticated (i.e. session cookie must be present).
+         * @param domainId ID of the domain to apply user notification settings on.
+         * @param notifyReplies Whether the user is to be notified about replies to their comments.
+         * @param notifyModerator Whether the user is to receive moderator notifications.
+         * @param notifyCommentStatus Whether the user is to be notified about status changes (approved/rejected) of their comments.
+         */
+        commenterUpdateSettingsViaApi(domainId: string, notifyReplies: boolean, notifyModerator: boolean, notifyCommentStatus: boolean): Chainable<Response<void>>;
+
         /***************************************************************************************************************
           Test site
         ***************************************************************************************************************/

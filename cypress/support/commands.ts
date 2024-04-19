@@ -571,6 +571,22 @@ Cypress.Commands.add(
                 headers: {'X-User-Session': token?.value},
             })));
 
+Cypress.Commands.add(
+    'commenterUpdateSettingsViaApi',
+    {prevSubject: false},
+    (domainId: string, notifyReplies: boolean, notifyModerator: boolean, notifyCommentStatus: boolean) =>
+        // Fetch the user session cookie
+        cy.getCookie(COOKIES.embedCommenterSession)
+            // Then issue an API request
+            .then(token =>
+                void cy.request({
+                    method:  'PUT',
+                    url:     '/api/embed/auth/user',
+                    body:    {domainId, notifyReplies, notifyModerator, notifyCommentStatus},
+                    headers: {'X-User-Session': token?.value},
+                })
+                .its('status').should('eq', 204)));
+
 Cypress.Commands.add('testSiteVisit', {prevSubject: false}, (path: string) =>
     cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
 

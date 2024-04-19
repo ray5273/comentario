@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"time"
 )
 
 func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder {
@@ -136,32 +137,46 @@ func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.
 }
 
 func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user *data.User) middleware.Responder {
-	// Parse page ID
-	var du *data.DomainUser
-	if pageID, r := parseUUIDPtr(params.Body.PageID); r != nil {
+	// Parse domain ID
+	domainID, r := parseUUIDPtr(params.Body.DomainID)
+	if r != nil {
 		return r
+	} else if domainID == nil {
+		// There's no domain ID
+		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("domainId"))
+	}
 
-		// If there's no page
-	} else if pageID == nil {
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("pageId"))
-
-		// Find the page
-	} else if page, err := svc.ThePageService.FindByID(pageID); err != nil {
-		return respServiceError(err)
-
-		// Fetch the domain user
-	} else if _, du, err = svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID); err != nil {
+	// Fetch the domain user
+	_, du, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID)
+	if err != nil {
 		return respServiceError(err)
 	}
 
-	// Update the domain user, if needed
-	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
+	// If there's no user yet
+	if du == nil {
+		// Add a new domain user record
+		du = &data.DomainUser{
+			DomainID:            *domainID,
+			UserID:              user.ID,
+			IsCommenter:         true,
+			NotifyReplies:       params.Body.NotifyReplies,
+			NotifyModerator:     params.Body.NotifyModerator,
+			NotifyCommentStatus: params.Body.NotifyCommentStatus,
+			CreatedTime:         time.Now().UTC(),
+		}
+		err = svc.TheDomainService.UserAdd(du)
+
+		// Domain user exists. Update it, if the settings change
+	} else if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
 		du.NotifyReplies = params.Body.NotifyReplies
 		du.NotifyModerator = params.Body.NotifyModerator
 		du.NotifyCommentStatus = params.Body.NotifyCommentStatus
-		if err := svc.TheDomainService.UserModify(du); err != nil {
-			return respServiceError(err)
-		}
+		err = svc.TheDomainService.UserModify(du)
+	}
+
+	// Error check
+	if err != nil {
+		return respServiceError(err)
 	}
 
 	// Succeeded

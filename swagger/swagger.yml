@@ -2084,7 +2084,7 @@ paths:
 
     put:
       operationId: EmbedAuthCurUserUpdate
-      summary: Update commenter details
+      summary: Update commenter settings
       tags:
         - ApiEmbed
       security:
@@ -2096,12 +2096,12 @@ paths:
           schema:
             type: object
             required:
-              - pageId
+              - domainId
             properties:
-              pageId:
+              domainId:
                 type: string
                 format: uuid
-                description: ID of the page to apply user notification settings on
+                description: ID of the domain to apply user notification settings on
               notifyReplies:
                 type: boolean
                 description: Whether the user is to be notified about replies to their comments
