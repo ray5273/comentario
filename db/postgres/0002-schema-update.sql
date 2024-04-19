@@ -53,6 +53,7 @@ alter table cm_user_sessions     alter column ip type varchar(39);
 alter table cm_domain_page_views alter column ip type varchar(39);
 
 ------------------------------------------------------------------------------------------------------------------------
--- Add status notification setting to domain users
+-- Add new columns to domain users
 ------------------------------------------------------------------------------------------------------------------------
-alter table cm_domains_users add column notify_comment_status boolean default true not null; -- Whether the user is to be notified about status changes (approved/rejected) of their comments
+alter table cm_domains_users add column notify_comment_status boolean       default true not null; -- Whether the user is to be notified about status changes (approved/rejected) of their comments
+alter table cm_domains_users add column moderation_paths      varchar(4096) default ''   not null; -- Paths the user receives moderation notifications for (moderators only)

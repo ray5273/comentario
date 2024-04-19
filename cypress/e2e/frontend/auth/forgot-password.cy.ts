@@ -49,23 +49,21 @@ context('Forgot password', () => {
         cy.toastCheckAndClose('pwd-reset-email-sent');
 
         // Fetch the sent email: there must be exactly one
-        cy.backendGetSentEmails().then(mails => {
-            // Check there's exactly one email
-            expect(mails).length(1);
+        cy.backendGetSentEmails()
+            .should('have.length', 1)
+            .its(0).then(m => {
+                // Verify the email's headers
+                expect(m.headers['Subject']).eq('Comentario: Reset Your Password');
+                expect(m.headers['From'])   .eq('noreply@localhost');
+                expect(m.headers['To'])     .eq(USERS.commenterOne.email);
 
-            // Verify the email's headers
-            const m = mails[0];
-            expect(m.headers['Subject']).eq('Comentario: Reset Your Password');
-            expect(m.headers['From'])   .eq('noreply@localhost');
-            expect(m.headers['To'])     .eq(USERS.commenterOne.email);
+                // Extract a password reset link from the body
+                const matches = m.body.match(/http:\/\/localhost:8080\/en\/\?passwordResetToken=[^"]+/g);
+                expect(matches).length(1);
 
-            // Extract a password reset link from the body
-            const matches = m.body.match(/http:\/\/localhost:8080\/en\/\?passwordResetToken=[^"]+/g);
-            expect(matches).length(1);
-
-            // Click the link
-            cy.visit(matches[0]);
-        });
+                // Click the link
+                cy.visit(matches[0]);
+            });
 
         // We're at the password reset page
         cy.isAt(PATHS.auth.resetPassword);

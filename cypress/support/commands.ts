@@ -701,8 +701,11 @@ Cypress.Commands.add('backendUpdateDynConfig', (values: { [key: string]: string 
             Object.entries(values).map(([k, v]) => ({key: k, value: String(v)})))
         .its('status').should('eq', 204));
 
-Cypress.Commands.add('backendGetSentEmails', () =>
-    cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body'));
+Cypress.Commands.add('backendGetSentEmails', () => {
+    // Wait a short while because emails are sent in the background
+    cy.wait(250);
+    return cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body');
+});
 
 Cypress.Commands.add('backendPatchDomain', (id: string, values: any) =>
     void cy.request('PATCH', `/api/e2e/domains/${id}`, values).its('status').should('eq', 204));

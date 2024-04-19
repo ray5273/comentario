@@ -3,11 +3,7 @@ import { COOKIES, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 context('Email notifications', () => {
 
     /** Assert there's no email sent. */
-    const noEmail = () => {
-        // Wait a short while because emails are sent in the background
-        cy.wait(250);
-        cy.backendGetSentEmails().should('be.empty');
-    };
+    const noEmail = () => cy.backendGetSentEmails().should('be.empty');
 
     beforeEach(cy.backendReset);
 
@@ -117,7 +113,7 @@ context('Email notifications', () => {
             // Expect one email
             cy.backendGetSentEmails()
                 .should('have.length', 1)
-                .its(0).should(mail => {
+                .its(0).then(mail => {
                     expect(mail.headers['Subject']).eq('Comentario: New comment on Comments');
                     expect(mail.headers['To']).eq(USERS.commenterTwo.email);
                     expect(mail.body).contains('Chihuahua');
@@ -194,7 +190,7 @@ context('Email notifications', () => {
                     // Expect one email
                     cy.backendGetSentEmails()
                         .should('have.length', 1)
-                        .its(0).should(mail => {
+                        .its(0).then(mail => {
                         expect(mail.headers['Subject']).eq('Comentario: Comment status changed');
                         expect(mail.headers['To']).eq(USERS.commenterOne.email);
                         expect(mail.body).contains('This is new');

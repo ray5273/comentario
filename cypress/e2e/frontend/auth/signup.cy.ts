@@ -106,23 +106,21 @@ context('Signup', () => {
             cy.login(user, {goTo: true, succeeds: false, errToast: 'email-not-confirmed'});
 
             // Fetch the sent email: there must be exactly one
-            cy.backendGetSentEmails().then(mails => {
-                // Check there's exactly one email
-                expect(mails).length(1);
+            cy.backendGetSentEmails()
+                .should('have.length', 1)
+                .its(0).then(m => {
+                    // Verify the email's headers
+                    expect(m.headers['Subject']).eq('Comentario: Confirm Your Email');
+                    expect(m.headers['From'])   .eq('noreply@localhost');
+                    expect(m.headers['To'])     .eq('test@example');
 
-                // Verify the email's headers
-                const m = mails[0];
-                expect(m.headers['Subject']).eq('Comentario: Confirm Your Email');
-                expect(m.headers['From'])   .eq('noreply@localhost');
-                expect(m.headers['To'])     .eq('test@example');
+                    // Extract a confirmation link from the body
+                    const matches = m.body.match(/http:\/\/localhost:8080\/api\/auth\/confirm\?access_token=[^"]+/g);
+                    expect(matches).length(1);
 
-                // Extract a confirmation link from the body
-                const matches = m.body.match(/http:\/\/localhost:8080\/api\/auth\/confirm\?access_token=[^"]+/g);
-                expect(matches).length(1);
-
-                // Confirm user's email address by following the link
-                cy.visit(matches[0]);
-            });
+                    // Confirm user's email address by following the link
+                    cy.visit(matches[0]);
+                });
 
             // There's a success toast
             cy.toastCheckAndClose('email-confirmed');
