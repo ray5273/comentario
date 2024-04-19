@@ -160,7 +160,7 @@ const ConfigKeyDomainDefaultsPrefix = "domain.defaults."
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
 var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
-	ConfigKeyAuthLoginLocalMaxAttempts:                                      {DefaultValue: "10", Datatype: ConfigDatatypeInt, Section: DynConfigItemSectionAuth, Min: 0, Max: 2 << 30},
+	ConfigKeyAuthLoginLocalMaxAttempts:                                      {DefaultValue: "10", Datatype: ConfigDatatypeInt, Section: DynConfigItemSectionAuth, Min: 0, Max: 1<<31 - 1},
 	ConfigKeyAuthSignupConfirmCommenter:                                     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyAuthSignupConfirmUser:                                          {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyAuthSignupEnabled:                                              {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
