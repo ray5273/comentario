@@ -1,5 +1,25 @@
 # Comentario changelog
 
+## v3.7.0
+
+In this release we've introduced domain-level dynamic configuration, added support for unregistered commenters with a name (previously they were always "Anonymous"), a new setting for email notifications about comment approval/rejection, extended comment metadata with details about its editing, added failed login tracking, and more.
+
+### Changes
+
+* Implement domain-level dynamic config, which uses the previously available global settings as defaults - 61d6ab0, e742b6c, 26c264c, 07d039b, bbd9223, 0080e6f, f18db2e, 621c394, cf549c3, bb0c42f, 478bc14, bbe3084, f39b80a, 056fd23, f784429, 57fbab7, 16c4816
+* Add support for named unregistered users (#40) - fe67590, 27bd7a5, 508a98d
+* Implement user login tracking, user locking, add password change time (#72) - 94bde34, 97c839f
+* Support IPv6 addresses (#69), more robust user IP handling (#76) - daf1a9f, 9514e6f
+* Admin UI: add user session list/expire button to user properties - 435dcbf
+* Embed: handle OAuth popup opening failure with a dialog (#89) - 16c6abb
+* Embed: add user setting for comment status notifications (#74) - fa5f4dd, 9c94f38
+* Embed: streamline the login dialog - cacafc6
+* Embed: add `auto-non-interactive-sso` attribute of `<comentario-comments>` tag (#81) - 217af15, a2d95e0
+* Embed: optimise Comentario startup by getting rid of separate config API call - 3ce7a09
+* Embed: improve comment metadata (subtitle) display (#59, #60) - 8f65f97, dc43833
+* Fix unmasked IP registered with pageview (#77) - ca0f0e6
+* Documentation improvements and fixes (#82) - 7a24146, 44d4a98, d3a32f6, e7f3cb7, fa4db4f, 2d70ba8
+
 ## v3.6.0
 
 This release adds multilingual capabilities to embedded Comentario and email templates, including Russian and Dutch translations.
