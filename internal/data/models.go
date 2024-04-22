@@ -432,6 +432,8 @@ func (u *User) WithLocked(b bool) *User {
 		u.LockedTime = NowNullable()
 	} else {
 		u.LockedTime = sql.NullTime{}
+		// Reset the failed attempt counter on unlock
+		u.FailedLoginAttempts = 0
 	}
 	return u
 }

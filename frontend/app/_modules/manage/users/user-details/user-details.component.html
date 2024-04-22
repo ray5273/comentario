@@ -143,10 +143,10 @@
                 </div>
             }
             <!-- Failed login attempts -->
-            @if (user.failedLoginAttempts | number; as v) {
+            @if (user.failedLoginAttempts; as v) {
                 <div>
                     <dt i18n>Failed login attempts</dt>
-                    <dd>{{ v }}</dd>
+                    <dd>{{ v | number }}</dd>
                 </div>
             }
             <!-- Locked -->
