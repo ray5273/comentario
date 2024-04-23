@@ -101,6 +101,7 @@ context('Config Manager', () => {
         it('stays on the page after reload', () => cy.verifyStayOnReload(pagePathDynamic, USERS.root));
 
         it('allows to edit config items', () => {
+            cy.backendReset();
             cy.loginViaApi(USERS.root, pagePathDynamic);
 
             // Check the items
@@ -221,7 +222,7 @@ context('Config Manager', () => {
                 ['Integrations'],
                     ['Use Gravatar for user avatars',                       '✔'],
                 ['Markdown'],
-                    ['Enable images in comments',                           '✔'],
+                    ['Enable images in comments',                           ''],
                     ['Enable links in comments',                            '✔'],
                     ['Enable tables in comments',                           '✔'],
                 ['Miscellaneous'],

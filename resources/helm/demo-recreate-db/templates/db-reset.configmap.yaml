@@ -32,6 +32,12 @@ data:
 
     -- Reset the dynamic config to its defaults
     delete from cm_configuration;
+    delete from cm_domain_configuration;
+
+    -- Disable images to mitigate possible attack (user IP disclosure via a logger)
+    insert into cm_domain_configuration (domain_id, key, value, ts_updated, user_updated)
+        values
+            ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.images.enabled', 'false', '2024-04-01 10:11:46', '00000000-0000-0000-0000-000000000001');
 
     -- Remove all users except the Anonymous and demo users
     delete from cm_users where id not in (
@@ -39,7 +45,7 @@ data:
         '39a71854-bcfd-42d5-af62-5e931d7a72d8',
         '0ae8c474-ff4c-4950-baf3-975c370dc205',
         '60bfb728-340e-44d5-9e53-149f7d2f6e6a');
-    insert into cm_users(id, email, name, password_hash, is_superuser, confirmed, ts_confirmed, ts_created, website_url, secret_token)
+    insert into cm_users(id, email, name, password_hash, is_superuser, confirmed, ts_confirmed, ts_created, website_url, secret_token, failed_login_attempts, is_locked)
         values (
             '39a71854-bcfd-42d5-af62-5e931d7a72d8',
             'admin@admin',
@@ -50,7 +56,9 @@ data:
             '2023-06-14 15:33:53.383519',
             '2023-06-14 15:33:53.383519',
             'https://comentario.app/',
-            'e49269dc-1c31-48cf-bd14-d86b7ade266e'),
+            'e49269dc-1c31-48cf-bd14-d86b7ade266e',
+            0,
+            false),
         (
             '0ae8c474-ff4c-4950-baf3-975c370dc205',
             'moderator@moderator',
@@ -61,7 +69,9 @@ data:
             '2023-10-27 08:21:04',
             '2023-10-27 08:21:04',
             '',
-            'c421998c-daa0-468e-a610-61120940d29f'),
+            'c421998c-daa0-468e-a610-61120940d29f',
+            0,
+            false),
         (
             '60bfb728-340e-44d5-9e53-149f7d2f6e6a',
             'test@test',
@@ -72,15 +82,19 @@ data:
             '2023-10-27 08:19:20',
             '2023-10-27 08:19:20',
             '',
-            '3b357689-27c1-4f2b-a829-72f7bb56f9da')
+            '3b357689-27c1-4f2b-a829-72f7bb56f9da',
+            0,
+            false)
         on conflict (id) do update
             set
-                email         = excluded.email,
-                name          = excluded.name,
-                password_hash = excluded.password_hash,
-                is_superuser  = excluded.is_superuser,
-                confirmed     = excluded.confirmed,
-                website_url   = excluded.website_url;
+                email                 = excluded.email,
+                name                  = excluded.name,
+                password_hash         = excluded.password_hash,
+                is_superuser          = excluded.is_superuser,
+                confirmed             = excluded.confirmed,
+                website_url           = excluded.website_url,
+                failed_login_attempts = excluded.failed_login_attempts,
+                is_locked             = excluded.is_locked;
 
     -- Delete all domains except demo.comentario.app
     delete from cm_domains where id != '9f0b8563-f29e-456e-b53b-3c83fb068b58';
@@ -214,7 +228,7 @@ data:
                 false,
                 current_timestamp,
                 '00000000-0000-0000-0000-000000000000',
-                'Don''t like it'),
+                'There''s something fishy here!'),
             -- Dutch
             ('065822de-e18a-48dd-ba0b-375e10add12d',
                 null,

@@ -172,7 +172,7 @@ var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingModerator:  {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyEnableCommentVoting:      {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyShowDeletedComments:      {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
-	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "false", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownLinksEnabled:     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownTablesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
