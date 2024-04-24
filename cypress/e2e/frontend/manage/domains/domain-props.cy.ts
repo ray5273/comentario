@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, REGEXES, USERS, Util } from '../../../../support/cy-utils';
+import { DOMAINS, PATHS, REGEXES, UI_LANGUAGES, USERS, Util } from '../../../../support/cy-utils';
 
 context('Domain Properties page', () => {
 
@@ -266,18 +266,12 @@ context('Domain Properties page', () => {
             cy.get('@optCssOverride').should('be.enabled');
             checkSnippet('');
             // -- lang
-            cy.get('@optLang').texts('option').should('arrayMatch', [
-                '(default)',
-                'English (English)',
-                'Nederlands (Dutch)',
-                'русский (Russian)',
-            ]);
-            cy.get('@optLang').select(1);
-            checkSnippet(' lang="en"');
-            cy.get('@optLang').select(2);
-            checkSnippet(' lang="nl"');
-            cy.get('@optLang').select(3);
-            checkSnippet(' lang="ru"');
+            cy.get('@optLang').texts('option').should('arrayMatch', ['(default)', ...Object.values(UI_LANGUAGES)]);
+            Object.keys(UI_LANGUAGES)
+                .forEach((lang, idx) => {
+                    cy.get('@optLang').select(idx+1);
+                    checkSnippet(` lang="${lang}"`);
+                })
             cy.get('@optLang').select(0);
             checkSnippet('');
             // -- css-override

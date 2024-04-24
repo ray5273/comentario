@@ -1,3 +1,11 @@
+/** Expected available UI languages. */
+export const UI_LANGUAGES = {
+    'en':    'English (English)',
+    'nl':    'Nederlands (Dutch)',
+    'pt-BR': 'português (Brazilian Portuguese)',
+    'ru':    'русский (Russian)',
+};
+
 /** Canned regular expressions. */
 export const REGEXES = {
     datetime:      /^\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)$/,

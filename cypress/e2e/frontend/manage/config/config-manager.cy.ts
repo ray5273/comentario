@@ -1,4 +1,4 @@
-import { InstanceConfigKey, PATHS, REGEXES, USERS } from '../../../../support/cy-utils';
+import { InstanceConfigKey, PATHS, REGEXES, UI_LANGUAGES, USERS } from '../../../../support/cy-utils';
 
 context('Config Manager', () => {
 
@@ -73,7 +73,7 @@ context('Config Manager', () => {
                 ['Configured federated identity providers', ['Facebook', 'GitHub', 'GitLab', 'Google', 'Twitter']],
                 ['Max. number of items per page',           '25'],
                 ['Live update enabled',                     '✔'],
-                ['Available UI languages',                  ['en' + 'English (English)', 'nl' + 'Nederlands (Dutch)', 'ru' + 'русский (Russian)']],
+                ['Available UI languages',                  Object.entries(UI_LANGUAGES).map(([k, v]) => k+v)],
                 ['Enabled extensions',                      ['Akismet', 'APILayer SpamChecker', 'Perspective']],
             ]);
 
