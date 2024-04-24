@@ -268,7 +268,8 @@ release:
   stage: release
   image: registry.gitlab.com/gitlab-org/release-cli:latest
   rules:
-    - if: $CI_COMMIT_TAG
+    # Only run in the main repo, and if it's a tag build
+    - if: $CI_PROJECT_NAMESPACE == 'comentario' && $CI_COMMIT_TAG
   before_script:
     # Install curl, jq
     - apk add --no-cache curl jq
@@ -311,13 +312,14 @@ release:
 deploy-dev:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_BRANCH == "dev"
+    # Only run if the context name is given (via CI/CD vars) and the branch is 'dev'
+    - if: $CV_K8S_CONTEXT && $CI_COMMIT_BRANCH == "dev"
   image: $DEPLOYER_IMAGE
   environment:
     name: edge.comentario.app
   script:
     # Use the Kubernetes context from GitLab agent
-    - kubectl config use-context comentario/comentario-ci-tools:ys-comentario
+    - kubectl config use-context $CV_K8S_CONTEXT
 
     # Perform chart installation/upgrade (edge.comentario.app), waiting for it to complete (up to two minutes)
     - helm upgrade
@@ -356,14 +358,15 @@ deploy-dev:
 deploy-tag:
   stage: deploy
   rules:
-    - if: $CI_COMMIT_TAG
+    # Only run if the context name is given (via CI/CD vars) and it's a tag build (manual deployment only)
+    - if: $CV_K8S_CONTEXT && $CI_COMMIT_TAG
       when: manual
   image: $DEPLOYER_IMAGE
   environment:
     name: comentario.app
   script:
     # Use the Kubernetes context from GitLab agent
-    - kubectl config use-context comentario/comentario-ci-tools:ys-comentario
+    - kubectl config use-context $CV_K8S_CONTEXT
 
     # Perform chart installation/upgrade (comentario.app), waiting for it to complete (up to two minutes)
     - helm upgrade
@@ -384,8 +387,8 @@ smoke-test:
   stage: post-deploy
   rules:
     # Only makes sense if deploy has run
-    - if: $CI_COMMIT_BRANCH == "dev"
-    - if: $CI_COMMIT_TAG && $CI_COMMIT_TAG !~ /rc/i
+    - if: $CV_K8S_CONTEXT && $CI_COMMIT_BRANCH == "dev"
+    - if: $CV_K8S_CONTEXT && $CI_COMMIT_TAG
   image: curlimages/curl:latest
   dependencies: []  # Do not download any artifacts
   script:
