@@ -12,6 +12,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
     private readonly preview:    Wrap<HTMLDivElement>;
     private readonly btnPreview: Wrap<HTMLButtonElement>;
     private readonly btnSubmit:  Wrap<HTMLButtonElement>;
+    private readonly toolbar:    Wrap<HTMLDivElement>;
     private previewing = false;
 
     /**
@@ -37,11 +38,14 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
     ) {
         super(UIToolkit.form(() => onSubmit(this), () => onCancel(this)).element);
 
+        // Render the toolbar
+        this.toolbar = this.renderToolbar();
+
         // Set up the form
         this.classes('comment-editor')
             .append(
                 // Toolbar
-                this.renderToolbar(),
+                this.toolbar,
                 // Textarea
                 this.textarea = UIToolkit.textarea(null, true, true)
                     .attr({name: 'comentario-comment-editor', maxlength: '4096'})
@@ -89,9 +93,10 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         // Toggle the value
         this.previewing = !this.previewing;
 
-        // Hide the textarea and show the preview in the preview mode
+        // Hide the toolbar/textarea and show the preview in the preview mode
+        this.toolbar .setClasses(this.previewing, 'disabled');
         this.textarea.setClasses(this.previewing, 'hidden');
-        this.preview.setClasses(!this.previewing, 'hidden');
+        this.preview .setClasses(!this.previewing, 'hidden');
 
         // Update the button
         this.btnPreview.setClasses(this.previewing, 'btn-active');

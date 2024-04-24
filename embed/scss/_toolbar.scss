@@ -29,4 +29,12 @@
             }
         }
     }
+
+    &.comentario-disabled {
+        background-color: $gray-1;
+
+        .comentario-btn-tool {
+            pointer-events: none;
+        }
+    }
 }

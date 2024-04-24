@@ -15,6 +15,7 @@
     }
 
     .comentario-comment-editor-preview {
+        min-height: 130px; // Consistent with the min-height of a textarea
         padding: 8px;
         border: 1px solid $violet-2;
         border-radius: 3px;

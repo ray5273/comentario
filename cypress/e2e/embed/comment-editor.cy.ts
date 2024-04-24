@@ -141,13 +141,15 @@ context('Comment Editor', () => {
                     '```';
                 cy.get('.comentario-root .comentario-add-comment-host').focus();
                 cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+                cy.get('@editor').find('.comentario-toolbar').as('toolbar');
                 cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue(text);
 
                 // Click on "Preview"
                 cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview').as('previewBtn').click()
                     .should('have.class', 'comentario-btn-active');
 
-                // The textarea is gone and a preview pane is visible
+                // The toolbar is disabled, the textarea is gone and a preview pane is visible
+                cy.get('@toolbar') .should('have.class', 'comentario-disabled');
                 cy.get('@textarea').should('not.be.visible');
                 cy.get('@editor').find('.comentario-comment-editor-preview').as('preview')
                     .should('be.visible')
@@ -161,6 +163,7 @@ context('Comment Editor', () => {
 
                 // Deactivate the preview: the editor's back and the preview gone
                 cy.get('@previewBtn').click().should('not.have.class', 'comentario-btn-active');
+                cy.get('@toolbar') .should('not.have.class', 'comentario-disabled');
                 cy.get('@preview') .should('not.be.visible');
                 cy.get('@textarea').should('be.visible').and('be.focused').and('have.value', text);
             });
