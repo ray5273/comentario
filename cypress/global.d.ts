@@ -131,13 +131,13 @@ declare namespace Cypress {
 
         /**
          * Collect visible texts of <dt> and <dd> elements of a definition list and return as an array of two-element
-         * arrays: [[dt, dd], [dt, dd], ...]. Must be chained off a <dl> element.
+         * arrays: `[[dt, dd], [dt, dd], ...]`. Must be chained off a `<dl>` element.
          */
         dlTexts(): Chainable<string[][]>;
 
         /**
-         * Return the <dd> element immediately following the <dt> containing the given text. Must be chained off a <dl>
-         * element.
+         * Return the <dd> element immediately following the <dt> containing the given text. Must be chained off a
+         * `<dl>` element.
          */
         ddItem(dtText: string): Chainable<JQueryWithSelector>
 

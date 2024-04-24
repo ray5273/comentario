@@ -612,4 +612,41 @@ context('User Properties page', () => {
             cy.commentTree('author', 'html').should('be.empty');
         });
     });
+
+    it('allows to unlock user', () => {
+        cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.linkedinUser.id).props);
+        makeAliases(true, true, true, false, false, 0);
+
+        // Verify user details: the user is locked
+        cy.get('@userDetails').dlTexts().should('matrixMatch', [
+            ['ID',                    USERS.linkedinUser.id],
+            ['Federated user',        'linkedin /59866240'],
+            ['Name',                  USERS.linkedinUser.name],
+            ['Email',                 USERS.linkedinUser.email],
+            ['Language',              'en'],
+            ['Confirmed',             REGEXES.checkDatetime],
+            ['Created',               REGEXES.datetime],
+            ['Last password change',  REGEXES.datetime],
+            ['Last login',            '(never)'],
+            ['Failed login attempts', '7'],
+            ['Locked',                /^✔\s*\(.+\)Unlock$/],
+        ]);
+
+        // Unlock them
+        cy.get('@userDetails').ddItem('Locked').contains('button', 'Unlock').click();
+        cy.toastCheckAndClose('user-is-unlocked');
+
+        // No locked status or failed attempts anymore
+        cy.get('@userDetails').dlTexts().should('matrixMatch', [
+            ['ID',                    USERS.linkedinUser.id],
+            ['Federated user',        'linkedin /59866240'],
+            ['Name',                  USERS.linkedinUser.name],
+            ['Email',                 USERS.linkedinUser.email],
+            ['Language',              'en'],
+            ['Confirmed',             REGEXES.checkDatetime],
+            ['Created',               REGEXES.datetime],
+            ['Last password change',  REGEXES.datetime],
+            ['Last login',            '(never)'],
+        ]);
+    });
 });

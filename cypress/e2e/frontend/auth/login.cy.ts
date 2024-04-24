@@ -94,6 +94,15 @@ context('Login', () => {
 
         // Now try to login again with the correct password: the user is locked
         cy.login(USERS.ace, {goTo: false, succeeds: false, errToast: 'user-locked'});
+
+        // Open the user properties (as root) and unlock the user account
+        cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.ace.id).props);
+        cy.get('app-user-properties #user-details .detail-table').ddItem('Locked').contains('button', 'Unlock').click();
+        cy.toastCheckAndClose('user-is-unlocked');
+        cy.logout();
+
+        // The user is able to login again
+        cy.login(USERS.ace);
     });
 
     it('doesn\'t lock user with unlimited failed attempts', () => {
