@@ -55,6 +55,7 @@ Below is a list of available command-line options, with their environment equiva
 | `--read-timeout=VALUE`       | Maximum duration before timing out read of the request                |                       | `30s`                               |
 | `--write-timeout=VALUE`      | Maximum duration before timing out write of the response              |                       | `60s`                               |
 | `-v`, `--verbose`            | Verbose logging (use `-vv` for debug logging)                         |                       |                                     |
+| `--no-color`                 | Disable log colouring                                                 | `$NO_COLOR`           |                                     |
 | `--base-url=VALUE`           | Server's own base URL                                                 | `$BASE_URL`           | `http://localhost:8080`             |
 | `--base-docs-url=VALUE`      | Base documentation URL                                                | `$BASE_DOCS_URL`      | `https://docs.comentario.app`       |
 | `--tos-url=VALUE`            | URL of the Terms of Service page                                      | `$TOS_URL`            | `<base docs URL>/en/legal/tos/`     |

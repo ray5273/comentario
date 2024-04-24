@@ -25,6 +25,7 @@ var (
 	// CLIFlags stores command-line flags
 	CLIFlags = struct {
 		Verbose           []bool `short:"v" long:"verbose"  description:"Verbose logging (-vv for debug)"`
+		NoLogColours      bool   `long:"no-color"           description:"Disable log colouring"                                                            env:"NO_COLOR"`
 		BaseURL           string `long:"base-url"           description:"Server's own base URL"                      default:"http://localhost:8080"       env:"BASE_URL"`
 		BaseDocsURL       string `long:"base-docs-url"      description:"Base documentation URL"                     default:"https://docs.comentario.app" env:"BASE_DOCS_URL"`
 		TermsOfServiceURL string `long:"tos-url"            description:"URL of the Terms of Service page"           default:""                            env:"TOS_URL"`

@@ -66,6 +66,9 @@ func main() {
 		os.Exit(code)
 	}
 
+	// Configure logging
+	setupLogging()
+
 	// Configure variables
 	config.AppVersion = version
 	config.BuildDate, _ = time.Parse(time.RFC3339, date)
@@ -74,7 +77,26 @@ func main() {
 	// Link the translations to the embedded filesystem
 	config.I18nFS = &i18nFS
 
-	// Configure logging
+	// Configure the API
+	server.ConfigureAPI()
+
+	// Serve the API
+	if err := server.Serve(); err != nil {
+		logger.Fatalf("Serve() failed: %v", err)
+	}
+}
+
+func setupLogging() {
+	// Create a custom backend to get rid of the default date/time format configured in the default backend
+	backend := logging.NewLogBackend(os.Stdout, "", 0)
+	formatter := logging.MustStringFormatter(
+		util.If(
+			config.CLIFlags.NoLogColours,
+			`%{time:2006-01-02 15:04:05.000} %{level:-5.5s} %{module:-11s} | %{message}`,
+			`%{color}%{time:2006-01-02 15:04:05.000} %{color:bold}%{level:-5.5s}%{color:reset} %{color}%{module:-11s} | %{message}%{color:reset}`))
+	logging.SetBackend(logging.NewBackendFormatter(backend, formatter))
+
+	// Configure logging level
 	var logLevel logging.Level
 	switch len(config.CLIFlags.Verbose) {
 	case 0:
@@ -84,14 +106,5 @@ func main() {
 	default:
 		logLevel = logging.DEBUG
 	}
-	logging.SetFormatter(logging.MustStringFormatter(`%{level:-5s} %{module} %{message}`))
 	logging.SetLevel(logLevel, "")
-
-	// Configure the API
-	server.ConfigureAPI()
-
-	// serve API
-	if err := server.Serve(); err != nil {
-		logger.Fatalf("Serve() failed: %v", err)
-	}
 }

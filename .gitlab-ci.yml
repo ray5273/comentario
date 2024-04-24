@@ -127,6 +127,7 @@ build:
 
     # Start the e2e backend
     - ./dist/comentario_linux_amd64_v1/comentario -vv
+          --no-color
           --e2e
           --port=8080
           --static-path=build/frontend
