@@ -260,10 +260,10 @@ export class ErrorMessage implements Message {
      * Instantiate a new ErrorMessage instance from the given error object. For now, only handle a string and an HTTP
      * error in a special way.
      * @param err Source error object.
-     * @param t Translation function for messages.
+     * @param t Translation function for messages, undefined if not available.
      */
-    static of(err: any, t: TranslateFunc): ErrorMessage {
-        let text = t('errorUnknown');
+    static of(err: any, t?: TranslateFunc): ErrorMessage {
+        let text = t?.('errorUnknown') || 'Unknown error';
 
         if (typeof err === 'string') {
             text = err;
@@ -282,7 +282,7 @@ export class ErrorMessage implements Message {
             // Translate error ID
             switch (resp?.id) {
                 case 'unknown-host':
-                    text = t('errorUnknownHost');
+                    text = t?.('errorUnknownHost') || resp.id;
                     break;
 
                 // Not a known error ID

@@ -3,8 +3,6 @@ import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment threads', () => {
 
-    before(cy.backendReset);
-
     /** Post-login routine for the "Dynamic Comentario" page. */
     const insertDynamic = () => {
         // No Comentario initially
@@ -42,6 +40,63 @@ context('Comment threads', () => {
         cy.get('comentario-comments .comentario-comments .comentario-card .comentario-card-children')
             .hasClass('comentario-card-children-unnest').should('arrayMatch', [false, true, true, true, true, true]);
     };
+
+    context('Startup', () => {
+
+        before(cy.backendReset);
+
+        it('handles unreachable API', () => {
+            // Simulate a total API failure
+            cy.intercept('/api/**', {statusCode: 500});
+
+            // Visit a comment page
+            cy.testSiteVisit(TEST_PATHS.comments);
+
+            // There's an error text
+            cy.get('.comentario-root').as('root').contains('Oh no, Comentario failed to start.').should('be.visible');
+
+            // No other interface elements
+            cy.get('@root').find('.comentario-profile-bar').should('not.exist');
+            cy.get('@root').find('.comentario-main-area')  .should('not.exist');
+            cy.get('@root').find('.comentario-footer')     .should('not.exist');
+        });
+
+        it('handles API failure', () => {
+            // Simulate an API comment endpoint failure
+            cy.intercept('/api/embed/comments', {statusCode: 500});
+
+            // Visit a comment page
+            cy.testSiteVisit(TEST_PATHS.comments);
+
+            // There's an error notice
+            cy.get('.comentario-root').as('root');
+            cy.get('@root').contains('.comentario-error', 'Error: Internal Server Error').should('be.visible');
+            cy.get('@root').find('.comentario-profile-bar')                              .should('be.visible');
+            cy.get('@root').find('.comentario-footer')                                   .should('be.visible');
+        });
+
+        it('shows placeholders while loading', () => {
+            // Simulate a slow API response
+            cy.intercept(
+                {method: 'POST', url: '/api/embed/comments'},
+                req => req.continue(res => void res.setDelay(4000))).as('apiComments');
+
+            // Visit a comment page
+            cy.testSiteVisit(TEST_PATHS.comments);
+
+            // Expect a few visible placeholders
+            cy.get('.comentario-root .comentario-main-area').as('mainArea');
+            cy.get('@mainArea').find('.comentario-main-area-placeholder').should('be.visible')
+                .find('.comentario-ph-comment-card').should('have.length', 3);
+
+            // After the request finished no placeholder anymore
+            cy.wait('@apiComments');
+            cy.get('@mainArea').find('.comentario-main-area-placeholder').should('not.exist');
+
+            // Verify the regular UI elements
+            EmbedUtils.makeAliases({anonymous: true});
+        });
+    });
 
     [
         {name: 'superuser',  user: USERS.root,           isModerator: true},

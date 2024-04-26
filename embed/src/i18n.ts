@@ -12,6 +12,13 @@ export class I18nService {
     /** Messages for i18n in the current language. */
     private readonly messages = new Map<string, string>();
 
+    /**
+     * Whether the service has been successfully initialised.
+     */
+    get initialised(): boolean {
+        return !!this.messages.size;
+    }
+
     constructor(private readonly api: ApiService) {}
 
     /**

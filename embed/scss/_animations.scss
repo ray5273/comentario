@@ -2,6 +2,8 @@
 
 $animation-duration: 250ms;
 
+// Fade in-out
+
 .comentario-fade-in {
     animation: comentario-fade-in-animation $animation-duration ease-in-out forwards 1;
 }
@@ -20,20 +22,14 @@ $animation-duration: 250ms;
     to   {opacity: 0;}
 }
 
+// Expand-collapse
+
 .comentario-expand {
     animation: comentario-expand-animation $animation-duration ease-in-out forwards 1;
 }
 
 .comentario-collapse {
     animation: comentario-collapse-animation $animation-duration ease-in-out forwards 1;
-}
-
-.comentario-bg-highlight {
-    animation: comentario-bg-highlight-animation 5s ease forwards 1;
-}
-
-.comentario-bg-blink {
-    animation: comentario-bg-blink-animation 2s ease forwards 1;
 }
 
 @keyframes comentario-expand-animation {
@@ -56,6 +52,16 @@ $animation-duration: 250ms;
         opacity: 0;
         transform: translateY(-100%);
     }
+}
+
+// Background blinks
+
+.comentario-bg-highlight {
+    animation: comentario-bg-highlight-animation 5s ease forwards 1;
+}
+
+.comentario-bg-blink {
+    animation: comentario-bg-blink-animation 2s ease forwards 1;
 }
 
 @keyframes comentario-bg-highlight-animation {

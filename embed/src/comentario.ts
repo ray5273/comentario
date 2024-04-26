@@ -38,10 +38,7 @@ export class Comentario extends HTMLElement {
     private readonly cdn = '[[[.CdnPrefix]]]';
 
     /** Service handling API requests. */
-    private readonly apiService = new ApiService(
-        Utils.joinUrl(this.origin, 'api'),
-        () => !this.ignoreApiErrors && this.setMessage(),
-        err => !this.ignoreApiErrors && this.handleApiError(err));
+    private readonly apiService = new ApiService(Utils.joinUrl(this.origin, 'api'));
 
     /** I18n service for obtaining localised messages. */
     private readonly i18n = new I18nService(this.apiService);
@@ -129,6 +126,9 @@ export class Comentario extends HTMLElement {
     /** Whether live comment update is enabled. */
     private readonly liveUpdate = this.getAttribute('live-update') !== 'false';
 
+    /** Timer for adding a content placeholder. */
+    private contentPlaceholderTimer?: any;
+
     // noinspection JSUnusedGlobalSymbols
     /**
      * Called by the browser when the element is added to the DOM.
@@ -157,7 +157,13 @@ export class Comentario extends HTMLElement {
      * @return Promise that resolves as soon as Comentario setup is complete
      */
     async main(): Promise<void> {
-        // Init i18n as the very first step because it may be needed for displaying (translated) error messages
+        // Set up an API error-reset handler
+        this.apiService.onBeforeRequest = () => !this.ignoreApiErrors && this.setMessage();
+
+        // Also set up an initial, temporary API error handler
+        this.apiService.onError = () => this.handleInitApiError();
+
+        // Init i18n as the very first action because it may be needed for displaying (translated) error messages
         await this.initI18n();
 
         // Load local configuration
@@ -200,11 +206,20 @@ export class Comentario extends HTMLElement {
                 // Footer
                 UIToolkit.div('footer').append(UIToolkit.a(this.i18n.t('poweredBy'), 'https://comentario.app/')));
 
-        // Load information about ourselves
-        await this.updateAuthStatus();
+        // Now that everything's in place, set up a proper API error handler
+        this.apiService.onError = err => !this.ignoreApiErrors && this.handleApiError(err);
 
-        // Load the UI
-        await this.reload();
+        // Add a temporary content placeholder after a short delay
+        this.contentPlaceholderTimer = setTimeout(() => this.addContentPlaceholder(), 500);
+        try {
+            // Load information about ourselves
+            await this.updateAuthStatus();
+
+            // Load the UI
+            await this.reload();
+        } finally {
+            this.stopContentPlaceholderTimer();
+        }
 
         // Scroll to the requested comment, if any
         this.scrollToCommentHash();
@@ -393,7 +408,9 @@ export class Comentario extends HTMLElement {
             this.messagePanel = UIToolkit.div('message-box')
                 .classes(err && 'error')
                 // Message body
-                .append(UIToolkit.div('message-box-body').inner(err ? `${this.i18n.t('error')}: ${message.text}.` : message.text)));
+                .append(
+                    UIToolkit.div('message-box-body')
+                        .inner(err && this.i18n.initialised ? `${this.i18n.t('error')}: ${message.text}.` : message.text)));
 
         // If there are details
         if (message.details) {
@@ -439,6 +456,9 @@ export class Comentario extends HTMLElement {
      * Create and return a main area element.
      */
     private setupMainArea() {
+        // Stop any upcoming placeholder timer
+        this.stopContentPlaceholderTimer();
+
         // Clean up everything from the main area
         this.mainArea!.html('');
         this.commentsArea = undefined;
@@ -1058,11 +1078,47 @@ export class Comentario extends HTMLElement {
     }
 
     /**
+     * Handle an incoming API error before Comentario is ready to do it properly (initialisation hasn't completed).
+     */
+    private handleInitApiError() {
+        this.root.append(
+            UIToolkit.div().style('color: red; font-weight: bold; font-size: 1.5em;').inner('Oh no, Comentario failed to start.'),
+            UIToolkit.div().inner('If you own this website, you might want to look at the browser console to find out why.'));
+    }
+
+    /**
      * Handle an incoming API error by displaying it in the message panel.
      * @param err Error to handle.
-     * @private
      */
     private handleApiError(err: any) {
-        this.setMessage(ErrorMessage.of(err, this.i18n.t));
+        this.setMessage(ErrorMessage.of(err, this.i18n.initialised ? this.i18n.t : undefined));
+    }
+
+    /**
+     * Generate an array of placeholders mimicking Comentario layout, and add them to the main area.
+     */
+    private addContentPlaceholder() {
+        const phText = () => UIToolkit.div('ph-bg', 'ph-card-text');
+        const phCard = () => UIToolkit.div('ph-comment-card').append(UIToolkit.div('ph-bg', 'ph-card-header'), phText(), phText(), phText());
+
+        UIToolkit.div('main-area-placeholder')
+            .append(
+                // Profile bar
+                UIToolkit.div('ph-profile-bar').append(UIToolkit.div('ph-bg', 'ph-button')),
+                // Add comment host
+                UIToolkit.div('ph-bg', 'ph-add-comment-host'),
+                // Cards
+                phCard(), phCard(), phCard())
+            .appendTo(this.mainArea!);
+    }
+
+    /**
+     * Stop any content placeholder timer.
+     */
+    private stopContentPlaceholderTimer() {
+        if (this.contentPlaceholderTimer) {
+            clearTimeout(this.contentPlaceholderTimer);
+            this.contentPlaceholderTimer = undefined;
+        }
     }
 }

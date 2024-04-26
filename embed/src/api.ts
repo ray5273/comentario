@@ -83,12 +83,25 @@ export class ApiService {
     /** HTTP client we'll use for API requests. */
     private readonly httpClient: HttpClient;
 
+    /** Callback that gets invoked before executing a request. It's supposed to clean up any displayed error status. */
+    private _onBeforeRequest?: () => void;
+
+    /** Callback that gets invoked when an API error occurs. */
+    private _onError?: (error: any) => void;
+
     constructor(
         private readonly baseUrl: string,
-        onBeforeRequest?: () => void,
-        onError?: (error: any) => void,
+
     ) {
-        this.httpClient = new HttpClient(baseUrl, onBeforeRequest, onError);
+        this.httpClient = new HttpClient(baseUrl, () => this._onBeforeRequest?.(), err => this._onError?.(err));
+    }
+
+    set onBeforeRequest(v: typeof this._onBeforeRequest | undefined) {
+        this._onBeforeRequest = v;
+    }
+
+    set onError(v: typeof this._onError | undefined) {
+        this._onError = v;
     }
 
     /**

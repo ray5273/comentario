@@ -2,7 +2,7 @@
 export interface LayoutSettings {
     /** Root selector for Comentario, defaults to 'comentario-comments'. */
     rootSelector?: string;
-    /** Whether the user is not logged in. */
+    /** Whether the user is not logged in. Defaults to false. */
     anonymous?: boolean;
     /** Whether login button is available (only when anonymous is true). Defaults to true. */
     login?: boolean;
