@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
@@ -147,6 +148,12 @@ func (svc *commentService) Count(
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 
+	// Working around #95: the database field only accommodates IPv4 at the moment, so we ignore IPv6 addresses
+	var authorIP string
+	if util.IsValidIPv4(c.AuthorIP) {
+		authorIP = config.MaskIP(c.AuthorIP)
+	}
+
 	// Insert a record into the database
 	if err := db.ExecuteOne(
 		db.Dialect().
@@ -171,9 +178,9 @@ func (svc *commentService) Create(c *data.Comment) error {
 				"user_deleted":   &c.UserDeleted,
 				"user_edited":    &c.UserEdited,
 				"pending_reason": util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength),
-				"author_name":    &c.AuthorName,
-				"author_ip":      &c.AuthorIP,
-				"author_country": &c.AuthorCountry,
+				"author_name":    c.AuthorName,
+				"author_ip":      authorIP,
+				"author_country": c.AuthorCountry,
 			}),
 	); err != nil {
 		logger.Errorf("commentService.Create: ExecuteOne() failed: %v", err)

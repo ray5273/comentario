@@ -131,13 +131,15 @@ func MaskIP(ip string) string {
 		// Find the second dot
 		idx := 0
 		for i, c := range ip {
-			if c == '.' {
+			switch c {
+			case '.':
 				idx++
 				if idx == 2 {
 					// Second dot found, replace the rest of the string
 					return ip[:i] + ".x.x"
 				}
-			} else if c == ':' {
+
+			case ':':
 				idx++
 				if idx == 2 {
 					// Second colon found, replace the rest of the string
