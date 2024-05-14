@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, first, Observable, switchMap, tap } from 'rxjs';
-import { map, shareReplay } from 'rxjs/operators';
+import { HttpClient } from '@angular/common/http';
+import { BehaviorSubject, first, Observable, of, switchMap, tap, timer } from 'rxjs';
+import { catchError, map, shareReplay } from 'rxjs/operators';
+import * as semver from 'semver';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
 import { ApiGeneralService, InstanceStaticConfig } from '../../generated-api';
 import { DynamicConfig } from '../_models/config';
@@ -12,10 +14,27 @@ declare global {
     }
 }
 
+/**
+ * Release metadata as presented by the GitLab API.
+ */
+export interface ReleaseMetadata {
+    name:     string;
+    tag_name: string;
+    tag_path: string;
+    _links: {
+        self: string;
+    }
+}
+
 @Injectable({
     providedIn: 'root',
 })
 export class ConfigService {
+
+    /**
+     * ID of Comentario GitLab project.
+     */
+    static readonly GITLAB_PROJECT_ID = '42486427';
 
     /**
      * Toast hiding delay in milliseconds.
@@ -48,11 +67,38 @@ export class ConfigService {
      */
     readonly extensions = this.api.configExtensionsGet().pipe(map(r => r.extensions), shareReplay(1));
 
+    /**
+     * Observable for obtaining the latest stable Comentario release metadata. It gets updated once in 6 hours, and
+     * emits an empty string if fetching version failed.
+     */
+    readonly stableRelease: Observable<ReleaseMetadata | undefined> = timer(3000, 6 * 3600 * 1000)
+        .pipe(
+            // Fetch the latest released version
+            switchMap(() => this.http.get<any>(`https://gitlab.com/api/v4/projects/${ConfigService.GITLAB_PROJECT_ID}/releases/`)),
+            // Turn any error into undefined
+            catchError(() => of(undefined)),
+            // Extract the latest release version (tag)
+            map(releases => Array.isArray(releases) && releases.length > 0 ? releases[0] as ReleaseMetadata : undefined),
+            // Update the upgrade availability
+            tap(r => {
+                const cur    = semver.coerce(this._staticConfig?.version);
+                const stable = semver.coerce(r?.tag_name);
+                this.upgradeAvailable.next(cur && stable ? semver.gt(stable, cur) : undefined);
+            }),
+            // Cache the last result
+            shareReplay(1));
+
+    /**
+     * Whether a newer stable Comentario version is available.
+     */
+    readonly upgradeAvailable = new BehaviorSubject<boolean | undefined>(undefined);
+
     private _staticConfig?: InstanceStaticConfig;
 
     constructor(
         ngbConfig: NgbConfig,
         toastConfig: NgbToastConfig,
+        private readonly http: HttpClient,
         private readonly api: ApiGeneralService,
     ) {
         // Detect if the e2e-test is active

@@ -24,7 +24,21 @@
     <!-- Comentario version -->
     <div>
         <dt i18n>Comentario version</dt>
-        <dd>{{ cfg.version }}</dd>
+        <dd [class.bg-warning-subtle]="upgradeAvailable && stableRelease" class="d-flex flex-wrap">
+            <div class="me-3">{{ cfg.version }}</div>
+            @if (upgradeAvailable === false) {
+                <!-- No upgrade available -->
+                <div class="fst-italic" i18n>No upgrade available.</div>
+            } @else if (upgradeAvailable && stableRelease) {
+                <!-- Upgrade version link -->
+                <div class="fw-bold">
+                    <a [appExternalLink]="stableRelease._links.self">
+                        <span class="colon" i18n>Upgrade available</span>&ngsp;
+                        <ng-container>{{ stableRelease.name }}</ng-container>
+                    </a>
+                </div>
+            }
+        </dd>
     </div>
     <!-- Build date -->
     <div>
