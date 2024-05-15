@@ -12,7 +12,8 @@ import {
     faSignOutAlt,
     faTachometerAlt,
     faUsers,
-    faUsersRectangle, faWrench,
+    faUsersRectangle,
+    faWrench,
 } from '@fortawesome/free-solid-svg-icons';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -20,6 +21,7 @@ import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
 import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 import { CommentService } from '../_services/comment.service';
+import { ConfigService } from '../../../_services/config.service';
 
 @UntilDestroy()
 @Component({
@@ -38,6 +40,7 @@ export class ControlCenterComponent implements OnInit {
     readonly Paths = Paths;
 
     readonly pendingCommentCount$ = this.commentService.countPending;
+    readonly configUpdates$       = this.configSvc.upgradeAvailable;
 
     // Icons
     readonly faArrowDownUpAcrossLine = faArrowDownUpAcrossLine;
@@ -56,6 +59,7 @@ export class ControlCenterComponent implements OnInit {
 
     constructor(
         private readonly router: Router,
+        private readonly configSvc: ConfigService,
         private readonly authSvc: AuthService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly commentService: CommentService,

@@ -4,7 +4,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainSsoSecretComponent } from './domain-sso-secret.component';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { ToolsModule } from '../../../tools/tools.module';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 

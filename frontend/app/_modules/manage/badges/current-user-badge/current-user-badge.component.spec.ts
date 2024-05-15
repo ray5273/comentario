@@ -1,6 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { CurrentUserBadgeComponent } from './current-user-badge.component';
-import { mockAuthService } from '../../../_utils/_mocks.spec';
+import { mockAuthService } from '../../../../_utils/_mocks.spec';
 
 describe('CurrentUserBadgeComponent', () => {
 

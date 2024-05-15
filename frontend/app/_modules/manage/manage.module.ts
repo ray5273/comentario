@@ -24,16 +24,16 @@ import { ManageGuard } from './_guards/manage.guard';
 import { ModeratorNotifyPolicyPipe } from './_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from './_pipes/comment-sort.pipe';
 import { DomainPageManagerComponent } from './domains/domain-pages/domain-page-manager/domain-page-manager.component';
-import { DomainBadgeComponent } from './domains/domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from './badges/domain-badge/domain-badge.component';
 import { SortSelectorComponent } from './sort-selector/sort-selector.component';
 import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
-import { DomainUserBadgeComponent } from './domain-user-badge/domain-user-badge.component';
+import { DomainUserBadgeComponent } from './badges/domain-user-badge/domain-user-badge.component';
 import { DatetimePipe } from './_pipes/datetime.pipe';
 import { DomainPagePropertiesComponent } from './domains/domain-pages/domain-page-properties/domain-page-properties.component';
 import { CommentListComponent } from './domains/comments/comment-list/comment-list.component';
 import { UserPropertiesComponent } from './users/user-properties/user-properties.component';
 import { UserEditComponent } from './users/user-edit/user-edit.component';
-import { CurrentUserBadgeComponent } from './current-user-badge/current-user-badge.component';
+import { CurrentUserBadgeComponent } from './badges/current-user-badge/current-user-badge.component';
 import { DomainUserManagerComponent } from './domains/domain-users/domain-user-manager/domain-user-manager.component';
 import { DomainUserPropertiesComponent } from './domains/domain-users/domain-user-properties/domain-user-properties.component';
 import { UserDetailsComponent } from './users/user-details/user-details.component';
@@ -41,7 +41,7 @@ import { DomainUserEditComponent } from './domains/domain-users/domain-user-edit
 import { DomainSsoSecretComponent } from './domains/domain-sso-secret/domain-sso-secret.component';
 import { DomainDetailComponent } from './domains/domain-detail/domain-detail.component';
 import { CommentPropertiesComponent } from './domains/comments/comment-properties/comment-properties.component';
-import { CommentStatusBadgeComponent } from './domains/comments/comment-status-badge/comment-status-badge.component';
+import { CommentStatusBadgeComponent } from './badges/comment-status-badge/comment-status-badge.component';
 import { MetricCardComponent } from './dashboard/metric-card/metric-card.component';
 import { CommentService } from './_services/comment.service';
 import { ConfigManagerComponent } from './config/config-manager/config-manager.component';
@@ -58,6 +58,7 @@ import { DomainEditGeneralComponent } from './domains/domain-edit/domain-edit-ge
 import { DomainEditAuthComponent } from './domains/domain-edit/domain-edit-auth/domain-edit-auth.component';
 import { DomainEditModerationComponent } from './domains/domain-edit/domain-edit-moderation/domain-edit-moderation.component';
 import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit-extensions/domain-edit-extensions.component';
+import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.component';
 
 @NgModule({
     declarations: [
@@ -104,6 +105,7 @@ import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit
         SortSelectorComponent,
         StaticConfigComponent,
         StatsChartComponent,
+        UpdatesBadgeComponent,
         UserDetailsComponent,
         UserEditComponent,
         UserLinkComponent,

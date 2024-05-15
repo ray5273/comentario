@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MockComponents } from 'ng-mocks';
 import { DomainStatsComponent } from './domain-stats.component';
 import { StatsChartComponent } from '../../stats-chart/stats-chart.component';
-import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainStatsComponent', () => {

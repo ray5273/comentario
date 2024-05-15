@@ -5,7 +5,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainUserEditComponent } from './domain-user-edit.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { ToastService } from '../../../../../_services/toast.service';
-import { DomainUserBadgeComponent } from '../../../domain-user-badge/domain-user-badge.component';
+import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
 import { ToolsModule } from '../../../../tools/tools.module';
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';

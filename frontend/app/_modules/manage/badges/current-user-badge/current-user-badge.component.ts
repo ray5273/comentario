@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { AuthService } from '../../../_services/auth.service';
+import { AuthService } from '../../../../_services/auth.service';
 
 /**
  * Component that renders a "YOU" badge for the current user, i.e. when the specified user ID matches the currently

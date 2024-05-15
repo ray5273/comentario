@@ -44,6 +44,14 @@ section {
     }
 }
 
+.floating-badge {
+    position: absolute;
+    top: 0;
+    left: 100%;
+    transform: translate(-50%, -50%);
+    animation: fade-in-linear-animation .25s ease forwards 1;
+}
+
 // Detail table
 dl.detail-table, dl.detail-table > div {
     align-items: baseline;
@@ -286,6 +294,10 @@ dl.detail-table, dl.detail-table > div {
 @keyframes fade-in-animation {
     0%   { opacity: 0; }
     75%  { opacity: 0; }
+    100% { opacity: 1; }
+}
+@keyframes fade-in-linear-animation {
+    0%   { opacity: 0; }
     100% { opacity: 1; }
 }
 

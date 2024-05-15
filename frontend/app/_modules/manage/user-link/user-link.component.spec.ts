@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MockComponents } from 'ng-mocks';
 import { UserLinkComponent } from './user-link.component';
 import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
-import { CurrentUserBadgeComponent } from '../current-user-badge/current-user-badge.component';
+import { CurrentUserBadgeComponent } from '../badges/current-user-badge/current-user-badge.component';
 
 describe('UserLinkComponent', () => {
 

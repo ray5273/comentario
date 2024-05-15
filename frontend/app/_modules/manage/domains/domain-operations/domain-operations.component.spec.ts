@@ -7,7 +7,7 @@ import { DomainOperationsComponent } from './domain-operations.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { ToolsModule } from '../../../tools/tools.module';
-import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainOperationsComponent', () => {

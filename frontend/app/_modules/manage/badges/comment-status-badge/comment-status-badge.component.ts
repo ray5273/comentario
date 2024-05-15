@@ -1,5 +1,5 @@
 import { Component, HostBinding, Input } from '@angular/core';
-import { Comment } from '../../../../../../generated-api';
+import { Comment } from '../../../../../generated-api';
 
 type CommentStatus = 'unknown' | 'deleted' | 'pending' | 'approved' | 'rejected';
 

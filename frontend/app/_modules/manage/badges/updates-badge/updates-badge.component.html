@@ -1,0 +1,7 @@
+<span class="badge rounded-pill bg-danger floating-badge" [title]="title">
+    @if (numUpdates === 0) {
+        <fa-icon [icon]="faAsterisk"/>
+    } @else {
+        <ng-container>{{ numUpdates }}</ng-container>
+    }
+</span>

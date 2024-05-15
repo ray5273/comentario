@@ -63,7 +63,7 @@
                         </a>
                     </li>
 
-                    <!-- Pages: if there's a domain -->
+                    <!-- Pages -->
                     <li class="nav-item">
                         <a [routerLink]="[Paths.manage.domains, d.id, 'pages']" routerLinkActive="active" class="cc-link">
                             <fa-icon class="cc-icon" [icon]="faFileLines"/>
@@ -71,14 +71,18 @@
                         </a>
                     </li>
 
-                    <!-- Comments: if there's a domain -->
+                    <!-- Comments -->
                     <li class="nav-item">
-                        <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link position-relative">
-                            <fa-icon class="cc-icon" [icon]="faComments"/>
-                            <!-- Number of comments pending moderation -->
-                            @if (pendingCommentCount$ | async; as cnt) {
-                                <span class="badge rounded-pill bg-danger cc-floater" title="Comments pending moderation" i18n-title>{{ cnt }}</span>
-                            }
+                        <a [routerLink]="[Paths.manage.domains, d.id, 'comments']" routerLinkActive="active" class="cc-link">
+                            <span class="cc-icon">
+                                <span class="position-relative">
+                                    <fa-icon [icon]="faComments"/>
+                                    <!-- Number of comments pending moderation -->
+                                    @if (pendingCommentCount$ | async; as cnt) {
+                                        <app-updates-badge [numUpdates]="cnt"  title="Comments pending moderation" i18n-title/>
+                                    }
+                                </span>
+                            </span>
                             <div class="cc-hide-collapsed" i18n>Comments</div>
                         </a>
                     </li>
@@ -138,7 +142,13 @@
                     <!-- Configuration -->
                     <li class="nav-item">
                         <a [routerLink]="Paths.manage.config._" routerLinkActive="active" class="cc-link">
-                            <fa-icon class="cc-icon" [icon]="faWrench"/>
+                            <span class="cc-icon">
+                                <span class="position-relative">
+                                    <fa-icon [icon]="faWrench"/>
+                                    <!-- Updates badge -->
+                                    @if (configUpdates$ | async) {<app-updates-badge/>}
+                                </span>
+                            </span>
                             <div class="cc-hide-collapsed" i18n>Configuration</div>
                         </a>
                     </li>

@@ -1,5 +1,5 @@
 import { Component, Input } from '@angular/core';
-import { DomainUser } from '../../../../generated-api';
+import { DomainUser } from '../../../../../generated-api';
 
 /**
  * Component that shows a badge for the given domain user, corresponding to their domain role.

@@ -5,7 +5,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainPropertiesComponent } from './domain-properties.component';
 import { ConfigService } from '../../../../_services/config.service';
-import { DomainBadgeComponent } from '../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { InstanceStaticConfig } from '../../../../../generated-api';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToolsModule } from '../../../tools/tools.module';

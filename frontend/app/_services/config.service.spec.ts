@@ -1,8 +1,9 @@
 import { TestBed } from '@angular/core/testing';
+import { HttpClientTestingModule } from '@angular/common/http/testing';
+import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { ConfigService } from './config.service';
 import { ApiGeneralService } from '../../generated-api';
-import { of } from 'rxjs';
 
 describe('ConfigService', () => {
 
@@ -10,6 +11,7 @@ describe('ConfigService', () => {
 
     beforeEach(() => {
         TestBed.configureTestingModule({
+            imports: [HttpClientTestingModule],
             providers: [
                 MockProvider(ApiGeneralService, {configExtensionsGet: () => of({extensions: undefined}) as any}),
             ],

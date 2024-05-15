@@ -3,6 +3,7 @@ import { first } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ConfigService, ReleaseMetadata } from '../../../../_services/config.service';
 import { DomainExtension } from '../../../../../generated-api';
+import { faAsterisk } from '@fortawesome/free-solid-svg-icons';
 
 @UntilDestroy()
 @Component({
@@ -29,4 +30,6 @@ export class StaticConfigComponent implements OnInit {
         this.configSvc.upgradeAvailable.pipe(untilDestroyed(this)).subscribe(b => this.upgradeAvailable = b);
         this.configSvc.stableRelease   .pipe(untilDestroyed(this)).subscribe(r => this.stableRelease = r);
     }
+
+    protected readonly faAsterisk = faAsterisk;
 }

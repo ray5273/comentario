@@ -3,7 +3,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainUserManagerComponent } from './domain-user-manager.component';
-import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../../../badges/domain-badge/domain-badge.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { ConfigService } from '../../../../../_services/config.service';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';

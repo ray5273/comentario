@@ -8,6 +8,7 @@ import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
 import { CommentService } from '../_services/comment.service';
 import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
 import { mockAuthService, mockDomainSelector } from '../../../_utils/_mocks.spec';
+import { ConfigService } from '../../../_services/config.service';
 
 describe('ControlCenterComponent', () => {
 
@@ -21,6 +22,7 @@ describe('ControlCenterComponent', () => {
             providers: [
                 mockAuthService(),
                 mockDomainSelector(),
+                MockProvider(ConfigService),
                 MockProvider(CommentService, {countPending: of(0)}),
             ],
         })

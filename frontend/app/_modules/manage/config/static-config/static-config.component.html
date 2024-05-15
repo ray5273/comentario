@@ -23,7 +23,13 @@
     </div>
     <!-- Comentario version -->
     <div>
-        <dt i18n>Comentario version</dt>
+        <dt>
+            <span class="position-relative">
+                <ng-container i18n>Comentario version</ng-container>
+                <!-- Updates badge -->
+                @if (upgradeAvailable) {<app-updates-badge/>}
+            </span>
+        </dt>
         <dd [class.bg-warning-subtle]="upgradeAvailable && stableRelease" class="d-flex flex-wrap">
             <div class="me-3">{{ cfg.version }}</div>
             @if (upgradeAvailable === false) {

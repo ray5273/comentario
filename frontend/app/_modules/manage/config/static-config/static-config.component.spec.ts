@@ -16,7 +16,14 @@ describe('StaticConfigComponent', () => {
             declarations: [StaticConfigComponent, MockPipes(DatetimePipe)],
             imports: [ToolsModule],
             providers: [
-                MockProvider(ConfigService, {staticConfig: {} as any, extensions: EMPTY}),
+                MockProvider(
+                    ConfigService,
+                    {
+                        staticConfig:     {} as any,
+                        extensions:       EMPTY,
+                        upgradeAvailable: EMPTY as any,
+                        stableRelease:    EMPTY,
+                    }),
             ],
         });
         fixture = TestBed.createComponent(StaticConfigComponent);

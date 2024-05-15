@@ -37,6 +37,11 @@ export class ConfigService {
     static readonly GITLAB_PROJECT_ID = '42486427';
 
     /**
+     * URL of the releases endpoint.
+     */
+    static readonly GITLAB_RELEASES_URL = `https://gitlab.com/api/v4/projects/${ConfigService.GITLAB_PROJECT_ID}/releases/`;
+
+    /**
      * Toast hiding delay in milliseconds.
      */
     static readonly TOAST_DELAY = 10000;
@@ -74,7 +79,7 @@ export class ConfigService {
     readonly stableRelease: Observable<ReleaseMetadata | undefined> = timer(3000, 6 * 3600 * 1000)
         .pipe(
             // Fetch the latest released version
-            switchMap(() => this.http.get<any>(`https://gitlab.com/api/v4/projects/${ConfigService.GITLAB_PROJECT_ID}/releases/`)),
+            switchMap(() => this.http.get<ReleaseMetadata[]>(ConfigService.GITLAB_RELEASES_URL)),
             // Turn any error into undefined
             catchError(() => of(undefined)),
             // Extract the latest release version (tag)

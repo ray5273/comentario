@@ -4,7 +4,7 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainPageManagerComponent } from './domain-page-manager.component';
-import { DomainBadgeComponent } from '../../domain-badge/domain-badge.component';
+import { DomainBadgeComponent } from '../../../badges/domain-badge/domain-badge.component';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
