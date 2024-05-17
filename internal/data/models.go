@@ -1141,3 +1141,26 @@ var DomainExtensions = map[models.DomainExtensionID]*DomainExtension{
 		KeyRequired: true,
 	},
 }
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// ReleaseMetadata holds release information
+type ReleaseMetadata struct {
+	Name    string `json:"name"`
+	Version string `json:"tag_name"`
+	Links   struct {
+		Self string `json:"self"`
+	} `json:"_links"`
+}
+
+func (rm *ReleaseMetadata) String() string {
+	return fmt.Sprintf("%q, %s, %s", rm.Name, rm.Version, rm.Links.Self)
+}
+
+func (rm *ReleaseMetadata) ToDTO() *models.ReleaseMetadata {
+	return &models.ReleaseMetadata{
+		Name:    rm.Name,
+		PageURL: rm.Links.Self,
+		Version: rm.Version,
+	}
+}

@@ -89,6 +89,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralConfigDynamicUpdateHandler = api_general.ConfigDynamicUpdateHandlerFunc(handlers.ConfigDynamicUpdate)
 	api.APIGeneralConfigExtensionsGetHandler = api_general.ConfigExtensionsGetHandlerFunc(handlers.ConfigExtensionsGet)
 	api.APIGeneralConfigGetHandler = api_general.ConfigGetHandlerFunc(handlers.ConfigGet)
+	api.APIGeneralConfigVersionsGetHandler = api_general.ConfigVersionsGetHandlerFunc(handlers.ConfigVersionsGet)
 	// Mail
 	api.APIGeneralMailUnsubscribeHandler = api_general.MailUnsubscribeHandlerFunc(handlers.MailUnsubscribe)
 	// CurUser

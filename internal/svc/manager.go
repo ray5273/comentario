@@ -14,8 +14,6 @@ var db *persistence.Database
 
 // ServiceManager provides high-level service management routines
 type ServiceManager interface {
-	// DBVersion returns the actual database server version in use
-	DBVersion() string
 	// E2eRecreateDBSchema recreates the DB schema and fills it with the provided seed data (only used for e2e testing)
 	E2eRecreateDBSchema(seedSQL string) error
 	// Initialise performs necessary initialisation of the services
@@ -30,10 +28,6 @@ type ServiceManager interface {
 
 type manager struct {
 	inited bool
-}
-
-func (m *manager) DBVersion() string {
-	return db.Version()
 }
 
 func (m *manager) E2eRecreateDBSchema(seedSQL string) error {

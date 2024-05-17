@@ -150,7 +150,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
 		SsoURL:                   domain.SSOURL,
 		TermsOfServiceURL:        config.TermsOfServiceURL,
-		Version:                  config.AppVersion,
+		Version:                  svc.TheVersionService.CurrentVersion(),
 	}
 
 	// Fetch the domain's identity providers

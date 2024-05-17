@@ -18,6 +18,7 @@ require (
 	github.com/gorilla/csrf v1.7.2
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/websocket v1.5.1
+	github.com/hashicorp/go-version v1.6.0
 	github.com/jellydator/ttlcache/v3 v3.2.0
 	github.com/jessevdk/go-flags v1.5.0
 	github.com/justinas/alice v1.2.0

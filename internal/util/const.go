@@ -13,6 +13,9 @@ const (
 	SwaggerUIPath   = APIPath + "docs" // Root path of the Swagger UI
 	WebSocketsPath  = "ws/"            // Root path of the WebSockets endpoints
 
+	GitLabProjectID   = "42486427"                                                             // ID of Comentario GitLab project
+	GitLabReleasesURL = "https://gitlab.com/api/v4/projects/" + GitLabProjectID + "/releases/" // URL of the releases endpoint
+
 	OneDay = 24 * time.Hour // Time unit representing one day
 
 	DBMaxAttempts = 10 // Max number of attempts to connect to the database

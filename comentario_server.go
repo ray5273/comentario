@@ -6,16 +6,15 @@ package main
 import (
 	"embed"
 	"errors"
-	"fmt"
 	"github.com/go-openapi/loads"
 	"github.com/jessevdk/go-flags"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
-	"time"
 )
 
 // logger represents a package-wide logger instance
@@ -69,10 +68,8 @@ func main() {
 	// Configure logging
 	setupLogging()
 
-	// Configure variables
-	config.AppVersion = version
-	config.BuildDate, _ = time.Parse(time.RFC3339, date)
-	fmt.Printf("Comentario server, version %s, built %s\n", config.AppVersion, config.BuildDate)
+	// Init the version service
+	svc.TheVersionService.Init(version, date)
 
 	// Link the translations to the embedded filesystem
 	config.I18nFS = &i18nFS

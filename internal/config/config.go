@@ -10,12 +10,6 @@ import (
 	"net/url"
 	"os"
 	"strings"
-	"time"
-)
-
-var (
-	AppVersion string    // Application version set during bootstrapping
-	BuildDate  time.Time // Application build date set during bootstrapping
 )
 
 var (
@@ -70,7 +64,7 @@ func CLIParsed() error {
 	// Parse the base URL
 	var err error
 	if BaseURL, err = util.ParseAbsoluteURL(CLIFlags.BaseURL, true, true); err != nil {
-		return fmt.Errorf("invalid Base URL: %v", err)
+		return fmt.Errorf("invalid Base URL: %w", err)
 	}
 	UseHTTPS = BaseURL.Scheme == "https"
 
@@ -100,7 +94,7 @@ func CLIParsed() error {
 		CDNURL = BaseURL
 
 	} else if CDNURL, err = util.ParseAbsoluteURL(CLIFlags.CDNURL, true, true); err != nil {
-		return fmt.Errorf("invalid CDN URL: %v", err)
+		return fmt.Errorf("invalid CDN URL: %w", err)
 	}
 
 	// Load secrets

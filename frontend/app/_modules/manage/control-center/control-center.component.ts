@@ -40,7 +40,7 @@ export class ControlCenterComponent implements OnInit {
     readonly Paths = Paths;
 
     readonly pendingCommentCount$ = this.commentService.countPending;
-    readonly configUpdates$       = this.configSvc.upgradeAvailable;
+    readonly configUpdates$       = this.configSvc.isUpgradable;
 
     // Icons
     readonly faArrowDownUpAcrossLine = faArrowDownUpAcrossLine;

@@ -22,9 +22,6 @@
                 "build": {
                     "builder": "@angular-devkit/build-angular:browser",
                     "options": {
-                        "allowedCommonJsDependencies": [
-                            "semver"
-                        ],
                         "outputPath": "../build/frontend",
                         "index": "./index.html",
                         "main": "./main.ts",

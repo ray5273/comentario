@@ -101,8 +101,8 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:       config.CLIFlags.BaseDocsURL,
 				BaseURL:           config.BaseURL.String(),
-				BuildDate:         strfmt.DateTime(config.BuildDate),
-				DbVersion:         svc.TheServiceManager.DBVersion(),
+				BuildDate:         strfmt.DateTime(svc.TheVersionService.BuildDate()),
+				DbVersion:         svc.TheVersionService.DBVersion(),
 				DefaultLangID:     util.DefaultLanguage.String(),
 				FederatedIdps:     idps,
 				HomeContentURL:    strfmt.URI(config.CLIFlags.HomeContentURL),
@@ -112,7 +112,26 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 				ServerTime:        strfmt.DateTime(time.Now().UTC()),
 				TermsOfServiceURL: config.TermsOfServiceURL,
 				UILanguages:       langs,
-				Version:           config.AppVersion,
+				Version:           svc.TheVersionService.CurrentVersion(),
 			},
 		})
+}
+
+func ConfigVersionsGet(_ api_general.ConfigVersionsGetParams, user *data.User) middleware.Responder {
+	// Verify the user is a superuser
+	if r := Verifier.UserIsSuperuser(user); r != nil {
+		return r
+	}
+
+	var rm *models.ReleaseMetadata
+	if d := svc.TheVersionService.LatestRelease(); d != nil {
+		rm = d.ToDTO()
+	}
+
+	// Succeeded
+	return api_general.NewConfigVersionsGetOK().WithPayload(&api_general.ConfigVersionsGetOKBody{
+		Current:       svc.TheVersionService.CurrentVersion(),
+		IsUpgradable:  svc.TheVersionService.IsUpgradable(),
+		LatestRelease: rm,
+	})
 }

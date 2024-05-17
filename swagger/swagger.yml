@@ -948,6 +948,28 @@ definitions:
         description: Colour hash, number based on the user's ID
         x-omitempty: false
 
+  releaseMetadata:
+    description: Release information
+    type: object
+    readOnly: true
+    required:
+      - name
+      - version
+      - pageUrl
+    properties:
+      name:
+        type: string
+        description: Release name
+        x-isnullable: false
+      version:
+        type: string
+        description: Released version
+        x-isnullable: false
+      pageUrl:
+        type: string
+        description: Release page URL
+        x-isnullable: false
+
   statsDailyCounts:
     description: Daily statistical data, one value per day
     type: array
@@ -3472,6 +3494,30 @@ paths:
       responses:
         204:
           description: Dynamic instance configuration has been reset
+
+  /config/versions:
+    get:
+      operationId: ConfigVersionsGet
+      summary: >
+        Get the current and the latest version info. Minimal access level: superuser
+      tags:
+        - ApiGeneral
+      responses:
+        200:
+          description: Version info
+          schema:
+            type: object
+            properties:
+              current:
+                type: string
+                description: Current Comentario version
+              latestRelease:
+                $ref: "#/definitions/releaseMetadata"
+                description: Latest stable Comentario release, if any
+              isUpgradable:
+                type: boolean
+                description: Whether the latestStable > current
+                x-omitempty: false
 
   /config/extensions:
     get:

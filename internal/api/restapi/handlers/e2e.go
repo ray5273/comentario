@@ -20,6 +20,7 @@ import (
 	"os"
 	"path"
 	"plugin"
+	"time"
 )
 
 // Global e2e handler instance (only in e2e testing mode)
@@ -81,6 +82,9 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 	if !ok {
 		return fmt.Errorf("symbol Handler from plugin %s doesn't implement End2EndHandler", pluginFile)
 	}
+
+	// Replace the version service
+	svc.TheVersionService = &mockVersionService{}
 
 	// Configure API endpoints
 	e2eHandler = *hPtr
@@ -267,4 +271,39 @@ func E2eReset(api_e2e.E2eResetParams) middleware.Responder {
 		return api_general.NewGenericInternalServerError()
 	}
 	return api_e2e.NewE2eResetNoContent()
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// mockVersionService is a dummy VersionService implementation
+type mockVersionService struct{}
+
+func (svc *mockVersionService) BuildDate() time.Time {
+	return time.Date(2024, time.February, 21, 14, 15, 16, 0, time.UTC)
+}
+
+func (svc *mockVersionService) CurrentVersion() string {
+	return "1.2.3"
+}
+
+func (svc *mockVersionService) DBVersion() string {
+	return "Multigalactic DB v417"
+}
+
+func (svc *mockVersionService) Init(string, string) {
+	// Stub
+}
+
+func (svc *mockVersionService) IsUpgradable() bool {
+	return false
+}
+
+func (svc *mockVersionService) LatestRelease() *data.ReleaseMetadata {
+	return &data.ReleaseMetadata{
+		Name:    "v1.2.3",
+		Version: "v1.2.3",
+		Links: struct {
+			Self string `json:"self"`
+		}{Self: "https://gitlab.com/comentario/comentario/-/releases"},
+	}
 }

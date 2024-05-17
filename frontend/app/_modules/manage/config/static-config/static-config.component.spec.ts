@@ -19,10 +19,10 @@ describe('StaticConfigComponent', () => {
                 MockProvider(
                     ConfigService,
                     {
-                        staticConfig:     {} as any,
-                        extensions:       EMPTY,
-                        upgradeAvailable: EMPTY as any,
-                        stableRelease:    EMPTY,
+                        staticConfig:  {} as any,
+                        extensions:    EMPTY,
+                        isUpgradable:  EMPTY,
+                        latestRelease: EMPTY,
                     }),
             ],
         });

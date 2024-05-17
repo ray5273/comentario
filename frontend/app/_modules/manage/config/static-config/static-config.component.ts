@@ -1,9 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { first } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ConfigService, ReleaseMetadata } from '../../../../_services/config.service';
-import { DomainExtension } from '../../../../../generated-api';
-import { faAsterisk } from '@fortawesome/free-solid-svg-icons';
+import { ConfigService } from '../../../../_services/config.service';
+import { DomainExtension, ReleaseMetadata } from '../../../../../generated-api';
 
 @UntilDestroy()
 @Component({
@@ -13,8 +12,8 @@ import { faAsterisk } from '@fortawesome/free-solid-svg-icons';
 export class StaticConfigComponent implements OnInit {
 
     extensions?: DomainExtension[];
-    upgradeAvailable?: boolean;
-    stableRelease?: ReleaseMetadata;
+    isUpgradable?: boolean;
+    latestRelease?: ReleaseMetadata;
 
     readonly cfg = this.configSvc.staticConfig;
 
@@ -27,9 +26,7 @@ export class StaticConfigComponent implements OnInit {
         this.configSvc.extensions.pipe(first()).subscribe(ex => this.extensions = ex);
 
         // Fetch the available stable version
-        this.configSvc.upgradeAvailable.pipe(untilDestroyed(this)).subscribe(b => this.upgradeAvailable = b);
-        this.configSvc.stableRelease   .pipe(untilDestroyed(this)).subscribe(r => this.stableRelease = r);
+        this.configSvc.latestRelease.pipe(untilDestroyed(this)).subscribe(r => this.latestRelease = r);
+        this.configSvc.isUpgradable .pipe(untilDestroyed(this)).subscribe(b => this.isUpgradable = b);
     }
-
-    protected readonly faAsterisk = faAsterisk;
 }
