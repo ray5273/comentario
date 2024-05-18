@@ -9,6 +9,7 @@ import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
 	"time"
@@ -825,7 +826,7 @@ func (svc *userService) UpdateLoginLocked(user *data.User) error {
 }
 
 // fetchUserDomainUser returns a new user, and domain user instance from the provided database row
-func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.DomainUser, error) {
+func (svc *userService) fetchUserDomainUser(s intf.Scanner) (*data.User, *data.DomainUser, error) {
 	var u data.User
 	var fidp sql.NullString
 	var duUID, duDID, avatarID uuid.NullUUID
@@ -905,7 +906,7 @@ func (svc *userService) fetchUserDomainUser(s util.Scanner) (*data.User, *data.D
 }
 
 // fetchUserSession returns a new user, and, optionally, user session instance from the provided database row
-func (svc *userService) fetchUserSession(s util.Scanner, fetchSession bool) (*data.User, *data.UserSession, error) {
+func (svc *userService) fetchUserSession(s intf.Scanner, fetchSession bool) (*data.User, *data.UserSession, error) {
 	// Prepare user fields
 	u := data.User{}
 	var avatarID uuid.NullUUID

@@ -12,7 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/e2e"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
@@ -20,19 +20,22 @@ import (
 	"os"
 	"path"
 	"plugin"
-	"time"
 )
 
 // Global e2e handler instance (only in e2e testing mode)
-var e2eHandler e2e.End2EndHandler
+var e2eHandler intf.End2EndHandler
 
 // e2eApp is an End2EndApp implementation, which links this app to the e2e plugin
 type e2eApp struct {
 	logger *logging.Logger
 }
 
-func (a *e2eApp) SetMailer(mailer util.Mailer) {
+func (a *e2eApp) SetMailer(mailer intf.Mailer) {
 	util.TheMailer = mailer
+}
+
+func (a *e2eApp) SetVersionService(s intf.VersionService) {
+	svc.TheVersionService = s
 }
 
 func (a *e2eApp) LogError(fmt string, args ...any) {
@@ -51,7 +54,7 @@ func (a *e2eApp) RecreateDBSchema(seedSQL string) error {
 	return svc.TheServiceManager.E2eRecreateDBSchema(seedSQL)
 }
 
-func (a *e2eApp) XSRFSafePaths() util.PathRegistry {
+func (a *e2eApp) XSRFSafePaths() intf.PathRegistry {
 	return util.XSRFSafePaths
 }
 
@@ -78,17 +81,15 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 	}
 
 	// Fetch the service interface (hPtr is a pointer, because Lookup always returns a pointer to symbol)
-	hPtr, ok := h.(*e2e.End2EndHandler)
+	hPtr, ok := h.(*intf.End2EndHandler)
 	if !ok {
 		return fmt.Errorf("symbol Handler from plugin %s doesn't implement End2EndHandler", pluginFile)
 	}
 
-	// Replace the version service
-	svc.TheVersionService = &mockVersionService{}
-
 	// Configure API endpoints
 	e2eHandler = *hPtr
 	api.APIE2eE2eConfigDynamicUpdateHandler = api_e2e.E2eConfigDynamicUpdateHandlerFunc(E2eConfigDynamicUpdate)
+	api.APIE2eE2eConfigVersionLatestReleaseUpdateHandler = api_e2e.E2eConfigVersionLatestReleaseUpdateHandlerFunc(E2eConfigVersionLatestReleaseUpdate)
 	api.APIE2eE2eDomainPatchHandler = api_e2e.E2eDomainPatchHandlerFunc(E2eDomainPatch)
 	api.APIE2eE2eDomainConfigUpdateHandler = api_e2e.E2eDomainConfigUpdateHandlerFunc(E2eDomainConfigUpdate)
 	api.APIE2eE2eDomainUpdateIdpsHandler = api_e2e.E2eDomainUpdateIdpsHandlerFunc(E2eDomainUpdateIdps)
@@ -117,6 +118,14 @@ func E2eConfigDynamicUpdate(params api_e2e.E2eConfigDynamicUpdateParams) middlew
 
 	// Succeeded
 	return api_e2e.NewE2eConfigDynamicUpdateNoContent()
+}
+
+func E2eConfigVersionLatestReleaseUpdate(params api_e2e.E2eConfigVersionLatestReleaseUpdateParams) middleware.Responder {
+	// Update the mocked version
+	e2eHandler.SetLatestRelease(params.Body.Name, params.Body.Version, params.Body.PageURL)
+
+	// Succeeded
+	return api_e2e.NewE2eConfigVersionLatestReleaseUpdateNoContent()
 }
 
 func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
@@ -271,39 +280,4 @@ func E2eReset(api_e2e.E2eResetParams) middleware.Responder {
 		return api_general.NewGenericInternalServerError()
 	}
 	return api_e2e.NewE2eResetNoContent()
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
-// mockVersionService is a dummy VersionService implementation
-type mockVersionService struct{}
-
-func (svc *mockVersionService) BuildDate() time.Time {
-	return time.Date(2024, time.February, 21, 14, 15, 16, 0, time.UTC)
-}
-
-func (svc *mockVersionService) CurrentVersion() string {
-	return "1.2.3"
-}
-
-func (svc *mockVersionService) DBVersion() string {
-	return "Multigalactic DB v417"
-}
-
-func (svc *mockVersionService) Init(string, string) {
-	// Stub
-}
-
-func (svc *mockVersionService) IsUpgradable() bool {
-	return false
-}
-
-func (svc *mockVersionService) LatestRelease() *data.ReleaseMetadata {
-	return &data.ReleaseMetadata{
-		Name:    "v1.2.3",
-		Version: "v1.2.3",
-		Links: struct {
-			Self string `json:"self"`
-		}{Self: "https://gitlab.com/comentario/comentario/-/releases"},
-	}
 }

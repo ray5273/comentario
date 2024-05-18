@@ -951,7 +951,6 @@ definitions:
   releaseMetadata:
     description: Release information
     type: object
-    readOnly: true
     required:
       - name
       - version
@@ -3568,6 +3567,23 @@ paths:
             type: array
             items:
               $ref: "#/definitions/dynamicConfigItem"
+      responses:
+        204:
+          description: Dynamic instance configuration item has been updated
+
+  /e2e/config/versions/latestRelease:
+    put:
+      operationId: E2eConfigVersionLatestReleaseUpdate
+      summary: Set the latest release returned by the app
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            $ref: "#/definitions/releaseMetadata"
       responses:
         204:
           description: Dynamic instance configuration item has been updated

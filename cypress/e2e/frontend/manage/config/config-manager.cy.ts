@@ -85,6 +85,17 @@ context('Config Manager', () => {
             cy.get('@cfgItems').ddItem('Privacy Policy URL')    .find('a').should('be.anchor', 'https://edge.docs.comentario.app/en/legal/privacy/',    anchorOpts);
             cy.get('@cfgItems').ddItem('Homepage content URL')  .find('a').should('be.anchor', 'https://edge.docs.comentario.app/en/embed/front-page/', anchorOpts);
         });
+
+        it('shows available upgrade', () => {
+            cy.backendUpdateLatestRelease('v2.89 BooBuster', 'v2.89', 'https://yktoo.com/en/software/comentario');
+            cy.loginViaApi(USERS.root, pagePathStatic);
+            cy.get('app-static-config #static-config-items').ddItem('Comentario version').find('a')
+                .should(
+                    'be.anchor',
+                    'https://yktoo.com/en/software/comentario',
+                    {newTab: true, noOpener: true, noReferrer: true, noFollow: false})
+                .and('have.text', 'Upgrade available: v2.89 BooBuster');
+        });
     });
 
     context('Dynamic config', () => {

@@ -2,12 +2,12 @@ package main
 
 import (
 	"fmt"
-	"gitlab.com/comentario/comentario/internal/e2e"
+	"gitlab.com/comentario/comentario/internal/intf"
 )
 
 // e2eMailer is a Mailer implementation that stores emails in memory instead of sending them out
 type e2eMailer struct {
-	mails     []e2e.MockMail  // Sent emails
+	mails     []intf.MockMail // Sent emails
 	failEmail map[string]bool // Map of emails to fail -> true
 }
 
@@ -28,7 +28,7 @@ func (m *e2eMailer) Mail(replyTo, recipient, subject, htmlMessage string, embedF
 	failure := m.failEmail[recipient]
 
 	// Store a mock email
-	msg := &e2e.MockMail{
+	msg := &intf.MockMail{
 		Headers: map[string]string{
 			"From":    "noreply@localhost",
 			"To":      recipient,

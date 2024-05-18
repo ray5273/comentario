@@ -2,11 +2,12 @@ package util
 
 import (
 	"crypto/tls"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"gopkg.in/gomail.v2"
 )
 
 // NewSMTPMailer instantiates a new Mailer capable of sending out emails using SMTP
-func NewSMTPMailer(host string, port int, username, password, emailFrom string, insecure, useSSL, useTLS bool) Mailer {
+func NewSMTPMailer(host string, port int, username, password, emailFrom string, insecure, useSSL, useTLS bool) intf.Mailer {
 	m := &smtpMailer{
 		emailFrom: emailFrom,
 		dialer:    gomail.NewDialer(host, port, username, password),

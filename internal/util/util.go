@@ -17,6 +17,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	gmhtml "github.com/yuin/goldmark/renderer/html"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"golang.org/x/net/html"
 	"io"
 	"math/rand"
@@ -28,36 +29,6 @@ import (
 	"strings"
 	"time"
 )
-
-// Scanner is a database/sql abstraction interface that can be used with both *sql.Row and *sql.Rows
-type Scanner interface {
-	// Err returns the error, if any
-	Err() error
-	// Scan copies columns from the underlying query row(s) to the values pointed to by dest
-	Scan(dest ...any) error
-}
-
-// Mailer allows sending emails
-type Mailer interface {
-	// Operational returns whether the mailer is functional (used to distinguish between a "real" mailer and noOpMailer)
-	Operational() bool
-	// Mail sends an email to the specified recipient.
-	//  - replyTo:     email address/name of the sender (optional).
-	//  - recipient:   email address/name of the recipient.
-	//  - subject:     email subject.
-	//  - htmlMessage: email text in the HTML format.
-	//  - embedFiles:  files to be embedded in the email
-	Mail(replyTo, recipient, subject, htmlMessage string, embedFiles ...string) error
-}
-
-// PathRegistry represents a list of paths. Each path entry assumes anything below it (i.e. starting with it) matches,
-// too
-type PathRegistry interface {
-	// Add adds paths to the list
-	Add(path ...string)
-	// Has returns true if the given path, or its starting path, is in the list
-	Has(path string) bool
-}
 
 // logger represents a package-wide logger instance
 var logger = logging.MustGetLogger("persistence")
@@ -76,7 +47,7 @@ var (
 	}
 
 	// TheMailer is a Mailer implementation available application-wide. Defaults to a mailer that doesn't do anything
-	TheMailer Mailer = &noOpMailer{}
+	TheMailer intf.Mailer = &noOpMailer{}
 )
 
 // ----------------------------------------------------------------------------------------------------------------------
@@ -102,7 +73,7 @@ func (s *ErrScanner) Scan(...any) error {
 
 // ----------------------------------------------------------------------------------------------------------------------
 
-// noOpMailer is a Mailer implementation that doesn't send any emails
+// noOpMailer is an intf.Mailer implementation that doesn't send any emails
 type noOpMailer struct{}
 
 func (m *noOpMailer) Operational() bool {

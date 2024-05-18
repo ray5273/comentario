@@ -1,6 +1,4 @@
-package e2e
-
-import "gitlab.com/comentario/comentario/internal/util"
+package intf
 
 // End2EndApp describes an application under e2e test
 type End2EndApp interface {
@@ -8,10 +6,12 @@ type End2EndApp interface {
 	RecreateDBSchema(seedSQL string) error
 
 	// SetMailer sets the global Mailer instance to be used by the app
-	SetMailer(mailer util.Mailer)
+	SetMailer(mailer Mailer)
+	// SetVersionService sets the global VersionService instance to be used by the app
+	SetVersionService(s VersionService)
 
 	// XSRFSafePaths returns a path registry for the paths excluded from XSRF protection
-	XSRFSafePaths() util.PathRegistry
+	XSRFSafePaths() PathRegistry
 
 	// LogInfo outputs a record of level info to the log
 	LogInfo(fmt string, args ...any)
@@ -31,6 +31,8 @@ type End2EndHandler interface {
 	Mails() []MockMail
 	// HandleReset resets the backend to its initial state
 	HandleReset() error
+	// SetLatestRelease sets the data to be returned by LatestRelease()
+	SetLatestRelease(name, version, pageURL string)
 }
 
 // MockMail stores information about a "sent" email

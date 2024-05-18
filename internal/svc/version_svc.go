@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/hashicorp/go-version"
-	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"strings"
@@ -13,33 +13,40 @@ import (
 )
 
 // TheVersionService is a global VersionService implementation
-var TheVersionService VersionService = &versionService{}
+var TheVersionService intf.VersionService = &versionService{}
 
-// VersionService is a service interface for managing versions
-type VersionService interface {
-	// BuildDate returns the application build date
-	BuildDate() time.Time
-	// CurrentVersion returns the current Comentario version
-	CurrentVersion() string
-	// DBVersion returns the actual database server version in use
-	DBVersion() string
-	// Init initialises the service
-	Init(curVersion, buildDate string)
-	// IsUpgradable returns whether the LatestRelease().Version > CurrentVersion()
-	IsUpgradable() bool
-	// LatestRelease returns the latest Comentario release metadata, if any, or nil otherwise
-	LatestRelease() *data.ReleaseMetadata
+//----------------------------------------------------------------------------------------------------------------------
+
+// releaseMetadata represents GitLab release information and implements intf.ReleaseMetadata
+type releaseMetadata struct {
+	RName   string `json:"name"`     // Release name
+	TagName string `json:"tag_name"` // Released version
+	Links   struct {
+		Self string `json:"self"`
+	} `json:"_links"` // Release HATEOAS links
+}
+
+func (rm *releaseMetadata) Name() string {
+	return rm.RName
+}
+
+func (rm *releaseMetadata) Version() string {
+	return rm.TagName
+}
+
+func (rm *releaseMetadata) PageURL() string {
+	return rm.Links.Self
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 // versionService is a blueprint VersionService implementation
 type versionService struct {
-	built      time.Time             // Application build date
-	cur        string                // The current Comentario version
-	latestRM   *data.ReleaseMetadata // Latest release metadata
-	latestDate time.Time             // When latestRM was last fetched
-	latestMu   sync.Mutex            // Mutex for latestRM
+	built      time.Time            // Application build date
+	cur        string               // The current Comentario version
+	latestRM   intf.ReleaseMetadata // Latest release metadata
+	latestDate time.Time            // When latestRM was last fetched
+	latestMu   sync.Mutex           // Mutex for latestRM
 }
 
 func (svc *versionService) BuildDate() time.Time {
@@ -73,7 +80,7 @@ func (svc *versionService) IsUpgradable() bool {
 		// Parse the current version
 		if vc, err := version.NewVersion(cv[0]); err == nil {
 			// Parse the latest released version
-			if vl, err := version.NewVersion(rm.Version); err == nil {
+			if vl, err := version.NewVersion(rm.Version()); err == nil {
 				// Compare
 				return vc.LessThan(vl)
 			}
@@ -82,7 +89,7 @@ func (svc *versionService) IsUpgradable() bool {
 	return false
 }
 
-func (svc *versionService) LatestRelease() *data.ReleaseMetadata {
+func (svc *versionService) LatestRelease() intf.ReleaseMetadata {
 	svc.latestMu.Lock()
 	defer svc.latestMu.Unlock()
 
@@ -99,7 +106,7 @@ func (svc *versionService) LatestRelease() *data.ReleaseMetadata {
 	return svc.latestRM
 }
 
-func (svc *versionService) fetchLatest() (*data.ReleaseMetadata, error) {
+func (svc *versionService) fetchLatest() (intf.ReleaseMetadata, error) {
 	logger.Debug("versionService.fetchLatest()")
 
 	// Fetch the releases
@@ -120,7 +127,7 @@ func (svc *versionService) fetchLatest() (*data.ReleaseMetadata, error) {
 	}
 
 	// Read and unmarshal the next value from the array
-	var rm data.ReleaseMetadata
+	var rm releaseMetadata
 	for dec.More() {
 		if err := dec.Decode(&rm); err != nil {
 			return nil, fmt.Errorf("versionService.fetchLatest: dec.Decode() failed: %w", err)
@@ -131,11 +138,11 @@ func (svc *versionService) fetchLatest() (*data.ReleaseMetadata, error) {
 	}
 
 	// Sanity check
-	if rm.Name == "" || rm.Version == "" || rm.Links.Self == "" {
+	if rm.RName == "" || rm.TagName == "" || rm.Links.Self == "" {
 		return nil, nil
 	}
 
 	// Succeeded
-	logger.Debugf("versionService: fetched latest release metadata: %v", &rm)
+	logger.Debugf("versionService: fetched latest release metadata: %q (%s)", rm.RName, rm.TagName)
 	return &rm, nil
 }

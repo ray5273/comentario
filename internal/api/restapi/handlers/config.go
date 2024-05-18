@@ -44,6 +44,7 @@ func ConfigDynamicUpdate(params api_general.ConfigDynamicUpdateParams, user *dat
 	return api_general.NewConfigDynamicUpdateNoContent()
 }
 
+//goland:noinspection GoUnusedParameter
 func ConfigExtensionsGet(api_general.ConfigExtensionsGetParams, *data.User) middleware.Responder {
 	// Make a list of enabled extensions
 	var dtos []*models.DomainExtension
@@ -62,6 +63,7 @@ func ConfigExtensionsGet(api_general.ConfigExtensionsGetParams, *data.User) midd
 	})
 }
 
+//goland:noinspection GoUnusedParameter
 func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	// Prepare a slice of IdP IDs
 	var idps []*models.FederatedIdentityProvider
@@ -125,7 +127,11 @@ func ConfigVersionsGet(_ api_general.ConfigVersionsGetParams, user *data.User) m
 
 	var rm *models.ReleaseMetadata
 	if d := svc.TheVersionService.LatestRelease(); d != nil {
-		rm = d.ToDTO()
+		rm = &models.ReleaseMetadata{
+			Name:    d.Name(),
+			PageURL: d.PageURL(),
+			Version: d.Version(),
+		}
 	}
 
 	// Succeeded

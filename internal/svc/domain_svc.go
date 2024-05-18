@@ -8,6 +8,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/util"
 	"sort"
 	"strings"
@@ -773,7 +774,7 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 }
 
 // fetchDomain fetches and returns a domain instance from the provided Scanner
-func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
+func (svc *domainService) fetchDomain(sc intf.Scanner) (*data.Domain, error) {
 	var d data.Domain
 	var ssoSecret sql.NullString
 	err := sc.Scan(
@@ -812,7 +813,7 @@ func (svc *domainService) fetchDomain(sc util.Scanner) (*data.Domain, error) {
 }
 
 // fetchDomainUser fetches the domain and, optionally, the domain user from the provided Scanner
-func (svc *domainService) fetchDomainUser(sc util.Scanner, extraCols ...any) (*data.Domain, *data.DomainUser, error) {
+func (svc *domainService) fetchDomainUser(sc intf.Scanner, extraCols ...any) (*data.Domain, *data.DomainUser, error) {
 	var d data.Domain
 	var ssoSecret sql.NullString
 	var duID uuid.NullUUID

@@ -246,15 +246,15 @@ chai.use((_chai) => {
 
             // Verify options
             if (options) {
-                if (options.newTab) {
+                if (options.newTab !== undefined) {
                     this.assert(
-                        a.target === '_blank',
+                        (a.target === '_blank') === options.newTab,
                         `expected target='${a.target}' to be "_blank"`,
                         `expected target='${a.target}' not to be "_blank"`,
                         true,
                         a.target);
                 }
-                if (options.noOpener) {
+                if (options.noOpener !== undefined) {
                     this.assert(
                         (a.rel.indexOf('noopener') >= 0) === options.noOpener,
                         `expected rel='${a.rel}' to not contain "noopener"`,
@@ -262,7 +262,7 @@ chai.use((_chai) => {
                         options.noOpener,
                         a.rel);
                 }
-                if (options.noReferrer) {
+                if (options.noReferrer !== undefined) {
                     this.assert(
                         (a.rel.indexOf('noreferrer') >= 0) === options.noReferrer,
                         `expected rel='${a.rel}' to not contain "noreferrer"`,
@@ -270,7 +270,7 @@ chai.use((_chai) => {
                         options.noReferrer,
                         a.rel);
                 }
-                if (options.noFollow) {
+                if (options.noFollow !== undefined) {
                     this.assert(
                         (a.rel.indexOf('nofollow') >= 0) === options.noFollow,
                         `expected rel='${a.rel}' to not contain "nofollow"`,

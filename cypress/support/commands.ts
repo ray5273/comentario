@@ -701,6 +701,10 @@ Cypress.Commands.add('backendUpdateDynConfig', (values: { [key: string]: string 
             Object.entries(values).map(([k, v]) => ({key: k, value: String(v)})))
         .its('status').should('eq', 204));
 
+Cypress.Commands.add('backendUpdateLatestRelease', (name: string, version: string, pageUrl: string) =>
+    void cy.request('PUT', '/api/e2e/config/versions/latestRelease', {name, version, pageUrl})
+        .its('status').should('eq', 204));
+
 Cypress.Commands.add('backendGetSentEmails', () => {
     // Wait a short while because emails are sent in the background
     cy.wait(250);

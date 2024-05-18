@@ -414,6 +414,11 @@ declare namespace Cypress {
         backendUpdateDynConfig(values: { [key: string]: string | number | boolean }): Chainable<void>;
 
         /**
+         * Update the latest released version returned by the backend.
+         */
+        backendUpdateLatestRelease(name: string, version: string, pageUrl: string): Chainable<void>;
+
+        /**
          * Obtain and return all sent emails from the backend.
          */
         backendGetSentEmails(): Chainable<SentMail[]>;

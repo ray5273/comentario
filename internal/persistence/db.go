@@ -14,6 +14,7 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
 	"os/signal"
@@ -310,7 +311,7 @@ func (db *Database) Select(e exp.SQLExpression) (*sql.Rows, error) {
 }
 
 // SelectRow executes the provided goqu query against the database, returning a single row
-func (db *Database) SelectRow(e exp.SQLExpression) util.Scanner {
+func (db *Database) SelectRow(e exp.SQLExpression) intf.Scanner {
 	// Convert the expression into SQL and params
 	eSQL, eParams, err := setPrepared(e).ToSQL()
 	if err != nil {
