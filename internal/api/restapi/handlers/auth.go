@@ -18,6 +18,8 @@ import (
 )
 
 var (
+	ErrSessionHeaderMissing = errors.New("session auth header missing in request")
+
 	ErrUnauthorised  = oaerrors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
 	ErrInternalError = oaerrors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
@@ -165,7 +167,8 @@ func AuthLogin(params api_general.AuthLoginParams) middleware.Responder {
 }
 
 func AuthLoginTokenNew(_ api_general.AuthLoginTokenNewParams) middleware.Responder {
-	t, err := authCreateLoginToken()
+	// Create an anonymous login token
+	t, err := authCreateLoginToken(nil)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -340,8 +343,13 @@ func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 }
 
 // FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
-// X-User-Session header
+// X-User-Session header. Returns ErrSessionHeaderMissing if there's no headerValue passed
 func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
+	// Make sure there's a value to parse
+	if headerValue == "" {
+		return nil, nil, ErrSessionHeaderMissing
+	}
+
 	// Extract session from the header value
 	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err != nil {
 		return nil, nil, err
@@ -400,10 +408,11 @@ func GetUserSessionBySessionHeader(r *http.Request) (*data.User, *data.UserSessi
 	return FetchUserBySessionHeader(r.Header.Get(util.HeaderUserSession))
 }
 
-// authCreateLoginToken creates and returns a new anonymous token with the "login" scope
-func authCreateLoginToken() (*data.Token, error) {
+// authCreateLoginToken creates and returns a new token with the "login" scope. If ownerID == nil, an anonymous token is
+// returned
+func authCreateLoginToken(ownerID *uuid.UUID) (*data.Token, error) {
 	// Create a new, anonymous token
-	if t, err := data.NewToken(nil, data.TokenScopeLogin, util.AuthSessionDuration, false); err != nil {
+	if t, err := data.NewToken(ownerID, data.TokenScopeLogin, util.AuthSessionDuration, false); err != nil {
 		return nil, err
 
 		// Persist the token

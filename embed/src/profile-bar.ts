@@ -22,6 +22,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
      * @param onSignup Callback for executing user registration.
      * @param onSaveSettings Callback for saving user settings.
      * @param onToggleLock Callback for toggling page lock.
+     * @param onOpenProfile Callback for Edit Comentario profile click
      */
     constructor(
         private readonly t: TranslateFunc,
@@ -33,6 +34,7 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly onSignup: (data: SignupData) => Promise<void>,
         private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
         private readonly onToggleLock: () => Promise<void>,
+        private readonly onOpenProfile: () => Promise<void>,
     ) {
         super(UIToolkit.div('profile-bar', 'toolbar', 'py-2').element);
     }
@@ -117,8 +119,8 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
             this.t,
             this.root,
             {ref: this._btnSettings!, placement: 'bottom-end'},
-            this.baseUrl,
-            this._principal!);
+            this._principal!,
+            this.onOpenProfile);
         if (dlg.confirmed) {
             await this.onSaveSettings(dlg.data);
         }

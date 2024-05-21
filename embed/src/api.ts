@@ -197,11 +197,15 @@ export class ApiService {
     }
 
     /**
-     * Obtain an anonymous token with the "login" scope. It's supposed to be used for subsequent federated
-     * authentication.
+     * Obtain a user-bound or anonymous token with the "login" scope. An anonymous token is supposed to be used for
+     * subsequent federated authentication, and a user-bound one for a subsequent login.
+     * @param anonymous Whether to request an anonymous token.
      */
-    async authNewLoginToken(): Promise<string> {
-        const r = await this.httpClient.post<ApiAuthLoginTokenNewResponse>('embed/auth/login/token');
+    async authNewLoginToken(anonymous: boolean): Promise<string> {
+        const r = await this.httpClient.post<ApiAuthLoginTokenNewResponse>(
+            'embed/auth/login/token',
+            undefined,
+            anonymous ? undefined : this.addAuth());
         return r.token;
     }
 

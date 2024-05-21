@@ -13,8 +13,8 @@ export class SettingsDialog extends Dialog {
         t: TranslateFunc,
         parent: Wrap<any>,
         pos: DialogPositioning,
-        private readonly baseUrl: string,
         private readonly principal: Principal,
+        private readonly onOpenProfile: () => void,
     ) {
         super(t, parent, t('dlgTitleUserSettings'), pos);
     }
@@ -24,11 +24,11 @@ export class SettingsDialog extends Dialog {
      * @param t Function for obtaining translated messages.
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
-     * @param baseUrl Base URL of the Comentario instance
      * @param principal Principal whose settings are being edited.
+     * @param onOpenProfile Callback for Edit Comentario profile click
      */
-    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, baseUrl: string, principal: Principal): Promise<SettingsDialog> {
-        const dlg = new SettingsDialog(t, parent, pos, baseUrl, principal);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, principal: Principal, onOpenProfile: () => void): Promise<SettingsDialog> {
+        const dlg = new SettingsDialog(t, parent, pos, principal, onOpenProfile);
         return dlg.run(dlg);
     }
 
@@ -80,7 +80,7 @@ export class SettingsDialog extends Dialog {
                 !this.principal.isSso &&
                     UIToolkit.div('dialog-centered')
                         .append(
-                            UIToolkit.a(this.t('actionEditComentarioProfile'), `${this.baseUrl}/en/manage/account/profile`)
+                            UIToolkit.button(this.t('actionEditComentarioProfile'), this.onOpenProfile, 'btn-link')
                                 .append(UIToolkit.icon('newTab').classes('ms-1'))));
     }
 }

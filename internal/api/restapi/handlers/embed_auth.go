@@ -1,8 +1,10 @@
 package handlers
 
 import (
+	"errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
+	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -34,8 +36,22 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	})
 }
 
-func EmbedAuthLoginTokenNew(_ api_embed.EmbedAuthLoginTokenNewParams) middleware.Responder {
-	t, err := authCreateLoginToken()
+func EmbedAuthLoginTokenNew(params api_embed.EmbedAuthLoginTokenNewParams) middleware.Responder {
+	var userID *uuid.UUID
+
+	// Try to authenticate the user
+	if u, _, err := GetUserSessionBySessionHeader(params.HTTPRequest); errors.Is(err, ErrSessionHeaderMissing) {
+		// No auth header: an anonymous token is requested
+	} else if err != nil {
+		// Any error other than "auth header missing"
+		return respUnauthorized(ErrorUnauthenticated)
+	} else {
+		// Successfully authenticated
+		userID = &u.ID
+	}
+
+	// Create a new login token
+	t, err := authCreateLoginToken(userID)
 	if err != nil {
 		return respServiceError(err)
 	}

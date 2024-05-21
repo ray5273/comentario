@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Settings dialog', () => {
@@ -36,12 +36,8 @@ context('Settings dialog', () => {
                     cy.get('@settingsDialog').find('#comentario-cb-notify-comment-status').as('cbNotifyCommentStatus').should('be.visible').and('be.checked');
                     cy.get('@settingsDialog').find('button[type=submit]')                 .as('btnSave')              .should('have.text', 'Save');
 
-                    // Check profile link
-                    cy.get('@settingsDialog').contains('Edit Comentario profile')
-                        .should(
-                            'be.anchor',
-                            Cypress.config().baseUrl + PATHS.manage.account.profile,
-                            {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
+                    // Check Edit profile button
+                    cy.get('@settingsDialog').contains('button', 'Edit Comentario profile').should('be.visible');
                 });
 
                 it('allows to update settings', () => {

@@ -200,7 +200,8 @@ export class Comentario extends HTMLElement {
                     () => this.logout(),
                     data => this.signup(data),
                     data => this.saveUserSettings(data),
-                    () => this.pageReadonlyToggle()),
+                    () => this.pageReadonlyToggle(),
+                    () => this.openComentarioProfile()),
                 // Main area
                 this.mainArea = UIToolkit.div('main-area'),
                 // Footer
@@ -669,7 +670,7 @@ export class Comentario extends HTMLElement {
      */
     private async oAuthLogin(idp: string): Promise<void> {
         // Request a new, anonymous login token
-        const token = await this.apiService.authNewLoginToken();
+        const token = await this.apiService.authNewLoginToken(true);
         const url = this.apiService.getOAuthInitUrl(idp, this.location.host, token);
 
         // If non-interactive SSO is triggered
@@ -1120,5 +1121,17 @@ export class Comentario extends HTMLElement {
             clearTimeout(this.contentPlaceholderTimer);
             this.contentPlaceholderTimer = undefined;
         }
+    }
+
+    /**
+     * Opens Comentario profile in a new tab.
+     */
+    private async openComentarioProfile(): Promise<void> {
+        // Request a new login token bound to the current user
+        const token = await this.apiService.authNewLoginToken(false);
+        const path = '/manage/account/profile';
+
+        // Open a new tab for Profile
+        window.open(`${this.origin}?authToken=${encodeURIComponent(token)}&path=${encodeURIComponent(path)}`, '_blank');
     }
 }

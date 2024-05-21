@@ -1,5 +1,5 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { ActivatedRoute, ParamMap, Router } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
@@ -19,12 +19,10 @@ export class HomeComponent implements OnInit {
     readonly embedUrl = this.configSvc.staticConfig.homeContentUrl;
 
     /** Handlers to execute when a specific parameter is present */
-    private readonly paramHandlers: {[name: string]: (...args: any[]) => any} = {
-        passwordResetToken: token => {
-            this.canRedirect = false;
-            this.router.navigate([Paths.auth.resetPassword], {state: {token}});
-        },
-        unsubscribed: () => this.toastSvc.success('unsubscribed-ok'),
+    private readonly paramHandlers: {[name: string]: (value: string, allParams: ParamMap) => any} = {
+        authToken:          (token, allParams) => this.handleAuth(token, allParams),
+        passwordResetToken: token => this.handlePasswordReset(token),
+        unsubscribed:       () => this.toastSvc.success('unsubscribed-ok'),
     };
 
     private paramsProcessed = false;
@@ -69,6 +67,24 @@ export class HomeComponent implements OnInit {
     private processParams() {
         // Check if there's a specific parameter passed to the Home component
         const params = this.route.snapshot.queryParamMap;
-        Object.entries(this.paramHandlers).find(([k, v]) => params.has(k) && (v(params.get(k)) || true /* Stop on first match */));
+        Object.entries(this.paramHandlers).find(([k, v]) => params.has(k) && (v(params.get(k)!, params) || true /* Stop on first match */));
+    }
+
+    /**
+     * Logs the user in, then redirects to the given path, when provided a token with the 'login' scope.
+     */
+    private handleAuth(token: string, allParams: ParamMap) {
+        // Log in using the provided token
+        this.authSvc.loginViaToken(token, false)
+            // If there's a return URL, navigate to it
+            .subscribe(() => allParams.has('path') && this.router.navigateByUrl(allParams.get('path')!));
+    }
+
+    /**
+     * Handles password reset, when provided a token with the 'pwd-reset' scope.
+     */
+    private handlePasswordReset(token: string) {
+        this.canRedirect = false;
+        this.router.navigate([Paths.auth.resetPassword], {state: {token}});
     }
 }

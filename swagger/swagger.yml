@@ -31,8 +31,9 @@ securityDefinitions:
     authorizationUrl: http://dummy/
     tokenUrl: http://dummy/
     scopes:
-      pwd-reset: reset user's password
       confirm-email: confirm user's email
+      login: authenticate the user
+      pwd-reset: reset user's password
 
 # Default security is cookie-based user authentication
 security:
@@ -1651,7 +1652,7 @@ paths:
 
     put:
       operationId: AuthLoginTokenRedeem
-      summary: Log in using the provided, no longer anonymous, token
+      summary: Log in using the provided, non-anonymous or no longer anonymous, token
       tags:
         - ApiGeneral
       security:
@@ -1987,9 +1988,14 @@ paths:
   /embed/auth/login/token:
     post:
       operationId: EmbedAuthLoginTokenNew
-      summary: Request a new anonymous token with the "login" scope, which is to be used for subsequent federated authentication
+      summary: >
+        Request a new token with the "login" scope. If there's no security header provided, the returned token will be
+        anonymous (not bound to any user yet), to be used for subsequent federated authentication. If there is a 
+        security header, the returned token will be bound to the corresponding user right away, and can be used for
+        logging in via a token redemption endpoint
       tags:
         - ApiEmbed
+      # Security is optional here
       security: []
       responses:
         200:

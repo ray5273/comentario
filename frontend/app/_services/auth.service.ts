@@ -1,7 +1,9 @@
 import { Injectable } from '@angular/core';
-import { merge, Observable, of, Subject, tap } from 'rxjs';
+import { HttpContext } from '@angular/common/http';
+import { finalize, merge, Observable, of, Subject, tap } from 'rxjs';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
-import { ApiGeneralService, Principal } from '../../generated-api';
+import { ApiGeneralService, Configuration, Principal } from '../../generated-api';
+import { HTTP_ERROR_HANDLING } from './http-interceptor.service';
 
 @Injectable({
     providedIn: 'root',
@@ -21,6 +23,7 @@ export class AuthService {
     private readonly _update$ = new Subject<Principal | null | undefined>();
 
     constructor(
+        private readonly apiConfig: Configuration,
         private readonly api: ApiGeneralService,
     ) {
         this.principal = merge(
@@ -48,6 +51,27 @@ export class AuthService {
                 this._update$.next(p);
                 return p;
             }));
+    }
+
+    /**
+     * Log into the server using the provided token and return the principal.
+     * @param token User-bound token with the 'login' scope
+     * @param disableErrorHandling Whether to inhibit standard error handling during the request.
+     */
+    loginViaToken(token: string, disableErrorHandling: boolean): Observable<Principal> {
+        // Store the token in the API config to be used for the token-based login
+        this.apiConfig.credentials.token = token;
+
+        // If error handling is off, set the option in a new HTTP context
+        const options = disableErrorHandling ? {context: new HttpContext().set(HTTP_ERROR_HANDLING, false)} : undefined;
+
+        // Run redemption with the API
+        return this.api.authLoginTokenRedeem(undefined, undefined, options)
+            .pipe(
+                // Store the returned principal
+                tap(p => this._update$.next(p)),
+                // Remove the token from the API config upon completion
+                finalize(() => delete this.apiConfig.credentials.token));
     }
 
     /**
