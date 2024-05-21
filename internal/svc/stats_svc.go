@@ -184,6 +184,11 @@ func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
 		return nil, translateDBErrors(err)
 	}
 
+	// Collect stats for own comments and pages
+	if err := svc.fillOwnStats(curUser, totals); err != nil {
+		return nil, translateDBErrors(err)
+	}
+
 	// Succeeded
 	return totals, nil
 }
@@ -298,6 +303,25 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 	// Verify Next() didn't error
 	if err := rows.Err(); err != nil {
 		logger.Errorf("statsService.fillDomainPageUserStats: Next() failed: %v", err)
+		return err
+	}
+
+	// Succeeded
+	return nil
+}
+
+// fillOwnStats fills the statistics for own comments and pages in totals
+func (svc *statsService) fillOwnStats(curUser *data.User, totals *StatsTotals) error {
+	// Prepare a query
+	q := db.Dialect().
+		From(goqu.T("cm_comments").As("c")).
+		Select(goqu.COUNT("*"), goqu.COUNT(goqu.I("c.page_id").Distinct())).
+		// Only include own comments and exclude deleted
+		Where(goqu.Ex{"c.user_created": &curUser.ID, "c.is_deleted": false})
+
+	// Run the query
+	if err := db.SelectRow(q).Scan(&totals.CountOwnComments, &totals.CountPagesCommented); err != nil {
+		logger.Errorf("statsService.fillOwnStats: SelectRow() failed: %v", err)
 		return err
 	}
 
@@ -432,6 +456,8 @@ type StatsTotals struct {
 	CountDomainUsers      int64 // Number of domain users the current user can manage
 	CountComments         int64 // Number of comments the current user can moderate
 	CountCommenters       int64 // Number of authors of comment the current user can moderate
+	CountPagesCommented   int64 // Number of pages the current user commented on
+	CountOwnComments      int64 // Number of comments the current user authored
 }
 
 // ToDTO converts the object into an API model
@@ -444,6 +470,8 @@ func (t *StatsTotals) ToDTO() *models.StatsTotals {
 		CountDomainsModerated: t.CountDomainsModerated,
 		CountDomainsOwned:     t.CountDomainsOwned,
 		CountDomainsReadonly:  t.CountDomainsReadonly,
+		CountOwnComments:      t.CountOwnComments,
+		CountPagesCommented:   t.CountPagesCommented,
 		CountPagesModerated:   t.CountPagesModerated,
 		CountUsersBanned:      t.CountUsersBanned,
 		CountUsersNonBanned:   t.CountUsersNonBanned,

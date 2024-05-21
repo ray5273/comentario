@@ -27,10 +27,16 @@
                                  label="Domains" sublabel="you're read-only on" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
             }
 
-            <!-- Pages -->
+            <!-- Pages moderated -->
             @if (totals.countPagesModerated; as c) {
                 <app-metric-card [value]="c" [chartCounts]="domainPageCounts" [fullHeight]="true"
                                  label="Pages" sublabel="you moderate" chartColour="#fd4f8850" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
+            }
+
+            <!-- Pages commented on -->
+            @if (totals.countPagesCommented; as c) {
+                <app-metric-card [value]="c" [fullHeight]="true"
+                                 label="Pages" sublabel="you commented on" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
             }
 
             <!-- Domain users -->
@@ -39,10 +45,16 @@
                                  label="Domain users" sublabel="you manage" chartColour="#e3a41c50" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
             }
 
-            <!-- Comments -->
+            <!-- Comments total -->
             @if (totals.countComments; as c) {
                 <app-metric-card [value]="c" [fullHeight]="true"
                                  label="Comments" sublabel="total" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
+            }
+
+            <!-- Comments authored -->
+            @if (totals.countOwnComments; as c) {
+                <app-metric-card [value]="c" [fullHeight]="true"
+                                 label="Comments" sublabel="you authored" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
             }
 
             <!-- Commenters -->

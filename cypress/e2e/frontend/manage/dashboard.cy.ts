@@ -67,6 +67,12 @@ context('Dashboard', () => {
                     - label:    Domains
                       sublabel: you're commenter on
                       value:    1
+                    - label:    Pages
+                      sublabel: you commented on
+                      value:    3
+                    - label:    Comments
+                      sublabel: you authored
+                      value:    3
                     `,
             },
             {
@@ -85,12 +91,18 @@ context('Dashboard', () => {
                     - label:    Pages
                       sublabel: you moderate
                       value:    13
+                    - label:    Pages
+                      sublabel: you commented on
+                      value:    9
                     - label:    Domain users
                       sublabel: you manage
                       value:    6
                     - label:    Comments
                       sublabel: total
                       value:    38
+                    - label:    Comments
+                      sublabel: you authored
+                      value:    17
                     - label:    Commenters
                       sublabel: total
                       value:    7
@@ -126,12 +138,18 @@ context('Dashboard', () => {
                     - label:    Pages
                       sublabel: you moderate
                       value:    16
+                    - label:    Pages
+                      sublabel: you commented on
+                      value:    2
                     - label:    Domain users
                       sublabel: you manage
                       value:    1
                     - label:    Comments
                       sublabel: total
                       value:    38
+                    - label:    Comments
+                      sublabel: you authored
+                      value:    4
                     - label:    Commenters
                       sublabel: total
                       value:    7

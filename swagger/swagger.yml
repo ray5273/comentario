@@ -993,6 +993,8 @@ definitions:
       - countDomainUsers
       - countComments
       - countCommenters
+      - countPagesCommented
+      - countOwnComments
     properties:
       countUsersTotal:
         type: integer
@@ -1058,6 +1060,18 @@ definitions:
         type: integer
         format: int64
         description: Number of authors of comment the current user can moderate
+        x-omitempty: false
+        x-isnullable: false
+      countPagesCommented:
+        type: integer
+        format: int64
+        description: Number of pages the current user commented on
+        x-omitempty: false
+        x-isnullable: false
+      countOwnComments:
+        type: integer
+        format: int64
+        description: Number of comments the current user authored
         x-omitempty: false
         x-isnullable: false
 
