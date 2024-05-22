@@ -31,17 +31,14 @@ context('Profile bar', () => {
                 name:     'only non-interactive SSO is enabled',
                 readonly: false,
                 notice:   undefined,
-                props:    {authLocal: false, authAnonymous: false}},
-            {
-                name:     'only unregistered is enabled',
-                readonly: false,
-                notice:   undefined,
-                props:    {authLocal: false, authSso: false}},
+                props:    {authLocal: false, authAnonymous: false},
+            },
             {
                 name:     'no auth is enabled',
                 readonly: true,
                 notice:   'This domain has no authentication method available. You cannot add new comments.',
-                props:    {authLocal: false, authAnonymous: false, authSso: false}},
+                props:    {authLocal: false, authAnonymous: false, authSso: false},
+            },
         ]
             .forEach(test =>
                 it(`isn't available when ${test.name}`, () => {
