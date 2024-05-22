@@ -86,7 +86,7 @@
 - {id: notificationNewReply,        translation: 'Je hebt deze e-mail ontvangen omdat je ervoor hebt gekozen om e-mailnotificaties te ontvangen voor reacties op comments.'}
 - {id: notWillingToSignup,          translation: 'Wil je je niet aanmelden? Je kunt reageren zonder te registreren'}
 - {id: pageIsReadonly,              translation: 'Deze thread is vergrendeld. Er kan geen nieuw comment worden toegevoegd.'}
-- {id: popupWasBlocked,             translation: 'Het popupvenster voor het inloggen is geblokkeerd door jouw browser. Sta pop-ups toe op deze website en klik op de knop Opnieuw proberen hieronder.'}
+- {id: popupWasBlocked,             translation: 'Het popupvenster is geblokkeerd door jouw browser. Sta pop-ups toe op deze website en klik op de knop Opnieuw proberen hieronder.'}
 - {id: poweredBy,                   translation: 'Mogelijk gemaakt door Comentario'}
 - {id: previewFailed,               translation: 'Tonen voorbeeld mislukt'}
 - {id: pwdResetExplanation,         translation: 'Je hebt deze e-mail ontvangen omdat jij (of iemand anders) een wachtwoordreset hebt aangevraagd in onze service.'}

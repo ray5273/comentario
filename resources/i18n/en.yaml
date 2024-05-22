@@ -89,7 +89,7 @@
 - {id: notificationNewReply,        translation: 'You''ve received this email because you opted in to receive email notifications for comment replies.'}
 - {id: notWillingToSignup,          translation: 'Not willing to sign up? You can comment without registration'}
 - {id: pageIsReadonly,              translation: 'This thread is locked. You cannot add new comments.'}
-- {id: popupWasBlocked,             translation: 'Login popup window was blocked by your browser. Please allow popups on this website, then click the Retry button below.'}
+- {id: popupWasBlocked,             translation: 'Popup window was blocked by your browser. Please allow popups on this website, then click the Retry button below.'}
 - {id: poweredBy,                   translation: 'Powered by Comentario'}
 - {id: previewFailed,               translation: 'Preview failed'}
 - {id: pwdResetExplanation,         translation: 'You''ve received this email because you (or someone else) requested a password reset in our service.'}

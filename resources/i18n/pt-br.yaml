@@ -86,7 +86,7 @@
 - {id: notificationNewReply,        translation: 'Você recebeu este email porque optou por receber notificações por email sobre respostas a comentários.'}
 - {id: notWillingToSignup,          translation: 'Prefere não registrar a sua conta? Você comentar anonimamente.'}
 - {id: pageIsReadonly,              translation: 'Este tópico está fechado. Você não pode adicionar novos comentários.'}
-- {id: popupWasBlocked,             translation: 'A janela pop-up de login foi bloqueada pelo seu navegador. Permita pop-ups neste site e clique no botão Tentar novamente abaixo.'}
+- {id: popupWasBlocked,             translation: 'A janela pop-up foi bloqueada pelo seu navegador. Permita pop-ups neste site e clique no botão Tentar novamente abaixo.'}
 - {id: poweredBy,                   translation: 'Criado por Comentario'}
 - {id: previewFailed,               translation: 'A prévia falhou'}
 - {id: pwdResetExplanation,         translation: 'Você recebeu este email pois você (ou outra pessoa) requisitou a redefinição de senha em nosso serviço.'}
