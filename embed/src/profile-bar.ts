@@ -47,6 +47,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
     }
 
     /**
+     * The Settings button element, for positioning dialogs.
+     */
+    get btnSettings(): Wrap<any> | undefined {
+        return this._btnSettings;
+    }
+
+    /**
      * Current page data.
      */
     set pageInfo(v: PageInfo | undefined) {

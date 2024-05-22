@@ -1131,7 +1131,12 @@ export class Comentario extends HTMLElement {
         const token = await this.apiService.authNewLoginToken(false);
         const path = '/manage/account/profile';
 
-        // Open a new tab for Profile
-        window.open(`${this.origin}?authToken=${encodeURIComponent(token)}&path=${encodeURIComponent(path)}`, '_blank');
+        // Try to open a new tab for Profile
+        while (!window.open(`${this.origin}?authToken=${encodeURIComponent(token)}&path=${encodeURIComponent(path)}`, '_blank')) {
+            // Failed to open popup: show a Popup blocked dialog
+            if (!await PopupBlockedDialog.run(this.i18n.t, this.root, {ref: this.profileBar!.btnSettings!, placement: 'bottom-end'})) {
+                return this.reject('Failed to open Admin UI popup');
+            }
+        }
     }
 }

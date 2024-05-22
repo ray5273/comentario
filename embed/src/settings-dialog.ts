@@ -80,7 +80,12 @@ export class SettingsDialog extends Dialog {
                 !this.principal.isSso &&
                     UIToolkit.div('dialog-centered')
                         .append(
-                            UIToolkit.button(this.t('actionEditComentarioProfile'), this.onOpenProfile, 'btn-link')
+                            UIToolkit.button(this.t('actionEditComentarioProfile'), () => this.openProfile(), 'btn-link')
                                 .append(UIToolkit.icon('newTab').classes('ms-1'))));
+    }
+
+    private openProfile() {
+        this.dismiss(false);
+        this.onOpenProfile();
     }
 }
