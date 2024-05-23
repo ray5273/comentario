@@ -93,7 +93,7 @@ func (m *manager) Run() {
 	}
 
 	// Start the websockets service, if enabled
-	if config.CLIFlags.DisableLiveUpdate {
+	if config.ServerConfig.DisableLiveUpdate {
 		logger.Info("Live update is disabled")
 	} else {
 		logger.Info("Live update is enabled, starting WebSockets service")
@@ -131,7 +131,7 @@ func (m *manager) postDBInit() error {
 	TheDomainConfigService.ResetCache()
 
 	// If superuser's ID or email is provided, turn that user into a superuser
-	if s := config.CLIFlags.Superuser; s != "" {
+	if s := config.ServerConfig.Superuser; s != "" {
 		if err := TheUserService.EnsureSuperuser(s); err != nil {
 			return fmt.Errorf("failed to turn user %q into superuser: %v", s, err)
 		}

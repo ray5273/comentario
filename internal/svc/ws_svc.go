@@ -80,8 +80,8 @@ func (svc *webSocketsService) Add(w http.ResponseWriter, r *http.Request) error 
 	}
 
 	// Make sure the maximum number of clients hasn't been exceeded
-	if svc.numClients.Load() >= int32(config.CLIFlags.WSMaxClients) {
-		return fmt.Errorf("cannot Add: maximum number of clients (%d) is reached", config.CLIFlags.WSMaxClients)
+	if svc.numClients.Load() >= int32(config.ServerConfig.WSMaxClients) {
+		return fmt.Errorf("cannot Add: maximum number of clients (%d) is reached", config.ServerConfig.WSMaxClients)
 	}
 
 	// Upgrade the request to a websocket

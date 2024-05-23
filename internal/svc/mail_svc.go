@@ -55,7 +55,7 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 		"IsApproved":    comment.IsApproved,
 		"PageTitle":     page.DisplayTitle(domain),
 		"PageURL":       domain.RootURL() + page.Path,
-		"UnsubscribeURL": config.URLForAPI(
+		"UnsubscribeURL": config.ServerConfig.URLForAPI(
 			"mail/unsubscribe",
 			map[string]string{
 				"domain": domain.ID.String(),
@@ -101,7 +101,7 @@ func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) err
 		TheI18nService.Translate(user.LangID, "confirmYourEmail"),
 		"confirm-email.gohtml",
 		map[string]any{
-			"ConfirmURL": config.URLForAPI("auth/confirm", map[string]string{"access_token": token.String()}),
+			"ConfirmURL": config.ServerConfig.URLForAPI("auth/confirm", map[string]string{"access_token": token.String()}),
 			"Name":       user.Name,
 		})
 }
@@ -132,7 +132,7 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 	templ := svc.getTemplate(lang, name)
 	if templ == nil {
 		// Create a new template
-		filePath := path.Join(config.CLIFlags.TemplatePath, name)
+		filePath := path.Join(config.ServerConfig.TemplatePath, name)
 		var err error
 		templ, err = template.New(name).
 			// Add required functions
@@ -189,5 +189,5 @@ func (svc *mailService) sendFromTemplate(lang, replyTo, recipient, subject, temp
 	}
 
 	// Send the mail, prepending the subject with the app name and embedding the logo
-	return svc.send(replyTo, recipient, "Comentario: "+subject, body, path.Join(config.CLIFlags.TemplatePath, "images", "logo.png"))
+	return svc.send(replyTo, recipient, "Comentario: "+subject, body, path.Join(config.ServerConfig.TemplatePath, "images", "logo.png"))
 }

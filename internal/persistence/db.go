@@ -58,29 +58,21 @@ type Database struct {
 func InitDB() (*Database, error) {
 	// Determine the DB dialect to use and validate config
 	var dialect dbDialect
-	var err error
 	switch {
 	// PostgreSQL
 	case config.SecretsConfig.Postgres.Host != "":
 		dialect = dbPostgres
-		err = validatePostgresConfig()
 	// SQLite3
 	case config.SecretsConfig.SQLite3.File != "":
 		dialect = dbSQLite3
-		err = validateSQLite3Config()
 	// Failed to identify DB dialect
 	default:
-		err = errors.New("could not determine DB dialect to use. Either postgres.host or sqlite3.file must be set")
-	}
-
-	// Verify configuration is valid
-	if err != nil {
-		return nil, err
+		return nil, errors.New("failed to determine DB dialect")
 	}
 
 	// Create a new database instance
 	logger.Infof("Using database dialect: %s", dialect)
-	db := &Database{dialect: dialect, debug: config.CLIFlags.DBDebug, doneConn: make(chan bool, 1)}
+	db := &Database{dialect: dialect, debug: config.ServerConfig.DBDebug, doneConn: make(chan bool, 1)}
 
 	// Try to connect
 	if err := db.connect(); err != nil {
@@ -437,7 +429,7 @@ func (db *Database) connect() error {
 	}
 
 	// Configure the database
-	db.db.SetMaxIdleConns(config.CLIFlags.DBIdleConns)
+	db.db.SetMaxIdleConns(config.ServerConfig.DBIdleConns)
 
 	// Succeeded
 	logger.Infof("Connected to database version %q", db.Version())
@@ -448,7 +440,7 @@ func (db *Database) connect() error {
 func (db *Database) getAvailableMigrations() ([]string, error) {
 	// Scan the migrations dir for available migration files. Files reside in a subdirectory whose name matches the DB
 	// dialect in use
-	dir := path.Join(config.CLIFlags.DBMigrationPath, string(db.dialect))
+	dir := path.Join(config.ServerConfig.DBMigrationPath, string(db.dialect))
 	files, err := os.ReadDir(dir)
 	if err != nil {
 		logger.Errorf("Failed to read DB migrations dir %q: %v", dir, err)
@@ -541,7 +533,7 @@ func (db *Database) installMigration(filename string, csExpected *[16]byte) (csA
 	status = "failed"
 
 	// Read in the content of the file
-	fullName := path.Join(config.CLIFlags.DBMigrationPath, string(db.dialect), filename)
+	fullName := path.Join(config.ServerConfig.DBMigrationPath, string(db.dialect), filename)
 	contents, err := os.ReadFile(fullName)
 	if err != nil {
 		logger.Errorf("Failed to read file '%s': %v", fullName, err)
@@ -717,45 +709,4 @@ func setPrepared(e exp.SQLExpression) exp.SQLExpression {
 
 	// No luck, pass e through
 	return e
-}
-
-// validatePostgresConfig verifies the PostgreSQL database configuration is valid
-func validatePostgresConfig() error {
-	var e []string
-	if config.SecretsConfig.Postgres.Host == "" {
-		e = append(e, "host is not specified")
-	}
-	if config.SecretsConfig.Postgres.Port == 0 {
-		config.SecretsConfig.Postgres.Port = 5432 // PostgreSQL default
-	}
-	if config.SecretsConfig.Postgres.Database == "" {
-		e = append(e, "DB name is not specified")
-	}
-	if config.SecretsConfig.Postgres.Username == "" {
-		e = append(e, "username is not specified")
-	}
-	if config.SecretsConfig.Postgres.Password == "" {
-		e = append(e, "password is not specified")
-	}
-	if config.SecretsConfig.Postgres.SSLMode == "" {
-		config.SecretsConfig.Postgres.SSLMode = "disable"
-	}
-	if len(e) > 0 {
-		return fmt.Errorf("PostgreSQL database misconfigured: %s", strings.Join(e, "; "))
-	}
-	return nil
-}
-
-// validateSQLite3Config verifies the SQLite3 database configuration is valid
-func validateSQLite3Config() error {
-	// Check file is specified
-	if config.SecretsConfig.SQLite3.File == "" {
-		return errors.New("SQLite3 database misconfigured: file is not specified")
-	}
-
-	// Check file exists (not an error)
-	if _, err := os.Stat(config.SecretsConfig.SQLite3.File); os.IsNotExist(err) {
-		logger.Warningf("SQLite3 database file %q does not exist, will create one", config.SecretsConfig.SQLite3.File)
-	}
-	return nil
 }

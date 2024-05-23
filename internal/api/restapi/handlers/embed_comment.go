@@ -125,7 +125,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		AuthAnonymous:            domain.AuthAnonymous,
 		AuthLocal:                domain.AuthLocal,
 		AuthSso:                  domain.AuthSSO,
-		BaseDocsURL:              config.CLIFlags.BaseDocsURL,
+		BaseDocsURL:              config.ServerConfig.BaseDocsURL,
 		CommentDeletionAuthor:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionAuthor),
 		CommentDeletionModerator: svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionModerator),
 		CommentEditingAuthor:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingAuthor),
@@ -144,12 +144,12 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		MarkdownLinksEnabled:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
 		MarkdownTablesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled),
 		PageID:                   strfmt.UUID(page.ID.String()),
-		PrivacyPolicyURL:         config.PrivacyPolicyURL,
+		PrivacyPolicyURL:         config.ServerConfig.PrivacyPolicyURL,
 		ShowDeletedComments:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
 		SsoNonInteractive:        domain.SSONonInteractive,
 		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
 		SsoURL:                   domain.SSOURL,
-		TermsOfServiceURL:        config.TermsOfServiceURL,
+		TermsOfServiceURL:        config.ServerConfig.TermsOfServiceURL,
 		Version:                  svc.TheVersionService.CurrentVersion(),
 	}
 

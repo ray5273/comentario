@@ -360,7 +360,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 			util.AuthSessionDuration,
 			true,
 			// Allow sending it cross-origin, but only via HTTPS as only a secure cookie can use SameSite=None
-			util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode))
+			util.If(config.ServerConfig.UseHTTPS(), http.SameSiteNoneMode, http.SameSiteLaxMode))
 }
 
 // oauthFailure returns either a generic "Unauthorized" responder (in case of interactive authentication), with the

@@ -26,7 +26,7 @@ func configureFlags(api *operations.ComentarioAPI) {
 		{
 			ShortDescription: "Server options",
 			LongDescription:  "Server options",
-			Options:          &config.CLIFlags,
+			Options:          &config.ServerConfig,
 		},
 	}
 }
@@ -51,13 +51,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	var uri strfmt.URI
 	api.Formats().Add("uri", &uri, func(s string) bool { return util.IsValidURL(s, true) })
 
-	// Update the config based on the CLI flags
-	if err := config.CLIParsed(); err != nil {
-		logger.Fatalf("Failed to process configuration: %v", err)
-	}
-
 	// Configure swagger UI
-	if config.CLIFlags.EnableSwaggerUI {
+	if config.ServerConfig.EnableSwaggerUI {
 		logger.Warningf("Enabling Swagger UI")
 		api.UseSwaggerUI()
 	}
@@ -172,7 +167,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.ServerShutdown = svc.TheServiceManager.Shutdown
 
 	// If in e2e-testing mode, configure the backend accordingly
-	if config.CLIFlags.E2e {
+	if config.ServerConfig.E2e {
 		if err := handlers.E2eConfigure(api); err != nil {
 			logger.Fatalf("Failed to configure e2e plugin: %v", err)
 		}
@@ -186,7 +181,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	)
 
 	// If XSRF protection isn't disabled, add an XSRF handler
-	if config.CLIFlags.DisableXSRF {
+	if config.ServerConfig.DisableXSRF {
 		logger.Warning("XSRF protection is disabled")
 	} else {
 		chain = chain.Append(xsrfProtectHandler, xsrfCookieHandler)
@@ -220,7 +215,7 @@ func configureServer(_ *http.Server, scheme, _ string) {
 	svc.TheServiceManager.Initialise()
 
 	// Init the e2e handler, if in the e2e testing mode
-	if config.CLIFlags.E2e {
+	if config.ServerConfig.E2e {
 		if err := handlers.E2eInit(); err != nil {
 			logger.Fatalf("e2e handler init failed: %v", err)
 		}

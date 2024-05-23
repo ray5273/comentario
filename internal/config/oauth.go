@@ -33,7 +33,7 @@ func facebookOauthConfigure() {
 		facebook.New(
 			SecretsConfig.IdP.Facebook.Key,
 			SecretsConfig.IdP.Facebook.Secret,
-			URLForAPI("oauth/facebook/callback", nil),
+			ServerConfig.URLForAPI("oauth/facebook/callback", nil),
 			"email",
 			"public_profile"),
 	)
@@ -51,7 +51,7 @@ func githubOauthConfigure() {
 		github.New(
 			SecretsConfig.IdP.GitHub.Key,
 			SecretsConfig.IdP.GitHub.Secret,
-			URLForAPI("oauth/github/callback", nil),
+			ServerConfig.URLForAPI("oauth/github/callback", nil),
 			"read:user",
 			"user:email"),
 	)
@@ -59,7 +59,7 @@ func githubOauthConfigure() {
 
 // gitlabEndpointURL returns a (custom) GitLab URL for the given path (which must start with a '/')
 func gitlabEndpointURL(path string) string {
-	return strings.TrimSuffix(CLIFlags.GitLabURL, "/") + path
+	return strings.TrimSuffix(ServerConfig.GitLabURL, "/") + path
 }
 
 // gitlabOauthConfigure configures federated authentication via GitLab
@@ -72,7 +72,7 @@ func gitlabOauthConfigure() {
 	logger.Infof("Registering GitLab OAuth2 provider for client %s", SecretsConfig.IdP.GitLab.Key)
 
 	// Customise the endpoint, if a custom GitLab URL is given
-	if CLIFlags.GitLabURL != "" {
+	if ServerConfig.GitLabURL != "" {
 		gitlab.AuthURL = gitlabEndpointURL("/oauth/authorize")
 		gitlab.TokenURL = gitlabEndpointURL("/oauth/token")
 		gitlab.ProfileURL = gitlabEndpointURL("/api/v4/user")
@@ -81,7 +81,7 @@ func gitlabOauthConfigure() {
 		gitlab.New(
 			SecretsConfig.IdP.GitLab.Key,
 			SecretsConfig.IdP.GitLab.Secret,
-			URLForAPI("oauth/gitlab/callback", nil),
+			ServerConfig.URLForAPI("oauth/gitlab/callback", nil),
 			"read_user"),
 	)
 }
@@ -98,7 +98,7 @@ func googleOauthConfigure() {
 		google.New(
 			SecretsConfig.IdP.Google.Key,
 			SecretsConfig.IdP.Google.Secret,
-			URLForAPI("oauth/google/callback", nil),
+			ServerConfig.URLForAPI("oauth/google/callback", nil),
 			"email",
 			"profile"),
 	)
@@ -116,7 +116,7 @@ func linkedinOauthConfigure() {
 		linkedin.New(
 			SecretsConfig.IdP.LinkedIn.Key,
 			SecretsConfig.IdP.LinkedIn.Secret,
-			URLForAPI("oauth/linkedin/callback", nil),
+			ServerConfig.URLForAPI("oauth/linkedin/callback", nil),
 			"profile",
 			"email"),
 	)
@@ -134,6 +134,6 @@ func twitterOauthConfigure() {
 		twitter.New(
 			SecretsConfig.IdP.Twitter.Key,
 			SecretsConfig.IdP.Twitter.Secret,
-			URLForAPI("oauth/twitter/callback", nil)),
+			ServerConfig.URLForAPI("oauth/twitter/callback", nil)),
 	)
 }

@@ -19,7 +19,7 @@ func EmbedI18nMessages(params api_embed.EmbedI18nMessagesParams) middleware.Resp
 	if errors.Is(err, svc.ErrNotFound) {
 		// Redirect to the default language instead
 		return api_embed.NewEmbedI18nMessagesTemporaryRedirect().
-			WithLocation(config.URLForAPI(fmt.Sprintf("/embed/i18n/%s/messages", util.DefaultLanguage), nil))
+			WithLocation(config.ServerConfig.URLForAPI(fmt.Sprintf("/embed/i18n/%s/messages", util.DefaultLanguage), nil))
 
 	} else if err != nil {
 		// Any other error

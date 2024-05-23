@@ -111,7 +111,7 @@ func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO URL is missing"))
 
 		// Verify SSO URL is valid and secure (allow insecure in e2e-testing mode)
-	} else if _, err := util.ParseAbsoluteURL(domain.SSOURL, config.CLIFlags.E2e, false); err != nil {
+	} else if _, err := util.ParseAbsoluteURL(domain.SSOURL, config.ServerConfig.E2e, false); err != nil {
 		respBadRequest(ErrorSSOMisconfigured.WithDetails(err.Error()))
 
 		// Verify SSO secret is configured

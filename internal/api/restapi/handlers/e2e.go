@@ -263,7 +263,7 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 
 	// Calculate the callback URL, including the payload and its HMAC signature
 	u := &url.URL{}
-	*u = *config.BaseURL
+	*u = *config.ServerConfig.ParsedBaseURL()
 	u.Path = path.Join(u.Path, util.APIPath, "oauth/sso/callback")
 	q := u.Query()
 	q.Set("payload", hex.EncodeToString(payloadBytes))

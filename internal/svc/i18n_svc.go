@@ -66,12 +66,12 @@ func (svc *i18nService) FrontendURL(lang, subPath string, queryParams map[string
 	if !svc.IsFrontendLang(lang) {
 		lang = util.DefaultLanguage.String()
 	}
-	return config.URLFor(fmt.Sprintf("%s/%s", lang, subPath), queryParams)
+	return config.ServerConfig.URLFor(fmt.Sprintf("%s/%s", lang, subPath), queryParams)
 }
 
 func (svc *i18nService) GuessFrontendUserLanguage(r *http.Request) string {
 	// First, analyze the requested path. If it's under a language root, use that language
-	if ok, p := config.PathOfBaseURL(r.URL.Path); ok && len(p) >= 3 && p[2] == '/' && svc.IsFrontendLang(p[0:2]) {
+	if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok && len(p) >= 3 && p[2] == '/' && svc.IsFrontendLang(p[0:2]) {
 		return p[0:2]
 	}
 

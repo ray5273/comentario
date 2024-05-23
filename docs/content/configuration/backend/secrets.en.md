@@ -91,6 +91,8 @@ Below is a summary of the values in the secrets file.
 | `extensions.perspective.key`                  | string  | Perspective API key                                                                           |                     |
 | `extensions.apiLayerSpamChecker.disable`      | boolean | Whether to globally disable APILayer SpamChecker API                                          |                     |
 | `extensions.apiLayerSpamChecker.key`          | string  | APILayer SpamChecker API key                                                                  |                     |
+| **Other**                                     |         |                                                                                               |                     |
+| `xsrfSecret`                                  | string  | Random string to generate XSRF key from (30 or more chars recommended)                        |    Random value     |
 {.table .table-striped}
 </div>
 
@@ -121,6 +123,12 @@ Comentario supports external comment-checking services called [extensions](/conf
 
 * If no extension (Akismet, Perspective, etc.) API key is provided, this extension will *still be available for users*, but they will need to [configure](/configuration/frontend/domain/extensions) the key on the domain level in order to activate it.
 * To disable an extension altogether, set its `disable` flag to `true`.
+
+## XSRF secret
+
+You can provide a value in `xsrfSecret`, which will be SHA256-hashed and used as an XSRF key for the frontend API calls. If you omit this value, a random key will be generated.
+
+A preconfigured, non-random secret value should be used in setups with multiple Comentario instances serving the same website; it would guarantee an XSRF token issued by one instance is accepted by another. Even in this situation it's sensible to rotate the secret once in a while, making sure all Comentario instances are restarted afterwards.
 
 ## Example
 

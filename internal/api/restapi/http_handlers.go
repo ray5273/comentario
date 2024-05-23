@@ -81,11 +81,11 @@ func makeAPIHandler(apiHandler http.Handler) alice.Constructor {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			// Verify the URL is a correct one
-			if ok, p := config.PathOfBaseURL(r.URL.Path); ok {
+			if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok {
 				// If it's an API call. Also check whether the Swagger UI is enabled (because it's also served by the API)
 				isAPIPath := strings.HasPrefix(p, util.APIPath)
 				isSwaggerPath := p == "swagger.json" || strings.HasPrefix(p, util.SwaggerUIPath)
-				if !isSwaggerPath && isAPIPath || isSwaggerPath && config.CLIFlags.EnableSwaggerUI {
+				if !isSwaggerPath && isAPIPath || isSwaggerPath && config.ServerConfig.EnableSwaggerUI {
 					r.URL.Path = "/" + p
 					apiHandler.ServeHTTP(w, r)
 					return
@@ -114,7 +114,7 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// If it's 'GET <path-under-root>'
-		if ok, p := config.PathOfBaseURL(r.URL.Path); ok && r.Method == http.MethodGet {
+		if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok && r.Method == http.MethodGet {
 			switch len(p) {
 			// Site root: redirect to the most appropriate language root
 			case 0:
@@ -162,7 +162,7 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 	logger.Debugf("Serving file '/%s' replacing placeholders", filePath)
 
 	// Read in the file
-	filename := path.Join(config.CLIFlags.StaticPath, filePath)
+	filename := path.Join(config.ServerConfig.StaticPath, filePath)
 	b, err := os.ReadFile(filename)
 
 	// If file doesn't exist, respond with 404 Not Found
@@ -182,8 +182,8 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 	if strings.Contains(s, "[[[.") {
 		b = []byte(
 			strings.Replace(strings.Replace(s,
-				"[[[.Origin]]]", strings.TrimSuffix(config.BaseURL.String(), "/"), -1),
-				"[[[.CdnPrefix]]]", strings.TrimSuffix(config.CDNURL.String(), "/"), -1))
+				"[[[.Origin]]]", strings.TrimSuffix(config.ServerConfig.ParsedBaseURL().String(), "/"), -1),
+				"[[[.CdnPrefix]]]", strings.TrimSuffix(config.ServerConfig.ParsedCDNURL().String(), "/"), -1))
 	}
 
 	// Determine content type
@@ -209,14 +209,14 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 // - paths starting from a language root ('/en/', '/ru/' etc.)
 func staticHandler(next http.Handler) http.Handler {
 	// Instantiate a file server for static content
-	fileHandler := http.FileServer(http.Dir(config.CLIFlags.StaticPath))
+	fileHandler := http.FileServer(http.Dir(config.ServerConfig.StaticPath))
 
 	// Make a middleware handler
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Resources are only served out via GET
 		if r.Method == http.MethodGet {
 			// If it's a path under the base URL
-			if ok, p := config.PathOfBaseURL(r.URL.Path); ok {
+			if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok {
 				// Check if it's a static resource or a path on/under a language root
 				repl, static := util.UIStaticPaths[p]
 				hasLang := !static && len(p) >= 3 && p[2] == '/' && svc.TheI18nService.IsFrontendLang(p[0:2])
@@ -274,7 +274,7 @@ func staticHandler(next http.Handler) http.Handler {
 func webSocketsHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if path is a web socket root path
-		if ok, p := config.PathOfBaseURL(r.URL.Path); ok && strings.HasPrefix(p, util.WebSocketsPath) {
+		if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok && strings.HasPrefix(p, util.WebSocketsPath) {
 			// Only allow GET requests
 			if r.Method != http.MethodGet {
 				writeError(w, http.StatusMethodNotAllowed)
@@ -319,12 +319,12 @@ func xsrfErrorHandler(w http.ResponseWriter, r *http.Request) {
 func xsrfProtectHandler(next http.Handler) http.Handler {
 	// Instantiate a CSRF handler (chained to the "next")
 	handler := csrf.Protect(
-		config.XSRFKey,
+		config.SecretsConfig.XSRFKey(),
 		csrf.ErrorHandler(http.HandlerFunc(xsrfErrorHandler)),
 		// Since the presence of this cookie also controls the appearance of the "XSRF-TOKEN" cookie, they must share
 		// the same path
 		csrf.Path("/"),
-		csrf.Secure(config.UseHTTPS),
+		csrf.Secure(config.ServerConfig.UseHTTPS()),
 		csrf.HttpOnly(true),
 		csrf.CookieName(util.CookieNameXSRFSession),
 		csrf.RequestHeader(util.HeaderXSRFToken))(next)
@@ -356,7 +356,7 @@ func xsrfCookieHandler(next http.Handler) http.Handler {
 					Value:    csrf.Token(r),
 					Path:     "/",
 					MaxAge:   int(util.UserSessionDuration.Seconds()),
-					Secure:   config.UseHTTPS,
+					Secure:   config.ServerConfig.UseHTTPS(),
 					HttpOnly: false,
 				})
 			}

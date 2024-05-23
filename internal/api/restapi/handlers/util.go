@@ -110,7 +110,7 @@ func (r *CookieResponder) WithCookie(name, value, path string, maxAge time.Durat
 		Value:    value,
 		Path:     path,
 		MaxAge:   int(maxAge.Seconds()),
-		Secure:   config.UseHTTPS,
+		Secure:   config.ServerConfig.UseHTTPS(),
 		HttpOnly: httpOnly,
 		SameSite: sameSite,
 	}
@@ -124,7 +124,7 @@ func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
 		Path:   path,
 		MaxAge: -1,
 		// Allow sending it cross-origin, but only via HTTPS as only a secure cookie can use SameSite=None
-		SameSite: util.If(config.UseHTTPS, http.SameSiteNoneMode, http.SameSiteLaxMode),
+		SameSite: util.If(config.ServerConfig.UseHTTPS(), http.SameSiteNoneMode, http.SameSiteLaxMode),
 	}
 	return r
 }

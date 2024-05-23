@@ -42,11 +42,32 @@ func main() {
 	defer util.LogError(server.Shutdown, "server.Shutdown()")
 
 	// Configure command-line options
+	if err := parseCLI(apiInstance, server, swaggerSpec.Spec().Info.Description); err != nil {
+		logger.Fatalf("Failed to post-process configuration: %v", err)
+	}
+
+	// Init the version service
+	svc.TheVersionService.Init(version, date)
+
+	// Link the translations to the embedded filesystem
+	config.I18nFS = &i18nFS
+
+	// Configure the API
+	server.ConfigureAPI()
+
+	// Serve the API
+	if err := server.Serve(); err != nil {
+		logger.Fatalf("Serve() failed: %v", err)
+	}
+}
+
+// parseCLI parses the command-line flags
+func parseCLI(api *operations.ComentarioAPI, server *restapi.Server, desc string) error {
 	parser := flags.NewParser(server, flags.Default)
 	parser.ShortDescription = util.ApplicationName
-	parser.LongDescription = swaggerSpec.Spec().Info.Description
+	parser.LongDescription = desc
 	server.ConfigureFlags()
-	for _, optsGroup := range apiInstance.CommandLineOptionsGroups {
+	for _, optsGroup := range api.CommandLineOptionsGroups {
 		_, err := parser.AddGroup(optsGroup.ShortDescription, optsGroup.LongDescription, optsGroup.Options)
 		if err != nil {
 			logger.Fatal(err)
@@ -68,34 +89,24 @@ func main() {
 	// Configure logging
 	setupLogging()
 
-	// Init the version service
-	svc.TheVersionService.Init(version, date)
-
-	// Link the translations to the embedded filesystem
-	config.I18nFS = &i18nFS
-
-	// Configure the API
-	server.ConfigureAPI()
-
-	// Serve the API
-	if err := server.Serve(); err != nil {
-		logger.Fatalf("Serve() failed: %v", err)
-	}
+	// Post-process the config
+	return config.PostProcess()
 }
 
+// setupLogging set the correct logging level and format
 func setupLogging() {
 	// Create a custom backend to get rid of the default date/time format configured in the default backend
 	backend := logging.NewLogBackend(os.Stdout, "", 0)
 	formatter := logging.MustStringFormatter(
 		util.If(
-			config.CLIFlags.NoLogColours,
+			config.ServerConfig.NoLogColours,
 			`%{time:2006-01-02 15:04:05.000} %{level:-5.5s} %{module:-11s} | %{message}`,
 			`%{color}%{time:2006-01-02 15:04:05.000} %{color:bold}%{level:-5.5s}%{color:reset} %{color}%{module:-11s} | %{message}%{color:reset}`))
 	logging.SetBackend(logging.NewBackendFormatter(backend, formatter))
 
 	// Configure logging level
 	var logLevel logging.Level
-	switch len(config.CLIFlags.Verbose) {
+	switch len(config.ServerConfig.Verbose) {
 	case 0:
 		logLevel = logging.WARNING
 	case 1:
