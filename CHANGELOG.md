@@ -1,5 +1,23 @@
 # Comentario changelog
 
+## v3.8.0
+
+This release adds own comment/page counts to the Dashboard, enables automatic Admin UI login from the user settings dialog on a comment page, adds Comentario version upgrade checks, improves embedded engine error handling, and fixes a number of issues. It also adds Brazilian Portuguese to the list of available languages.
+
+* Config manager: display a notification in the sidebar and an upgrade link - bb00751, 858c6da, e4ca7a9, 72779a0
+* Dashboard: add counts of pages/comments you authored - 7a13f5e
+* Add optional `xsrfSecret` value to secrets (#75) - a6c11fb
+* Embed: transparent login to Admin UI on `Edit Comentario profile` click - d256dca, 7b61f97, 3ea3ff9
+* Embed: better startup error handling - 906185a
+* Embed: content placeholders while loading (#94) - 906185a
+* Embed: disable toolbar on preview (#93) - 50d8366
+* Backend logging improvements: log colouring, times with milliseconds, better formatting, `--no-color` CLI option - 5b6c9d0
+* Add translation to Brazilian Portuguese (thanks to Guilherme Alves) - f5ed5ff, 5fac68d
+* Dynamic config: disable images in markdown by default to mitigate possible identity attacks - 678cd4a
+* Fix: only support IPv4 in `signup_ip`/`author_ip` (works around #95) - fb844b1
+* Fix: also mask `author_ip` - fb844b1
+* Fix: reset failed login counter on unlock (#91) - c21175b
+
 ## v3.7.0
 
 In this release we've introduced domain-level dynamic configuration, added support for unregistered commenters with a name (previously they were always "Anonymous"), a new setting for email notifications about comment approval/rejection, extended comment metadata with details about its editing, added failed login tracking, and more.
