@@ -307,7 +307,7 @@ We're now using Cypress for end-to-end (e2e) tests (the proper tests will follow
 
 ## v2.2.0
 
-* This release features a major backend overhaul: Comentario is now using server code generated with [go-swagger](https://goswagger.io/) based on the [Swagger/OpenAPI spec](swagger/swagger.yml).
+* This release features a major backend overhaul: Comentario is now using server code generated with [go-swagger](https://goswagger.io/) based on the [Swagger/OpenAPI spec](resources/swagger/swagger.yml).
 * All available federated authentication options are fully functional again: GitHub, GitLab, Google, Twitter, and SSO.
 * This is the last Comentario version that's fully compatible (meaning, backward- and forward-compatible) with Commento database v1.8.0.
 * It's also *almost* compatible with Commento API, with the exception that it consumes `application/json` instead of `application/x-www-form-urlencoded`.

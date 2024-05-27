@@ -5,7 +5,7 @@
     "scripts": {
         "build": "ng build --configuration development",
         "build:prod": "ng build",
-        "generate": "rm -rf generated-api/ && openapi-generator-cli generate -i ../swagger/swagger.yml -g typescript-angular -o generated-api",
+        "generate": "rm -rf generated-api/ && openapi-generator-cli generate -i ../resources/swagger/swagger.yml -g typescript-angular -o generated-api",
         "lint": "ng lint",
         "start": "ng build --watch --configuration development",
         "test": "ng test",
