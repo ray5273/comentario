@@ -26,6 +26,7 @@ type ServerConfiguration struct {
 	DBIdleConns       int    `long:"db-idle-conns"      description:"Max. # of idle DB connections"              default:"50"                          env:"DB_MAX_IDLE_CONNS"`
 	DisableXSRF       bool   `long:"disable-xsrf"       description:"Disable XSRF protection (development purposes only)"`
 	EnableSwaggerUI   bool   `long:"enable-swagger-ui"  description:"Enable Swagger UI at /api/docs"`
+	PluginPath        string `long:"plugin-path"        description:"Path to plugins"                            default:""                            env:"PLUGIN_PATH"`
 	StaticPath        string `long:"static-path"        description:"Path to static files"                       default:"./frontend"                  env:"STATIC_PATH"`
 	DBMigrationPath   string `long:"db-migration-path"  description:"Path to DB migration files"                 default:"./db"                        env:"DB_MIGRATION_PATH"`
 	DBDebug           bool   `long:"db-debug"           description:"Enable database debug logging"`

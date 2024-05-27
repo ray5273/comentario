@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/plugins"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
@@ -30,6 +31,9 @@ var (
 var i18nFS embed.FS // Translations
 
 func main() {
+	// Init the version service
+	svc.TheVersionService.Init(version, date)
+
 	// Load the embedded Swagger file
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
 	if err != nil {
@@ -46,8 +50,10 @@ func main() {
 		logger.Fatalf("Failed to post-process configuration: %v", err)
 	}
 
-	// Init the version service
-	svc.TheVersionService.Init(version, date)
+	// Load plugins
+	if err := plugins.ThePluginManager.Init(); err != nil {
+		logger.Fatalf("Failed to init plugin manager: %v", err)
+	}
 
 	// Link the translations to the embedded filesystem
 	config.I18nFS = &i18nFS

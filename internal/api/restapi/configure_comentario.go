@@ -13,6 +13,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/plugins"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -138,7 +139,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Embed API
 	//------------------------------------------------------------------------------------------------------------------
 
-	// |I18n
+	// I18n
 	api.APIEmbedEmbedI18nMessagesHandler = api_embed.EmbedI18nMessagesHandlerFunc(handlers.EmbedI18nMessages)
 	// Auth
 	api.APIEmbedEmbedAuthLoginHandler = api_embed.EmbedAuthLoginHandlerFunc(handlers.EmbedAuthLogin)
@@ -192,6 +193,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	chain = chain.Append(
 		securityHeadersHandler,
 		staticHandler,
+		plugins.ThePluginManager.ServeHandler,
 		makeAPIHandler(api.Serve(nil)),
 	)
 

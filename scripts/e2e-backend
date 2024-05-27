@@ -99,6 +99,9 @@ secrets="$root_dir/resources/k8s/~secrets.yaml"
 [[ ! -f "$secrets" ]] && secrets="$root_dir/resources/k8s/secrets.postgres.yaml"
 echo "Using secrets file: $secrets"
 
+# Add Claro plugin if present
+[[ -d "$root_dir/../claro/build" ]] && comentario_args="$comentario_args --plugin-path=$root_dir/../claro/build"
+
 # Start the backend
 ((do_e2e)) && comentario_args="$comentario_args --e2e"
 echo "Starting $build_dir/comentario"
