@@ -699,25 +699,30 @@ export class Comentario extends HTMLElement {
      */
     private async loginSsoNonInteractive(ssoUrl: string): Promise<void> {
         // Promise resolving as soon as the iframe communicates back
-        const ready = new Promise<SsoLoginResponse>((resolve, reject) =>
-            window.addEventListener(
-                'message',
-                (e: MessageEvent<SsoLoginResponse>) => {
-                    // Make sure the message originates from the backend and is a valid response
-                    if (e.origin !== this.origin || e.data?.type !== 'auth.sso.result') {
-                        return;
-                    }
+        const ready = new Promise<SsoLoginResponse>((resolve, reject) => {
+            // Message event listener
+            const onMessage = (e: MessageEvent<SsoLoginResponse>) => {
+                // Make sure the message originates from the backend and is a valid response
+                if (e.origin !== this.origin || e.data?.type !== 'auth.sso.result') {
+                    return;
+                }
 
-                    // Check if login was successful
-                    if (!e.data.success) {
-                        reject(e.data.error);
+                // Remove the listener after the first reception
+                window.removeEventListener('message', onMessage);
 
-                    } else {
-                        // Succeeded
-                        resolve(e.data);
-                    }
-                },
-                {once: true}));
+                // Check if login was successful
+                if (!e.data.success) {
+                    reject(e.data.error);
+
+                } else {
+                    // Succeeded
+                    resolve(e.data);
+                }
+            };
+
+            // Add a message event listener
+            window.addEventListener('message', onMessage);
+        });
 
         // Time out after 30 seconds
         const timeout = new Promise<never>((_, reject) => setTimeout(() => reject('SSO login timed out'), 30_000));
