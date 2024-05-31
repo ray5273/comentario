@@ -213,7 +213,6 @@ type User struct {
 	FailedLoginAttempts int           // Number of failed login attempts
 	IsLocked            bool          // Whether the user is locked out
 	LockedTime          sql.NullTime  // When the user was locked
-
 }
 
 // NewUser instantiates a new User
@@ -287,6 +286,18 @@ func (u *User) FederatedIdPNullStr() sql.NullString {
 		return sql.NullString{}
 	}
 	return sql.NullString{String: u.FederatedIdP, Valid: true}
+}
+
+func (u *User) GetEmail() string {
+	return u.Email
+}
+
+func (u *User) GetID() uuid.UUID {
+	return u.ID
+}
+
+func (u *User) GetName() string {
+	return u.Name
 }
 
 // IsAnonymous returns whether the user is anonymous

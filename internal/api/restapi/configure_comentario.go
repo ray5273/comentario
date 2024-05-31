@@ -192,8 +192,8 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// must be delivered), and the API handler
 	chain = chain.Append(
 		securityHeadersHandler,
+		plugins.ThePluginManager.ServeHandler, // Comes before "regular" statics/API handlers because it can serve both
 		staticHandler,
-		plugins.ThePluginManager.ServeHandler,
 		makeAPIHandler(api.Serve(nil)),
 	)
 

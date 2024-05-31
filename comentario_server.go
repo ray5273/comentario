@@ -106,8 +106,8 @@ func setupLogging() {
 	formatter := logging.MustStringFormatter(
 		util.If(
 			config.ServerConfig.NoLogColours,
-			`%{time:2006-01-02 15:04:05.000} %{level:-5.5s} %{module:-11s} | %{message}`,
-			`%{color}%{time:2006-01-02 15:04:05.000} %{color:bold}%{level:-5.5s}%{color:reset} %{color}%{module:-11s} | %{message}%{color:reset}`))
+			`%{time:2006-01-02 15:04:05.000} %{level:-5.5s} %{module:-11.11s} | %{message}`,
+			`%{color}%{time:2006-01-02 15:04:05.000} %{color:bold}%{level:-5.5s}%{color:reset} %{color}%{module:-11.11s} | %{message}%{color:reset}`))
 	logging.SetBackend(logging.NewBackendFormatter(backend, formatter))
 
 	// Configure logging level
