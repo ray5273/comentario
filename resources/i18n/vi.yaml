@@ -1,0 +1,126 @@
+- {id: accountCreatedConfirmEmail,  translation: 'Tài khoản của bạn đã được tạo thành công. Vui lòng kiểm tra email và nhấp vào liên kết xác nhận.'}
+- {id: actionAddComment,            translation: 'Thêm bình luận'}
+- {id: actionApprove,               translation: 'Phê duyệt'}
+- {id: actionCancel,                translation: 'Hủy'}
+- {id: actionClose,                 translation: 'Đóng'}
+- {id: actionCollapseChildren,      translation: 'Thu gọn bình luận'}
+- {id: actionCommentUnreg,          translation: 'Bình luận không cần đăng ký'}
+- {id: actionConfirmEmail,          translation: 'Xác nhận email của bạn'}
+- {id: actionContext,               translation: 'Ngữ cảnh'}
+- {id: actionDelete,                translation: 'Xóa'}
+- {id: actionDownvote,              translation: 'Không đồng ý'}
+- {id: actionEdit,                  translation: 'Chỉnh sửa'}
+- {id: actionEditComentarioProfile, translation: 'Chỉnh sửa hồ sơ Comentario'}
+- {id: actionExpandChildren,        translation: 'Mở rộng bình luận'}
+- {id: actionLogIn,                 translation: 'Đăng nhập'}
+- {id: actionOk,                    translation: 'OK'}
+- {id: actionPreview,               translation: 'Xem trước'}
+- {id: actionReject,                translation: 'Từ chối'}
+- {id: actionReply,                 translation: 'Trả lời'}
+- {id: actionResetPassword,         translation: 'Đặt lại mật khẩu của bạn'}
+- {id: actionRetry,                 translation: 'Thử lại'}
+- {id: actionSave,                  translation: 'Lưu'}
+- {id: actionSignIn,                translation: 'Đăng nhập'}
+- {id: actionSignUp,                translation: 'Đăng ký'}
+- {id: actionSignUpLink,            translation: 'Đăng ký ở đây'}
+- {id: actionSso,                   translation: 'Đăng nhập một lần (SSO)'}
+- {id: actionSticky,                translation: 'Ghim'}
+- {id: actionUnsticky,              translation: 'Bỏ ghim'}
+- {id: actionUnsubscribe,           translation: 'Hủy đăng ký'}
+- {id: actionUpvote,                translation: 'Đồng ý'}
+- {id: addCommentPlaceholder,       translation: 'Thêm bình luận'}
+- {id: btnBold,                     translation: 'In đậm'}
+- {id: btnBulletList,               translation: 'Danh sách đánh dấu'}
+- {id: btnCode,                     translation: 'Mã'}
+- {id: btnImage,                    translation: 'Hình ảnh'}
+- {id: btnItalic,                   translation: 'In nghiêng'}
+- {id: btnLink,                     translation: 'Liên kết'}
+- {id: btnLock,                     translation: 'Khóa'}
+- {id: btnLogout,                   translation: 'Đăng xuất'}
+- {id: btnMarkdownHelp,             translation: 'Trợ giúp Markdown'}
+- {id: btnNumberedList,             translation: 'Danh sách đánh số'}
+- {id: btnQuote,                    translation: 'Trích dẫn'}
+- {id: btnSettings,                 translation: 'Cài đặt'}
+- {id: btnStrikethrough,            translation: 'Gạch ngang'}
+- {id: btnTable,                    translation: 'Bảng'}
+- {id: btnUnlock,                   translation: 'Mở khóa'}
+- {id: clickButtonBelow,            translation: 'Vui lòng nhấp vào nút bên dưới để thực hiện.'}
+- {id: commentIsApproved,           translation: 'Bình luận này đã được phê duyệt bởi người kiểm duyệt.'}
+- {id: commentIsPending,            translation: 'Bình luận này đang chờ phê duyệt.'}
+- {id: commentIsRejected,           translation: 'Bình luận này bị từ chối vì nó là spam hoặc không phù hợp.'}
+- {id: commentNotFound,             translation: 'Bình luận bạn tìm kiếm không tồn tại; có thể đã bị xóa.'}
+- {id: commentScore,                translation: 'Điểm bình luận'}
+- {id: commentStatusChanged,        translation: 'Trạng thái bình luận đã thay đổi'}
+- {id: confirmCommentDeletion,      translation: 'Bạn có chắc chắn muốn xóa bình luận này không?'}
+- {id: confirmEmailAct,             translation: 'Để hoàn tất đăng ký, vui lòng nhấp vào nút bên dưới.'}
+- {id: confirmEmailExplanation,     translation: 'Bạn nhận được email này vì bạn (hoặc ai đó) đã đăng ký địa chỉ email này.'}
+- {id: confirmEmailRequest,         translation: 'Bạn đã đăng ký tài khoản Comentario mới với địa chỉ email này.'}
+- {id: confirmYourEmail,            translation: 'Xác nhận email của bạn'}
+- {id: dlgTitleConfirm,             translation: 'Xác nhận'}
+- {id: dlgTitleCreateAccount,       translation: 'Tạo tài khoản'}
+- {id: dlgTitleLogIn,               translation: 'Đăng nhập'}
+- {id: dlgTitlePopupBlocked,        translation: 'Cửa sổ bật lên bị chặn'}
+- {id: dlgTitleUserSettings,        translation: 'Cài đặt người dùng'}
+- {id: domainAuthUnconfigured,      translation: 'Tên miền này không có phương thức xác thực nào. Bạn không thể thêm bình luận mới.'}
+- {id: error,                       translation: 'Lỗi'}
+- {id: errorUnknown,                translation: 'Lỗi không xác định'}
+- {id: errorUnknownHost,            translation: 'Tên miền này không được đăng ký trong Comentario'}
+- {id: fieldComStatusNotifications, translation: 'Thông báo trạng thái bình luận'}
+- {id: fieldModNotifications,       translation: 'Thông báo người kiểm duyệt'}
+- {id: fieldPassword,               translation: 'Mật khẩu'}
+- {id: fieldRealName,               translation: 'Tên thật'}
+- {id: fieldReplyNotifications,     translation: 'Thông báo trả lời'}
+- {id: fieldWebsiteOpt,             translation: 'Trang web (tùy chọn)'}
+- {id: fieldYourNameOptional,       translation: 'Tên của bạn (tùy chọn)'}
+- {id: forgotPasswordLink,          translation: 'Quên mật khẩu?'}
+- {id: helloName,                   translation: 'Xin chào {{ index . 0 }}!'}
+- {id: ignoreEmail,                 translation: 'Nếu bạn không thực hiện điều này, vui lòng bỏ qua email này.'}
+- {id: loginViaLocalAuth,           translation: 'Đăng nhập bằng email và mật khẩu của bạn'}
+- {id: loginWith,                   translation: 'Đăng nhập bằng'}
+- {id: newComment,                  translation: 'Bình luận mới'}
+- {id: newCommentOn,                translation: 'Bình luận mới về {{ index . 0 }}'}
+- {id: noAccountYet,                translation: 'Chưa có tài khoản?'}
+- {id: notificationCommentStatus,   translation: 'Bạn nhận được email này vì bạn đã chọn nhận thông báo email cho các cập nhật trạng thái bình luận.'}
+- {id: notificationModAll,          translation: 'Bạn nhận được email này vì chủ sở hữu tên miền đã chọn thông báo cho người kiểm duyệt về tất cả các bình luận mới qua email.'}
+- {id: notificationModPending,      translation: 'Bạn nhận được email này vì chủ sở hữu tên miền đã chọn thông báo cho người kiểm duyệt về các bình luận đang chờ phê duyệt qua email.'}
+- {id: notificationNewReply,        translation: 'Bạn nhận được email này vì bạn đã chọn nhận thông báo email cho các trả lời bình luận.'}
+- {id: notWillingToSignup,          translation: 'Không muốn đăng ký? Bạn có thể bình luận mà không cần đăng ký'}
+- {id: pageIsReadonly,              translation: 'Chủ đề này đã bị khóa. Bạn không thể thêm bình luận mới.'}
+- {id: popupWasBlocked,             translation: 'Cửa sổ bật lên đã bị trình duyệt của bạn chặn. Vui lòng cho phép cửa sổ bật lên trên trang web này, sau đó nhấp vào nút Thử lại bên dưới.'}
+- {id: poweredBy,                   translation: 'Được cung cấp bởi Comentario'}
+- {id: previewFailed,               translation: 'Xem trước thất bại'}
+- {id: pwdResetExplanation,         translation: 'Bạn nhận được email này vì bạn (hoặc ai đó) đã yêu cầu đặt lại mật khẩu.'}
+- {id: pwdResetRequest,             translation: 'Bạn đã khởi tạo quy trình đặt lại mật khẩu tài khoản Comentario.'}
+- {id: pwdStrengthExplained,        translation: 'Mật khẩu phải dài ít nhất 8 ký tự và chứa một chữ cái viết hoa, một chữ cái viết thường và một chữ số hoặc ký hiệu.'}
+- {id: resetYourPassword,           translation: 'Đặt lại mật khẩu của bạn'}
+- {id: sampleText,                  translation: 'văn bản'}
+- {id: signUpAgreeAnd,              translation: 'và'}
+- {id: signUpAgreePrivacyPolicy,    translation: 'Chính sách bảo mật'}
+- {id: signUpAgreeTerms,            translation: 'Điều khoản dịch vụ'}
+- {id: signUpAgreeTo,               translation: 'Bằng cách đăng ký, bạn đồng ý với'}
+- {id: sortNewest,                  translation: 'Mới nhất'}
+- {id: sortOldest,                  translation: 'Cũ nhất'}
+- {id: sortVotes,                   translation: 'Bỏ phiếu'}
+- {id: ssoAuthFailed,               translation: 'Xác thực SSO thất bại.'}
+- {id: statusDeleted,               translation: 'đã xóa'}
+- {id: statusDeletedByAuthor,       translation: 'đã xóa bởi tác giả'}
+- {id: statusDeletedByModerator,    translation: 'đã xóa bởi người kiểm duyệt'}
+- {id: statusDeletedUser,           translation: 'Người dùng đã xóa'}
+- {id: statusEditedByAuthor,        translation: 'được chỉnh sửa bởi tác giả'}
+- {id: statusEditedByModerator,     translation: 'được chỉnh sửa bởi người kiểm duyệt'}
+- {id: statusModerator,             translation: 'Người kiểm duyệt'}
+- {id: statusPending,               translation: 'Đang chờ'}
+- {id: stickyComment,               translation: 'Bình luận được ghim'}
+- {id: technicalDetails,            translation: 'Chi tiết kỹ thuật'}
+- {id: timeDaysAgo,                 translation: 'ngày trước'}
+- {id: timeHourAgo,                 translation: 'một giờ trước'}
+- {id: timeHoursAgo,                translation: 'giờ trước'}
+- {id: timeJustNow,                 translation: 'vừa mới'}
+- {id: timeMinuteAgo,               translation: 'một phút trước'}
+- {id: timeMinutesAgo,              translation: 'phút trước'}
+- {id: timeMonthAgo,                translation: 'một tháng trước'}
+- {id: timeMonthsAgo,               translation: 'tháng trước'}
+- {id: timeYearAgo,                 translation: 'một năm trước'}
+- {id: timeYearsAgo,                translation: 'năm trước'}
+- {id: timeYesterday,               translation: 'hôm qua'}
+- {id: unreadReply,                 translation: 'Trả lời chưa đọc'}

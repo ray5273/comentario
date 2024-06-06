@@ -4,6 +4,7 @@ export const UI_LANGUAGES = {
     'nl':    'Nederlands (Dutch)',
     'pt-BR': 'português (Brazilian Portuguese)',
     'ru':    'русский (Russian)',
+    'vi':    'Tiếng Việt (Vietnamese)',
 };
 
 /** Canned regular expressions. */
