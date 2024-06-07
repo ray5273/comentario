@@ -190,25 +190,31 @@ docker-image:
     - build
   parallel:
     matrix:
-      - IMG_TAG_CURRENT: $CI_REGISTRY_IMAGE:$VERSION
-        IMG_TAG_LATEST:  $CI_REGISTRY_IMAGE:latest
-        DOCKERFILE: Dockerfile
-      - IMG_TAG_CURRENT: $CI_REGISTRY_IMAGE:$VERSION-ubuntu
-        IMG_TAG_LATEST:  $CI_REGISTRY_IMAGE:latest-ubuntu
-        DOCKERFILE: Dockerfile.ubuntu
+      - FLAVOUR:
+        - -alpine
+        - -ubuntu
+  variables:
+    IMG_TAG_CURRENT: $CI_REGISTRY_IMAGE:$VERSION
+    IMG_TAG_LATEST:  $CI_REGISTRY_IMAGE:latest
   script:
+    # Determine the suffix: it will be empty for Alpine
+    - suffix="${FLAVOUR#-alpine}"
+    - echo "Using image suffix '$suffix'"
+
     # Login to the Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
     # Build and push the images
-    - docker build -t "$IMG_TAG_CURRENT" -f "$DOCKERFILE" .
-    - docker push "$IMG_TAG_CURRENT"
+    - echo "Building tag '$IMG_TAG_CURRENT$suffix'"
+    - docker build -t "$IMG_TAG_CURRENT$suffix" -f "Dockerfile$suffix" .
+    - docker push "$IMG_TAG_CURRENT$suffix"
 
     # For dev, also push it as 'latest'
     - |
       if [[ "$CI_COMMIT_BRANCH" == "dev" ]]; then
-          docker tag "$IMG_TAG_CURRENT" "$IMG_TAG_LATEST"
-          docker push "$IMG_TAG_LATEST"
+          echo "Building tag '$IMG_TAG_LATEST$suffix'"
+          docker tag "$IMG_TAG_CURRENT$suffix" "$IMG_TAG_LATEST$suffix"
+          docker push "$IMG_TAG_LATEST$suffix"
       fi
 
 # Verify the .deb package
