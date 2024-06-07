@@ -190,13 +190,12 @@ docker-image:
     - build
   parallel:
     matrix:
-      - TAG_SUFFIX: ''
+      - IMG_TAG_CURRENT: $CI_REGISTRY_IMAGE:$VERSION
+        IMG_TAG_LATEST:  $CI_REGISTRY_IMAGE:latest
         DOCKERFILE: Dockerfile
-      - TAG_SUFFIX: '-ubuntu'
+      - IMG_TAG_CURRENT: $CI_REGISTRY_IMAGE:$VERSION-ubuntu
+        IMG_TAG_LATEST:  $CI_REGISTRY_IMAGE:latest-ubuntu
         DOCKERFILE: Dockerfile.ubuntu
-  variables:
-    IMG_TAG_CURRENT: $CI_REGISTRY_IMAGE:$VERSION$TAG_SUFFIX
-    IMG_TAG_LATEST:  $CI_REGISTRY_IMAGE:latest$TAG_SUFFIX
   script:
     # Login to the Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
