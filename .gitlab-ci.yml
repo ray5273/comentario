@@ -28,6 +28,15 @@ variables:
   SKIP_TESTS:
     value: "false"
     description: Whether to skip executing front-end tests
+    options:
+      - "false"
+      - "true"
+  SKIP_DEPLOY:
+    value: "false"
+    description: Whether to skip deployment
+    options:
+      - "false"
+      - "true"
 
 build:
   stage: build
@@ -344,6 +353,8 @@ release:
 deploy-dev:
   stage: deploy
   rules:
+    - if: $SKIP_DEPLOY == 'true'
+      when: never
     # Only run if the context name is given (via CI/CD vars) and the branch is 'dev'
     - if: $CV_K8S_CONTEXT && $CI_COMMIT_BRANCH == "dev"
   image: $DEPLOYER_IMAGE
@@ -390,6 +401,8 @@ deploy-dev:
 deploy-tag:
   stage: deploy
   rules:
+    - if: $SKIP_DEPLOY == 'true'
+      when: never
     # Only run if the context name is given (via CI/CD vars) and it's a tag build (manual deployment only)
     - if: $CV_K8S_CONTEXT && $CI_COMMIT_TAG
       when: manual
