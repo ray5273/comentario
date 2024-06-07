@@ -1,0 +1,41 @@
+#=======================================================================================================================
+# Dockerfile to build Comentario Ubuntu-based image.
+# It assumes the frontend and the backend are built (using `npm run build` and `goreleaser release`, accordingly).
+#=======================================================================================================================
+FROM ubuntu:24.04
+
+# Install locales and CA certificates (for sending mail via SMTP TLS)
+RUN apt-get update && \
+    apt-get install -y locales ca-certificates && \
+    rm -rf /var/lib/apt/lists/* && \
+    # Activate the en-US locale
+    localedef -i en_US -c -f UTF-8 -A /usr/share/locale/locale.alias en_US.UTF-8
+ENV LANG en_US.utf8
+
+# Copy the previously built frontend
+COPY ./build/frontend /comentario/frontend
+
+# Copy static files
+COPY ./db /comentario/db
+COPY ./templates /comentario/templates
+
+# Copy the binary (dynamically linked)
+COPY ./dist/comentario_linux_amd64_v1/comentario /comentario/
+
+# Make sure files were built and are available
+RUN ls -lAF /comentario/ && \
+    test -x /comentario/comentario && \
+    test -d /comentario/db && \
+    test -s /comentario/db/postgres/0001-comentario-v3.sql && \
+    test -s /comentario/db/sqlite3/0001-comentario-v3.sql && \
+    test -s /comentario/frontend/comentario.css && \
+    test -s /comentario/frontend/comentario.js && \
+    test -d /comentario/frontend/en/fonts && \
+    test -d /comentario/frontend/en/images && \
+    test -s /comentario/frontend/en/index.html && \
+    test -d /comentario/templates && \
+    test -d /comentario/templates/images
+
+WORKDIR /comentario/
+ENTRYPOINT ["/comentario/comentario"]
+CMD ["--host=0.0.0.0", "--port=80", "-v"]
