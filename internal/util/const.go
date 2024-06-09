@@ -68,9 +68,23 @@ var (
 
 	// UIStaticPaths stores a map of known UI static paths to a flag that says whether the file contains replacements
 	UIStaticPaths = map[string]bool{
-		"favicon.ico":    false,
-		"comentario.js":  true,
-		"comentario.css": true,
+		"android-chrome-192x192.png": false,
+		"android-chrome-512x512.png": false,
+		"apple-touch-icon.png":       false,
+		"browserconfig.xml":          false,
+		"favicon.ico":                false,
+		"favicon-16x16.png":          false,
+		"favicon-32x32.png":          false,
+		"mstile-70x70.png":           false,
+		"mstile-144x144.png":         false,
+		"mstile-150x150.png":         false,
+		"mstile-310x150.png":         false,
+		"mstile-310x310.png":         false,
+		"robots.txt":                 false,
+		"safari-pinned-tab.svg":      false,
+		"site.webmanifest":           false,
+		"comentario.js":              true,
+		"comentario.css":             true,
 	}
 
 	// XSRFSafePaths stores a list of path prefixes that should be excluded from XSRF protection

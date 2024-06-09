@@ -31,7 +31,6 @@
                         "tsConfig": "tsconfig.app.json",
                         "inlineStyleLanguage": "scss",
                         "assets": [
-                            "./favicon.ico",
                             {
                                 "glob": "*",
                                 "input": "assets/fonts",
@@ -41,6 +40,16 @@
                                 "glob": "**",
                                 "input": "assets/images",
                                 "output": "images"
+                            },
+                            {
+                                "glob": "*",
+                                "input": "assets/misc",
+                                "output": "/"
+                            },
+                            {
+                                "glob": "*",
+                                "input": "assets/favicons",
+                                "output": "/"
                             }
                         ],
                         "styles": [
@@ -111,8 +120,26 @@
                         "tsConfig": "tsconfig.spec.json",
                         "inlineStyleLanguage": "scss",
                         "assets": [
-                            "./favicon.ico",
-                            "./assets"
+                            {
+                                "glob": "*",
+                                "input": "assets/fonts",
+                                "output": "fonts"
+                            },
+                            {
+                                "glob": "**",
+                                "input": "assets/images",
+                                "output": "images"
+                            },
+                            {
+                                "glob": "*",
+                                "input": "assets/misc",
+                                "output": "/"
+                            },
+                            {
+                                "glob": "*",
+                                "input": "assets/favicons",
+                                "output": "/"
+                            }
                         ],
                         "styles": [
                             "./scss/styles.scss"

@@ -10,8 +10,8 @@
         "start": "ng build --watch --configuration development",
         "test": "ng test",
         "test:ci": "ng test --browsers=ChromeHeadlessCI --watch=false --progress=false",
-        "copy-assets": "cp ../build/frontend/en/*.ico ../build/frontend/",
-        "cleanup-assets": "rm -f ../build/frontend/*/*.ico",
+        "copy-assets": "cp ../build/frontend/en/*.ico ../build/frontend/en/*.png ../build/frontend/en/*.svg ../build/frontend/en/*.xml ../build/frontend/en/*.txt ../build/frontend/en/site.webmanifest ../build/frontend/",
+        "cleanup-assets": "rm -f ../build/frontend/*/*.ico ../build/frontend/*/*.png ../build/frontend/*/*.svg ../build/frontend/*/*.xml ../build/frontend/*/*.txt ../build/frontend/*/site.webmanifest",
         "postbuild": "npm run copy-assets && npm run cleanup-assets",
         "postbuild:prod": "npm run copy-assets && npm run cleanup-assets"
     },

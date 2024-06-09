@@ -4,7 +4,23 @@ context('Static assets', () => {
 
     [
         // Favicons
-        {path: '/favicon.ico', dir: 'frontend', encoding: 'binary', ctype: 'image/vnd.microsoft.icon'},
+        {path: '/android-chrome-192x192.png', dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/android-chrome-512x512.png', dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/apple-touch-icon.png',       dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/favicon.ico',                dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/vnd.microsoft.icon'},
+        {path: '/favicon-16x16.png',          dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/favicon-32x32.png',          dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/mstile-70x70.png',           dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/mstile-144x144.png',         dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/mstile-150x150.png',         dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/mstile-310x150.png',         dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/mstile-310x310.png',         dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/safari-pinned-tab.svg',      dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/svg+xml'},
+
+        // Text resources
+        {path: '/browserconfig.xml', dir: 'frontend/assets/misc', encoding: 'binary', ctype: 'text/xml; charset=utf-8'},
+        {path: '/robots.txt',        dir: 'frontend/assets/misc', encoding: 'binary', ctype: 'text/plain; charset=utf-8'},
+        {path: '/site.webmanifest',  dir: 'frontend/assets/misc', encoding: 'binary', ctype: 'text/plain; charset=utf-8'},
 
         // Fonts
         {path: '/en/fonts/source-sans-300-cyrillic.woff2',     dir: 'frontend/assets/fonts', encoding: 'binary', ctype: 'font/woff2'},

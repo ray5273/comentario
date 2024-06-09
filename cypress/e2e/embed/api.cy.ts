@@ -1,8 +1,34 @@
-import { DOMAINS, TEST_PATHS } from '../../support/cy-utils';
+import { DOMAINS, TEST_PATHS, UI_LANGUAGES } from '../../support/cy-utils';
 
 context('API', () => {
 
     before(cy.backendReset);
+
+    context('i18n', () => {
+
+        let numAssets: number;
+
+        // Determine the number of expected entries by looking at the en.yaml file
+        before(() => cy.readFile('resources/i18n/en.yaml', 'utf-8')
+            .then((data: string) => numAssets = data.match(/\{id:/g).length));
+
+        Object.entries(UI_LANGUAGES)
+            .forEach(([code, name]) =>
+                it(`serves messages in ${code} - ${name}`, () => {
+                    cy.request({url: `/api/embed/i18n/${code}/messages`, followRedirect: false}).then(r => {
+                        expect(r.status).eq(200);
+                        expect(Array.isArray(r.body)).true;
+                        expect(r.body.length).eq(numAssets);
+                    });
+                }));
+
+        it('redirects to en on an unknown language', () => {
+            cy.request({url: '/api/embed/i18n/xx-yz/messages', followRedirect: false}).then(r => {
+                expect(r.status).eq(307);
+                expect(r.headers.location).eq(`${Cypress.config().baseUrl}/api/embed/i18n/en/messages`);
+            });
+        });
+    });
 
     context('EmbedCommentCount', () => {
 
