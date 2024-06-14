@@ -28,7 +28,7 @@ var logger = logging.MustGetLogger("plugins")
 
 // ThePluginManager is a global plugin manager instance
 var ThePluginManager PluginManager = &pluginManager{
-	plugs: map[string]extend.ComentarioPlugin{},
+	plugs: map[string]*pluginEntry{},
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,9 +72,15 @@ func (p *pluginLogger) Debugf(format string, args ...any) {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// pluginEntry groups a loaded plugin's info
+type pluginEntry struct {
+	p extend.ComentarioPlugin        // Plugin implementation
+	c *extend.ComentarioPluginConfig // Configuration obtained from the plugin
+}
+
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
-	plugs map[string]extend.ComentarioPlugin // Map of loaded plugin implementations by the path served
+	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
 }
 
 func (pm *pluginManager) AuthenticateBySessionCookie(value string) (extend.Principal, error) {
@@ -116,18 +122,18 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 		if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok {
 			// Check if it's a plugin API call
 			if strings.HasPrefix(p, util.APIPath) {
-				if plug := pm.findByPath(p, util.APIPath); plug != nil {
+				if pe := pm.findByPath(p, util.APIPath); pe != nil {
 					r.URL.Path = "/" + p
-					plug.APIHandler().ServeHTTP(w, r)
+					pe.p.APIHandler().ServeHTTP(w, r)
 					return
 				}
 			}
 
 			// Not an API call. Check if it's a statics request: resource can only be served via GET
 			if r.Method == http.MethodGet {
-				if plug := pm.findByPath(p, ""); plug != nil {
+				if pe := pm.findByPath(p, ""); pe != nil {
 					r.URL.Path = "/" + p
-					plug.StaticHandler().ServeHTTP(w, r)
+					pe.p.StaticHandler().ServeHTTP(w, r)
 					return
 				}
 			}
@@ -139,10 +145,10 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 }
 
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found
-func (pm *pluginManager) findByPath(requestPath, prefix string) extend.ComentarioPlugin {
-	for plugPath, plug := range pm.plugs {
+func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
+	for _, plug := range pm.plugs {
 		// If the plugin can handle this path
-		if strings.HasPrefix(requestPath, prefix+plugPath) {
+		if strings.HasPrefix(requestPath, prefix+plug.c.Path) {
 			return plug
 		}
 	}
@@ -150,7 +156,7 @@ func (pm *pluginManager) findByPath(requestPath, prefix string) extend.Comentari
 }
 
 // loadPlugin loads a plugin lib
-func (pm *pluginManager) loadPlugin(filename string) (extend.ComentarioPlugin, error) {
+func (pm *pluginManager) loadPlugin(filename string) (*pluginEntry, error) {
 	// Try to load the plugin library
 	plugLib, err := plugin.Open(filename)
 	if err != nil {
@@ -174,8 +180,14 @@ func (pm *pluginManager) loadPlugin(filename string) (extend.ComentarioPlugin, e
 		return nil, fmt.Errorf("failed to Init() plugin %q: %w", filename, err)
 	}
 
+	// Fetch (a copy of) the config
+	cfg := (*hPtr).Config()
+
+	// Correct the path by removing any leading '/' and enforcing a trailing one
+	cfg.Path = strings.TrimSuffix(strings.TrimPrefix(cfg.Path, "/"), "/") + "/"
+
 	// Succeeded
-	return *hPtr, nil
+	return &pluginEntry{p: *hPtr, c: &cfg}, nil
 }
 
 // scanDir scans the plugin directory recursively, loading every discovered plugin and returning the number of plugins
@@ -207,16 +219,15 @@ func (pm *pluginManager) scanDir(dir string) (int, error) {
 		}
 
 		// Try to load the plugin
-		plug, err := pm.loadPlugin(fullPath)
+		pe, err := pm.loadPlugin(fullPath)
 		if err != nil {
 			return 0, err
 		}
 
-		// Store the implementation in the map
+		// Store the implementation
 		cnt++
-		pPath := strings.TrimSuffix(strings.TrimPrefix(plug.Path(), "/"), "/") + "/"
-		logger.Infof("Loaded plugin library %s (serve path: %q)", fullPath, pPath)
-		pm.plugs[pPath] = plug
+		logger.Infof("Loaded plugin library %s (ID: %s, serve path: %q)", fullPath, pe.c.ID, pe.c.Path)
+		pm.plugs[pe.c.ID] = pe
 	}
 
 	// Succeeded

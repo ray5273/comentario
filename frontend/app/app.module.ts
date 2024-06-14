@@ -2,10 +2,10 @@ import { APP_INITIALIZER, LOCALE_ID, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { provideRouter, RouterModule, Routes } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
-import { AppRoutingModule } from './_modules/app-routing.module';
 import { AppComponent } from './app/app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { FooterComponent } from './footer/footer.component';
@@ -19,6 +19,26 @@ import { environment } from '../environments/environment';
 import { ToolsModule } from './_modules/tools/tools.module';
 import { ConfigService } from './_services/config.service';
 import { LANGUAGE, provideLanguage } from '../environments/languages';
+import { AuthGuard } from './_guards/auth.guard';
+
+const routes: Routes = [
+    // Auth
+    {
+        path:         'auth',
+        loadChildren: () => import('./_modules/auth/auth.module').then(m => m.AuthModule),
+    },
+
+    // Control Center
+    {
+        path:         'manage',
+        loadChildren: () => import('./_modules/manage/manage.module').then(m => m.ManageModule),
+        canMatch:     [AuthGuard.isAuthenticatedMatch],
+    },
+
+    // Fallback routes
+    {path: '', pathMatch: 'full', component: HomeComponent},
+    {path: '**',                  component: PageNotFoundComponent},
+];
 
 @NgModule({
     declarations: [
@@ -33,13 +53,13 @@ import { LANGUAGE, provideLanguage } from '../environments/languages';
     imports: [
         BrowserModule,
         BrowserAnimationsModule,
+        RouterModule,
         HttpClientModule,
         FormsModule,
         ReactiveFormsModule,
         FontAwesomeModule,
         NgbToastModule,
         ApiModule,
-        AppRoutingModule,
         ToolsModule,
     ],
     providers: [
@@ -47,6 +67,7 @@ import { LANGUAGE, provideLanguage } from '../environments/languages';
         {provide: Configuration, useFactory: () => new Configuration({basePath: environment.apiBaseUrl})},
         {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
+        provideRouter(routes),
         // Initialise the config service
         {
             provide: APP_INITIALIZER,
