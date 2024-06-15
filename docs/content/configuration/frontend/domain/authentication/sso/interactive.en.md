@@ -46,6 +46,7 @@ The payload value holds a JSON-formatted user data, providing the following prop
 * `email`, specifying the user's email address;
 * `name`, providing the user's full name;
 * `photo`, an optional user avatar URL.
+* `link`, an optional user profile or website URL.
 
 For example:
 

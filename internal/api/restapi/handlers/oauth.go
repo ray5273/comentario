@@ -26,6 +26,7 @@ type ssoPayload struct {
 	Email string `json:"email"`
 	Name  string `json:"name"`
 	Photo string `json:"photo"`
+	Link  string `json:"link"`
 }
 
 func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Responder {
@@ -79,6 +80,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 	reqParams := params.HTTPRequest.URL.Query()
 	var fedUser goth.User
+	var userWebsiteURL string
 
 	// SSO auth
 	nonIntSSO := false
@@ -118,6 +120,11 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			Name:      payload.Name,
 			UserID:    payload.Email,
 			AvatarURL: payload.Photo,
+		}
+
+		// If a valid profile link is provided, store it as the user's website URL
+		if util.IsValidURL(payload.Link, true) {
+			userWebsiteURL = payload.Link
 		}
 
 		// Non-SSO auth
@@ -193,7 +200,8 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		user = data.NewUser(fedUser.Email, fedUser.Name).
 			WithConfirmed(true). // Confirm the user right away as we trust the IdP
 			WithSignup(params.HTTPRequest, authSession.Host).
-			WithFederated(fedUser.UserID, params.Provider)
+			WithFederated(fedUser.UserID, params.Provider).
+			WithWebsiteURL(userWebsiteURL)
 		if err := svc.TheUserService.Create(user); err != nil {
 			return oauthFailureInternal(nonIntSSO, err)
 		}
@@ -223,7 +231,8 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		user.
 			WithEmail(fedUser.Email).
 			WithName(fedUser.Name).
-			WithFederated(fedUser.UserID, params.Provider)
+			WithFederated(fedUser.UserID, params.Provider).
+			WithWebsiteURL(userWebsiteURL)
 		if err := svc.TheUserService.Update(user); err != nil {
 			return oauthFailureInternal(nonIntSSO, err)
 		}
