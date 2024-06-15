@@ -2,7 +2,7 @@ import { APP_INITIALIZER, LOCALE_ID, NgModule } from '@angular/core';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
-import { provideRouter, RouterModule, Routes } from '@angular/router';
+import { provideRouter, RouterModule, Routes, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
@@ -67,7 +67,10 @@ const routes: Routes = [
         {provide: Configuration, useFactory: () => new Configuration({basePath: environment.apiBaseUrl})},
         {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
-        provideRouter(routes),
+        provideRouter(
+            routes,
+            withComponentInputBinding(),
+            withInMemoryScrolling({scrollPositionRestoration: 'enabled'})),
         // Initialise the config service
         {
             provide: APP_INITIALIZER,
