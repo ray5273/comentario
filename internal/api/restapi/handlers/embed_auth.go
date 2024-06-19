@@ -109,7 +109,7 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 
 	// Verify no such email is registered yet
 	email := data.EmailPtrToString(params.Body.Email)
-	if r := Verifier.UserCanSignupWithEmail(email); r != nil {
+	if _, r := Verifier.UserCanSignupWithEmail(email); r != nil {
 		return r
 	}
 

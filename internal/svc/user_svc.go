@@ -47,9 +47,11 @@ type UserService interface {
 	// FindDomainUserByID fetches and returns a User and DomainUser by domain and user IDs. If the user exists, but
 	// there's no record for the user on that domain, returns nil for DomainUser
 	FindDomainUserByID(userID, domainID *uuid.UUID) (*data.User, *data.DomainUser, error)
-	// FindUserByEmail finds and returns a user by the given email. If localOnly == true, only looks for a
-	// locally-authenticated user
-	FindUserByEmail(email string, localOnly bool) (*data.User, error)
+	// FindUserByEmail finds and returns a user by the given email
+	FindUserByEmail(email string) (*data.User, error)
+	// FindUserByFederatedID finds and returns a federated user by the given federated IdP and user ID. If idp is empty,
+	// it means searching for an SSO user
+	FindUserByFederatedID(idp, id string) (*data.User, error)
 	// FindUserByID finds and returns a user by the given user ID
 	FindUserByID(id *uuid.UUID) (*data.User, error)
 	// FindUserBySession finds and returns a user and the related session by the given user and session ID
@@ -337,17 +339,12 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
 		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id",
-			// DomainUser fields
-			"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.notify_comment_status", "du.ts_created").
+			append(
+				// User and avatar fields
+				svc.userColumns(),
+				// DomainUser fields
+				"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
+				"du.notify_moderator", "du.notify_comment_status", "du.ts_created")...).
 		LeftJoin(
 			goqu.T("cm_domains_users").As("du"),
 			goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID})).
@@ -361,31 +358,44 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	}
 }
 
-func (svc *userService) FindUserByEmail(email string, localOnly bool) (*data.User, error) {
-	logger.Debugf("userService.FindUserByEmail('%s', %v)", email, localOnly)
+func (svc *userService) FindUserByEmail(email string) (*data.User, error) {
+	logger.Debugf("userService.FindUserByEmail(%q)", email)
 
 	// Prepare the query
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
-		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id").
+		Select(svc.userColumns()...).
 		Where(goqu.Ex{"u.email": email}).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
 
-	// If only local users are in scope
-	if localOnly {
-		q = q.Where(goqu.Ex{"u.federated_idp": nil, "u.federated_sso": false})
+	// Query the database
+	if u, _, err := svc.fetchUserSession(db.SelectRow(q), false); err != nil {
+		return nil, translateDBErrors(err)
+	} else {
+		return u, nil
+	}
+}
+
+func (svc *userService) FindUserByFederatedID(idp, id string) (*data.User, error) {
+	logger.Debugf("userService.FindUserByFederatedID(%q, %q)", idp, id)
+
+	// Prepare the query
+	q := db.Dialect().
+		From(goqu.T("cm_users").As("u")).
+		Select(svc.userColumns()...).
+		Where(goqu.Ex{"u.federated_id": id}).
+		// Outer-join user avatars
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
+
+	// Restrict by IdP
+	if idp == "" {
+		q = q.Where(goqu.Ex{"u.federated_idp": nil, "u.federated_sso": true})
+	} else {
+		q = q.Where(goqu.Ex{"u.federated_idp": idp, "u.federated_sso": false})
 	}
 
-	// Query the database
+	// Fetch the user
 	if u, _, err := svc.fetchUserSession(db.SelectRow(q), false); err != nil {
 		return nil, translateDBErrors(err)
 	} else {
@@ -404,15 +414,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	// Prepare the query
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
-		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id").
+		Select(svc.userColumns()...).
 		Where(goqu.Ex{"u.id": id}).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
@@ -438,17 +440,12 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
 		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id",
-			// User session fields
-			"s.id", "s.user_id", "s.ts_created", "s.ts_expires", "s.host", "s.proto", "s.ip", "s.country", "s.ua_browser_name",
-			"s.ua_browser_version", "s.ua_os_name", "s.ua_os_version", "s.ua_device").
+			append(
+				// User and avatar fields
+				svc.userColumns(),
+				// User session fields
+				"s.id", "s.user_id", "s.ts_created", "s.ts_expires", "s.host", "s.proto", "s.ip", "s.country",
+				"s.ua_browser_name", "s.ua_browser_version", "s.ua_os_name", "s.ua_os_version", "s.ua_device")...).
 		// Join user sessions
 		Join(goqu.T("cm_user_sessions").As("s"), goqu.On(goqu.Ex{"s.user_id": goqu.I("u.id")})).
 		// Outer-join user avatars
@@ -473,15 +470,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	// Prepare a statement
 	q := db.Dialect().
 		From(goqu.T("cm_users").As("u")).
-		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id").
+		Select(svc.userColumns()...).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
 
@@ -551,17 +540,12 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 	q := db.Dialect().
 		From(goqu.T("cm_domains_users").As("du")).
 		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id",
-			// DomainUser fields
-			"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
-			"du.notify_moderator", "du.notify_comment_status", "du.ts_created").
+			append(
+				// User and avatar fields
+				svc.userColumns(),
+				// DomainUser fields
+				"du.domain_id", "du.user_id", "du.is_owner", "du.is_moderator", "du.is_commenter", "du.notify_replies",
+				"du.notify_moderator", "du.notify_comment_status", "du.ts_created")...).
 		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("du.user_id")})).
 		Where(goqu.Ex{"du.domain_id": domainID})
@@ -636,15 +620,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	// Prepare a query
 	q := db.Dialect().
 		From(goqu.T("cm_domains_users").As("du")).
-		Select(
-			// User fields
-			"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
-			"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
-			"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp",
-			"u.federated_sso", "u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change",
-			"u.ts_last_login", "u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
-			// Avatar fields
-			"a.user_id").
+		Select(svc.userColumns()...).
 		// Join users
 		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
 		// Outer-join user avatars
@@ -979,4 +955,18 @@ func (svc *userService) fetchUserSession(s intf.Scanner, fetchSession bool) (*da
 	}
 	u.HasAvatar = avatarID.Valid
 	return &u, us, nil
+}
+
+// userColumns returns a list of user/avatar columns for the select SQL statement
+func (svc *userService) userColumns() []any {
+	return []any{
+		// User fields
+		"u.id", "u.email", "u.name", "u.lang_id", "u.password_hash", "u.system_account", "u.is_superuser",
+		"u.confirmed", "u.ts_confirmed", "u.ts_created", "u.user_created", "u.signup_ip", "u.signup_country",
+		"u.signup_host", "u.banned", "u.ts_banned", "u.user_banned", "u.remarks", "u.federated_idp", "u.federated_sso",
+		"u.federated_id", "u.website_url", "u.secret_token", "u.ts_password_change", "u.ts_last_login",
+		"u.ts_last_failed_login", "u.failed_login_attempts", "u.is_locked", "u.ts_locked",
+		// Avatar fields
+		"a.user_id",
+	}
 }

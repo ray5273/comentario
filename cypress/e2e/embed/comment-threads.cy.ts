@@ -543,9 +543,9 @@ context('Comment threads', () => {
 
     context('non-interactive SSO', () => {
 
-        before(cy.backendReset);
-
         context('when automatic SSO login is enabled', () => {
+
+            before(cy.backendReset);
 
             it('triggers SSO login upon load', () => {
                 // Go to the auto-non-interactive-sso-page
@@ -565,6 +565,8 @@ context('Comment threads', () => {
 
         context('when automatic initialisation is disabled', () => {
 
+            before(cy.backendReset);
+
             it('triggers SSO login upon load', () => {
                 // Go to the manual init page
                 cy.testSiteVisit(TEST_PATHS.attr.autoInit);
@@ -573,6 +575,14 @@ context('Comment threads', () => {
                 cy.contains('button', 'Run with non-interactive SSO login').click();
 
                 // Automatically logged in as SSO user
+                cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
+
+                // Log out, then refresh and relogin
+                cy.testSiteLogout();
+                cy.reload();
+                cy.contains('button', 'Run with non-interactive SSO login').click();
+
+                // The SSO user already exists, we're automatically logged in again
                 cy.testSiteIsLoggedIn(USERS.johnDoeSso.name);
             });
 

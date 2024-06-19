@@ -126,7 +126,7 @@ func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID]
 func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, realEmail bool, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
 	// Try to find an existing user with the same email
 	var user *data.User
-	if u, err := TheUserService.FindUserByEmail(email, false); err == nil {
+	if u, err := TheUserService.FindUserByEmail(email); err == nil {
 		// User already exists
 		user = u
 

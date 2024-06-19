@@ -418,7 +418,7 @@ func (u *User) WithEmail(s string) *User {
 // WithFederated sets the federated IdP values
 func (u *User) WithFederated(id, idpID string) *User {
 	u.FederatedID = id
-	u.FederatedSSO = idpID == "sso"
+	u.FederatedSSO = idpID == "" || idpID == "sso" // Prevent "sso" from being stored, it isn't a valid IdP ID
 	u.FederatedIdP = util.If(u.FederatedSSO, "", idpID)
 	return u
 }

@@ -49,8 +49,8 @@ type VerifierService interface {
 	// UserCanModerateDomain verifies the given user is a superuser or the domain user is a domain moderator. domainUser
 	// can be nil
 	UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder
-	// UserCanSignupWithEmail verifies the user can sign up locally (using email and password)
-	UserCanSignupWithEmail(email string) middleware.Responder
+	// UserCanSignupWithEmail verifies the user can sign up using then given email
+	UserCanSignupWithEmail(email string) (*exmodels.Error, middleware.Responder)
 	// UserCanUpdateComment verifies the given domain user is allowed to update the specified comment. domainUser can be
 	// nil
 	UserCanUpdateComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
@@ -254,30 +254,31 @@ func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.Domai
 	return respForbidden(ErrorNotModerator)
 }
 
-func (v *verifier) UserCanSignupWithEmail(email string) middleware.Responder {
+func (v *verifier) UserCanSignupWithEmail(email string) (*exmodels.Error, middleware.Responder) {
 	// Try to find an existing user by email
-	user, err := svc.TheUserService.FindUserByEmail(email, false)
+	user, err := svc.TheUserService.FindUserByEmail(email)
 	if errors.Is(err, svc.ErrNotFound) {
 		// Success: no such email
-		return nil
+		return nil, nil
 	} else if err != nil {
 		// Any other DB error
-		return respServiceError(err)
+		return ErrorUnknown, respServiceError(err)
 	}
 
 	// Email found. If a local account exists
 	if user.IsLocal() {
 		// Account already exists
-		return respUnauthorized(ErrorEmailAlreadyExists)
+		return ErrorEmailAlreadyExists, respUnauthorized(ErrorEmailAlreadyExists)
 	}
 
 	// Existing account is a federated one. If the user logs in via SSO
 	if user.FederatedSSO {
-		return respUnauthorized(ErrorLoginUsingSSO)
+		return ErrorLoginUsingSSO, respUnauthorized(ErrorLoginUsingSSO)
 	}
 
 	// User logs in using a federated IdP
-	return respUnauthorized(ErrorLoginUsingIdP.WithDetails(user.FederatedIdP))
+	ee := ErrorLoginUsingIdP.WithDetails(user.FederatedIdP)
+	return ee, respUnauthorized(ee)
 }
 
 func (v *verifier) UserCanUpdateComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {

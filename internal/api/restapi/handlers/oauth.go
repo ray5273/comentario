@@ -25,6 +25,7 @@ type ssoPayload struct {
 	Token string `json:"token"`
 	Email string `json:"email"`
 	Name  string `json:"name"`
+	ID    string `json:"id"`
 	Photo string `json:"photo"`
 	Link  string `json:"link"`
 }
@@ -33,9 +34,12 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	// SSO authentication is a special case
 	var provider goth.Provider
 	var r middleware.Responder
+	var idpID string
 	if params.Provider != "sso" {
-		// Otherwise it's a goth provider: find it
-		if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(params.Provider)); r != nil {
+		idpID = params.Provider
+
+		// It's a goth provider: find it
+		if provider, r = Verifier.FederatedIdProvider(models.FederatedIdpID(idpID)); r != nil {
 			return r
 		}
 	}
@@ -115,11 +119,18 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		}
 
 		// Prepare a federated user
-		fedUser = goth.User{
-			Email:     payload.Email,
-			Name:      payload.Name,
-			UserID:    payload.Email,
-			AvatarURL: payload.Photo,
+		fedUser = goth.User{Email: payload.Email, Name: payload.Name}
+
+		// Use the email as the ID if no real ID is provided
+		if payload.ID == "" {
+			fedUser.UserID = payload.Email
+		} else {
+			fedUser.UserID = payload.ID
+		}
+
+		// If a valid avatar link is provided, store it as the user's avatar URL
+		if util.IsValidURL(payload.Photo, true) {
+			fedUser.AvatarURL = payload.Photo
 		}
 
 		// If a valid profile link is provided, store it as the user's website URL
@@ -167,10 +178,25 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return oauthFailure(nonIntSSO, "user name missing", nil)
 	}
 
-	// Try to find an existing user by email
-	var user *data.User
-	if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email, false); errors.Is(err, svc.ErrNotFound) {
-		// No such email/user: it's a signup. Check whether signup is enabled
+	// Try to find an existing user by their federated ID
+	user, err := svc.TheUserService.FindUserByFederatedID(idpID, fedUser.UserID)
+	if errors.Is(err, svc.ErrNotFound) {
+		// If the ID wasn't found, also try to look the user up by email, because historically federated/SSO users were
+		// created without an ID; the same also applies to imported users
+		if user, err = svc.TheUserService.FindUserByEmail(fedUser.Email); errors.Is(err, svc.ErrNotFound) {
+			// No such user
+			user = nil
+			err = nil
+		}
+	}
+
+	// Any DB error other than "not found"
+	if err != nil {
+		return oauthFailureInternal(nonIntSSO, err)
+	}
+
+	// If no such user, it's a signup
+	if user == nil {
 		var cfgItem *data.DynConfigItem
 		if domain == nil {
 			// Frontend signup
@@ -188,7 +214,6 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		// Check for setting fetching error
 		if err != nil {
 			return oauthFailureInternal(nonIntSSO, err)
-
 		}
 
 		// Check if the setting enables signup
@@ -196,42 +221,58 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailure(nonIntSSO, ErrorSignupsForbidden.Message, nil)
 		}
 
+		// Make sure the email isn't in use yet
+		if errm, _ := Verifier.UserCanSignupWithEmail(fedUser.Email); errm != nil {
+			return oauthFailure(nonIntSSO, errm.String(), nil)
+		}
+
 		// Insert a new user
 		user = data.NewUser(fedUser.Email, fedUser.Name).
 			WithConfirmed(true). // Confirm the user right away as we trust the IdP
 			WithSignup(params.HTTPRequest, authSession.Host).
-			WithFederated(fedUser.UserID, params.Provider).
+			WithFederated(fedUser.UserID, idpID).
 			WithWebsiteURL(userWebsiteURL)
 		if err := svc.TheUserService.Create(user); err != nil {
 			return oauthFailureInternal(nonIntSSO, err)
 		}
 
-	} else if err != nil {
-		// Any other DB error
-		return oauthFailureInternal(nonIntSSO, err)
-
-		// Email found. If a local account exists
+		// User is found. If a local account exists
 	} else if user.IsLocal() {
 		return oauthFailure(nonIntSSO, ErrorLoginLocally.Message, nil)
 
 		// Existing account is a federated one. Make sure the user isn't changing their IdP
-	} else if provider != nil && user.FederatedIdP != params.Provider {
+	} else if provider != nil && user.FederatedIdP != idpID {
 		return oauthFailure(nonIntSSO, ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).String(), nil)
 
 		// If user is authenticating via SSO, it must stay that way
 	} else if provider == nil && !user.FederatedSSO {
 		return oauthFailure(nonIntSSO, ErrorLoginUsingSSO.Message, nil)
 
+		// If the federated ID is available, it must match the one coming from the provider; otherwise it means the
+		// email belongs to a different user
+	} else if user.FederatedID != "" && user.FederatedID != fedUser.UserID {
+		return oauthFailure(
+			nonIntSSO,
+			ErrorEmailAlreadyExists.Message,
+			fmt.Errorf("federated ID from IdP (%q) didn't match one user has (%q)", fedUser.UserID, user.FederatedID))
+
 		// Verify they're allowed to log in
 	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
 		return r
 
 	} else {
+		// If the user's email is changing, make sure no such email exists
+		if user.Email != fedUser.Email {
+			if _, err := svc.TheUserService.FindUserByEmail(fedUser.Email); !errors.Is(err, svc.ErrNotFound) {
+				return oauthFailure(nonIntSSO, ErrorEmailAlreadyExists.Message, nil)
+			}
+			user.WithEmail(fedUser.Email)
+		}
+
 		// Update user details
 		user.
-			WithEmail(fedUser.Email).
 			WithName(fedUser.Name).
-			WithFederated(fedUser.UserID, params.Provider).
+			WithFederated(fedUser.UserID, idpID).
 			WithWebsiteURL(userWebsiteURL)
 		if err := svc.TheUserService.Update(user); err != nil {
 			return oauthFailureInternal(nonIntSSO, err)
@@ -373,7 +414,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 }
 
 // oauthFailure returns either a generic "Unauthorized" responder (in case of interactive authentication), with the
-// given message in the details, or a postMessage responder (for non-interactive auth), and logging the passed error.
+// given message in the details, or a postMessage responder (for non-interactive auth), and logs the passed error.
 // The reason it's handled this way is that logging may expose actual (confidential) error details, whereas the response
 // is kept generic. If err == nil, a new error is constructed using the message; this use case assumes there are no
 // additional details available to be logged.

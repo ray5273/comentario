@@ -218,8 +218,9 @@ func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.
 }
 
 func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middleware.Responder {
-	// Find the local user with that email
-	if user, err := svc.TheUserService.FindUserByEmail(data.EmailPtrToString(params.Body.Email), true); errors.Is(err, svc.ErrNotFound) {
+	// Find the user with that email
+	user, err := svc.TheUserService.FindUserByEmail(data.EmailPtrToString(params.Body.Email))
+	if errors.Is(err, svc.ErrNotFound) || err == nil && !user.IsLocal() {
 		// No such email: apply a random delay to discourage email polling
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 
@@ -256,7 +257,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 
 	// Verify no such email is registered yet
 	email := data.EmailPtrToString(params.Body.Email)
-	if r := Verifier.UserCanSignupWithEmail(email); r != nil {
+	if _, r := Verifier.UserCanSignupWithEmail(email); r != nil {
 		return r
 	}
 
@@ -445,8 +446,8 @@ func authAddUserSessionToResponse(resp PrincipalResponder, user *data.User, us *
 // session. In case of error an error responder is returned
 func loginLocalUser(email, password, host string, req *http.Request) (*data.User, *data.UserSession, middleware.Responder) {
 	// Find the user
-	user, err := svc.TheUserService.FindUserByEmail(email, true)
-	if errors.Is(err, svc.ErrNotFound) {
+	user, err := svc.TheUserService.FindUserByEmail(email)
+	if errors.Is(err, svc.ErrNotFound) || err == nil && !user.IsLocal() {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
 	} else if err != nil {
