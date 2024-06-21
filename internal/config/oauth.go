@@ -1,24 +1,56 @@
 package config
 
 import (
+	"fmt"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
 	"github.com/markbates/goth/providers/github"
 	"github.com/markbates/goth/providers/gitlab"
 	"github.com/markbates/goth/providers/google"
-	"github.com/markbates/goth/providers/linkedin"
+	"github.com/markbates/goth/providers/openidConnect"
 	"github.com/markbates/goth/providers/twitter"
+	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/data"
 	"strings"
 )
 
+// FederatedIdProviders accumulates information about all supported ID providers
+var FederatedIdProviders = map[models.FederatedIdpID]*data.FederatedIdentityProvider{
+	// Predefined providers
+	"facebook": {ID: "facebook", Name: "Facebook", GothName: "facebook"},
+	"github":   {ID: "github", Name: "GitHub", GothName: "github"},
+	"gitlab":   {ID: "gitlab", Name: "GitLab", GothName: "gitlab"},
+	"google":   {ID: "google", Name: "Google", GothName: "google"},
+	"twitter":  {ID: "twitter", Name: "Twitter", GothName: "twitter"},
+}
+
+// GetFederatedIdP returns whether federated identity provider is known and configured, and if yes, its Provider
+// interface
+func GetFederatedIdP(id models.FederatedIdpID) (known, configured bool, provider goth.Provider, fidp *data.FederatedIdentityProvider) {
+	// Look up the IdP
+	if fidp, known = FederatedIdProviders[id]; !known {
+		return
+	}
+
+	// IdP found, now verify it's configured
+	provider, err := goth.GetProvider(fidp.GothName)
+	configured = err == nil
+	return
+}
+
 // oauthConfigure configures federated (OAuth) authentication
-func oauthConfigure() {
+func oauthConfigure() error {
 	facebookOauthConfigure()
 	githubOauthConfigure()
 	gitlabOauthConfigure()
 	googleOauthConfigure()
-	linkedinOauthConfigure()
 	twitterOauthConfigure()
+	return oidcConfigure()
+}
+
+// oauthCallbackURL returns the full callback URL for the provider with the given ID
+func oauthCallbackURL(id string) string {
+	return ServerConfig.URLForAPI(fmt.Sprintf("oauth/%s/callback", id), nil)
 }
 
 // facebookOauthConfigure configures federated authentication via Facebook
@@ -33,7 +65,7 @@ func facebookOauthConfigure() {
 		facebook.New(
 			SecretsConfig.IdP.Facebook.Key,
 			SecretsConfig.IdP.Facebook.Secret,
-			ServerConfig.URLForAPI("oauth/facebook/callback", nil),
+			oauthCallbackURL("facebook"),
 			"email",
 			"public_profile"),
 	)
@@ -51,7 +83,7 @@ func githubOauthConfigure() {
 		github.New(
 			SecretsConfig.IdP.GitHub.Key,
 			SecretsConfig.IdP.GitHub.Secret,
-			ServerConfig.URLForAPI("oauth/github/callback", nil),
+			oauthCallbackURL("github"),
 			"read:user",
 			"user:email"),
 	)
@@ -81,7 +113,7 @@ func gitlabOauthConfigure() {
 		gitlab.New(
 			SecretsConfig.IdP.GitLab.Key,
 			SecretsConfig.IdP.GitLab.Secret,
-			ServerConfig.URLForAPI("oauth/gitlab/callback", nil),
+			oauthCallbackURL("gitlab"),
 			"read_user"),
 	)
 }
@@ -98,27 +130,9 @@ func googleOauthConfigure() {
 		google.New(
 			SecretsConfig.IdP.Google.Key,
 			SecretsConfig.IdP.Google.Secret,
-			ServerConfig.URLForAPI("oauth/google/callback", nil),
+			oauthCallbackURL("google"),
 			"email",
 			"profile"),
-	)
-}
-
-// linkedinOauthConfigure configures federated authentication via LinkedIn
-func linkedinOauthConfigure() {
-	if !SecretsConfig.IdP.LinkedIn.Usable() {
-		logger.Debug("LinkedIn auth isn't configured or enabled")
-		return
-	}
-
-	logger.Infof("Registering LinkedIn OAuth2 provider for client %s", SecretsConfig.IdP.LinkedIn.Key)
-	goth.UseProviders(
-		linkedin.New(
-			SecretsConfig.IdP.LinkedIn.Key,
-			SecretsConfig.IdP.LinkedIn.Secret,
-			ServerConfig.URLForAPI("oauth/linkedin/callback", nil),
-			"profile",
-			"email"),
 	)
 }
 
@@ -134,6 +148,52 @@ func twitterOauthConfigure() {
 		twitter.New(
 			SecretsConfig.IdP.Twitter.Key,
 			SecretsConfig.IdP.Twitter.Secret,
-			ServerConfig.URLForAPI("oauth/twitter/callback", nil)),
+			oauthCallbackURL("twitter")),
 	)
+}
+
+// oidcConfigure configures federated authentication via OIDC providers
+func oidcConfigure() error {
+	cnt := 0
+	for _, p := range SecretsConfig.IdP.OIDC {
+		// Skip unusable ones
+		if !p.Usable() {
+			continue
+		}
+
+		// Instantiate a new OIDC provider. This will also retrieve its configuration via discovery
+		qid := p.QualifiedID()
+		op, err := openidConnect.NewNamed(
+			p.ID,
+			p.Key,
+			p.Secret,
+			oauthCallbackURL(qid),
+			strings.TrimSuffix(p.URL, "/")+"/.well-known/openid-configuration",
+			p.Scopes...)
+		if err != nil {
+			return fmt.Errorf("failed to add OIDC provider (ID=%q): %w", p.ID, err)
+		}
+
+		// Set the name explicitly to override goth's name assigning logic that adds a suffix
+		op.SetName(qid)
+
+		// Register the provider
+		logger.Infof("Registering OIDC provider (ID=%q) for client %s", p.ID, p.Key)
+		goth.UseProviders(op)
+
+		// Add it to the configured providers map
+		mid := models.FederatedIdpID(qid)
+		FederatedIdProviders[mid] = &data.FederatedIdentityProvider{
+			ID:       mid,
+			Name:     p.Name,
+			GothName: qid,
+		}
+		cnt++
+	}
+
+	// If no configure providers available
+	if cnt == 0 {
+		logger.Debug("No OIDC providers configured or enabled")
+	}
+	return nil
 }

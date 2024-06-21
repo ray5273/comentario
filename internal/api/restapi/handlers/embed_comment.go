@@ -159,7 +159,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	} else {
 		// Make a list of identity providers whose IDs are on the list
 		for _, idpID := range idpIDs {
-			if _, ok, _, fidp := data.GetFederatedIdP(idpID); ok {
+			if _, ok, _, fidp := config.GetFederatedIdP(idpID); ok {
 				pageInfo.Idps = append(pageInfo.Idps, fidp.ToDTO())
 			}
 		}

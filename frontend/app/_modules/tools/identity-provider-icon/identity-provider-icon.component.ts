@@ -1,7 +1,6 @@
 import { Component, Input } from '@angular/core';
 import { faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
-import { faFacebook, faGithub, faGitlab, faGoogle, faLinkedin, faTwitter } from '@fortawesome/free-brands-svg-icons';
-import { FederatedIdpId } from '../../../../generated-api';
+import { faFacebook, faGithub, faGitlab, faGoogle, faOpenid, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
 @Component({
     selector: 'app-idp-icon',
@@ -15,34 +14,30 @@ export class IdentityProviderIconComponent {
      * Federated identity provider ID.
      */
     @Input({required: true})
-    set idpId(id: FederatedIdpId) {
+    set idpId(id: string) {
         switch (id) {
-            case FederatedIdpId.Facebook:
+            case 'facebook':
                 this.icon = faFacebook;
                 break;
 
-            case FederatedIdpId.Github:
+            case 'github':
                 this.icon = faGithub;
                 break;
 
-            case FederatedIdpId.Gitlab:
+            case 'gitlab':
                 this.icon = faGitlab;
                 break;
 
-            case FederatedIdpId.Linkedin:
-                this.icon = faLinkedin;
-                break;
-
-            case FederatedIdpId.Google:
+            case 'google':
                 this.icon = faGoogle;
                 break;
 
-            case FederatedIdpId.Twitter:
+            case 'twitter':
                 this.icon = faTwitter;
                 break;
 
             default:
-                this.icon = faQuestionCircle;
+                this.icon = id?.startsWith('oidc:') ? faOpenid : faQuestionCircle;
         }
     }
 }

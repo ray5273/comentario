@@ -620,7 +620,7 @@ context('User Properties page', () => {
         // Verify user details: the user is locked
         cy.get('@userDetails').dlTexts().should('matrixMatch', [
             ['ID',                    USERS.linkedinUser.id],
-            ['Federated user',        'linkedin /59866240'],
+            ['Federated user',        'oidc:linkedin /59866240'],
             ['Name',                  USERS.linkedinUser.name],
             ['Email',                 USERS.linkedinUser.email],
             ['Language',              'en'],
@@ -639,7 +639,7 @@ context('User Properties page', () => {
         // No locked status or failed attempts anymore
         cy.get('@userDetails').dlTexts().should('matrixMatch', [
             ['ID',                    USERS.linkedinUser.id],
-            ['Federated user',        'linkedin /59866240'],
+            ['Federated user',        'oidc:linkedin /59866240'],
             ['Name',                  USERS.linkedinUser.name],
             ['Email',                 USERS.linkedinUser.email],
             ['Language',              'en'],

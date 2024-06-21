@@ -7,13 +7,10 @@ export type TranslateFunc = (id: string) => string;
 
 export type StringBooleanMap = { [k: string]: boolean };
 
-/** Federated identity provider ID */
-export type FederatedIdpId = 'facebook' | 'github' | 'gitlab' | 'google' | 'linkedin' | 'twitter';
-
 /** Federated identity provider info */
 export interface FederatedIdentityProvider {
     /** Provider ID */
-    readonly id: FederatedIdpId;
+    readonly id: string;
     /** Provider display name */
     readonly name: string;
     /** Provider icon name */
@@ -185,15 +182,12 @@ export enum LoginChoice {
     unregistered,
 }
 
-/** ID of a federated provider available for login, which includes 'sso'. */
-export type LoginIdPId = FederatedIdpId | 'sso';
-
 /** The result of running the Login dialog. */
 export interface LoginData {
     /** User's choice in the dialog. */
     readonly choice: LoginChoice;
     /** Federated ID provider ID in case choice === federatedAuth. */
-    readonly idp?: LoginIdPId;
+    readonly idp?: string;
     /** User's email in case choice === localAuth. */
     readonly email?: string;
     /** User's password in case choice === localAuth. */

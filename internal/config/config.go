@@ -183,7 +183,9 @@ func PostProcess() error {
 	}
 
 	// Configure OAuth providers
-	oauthConfigure()
+	if err := oauthConfigure(); err != nil {
+		return err
+	}
 
 	// Configure mailer
 	if err := configureMailer(); err != nil {

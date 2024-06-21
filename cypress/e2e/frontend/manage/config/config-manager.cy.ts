@@ -70,7 +70,7 @@ context('Config Manager', () => {
                 ['Database version',                        'Multigalactic DB v417'],
                 ['Default UI language ID',                  'en'],
                 ['Homepage content URL',                    'https://edge.docs.comentario.app/en/embed/front-page/'],
-                ['Configured federated identity providers', ['Facebook', 'GitHub', 'GitLab', 'Google', 'Twitter']],
+                ['Configured federated identity providers', ['Facebook', 'GitHub', 'GitLab', 'Google', 'LinkedIn', 'Twitter']],
                 ['Max. number of items per page',           '25'],
                 ['Live update enabled',                     '✔'],
                 ['Available UI languages',                  Object.entries(UI_LANGUAGES).map(([k, v]) => k+v)],

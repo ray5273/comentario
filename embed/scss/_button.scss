@@ -78,12 +78,12 @@
 
 @include make-btn("primary",   $white, $primary);
 @include make-btn("secondary", $white, $secondary);
+@include make-btn("dark",      $white, $dark);
 @include make-btn("danger",    $white, $red-8);
 @include make-btn("facebook",  $white, #1877f2);
 @include make-btn("github",    $white, $black);
 @include make-btn("gitlab",    $white, #fc6d26);
 @include make-btn("google",    $white, #4285f4);
-@include make-btn("linkedin",  $white, #0077b5);
 @include make-btn("twitter",   $white, #1da1f2);
 @include make-btn("sso",       $white, #7275ab);
 

@@ -9,7 +9,6 @@ import {
     DomainExtension,
     DomainGet200Response,
     DomainUser,
-    FederatedIdpId,
     Principal,
 } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
@@ -45,7 +44,7 @@ export class DomainMeta {
         /** Domain dynamic configuration. */
         readonly config?: DynamicConfig,
         /** List of federated IdP IDs enabled for the domain. */
-        readonly federatedIdpIds?: FederatedIdpId[],
+        readonly federatedIdpIds?: string[],
         /** List of extensions enabled for the domain. */
         readonly extensions?: DomainExtension[],
         /** Authenticated principal, if any. */

@@ -74,6 +74,7 @@ context('Domain Properties page', () => {
                     'GitHub',
                     'GitLab',
                     'Google',
+                    'LinkedIn',
                     'Twitter',
                     'Non-interactive Single Sign-On',
                         `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
@@ -190,6 +191,7 @@ context('Domain Properties page', () => {
                     'GitHub',
                     'GitLab',
                     'Google',
+                    'LinkedIn',
                     'Twitter',
                     'Non-interactive Single Sign-On',
                         `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
@@ -271,7 +273,7 @@ context('Domain Properties page', () => {
                 .forEach((lang, idx) => {
                     cy.get('@optLang').select(idx+1);
                     checkSnippet(` lang="${lang}"`);
-                })
+                });
             cy.get('@optLang').select(0);
             checkSnippet('');
             // -- css-override

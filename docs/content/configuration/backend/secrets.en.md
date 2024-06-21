@@ -84,6 +84,15 @@ Below is a summary of the values in the secrets file.
 | `idp.twitter.disable`                         | boolean | Whether to forcefully disable Twitter/X authentication                                        |                     |
 | `idp.twitter.key`                             | string  | Client ID for Twitter/X authentication                                                        |                     |
 | `idp.twitter.secret`                          | string  | Client secret for Twitter/X authentication                                                    |                     |
+| **OIDC (OpenID Connect) identity providers**  |         |                                                                                               |                     |
+| `idp.oidc`                                    | array   | Array of OIDC provider entries, each element is an object (see below)                         |                     |
+| `idp.oidc.[N].id`                             | string  | Unique ID of the OIDC provider, consisting of max. 32 lowercase letters, digits, and dashes   |                     |
+| `idp.oidc.[N].name`                           | string  | OIDC provider display name                                                                    |                     |
+| `idp.oidc.[N].url`                            | string  | OIDC provider server URL                                                                      |                     |
+| `idp.oidc.[N].scopes`                         | array   | OIDC scopes to request (array of strings)                                                     |                     |
+| `idp.oidc.[N].disable`                        | boolean | Whether to forcefully disable authentication via this provider                                |                     |
+| `idp.oidc.[N].key`                            | string  | OIDC client ID                                                                                |                     |
+| `idp.oidc.[N].secret`                         | string  | OIDC client secret                                                                            |                     |
 | **Extensions**                                |         |                                                                                               |                     |
 | `extensions.akismet.disable`                  | boolean | Whether to globally disable Akismet API                                                       |                     |
 | `extensions.akismet.key`                      | string  | Akismet API key                                                                               |                     |
@@ -117,11 +126,16 @@ Comentario supports *federated authentication* via [external identity providers]
 * If no configuration is given for a federated identity provider, this provider will not be available for user authentication.
 * If you want to (temporarily) disable a fully-configured identity provider, set its `disable` flag to `true`.
 
+You can also configure one or more [OpenID Connect](https://openid.net/developers/how-connect-works/) (OIDC) identity providers:
+
+* The provider must support the [OIDC discovery spec](https://openid.net/specs/openid-connect-discovery-1_0.html) (i.e. serve a discovery document at `.well-known/openid-configuration`).
+* Like other federated identity providers, any OIDC provider can be disabled using the corresponding `disable` flag. 
+
 ## Extensions
 
 Comentario supports external comment-checking services called [extensions](/configuration/frontend/domain/extensions).
 
-* If no extension (Akismet, Perspective, etc.) API key is provided, this extension will *still be available for users*, but they will need to [configure](/configuration/frontend/domain/extensions) the key on the domain level in order to activate it.
+* If no extension (Akismet, Perspective, etc.) API key is provided, this extension will *still be available for users*, but they will need to [configure](/configuration/frontend/domain/extensions) the key at the domain level in order to activate it.
 * To disable an extension altogether, set its `disable` flag to `true`.
 
 ## XSRF secret

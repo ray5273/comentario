@@ -69,7 +69,7 @@ context('Signup', () => {
             // Check social buttons
             cy.get('app-federated-login').should('be.visible')
                 .texts('button')
-                .should('arrayMatch', ['Facebook', 'GitHub', 'GitLab', 'Google', 'Twitter']);
+                .should('arrayMatch', ['Facebook', 'GitHub', 'GitLab', 'Google', 'LinkedIn', 'Twitter']);
 
             // Check switch to login
             cy.contains('a', 'Log in here').click();

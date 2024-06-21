@@ -49,14 +49,15 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#signup_enableLocal')    .as('cfgSignupEnableLocal');
         cy.get('@domainEdit').find('#signup_enableSso')      .as('cfgSignupEnableSso');
         // Methods
-        cy.get('@domainEdit').find('#auth-anonymous').as('authAnonymous');
-        cy.get('@domainEdit').find('#auth-local')    .as('authLocal');
-        cy.get('@domainEdit').find('#auth-facebook') .as('authFacebook');
-        cy.get('@domainEdit').find('#auth-github')   .as('authGithub');
-        cy.get('@domainEdit').find('#auth-gitlab')   .as('authGitlab');
-        cy.get('@domainEdit').find('#auth-google')   .as('authGoogle');
-        cy.get('@domainEdit').find('#auth-twitter')  .as('authTwitter');
-        cy.get('@domainEdit').find('#auth-sso')      .as('authSso');
+        cy.get('@domainEdit').find('#auth-anonymous')    .as('authAnonymous');
+        cy.get('@domainEdit').find('#auth-local')        .as('authLocal');
+        cy.get('@domainEdit').find('#auth-facebook')     .as('authFacebook');
+        cy.get('@domainEdit').find('#auth-github')       .as('authGithub');
+        cy.get('@domainEdit').find('#auth-gitlab')       .as('authGitlab');
+        cy.get('@domainEdit').find('#auth-google')       .as('authGoogle');
+        cy.get('@domainEdit').find('#auth-oidc-linkedin').as('authLinkedin');
+        cy.get('@domainEdit').find('#auth-twitter')      .as('authTwitter');
+        cy.get('@domainEdit').find('#auth-sso')          .as('authSso');
         if (sso) {
             cy.get('@domainEdit').find('#sso-url')            .as('authSsoUrl');
             cy.get('@domainEdit').find('#sso-non-interactive').as('authSsoNonInt');
@@ -233,7 +234,7 @@ context('Domain Edit page', () => {
             it('has all necessary controls', () => {
                 // Check page content
                 cy.get('@domainEdit').texts('li[ngbnavitem]')
-                    .should('arrayMatch', ['General', 'Authentication' + '6', 'Moderation', 'Extensions']);
+                    .should('arrayMatch', ['General', 'Authentication' + '7', 'Moderation', 'Extensions']);
                 cy.get('@btnCancel').should('be.visible');
                 cy.get('@btnSubmit').should('be.visible').should('be.enabled').should('have.text', 'Create');
 
@@ -269,6 +270,7 @@ context('Domain Edit page', () => {
                 cy.get('@authGithub')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authGitlab')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authGoogle')   .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@authLinkedin') .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authTwitter')  .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authSso')      .should('be.visible').and('be.enabled').and('not.be.checked');
 
@@ -364,6 +366,7 @@ context('Domain Edit page', () => {
                             'GitHub',
                             'GitLab',
                             'Google',
+                            'LinkedIn',
                             'Twitter',
                         ],
                     ],
@@ -423,6 +426,7 @@ context('Domain Edit page', () => {
                 cy.get('@authGithub')   .clickLabel();
                 cy.get('@authGitlab')   .clickLabel();
                 cy.get('@authGoogle')   .clickLabel();
+                cy.get('@authLinkedin') .clickLabel();
                 cy.get('@authTwitter')  .clickLabel();
                 cy.get('@authSso')      .clickLabel();
                 cy.get('app-domain-edit #sso-url')            .setValue('https://sso.facebook.com');
@@ -545,7 +549,7 @@ context('Domain Edit page', () => {
             it('has all necessary controls', () => {
                 // Check page content
                 cy.get('@domainEdit').texts('li[ngbnavitem]')
-                    .should('arrayMatch', ['General', 'Authentication' + '8', 'Moderation', 'Extensions']);
+                    .should('arrayMatch', ['General', 'Authentication' + '9', 'Moderation', 'Extensions']);
                 cy.get('@btnCancel').should('be.visible');
                 cy.get('@btnSubmit').should('be.visible').should('be.enabled').should('have.text', 'Save');
 
@@ -580,6 +584,7 @@ context('Domain Edit page', () => {
                 cy.get('@authGithub')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authGitlab')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authGoogle')   .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@authLinkedin') .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authTwitter')  .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authSso')      .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@authSsoUrl')   .should('be.visible').and('be.enabled').and('have.value', `${Cypress.config().baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`);
@@ -658,6 +663,7 @@ context('Domain Edit page', () => {
                 cy.get('@authGithub')   .clickLabel();
                 cy.get('@authGitlab')   .clickLabel();
                 cy.get('@authGoogle')   .clickLabel();
+                cy.get('@authLinkedin') .clickLabel();
                 cy.get('@authTwitter')  .clickLabel();
                 cy.get('@authSso')      .clickLabel();
                 // Check there's "no auth method available" warning
@@ -768,6 +774,7 @@ context('Domain Edit page', () => {
                 cy.get('@authGithub')   .should('not.be.checked');
                 cy.get('@authGitlab')   .should('not.be.checked');
                 cy.get('@authGoogle')   .should('not.be.checked');
+                cy.get('@authLinkedin') .should('not.be.checked');
                 cy.get('@authTwitter')  .should('not.be.checked');
                 cy.get('@authSso')      .should('not.be.checked');
 

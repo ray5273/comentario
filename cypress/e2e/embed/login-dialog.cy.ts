@@ -88,11 +88,12 @@ context('Login dialog', () => {
     context('federated auth', () => {
 
         const knownIdps = [
-            {id: 'facebook', label: 'Facebook'},
-            {id: 'github',   label: 'GitHub'},
-            {id: 'gitlab',   label: 'GitLab'},
-            {id: 'google',   label: 'Google'},
-            {id: 'twitter',  label: 'Twitter'},
+            {id: 'facebook',      label: 'Facebook'},
+            {id: 'github',        label: 'GitHub'},
+            {id: 'gitlab',        label: 'GitLab'},
+            {id: 'google',        label: 'Google'},
+            {id: 'oidc:linkedin', label: 'LinkedIn'},
+            {id: 'twitter',       label: 'Twitter'},
         ];
 
         it('shows no login buttons when no IdP enabled', () => {

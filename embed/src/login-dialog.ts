@@ -1,7 +1,7 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { LoginChoice, LoginData, LoginIdPId, PageInfo, TranslateFunc } from './models';
+import { LoginChoice, LoginData, PageInfo, TranslateFunc } from './models';
 
 export class LoginDialog extends Dialog {
 
@@ -9,7 +9,7 @@ export class LoginDialog extends Dialog {
     private _pwd?: Wrap<HTMLInputElement>;
     private _userName?: Wrap<HTMLInputElement>;
     private _choice = LoginChoice.localAuth;
-    private _idp?: LoginIdPId;
+    private _idp?: string;
 
     private constructor(
         t: TranslateFunc,
@@ -78,7 +78,11 @@ export class LoginDialog extends Dialog {
                                     UIToolkit.button(this.t('actionSso'), () => this.dismissWith(LoginChoice.federatedAuth, 'sso'), 'btn-sso'),
                                 // OAuth buttons
                                 ...this.pageInfo.idps?.map(idp =>
-                                    UIToolkit.button(idp.name, () => this.dismissWith(LoginChoice.federatedAuth, idp.id), `btn-${idp.id}`)) ?? [])));
+                                    UIToolkit.button(
+                                        idp.name,
+                                        () => this.dismissWith(LoginChoice.federatedAuth, idp.id),
+                                        `btn-${idp.id.startsWith('oidc:') ? 'dark' : idp.id}`)) ??
+                                [])));
         }
 
         // If there's a local login option, create a login form
@@ -136,7 +140,7 @@ export class LoginDialog extends Dialog {
         return container;
     }
 
-    private dismissWith(choice: LoginChoice, idp?: LoginIdPId) {
+    private dismissWith(choice: LoginChoice, idp?: string) {
         this._choice = choice;
         this._idp    = idp;
         this.dismiss(true);

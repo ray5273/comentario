@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
+	"regexp"
 	"strings"
 )
 
@@ -39,6 +40,58 @@ type APIKey struct {
 	Key     string `yaml:"key"`     // API key
 }
 
+// OIDCProvider stores OIDC provider configuration
+type OIDCProvider struct {
+	KeySecret `yaml:",inline"`
+	ID        string   `yaml:"id"`     // Unique provider ID, e.g. "keycloak"
+	Name      string   `yaml:"name"`   // Provider display name, e.g. "Keycloak"
+	URL       string   `yaml:"url"`    // OIDC server URL
+	Scopes    []string `yaml:"scopes"` // Additional scopes to request
+}
+
+// QualifiedID returns the provider's ID prepended with the common OIDC prefix
+func (p *OIDCProvider) QualifiedID() string {
+	return "oidc:" + p.ID
+}
+
+var reOIDCProviderID = regexp.MustCompile(`^[-a-z0-9]{1,32}$`)
+
+// validate the OIDC provider configuration
+func (p *OIDCProvider) validate() error {
+	// Don't bother if it's disabled
+	if p.Disable {
+		return nil
+	}
+
+	// KeySecret
+	if !p.Usable() {
+		return errors.New("both provider key and secret must be specified")
+	}
+
+	// ID
+	switch {
+	case p.ID == "":
+		return errors.New("provider ID must be specified")
+	case len(p.ID) > 32:
+		return fmt.Errorf("provider ID cannot exceed 32 characters (%d supplied)", len(p.ID))
+	case !reOIDCProviderID.MatchString(p.ID):
+		return errors.New("provider ID must consist of lowercase characters, digits, and dashes only")
+	}
+
+	// Name
+	if p.Name == "" {
+		return errors.New("provider name must be specified")
+	}
+
+	// Discovery URL
+	if p.URL == "" {
+		return errors.New("provider server URL must be specified")
+	} else if !util.IsValidURL(p.URL, false) {
+		return errors.New("invalid provider server URL")
+	}
+	return nil
+}
+
 type SecretsConfiguration struct {
 	// PostgreSQL settings. Used when at least host is provided
 	Postgres struct {
@@ -67,12 +120,12 @@ type SecretsConfiguration struct {
 
 	// Federated identity provider settings
 	IdP struct {
-		Facebook KeySecret `yaml:"facebook"` // Facebook auth config
-		GitHub   KeySecret `yaml:"github"`   // GitHub auth config
-		GitLab   KeySecret `yaml:"gitlab"`   // GitLab auth config
-		Google   KeySecret `yaml:"google"`   // Google auth config
-		LinkedIn KeySecret `yaml:"linkedin"` // LinkedIn auth config
-		Twitter  KeySecret `yaml:"twitter"`  // Twitter auth config
+		Facebook KeySecret      `yaml:"facebook"` // Facebook auth config
+		GitHub   KeySecret      `yaml:"github"`   // GitHub auth config
+		GitLab   KeySecret      `yaml:"gitlab"`   // GitLab auth config
+		Google   KeySecret      `yaml:"google"`   // Google auth config
+		Twitter  KeySecret      `yaml:"twitter"`  // Twitter auth config
+		OIDC     []OIDCProvider `yaml:"oidc"`     // OIDC provider specs
 	} `yaml:"idp"`
 
 	// Extension settings
@@ -135,7 +188,9 @@ func (sc *SecretsConfiguration) validate() error {
 	default:
 		return errors.New("could not determine DB dialect to use. Either postgres.host or sqlite3.file must be set")
 	}
-	return nil
+
+	// Validate identity providers
+	return sc.validateIdPConfig()
 }
 
 // validatePostgresConfig verifies the PostgreSQL database configuration is valid
@@ -176,5 +231,26 @@ func (sc *SecretsConfiguration) validateSQLite3Config() error {
 	if _, err := os.Stat(sc.SQLite3.File); os.IsNotExist(err) {
 		logger.Warningf("SQLite3 database file %q does not exist, will create one", sc.SQLite3.File)
 	}
+	return nil
+}
+
+// validateIdPConfig verifies the IdP configuration is valid
+func (sc *SecretsConfiguration) validateIdPConfig() error {
+	// Iterate all available OIDC entries
+	ids := map[string]bool{}
+	for _, p := range sc.IdP.OIDC {
+		// Validate the config
+		if err := p.validate(); err != nil {
+			return fmt.Errorf("invalid OIDC provider (ID=%q) config: %w", p.ID, err)
+		}
+
+		// Make sure the ID is unique
+		if ids[p.ID] {
+			return fmt.Errorf("duplicate OIDC provider ID: %q", p.ID)
+		}
+		ids[p.ID] = true
+	}
+
+	// Succeeded
 	return nil
 }

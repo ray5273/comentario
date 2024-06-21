@@ -4,7 +4,7 @@ import { finalize, first, of, switchMap, throwError, timer } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ConfigService } from '../../../_services/config.service';
-import { ApiGeneralService, Configuration, FederatedIdpId } from '../../../../generated-api';
+import { ApiGeneralService, Configuration, FederatedIdentityProvider } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
 import { AuthService } from '../../../_services/auth.service';
 import { Paths } from '../../../_utils/consts';
@@ -29,7 +29,7 @@ export class FederatedLoginComponent {
         private readonly authSvc: AuthService,
     ) {}
 
-    loginWith(idp: FederatedIdpId) {
+    loginWith(idp: string) {
         this.loggingIn = true;
 
         // Request a new, anonymous login token
@@ -77,5 +77,9 @@ export class FederatedLoginComponent {
                 // Show a toast on a failed authentication
                 error: err => this.toastSvc.error('oauth-login-failed', undefined, undefined, err),
             });
+    }
+
+    getButtonClass(provider: FederatedIdentityProvider) {
+        return provider.id.startsWith('oidc:') ? 'btn-dark' : `btn-${provider.id}`;
     }
 }

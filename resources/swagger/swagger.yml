@@ -501,10 +501,10 @@ definitions:
   federatedIdentityProvider:
     description: Federated identity provider info
     type: object
+    readOnly: true
     required:
       - id
       - name
-      - icon
     properties:
       id:
         $ref: "#/definitions/federatedIdpId"
@@ -515,22 +515,12 @@ definitions:
         description: Provider display name
         x-isnullable: false
         example: GitHub
-      icon:
-        type: string
-        description: Provider icon name
-        x-isnullable: false
-        example: github
 
   federatedIdpId:
     description: Federated identity provider ID
     type: string
-    enum:
-      - facebook
-      - github
-      - gitlab
-      - google
-      - linkedin
-      - twitter
+    maxLength: 37
+    pattern: '^facebook|github|gitlab|google|twitter|(oidc:[-a-z0-9]{1,32})$'
     x-isnullable: false
 
   host:
@@ -1333,16 +1323,10 @@ parameters:
     in: path
     name: provider
     required: true
-    description: Federated identity provider ID
+    description: Federated identity provider ID. The same as the federatedIdpId type, but also includes 'sso'
     type: string
-    enum:
-      - facebook
-      - github
-      - gitlab
-      - google
-      - linkedin
-      - twitter
-      - sso  # SSO is a special case of federated authentication, which requires additional configuration for a specific domain
+    maxLength: 37
+    pattern: '^facebook|github|gitlab|google|twitter|sso|(oidc:[-a-z0-9]{1,32})$'
 
   pathDailyMetric:
     name: metric
@@ -1356,6 +1340,16 @@ parameters:
       - domainPages
       - views
 
+  pathHost:
+    name: host
+    in: path
+    required: true
+    description: Domain host path parameter
+    type: string
+    minLength: 1
+    maxLength: 259
+    pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
+
   pathImportSource:
     name: source
     in: path
@@ -1366,16 +1360,6 @@ parameters:
       - comentario
       - disqus
       - wordpress
-
-  pathHost:
-    name: host
-    in: path
-    required: true
-    description: Domain host path parameter
-    type: string
-    minLength: 1
-    maxLength: 259
-    pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
 
   pathUuid:
     in: path

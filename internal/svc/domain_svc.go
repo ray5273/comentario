@@ -7,6 +7,7 @@ import (
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -538,7 +539,7 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 			return nil, err
 
 			// Only add a provider if it's enabled globally
-		} else if _, ok, _, _ := data.GetFederatedIdP(id); ok {
+		} else if _, ok, _, _ := config.GetFederatedIdP(id); ok {
 			res = append(res, id)
 		}
 	}

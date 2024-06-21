@@ -124,7 +124,7 @@ func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 }
 
 func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder) {
-	if known, conf, p, _ := data.GetFederatedIdP(id); !known {
+	if known, conf, p, _ := config.GetFederatedIdP(id); !known {
 		// Provider ID not known
 		return nil, respBadRequest(ErrorIdPUnknown.WithDetails(string(id)))
 	} else if !conf {
