@@ -145,6 +145,7 @@ data:
             ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'gitlab'),
             ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'github'),
             ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'google'),
+            ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'oidc:linkedin'),
             ('9f0b8563-f29e-456e-b53b-3c83fb068b58', 'twitter');
 
     -- Reconfigure demo.comentario.app's extensions, remove all other extension config
