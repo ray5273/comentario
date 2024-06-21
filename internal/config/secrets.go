@@ -95,17 +95,16 @@ func (sc *SecretsConfiguration) PostProcess() error {
 		return err
 	}
 
-	// Generate a random XSRF key if no secret is provided
-	if sc.XSRFSecret == "" {
-		var err error
-		if sc.xsrfKey, err = util.RandomBytes(32); err != nil {
-			return err
-		}
-	}
+	// Hash the XSRF secret if it's provided and use that as the key
+	var err error
+	if sc.XSRFSecret != "" {
+		x := sha256.Sum256([]byte(sc.XSRFSecret))
+		sc.xsrfKey = x[:]
 
-	// Hash the secret otherwise
-	x := sha256.Sum256([]byte(sc.XSRFSecret))
-	sc.xsrfKey = x[:]
+		// Generate a random XSRF key otherwise
+	} else if sc.xsrfKey, err = util.RandomBytes(32); err != nil {
+		return err
+	}
 
 	// Succeeded
 	return nil
