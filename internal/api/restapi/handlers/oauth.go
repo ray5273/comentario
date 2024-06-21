@@ -25,7 +25,6 @@ type ssoPayload struct {
 	Token string `json:"token"`
 	Email string `json:"email"`
 	Name  string `json:"name"`
-	ID    string `json:"id"`
 	Photo string `json:"photo"`
 	Link  string `json:"link"`
 }
@@ -118,14 +117,11 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailure(nonIntSSO, "hmac: signature verification failed", nil)
 		}
 
-		// Prepare a federated user
-		fedUser = goth.User{Email: payload.Email, Name: payload.Name}
-
-		// Use the email as the ID if no real ID is provided
-		if payload.ID == "" {
-			fedUser.UserID = payload.Email
-		} else {
-			fedUser.UserID = payload.ID
+		// Prepare a federated user, using email as the ID (until #100 is implemented)
+		fedUser = goth.User{
+			Email:  payload.Email,
+			Name:   payload.Name,
+			UserID: payload.Email,
 		}
 
 		// If a valid avatar link is provided, store it as the user's avatar URL

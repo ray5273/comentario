@@ -45,7 +45,6 @@ The payload value holds a JSON-formatted user data, providing the following prop
 * `token`, which must be the same value that was passed during the initial SSO call;
 * `email`, specifying the user's email address;
 * `name`, providing the user's full name;
-* `id`, an optional unique ID to be used for looking the user up. If not provided, the user will be searched by the email;
 * `photo`, an optional user avatar URL;
 * `link`, an optional user profile or website URL.
 
@@ -55,7 +54,6 @@ For example:
 {
   "token": "0a3577213987d24993ef20d335f7b9769c1d1719b40767c6948d6c3882403a96",
   "email": "johndoe@example.com",
-  "name": "John Doe",
-  "id": "198437697245769245986901"
+  "name": "John Doe"
 }
 ```
