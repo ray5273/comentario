@@ -23,6 +23,8 @@ tags:
     - Google
     - Twitter
     - X
+    - OIDC
+    - OpenID Connect
     - Akismet
     - Perspective
     - APILayer
@@ -51,63 +53,63 @@ Below is a summary of the values in the secrets file.
 
 <div class="table-responsive">
 
-| Key                                           | Type    | Description                                                                                   |    Default value    |
-|-----------------------------------------------|---------|-----------------------------------------------------------------------------------------------|:-------------------:|
-| **Database**                                  |         |                                                                                               |                     |
-| `postgres.host`                               | string  | Hostname or IP address of PostgreSQL DB                                                       |                     |
-| `postgres.port`                               | integer | Port number of PostgreSQL DB                                                                  |       `5432`        |
-| `postgres.database`                           | string  | Name of the PostgreSQL database                                                               |                     |
-| `postgres.username`                           | string  | Username to connect to PostgreSQL                                                             |                     |
-| `postgres.password`                           | string  | Password to connect to PostgreSQL                                                             |                     |
-| `postgres.sslmode`                            | string  | SSL mode for PostgreSQL (`disable`, `allow`, `prefer`, `require`, `verify-ca`, `verify-full`) |      `disable`      |
-| `sqlite3.file`                                | string  | Path to the SQLite3 database file                                                             |                     |
-| **SMTP server**                               |         |                                                                                               |                     |
-| `smtpServer.host`                             | string  | Hostname or IP address of SMTP server. Required for emailing to work                          |                     |
-| `smtpServer.port`                             | integer | Port number of SMTP server                                                                    |  `587` (STARTTLS)   |
-| `smtpServer.username`                         | string  | Username to connect to SMTP server                                                            |                     |
-| `smtpServer.password`                         | string  | Password to connect to SMTP server                                                            |                     |
-| `smtpServer.encryption`                       | string  | Encryption used for sending mails: `none`, `ssl`, `tls`                                       | Derived from `port` |
-| `smtpServer.insecure`                         | boolean | Whether to skip SMTP server's SSL certificate verification                                    |       `false`       |
-| **[Identity providers](/configuration/idps)** |         |                                                                                               |                     |
-| `idp.facebook.disable`                        | boolean | Whether to forcefully disable Facebook authentication                                         |                     |
-| `idp.facebook.key`                            | string  | Client ID for Facebook authentication                                                         |                     |
-| `idp.facebook.secret`                         | string  | Client secret for Facebook authentication                                                     |                     |
-| `idp.github.disable`                          | boolean | Whether to forcefully disable GitHub authentication                                           |                     |
-| `idp.github.key`                              | string  | Client ID for GitHub authentication                                                           |                     |
-| `idp.github.secret`                           | string  | Client secret for GitHub authentication                                                       |                     |
-| `idp.gitlab.disable`                          | boolean | Whether to forcefully disable GitLab authentication                                           |                     |
-| `idp.gitlab.key`                              | string  | Client ID for GitLab authentication                                                           |                     |
-| `idp.gitlab.secret`                           | string  | Client secret for GitLab authentication                                                       |                     |
-| `idp.google.disable`                          | boolean | Whether to forcefully disable Google authentication                                           |                     |
-| `idp.google.key`                              | string  | Client ID for Google authentication                                                           |                     |
-| `idp.google.secret`                           | string  | Client secret for Google authentication                                                       |                     |
-| `idp.twitter.disable`                         | boolean | Whether to forcefully disable Twitter/X authentication                                        |                     |
-| `idp.twitter.key`                             | string  | Client ID for Twitter/X authentication                                                        |                     |
-| `idp.twitter.secret`                          | string  | Client secret for Twitter/X authentication                                                    |                     |
-| **OIDC (OpenID Connect) identity providers**  |         |                                                                                               |                     |
-| `idp.oidc`                                    | array   | Array of OIDC provider entries, each element is an object (see below)                         |                     |
-| `idp.oidc.[N].id`                             | string  | Unique ID of the OIDC provider, consisting of max. 32 lowercase letters, digits, and dashes   |                     |
-| `idp.oidc.[N].name`                           | string  | OIDC provider display name                                                                    |                     |
-| `idp.oidc.[N].url`                            | string  | OIDC provider server URL                                                                      |                     |
-| `idp.oidc.[N].scopes`                         | array   | OIDC scopes to request (array of strings)                                                     |                     |
-| `idp.oidc.[N].disable`                        | boolean | Whether to forcefully disable authentication via this provider                                |                     |
-| `idp.oidc.[N].key`                            | string  | OIDC client ID                                                                                |                     |
-| `idp.oidc.[N].secret`                         | string  | OIDC client secret                                                                            |                     |
-| **Extensions**                                |         |                                                                                               |                     |
-| `extensions.akismet.disable`                  | boolean | Whether to globally disable Akismet API                                                       |                     |
-| `extensions.akismet.key`                      | string  | Akismet API key                                                                               |                     |
-| `extensions.perspective.disable`              | boolean | Whether to globally disable Perspective API                                                   |                     |
-| `extensions.perspective.key`                  | string  | Perspective API key                                                                           |                     |
-| `extensions.apiLayerSpamChecker.disable`      | boolean | Whether to globally disable APILayer SpamChecker API                                          |                     |
-| `extensions.apiLayerSpamChecker.key`          | string  | APILayer SpamChecker API key                                                                  |                     |
-| **Other**                                     |         |                                                                                               |                     |
-| `xsrfSecret`                                  | string  | Random string to generate XSRF key from (30 or more chars recommended)                        |    Random value     |
+| Key                                                     | Type    | Description                                                                                   |    Default value    |
+|---------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------|:-------------------:|
+| **Database**                                            |         |                                                                                               |                     |
+| `postgres.host`                                         | string  | Hostname or IP address of PostgreSQL DB                                                       |                     |
+| `postgres.port`                                         | integer | Port number of PostgreSQL DB                                                                  |       `5432`        |
+| `postgres.database`                                     | string  | Name of the PostgreSQL database                                                               |                     |
+| `postgres.username`                                     | string  | Username to connect to PostgreSQL                                                             |                     |
+| `postgres.password`                                     | string  | Password to connect to PostgreSQL                                                             |                     |
+| `postgres.sslmode`                                      | string  | SSL mode for PostgreSQL (`disable`, `allow`, `prefer`, `require`, `verify-ca`, `verify-full`) |      `disable`      |
+| `sqlite3.file`                                          | string  | Path to the SQLite3 database file                                                             |                     |
+| **SMTP server**                                         |         |                                                                                               |                     |
+| `smtpServer.host`                                       | string  | Hostname or IP address of SMTP server. Required for emailing to work                          |                     |
+| `smtpServer.port`                                       | integer | Port number of SMTP server                                                                    |  `587` (STARTTLS)   |
+| `smtpServer.username`                                   | string  | Username to connect to SMTP server                                                            |                     |
+| `smtpServer.password`                                   | string  | Password to connect to SMTP server                                                            |                     |
+| `smtpServer.encryption`                                 | string  | Encryption used for sending mails: `none`, `ssl`, `tls`                                       | Derived from `port` |
+| `smtpServer.insecure`                                   | boolean | Whether to skip SMTP server's SSL certificate verification                                    |       `false`       |
+| **[Identity providers](/configuration/idps)**           |         |                                                                                               |                     |
+| `idp.facebook.disable`                                  | boolean | Whether to forcefully disable Facebook authentication                                         |                     |
+| `idp.facebook.key`                                      | string  | Client ID for Facebook authentication                                                         |                     |
+| `idp.facebook.secret`                                   | string  | Client secret for Facebook authentication                                                     |                     |
+| `idp.github.disable`                                    | boolean | Whether to forcefully disable GitHub authentication                                           |                     |
+| `idp.github.key`                                        | string  | Client ID for GitHub authentication                                                           |                     |
+| `idp.github.secret`                                     | string  | Client secret for GitHub authentication                                                       |                     |
+| `idp.gitlab.disable`                                    | boolean | Whether to forcefully disable GitLab authentication                                           |                     |
+| `idp.gitlab.key`                                        | string  | Client ID for GitLab authentication                                                           |                     |
+| `idp.gitlab.secret`                                     | string  | Client secret for GitLab authentication                                                       |                     |
+| `idp.google.disable`                                    | boolean | Whether to forcefully disable Google authentication                                           |                     |
+| `idp.google.key`                                        | string  | Client ID for Google authentication                                                           |                     |
+| `idp.google.secret`                                     | string  | Client secret for Google authentication                                                       |                     |
+| `idp.twitter.disable`                                   | boolean | Whether to forcefully disable Twitter/X authentication                                        |                     |
+| `idp.twitter.key`                                       | string  | Client ID for Twitter/X authentication                                                        |                     |
+| `idp.twitter.secret`                                    | string  | Client secret for Twitter/X authentication                                                    |                     |
+| **[OIDC identity providers](/configuration/idps/oidc)** |         |                                                                                               |                     |
+| `idp.oidc`                                              | array   | Array of OIDC provider entries, each element is an object (see below)                         |                     |
+| `idp.oidc.[N].id`                                       | string  | Unique ID of the OIDC provider, consisting of max. 32 lowercase letters, digits, and dashes   |                     |
+| `idp.oidc.[N].name`                                     | string  | OIDC provider display name                                                                    |                     |
+| `idp.oidc.[N].url`                                      | string  | OIDC provider server URL                                                                      |                     |
+| `idp.oidc.[N].scopes`                                   | array   | OIDC scopes to request (array of strings)                                                     |                     |
+| `idp.oidc.[N].disable`                                  | boolean | Whether to forcefully disable authentication via this provider                                |                     |
+| `idp.oidc.[N].key`                                      | string  | OIDC client ID                                                                                |                     |
+| `idp.oidc.[N].secret`                                   | string  | OIDC client secret                                                                            |                     |
+| **Extensions**                                          |         |                                                                                               |                     |
+| `extensions.akismet.disable`                            | boolean | Whether to globally disable Akismet API                                                       |                     |
+| `extensions.akismet.key`                                | string  | Akismet API key                                                                               |                     |
+| `extensions.perspective.disable`                        | boolean | Whether to globally disable Perspective API                                                   |                     |
+| `extensions.perspective.key`                            | string  | Perspective API key                                                                           |                     |
+| `extensions.apiLayerSpamChecker.disable`                | boolean | Whether to globally disable APILayer SpamChecker API                                          |                     |
+| `extensions.apiLayerSpamChecker.key`                    | string  | APILayer SpamChecker API key                                                                  |                     |
+| **Other**                                               |         |                                                                                               |                     |
+| `xsrfSecret`                                            | string  | Random string to generate XSRF key from (30 or more chars recommended)                        |    Random value     |
 {.table .table-striped}
 </div>
 
 ## Database
 
-The only mandatory settings in the above table concern database configuration: Comentario requires a database for data storage.
+The only mandatory settings in the above table concern database configuration: Comentario [requires](/installation/requirements) a database for data storage.
 
 * If `postgres.host` is specified, **PostgreSQL database** will be used. Then you'll also need to provide `postgres.database`, `postgres.username`, and `postgres.password`.
 * Otherwise, Comentario will use a local, file-based **SQLite3** database: you have to specify a complete file path in `sqlite3.file`. If the file doesn't exist, it will be created, but the path must exist and be writable.
@@ -126,7 +128,7 @@ Comentario supports *federated authentication* via [external identity providers]
 * If no configuration is given for a federated identity provider, this provider will not be available for user authentication.
 * If you want to (temporarily) disable a fully-configured identity provider, set its `disable` flag to `true`.
 
-You can also configure one or more [OpenID Connect](https://openid.net/developers/how-connect-works/) (OIDC) identity providers:
+You can also configure one or more [OpenID Connect](/configuration/idps/oidc) (OIDC) identity providers:
 
 * The provider must support the [OIDC discovery spec](https://openid.net/specs/openid-connect-discovery-1_0.html) (i.e. serve a discovery document at `.well-known/openid-configuration`).
 * Like other federated identity providers, any OIDC provider can be disabled using the corresponding `disable` flag. 
