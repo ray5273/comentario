@@ -1,6 +1,7 @@
 ---
 title: Login via Twitter/X
 description: How to configure OAuth2 login via Twitter (a.k.a. "X")
+weight: 100
 tags:
     - configuration
     - identity provider

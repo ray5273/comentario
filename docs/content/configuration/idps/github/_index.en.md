@@ -1,6 +1,7 @@
 ---
 title: Login via GitHub
 description: How to configure OAuth2 login via GitHub
+weight: 100
 tags:
     - configuration
     - identity provider

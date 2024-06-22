@@ -1,6 +1,7 @@
 ---
 title: Login via Facebook
 description: How to configure OAuth2 login via Facebook
+weight: 100
 tags:
     - configuration
     - identity provider

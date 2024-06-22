@@ -1,6 +1,7 @@
 ---
 title: Login via GitLab
 description: How to configure OAuth2 login via GitLab
+weight: 100
 tags:
     - configuration
     - identity provider
