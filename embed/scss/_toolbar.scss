@@ -31,7 +31,7 @@
     }
 
     &.comentario-disabled {
-        background-color: $gray-1;
+        background-color: var(--cmntr-bg-shade);
 
         .comentario-btn-tool {
             pointer-events: none;

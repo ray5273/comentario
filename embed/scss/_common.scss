@@ -37,7 +37,7 @@ blockquote {
     justify-content: center;
     align-items: center;
     align-content: center;
-    background-color: $white;
+    background-color: var(--cmntr-bg);
     font-size: 15px;
 
     // Only show border and such when there's no editor inserted

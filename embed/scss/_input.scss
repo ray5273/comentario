@@ -5,7 +5,7 @@ input[type=text],
 input[type=email],
 input[type=url],
 input[type=password] {
-    background-color: $white;
+    background-color: var(--cmntr-bg);
     border: 1px solid rgba(50, 50, 93, .1);
     border-radius: 3px;
     color: $gray-7;
@@ -118,13 +118,13 @@ textarea {
     align-items: stretch;
     box-shadow: 0 1px 3px rgba(50, 50, 93, .15), 0 1px 0 rgba(0, 0, 0, .02);
     border-radius: 4px;
-    background-color: $white;
+    background-color: var(--cmntr-bg);
     margin: 8px;
 
     .comentario-input {
         flex-grow: 1;
         height: 40px;
-        background-color: $white;
+        background-color: var(--cmntr-bg);
         border: none;
         outline: none;
         padding: 5px 5px 5px 10px;

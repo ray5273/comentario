@@ -9,7 +9,7 @@
     width: 90%;
     max-width: 500px;
     min-height: 100px;
-    background-color: $gray-1;
+    background-color: var(--cmntr-bg-shade);
     border: 1px solid $gray-5;
     box-shadow: 0 0 20px rgba(153, 153, 153, 0.5);
 
@@ -24,7 +24,7 @@
         position: relative;
         display: flex;
         align-items: center;
-        background-color: $gray-3;
+        background-color: var(--cmntr-dlg-header-bg);
         padding: 6px 16px;
         line-height: 24px;
         font-weight: bold;
@@ -65,7 +65,7 @@
         z-index: 101;
         width: 12px;
         height: 12px;
-        background-color: $gray-1; // Match colour with the dialog body by default
+        background-color: var(--cmntr-bg-shade); // Match colour with the dialog body by default
         border: 1px solid transparent;
     }
 
@@ -90,7 +90,7 @@
     &[data-popper-placement^='bottom'] > .comentario-dialog-arrow {
         top: -7px;
         &::before {
-            background-color: $gray-3; // Match colour with the dialog header when the arrow is on the top
+            background-color: var(--cmntr-dlg-header-bg); // Match colour with the dialog header when the arrow is on the top
             border-left-color: $gray-5;
             border-top-color: $gray-5;
         }

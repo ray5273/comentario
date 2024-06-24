@@ -1,0 +1,17 @@
+@import "colours";
+
+:root {
+    // Default (light mode) properties
+    --cmntr-bg: #{$white};
+    --cmntr-bg-shade: #{$gray-1};
+    --cmntr-color: #{$gray-8};
+    --cmntr-dlg-header-bg: #{$gray-3};
+
+    // Dark mode properties
+    @media (prefers-color-scheme: dark) {
+        --cmntr-bg: #{$gray-9};
+        --cmntr-bg-shade: #{$gray-8};
+        --cmntr-color: #{$gray-1};
+        --cmntr-dlg-header-bg: #{$gray-6};
+    }
+}

@@ -35,7 +35,7 @@
         border-collapse: collapse;
 
         tbody > tr:nth-of-type(odd) > * {
-            background-color: rgba($black, .05);
+            background-color: rgba(var(--cmntr-color), .05);
         }
 
         td, th {
@@ -52,6 +52,6 @@
 
     pre {
         padding: 6px;
-        background-color: $gray-1;
+        background-color: var(--cmntr-bg-shade);
     }
 }
