@@ -4,7 +4,7 @@
 .comentario-card {
     display: flex;
     margin-top: 16px;
-    border-top: 1px solid $gray-1;
+    border-top: 1px solid var(--cmntr-card-border);
 
     // Replaces the .comentario-card-expand-toggler in a card that has no children
     .comentario-card-expand-spacer {
@@ -70,38 +70,38 @@
     .comentario-name {
         font-weight: bold;
         font-size: 14px;
-        color: $gray-7 !important;
+        color: var(--cmntr-color) !important;
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
     }
 
     .comentario-subtitle {
-        color: $gray-6;
+        color: var(--cmntr-muted-color);
         font-size: 12px;
 
         a {
-            color: $gray-6;
+            color: var(--cmntr-muted-color);
         }
     }
 
     .comentario-score {
         display: inline;
-        color: $gray-4;
+        color: var(--cmntr-score-color);
         font-weight: 700;
         transition: color 0.2s;
     }
 
     .comentario-upvoted {
-        color: $green-6;
+        color: var(--cmntr-score-up-color);
     }
 
     .comentario-downvoted {
-        color: $orange-6;
+        color: var(--cmntr-score-down-color);
     }
 
     .comentario-is-sticky {
-        color: $yellow-4 !important;
+        color: var(--cmntr-sticky-color) !important;
     }
 
     .comentario-card-body {
@@ -113,7 +113,7 @@
         padding-top: 8px;
         padding-bottom: 8px;
         text-align: center;
-        color: $orange-8;
+        color: var(--cmntr-warning-color);
     }
 }
 
@@ -123,12 +123,12 @@
 }
 
 .comentario-pending {
-    background: $gray-2;
-    border: $yellow-6 dashed 1px;
+    background-color: var(--cmntr-pending-bg);
+    border: var(--cmntr-pending-border) dashed 1px;
 }
 
 .comentario-rejected {
-    background: $yellow-1;
+    background-color: var(--cmntr-rejected-bg);
 }
 
 .comentario-avatar {
@@ -138,7 +138,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    color: $white;
+    color: var(--cmntr-bg);
     font-size: 20px;
     margin-right: 10px;
     border: 0 transparent;

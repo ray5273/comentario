@@ -66,13 +66,13 @@ $animation-duration: 250ms;
 
 @keyframes comentario-bg-highlight-animation {
     0%   { background-color: transparent; }
-    10%  { background-color: $indigo-2; }
-    50%  { background-color: $indigo-2; }
+    10%  { background-color: var(--cmntr-bg-highlight); }
+    50%  { background-color: var(--cmntr-bg-highlight); }
     100% { background-color: transparent; }
 }
 
 @keyframes comentario-bg-blink-animation {
     0%   { background-color: transparent; }
-    50%  { background-color: $yellow-3; }
+    50%  { background-color: var(--cmntr-bg-blink); }
     100% { background-color: transparent; }
 }

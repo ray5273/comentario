@@ -5,10 +5,10 @@ input[type=text],
 input[type=email],
 input[type=url],
 input[type=password] {
-    background-color: var(--cmntr-bg);
+    background-color: var(--cmntr-input-bg);
     border: 1px solid rgba(50, 50, 93, .1);
     border-radius: 3px;
-    color: $gray-7;
+    color: var(--cmntr-input-color);
 
     // Draw a red border around invalid controls that have been touched (blurred; gets added programmatically)
     &.comentario-touched:invalid {
@@ -16,11 +16,11 @@ input[type=password] {
     }
 
     &::placeholder {
-        color: $gray-5;
+        color: var(--cmntr-input-ph-color);
     }
 
     &:disabled {
-        color: $gray-6;
+        color: var(--cmntr-input-disabled-color);
     }
 }
 
@@ -107,7 +107,7 @@ textarea {
     }
 
     label {
-        color: $gray-7;
+        color: var(--cmntr-label-color);
         font-size: 13px;
     }
 }
@@ -130,7 +130,7 @@ textarea {
         padding: 5px 5px 5px 10px;
 
         &::placeholder {
-            color: $gray-5;
+            color: var(--cmntr-input-ph-color);
         }
     }
 
@@ -143,7 +143,7 @@ textarea {
 .comentario-form-text {
     margin: 2px 8px;
     font-size: 13px;
-    color: $gray-6;
+    color: var(--cmntr-muted-color);
 }
 
 .comentario-round-check {

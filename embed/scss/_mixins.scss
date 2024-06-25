@@ -30,7 +30,7 @@
     table {
         margin-bottom: 12px;
         vertical-align: top;
-        border-color: $gray-3;
+        border-color: var(--cmntr-table-border);
         caption-side: bottom;
         border-collapse: collapse;
 
@@ -40,7 +40,7 @@
 
         td, th {
             padding: 6px 9px;
-            border: 1px solid $gray-3;
+            border: 1px solid var(--cmntr-table-border);
         }
     }
 

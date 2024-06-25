@@ -3,11 +3,11 @@
 
 .comentario-btn {
     // Vars
-    --cmntr-btn-color:        #{$link-color};
+    --cmntr-btn-color:        var(--cmntr-link-color);
     --cmntr-btn-bg:           transparent;
-    --cmntr-btn-hover-color:  #{$link-hover-color};
+    --cmntr-btn-hover-color:  var(--cmntr-link-hover-color);
     --cmntr-btn-hover-bg:     transparent;
-    --cmntr-btn-active-color: #{$link-hover-color};
+    --cmntr-btn-active-color: var(--cmntr-link-hover-color);
     --cmntr-btn-active-bg:    transparent;
 
     color: var(--cmntr-btn-color);

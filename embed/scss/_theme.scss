@@ -1,0 +1,80 @@
+@import "colours";
+
+@mixin theme-props($theme: light) {
+    // Light theme properties
+    @if $theme == light {
+        --cmntr-bg:                   #{$white};
+        --cmntr-bg-shade:             #{$gray-1};
+        --cmntr-bg-highlight:         #{$indigo-2};
+        --cmntr-bg-blink:             #{$yellow-3};
+        --cmntr-danger-bg:            #{$red-1};
+        --cmntr-deleted-bg:           #{$pink-2};
+        --cmntr-dlg-header-bg:        #{$gray-3};
+        --cmntr-input-bg:             #{$white};
+        --cmntr-pending-bg:           #{$gray-2};
+        --cmntr-placeholder-bg:       #{$gray-3};
+        --cmntr-placeholder-mask:     #{$gray-9};
+        --cmntr-rejected-bg:          #{$yellow-1};
+        --cmntr-success-bg:           #{$green-1};
+        --cmntr-warning-bg:           #{$yellow-1};
+
+        --cmntr-color:                #{$gray-8};
+        --cmntr-danger-color:         #{$red-7};
+        --cmntr-input-color:          #{$gray-7};
+        --cmntr-input-ph-color:       #{$gray-5};
+        --cmntr-input-disabled-color: #{$gray-6};
+        --cmntr-label-color:          #{$gray-7};
+        --cmntr-link-color:           #{$blue-9};
+        --cmntr-link-hover-color:     #{$blue-6};
+        --cmntr-muted-color:          #{$gray-6};
+        --cmntr-score-color:          #{$gray-4};
+        --cmntr-score-up-color:       #{$green-6};
+        --cmntr-score-down-color:     #{$orange-6};
+        --cmntr-sticky-color:         #{$yellow-4};
+        --cmntr-success-color:        #{$green-7};
+        --cmntr-warning-color:        #{$yellow-7};
+
+        --cmntr-card-border:          #{$gray-1};
+        --cmntr-dlg-border:           #{$gray-5};
+        --cmntr-pending-border:       #{$yellow-6};
+        --cmntr-table-border:         #{$gray-3};
+
+    // Dark theme properties
+    } @else {
+        color-scheme: dark;
+        --cmntr-bg:                   #{$gray-9};
+        --cmntr-bg-shade:             #{$gray-8};
+        --cmntr-bg-highlight:         #{$indigo-7};
+        --cmntr-bg-blink:             #{$yellow-6};
+        --cmntr-danger-bg:            #{$red-9};
+        --cmntr-deleted-bg:           #{$pink-5};
+        --cmntr-dlg-header-bg:        #{$gray-6};
+        --cmntr-input-bg:             #{$gray-9};
+        --cmntr-pending-bg:           #{$gray-7};
+        --cmntr-placeholder-bg:       #{$gray-6};
+        --cmntr-rejected-bg:          #{$yellow-8};
+        --cmntr-success-bg:           #{$green-8};
+        --cmntr-warning-bg:           #{$yellow-8};
+
+        --cmntr-color:                #{$gray-1};
+        --cmntr-danger-color:         #{$red-2};
+        --cmntr-input-color:          #{$gray-2};
+        --cmntr-input-ph-color:       #{$gray-4};
+        --cmntr-input-disabled-color: #{$gray-3};
+        --cmntr-label-color:          #{$gray-2};
+        --cmntr-link-color:           #{$blue-3};
+        --cmntr-link-hover-color:     #{$blue-6};
+        --cmntr-muted-color:          #{$gray-3};
+        --cmntr-score-color:          #{$gray-5};
+        --cmntr-score-up-color:       #{$green-3};
+        --cmntr-score-down-color:     #{$orange-3};
+        --cmntr-sticky-color:         #{$yellow-5};
+        --cmntr-success-color:        #{$green-2};
+        --cmntr-warning-color:        #{$yellow-2};
+
+        --cmntr-card-border:          #{$gray-8};
+        --cmntr-dlg-border:           #{$gray-4};
+        --cmntr-pending-border:       #{$yellow-3};
+        --cmntr-table-border:         #{$gray-6};
+    }
+}

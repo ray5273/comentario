@@ -43,9 +43,13 @@
 }
 
 .comentario-ph-bg {
-    background-color: $gray-3;
+    background-color: var(--cmntr-placeholder-bg);
     opacity: .5;
-    mask-image: linear-gradient(130deg, $gray-9 40%, rgba(0, 0, 0, .2) 50%, $gray-9 60%);
+    mask-image: linear-gradient(
+        130deg,
+        var(--cmntr-placeholder-mask) 40%,
+        rgba(0, 0, 0, .2) 50%,
+        var(--cmntr-placeholder-mask) 60%);
     mask-size: 200% 100%;
     animation: comentario-ph-bg 2s linear infinite;
 }

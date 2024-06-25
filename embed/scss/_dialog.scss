@@ -10,12 +10,12 @@
     max-width: 500px;
     min-height: 100px;
     background-color: var(--cmntr-bg-shade);
-    border: 1px solid $gray-5;
+    border: 1px solid var(--cmntr-dlg-border);
     box-shadow: 0 0 20px rgba(153, 153, 153, 0.5);
 
     hr {
         border: none;
-        background: $gray-6;
+        background: var(--cmntr-muted-color);
         height: 1px;
         margin: 12px 0;
     }
@@ -30,7 +30,7 @@
         font-weight: bold;
 
         .comentario-dialog-btn-close {
-            --cmntr-btn-color: $gray-7;
+            --cmntr-btn-color: var(--cmntr-muted-color);
 
             position: absolute;
             top: 0;
@@ -52,7 +52,7 @@
     }
 
     .comentario-dialog-centered {
-        color: $gray-6;
+        color: var(--cmntr-muted-color);
         text-align: center;
         margin: 8px 0;
     }
@@ -82,8 +82,8 @@
     &[data-popper-placement^='top'] > .comentario-dialog-arrow {
         bottom: -6px;
         &::before {
-            border-right-color: $gray-5;
-            border-bottom-color: $gray-5;
+            border-right-color: var(--cmntr-dlg-border);
+            border-bottom-color: var(--cmntr-dlg-border);
         }
     }
 
@@ -91,24 +91,24 @@
         top: -7px;
         &::before {
             background-color: var(--cmntr-dlg-header-bg); // Match colour with the dialog header when the arrow is on the top
-            border-left-color: $gray-5;
-            border-top-color: $gray-5;
+            border-left-color: var(--cmntr-dlg-border);
+            border-top-color: var(--cmntr-dlg-border);
         }
     }
 
     &[data-popper-placement^='left'] > .comentario-dialog-arrow {
         right: -6px;
         &::before {
-            border-right-color: $gray-5;
-            border-top-color: $gray-5;
+            border-right-color: var(--cmntr-dlg-border);
+            border-top-color: var(--cmntr-dlg-border);
         }
     }
 
     &[data-popper-placement^='right'] > .comentario-dialog-arrow {
         left: -7px;
         &::before {
-            border-left-color: $gray-5;
-            border-bottom-color: $gray-5;
+            border-left-color: var(--cmntr-dlg-border);
+            border-bottom-color: var(--cmntr-dlg-border);
         }
     }
 }

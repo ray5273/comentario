@@ -5,14 +5,14 @@
 }
 
 a {
-    color: $link-color;
+    color: var(--cmntr-link-color);
     outline: none;
     text-decoration: none;
     cursor: pointer;
 
     &:not(.comentario-btn){
         &:hover, &:focus {
-            color: $link-hover-color;
+            color: var(--cmntr-link-hover-color);
         }
     }
 }
@@ -21,9 +21,8 @@ blockquote {
     margin: 0 0 0 8px;
     padding: 0 0 0 5px;
     border-left: 2px solid $gray-5;
-    color: $gray-6;
+    color: var(--cmntr-muted-color);
 }
-
 
 .comentario-icon {
     display: inline-block;
@@ -49,7 +48,7 @@ blockquote {
 
         .comentario-add-comment-placeholder {
             display: block;
-            color: $gray-5;
+            color: var(--cmntr-input-ph-color);
         }
     }
 
@@ -121,14 +120,14 @@ blockquote {
 // Colourising
 
 .comentario-text-muted {
-    color: $gray-7 !important;
+    color: var(--cmntr-muted-color) !important;
 }
 .comentario-text-success {
-    color: $green-7 !important;
+    color: var(--cmntr-success-color) !important;
 }
 .comentario-text-danger {
-    color: $red-7 !important;
+    color: var(--cmntr-danger-color) !important;
 }
 .comentario-text-warning {
-    color: $yellow-7 !important;
+    color: var(--cmntr-warning-color) !important;
 }

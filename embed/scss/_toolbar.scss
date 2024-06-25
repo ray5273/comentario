@@ -11,7 +11,7 @@
     }
 
     .comentario-btn-tool {
-        --cmntr-btn-color: $gray-7;
+        --cmntr-btn-color: var(--cmntr-muted-color);
 
         margin: 0;
         padding: 0;
