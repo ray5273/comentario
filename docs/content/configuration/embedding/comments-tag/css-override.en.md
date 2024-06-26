@@ -10,6 +10,7 @@ tags:
     - styling
 seeAlso:
     - ../comments-tag
+    - theme
 ---
 
 The `css-override` attribute of the [comments tag](../comments-tag) can be used to change or disable standard Comentario styles for embedded comments.

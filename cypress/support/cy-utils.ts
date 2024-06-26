@@ -77,6 +77,7 @@ export const PATHS = {
 export const TEST_PATHS = {
     home:      '/',
     comments:  '/comments/',
+    darkMode:  '/dark-mode/',
     double:    '/double/',
     dynamic:   '/dynamic/',
     noComment: '/nocomment/',

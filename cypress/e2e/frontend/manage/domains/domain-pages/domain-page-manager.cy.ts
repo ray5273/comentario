@@ -10,10 +10,15 @@ context('Domain Page Manager', () => {
         {path: '/',                         title: 'Home',                          cntComments: 17, cntViews: 10},
         {path: '/nocomment/',               title: 'No comment',                    cntComments: 0,  cntViews: 2},
         {path: '/readonly/',                title: 'Readonly page',                 cntComments: 0,  cntViews: 42},
-        {path: '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865',
+        {path: '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/' +
+                'on/display/to/make/it/a/bit/usable.html?' +
+                'some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&' +
+                'foo=bar&buzz=238974592875469782&' +
+                'bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865',
                                             title: '',                              cntComments: 0,  cntViews: 0},
         {path: '/double/',                  title: 'Double Comentario',             cntComments: 2,  cntViews: 0},
         {path: '/attr/auto-init/',          title: 'Attribute: auto-init=false',    cntComments: 2,  cntViews: 0},
+        {path: '/dark-mode/',               title: 'Dark mode',                     cntComments: 2,  cntViews: 0},
         {path: '/dynamic/',                 title: 'Dynamic insertion',             cntComments: 1,  cntViews: 4},
         {path: '/attr/no-fonts/',           title: 'Attribute: no-fonts=true',      cntComments: 2,  cntViews: 0},
         {path: '/attr/css-override/',       title: 'Attribute: css-override',       cntComments: 2,  cntViews: 0},

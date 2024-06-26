@@ -90,7 +90,7 @@ context('Dashboard', () => {
                       value:    0
                     - label:    Pages
                       sublabel: you moderate
-                      value:    13
+                      value:    14
                     - label:    Pages
                       sublabel: you commented on
                       value:    9
@@ -99,7 +99,7 @@ context('Dashboard', () => {
                       value:    6
                     - label:    Comments
                       sublabel: total
-                      value:    38
+                      value:    40
                     - label:    Comments
                       sublabel: you authored
                       value:    17
@@ -113,7 +113,7 @@ context('Dashboard', () => {
                     - label:    Views
                       value:    217
                     - label:    Comments
-                      value:    38
+                      value:    40
                     `,
             },
             {
@@ -137,7 +137,7 @@ context('Dashboard', () => {
                       value:    1
                     - label:    Pages
                       sublabel: you moderate
-                      value:    16
+                      value:    17
                     - label:    Pages
                       sublabel: you commented on
                       value:    2
@@ -146,7 +146,7 @@ context('Dashboard', () => {
                       value:    1
                     - label:    Comments
                       sublabel: total
-                      value:    38
+                      value:    40
                     - label:    Comments
                       sublabel: you authored
                       value:    4
@@ -178,13 +178,13 @@ context('Dashboard', () => {
                       value:    0
                     - label:    Pages
                       sublabel: you moderate
-                      value:    17
+                      value:    18
                     - label:    Domain users
                       sublabel: you manage
                       value:    9
                     - label:    Comments
                       sublabel: total
-                      value:    39
+                      value:    41
                     - label:    Commenters
                       sublabel: total
                       value:    7
@@ -195,7 +195,7 @@ context('Dashboard', () => {
                     - label:    Views
                       value:    217
                     - label:    Comments
-                      value:    39
+                      value:    41
                     `,
             },
         ]

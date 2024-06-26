@@ -122,6 +122,21 @@
                     </div>
                 </div>
             </div>
+            <!-- Colour theme -->
+            <div class="row mb-3">
+                <div class="col-sm-3">
+                    <app-info-icon docLink="configuration/embedding/comments-tag/theme/" class="me-2"/>
+                    <label for="opt-theme" class="col-form-label colon" i18n>Colour theme</label>
+                </div>
+                <div class="col-sm-9">
+                    <select formControlName="theme" class="form-select" id="opt-theme"
+                            [class.is-invalid]="form.controls.theme.invalid">
+                        <option value="" i18n>(default)</option>
+                        <option value="light" i18n>Light</option>
+                        <option value="dark"  i18n>Dark</option>
+                    </select>
+                </div>
+            </div>
         </form>
     </div>
 </div>

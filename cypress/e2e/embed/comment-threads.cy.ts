@@ -321,6 +321,29 @@ context('Comment threads', () => {
                     comments:      '',
                 },
                 {
+                    path:        TEST_PATHS.darkMode,
+                    heading:     'Dark mode',
+                    subheading:  true,
+                    verifyLogin: true,
+                    comments:
+                        // language=yaml
+                        `
+                        - id: e9daf243-248f-480c-b940-84bd9d677f13
+                          author: Darth Vader
+                          subtitle: 10 days ago
+                          html: <p>Hello from the <strong>Dark Side</strong></p>
+                          score: -100
+                          sticky: true
+                          children:
+                          - id: 24b5ca27-6d12-45d8-8994-d979d06e4652
+                            author: Luke
+                            subtitle: 9 days ago
+                            html: <p>We need to talk</p>
+                            score: 0
+                            sticky: false
+                        `,
+                },
+                {
                     path:        TEST_PATHS.attr.autoInit,
                     heading:     'Attribute: auto-init=false',
                     subheading:  true,

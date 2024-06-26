@@ -156,7 +156,7 @@ context('Domain Operations page', () => {
 
                         // Verify comments left
                         cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).comments);
-                        cy.get('app-comment-manager').verifyListFooter(23, false);
+                        cy.get('app-comment-manager').verifyListFooter(25, true);
                     });
                 });
 

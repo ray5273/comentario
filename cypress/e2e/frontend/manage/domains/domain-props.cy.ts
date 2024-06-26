@@ -238,6 +238,7 @@ context('Domain Properties page', () => {
             cy.get('#opt-css-override')            .as('optCssOverride')          .should('be.visible').and('have.value', '').and('be.enabled');
             cy.get('#opt-max-level')               .as('optMaxLevel')             .should('be.visible').and('have.value', '10');
             cy.get('#opt-page-id')                 .as('optPageId')               .should('be.visible').and('have.value', '');
+            cy.get('#opt-theme')                   .as('optTheme')                .should('be.visible').and('have.value', '');
 
             // Change options
             // -- auto-init
@@ -291,6 +292,14 @@ context('Domain Properties page', () => {
             checkSnippet(' page-id="/test-page"');
             cy.get('@optPageId').clear();
             checkSnippet('');
+            // -- theme
+            cy.get('@optTheme').texts('option').should('arrayMatch', ['(default)', 'Light', 'Dark']);
+            cy.get('@optTheme').select(1);
+            checkSnippet(` theme="light"`);
+            cy.get('@optTheme').select(2);
+            checkSnippet(` theme="dark"`);
+            cy.get('@optTheme').select(0);
+            checkSnippet('');
 
             // Multiple options as once
             cy.get('@optAutoInit').clickLabel();
@@ -301,6 +310,7 @@ context('Domain Properties page', () => {
             cy.get('@optCssOverride').setValue('https://whatever.org/x.css');
             cy.get('@optMaxLevel').setValue('42');
             cy.get('@optPageId').setValue('/path/1');
+            cy.get('@optTheme').select('Dark');
             checkSnippet(
                 ' auto-init="false"' +
                 ' auto-non-interactive-sso="true"' +
@@ -309,7 +319,8 @@ context('Domain Properties page', () => {
                 ' lang="nl"' +
                 ' css-override="https://whatever.org/x.css"' +
                 ' max-level="42"' +
-                ' page-id="/path/1"');
+                ' page-id="/path/1"'+
+                ' theme="dark"');
         });
 
         it('shows properties for SSO-enabled domain', () => {

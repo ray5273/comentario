@@ -41,6 +41,7 @@ Comentario recognises the following tag attributes:
 | [`max-level`](max-level)                               | Maximum comment visual nesting level. Set to `1` to disable nesting altogether | `10`                  |
 | [`no-fonts`](no-fonts)                                 | Set to `true` to avoid applying default Comentario fonts                       | `false`               |
 | [`page-id`](page-id)                                   | Overrides the path (URL) of the current page                                   |                       |
+| [`theme`](theme)                                       | Colour theme to render Comentario in                                           | OS colour theme       |
 {.table .table-striped}
 </div>
 
@@ -54,5 +55,6 @@ Below is an example of a customised `<comentario-comments>` tag:
                      live-update="false"
                      max-level="5"
                      no-fonts="true" 
-                     page-id="/blog/post/123"></comentario-comments>
+                     page-id="/blog/post/123"
+                     theme="dark"></comentario-comments>
 ```

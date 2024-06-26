@@ -26,6 +26,7 @@ export class DomainInstallComponent implements OnInit {
         cssOverride:           ['', [XtraValidators.url(false)]],
         maxLevel:              [10, [Validators.min(1), Validators.max(99)]],
         pageId:                ['', Validators.maxLength(2076)], // 2083 - length of 'http://'
+        theme:                 '',
     });
 
     readonly languages = this.cfgSvc.staticConfig.uiLanguages;
@@ -71,6 +72,9 @@ export class DomainInstallComponent implements OnInit {
         }
         if (val.pageId) {
             opts += ` page-id="${Utils.escapeAttrValue(val.pageId)}"`;
+        }
+        if (val.theme) {
+            opts += ` theme="${val.theme}"`;
         }
         return `<script defer src="${this.scriptUrl}"></script>\n` +
             `<comentario-comments${opts}></comentario-comments>`;
