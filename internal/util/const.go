@@ -28,6 +28,7 @@ const (
 // Cookie names
 
 const (
+	CookieNameLanguage    = "lang"                     // Cookie name to store the user's language preference
 	CookieNameUserSession = "comentario_user_session"  // Cookie name to store the session of the authenticated user
 	CookieNameAuthSession = "_comentario_auth_session" // Cookie name to store the federated authentication session ID
 	CookieNameXSRFSession = "_xsrf_session"            // Cookie name where Gorilla CSRF must store its session
@@ -87,12 +88,19 @@ var (
 		"comentario.css":             true,
 	}
 
-	// XSRFSafePaths stores a list of path prefixes that should be excluded from XSRF protection
+	// XSRFSafePaths stores a list of path prefixes that should be excluded from XSRF protection. They must be paths
+	// relative to the base URL and have no leading '/'
 	XSRFSafePaths = &pathRegistry{}
 )
 
 func init() {
 	XSRFSafePaths.Add(
-		"/api/embed/", // Embed endpoints are cross-site by design because scripts are always loaded from a different origin
+		// Embed endpoints are cross-site by design because scripts are always loaded from a different origin
+		"api/embed/",
+
+		// Avoid setting the XSRF session cookies on static resources because it prevents caching them (when combined
+		// with the "Vary: Cookie" HTTP header automatically added by the runtime)
+		"en/fonts/",
+		"en/images/",
 	)
 }

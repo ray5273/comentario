@@ -7,6 +7,7 @@ import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/util"
 	"gopkg.in/yaml.v3"
+	"net/http"
 	"net/url"
 	"os"
 	"strings"
@@ -149,6 +150,25 @@ func (sc *ServerConfiguration) postProcess() error {
 }
 
 //----------------------------------------------------------------------------------------------------------------------
+
+// IsXSRFSafe returns whether the given request is "XSRF-safe"
+func IsXSRFSafe(r *http.Request) bool {
+	// Only handle requests mapping to a path under the base
+	if ok, p := ServerConfig.PathOfBaseURL(r.URL.Path); ok {
+		// Safe if it's a GET/HEAD/OPTIONS <static resource>
+		if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
+			if _, static := util.UIStaticPaths[p]; static {
+				return true
+			}
+		}
+
+		// Safe if it's a known "safe path"
+		return util.XSRFSafePaths.Has(p)
+	}
+
+	// (Potentially) not safe
+	return false
+}
 
 // MaskIP hides a part of the given IPv4/IPv6 address if full IP logging isn't enabled, otherwise returns the IP as-is
 func MaskIP(ip string) string {

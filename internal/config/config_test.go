@@ -1,6 +1,8 @@
 package config
 
 import (
+	"fmt"
+	"net/http"
 	"net/url"
 	"testing"
 )
@@ -110,6 +112,92 @@ func TestServerConfiguration_URLForAPI(t *testing.T) {
 			sc := ServerConfiguration{parsedBaseURL: mustParseURL(tt.base)}
 			if got := sc.URLForAPI(tt.path, tt.queryParams); got != tt.want {
 				t.Errorf("URLForAPI() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestIsXSRFSafe(t *testing.T) {
+	base := "http://foo.bar"
+	tests := []struct {
+		reqMethod string
+		reqPath   string
+		want      bool
+	}{
+		// GET not under base URL
+		{"GET", "/baz", false},
+		{"GET", "/android-chrome-192x192.png", false},
+		{"GET", "/android-chrome-512x512.png", false},
+		{"GET", "/apple-touch-icon.png", false},
+		{"GET", "/browserconfig.xml", false},
+		{"GET", "/favicon.ico", false},
+		{"GET", "/favicon-16x16.png", false},
+		{"GET", "/favicon-32x32.png", false},
+		{"GET", "/mstile-70x70.png", false},
+		{"GET", "/mstile-144x144.png", false},
+		{"GET", "/mstile-150x150.png", false},
+		{"GET", "/mstile-310x150.png", false},
+		{"GET", "/mstile-310x310.png", false},
+		{"GET", "/robots.txt", false},
+		{"GET", "/safari-pinned-tab.svg", false},
+		{"GET", "/site.webmanifest", false},
+		{"GET", "/comentario.js", false},
+		{"GET", "/comentario.css", false},
+		// Valid method, not under base URL
+		{"HEAD", "/site.webmanifest", false},
+		{"HEAD", "/comentario.js", false},
+		{"OPTIONS", "/comentario.css", false},
+		// Invalid method, under base URL
+		{"POST", "/cc/android-chrome-192x192.png", false},
+		{"PUT", "/cc/android-chrome-512x512.png", false},
+		{"PATCH", "/cc/apple-touch-icon.png", false},
+		{"DELETE", "/cc/browserconfig.xml", false},
+		// Valid method under base URL
+		{"GET", "/cc/baz", false},
+		{"GET", "/cc/android-chrome-192x192.png", true},
+		{"GET", "/cc/android-chrome-512x512.png", true},
+		{"GET", "/cc/apple-touch-icon.png", true},
+		{"GET", "/cc/browserconfig.xml", true},
+		{"GET", "/cc/favicon.ico", true},
+		{"GET", "/cc/favicon-16x16.png", true},
+		{"GET", "/cc/favicon-32x32.png", true},
+		{"GET", "/cc/mstile-70x70.png", true},
+		{"GET", "/cc/mstile-144x144.png", true},
+		{"GET", "/cc/mstile-150x150.png", true},
+		{"GET", "/cc/mstile-310x150.png", true},
+		{"GET", "/cc/mstile-310x310.png", true},
+		{"GET", "/cc/robots.txt", true},
+		{"GET", "/cc/safari-pinned-tab.svg", true},
+		{"GET", "/cc/site.webmanifest", true},
+		{"GET", "/cc/comentario.js", true},
+		{"GET", "/cc/comentario.css", true},
+		{"HEAD", "/cc/site.webmanifest", true},
+		{"HEAD", "/cc/comentario.js", true},
+		{"OPTIONS", "/cc/comentario.css", true},
+		// XSRF-safe paths, not under base URL
+		{"GET", "/api/embed/", false},
+		{"GET", "/en/fonts/", false},
+		{"GET", "/en/images/", false},
+		{"POST", "/api/embed/", false},
+		{"POST", "/en/fonts/", false},
+		{"POST", "/en/images/", false},
+		// XSRF-safe paths, under base URL
+		{"GET", "/cc/api/embed/", true},
+		{"GET", "/cc/en/fonts/", true},
+		{"GET", "/cc/en/images/", true},
+		{"POST", "/cc/api/embed/", true},
+		{"POST", "/cc/en/fonts/", true},
+		{"POST", "/cc/en/images/", true},
+		{"PUT", "/cc/api/embed/foo/42", true},
+		{"PUT", "/cc/en/fonts/foo/42", true},
+		{"PUT", "/cc/en/images/foo/42", true},
+	}
+	ServerConfig = ServerConfiguration{parsedBaseURL: mustParseURL(base + "/cc")}
+	for _, tt := range tests {
+		t.Run(fmt.Sprintf("%s %s", tt.reqMethod, tt.reqPath), func(t *testing.T) {
+			r := &http.Request{Method: tt.reqMethod, URL: mustParseURL(base + tt.reqPath)}
+			if got := IsXSRFSafe(r); got != tt.want {
+				t.Errorf("IsXSRFSafe() = %v, want %v", got, tt.want)
 			}
 		})
 	}

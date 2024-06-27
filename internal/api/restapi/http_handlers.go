@@ -222,16 +222,6 @@ func staticHandler(next http.Handler) http.Handler {
 				hasLang := !static && len(p) >= 3 && p[2] == '/' && svc.TheI18nService.IsFrontendLang(p[0:2])
 				langRoot := hasLang && len(p) == 3 // If the path looks like 'xx/', it's a language root
 
-				// If under a language root, set a language cookie
-				if hasLang {
-					http.SetCookie(w, &http.Cookie{
-						Name:   "lang",
-						Value:  p[0:2],
-						Path:   "/",
-						MaxAge: int(util.LangCookieDuration.Seconds()),
-					})
-				}
-
 				// If it's a static file with placeholders, serve it with replacements
 				if static && repl {
 					serveFileWithPlaceholders(p, w, r)
@@ -254,8 +244,17 @@ func staticHandler(next http.Handler) http.Handler {
 						}
 					}
 
-					// Language root or file wasn't found: serve the main application script for the given language
+					// Language root or file wasn't found
 					if hasLang {
+						// Set a language cookie
+						http.SetCookie(w, &http.Cookie{
+							Name:   util.CookieNameLanguage,
+							Value:  p[0:2],
+							Path:   "/",
+							MaxAge: int(util.LangCookieDuration.Seconds()),
+						})
+
+						// Serve the frontend script for the given language
 						serveFileWithPlaceholders(fmt.Sprintf("%s/index.html", p[0:2]), w, r)
 						return
 					}
@@ -271,6 +270,7 @@ func staticHandler(next http.Handler) http.Handler {
 	})
 }
 
+// webSocketsHandler handles incoming Live update (web sockets) connections
 func webSocketsHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Check if path is a web socket root path
@@ -331,8 +331,8 @@ func xsrfProtectHandler(next http.Handler) http.Handler {
 
 	// Make a new handler that either calls XSRF of passes control on directly to "next"
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Bypass the XSRF handler if it's a known "safe" path
-		if util.XSRFSafePaths.Has(r.URL.Path) {
+		// Bypass the XSRF handler if it's an "XSRF-safe" request
+		if config.IsXSRFSafe(r) {
 			next.ServeHTTP(w, r)
 			return
 		}
@@ -345,8 +345,8 @@ func xsrfProtectHandler(next http.Handler) http.Handler {
 // xsrfCookieHandler returns a middleware that adds an XSRF cookie to the response
 func xsrfCookieHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		// Don't bother if it's a known "XSRF-safe" path
-		if !util.XSRFSafePaths.Has(r.URL.Path) {
+		// Don't bother if it's an "XSRF-safe" request
+		if !config.IsXSRFSafe(r) {
 			// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the auth status
 			// is requested
 			_, err := r.Cookie(util.CookieNameXSRFSession)

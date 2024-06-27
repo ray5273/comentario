@@ -50,6 +50,10 @@ context('Static assets', () => {
         {path: '/en/images/logo.svg',            dir: 'frontend/assets/images',       encoding: 'binary', ctype: 'image/svg+xml'},
         {path: '/en/images/icons/disqus.svg',    dir: 'frontend/assets/images/icons', encoding: 'binary', ctype: 'image/svg+xml'},
         {path: '/en/images/icons/wordpress.svg', dir: 'frontend/assets/images/icons', encoding: 'binary', ctype: 'image/svg+xml'},
+
+        // Embed files
+        {path: '/comentario.js',  encoding: 'utf-8', ctype: 'text/javascript; charset=utf-8', contains: 'customElements.define('},
+        {path: '/comentario.css', encoding: 'utf-8', ctype: 'text/css; charset=utf-8',        contains: '.comentario-root'},
     ]
         .forEach(asset => {
             it(`asset ${asset.path} is served correctly`, () => {
@@ -58,27 +62,21 @@ context('Static assets', () => {
                     expect(r.status).eq(200);
                     expect(r.headers['content-type']).eq(asset.ctype);
 
-                    // Verify the contents by comparing to the source file
-                    cy.readFile(`${asset.dir}/${asset.path.replace(/^.*\/([^\/]+)$/, '$1')}`, asset.encoding as Encodings)
-                        .then(data => data === r.body)
-                        .should('be.true');
+                    // If there's a source dir provided, verify the contents by comparing to the source file
+                    if (asset.dir) {
+                        cy.readFile(`${asset.dir}/${asset.path.replace(/^.*\/([^\/]+)$/, '$1')}`, asset.encoding as Encodings)
+                            .then(data => data === r.body)
+                            .should('be.true');
+
+                    // If there's a content expectation, verify it
+                    } else if (asset.contains) {
+                        expect(r.body).contains(asset.contains);
+                    }
+
+                    // Make sure no cookies or Vary header are delivered (so the browser can cache the asset)
+                    expect(r.headers['set-cookie']).undefined;
+                    expect(r.headers['vary'])      .undefined;
                 });
             });
         });
-
-    it('serves comentario.js', () => {
-        cy.request({url: '/comentario.js', encoding: 'utf-8'}).then(r => {
-            expect(r.status).eq(200);
-            expect(r.headers['content-type']).eq('text/javascript; charset=utf-8');
-            expect(r.body).contains('customElements.define(');
-        });
-    });
-
-    it('serves comentario.css', () => {
-        cy.request({url: '/comentario.css', encoding: 'utf-8'}).then(r => {
-            expect(r.status).eq(200);
-            expect(r.headers['content-type']).eq('text/css; charset=utf-8');
-            expect(r.body).contains('.comentario-root');
-        });
-    });
 });

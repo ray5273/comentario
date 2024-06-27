@@ -92,10 +92,12 @@ type pathRegistry struct {
 	r []string
 }
 
+// Add path(s) to the registry
 func (p *pathRegistry) Add(path ...string) {
 	p.r = append(p.r, path...)
 }
 
+// Has returns whether the given path matches any entry in the registry
 func (p *pathRegistry) Has(path string) bool {
 	for _, s := range p.r {
 		if strings.HasPrefix(path, s) {

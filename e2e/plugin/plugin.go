@@ -35,9 +35,9 @@ func (h *handler) Init(app intf.End2EndApp) error {
 
 	// Lift XSRF protection on management and login endpoints
 	h.app.XSRFSafePaths().Add(
-		"/api/e2e/",
-		"/api/auth/login",
-		"/api/embed/auth/login",
+		"api/e2e/",
+		"api/auth/login",
+		"api/embed/auth/login",
 	)
 
 	// Reset the plugin
