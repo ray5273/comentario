@@ -17,19 +17,25 @@ This page explains how you can migrate to Comentario version 3 from a 2.x instal
 
 The most important part of the migration is the database conversion, which happens automatically on the first run. This process is irreversible; once migrated, the original database will be deleted. The only way to revert that is making a back-up copy prior to migration.
 
-**IMPORTANT:** a direct database migration from Comentario 2.x to 3.x is only possible if you're staying on the same database, i.e. PostgreSQL (the only option for 2.x). Migration from PostgreSQL to SQLite can only be done via export and a subsequent import.
+{{< callout "warning" "IMPORTANT" >}}
+A direct database migration from Comentario 2.x to 3.x is only possible if you're staying on the same database, i.e. PostgreSQL (the only option for 2.x). Migration from PostgreSQL to SQLite can only be done via export and a subsequent import.
+{{< /callout >}}
 
 ## Migration steps
 
 ### 1. Back up your data
 
-**VERY IMPORTANT:** Always make a backup of your original database!
+{{< callout "warning" "VERY IMPORTANT" >}}
+Always make a backup of your original database!
+{{< /callout >}}
 
 The migration can fail, go wrong, or wipe the original data. This is especially true due to the quirks of the original Commento data model.
 
 ### 2. Check your backup
 
-**ALSO VERY IMPORTANT:** Make sure the backup you made can be restored. A non-restorable backup is as useless as a non-existent one.
+{{< callout "warning" "ALSO VERY IMPORTANT" >}}
+Make sure the backup you made can be restored. A non-restorable backup is as useless as a non-existent one.
+{{< /callout >}}
 
 ### 3. Deploy Comentario
 

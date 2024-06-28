@@ -157,7 +157,9 @@ sqlite3:
   file: /tmp/my-comentario.db
 ```
 
-**WARNING: this is just an example!** The `/tmp` directory usually gets cleaned on each reboot, so you'll lose all data. 
+{{< callout "warning" "WARNING: The above is just an example!" >}}
+In certain systems the `/tmp` directory gets cleaned on each reboot, so you'll lose all data.
+{{< /callout >}}
 
 ### PostgreSQL
 

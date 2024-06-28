@@ -23,7 +23,9 @@ Welcome to the Comentario privacy policy! We pride ourselves upon the fact that 
 
 In this Policy, **Comentario** refers to the service offered by [Yktoo Solutions](https://yktoo.solutions/) (the **"Company"** or **"We"**) through the [Comentario](https://comentario.app/) website (the **"Service"**) and the related websites (the **"Services"**); this umbrella term includes the provided applications, content, and other relevant parts of the functionality. We sometimes refer to **"You"**, which may be a visitor on one of our websites, a user of one or more of our services (**"User"** or **"Customer"**), or a visitor of a page containing comments handled by the service (**"Visitor"**). This Policy is further complemented by Comentario's [Terms of Service](tos).
 
-**IMPORTANT: If you do not agree with our policies and the terms of the aforementioned Terms of Service, please do not use our Service. By accessing or using our Service, you agree to this Policy.**
+{{< callout "warning" "IMPORTANT" >}}
+**If you do not agree with our policies and the terms of the aforementioned Terms of Service, please do not use our Service. By accessing or using our Service, you agree to this Policy.**
+{{< /callout >}}
 
 ## 1. Controller and Processor
 

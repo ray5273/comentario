@@ -503,3 +503,15 @@ footer {
     overflow: hidden;
     max-height: 200px;
 }
+
+// Callouts
+.callout-header {
+    font-weight: bold;
+    margin-bottom: 1rem;
+}
+.callout-body {
+    // Remove the bottom margin from the last paragraph or list
+    p:last-child, ul:last-child, ol:last-child {
+        margin-bottom: 0;
+    }
+}
