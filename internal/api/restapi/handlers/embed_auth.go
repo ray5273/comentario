@@ -5,6 +5,8 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/auth"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -40,11 +42,11 @@ func EmbedAuthLoginTokenNew(params api_embed.EmbedAuthLoginTokenNewParams) middl
 	var userID *uuid.UUID
 
 	// Try to authenticate the user
-	if u, _, err := GetUserSessionBySessionHeader(params.HTTPRequest); errors.Is(err, ErrSessionHeaderMissing) {
+	if u, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest); errors.Is(err, auth.ErrSessionHeaderMissing) {
 		// No auth header: an anonymous token is requested
 	} else if err != nil {
 		// Any error other than "auth header missing"
-		return respUnauthorized(ErrorUnauthenticated)
+		return respUnauthorized(exmodels.ErrorUnauthenticated)
 	} else {
 		// Successfully authenticated
 		userID = &u.ID
@@ -83,7 +85,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 
 func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the session header
-	_, sessionID, err := ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
+	_, sessionID, err := auth.ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
 	if err != nil {
 		return respUnauthorized(nil)
 	}
@@ -139,7 +141,7 @@ func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.
 	// Fetch the session header value
 	if s := params.HTTPRequest.Header.Get(util.HeaderUserSession); s != "" {
 		// Try to fetch the user
-		if user, userSession, err := FetchUserBySessionHeader(s); err == nil {
+		if user, userSession, err := auth.FetchUserBySessionHeader(s); err == nil {
 			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
 			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
 				// Succeeded: user is authenticated
@@ -159,7 +161,7 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 		return r
 	} else if domainID == nil {
 		// There's no domain ID
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("domainId"))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("domainId"))
 	}
 
 	// Fetch the domain user

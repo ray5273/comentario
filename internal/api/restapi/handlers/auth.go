@@ -1,13 +1,12 @@
 package handlers
 
 import (
-	"encoding/base64"
 	"errors"
-	"fmt"
-	oaerrors "github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/auth"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -17,51 +16,10 @@ import (
 	"strings"
 )
 
-var (
-	ErrSessionHeaderMissing = errors.New("session auth header missing in request")
-
-	ErrUnauthorised  = oaerrors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-	ErrInternalError = oaerrors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
-)
-
 // PrincipalResponder is an interface for a responder with the SetPayload method for returning a principal
 type PrincipalResponder interface {
 	middleware.Responder
 	SetPayload(*models.Principal)
-}
-
-// AuthBearerToken inspects the token (usually provided in a header) and determines if the token is of one of the
-// provided scopes
-func AuthBearerToken(tokenStr string, scopes []string) (*data.User, error) {
-	// Try to find the token
-	token, err := svc.TheTokenService.FindByStrValue(tokenStr, false)
-	if err != nil {
-		return nil, ErrUnauthorised
-	}
-
-	// Check if the token is of the right scope
-	if util.IndexOfString(string(token.Scope), scopes) < 0 {
-		return nil, ErrUnauthorised
-	}
-
-	// Token seems legitimate, now find its owner
-	var user *data.User
-	if user, err = svc.TheUserService.FindUserByID(&token.Owner); err != nil {
-		return nil, ErrInternalError
-
-		// Verify the user is allowed to authenticate at all
-	} else if err, _ := Verifier.UserCanAuthenticate(user, false); err != nil {
-		// Not allowed
-		return nil, ErrUnauthorised
-	}
-
-	// If it's a disposable token, revoke it, ignoring any error
-	if !token.Multiuse {
-		_ = svc.TheTokenService.DeleteByValue(token.Value)
-	}
-
-	// Succeeded
-	return user, nil
 }
 
 func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Responder {
@@ -90,7 +48,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 		if cnt, err := svc.TheUserService.CountUsers(true, false, false, true, true); err != nil {
 			return respServiceError(err)
 		} else if cnt <= 1 {
-			return respBadRequest(ErrorDeletingLastSuperuser)
+			return respBadRequest(exmodels.ErrorDeletingLastSuperuser)
 		}
 	}
 
@@ -137,7 +95,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 
 	// Verify none are to be orphaned
 	if len(toBeOrphaned) > 0 {
-		return respBadRequest(ErrorDeletingLastOwner.WithDetails(strings.Join(toBeOrphaned, ", ")))
+		return respBadRequest(exmodels.ErrorDeletingLastOwner.WithDetails(strings.Join(toBeOrphaned, ", ")))
 	}
 
 	// Delete the user, optionally deleting their comments
@@ -190,7 +148,7 @@ func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *d
 
 func AuthLogout(params api_general.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
-	_, sessionID, err := FetchUserSessionIDFromCookie(params.HTTPRequest)
+	_, sessionID, err := auth.FetchUserSessionIDFromCookie(params.HTTPRequest)
 	if err != nil {
 		return respUnauthorized(nil)
 	}
@@ -230,7 +188,7 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 
 		// User found. Check if the account is locked
 	} else if user.IsLocked {
-		return respForbidden(ErrorUserLocked)
+		return respForbidden(exmodels.ErrorUserLocked)
 
 		// Generate a random password-reset token
 	} else if token, err := data.NewToken(&user.ID, data.TokenScopeResetPassword, util.UserPwdResetDuration, false); err != nil {
@@ -290,125 +248,6 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		WithPayload(user.ToPrincipal(nil))
 }
 
-// AuthUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header
-func AuthUserByCookieHeader(headerValue string) (*data.User, error) {
-	// Hack to parse the provided data (which is in fact the "Cookie" header, but Swagger 2.0 doesn't support
-	// auth cookies, only headers)
-	r := &http.Request{Header: http.Header{"Cookie": []string{headerValue}}}
-
-	// Authenticate the user
-	u, err := GetUserBySessionCookie(r)
-	if err != nil {
-		// Authentication failed
-		logger.Warningf("Failed to authenticate user: %v", err)
-		return nil, ErrUnauthorised
-	}
-
-	// Succeeded
-	return u, nil
-}
-
-// AuthUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
-func AuthUserBySessionHeader(headerValue string) (*data.User, error) {
-	if user, _, err := FetchUserBySessionHeader(headerValue); err != nil {
-		// Authentication failed
-		return nil, ErrUnauthorised
-	} else {
-		// Succeeded
-		return user, nil
-	}
-}
-
-// ExtractUserSessionIDs parses and return the given string value that combines user and session ID
-func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
-	// Decode the value from base64
-	b, err := base64.RawURLEncoding.DecodeString(s)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Check it's exactly 32 (16 + 16) bytes long
-	if l := len(b); l != 32 {
-		return nil, nil, fmt.Errorf("invalid user-session value length (%d), want 32", l)
-	}
-
-	// Extract ID and token
-	if userID, err := uuid.FromBytes(b[:16]); err != nil {
-		return nil, nil, err
-	} else if sessionID, err := uuid.FromBytes(b[16:]); err != nil {
-		return nil, nil, err
-	} else {
-		// Succeeded
-		return &userID, &sessionID, nil
-	}
-}
-
-// FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
-// X-User-Session header. Returns ErrSessionHeaderMissing if there's no headerValue passed
-func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
-	// Make sure there's a value to parse
-	if headerValue == "" {
-		return nil, nil, ErrSessionHeaderMissing
-	}
-
-	// Extract session from the header value
-	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err != nil {
-		return nil, nil, err
-
-		// Find the user and the session
-	} else if user, us, err := svc.TheUserService.FindUserBySession(userID, sessionID); err != nil {
-		return nil, nil, err
-
-		// Verify the user is allowed to authenticate
-	} else if errm, _ := Verifier.UserCanAuthenticate(user, true); errm != nil {
-		return nil, nil, errm.Error()
-
-	} else {
-		// Succeeded
-		return user, us, nil
-	}
-}
-
-// FetchUserSessionIDFromCookie extracts user ID and session ID from a session cookie contained in the given request
-func FetchUserSessionIDFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error) {
-	// Extract user-session data from the cookie
-	cookie, err := r.Cookie(util.CookieNameUserSession)
-	if err != nil {
-		return nil, nil, err
-	}
-
-	// Decode and parse the value
-	return ExtractUserSessionIDs(cookie.Value)
-}
-
-// GetUserBySessionCookie parses the session cookie contained in the given request and returns the corresponding user
-func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
-	// Extract session from the cookie
-	userID, sessionID, err := FetchUserSessionIDFromCookie(r)
-	if err != nil {
-		return nil, err
-	}
-
-	// Find the user
-	user, _, err := svc.TheUserService.FindUserBySession(userID, sessionID)
-	if err != nil {
-		return nil, err
-	}
-
-	// Verify the user is allowed to authenticate
-	if errm, _ := Verifier.UserCanAuthenticate(user, true); errm != nil {
-		return nil, errm.Error()
-	}
-
-	// Succeeded
-	return user, nil
-}
-
-// GetUserSessionBySessionHeader parses the session header contained in the given request and returns the corresponding user
-func GetUserSessionBySessionHeader(r *http.Request) (*data.User, *data.UserSession, error) {
-	return FetchUserBySessionHeader(r.Header.Get(util.HeaderUserSession))
-}
-
 // authCreateLoginToken creates and returns a new token with the "login" scope. If ownerID == nil, an anonymous token is
 // returned
 func authCreateLoginToken(ownerID *uuid.UUID) (*data.Token, error) {
@@ -449,7 +288,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 	user, err := svc.TheUserService.FindUserByEmail(email)
 	if errors.Is(err, svc.ErrNotFound) || err == nil && !user.IsLocal() {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
+		return nil, nil, respUnauthorized(exmodels.ErrorInvalidCredentials)
 	} else if err != nil {
 		return nil, nil, respServiceError(err)
 	}
@@ -469,7 +308,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 
 		// Pause for a random while
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
-		return nil, nil, respUnauthorized(ErrorInvalidCredentials)
+		return nil, nil, respUnauthorized(exmodels.ErrorInvalidCredentials)
 	}
 
 	// Verify the user can log in and create a new session
@@ -485,8 +324,8 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 // case of error an error responder is returned
 func loginUser(user *data.User, host string, req *http.Request) (*data.UserSession, middleware.Responder) {
 	// Verify the user is allowed to log in
-	if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
-		return nil, r
+	if errm := auth.UserCanAuthenticate(user, true); errm != nil {
+		return nil, respUnauthorized(errm)
 	}
 
 	// Create a new session

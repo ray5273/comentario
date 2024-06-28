@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/extend"
-	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
+	"gitlab.com/comentario/comentario/internal/api/auth"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -19,6 +20,8 @@ type PluginManager interface {
 	extend.ComentarioPluginHost
 	// Init initialises the manager
 	Init() error
+	// PluginConfig returns configuration of all registered plugins as DTOs
+	PluginConfig() []*models.PluginConfig
 	// ServeHandler returns an HTTP handler for processing requests
 	ServeHandler(next http.Handler) http.Handler
 }
@@ -78,6 +81,36 @@ type pluginEntry struct {
 	c *extend.ComentarioPluginConfig // Configuration obtained from the plugin
 }
 
+// ToDTO converts this model into a DTO model
+func (pe pluginEntry) ToDTO() *models.PluginConfig {
+	// Convert plugs to DTOs
+	var plugs []*models.PluginUIPlugConfig
+	for _, p := range pe.c.UIPlugs {
+		plugs = append(plugs, &models.PluginUIPlugConfig{
+			ComponentTag: p.ComponentTag,
+			Label:        p.Label,
+			Location:     p.Location,
+		})
+	}
+
+	// Convert resources to DTOs
+	var resources []*models.PluginUIResourceConfig
+	for _, r := range pe.c.UIResources {
+		resources = append(resources, &models.PluginUIResourceConfig{
+			Rel:  r.Rel,
+			Type: r.Type,
+			URL:  r.URL,
+		})
+	}
+
+	return &models.PluginConfig{
+		ID:          pe.c.ID,
+		Path:        pe.c.Path,
+		UIPlugs:     plugs,
+		UIResources: resources,
+	}
+}
+
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
@@ -85,7 +118,7 @@ type pluginManager struct {
 
 func (pm *pluginManager) AuthenticateBySessionCookie(value string) (extend.Principal, error) {
 	// User implements Principal, so simply hand over to the cookie auth handler
-	return handlers.AuthUserByCookieHeader(value)
+	return auth.AuthenticateUserByCookieHeader(value)
 }
 
 func (pm *pluginManager) CreateLogger(module string) extend.Logger {
@@ -110,6 +143,16 @@ func (pm *pluginManager) Init() error {
 	return nil
 }
 
+func (pm *pluginManager) PluginConfig() []*models.PluginConfig {
+	var res []*models.PluginConfig
+
+	// Iterate over plugins and convert their configs into DTOs
+	for _, pe := range pm.plugs {
+		res = append(res, pe.ToDTO())
+	}
+	return res
+}
+
 func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 	// Pass through if no plugins available
 	if len(pm.plugs) == 0 {
@@ -129,8 +172,8 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 				}
 			}
 
-			// Not an API call. Check if it's a statics request: resource can only be served via GET
-			if r.Method == http.MethodGet {
+			// Not an API call. Check if it's a statics request: resource can only be served via GET/HEAD/OPTIONS
+			if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
 				if pe := pm.findByPath(p, ""); pe != nil {
 					r.URL.Path = "/" + p
 					pe.p.StaticHandler().ServeHTTP(w, r)

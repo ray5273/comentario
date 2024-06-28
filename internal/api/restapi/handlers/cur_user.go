@@ -3,6 +3,8 @@ package handlers
 import (
 	"errors"
 	"github.com/go-openapi/runtime/middleware"
+	"gitlab.com/comentario/comentario/internal/api/auth"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -12,7 +14,7 @@ import (
 
 func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	// Try to authenticate the user
-	user, err := GetUserBySessionCookie(params.HTTPRequest)
+	user, err := auth.GetUserBySessionCookie(params.HTTPRequest)
 	if errors.Is(err, svc.ErrDB) {
 		// Houston, we have a problem
 		return respInternalError(nil)
@@ -60,7 +62,7 @@ func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) midd
 		if !user.VerifyPassword(params.Body.CurPassword) {
 			// Sleep a while to discourage brute-force attacks
 			time.Sleep(util.WrongAuthDelayMax)
-			return respBadRequest(ErrorWrongCurPassword)
+			return respBadRequest(exmodels.ErrorWrongCurPassword)
 		}
 		user.WithPassword(string(params.Body.NewPassword))
 	}

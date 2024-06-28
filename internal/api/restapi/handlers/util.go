@@ -133,7 +133,7 @@ func (r *CookieResponder) WithoutCookie(name, path string) *CookieResponder {
 func parseUUID(sid strfmt.UUID) (*uuid.UUID, middleware.Responder) {
 	u, err := data.DecodeUUID(sid)
 	if err != nil {
-		return nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(sid)))
+		return nil, respBadRequest(exmodels.ErrorInvalidUUID.WithDetails(string(sid)))
 	}
 	return u, nil
 }
@@ -142,7 +142,7 @@ func parseUUID(sid strfmt.UUID) (*uuid.UUID, middleware.Responder) {
 func parseUUIDPtr(pid *strfmt.UUID) (*uuid.UUID, middleware.Responder) {
 	u, err := data.DecodeUUIDPtr(pid)
 	if err != nil {
-		return nil, respBadRequest(ErrorInvalidUUID.WithDetails(string(conv.UUIDValue(pid))))
+		return nil, respBadRequest(exmodels.ErrorInvalidUUID.WithDetails(string(conv.UUIDValue(pid))))
 	}
 	return u, nil
 }
@@ -173,9 +173,9 @@ func respNotFound(err *exmodels.Error) middleware.Responder {
 func respServiceError(err error) middleware.Responder {
 	switch {
 	case errors.Is(err, svc.ErrEmailSend):
-		return api_general.NewGenericBadGateway().WithPayload(ErrorEmailSendFailure)
+		return api_general.NewGenericBadGateway().WithPayload(exmodels.ErrorEmailSendFailure)
 	case errors.Is(err, svc.ErrResourceFetch):
-		return api_general.NewGenericBadGateway().WithPayload(ErrorResourceFetchFailed)
+		return api_general.NewGenericBadGateway().WithPayload(exmodels.ErrorResourceFetchFailed)
 	case errors.Is(err, svc.ErrNotFound):
 		return api_general.NewGenericNotFound()
 	}

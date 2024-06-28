@@ -37,9 +37,6 @@ type VerifierService interface {
 	LocalSignupEnabled(domainID *uuid.UUID) middleware.Responder
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
 	UserCanAddDomain(user *data.User) middleware.Responder
-	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
-	// indicates if the user must also have a confirmed email
-	UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder)
 	// UserCanDeleteComment verifies the given domain user is allowed to delete the specified comment. domainUser can be
 	// nil
 	UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
@@ -73,7 +70,7 @@ func (v *verifier) DomainConfigItems(items []*models.DynamicConfigItem) middlewa
 	for _, item := range items {
 		// Pass the key and the value to the domain config service for validation
 		if err := svc.TheDomainConfigService.ValidateKeyValue(swag.StringValue(item.Key), swag.StringValue(item.Value)); err != nil {
-			return respBadRequest(ErrorInvalidPropertyValue.WithDetails(err.Error()))
+			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(err.Error()))
 		}
 	}
 
@@ -85,13 +82,13 @@ func (v *verifier) DomainHostCanBeAdded(host string) middleware.Responder {
 	// Validate the host
 	if ok, _, _ := util.IsValidHostPort(host); !ok {
 		logger.Warningf("DomainNew(): '%s' is not a valid host[:port]", host)
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails(host))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(host))
 	}
 
 	// Make sure domain host isn't taken yet
 	if _, err := svc.TheDomainService.FindByHost(host); err == nil {
 		// Domain host already exists in the DB
-		return respBadRequest(ErrorHostAlreadyExists)
+		return respBadRequest(exmodels.ErrorHostAlreadyExists)
 	} else if !errors.Is(err, svc.ErrNotFound) {
 		// Any database error other than "not found"
 		return respServiceError(err)
@@ -104,19 +101,19 @@ func (v *verifier) DomainHostCanBeAdded(host string) middleware.Responder {
 func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 	// Verify SSO is at all enabled
 	if !domain.AuthSSO {
-		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO isn't enabled"))
+		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails("SSO isn't enabled"))
 
 		// Verify SSO URL is set
 	} else if domain.SSOURL == "" {
-		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO URL is missing"))
+		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails("SSO URL is missing"))
 
 		// Verify SSO URL is valid and secure (allow insecure in e2e-testing mode)
 	} else if _, err := util.ParseAbsoluteURL(domain.SSOURL, config.ServerConfig.E2e, false); err != nil {
-		respBadRequest(ErrorSSOMisconfigured.WithDetails(err.Error()))
+		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails(err.Error()))
 
 		// Verify SSO secret is configured
 	} else if !domain.SSOSecretStr().Valid {
-		respBadRequest(ErrorSSOMisconfigured.WithDetails("SSO secret isn't configured"))
+		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails("SSO secret isn't configured"))
 	}
 
 	// Succeeded
@@ -126,10 +123,10 @@ func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 func (v *verifier) FederatedIdProvider(id models.FederatedIdpID) (goth.Provider, middleware.Responder) {
 	if known, conf, p, _ := config.GetFederatedIdP(id); !known {
 		// Provider ID not known
-		return nil, respBadRequest(ErrorIdPUnknown.WithDetails(string(id)))
+		return nil, respBadRequest(exmodels.ErrorIdPUnknown.WithDetails(string(id)))
 	} else if !conf {
 		// Provider not configured
-		return nil, respBadRequest(ErrorIdPUnconfigured.WithDetails(string(id)))
+		return nil, respBadRequest(exmodels.ErrorIdPUnconfigured.WithDetails(string(id)))
 	} else {
 		// Succeeded
 		return p, nil
@@ -151,7 +148,7 @@ func (v *verifier) FederatedIdProviders(ids []models.FederatedIdpID) middleware.
 
 func (v *verifier) IsAnotherUser(curUserID, userID *uuid.UUID) middleware.Responder {
 	if *curUserID == *userID {
-		return respBadRequest(ErrorSelfOperation)
+		return respBadRequest(exmodels.ErrorSelfOperation)
 	}
 	return nil
 }
@@ -175,7 +172,7 @@ func (v *verifier) LocalSignupEnabled(domainID *uuid.UUID) middleware.Responder 
 
 	// If signup is disabled
 	if !item.AsBool() {
-		return respForbidden(ErrorSignupsForbidden)
+		return respForbidden(exmodels.ErrorSignupsForbidden)
 	}
 
 	// Signup allowed
@@ -191,34 +188,11 @@ func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
 			if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
 				return respServiceError(err)
 			} else if i == 0 {
-				return respForbidden(ErrorNewOwnersForbidden)
+				return respForbidden(exmodels.ErrorNewOwnersForbidden)
 			}
 		}
 	}
 	return nil
-}
-
-func (v *verifier) UserCanAuthenticate(user *data.User, requireConfirmed bool) (*exmodels.Error, middleware.Responder) {
-	switch {
-	// Only non-system, non-anonymous users may login
-	case user.SystemAccount || user.IsAnonymous():
-		return ErrorInvalidCredentials, respUnauthorized(ErrorInvalidCredentials)
-
-	// Check if the user is locked out
-	case user.IsLocked:
-		return ErrorUserLocked, respForbidden(ErrorUserLocked)
-
-	// Check if the user is banned
-	case user.Banned:
-		return ErrorUserBanned, respForbidden(ErrorUserBanned)
-
-	// If required, check if the user has confirmed their email
-	case requireConfirmed && !user.Confirmed:
-		return ErrorEmailNotConfirmed, respForbidden(ErrorEmailNotConfirmed)
-	}
-
-	// Succeeded
-	return nil, nil
 }
 
 func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
@@ -237,21 +211,21 @@ func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, do
 	}
 
 	// Deletion not allowed
-	return respForbidden(ErrorNotAllowed)
+	return respForbidden(exmodels.ErrorNotAllowed)
 }
 
 func (v *verifier) UserCanManageDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
 	if user.IsSuperuser || domainUser.IsAnOwner() {
 		return nil
 	}
-	return respForbidden(ErrorNotDomainOwner)
+	return respForbidden(exmodels.ErrorNotDomainOwner)
 }
 
 func (v *verifier) UserCanModerateDomain(user *data.User, domainUser *data.DomainUser) middleware.Responder {
 	if user.IsSuperuser || domainUser.CanModerate() {
 		return nil
 	}
-	return respForbidden(ErrorNotModerator)
+	return respForbidden(exmodels.ErrorNotModerator)
 }
 
 func (v *verifier) UserCanSignupWithEmail(email string) (*exmodels.Error, middleware.Responder) {
@@ -262,22 +236,22 @@ func (v *verifier) UserCanSignupWithEmail(email string) (*exmodels.Error, middle
 		return nil, nil
 	} else if err != nil {
 		// Any other DB error
-		return ErrorUnknown, respServiceError(err)
+		return exmodels.ErrorUnknown, respServiceError(err)
 	}
 
 	// Email found. If a local account exists
 	if user.IsLocal() {
 		// Account already exists
-		return ErrorEmailAlreadyExists, respUnauthorized(ErrorEmailAlreadyExists)
+		return exmodels.ErrorEmailAlreadyExists, respUnauthorized(exmodels.ErrorEmailAlreadyExists)
 	}
 
 	// Existing account is a federated one. If the user logs in via SSO
 	if user.FederatedSSO {
-		return ErrorLoginUsingSSO, respUnauthorized(ErrorLoginUsingSSO)
+		return exmodels.ErrorLoginUsingSSO, respUnauthorized(exmodels.ErrorLoginUsingSSO)
 	}
 
 	// User logs in using a federated IdP
-	ee := ErrorLoginUsingIdP.WithDetails(user.FederatedIdP)
+	ee := exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP)
 	return ee, respUnauthorized(ee)
 }
 
@@ -297,33 +271,33 @@ func (v *verifier) UserCanUpdateComment(domainID *uuid.UUID, user *data.User, do
 	}
 
 	// Editing not allowed
-	return respForbidden(ErrorNotAllowed)
+	return respForbidden(exmodels.ErrorNotAllowed)
 }
 
 func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {
 	if user.IsAnonymous() {
-		return respUnauthorized(ErrorUnauthenticated)
+		return respUnauthorized(exmodels.ErrorUnauthenticated)
 	}
 	return nil
 }
 
 func (v *verifier) UserIsLocal(user *data.User) middleware.Responder {
 	if !user.IsLocal() {
-		return respBadRequest(ErrorNoLocalUser)
+		return respBadRequest(exmodels.ErrorNoLocalUser)
 	}
 	return nil
 }
 
 func (v *verifier) UserIsNotSystem(user *data.User) middleware.Responder {
 	if user.SystemAccount {
-		return respBadRequest(ErrorImmutableAccount)
+		return respBadRequest(exmodels.ErrorImmutableAccount)
 	}
 	return nil
 }
 
 func (v *verifier) UserIsSuperuser(user *data.User) middleware.Responder {
 	if !user.IsSuperuser {
-		return respForbidden(ErrorNoSuperuser)
+		return respForbidden(exmodels.ErrorNoSuperuser)
 	}
 	return nil
 }

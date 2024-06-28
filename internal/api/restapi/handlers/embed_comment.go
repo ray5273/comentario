@@ -6,6 +6,8 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/auth"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -45,7 +47,7 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 
 func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responder {
 	// Try to authenticate the user
-	user, _, err := GetUserSessionBySessionHeader(params.HTTPRequest)
+	user, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
 		// Failed, consider the user anonymous
 		user = data.AnonymousUser
@@ -99,7 +101,7 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 
 func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Responder {
 	// Try to authenticate the user
-	user, _, err := GetUserSessionBySessionHeader(params.HTTPRequest)
+	user, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
 		// Failed, consider the user anonymous
 		user = data.AnonymousUser
@@ -109,7 +111,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
 	if errors.Is(err, svc.ErrNotFound) {
 		// No domain found for this host
-		return respForbidden(ErrorUnknownHost)
+		return respForbidden(exmodels.ErrorUnknownHost)
 	} else if err != nil {
 		return respServiceError(err)
 	}
@@ -214,8 +216,8 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 
 	// If the comment isn't submitted as a unregistered, authenticate the user
 	if !params.Body.Unregistered {
-		if u, _, err := GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
-			return respUnauthorized(ErrorUnauthenticated)
+		if u, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
+			return respUnauthorized(exmodels.ErrorUnauthenticated)
 		} else {
 			// Successfully authenticated
 			user = u
@@ -226,7 +228,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if errors.Is(err, svc.ErrNotFound) {
 		// No domain found for this host
-		return respForbidden(ErrorUnknownHost)
+		return respForbidden(exmodels.ErrorUnknownHost)
 	} else if err != nil {
 		return respServiceError(err)
 	}
@@ -258,11 +260,11 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 
 	// Verify the domain, the page, and the user aren't readonly
 	if domain.IsReadonly {
-		return respForbidden(ErrorDomainReadonly)
+		return respForbidden(exmodels.ErrorDomainReadonly)
 	} else if page.IsReadonly {
-		return respForbidden(ErrorPageReadonly)
+		return respForbidden(exmodels.ErrorPageReadonly)
 	} else if domainUser.IsReadonly() {
-		return respForbidden(ErrorUserReadonly)
+		return respForbidden(exmodels.ErrorUserReadonly)
 	}
 
 	// Prepare a comment
@@ -354,7 +356,7 @@ func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.Us
 
 	// Verify it's a top-level comment
 	if !comment.IsRoot() {
-		return respBadRequest(ErrorNoRootComment)
+		return respBadRequest(exmodels.ErrorNoRootComment)
 	}
 
 	// Update the comment, if necessary
@@ -428,12 +430,12 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 
 	// Make sure voting is enabled
 	if !svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting) {
-		return respForbidden(ErrorFeatureDisabled.WithDetails("comment voting"))
+		return respForbidden(exmodels.ErrorFeatureDisabled.WithDetails("comment voting"))
 	}
 
 	// Make sure the user is not voting for their own comment
 	if comment.UserCreated.UUID == user.ID {
-		return respForbidden(ErrorSelfVote)
+		return respForbidden(exmodels.ErrorSelfVote)
 	}
 
 	// Update the vote and the comment

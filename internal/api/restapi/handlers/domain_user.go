@@ -4,6 +4,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -64,7 +65,7 @@ func DomainUserUpdate(params api_general.DomainUserUpdateParams, user *data.User
 
 	// Make sure the user isn't editing themselves
 	if du.UserID == user.ID {
-		return respBadRequest(ErrorSelfOperation)
+		return respBadRequest(exmodels.ErrorSelfOperation)
 	}
 
 	// Update the domain user

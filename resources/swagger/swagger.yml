@@ -598,6 +598,17 @@ definitions:
         type: string
         description: Any error message occurred during the import
 
+  instancePluginConfig:
+    description: Instance configuration of plugins
+    type: object
+    readOnly: true
+    properties:
+      plugins:
+        type: array
+        items:
+          $ref: "#/definitions/pluginConfig"
+        description: Configured plugins data
+
   instanceStaticConfig:
     description: Static instance configuration
     type: object
@@ -865,6 +876,77 @@ definitions:
     maxLength: 2075 # 2083 (max URL length) - 8 (http://a, the shortest possible prefix)
     pattern: "/.*"
     x-isnullable: false
+
+  pluginConfig:
+    description: Configuration of a plugin
+    type: object
+    readOnly: true
+    required:
+      - id
+      - path
+    properties:
+      id:
+        type: string
+        description: Unique plugin ID
+        x-isnullable: false
+      path:
+        type: string
+        description: URL path the plugin responds at
+        x-isnullable: false
+      uiResources:
+        type: array
+        items:
+          $ref: "#/definitions/pluginUIResourceConfig"
+        description: Configuration of the plugin's UI resources
+      uiPlugs:
+        type: array
+        items:
+          $ref: "#/definitions/pluginUIPlugConfig"
+        description: Configuration of the plugin's UI plugs
+
+  pluginUIResourceConfig:
+    description: Configuration of a plugin UI resource
+    type: object
+    readOnly: true
+    required:
+      - type
+      - url
+      - rel
+    properties:
+      type:
+        type: string
+        description: Type of the resource
+        x-isnullable: false
+      url:
+        type: string
+        description: URL of the resource
+        x-isnullable: false
+      rel:
+        type: string
+        description: Relationship of the resource
+        x-isnullable: false
+
+  pluginUIPlugConfig:
+    description: Configuration of a plugin UI plug
+    type: object
+    readOnly: true
+    required:
+      - location
+      - label
+      - componentTag
+    properties:
+      location:
+        type: string
+        description: Location of the plug
+        x-isnullable: false
+      label:
+        type: string
+        description: Plug's label
+        x-isnullable: false
+      componentTag:
+        type: string
+        description: Plug's component tag
+        x-isnullable: false
 
   principal:
     description: Authenticated or anonymous user
@@ -3470,6 +3552,9 @@ paths:
                 items:
                   $ref: "#/definitions/dynamicConfigItem"
                 description: Dynamic instance configuration items
+              pluginConfig:
+                $ref: "#/definitions/instancePluginConfig"
+                description: Instance configuration of plugins
 
     patch:
       operationId: ConfigDynamicUpdate

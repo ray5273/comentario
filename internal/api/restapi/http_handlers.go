@@ -7,7 +7,7 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
 	"github.com/justinas/alice"
-	rh "gitlab.com/comentario/comentario/internal/api/restapi/handlers"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -311,7 +311,7 @@ func xsrfErrorHandler(w http.ResponseWriter, r *http.Request) {
 	// Respond with 403, with an XSRF error as a payload
 	w.Header().Set("Content-type", "application/json")
 	api_general.NewGenericForbidden().
-		WithPayload(rh.ErrorXSRFTokenInvalid.WithDetails(csrf.FailureReason(r).Error())).
+		WithPayload(exmodels.ErrorXSRFTokenInvalid.WithDetails(csrf.FailureReason(r).Error())).
 		WriteResponse(w, runtime.JSONProducer())
 }
 

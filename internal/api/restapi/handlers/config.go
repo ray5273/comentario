@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/plugins"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/text/language/display"
@@ -100,6 +101,9 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	return api_general.NewConfigGetOK().
 		WithPayload(&api_general.ConfigGetOKBody{
 			DynamicConfig: data.DynConfigMapToDTOs(dynConfig),
+			PluginConfig: &models.InstancePluginConfig{
+				Plugins: plugins.ThePluginManager.PluginConfig(),
+			},
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:       config.ServerConfig.BaseDocsURL,
 				BaseURL:           config.ServerConfig.ParsedBaseURL().String(),

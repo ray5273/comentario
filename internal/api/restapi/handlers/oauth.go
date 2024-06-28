@@ -11,6 +11,8 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
+	"gitlab.com/comentario/comentario/internal/api/auth"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -69,7 +71,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 		// Make sure the token is still anonymous
 	} else if !token.IsAnonymous() {
-		return oauthFailure(false, ErrorBadToken.Message, fmt.Errorf("token isn't anonymous but belongs to user %v", &token.Owner))
+		return oauthFailure(false, exmodels.ErrorBadToken.Message, fmt.Errorf("token isn't anonymous but belongs to user %v", &token.Owner))
 	}
 
 	// If it's a commenter login/signup, find the domain the user is authenticating on
@@ -214,7 +216,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 		// Check if the setting enables signup
 		if !cfgItem.AsBool() {
-			return oauthFailure(nonIntSSO, ErrorSignupsForbidden.Message, nil)
+			return oauthFailure(nonIntSSO, exmodels.ErrorSignupsForbidden.Message, nil)
 		}
 
 		// Make sure the email isn't in use yet
@@ -234,33 +236,33 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 		// User is found. If a local account exists
 	} else if user.IsLocal() {
-		return oauthFailure(nonIntSSO, ErrorLoginLocally.Message, nil)
+		return oauthFailure(nonIntSSO, exmodels.ErrorLoginLocally.Message, nil)
 
 		// Existing account is a federated one. Make sure the user isn't changing their IdP
 	} else if provider != nil && user.FederatedIdP != idpID {
-		return oauthFailure(nonIntSSO, ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).String(), nil)
+		return oauthFailure(nonIntSSO, exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).String(), nil)
 
 		// If user is authenticating via SSO, it must stay that way
 	} else if provider == nil && !user.FederatedSSO {
-		return oauthFailure(nonIntSSO, ErrorLoginUsingSSO.Message, nil)
+		return oauthFailure(nonIntSSO, exmodels.ErrorLoginUsingSSO.Message, nil)
 
 		// If the federated ID is available, it must match the one coming from the provider; otherwise it means the
 		// email belongs to a different user
 	} else if user.FederatedID != "" && user.FederatedID != fedUser.UserID {
 		return oauthFailure(
 			nonIntSSO,
-			ErrorEmailAlreadyExists.Message,
+			exmodels.ErrorEmailAlreadyExists.Message,
 			fmt.Errorf("federated ID from IdP (%q) didn't match one user has (%q)", fedUser.UserID, user.FederatedID))
 
 		// Verify they're allowed to log in
-	} else if _, r := Verifier.UserCanAuthenticate(user, true); r != nil {
-		return r
+	} else if errm := auth.UserCanAuthenticate(user, true); r != nil {
+		return respUnauthorized(errm)
 
 	} else {
 		// If the user's email is changing, make sure no such email exists
 		if user.Email != fedUser.Email {
 			if _, err := svc.TheUserService.FindUserByEmail(fedUser.Email); !errors.Is(err, svc.ErrNotFound) {
-				return oauthFailure(nonIntSSO, ErrorEmailAlreadyExists.Message, nil)
+				return oauthFailure(nonIntSSO, exmodels.ErrorEmailAlreadyExists.Message, nil)
 			}
 			user.WithEmail(fedUser.Email)
 		}
@@ -314,7 +316,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	if params.Provider == "sso" {
 		// Verify there's a host specified
 		if host == "" {
-			return oauthFailure(false, ErrorInvalidPropertyValue.WithDetails("host").String(), nil)
+			return oauthFailure(false, exmodels.ErrorInvalidPropertyValue.WithDetails("host").String(), nil)
 		}
 
 		// Otherwise it's a goth provider: find it
@@ -326,13 +328,13 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	token, err := svc.TheTokenService.FindByStrValue(params.Token, false)
 	if errors.Is(err, svc.ErrNotFound) {
 		// Token not found
-		return oauthFailure(false, ErrorBadToken.Message, nil)
+		return oauthFailure(false, exmodels.ErrorBadToken.Message, nil)
 	} else if err != nil {
 		// Any other database error
 		return oauthFailureInternal(false, err)
 		// Make sure the token is anonymous
 	} else if !token.IsAnonymous() {
-		return oauthFailure(false, ErrorBadToken.Message, fmt.Errorf("token isn't anonymous but belongs to user %v", &token.Owner))
+		return oauthFailure(false, exmodels.ErrorBadToken.Message, fmt.Errorf("token isn't anonymous but belongs to user %v", &token.Owner))
 	}
 
 	// SSO auth

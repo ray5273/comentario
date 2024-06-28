@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -43,7 +44,7 @@ func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *dat
 		counts, err = svc.TheStatsService.GetDailyViewCounts(user.IsSuperuser, &user.ID, domainID, numDays)
 
 	default:
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails(params.Metric))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(params.Metric))
 	}
 
 	// Check for error

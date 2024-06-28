@@ -5,6 +5,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -251,10 +252,10 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 	password := dto.Password
 	if u.IsLocal() {
 		if !util.IsValidEmail(email) {
-			return respBadRequest(ErrorInvalidPropertyValue.WithDetails("email"))
+			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("email"))
 		}
 		if name == "" {
-			return respBadRequest(ErrorImmutableProperty.WithDetails("name"))
+			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("name"))
 		}
 		u.WithEmail(email).WithName(name)
 
@@ -266,22 +267,22 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 	} else {
 		// Federated user
 		if email != "" {
-			return respBadRequest(ErrorImmutableProperty.WithDetails("email"))
+			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("email"))
 		}
 		if name != "" {
-			return respBadRequest(ErrorImmutableProperty.WithDetails("name"))
+			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("name"))
 		}
 		if password != "" {
-			return respBadRequest(ErrorImmutableProperty.WithDetails("password"))
+			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("password"))
 		}
 	}
 
 	// A user cannot revoke their own superuser or confirmed status
 	if user.ID == u.ID {
 		if !dto.IsSuperuser {
-			return respBadRequest(ErrorSelfOperation.WithDetails("revoke superuser"))
+			return respBadRequest(exmodels.ErrorSelfOperation.WithDetails("revoke superuser"))
 		} else if !dto.Confirmed {
-			return respBadRequest(ErrorSelfOperation.WithDetails("remove confirmed status"))
+			return respBadRequest(exmodels.ErrorSelfOperation.WithDetails("remove confirmed status"))
 		}
 	}
 

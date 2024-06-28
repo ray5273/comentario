@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -146,15 +147,15 @@ func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
 
 	// Patch the DTO using the provided JSON
 	if params.HTTPRequest.Body == nil {
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("body is required"))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("body is required"))
 	}
 	//goland:noinspection GoUnhandledErrorResult
 	defer params.HTTPRequest.Body.Close()
 	if body, err := io.ReadAll(params.HTTPRequest.Body); err != nil {
-		return respInternalError(ErrorInvalidInputData.WithDetails(err.Error()))
+		return respInternalError(exmodels.ErrorInvalidInputData.WithDetails(err.Error()))
 	} else {
 		if err := json.Unmarshal(body, &dto); err != nil {
-			return respBadRequest(ErrorInvalidPropertyValue.WithDetails(err.Error()))
+			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(err.Error()))
 		}
 	}
 
@@ -236,18 +237,18 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 	// Parse the token
 	token, err := hex.DecodeString(params.Token)
 	if err != nil {
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("token"))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("token"))
 	}
 
 	// Parse the HMAC
 	tokenHMAC, err := hex.DecodeString(params.Hmac)
 	if err != nil {
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("hmac"))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("hmac"))
 	}
 
 	// Verify the token signature
 	if !hmac.Equal(tokenHMAC, util.HMACSign(token, domain.SSOSecret)) {
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("HMAC signature doesn't check out"))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("HMAC signature doesn't check out"))
 	}
 
 	// Make a fake payload

@@ -8,6 +8,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/justinas/alice"
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
@@ -59,9 +60,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	}
 
 	// Set up auth handlers
-	api.TokenAuth = handlers.AuthBearerToken
-	api.UserSessionHeaderAuth = handlers.AuthUserBySessionHeader
-	api.UserCookieAuth = handlers.AuthUserByCookieHeader
+	api.TokenAuth = auth.AuthenticateBearerToken
+	api.UserSessionHeaderAuth = auth.AuthenticateUserBySessionHeader
+	api.UserCookieAuth = auth.AuthenticateUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
 	// General API

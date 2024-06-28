@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -38,7 +39,7 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 
 		// Make sure the secret checks out
 	} else if *secret != user.SecretToken {
-		respUnauthorized(ErrorBadToken)
+		respUnauthorized(exmodels.ErrorBadToken)
 	}
 
 	// Update the domain user properties

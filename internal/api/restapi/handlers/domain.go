@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -131,11 +132,11 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 	case "application/zip":
 		expData, err = util.DecompressZip(expData)
 	case "application/octet-stream":
-		return respBadRequest(ErrorInvalidInputData.WithDetails("unsupported binary data format"))
+		return respBadRequest(exmodels.ErrorInvalidInputData.WithDetails("unsupported binary data format"))
 	}
 	if err != nil {
 		logger.Warningf("DomainImport(): failed to decompress data: %v", err)
-		return respBadRequest(ErrorInvalidInputData.WithDetails("decompression failed"))
+		return respBadRequest(exmodels.ErrorInvalidInputData.WithDetails("decompression failed"))
 	}
 
 	// Find the domain and verify the user's privileges
@@ -157,7 +158,7 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 		res = svc.TheImportExportService.ImportWordPress(user, domain, expData)
 
 	default:
-		return respBadRequest(ErrorInvalidPropertyValue.WithDetails("source"))
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("source"))
 	}
 
 	// Succeeded
@@ -293,7 +294,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 
 	// Verify the host isn't changing
 	if string(params.Body.Domain.Host) != domain.Host {
-		return respBadRequest(ErrorImmutableProperty.WithDetails("host"))
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("host"))
 	}
 
 	// Validate domain configuration
@@ -335,11 +336,11 @@ func domainConvertExtensions(exIn []*models.DomainExtension) ([]*data.DomainExte
 	for _, e := range exIn {
 		// Check the extension is known
 		if ex, ok := data.DomainExtensions[e.ID]; !ok {
-			return nil, respBadRequest(ErrorInvalidPropertyValue.WithDetails(fmt.Sprintf("unknown extension (ID=%q)", e.ID)))
+			return nil, respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(fmt.Sprintf("unknown extension (ID=%q)", e.ID)))
 
 			// Check the extension is enabled
 		} else if !ex.Enabled {
-			return nil, respBadRequest(ErrorInvalidPropertyValue.WithDetails(fmt.Sprintf("extension (ID=%q) is disabled", e.ID)))
+			return nil, respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(fmt.Sprintf("extension (ID=%q) is disabled", e.ID)))
 
 		} else {
 			// Convert the model
@@ -374,7 +375,7 @@ func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, checkCanManage b
 
 			// If no user record is present, the user isn't allowed to view the domain at all (unless it's a superuser)
 		} else if !user.IsSuperuser && domainUser == nil {
-			return nil, nil, respForbidden(ErrorUnauthorized)
+			return nil, nil, respForbidden(exmodels.ErrorUnauthorized)
 		}
 
 		// Apply the user's authorisations
