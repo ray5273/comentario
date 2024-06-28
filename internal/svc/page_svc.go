@@ -94,10 +94,16 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error) {
 	logger.Debugf("pageService.FetchUpdatePageTitle([%s], %v)", &domain.ID, page)
 
+	// Compose the page's URL. Since the path may contain query params, try to split it into a path and a query
+	pq := strings.SplitN(page.Path, "?", 2)
+	u := &url.URL{Scheme: domain.Scheme(), Host: domain.Host, Path: pq[0]}
+	if len(pq) > 1 {
+		u.RawQuery = pq[1]
+	}
+
 	// Try to fetch the title
 	var title string
 	var err error
-	u := &url.URL{Scheme: domain.Scheme(), Host: domain.Host, Path: page.Path}
 	if title, err = util.HTMLTitleFromURL(u); err != nil {
 		// Failed, just use the URL as the title
 		title = u.String()
