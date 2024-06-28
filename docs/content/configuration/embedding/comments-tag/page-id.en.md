@@ -14,7 +14,11 @@ The `page-id` attribute of the [comments tag](../comments-tag) can be used to pr
 
 <!--more-->
 
-Its name (originating from Commento) is somewhat confusing because the value of `page-id` must be *a path* under the page's [domain](/kb/domain). Comentario uses it for the following two purposes:
+{{< callout >}}
+This attribute is a misnomer (inherited from Commento), because the value of `page-id` must be *a path* under the page's [domain](/kb/domain).
+{{< /callout >}}
+
+Comentario uses it for the following two purposes:
 
 1. As the page's identifier indicating which comments belong to that page, and
 2. As the actual page's path, used, for instance, to create a link to the comment in email notifications.

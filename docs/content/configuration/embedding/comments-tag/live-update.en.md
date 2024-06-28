@@ -18,4 +18,6 @@ The `live-update` attribute of the [comments tag](../comments-tag) controls whet
 * If set to `false`, the Live update is disabled for this particular page.
 * If set to `true` or omitted, the Live update is enabled.
 
-**NB:** This attribute has no effect when live update is disabled [globally on the server](/configuration/backend/static) by passing the `--no-live-update` option.
+{{< callout >}}
+This attribute has no effect when live update is disabled [globally on the server](/configuration/backend/static) by passing the `--no-live-update` option.
+{{< /callout >}}

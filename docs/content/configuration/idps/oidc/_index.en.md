@@ -48,7 +48,9 @@ idp:
 ...
 ```
 5. Restart Comentario.\
-   **WARNING:** Comentario will not start if the provided configuration is incomplete or incorrect, for example, if it was unable to request the `.well-known/openid-configuration` document.
+   {{< callout "warning" "WARNING" >}}
+   Comentario will not start if the provided configuration is incomplete or incorrect, including situations when requesting the `.well-known/openid-configuration` document from the server fails for any reason.
+   {{< /callout >}}
 6. You should now see your provider name ("My Identity Server") under **Configured federated identity providers** on the Static configuration page of the Administration UI.
 11. Still in the Admin UI, navigate to the desired domain properties and tick off that provider on the [Authentication tab](/configuration/frontend/domain/authentication), then click **Save**.
     {{< imgfig "domain-auth.png" "" "border shadow" >}}

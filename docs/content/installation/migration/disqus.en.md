@@ -17,7 +17,10 @@ You just export your data from Disqus, then import the downloaded data dump into
 
 ### 1. Back up your data
 
-If you're importing data into an existing Comentario domain, remember to always **make a backup first**. Once you've done it, make sure it **can be restored**!
+{{< callout "warning" "IMPORTANT" >}}
+* If you're importing data into an existing Comentario domain, remember to always **make a backup first**.
+* Once you've made it, make sure it **can be restored**!
+{{< /callout >}}
 
 If you will import into a new domain, you can skip this step because you can simply delete that domain should the process go wrong.
 

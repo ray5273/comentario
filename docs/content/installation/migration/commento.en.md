@@ -1,14 +1,18 @@
 ---
-title: Migration from Commento
-description: How to migrate to Comentario from Commento
+title: Migration from Commento(++)
+description: How to migrate to Comentario from Commento and Commento++
 weight: 200
 tags:
     - Commento
+    - Commento++
+    - Commentoplusplus
     - installation
     - migration
     - upgrade
     - PostgreSQL
 ---
+
+## Commento
 
 Commento was once a popular open-source commenting system.
 
@@ -18,9 +22,11 @@ It is in fact a predecessor of Comentario, because Comentario 2.x started as a f
 
 The fact that Comentario 2.x database was 100% compatible with Commento made the [migration](comentario-2.x) very easy: it was basically a drop-in replacement, which only required adjusting some server parameters. It made also a reverse migration possible.
 
-**IMPORTANT:** a direct database migration from Commento to Comentario is only possible if you're staying on the same database, i.e. PostgreSQL (the only option for Commento). Migration from PostgreSQL to SQLite can only be done via export and a subsequent import.
+{{< callout >}}
+Comentario only supports direct migration from the latest available Commento release: **1.8.0**. More specifically, it expects exactly 30 database migrations installed.
+{{< /callout >}}
 
-## Comentario 3
+### Comentario 3
 
 The **version 3** of Comentario is a major step forward: it addresses many inconsistencies and limitations of Commento data model, which slowed down the development of the latter and made solving some issues nearly impossible.
 
@@ -30,17 +36,37 @@ We've done our best to make the migration transparent, keeping Comentario "plug-
 
 Contrary to Comentario 2.x, it's a one-way ticket though; once migrated, the original database will be deleted. The only way to revert that is restoring a back-up copy made prior to migration.
 
+## Commento++
+
+Commento++ (a.k.a. Commentoplusplus) was another project stemming from Commento, which tried to resolve its most pressing problems and added some new functionality.
+
+Since its database is very close to the original, it's also possible to directly migrate to Comentario from Commento++.
+
+{{< callout >}}
+Comentario only supports direct migration from the latest available Commento++ release: **1.8.7**. More specifically, it expects exactly 33 database migrations installed.
+{{< /callout >}}
+
 ## Migration steps
+
+{{< callout "warning" "IMPORTANT" >}}
+A direct database migration from Commento/Commento++ to Comentario is only possible if you're staying on the same database, i.e. PostgreSQL (the only option for Commento and Commento++).
+
+Migration from PostgreSQL to SQLite can only be done via export and a subsequent import. This path, however, will result in a data loss since not attributes get exported.
+{{< /callout >}}
 
 ### 1. Back up your data
 
-**VERY IMPORTANT:** Always make a backup of your original database!
+{{< callout "warning" "VERY IMPORTANT" >}}
+Always make a backup of your original database!
+{{< /callout >}}
 
 The migration can fail, go wrong, or wipe the original data. This is especially true due to the quirks of the original Commento data model.
 
 ### 2. Check your backup
 
-**ALSO VERY IMPORTANT:** Make sure the backup you made can be restored. A non-restorable backup is as useless as a non-existent one.
+{{< callout "warning" "ALSO VERY IMPORTANT" >}}
+Make sure the backup you made can be restored. A non-restorable backup is as useless as a non-existent one.
+{{< /callout >}}
 
 ### 3. Deploy Comentario
 

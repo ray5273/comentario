@@ -10,8 +10,9 @@ tags:
     - SPA
 ---
 
-**WARNING:\
-This feature is in the preview status. The provided API can (and probably will) change in future releases.**
+{{< callout "warning" "WARNING" >}}
+This feature is in the **preview status**. The provided API can (and probably will) change in future releases.
+{{< /callout >}}
 
 [Angular](https://angular.io/) is one of the most popular frameworks for building rich single-page web applications.
 

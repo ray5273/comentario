@@ -48,7 +48,7 @@ Available features:
 * **Statistics**\
   Comentario collects and displays statistics on views and comments. It includes high-level depersonalised data, such as country, language, OS, browser, and device type. The statistical data can be viewed per-domain or for the entire system.
 * **Data import/export**\
-  Comments and users can be easily imported from Disqus, WordPress, Commento. Existing data can also be exported as a JSON file.
+  Comments and users can be easily imported from Disqus, WordPress, Commento/Commento++. Existing data can also be exported as a JSON file.
 
 ## FAQ
 

@@ -1,0 +1,18 @@
+<!--
+     Renders a callout block. Parameters:
+     0 - optional callout type, one of "info" (default), "warning", "danger"
+     1 - optional callout header
+ -->
+{{- $type := .Get 0 | default "info" -}}
+{{- $icon := cond (eq $type "warning") "exclamation" (cond (eq $type "danger") "skull-crossbones" "info") -}}
+<div class="alert alert-{{ $type }} d-flex">
+    <div class="me-2 py-2 ps-2 pe-3 border-{{ $type }} border-end">
+        <i class="fa-solid fa-2x fa-{{ $icon }}"></i>
+    </div>
+    <div class="p-2">
+        {{- with .Get 1 }}<div class="callout-header">{{ . }}</div>{{- end }}
+        <div class="callout-body">
+            {{- .Page.RenderString .Inner -}}
+        </div>
+    </div>
+</div>

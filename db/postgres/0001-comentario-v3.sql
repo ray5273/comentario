@@ -1,6 +1,6 @@
 --======================================================================================================================
 -- A start-over database migration, or, rather, an init script that (re)creates the entire database schema from the
--- legacy Commento database, if any.
+-- legacy Commento/Commento++ database, if any.
 --======================================================================================================================
 --
 -- This migration is reentrant: it's idempotent in the case of a successful execution, and it may receive future
@@ -29,9 +29,11 @@ begin
             raise exception
                 E'\n\nNot all legacy database migrations have been installed: found %, expected 30. Please install and run Comentario 2.x first.\n\n',
                 migCount;
-        elseif migCount > 30 then
+
+        -- Commento++ had 3 more migrations, which is OK too (they didn't add anything significant to impact the conversion)
+        elseif migCount > 30 and migCount != 33 then
             raise exception
-                E'\n\nToo many database migrations installed: found %, expected 30.\n\n',
+                E'\n\nToo many database migrations installed: found %, expected 30 or 33.\n\n',
                 migCount;
         end if;
 
@@ -427,7 +429,7 @@ begin
 
         -- Migrate owners
         insert into cm_users(id, email, name, password_hash, confirmed, ts_confirmed, ts_created, secret_token)
-            select m.id, o.email, o.name, o.passwordhash, o.confirmedemail='true', o.joindate, o.joindate, gen_random_uuid()
+            select m.id, o.email, substring(o.name, 1, 63), o.passwordhash, o.confirmedemail='true', o.joindate, o.joindate, gen_random_uuid()
                 from owners o
                 join temp_ownerhex_map m on m.ownerhex=o.ownerhex;
 
@@ -436,7 +438,7 @@ begin
                 id, email, name, password_hash, confirmed, ts_confirmed, ts_created, federated_idp, federated_sso,
                 website_url, secret_token)
             select
-                    m.id, c.email, c.name, c.passwordhash, true, c.joindate, c.joindate,
+                    m.id, c.email, substring(c.name, 1, 63), c.passwordhash, true, c.joindate, c.joindate,
                     case
                         when c.provider='commento' then null
                         when c.provider like 'sso:%' then null
@@ -481,9 +483,10 @@ begin
                 mod_anonymous, mod_authenticated, mod_links, mod_images, mod_notify_policy, default_sort,
                 count_comments, count_views)
             select
-                    m.id, d.name, d.domain, d.creationdate, d.state='frozen', d.requireidentification != true,
-                    d.commentoprovider, d.ssoprovider, d.ssourl, nullif(d.ssosecret, ''),
-                    d.moderateallanonymous or d.requiremoderation, d.requiremoderation, false, false,
+                    m.id, substring(d.name, 1, 255), d.domain, d.creationdate, d.state='frozen',
+                    d.requireidentification != true, d.commentoprovider, d.ssoprovider, d.ssourl,
+                    nullif(d.ssosecret, ''), d.moderateallanonymous or d.requiremoderation, d.requiremoderation, false,
+                    false,
                     case
                         when d.emailnotificationpolicy='all' then 'all'
                         when d.emailnotificationpolicy='none' then 'none'
@@ -558,7 +561,7 @@ begin
 
         -- Migrate pages
         insert into cm_domain_pages(id, domain_id, path, title, ts_created, is_readonly, count_comments)
-            select gen_random_uuid(), m.id, p.path, p.title, current_timestamp, p.islocked, p.commentcount
+            select gen_random_uuid(), m.id, substring(p.path, 1, 2083), substring(p.title, 1, 100), current_timestamp, p.islocked, p.commentcount
                 from pages p
                 join temp_domain_map m on m.domain=p.domain;
 
