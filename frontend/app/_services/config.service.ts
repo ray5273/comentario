@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { BehaviorSubject, first, Observable, of, switchMap, tap, timer } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
-import { ApiGeneralService, InstanceStaticConfig, ReleaseMetadata } from '../../generated-api';
+import { ApiGeneralService, InstancePluginConfig, InstanceStaticConfig, ReleaseMetadata } from '../../generated-api';
 import { DynamicConfig } from '../_models/config';
 
 declare global {
@@ -36,8 +36,11 @@ export class ConfigService {
         .pipe(
             // Fetch the config from the backend
             switchMap(() => this.api.configGet()),
-            // Store its static part permanently
-            tap(cfg => this._staticConfig = cfg.staticConfig),
+            // Store its static/plugin parts permanently
+            tap(cfg => {
+                this._staticConfig = cfg.staticConfig;
+                this._pluginConfig = cfg.pluginConfig;
+            }),
             // Convert the dynamic part into a map
             map(cfg => new DynamicConfig(cfg.dynamicConfig)),
             // Cache the last result
@@ -61,6 +64,7 @@ export class ConfigService {
             shareReplay(1));
 
     private _staticConfig?: InstanceStaticConfig;
+    private _pluginConfig?: InstancePluginConfig;
 
     constructor(
         ngbConfig: NgbConfig,
@@ -80,6 +84,13 @@ export class ConfigService {
      */
     get staticConfig(): InstanceStaticConfig {
         return this._staticConfig!;
+    }
+
+    /**
+     * Plugin instance configuration obtained from the server.
+     */
+    get pluginConfig(): InstancePluginConfig {
+        return this._pluginConfig!;
     }
 
     /**

@@ -28,6 +28,9 @@ export const Paths = {
             profile:    '/manage/account/profile',
         },
     },
+
+    // Plugins
+    plugin:             '/plugin',
 };
 
 /**
