@@ -923,7 +923,7 @@ definitions:
         x-isnullable: false
       rel:
         type: string
-        description: Relationship of the resource
+        description: Relationship to the host document
         x-isnullable: false
 
   pluginUIPlugConfig:
@@ -946,6 +946,10 @@ definitions:
       componentTag:
         type: string
         description: Plug's component tag
+        x-isnullable: false
+      path:
+        type: string
+        description: Path the plug's component will be available at
         x-isnullable: false
 
   principal:

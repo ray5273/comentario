@@ -1,4 +1,4 @@
-package extend
+package plugin
 
 import (
 	"github.com/google/uuid"
@@ -25,45 +25,54 @@ type Logger interface {
 	Debugf(format string, args ...any)
 }
 
-// ComentarioPluginHost represents the host application, which hosts plugins
-type ComentarioPluginHost interface {
+// HostApp represents the host application, which hosts plugins
+type HostApp interface {
 	// AuthenticateBySessionCookie authenticates a principal given a session cookie value
 	AuthenticateBySessionCookie(value string) (Principal, error)
 	// CreateLogger creates and returns a logger used for logging plugin messages
 	CreateLogger(module string) Logger
 }
 
-// ComentarioPluginUIResource describes a UI resource required by the plugin
-type ComentarioPluginUIResource struct {
+// UIResource describes a UI resource required by the plugin
+type UIResource struct {
 	Type string // Resource type
 	URL  string // Resource URL, relative to "<base_path>/<plugin_path>"
 	Rel  string // Relationship to the host document
 }
 
-// ComentarioPluginUIPlug specifies a UI plug
+// UIPlugLocation denotes a plug's location in the UI
+type UIPlugLocation string
+
+//goland:noinspection GoUnusedConst
+const (
+	UIPLugLocationNavbarMenu UIPlugLocation = "navbar.menu"
+)
+
+// UIPlug specifies a UI plug, i.e. a visual element that gets injected in the frontend
 // Warning: Unstable API
-type ComentarioPluginUIPlug struct {
-	Location     string // Where to plug the specified component
-	Label        string // Plug label
-	ComponentTag string // HTML tag of the component to plug
+type UIPlug struct {
+	Location     UIPlugLocation // Where to plug the specified component
+	Label        string         // Plug label
+	ComponentTag string         // HTML tag of the component to plug
+	Path         string         // Path the plug's component will be available at
 }
 
-// ComentarioPluginConfig describes plugin configuration
+// Config describes plugin configuration
 // Warning: Unstable API
-type ComentarioPluginConfig struct {
-	ID          string                       // Unique plugin identifier
-	Path        string                       // Path the plugin's handlers are invoked on
-	UIResources []ComentarioPluginUIResource // UI resources to be loaded for the plugin
-	UIPlugs     []ComentarioPluginUIPlug     // UI plugs
+type Config struct {
+	ID          string       // Unique plugin identifier
+	Path        string       // Path the plugin's handlers are invoked on
+	UIResources []UIResource // UI resources to be loaded for the plugin
+	UIPlugs     []UIPlug     // UI plugs
 }
 
 // ComentarioPlugin describes a plugin that handles API and static HTTP calls
 // Warning: Unstable API
 type ComentarioPlugin interface {
 	// Init initialises the plugin, supplying it with a host reference
-	Init(host ComentarioPluginHost) error
+	Init(host HostApp) error
 	// Config should return the plugin's configuration
-	Config() ComentarioPluginConfig
+	Config() Config
 	// APIHandler returns a handler that processes API calls relevant to the plugin. Each HTTP request passed to the
 	// handler will have a path conforming "<base_path>/api/<plugin_path>[/<subpath>]"
 	APIHandler() http.Handler

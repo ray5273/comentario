@@ -11,7 +11,7 @@
             @for (plugin of plugins; track plugin.id) {
                 @for (plug of plugin.menuPlugs; track plug) {
                     <li class="nav-item">
-                        <a class="nav-link" [routerLink]="[Paths.plugin, plugin.id, plug.location]">{{ plug.label }}</a>
+                        <a class="nav-link" [routerLink]="[Paths.plugin, plugin.id, plug.path]">{{ plug.label }}</a>
                     </li>
                 }
             }

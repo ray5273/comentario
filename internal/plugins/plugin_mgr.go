@@ -3,7 +3,7 @@ package plugins
 import (
 	"fmt"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/extend"
+	plugin2 "gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -17,7 +17,7 @@ import (
 
 // PluginManager is a service interface for managing plugins
 type PluginManager interface {
-	extend.ComentarioPluginHost
+	plugin2.HostApp
 	// Init initialises the manager
 	Init() error
 	// PluginConfig returns configuration of all registered plugins as DTOs
@@ -77,8 +77,8 @@ func (p *pluginLogger) Debugf(format string, args ...any) {
 
 // pluginEntry groups a loaded plugin's info
 type pluginEntry struct {
-	p extend.ComentarioPlugin        // Plugin implementation
-	c *extend.ComentarioPluginConfig // Configuration obtained from the plugin
+	p plugin2.ComentarioPlugin // Plugin implementation
+	c *plugin2.Config          // Configuration obtained from the plugin
 }
 
 // ToDTO converts this model into a DTO model
@@ -89,7 +89,8 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 		plugs = append(plugs, &models.PluginUIPlugConfig{
 			ComponentTag: p.ComponentTag,
 			Label:        p.Label,
-			Location:     p.Location,
+			Location:     string(p.Location),
+			Path:         p.Path,
 		})
 	}
 
@@ -116,12 +117,12 @@ type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
 }
 
-func (pm *pluginManager) AuthenticateBySessionCookie(value string) (extend.Principal, error) {
+func (pm *pluginManager) AuthenticateBySessionCookie(value string) (plugin2.Principal, error) {
 	// User implements Principal, so simply hand over to the cookie auth handler
 	return auth.AuthenticateUserByCookieHeader(value)
 }
 
-func (pm *pluginManager) CreateLogger(module string) extend.Logger {
+func (pm *pluginManager) CreateLogger(module string) plugin2.Logger {
 	return &pluginLogger{l: logging.MustGetLogger(module)}
 }
 
@@ -191,7 +192,7 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
 	for _, plug := range pm.plugs {
 		// If the plugin can handle this path
-		if strings.HasPrefix(requestPath, prefix+plug.c.Path) {
+		if strings.HasPrefix(requestPath, prefix+plug.c.Path+"/") {
 			return plug
 		}
 	}
@@ -213,7 +214,7 @@ func (pm *pluginManager) loadPlugin(filename string) (*pluginEntry, error) {
 	}
 
 	// Fetch the service interface (hPtr is a pointer, because Lookup always returns a pointer to symbol)
-	hPtr, ok := h.(*extend.ComentarioPlugin)
+	hPtr, ok := h.(*plugin2.ComentarioPlugin)
 	if !ok {
 		return nil, fmt.Errorf("symbol PluginImpl from plugin %q doesn't implement ComentarioPlugin", filename)
 	}
@@ -226,8 +227,8 @@ func (pm *pluginManager) loadPlugin(filename string) (*pluginEntry, error) {
 	// Fetch (a copy of) the config
 	cfg := (*hPtr).Config()
 
-	// Correct the path by removing any leading '/' and enforcing a trailing one
-	cfg.Path = strings.TrimSuffix(strings.TrimPrefix(cfg.Path, "/"), "/") + "/"
+	// Correct the path by removing any leading and trailing slash
+	cfg.Path = strings.Trim(cfg.Path, "/")
 
 	// Succeeded
 	return &pluginEntry{p: *hPtr, c: &cfg}, nil

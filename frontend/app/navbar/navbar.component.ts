@@ -13,10 +13,10 @@ export class NavbarComponent {
 
     readonly Paths = Paths;
 
-    /** UI plugs with the 'menu:header' location. */
+    /** UI plugs destined for the navbar. */
     readonly plugins = this.configSvc.pluginConfig.plugins?.map(pc => ({
         ...pc,
-        menuPlugs: pc.uiPlugs?.filter(p => p.location === 'menu:header'),
+        menuPlugs: pc.uiPlugs?.filter(p => p.location === 'navbar.menu'),
     }));
 
     constructor(
