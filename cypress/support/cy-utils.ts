@@ -82,6 +82,11 @@ export const TEST_PATHS = {
     dynamic:   '/dynamic/',
     noComment: '/nocomment/',
     readonly:  '/readonly/',
+    looooong:  '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/' +
+               'on/display/to/make/it/a/bit/usable.html?' +
+               'some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&' +
+               'foo=bar&buzz=238974592875469782&' +
+               'bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865',
 
     attr: {
         autoInit:              '/attr/auto-init/',
@@ -90,6 +95,7 @@ export const TEST_PATHS = {
         cssOverride:           '/attr/css-override/',
         cssOverrideFalse:      '/attr/css-override-false/',
         pageId:                '/attr/page-id/',
+        pageIdAlias:           '/different-page/123',
         maxLevel:              '/attr/max-level/',
         noLiveUpdate:          '/attr/live-update/',
     },

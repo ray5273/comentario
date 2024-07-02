@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
 
 context('Domain Page Manager', () => {
 
@@ -6,25 +6,20 @@ context('Domain Page Manager', () => {
 
     /** Pages, ordered by creation date. */
     const pages = [
-        {path: '/comments/',                title: 'Comments',                      cntComments: 0,  cntViews: 0},
-        {path: '/',                         title: 'Home',                          cntComments: 17, cntViews: 10},
-        {path: '/nocomment/',               title: 'No comment',                    cntComments: 0,  cntViews: 2},
-        {path: '/readonly/',                title: 'Readonly page',                 cntComments: 0,  cntViews: 42},
-        {path: '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/' +
-                'on/display/to/make/it/a/bit/usable.html?' +
-                'some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&' +
-                'foo=bar&buzz=238974592875469782&' +
-                'bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865',
-                                            title: '',                              cntComments: 0,  cntViews: 0},
-        {path: '/double/',                  title: 'Double Comentario',             cntComments: 2,  cntViews: 0},
-        {path: '/attr/auto-init/',          title: 'Attribute: auto-init=false',    cntComments: 2,  cntViews: 0},
-        {path: '/dark-mode/',               title: 'Dark mode',                     cntComments: 2,  cntViews: 0},
-        {path: '/dynamic/',                 title: 'Dynamic insertion',             cntComments: 1,  cntViews: 4},
-        {path: '/attr/no-fonts/',           title: 'Attribute: no-fonts=true',      cntComments: 2,  cntViews: 0},
-        {path: '/attr/css-override/',       title: 'Attribute: css-override',       cntComments: 2,  cntViews: 0},
-        {path: '/attr/css-override-false/', title: 'Attribute: css-override=false', cntComments: 2,  cntViews: 0},
-        {path: '/different-page/123',       title: 'Attribute: page-id',            cntComments: 2,  cntViews: 0},
-        {path: '/attr/max-level/',          title: 'Attribute: max-level=2',        cntComments: 6,  cntViews: 0},
+        {path: TEST_PATHS.comments,              title: 'Comments',                      cntComments: 0,  cntViews: 0},
+        {path: TEST_PATHS.home,                  title: 'Home',                          cntComments: 17, cntViews: 10},
+        {path: TEST_PATHS.noComment,             title: 'No comment',                    cntComments: 0,  cntViews: 2},
+        {path: TEST_PATHS.readonly,              title: 'Readonly page',                 cntComments: 0,  cntViews: 42},
+        {path: TEST_PATHS.looooong,              title: '',                              cntComments: 0,  cntViews: 0},
+        {path: TEST_PATHS.double,                title: 'Double Comentario',             cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.autoInit,         title: 'Attribute: auto-init=false',    cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.darkMode,              title: 'Dark mode',                     cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.dynamic,               title: 'Dynamic insertion',             cntComments: 1,  cntViews: 4},
+        {path: TEST_PATHS.attr.noFonts,          title: 'Attribute: no-fonts=true',      cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.cssOverride,      title: 'Attribute: css-override',       cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.cssOverrideFalse, title: 'Attribute: css-override=false', cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.pageIdAlias,      title: 'Attribute: page-id',            cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.maxLevel,         title: 'Attribute: max-level=2',        cntComments: 6,  cntViews: 0},
     ];
     const pagesByPath        = pages.slice().sort((a, b) => a.path.localeCompare(b.path))  .map(p => p.path);
     const pagesByTitle       = pages.slice().sort((a, b) => a.title.localeCompare(b.title)).map(p => p.title).filter(s => s);
@@ -145,6 +140,17 @@ context('Domain Page Manager', () => {
         it('allows to navigate to page props', () => {
             cy.get('@pageList').find('a.list-group-item').eq(1).click();
             cy.isAt(pagePath + '/0ebb8a1b-12f6-421e-b1bb-75867ac4a000');
+        });
+
+        it('updates view stats', () => {
+            // Visit the comments page to register a pageview
+            cy.testSiteVisit(TEST_PATHS.comments);
+            cy.commentTree().should('have.length', 1);
+
+            // Go back to the list and check the counts
+            cy.visit(pagePath);
+            cy.get('@pageList').contains('a.list-group-item', TEST_PATHS.comments)
+                .find('.domain-page-cnt-views').should('have.text', '1' + 'views');
         });
     });
 

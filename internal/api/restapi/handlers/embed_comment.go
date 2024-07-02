@@ -187,11 +187,9 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		return respServiceError(err)
 	}
 
-	// Register a view in page/domain statistics in the background, ignoring any error
-	go func() {
-		_ = svc.ThePageService.IncrementCounts(&page.ID, 0, 1)
-		_ = svc.TheDomainService.IncrementCounts(&domain.ID, 0, 1)
-	}()
+	// Register a view in domain statistics in the background, ignoring any error (pageviews are already incremented in
+	// the upsert above)
+	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, 0, 1) }()
 
 	// Succeeded
 	return api_embed.NewEmbedCommentListOK().WithPayload(&api_embed.EmbedCommentListOKBody{

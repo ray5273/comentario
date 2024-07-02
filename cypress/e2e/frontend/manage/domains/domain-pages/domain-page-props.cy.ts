@@ -132,7 +132,19 @@ context('Domain Page Properties page', () => {
                 // Check number of comments in the Comments section
                 cy.get('@commentList').verifyListFooter(16, false);
 
+                // Load the comment page and wait for Comentario to load
+                cy.testSiteVisit(TEST_PATHS.home);
+                cy.commentTree().should('have.length', 2);
+
+                // Go back to verify the pageview has been registered
+                cy.visit(localhostPagePath);
+                cy.get('@pageDetails').ddItem('Number of views').should('have.text', '11');
+
                 // Test the read-only switch
                 checkReadOnly();
+
+                // As this results in 2 more pageviews, the counter is increased again
+                cy.visit(localhostPagePath);
+                cy.get('@pageDetails').ddItem('Number of views').should('have.text', '13');
             }));
 });
