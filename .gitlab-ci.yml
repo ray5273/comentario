@@ -279,12 +279,11 @@ verify-package-deb:
 # Verify the .rpm package
 verify-package-rpm:
   stage: package
-  image: centos:7
+  image: redhat/ubi9
   dependencies:
     - build
   before_script:
-    # Install systemd to fulfill the requirements, and jq (from epel-release) to query artifacts
-    - yum install -y systemd epel-release
+    # Install jq to query artifacts
     - yum install -y jq
   script:
     # Install the package
