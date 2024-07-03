@@ -598,6 +598,26 @@ definitions:
         type: string
         description: Any error message occurred during the import
 
+  instanceConfig:
+    description: Instance configuration
+    type: object
+    readOnly: true
+    required:
+      - staticConfig
+      - pluginConfig
+    properties:
+      staticConfig:
+        $ref: "#/definitions/instanceStaticConfig"
+        description: Static instance configuration
+      dynamicConfig:
+        type: array
+        items:
+          $ref: "#/definitions/dynamicConfigItem"
+        description: Dynamic instance configuration items
+      pluginConfig:
+        $ref: "#/definitions/instancePluginConfig"
+        description: Instance configuration of plugins
+
   instancePluginConfig:
     description: Instance configuration of plugins
     type: object
@@ -3544,21 +3564,7 @@ paths:
         200:
           description: Instance configuration
           schema:
-            type: object
-            required:
-              - static
-            properties:
-              staticConfig:
-                $ref: "#/definitions/instanceStaticConfig"
-                description: Static instance configuration
-              dynamicConfig:
-                type: array
-                items:
-                  $ref: "#/definitions/dynamicConfigItem"
-                description: Dynamic instance configuration items
-              pluginConfig:
-                $ref: "#/definitions/instancePluginConfig"
-                description: Instance configuration of plugins
+            $ref: "#/definitions/instanceConfig"
 
     patch:
       operationId: ConfigDynamicUpdate

@@ -99,7 +99,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 
 	// Succeeded
 	return api_general.NewConfigGetOK().
-		WithPayload(&api_general.ConfigGetOKBody{
+		WithPayload(&models.InstanceConfig{
 			DynamicConfig: data.DynConfigMapToDTOs(dynConfig),
 			PluginConfig: &models.InstancePluginConfig{
 				Plugins: plugins.ThePluginManager.PluginConfig(),

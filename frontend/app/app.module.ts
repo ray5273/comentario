@@ -20,6 +20,7 @@ import { ToolsModule } from './_modules/tools/tools.module';
 import { ConfigService } from './_services/config.service';
 import { LANGUAGE, provideLanguage } from '../environments/languages';
 import { AuthGuard } from './_guards/auth.guard';
+import { PluginService } from './_services/plugin.service';
 
 const routes: Routes = [
     // Auth
@@ -33,6 +34,12 @@ const routes: Routes = [
         path:         'manage',
         loadChildren: () => import('./_modules/manage/manage.module').then(m => m.ManageModule),
         canMatch:     [AuthGuard.isAuthenticatedMatch],
+    },
+
+    // Plugins
+    {
+        path:         'plugin',
+        loadChildren: () => import('./_modules/plugin/plugin.module').then(m => m.PluginModule),
     },
 
     // Fallback routes
@@ -71,13 +78,9 @@ const routes: Routes = [
             routes,
             withComponentInputBinding(),
             withInMemoryScrolling({scrollPositionRestoration: 'enabled'})),
-        // Initialise the config service
-        {
-            provide: APP_INITIALIZER,
-            useFactory: (cs: ConfigService) => () => cs.init(),
-            deps: [ConfigService],
-            multi: true,
-        },
+        // Initialise the services
+        {provide: APP_INITIALIZER, useFactory: (cs: ConfigService) => () => cs.init(), deps: [ConfigService], multi: true},
+        {provide: APP_INITIALIZER, useFactory: (ps: PluginService) => () => ps.init(), deps: [PluginService], multi: true},
     ],
     bootstrap: [AppComponent],
 })

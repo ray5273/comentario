@@ -1,8 +1,14 @@
 import { Injectable } from '@angular/core';
-import { BehaviorSubject, first, Observable, of, switchMap, tap, timer } from 'rxjs';
+import { BehaviorSubject, first, Observable, of, ReplaySubject, switchMap, tap, timer } from 'rxjs';
 import { catchError, map, shareReplay } from 'rxjs/operators';
 import { NgbConfig, NgbToastConfig } from '@ng-bootstrap/ng-bootstrap';
-import { ApiGeneralService, InstancePluginConfig, InstanceStaticConfig, ReleaseMetadata } from '../../generated-api';
+import {
+    ApiGeneralService,
+    InstanceConfig,
+    InstancePluginConfig,
+    InstanceStaticConfig,
+    ReleaseMetadata,
+} from '../../generated-api';
 import { DynamicConfig } from '../_models/config';
 
 declare global {
@@ -20,12 +26,18 @@ export class ConfigService {
     /**
      * Toast hiding delay in milliseconds.
      */
-    static readonly TOAST_DELAY = 10000;
+    static readonly TOAST_DELAY = 10_000;
 
     /**
      * Whether the system is running under an end-2-end test.
      */
     readonly isUnderTest: boolean = false;
+
+    /**
+     * Observable for instance configuration obtained from the server. Supposed to only be used during app
+     * initialisation, because once it's complete one can start using the cached configs (staticConfig etc.)
+     */
+    readonly config$ = new ReplaySubject<InstanceConfig>();
 
     private readonly _dynamicReload$ = new BehaviorSubject<void>(undefined);
 
@@ -36,10 +48,12 @@ export class ConfigService {
         .pipe(
             // Fetch the config from the backend
             switchMap(() => this.api.configGet()),
+            // Notify the observable
+            tap(this.config$),
             // Store its static/plugin parts permanently
             tap(cfg => {
                 this._staticConfig = cfg.staticConfig;
-                this._pluginConfig = cfg.pluginConfig;
+                this._pluginConfig = cfg.pluginConfig ?? {};
             }),
             // Convert the dynamic part into a map
             map(cfg => new DynamicConfig(cfg.dynamicConfig)),
@@ -80,17 +94,23 @@ export class ConfigService {
     }
 
     /**
-     * Static instance configuration obtained from the server.
+     * Static instance configuration obtained from the server. Only available after the app initialisation has finished.
      */
     get staticConfig(): InstanceStaticConfig {
-        return this._staticConfig!;
+        if (!this._staticConfig) {
+            throw Error('App initialisation is not complete, no static config available yet.');
+        }
+        return this._staticConfig;
     }
 
     /**
-     * Plugin instance configuration obtained from the server.
+     * Plugin instance configuration obtained from the server. Only available after the app initialisation has finished.
      */
     get pluginConfig(): InstancePluginConfig {
-        return this._pluginConfig!;
+        if (!this._pluginConfig) {
+            throw Error('App initialisation is not complete, no plugin config available yet.');
+        }
+        return this._pluginConfig;
     }
 
     /**
@@ -98,7 +118,6 @@ export class ConfigService {
      */
     get latestRelease(): Observable<ReleaseMetadata | undefined> {
         return this._versionData$.pipe(map(d => d?.latestRelease));
-
     }
 
     /**
