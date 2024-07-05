@@ -4,7 +4,7 @@
 export interface Language {
     /** Name of the language in that language. */
     nativeName: string;
-    /** Two-letter ISO 639-1 language code. */
+    /** Language tag. */
     code: string;
     /** Language weight to order languages by. */
     weight: number;

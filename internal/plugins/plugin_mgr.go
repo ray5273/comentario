@@ -3,7 +3,7 @@ package plugins
 import (
 	"fmt"
 	"github.com/op/go-logging"
-	plugin2 "gitlab.com/comentario/comentario/extend/plugin"
+	complugin "gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -17,7 +17,7 @@ import (
 
 // PluginManager is a service interface for managing plugins
 type PluginManager interface {
-	plugin2.HostApp
+	complugin.HostApp
 	// Init initialises the manager
 	Init() error
 	// PluginConfig returns configuration of all registered plugins as DTOs
@@ -77,8 +77,9 @@ func (p *pluginLogger) Debugf(format string, args ...any) {
 
 // pluginEntry groups a loaded plugin's info
 type pluginEntry struct {
-	p plugin2.ComentarioPlugin // Plugin implementation
-	c *plugin2.Config          // Configuration obtained from the plugin
+	id string                     // Unique plugin ID
+	p  complugin.ComentarioPlugin // Plugin implementation
+	c  *complugin.Config          // Configuration obtained from the plugin
 }
 
 // ToDTO converts this model into a DTO model
@@ -86,9 +87,16 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 	// Convert plugs to DTOs
 	var plugs []*models.PluginUIPlugConfig
 	for _, p := range pe.c.UIPlugs {
+		// Convert the plug's labels into DTO's
+		var labels []*models.PluginUILabel
+		for _, l := range p.Labels {
+			labels = append(labels, &models.PluginUILabel{Language: l.Language, Text: l.Text})
+		}
+
+		// Convert the plug itself into a DTO
 		plugs = append(plugs, &models.PluginUIPlugConfig{
 			ComponentTag: p.ComponentTag,
-			Label:        p.Label,
+			Labels:       labels,
 			Location:     string(p.Location),
 			Path:         p.Path,
 		})
@@ -105,7 +113,7 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 	}
 
 	return &models.PluginConfig{
-		ID:          pe.c.ID,
+		ID:          pe.id,
 		Path:        pe.c.Path,
 		UIPlugs:     plugs,
 		UIResources: resources,
@@ -117,12 +125,12 @@ type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
 }
 
-func (pm *pluginManager) AuthenticateBySessionCookie(value string) (plugin2.Principal, error) {
+func (pm *pluginManager) AuthenticateBySessionCookie(value string) (complugin.Principal, error) {
 	// User implements Principal, so simply hand over to the cookie auth handler
 	return auth.AuthenticateUserByCookieHeader(value)
 }
 
-func (pm *pluginManager) CreateLogger(module string) plugin2.Logger {
+func (pm *pluginManager) CreateLogger(module string) complugin.Logger {
 	return &pluginLogger{l: logging.MustGetLogger(module)}
 }
 
@@ -134,8 +142,10 @@ func (pm *pluginManager) Init() error {
 	}
 
 	// Scan for plugins
-	if cnt, err := pm.scanDir(config.ServerConfig.PluginPath); err != nil {
+	if cnt, err := pm.scanDir(path.Clean(config.ServerConfig.PluginPath)); err != nil {
 		return err
+	} else if cnt == 0 {
+		logger.Info("No plugins found")
 	} else {
 		logger.Infof("Loaded %d plugins", cnt)
 	}
@@ -199,7 +209,22 @@ func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
 	return nil
 }
 
-// loadPlugin loads a plugin lib
+// initPlugin initialises the given plugin and fetches its config
+func (pm *pluginManager) initPlugin(p complugin.ComentarioPlugin, secrets complugin.YAMLDecoder) (*complugin.Config, error) {
+	// Initialise the plugin
+	if err := p.Init(pm, secrets); err != nil {
+		return nil, err
+	}
+
+	// Fetch (a copy of) the config
+	cfg := p.Config()
+
+	// Correct the path by removing any leading and trailing slash
+	cfg.Path = strings.Trim(cfg.Path, "/")
+	return &cfg, nil
+}
+
+// loadPlugin loads a plugin lib and returns either a complete plugin entry, or nil if the plugin is explicitly disabled
 func (pm *pluginManager) loadPlugin(filename string) (*pluginEntry, error) {
 	// Try to load the plugin library
 	plugLib, err := plugin.Open(filename)
@@ -214,29 +239,41 @@ func (pm *pluginManager) loadPlugin(filename string) (*pluginEntry, error) {
 	}
 
 	// Fetch the service interface (hPtr is a pointer, because Lookup always returns a pointer to symbol)
-	hPtr, ok := h.(*plugin2.ComentarioPlugin)
+	hPtr, ok := h.(*complugin.ComentarioPlugin)
 	if !ok {
 		return nil, fmt.Errorf("symbol PluginImpl from plugin %q doesn't implement ComentarioPlugin", filename)
 	}
 
-	// Initialise the plugin
-	if err := (*hPtr).Init(pm); err != nil {
-		return nil, fmt.Errorf("failed to Init() plugin %q: %w", filename, err)
+	// Fetch plugin ID
+	id := (*hPtr).ID()
+
+	// Find the plugin's secrets config
+	secConf := config.SecretsConfig.Plugins[id]
+
+	// Check if the plugin is disabled
+	var d config.Disableable
+	if err := secConf.Decode(&d); err != nil {
+		return nil, fmt.Errorf("error decoding secrets config for plugin %q: %w", filename, err)
+	} else if d.Disable {
+		// Plugin disabled
+		return nil, nil
 	}
 
-	// Fetch (a copy of) the config
-	cfg := (*hPtr).Config()
-
-	// Correct the path by removing any leading and trailing slash
-	cfg.Path = strings.Trim(cfg.Path, "/")
+	// Initialise the plugin
+	cfg, err := pm.initPlugin(*hPtr, &secConf)
+	if err != nil {
+		return nil, fmt.Errorf("failed to initialise plugin %q: %w", filename, err)
+	}
 
 	// Succeeded
-	return &pluginEntry{p: *hPtr, c: &cfg}, nil
+	return &pluginEntry{id: id, p: *hPtr, c: cfg}, nil
 }
 
 // scanDir scans the plugin directory recursively, loading every discovered plugin and returning the number of plugins
 // found
 func (pm *pluginManager) scanDir(dir string) (int, error) {
+	logger.Debugf("Scanning directory %s", dir)
+
 	// Scan the plugin dir
 	files, err := os.ReadDir(dir)
 	if err != nil {
@@ -266,12 +303,22 @@ func (pm *pluginManager) scanDir(dir string) (int, error) {
 		pe, err := pm.loadPlugin(fullPath)
 		if err != nil {
 			return 0, err
+
+		} else if pe == nil {
+			// If a nil is returned, the plugin is explicitly disabled in secrets
+			logger.Infof("Plugin library %s has been disabled in the secrets config", fullPath)
+			continue
+		}
+
+		// Make sure the ID is unique
+		if _, ok := pm.plugs[pe.id]; ok {
+			return 0, fmt.Errorf("duplicate plugin ID %q returned by library %s", pe.id, fullPath)
 		}
 
 		// Store the implementation
 		cnt++
-		logger.Infof("Loaded plugin library %s (ID: %s, serve path: %q)", fullPath, pe.c.ID, pe.c.Path)
-		pm.plugs[pe.c.ID] = pe
+		logger.Infof("Loaded plugin library %s (ID: %s, serve path: %q)", fullPath, pe.id, pe.c.Path)
+		pm.plugs[pe.id] = pe
 	}
 
 	// Succeeded

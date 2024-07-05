@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"gitlab.com/comentario/comentario/internal/util"
+	"gopkg.in/yaml.v3"
 	"os"
 	"regexp"
 	"strings"
@@ -22,11 +23,16 @@ const (
 // SecretsConfig is a configuration object for storing sensitive information
 var SecretsConfig = &SecretsConfiguration{}
 
+// Disableable provides a flag for disabling the underlying functionality
+type Disableable struct {
+	Disable bool `yaml:"disable"` // Can be used to forcefully disable the corresponding functionality
+}
+
 // KeySecret is a record containing a key and a secret
 type KeySecret struct {
-	Disable bool   `yaml:"disable"` // Can be used to forcefully disable the corresponding functionality
-	Key     string `yaml:"key"`     // Public key
-	Secret  string `yaml:"secret"`  // Private key
+	Disableable `yaml:",inline"`
+	Key         string `yaml:"key"`    // Public key
+	Secret      string `yaml:"secret"` // Private key
 }
 
 // Usable returns whether the instance isn't disabled and the key and the secret are filled in
@@ -36,8 +42,8 @@ func (c *KeySecret) Usable() bool {
 
 // APIKey is a record containing an API key
 type APIKey struct {
-	Disable bool   `yaml:"disable"` // Can be used to forcefully disable the corresponding functionality
-	Key     string `yaml:"key"`     // API key
+	Disableable `yaml:",inline"`
+	Key         string `yaml:"key"` // API key
 }
 
 // OIDCProvider stores OIDC provider configuration
@@ -92,6 +98,7 @@ func (p *OIDCProvider) validate() error {
 	return nil
 }
 
+// SecretsConfiguration accumulates the entire configuration provided in a secrets file
 type SecretsConfiguration struct {
 	// PostgreSQL settings. Used when at least host is provided
 	Postgres struct {
@@ -137,6 +144,9 @@ type SecretsConfiguration struct {
 
 	// Optional random string to generate XSRF key from
 	XSRFSecret string `yaml:"xsrfSecret"`
+
+	// Optional plugin config, a map indexed by plugin ID. Gets read as raw YAML nodes
+	Plugins map[string]yaml.Node `yaml:"plugins"`
 
 	xsrfKey []byte // The generated XSRF key for the server
 }

@@ -7,6 +7,7 @@ import { DocsService } from '../_services/docs.service';
 import { ConfigService } from '../_services/config.service';
 import { InstanceStaticConfig } from '../../generated-api';
 import { mockAuthService } from '../_utils/_mocks.spec';
+import { PluginService } from '../_services/plugin.service';
 
 describe('FooterComponent', () => {
 
@@ -20,6 +21,7 @@ describe('FooterComponent', () => {
             providers: [
                 MockProvider(DocsService),
                 MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
+                MockProvider(PluginService),
                 mockAuthService(),
             ],
         })

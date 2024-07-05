@@ -42,22 +42,24 @@
         </div>
 
         <div class="col-md">
-            <!-- Items for authenticated user -->
-            @if (isAuthenticated) {
-                <ul class="list-unstyled">
+            <ul class="list-unstyled">
+                <!-- Items for authenticated user -->
+                @if (isAuthenticated) {
                     <li class="heading" i18n>Manage</li>
                     <li><a [routerLink]="Paths.manage.dashboard"       routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Dashboard</a></li>
                     <li><a [routerLink]="Paths.manage.domains"         routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Domains</a></li>
                     <li><a [routerLink]="Paths.manage.account.profile" routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Profile</a></li>
-                </ul>
-            } @else {
-                <!-- Items for non-authenticated user -->
-                <ul class="list-unstyled">
+                } @else {
+                    <!-- Items for non-authenticated user -->
                     <li class="heading" i18n>Get started</li>
                     <li><a [routerLink]="Paths.auth.signup" routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Sign up</a></li>
                     <li><a [routerLink]="Paths.auth.login"  routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Sign in</a></li>
-                </ul>
-            }
+                }
+                <!-- Plugin items -->
+                @for (plug of plugs; track plug) {
+                    <li><a [routerLink]="[Paths.plugin, plug.pluginPath, plug.path]"  routerLinkActive="active" ariaCurrentWhenActive="page">{{ plug.label }}</a></li>
+                }
+            </ul>
         </div>
     </div>
 </footer>

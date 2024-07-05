@@ -2,7 +2,25 @@ import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT, Location } from '@angular/common';
 import { merge, Observable, Subject, switchMap, takeUntil, tap, throwError, timeout } from 'rxjs';
 import { ConfigService } from './config.service';
-import { PluginConfig } from '../../generated-api';
+import { PluginConfig, PluginUIPlugConfig } from '../../generated-api';
+import { LANGUAGE } from '../../environments/languages';
+import { Language } from '../_models/models';
+
+/** An easy-to-consume data structure describing a UI plug. */
+export interface UIPlug {
+    /** ID of the plugin. */
+    pluginId: string;
+    /** Plugin's path. */
+    pluginPath: string;
+    /** Location of the plug. */
+    location: string;
+    /** Plug's label in the current language. */
+    label: string;
+    /** Plug's component tag. */
+    componentTag: string;
+    /** Plug's path. */
+    path: string;
+}
 
 @Injectable({
     providedIn: 'root',
@@ -11,6 +29,7 @@ export class PluginService {
 
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
+        @Inject(LANGUAGE) private readonly lang: Language,
         private readonly configSvc: ConfigService,
     ) {}
 
@@ -32,6 +51,36 @@ export class PluginService {
                         .pipe(tap({complete: () => loaded.next()}))),
                 // Force the outer observable to complete after the inner (merge()) has
                 takeUntil(loaded));
+    }
+
+    /**
+     * Return a list of plugin configurations, each containing only UI plugs for the specified location.
+     * @param location UI plug locations to keep.
+     */
+    uiPlugsForLocation(location: string): UIPlug[] | undefined {
+        const defLang = this.configSvc.staticConfig.defaultLangId;
+
+        // Returns a label for the current app language, if any, or otherwise for the default language
+        const findLabel = (plug: PluginUIPlugConfig): string =>
+            plug.labels.find(l => l.language === this.lang.code)?.text ??
+            plug.labels.find(l => l.language === defLang)?.text ??
+            '<UNKNOWN_PLUG_LABEL>';
+
+        // Since this method is invoked AFTER the app is initialised, it's safe to refer to the pluginConfig here
+        return this.configSvc.pluginConfig.plugins
+            // Make a flat list of all plugin plugs
+            ?.flatMap(plugin =>
+                plugin.uiPlugs
+                    ?.filter(plug => plug.location === location)
+                    .map(plug => ({
+                        pluginId:     plugin.id,
+                        pluginPath:   plugin.path,
+                        location:     plug.location,
+                        label:        findLabel(plug),
+                        componentTag: plug.componentTag,
+                        path:         plug.path,
+                    })) ??
+                []);
     }
 
     /**

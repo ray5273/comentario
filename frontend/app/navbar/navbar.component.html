@@ -8,12 +8,10 @@
     <div class="nav-row flex-md-grow-1 flex-wrap flex-md-nowrap" id="navbar-content">
         <ul class="navbar-nav ms-md-auto">
             <!-- Plugin items -->
-            @for (plugin of plugins; track plugin.id) {
-                @for (plug of plugin.menuPlugs; track plug) {
-                    <li class="nav-item">
-                        <a class="nav-link" [routerLink]="[Paths.plugin, plugin.path, plug.path]">{{ plug.label }}</a>
-                    </li>
-                }
+            @for (plug of plugs; track plug) {
+                <li class="nav-item">
+                    <a class="nav-link" [routerLink]="[Paths.plugin, plug.pluginPath, plug.path]">{{ plug.label }}</a>
+                </li>
             }
             <!-- Docs -->
             <li class="nav-item"><a class="nav-link" [href]="docsSvc.urlHome" target="_blank" rel="noopener" i18n="menu item">Docs</a></li>

@@ -924,6 +924,23 @@ definitions:
           $ref: "#/definitions/pluginUIPlugConfig"
         description: Configuration of the plugin's UI plugs
 
+  pluginUILabel:
+    description: Label of a plugin UI plug for a specific language
+    type: object
+    readOnly: true
+    required:
+      - language
+      - text
+    properties:
+      language:
+        type: string
+        description: Language tag
+        x-isnullable: false
+      text:
+        type: string
+        description: Label text
+        x-isnullable: false
+
   pluginUIResourceConfig:
     description: Configuration of a plugin UI resource
     type: object
@@ -952,17 +969,19 @@ definitions:
     readOnly: true
     required:
       - location
-      - label
+      - labels
       - componentTag
+      - path
     properties:
       location:
         type: string
         description: Location of the plug
         x-isnullable: false
-      label:
-        type: string
-        description: Plug's label
-        x-isnullable: false
+      labels:
+        type: array
+        items:
+          $ref: "#/definitions/pluginUILabel"
+        description: Plug's labels
       componentTag:
         type: string
         description: Plug's component tag

@@ -46,13 +46,20 @@ type UIPlugLocation string
 //goland:noinspection GoUnusedConst
 const (
 	UIPLugLocationNavbarMenu UIPlugLocation = "navbar.menu"
+	UIPLugLocationFooterMenu UIPlugLocation = "footer.menu"
 )
+
+// UILabel provides a label displayed in the UI for a specific language
+type UILabel struct {
+	Language string // Language tag
+	Text     string // Label text
+}
 
 // UIPlug specifies a UI plug, i.e. a visual element that gets injected in the frontend
 // Warning: Unstable API
 type UIPlug struct {
 	Location     UIPlugLocation // Where to plug the specified component
-	Label        string         // Plug label
+	Labels       []UILabel      // Plug labels, provided at least for the default UI language ("en")
 	ComponentTag string         // HTML tag of the component to plug
 	Path         string         // Path the plug's component will be available at
 }
@@ -60,17 +67,23 @@ type UIPlug struct {
 // Config describes plugin configuration
 // Warning: Unstable API
 type Config struct {
-	ID          string       // Unique plugin identifier
 	Path        string       // Path the plugin's handlers are invoked on
 	UIResources []UIResource // UI resources to be loaded for the plugin
 	UIPlugs     []UIPlug     // UI plugs
 }
 
+// YAMLDecoder allows for unmarshalling configuration into a user-defined structure, which provides `yaml` metadata
+type YAMLDecoder interface {
+	Decode(target any) error
+}
+
 // ComentarioPlugin describes a plugin that handles API and static HTTP calls
 // Warning: Unstable API
 type ComentarioPlugin interface {
-	// Init initialises the plugin, supplying it with a host reference
-	Init(host HostApp) error
+	// ID returns a unique plugin identifier
+	ID() string
+	// Init initialises the plugin, supplying it with a host reference and an optional secrets config decoder
+	Init(host HostApp, secretsDecoder YAMLDecoder) error
 	// Config should return the plugin's configuration
 	Config() Config
 	// APIHandler returns a handler that processes API calls relevant to the plugin. Each HTTP request passed to the

@@ -32,7 +32,7 @@ func TestKeySecret_Usable(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			c := &KeySecret{Disable: tt.disable, Key: tt.key, Secret: tt.secret}
+			c := &KeySecret{Disableable: Disableable{tt.disable}, Key: tt.key, Secret: tt.secret}
 			if got := c.Usable(); got != tt.want {
 				t.Errorf("Usable() = %v, want %v", got, tt.want)
 			}
