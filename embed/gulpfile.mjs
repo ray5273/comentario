@@ -6,7 +6,7 @@ import gulpSass from 'gulp-sass';
 import gif from 'gulp-if';
 import sourcemaps from 'gulp-sourcemaps';
 import cleanCss from 'gulp-clean-css';
-import eslint from 'gulp-eslint-new';
+import gulpESLintNew from 'gulp-eslint-new';
 import webpack from 'webpack-stream';
 
 const sass = gulpSass(dartSass);
@@ -33,9 +33,9 @@ const buildDir = '../build/frontend/';
 /** Lint Javascript and Typerscript sources. */
 export const lint = () =>
     src(sources.typescript)
-        .pipe(eslint())
-        .pipe(eslint.format())
-        .pipe(eslint.failAfterError());
+        .pipe(gulpESLintNew())
+        .pipe(gulpESLintNew.format())
+        .pipe(gulpESLintNew.failAfterError());
 
 /** Compile SCSS files into CSS. */
 const compileCss = () =>

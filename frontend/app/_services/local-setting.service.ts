@@ -24,7 +24,7 @@ export class LocalSettingService {
         if (s) {
             try {
                 return JSON.parse(s);
-            } catch (e) {
+            } catch {
                 // Ignore
             }
         }

@@ -15,7 +15,7 @@ export class Sort implements SortSpec {
         /** Sort property name. */
         public property: string,
         /** Whether to sort ascending (false) or descending (true). */
-        public descending: boolean = false,
+        public descending = false,
     ) {}
 
     get spec(): SortSpec {

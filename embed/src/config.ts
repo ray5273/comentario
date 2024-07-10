@@ -51,7 +51,7 @@ export class LocalConfig {
                 this._unregisteredCommenting = data.unregisteredCommenting;
                 this._unregisteredName       = data.unregisteredName;
                 this._commentSort            = data.commentSort;
-            } catch (e) {
+            } catch {
                 // Ignore
             }
         }

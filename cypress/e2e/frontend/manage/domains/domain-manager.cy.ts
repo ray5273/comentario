@@ -3,7 +3,7 @@ import { DOMAINS, InstanceConfigKey, PATHS, USERS } from '../../../../support/cy
 context('Domain Manager', () => {
 
     const noData = 'You have no connected domains.';
-    const makeDMAliases = (canAdd: boolean, hasItems: boolean, canLoadMore: boolean = false) => {
+    const makeDMAliases = (canAdd: boolean, hasItems: boolean, canLoadMore = false) => {
         cy.get('app-domain-manager')                    .as('domainManager');
         cy.get('@domainManager').find('#filter-string') .as('filterString');
 

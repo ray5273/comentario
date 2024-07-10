@@ -4,8 +4,8 @@ import { Observable } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
-import { Utils } from "../_utils/utils";
-import { ToastService } from "../_services/toast.service";
+import { Utils } from '../_utils/utils';
+import { ToastService } from '../_services/toast.service';
 
 /**
  * Guard class that verifies various authentication and authorisation aspects.

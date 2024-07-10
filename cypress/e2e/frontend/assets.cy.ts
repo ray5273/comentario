@@ -64,7 +64,7 @@ context('Static assets', () => {
 
                     // If there's a source dir provided, verify the contents by comparing to the source file
                     if (asset.dir) {
-                        cy.readFile(`${asset.dir}/${asset.path.replace(/^.*\/([^\/]+)$/, '$1')}`, asset.encoding as Encodings)
+                        cy.readFile(`${asset.dir}/${asset.path.replace(/^.*\/([^/]+)$/, '$1')}`, asset.encoding as Encodings)
                             .then(data => data === r.body)
                             .should('be.true');
 

@@ -5,7 +5,7 @@ import { Pipe, PipeTransform } from '@angular/core';
 })
 export class DynConfigSectionNamePipe implements PipeTransform {
 
-    private static NAMES: { [k: string]: string } = {
+    private static NAMES: Record<string, string> = {
         'auth':         $localize`Authentication`,
         'comments':     $localize`Comments`,
         'integrations': $localize`Integrations`,

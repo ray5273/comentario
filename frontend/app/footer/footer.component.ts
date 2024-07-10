@@ -3,7 +3,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faGitlab, faLinkedin, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
-import { ConfigService } from "../_services/config.service";
+import { ConfigService } from '../_services/config.service';
 import { AuthService } from '../_services/auth.service';
 import { PluginService } from '../_services/plugin.service';
 

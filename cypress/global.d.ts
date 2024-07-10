@@ -22,7 +22,7 @@ declare namespace Cypress {
     }
 
     interface SentMail {
-        headers:    { [k: string]: string };
+        headers:    Record<string, string>;
         embedFiles: string[];
         body:       string;
         succeeded:  boolean;
@@ -71,7 +71,7 @@ declare namespace Cypress {
         /** Error notification shown after login fails. Ignored unless succeeds is false, otherwise mandatory. */
         errMessage?: string;
         /** Custom headers to use (only when logging via API). */
-        headers?: { [k: string]: string };
+        headers?: Record<string, string>;
     }
 
     interface IsAtObjectWithUnderscore {
@@ -411,7 +411,7 @@ declare namespace Cypress {
         /**
          * Request the backend to update the given dynamic config items.
          */
-        backendUpdateDynConfig(values: { [key: string]: string | number | boolean }): Chainable<void>;
+        backendUpdateDynConfig(values: Record<string, string | number | boolean>): Chainable<void>;
 
         /**
          * Update the latest released version returned by the backend.
@@ -435,7 +435,7 @@ declare namespace Cypress {
          * @param id ID of the domain to patch.
          * @param values New configuration item values
          */
-        backendUpdateDomainConfig(id: string, values: { [key: string]: string | number | boolean }): Chainable<void>;
+        backendUpdateDomainConfig(id: string, values: Record<string, string | number | boolean>): Chainable<void>;
 
         /**
          * Update the list of federated identity providers enabled for the specified domain.
@@ -447,6 +447,7 @@ declare namespace Cypress {
 
     // noinspection JSUnusedGlobalSymbols
     interface Chainer<Subject> {
+        // eslint-disable-next-line @typescript-eslint/prefer-function-type
         (chainer:
              'arrayMatch'  | 'not.arrayMatch'  |
              'matrixMatch' | 'not.matrixMatch' |

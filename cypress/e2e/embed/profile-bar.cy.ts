@@ -1,7 +1,6 @@
 import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
-// eslint-disable-next-line no-only-or-skip-tests/no-skip-tests
 const itHeaded = Cypress.browser.isHeaded ? it : it.skip;
 
 context('Profile bar', () => {

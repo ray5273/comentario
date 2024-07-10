@@ -2,7 +2,6 @@ import JQueryWithSelector = Cypress.JQueryWithSelector;
 import CommentButton = Cypress.CommentButton;
 import { COOKIES, PATHS } from './cy-utils';
 
-// @ts-ignore
 const { config, $ } = Cypress;
 const baseUrl = config('baseUrl');
 
@@ -467,7 +466,6 @@ Cypress.Commands.add(
     'verifyPasswordInputValidation',
     {prevSubject: 'element'},
     (element: JQueryWithSelector, options?: {required?: boolean, strong?: boolean}) => {
-        // eslint-disable-next-line cypress/no-assigning-return-values
         const el = cy.wrap(element).clear();
 
         // Check required
@@ -694,7 +692,7 @@ Cypress.Commands.add(
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDynConfig', (values: { [key: string]: string | number | boolean }) =>
+Cypress.Commands.add('backendUpdateDynConfig', (values: Record<string, string | number | boolean>) =>
     void cy.request(
             'PUT',
             '/api/e2e/config/dynamic',
@@ -714,7 +712,7 @@ Cypress.Commands.add('backendGetSentEmails', () => {
 Cypress.Commands.add('backendPatchDomain', (id: string, values: any) =>
     void cy.request('PATCH', `/api/e2e/domains/${id}`, values).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: { [key: string]: string | number | boolean }) =>
+Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: Record<string, string | number | boolean>) =>
     void cy.request(
             'PUT',
             `/api/e2e/domains/${id}/config`,

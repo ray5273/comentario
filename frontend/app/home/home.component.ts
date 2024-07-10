@@ -19,7 +19,7 @@ export class HomeComponent implements OnInit {
     readonly embedUrl = this.configSvc.staticConfig.homeContentUrl;
 
     /** Handlers to execute when a specific parameter is present */
-    private readonly paramHandlers: {[name: string]: (value: string, allParams: ParamMap) => any} = {
+    private readonly paramHandlers: Record<string, (value: string, allParams: ParamMap) => any> = {
         authToken:          (token, allParams) => this.handleAuth(token, allParams),
         passwordResetToken: token => this.handlePasswordReset(token),
         unsubscribed:       () => this.toastSvc.success('unsubscribed-ok'),

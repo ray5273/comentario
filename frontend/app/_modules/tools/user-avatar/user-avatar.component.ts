@@ -41,11 +41,11 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
         const c = [`size-${this.size.toLowerCase()}`];
 
         // Anonymous user
-        if (this.isAnonymous)
+        if (this.isAnonymous) {
             c.push('avatar-anonymous');
 
         // If no picture, add initial and background colour classes
-        else if (!this._src) {
+        } else if (!this._src) {
             c.push('avatar-initial', `user-bg-colour-${this.user?.colourIndex || 0}`);
         }
         return c;

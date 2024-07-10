@@ -5,7 +5,7 @@ export type UUID = string;
 
 export type TranslateFunc = (id: string) => string;
 
-export type StringBooleanMap = { [k: string]: boolean };
+export type StringBooleanMap = Record<string, boolean>;
 
 /** Federated identity provider info */
 export interface FederatedIdentityProvider {
@@ -163,7 +163,7 @@ export class PageInfo {
 }
 
 /** Commenter users mapped by their IDs. There will be no entry for a commenter that corresponds to a deleted user. */
-export type CommenterMap = { [k: UUID]: Commenter | undefined };
+export type CommenterMap = Record<UUID, Commenter | undefined>;
 
 export type ComparatorFunc<T> = (a: T, b: T) => number;
 
@@ -268,7 +268,7 @@ export class ErrorMessage implements Message {
             if (typeof err.response === 'string') {
                 try {
                     resp = JSON.parse(err.response);
-                } catch (e) {
+                } catch {
                     // Do nothing
                 }
             }

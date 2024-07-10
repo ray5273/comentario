@@ -1,5 +1,5 @@
 import { Pipe, PipeTransform } from '@angular/core';
-import { DomainModNotifyPolicy } from "../../../../generated-api";
+import { DomainModNotifyPolicy } from '../../../../generated-api';
 
 @Pipe({
     name: 'moderatorNotifyPolicy'

@@ -15,7 +15,7 @@ import { ConfigKeyDomainDefaultsPrefix } from '../../../../_models/config';
 export class DynamicConfigComponent implements OnInit {
 
     /** Config items, grouped by section. */
-    bySection?: { [section: string]: DynamicConfigItem[] };
+    bySection?: Record<string, DynamicConfigItem[]>;
 
     readonly resetting = new ProcessingStatus();
     readonly domainDefaultsPrefix = ConfigKeyDomainDefaultsPrefix;

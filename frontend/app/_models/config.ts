@@ -21,7 +21,7 @@ export enum DomainConfigItemKey {
 
 /** Instance dynamic config item keys. */
 export enum InstanceConfigItemKey {
-    authLoginLocalMaxAttempts              = "auth.login.local.maxAttempts",
+    authLoginLocalMaxAttempts              = 'auth.login.local.maxAttempts',
     authSignupConfirmCommenter             = 'auth.signup.confirm.commenter',
     authSignupConfirmUser                  = 'auth.signup.confirm.user',
     authSignupEnabled                      = 'auth.signup.enabled',
@@ -49,10 +49,10 @@ export enum InstanceConfigItemKey {
 export class DynamicConfig {
 
     /** Configuration items, mapped by key. */
-    readonly byKey: { [key: string]: DynamicConfigItem };
+    readonly byKey: Record<string, DynamicConfigItem>;
 
     /** Configuration items, grouped by section key. */
-    readonly bySection: { [section: string]: DynamicConfigItem[] };
+    readonly bySection: Record<string, DynamicConfigItem[]>;
 
     constructor(
         configItems?: DynamicConfigItem[],

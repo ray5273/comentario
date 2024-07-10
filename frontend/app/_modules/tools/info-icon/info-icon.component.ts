@@ -4,7 +4,7 @@ import { DocsService } from '../../../_services/docs.service';
 
 @Component({
     selector: 'app-info-icon',
-    templateUrl: `./info-icon.component.html`,
+    templateUrl: './info-icon.component.html',
     styleUrls: ['./info-icon.component.scss'],
 })
 export class InfoIconComponent {

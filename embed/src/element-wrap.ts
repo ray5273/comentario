@@ -76,7 +76,7 @@ export class Wrap<T extends HTMLElement | SVGElement> {
      * @param values Object that provides attribute names and their values. null and undefined values cause attribute
      * removal from the node.
      */
-    attr(values: { [k: string]: string | null | undefined } | false | null | undefined): Wrap<T> {
+    attr(values: Record<string, string | null | undefined> | false | null | undefined): Wrap<T> {
         if (this.el && values) {
             Object.entries(values).forEach(([k, v]) => {
                 if (v === undefined || v === null) {

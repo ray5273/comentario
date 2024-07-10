@@ -18,7 +18,7 @@ describe('PluginService', () => {
         service = TestBed.inject(PluginService);
     });
 
-    it('is be created', () => {
+    it('is created', () => {
         expect(service).toBeTruthy();
     });
 });

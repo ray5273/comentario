@@ -33,7 +33,7 @@ export interface CommentWithCard extends Comment {
 export class CommentParentMap {
 
     /** Internal data object, a map of lists of comments, grouped by their parentId. */
-    private _data?: { [parentId: UUID]: CommentWithCard[] };
+    private _data?: Record<UUID, CommentWithCard[]>;
 
     /**
      * Add the given comment to the map.
@@ -251,7 +251,6 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         });
 
         // Render child comments, if any
-        // eslint-disable-next-line @typescript-eslint/no-use-before-define
         return comments.map(c => new CommentCard(c, ctx, level));
     }
 

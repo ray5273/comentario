@@ -5,7 +5,7 @@ import { Observable } from 'rxjs';
  */
 export class ProcessingStatus {
     constructor(
-        public active: boolean = false,
+        public active = false,
     ) {}
 
     /**

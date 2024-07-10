@@ -8,7 +8,7 @@ export class HttpClientError {
     ) {}
 }
 
-export type HttpHeaders = { [k: string]: string };
+export type HttpHeaders = Record<string, string>;
 
 export class HttpClient {
 

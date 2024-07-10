@@ -1,4 +1,4 @@
-const YAML = require('yamljs');
+import * as YAML from 'yamljs';
 
 chai.use((_chai) => {
 

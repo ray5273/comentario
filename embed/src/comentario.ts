@@ -1030,7 +1030,7 @@ export class Comentario extends HTMLElement {
             const r = await this.apiService.commentGet(msg.comment);
             comment = r.comment;
             commenter = r.commenter;
-        } catch (e) {
+        } catch {
             // Ignore all failed requests. Possibly we simply can't see the comment because it's unapproved
             return;
         } finally {
