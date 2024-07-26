@@ -1,8 +1,36 @@
 # Comentario changelog
 
+## v3.9.0
+
+This release implements external OIDC authentication, including login via LinkedIn, adds dark theme support to embedded comments, allows a direct database migration from Commento++, and fixes a number of issues. It also adds Vietnamese to the list of available languages.
+
+From now on, the `latest` Docker image tag will refer to the most recent *released version*; the most recent dev build (what used to be `latest` before) is now tagged as `edge`. Thanks to this, pulling `registry.gitlab.com/comentario/comentario` will result in the latest stable Comentario image. We also added Ubuntu-based Docker images, built from a dynamically-linked binary.
+
+### Changes
+
+* Add dark theme support (#101) - 7e3a6bd1, 5957b6bc, 8d0e9f77
+* Add support for OIDC authentication (incl. LinkedIn login) (#25, #4; obsoletes !5) - a11b0591, 5bcccd0e, cf7bb8b7, 6fe7f68e
+* Use federated ID for user lookups, before resorting to email lookup (#99) - c0c7bba1
+* SSO: add link payload property (#98) - 1e84833b
+* Frontend: add proper favicons/manifests for all platforms and `robots.txt` - 35be77ea
+* Publish Comentario Helm chart to GitLab chart repository - 15e9793f
+* Add Ubuntu-based Docker image build - c4f8e547
+* Allow migration from Commento++ (#97) - 4b129fe8
+* Change image tagging logic: `latest` is now latest release, `edge` is latest dev - 7081c751
+* Frontend: Angular 18, ESLint 9, bump other deps - 80355b17
+* Add translation to Vietnamese - 03287764
+* Fix: set XSRF & language cookies only when necessary (#103) - 26661c1c
+* Fix: XSRF key generation - 2d439162
+* Fix: page title fetching when path contains query (#106) - a39a9f4c
+* Fix: double pageview counting (#108, deprecates !8) - 7b49952a
+* Fix: Embed: non-interactive SSO message handler removal (#96) - 07f3c519
+* Fix: Embed: remove Comentario background (#105) - af827099
+
 ## v3.8.0
 
 This release adds own comment/page counts to the Dashboard, enables automatic Admin UI login from the user settings dialog on a comment page, adds Comentario version upgrade checks, improves embedded engine error handling, and fixes a number of issues. It also adds Brazilian Portuguese to the list of available languages.
+
+### Changes
 
 * Config manager: display a notification in the sidebar and an upgrade link - bb00751, 858c6da, e4ca7a9, 72779a0
 * Dashboard: add counts of pages/comments you authored - 7a13f5e
