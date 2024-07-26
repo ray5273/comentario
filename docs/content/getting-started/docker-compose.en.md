@@ -28,7 +28,7 @@ services:
       - "5432:5432"
 
   app:
-    image: registry.gitlab.com/comentario/comentario:v3.8.0
+    image: registry.gitlab.com/comentario/comentario
     environment:
       BASE_URL: http://localhost:8080/
       SECRETS_FILE: "/secrets.yaml"

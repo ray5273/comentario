@@ -27,6 +27,13 @@ docker run registry.gitlab.com/comentario/comentario:v3.8.0         # Alpine-bas
 docker run registry.gitlab.com/comentario/comentario:v3.8.0-ubuntu  # Ubuntu-based
 ```
 
+The latest release build is also tagged as `latest` (which is Docker's default tag), so running the below command will pull the latest released Comentario version:
+
+```bash
+docker run registry.gitlab.com/comentario/comentario                # Alpine-based
+docker run registry.gitlab.com/comentario/comentario:latest-ubuntu  # Ubuntu-based
+```
+
 ## Edge builds
 
 Every commit on the `dev` branch produces an image tagged with the branch and the commit hash. You can run, for example:
@@ -36,9 +43,9 @@ docker run registry.gitlab.com/comentario/comentario:dev-073c0b88         # Alpi
 docker run registry.gitlab.com/comentario/comentario:dev-073c0b88-ubuntu  # Ubuntu-based
 ```
 
-The very latest `dev` build is also tagged as `latest`, so running the below command will pull the latest *unstable* Comentario version:
+The very latest `dev` build is also tagged as `edge`, so running the below command will pull the latest *unstable* Comentario version:
 
 ```bash
-docker run registry.gitlab.com/comentario/comentario                # Alpine-based
-docker run registry.gitlab.com/comentario/comentario:latest-ubuntu  # Ubuntu-based
+docker run registry.gitlab.com/comentario/comentario:edge         # Alpine-based
+docker run registry.gitlab.com/comentario/comentario:edge-ubuntu  # Ubuntu-based
 ```
