@@ -231,10 +231,14 @@ docker-image:
       }
 
       # For a tag, also push it as 'latest'
-      [[ -n "$CI_COMMIT_TAG" ]] && push_tag "$IMG_TAG_LATEST"
+      if [[ -n "$CI_COMMIT_TAG" ]]; then
+          push_tag "$IMG_TAG_LATEST"
+      fi
 
       # For dev, also push it as 'edge'
-      [[ "$CI_COMMIT_BRANCH" == "dev" ]] && push_tag "$IMG_TAG_EDGE"
+      if [[ "$CI_COMMIT_BRANCH" == "dev" ]]; then
+          push_tag "$IMG_TAG_EDGE"
+      fi
 
 helm-chart:
   stage: package
