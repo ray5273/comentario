@@ -1,6 +1,7 @@
 ---
 title: comentario.app
 layout: front-page
+searchable: false
 ---
 
 ## What is Comentario?

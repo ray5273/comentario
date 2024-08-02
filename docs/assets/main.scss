@@ -503,6 +503,11 @@ footer {
     overflow: hidden;
     max-height: 200px;
 }
+.card-hover {
+    &:hover, &:focus {
+        background-color: $secondary-bg-subtle;
+    }
+}
 
 // Callouts
 .callout-header {

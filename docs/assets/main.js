@@ -57,9 +57,17 @@ $(function () {
     /**
      * Site search.
      */
-    $("#search-query").on('input', debounce(500, search));
-    const $searchResults   = $('#search-results');
-    const $searchNoResults = $('#no-search-results');
+    const $searchQuery          = $('#search-query');
+    const $searchResults        = $('#search-results');
+    const $searchResultCount    = $('#search-result-count');
+    const $searchResultCountVal = $('#search-result-count-value');
+    const $searchNoResults      = $('#no-search-results');
+
+    // Rerun site search on Back/Forward navigation.
+    if ($searchQuery.length) {
+        $searchQuery.on('input', debounce(500, search));
+        $(window).on('load', debounce(500, search));
+    }
 
     /** Cached index file. */
     let searchIndex;
@@ -67,10 +75,11 @@ $(function () {
     function search() {
         // Remove all results
         $searchResults.html('').toggleClass('d-none', true);
+        $searchResultCount.toggleClass('d-none', true);
         $searchNoResults.toggleClass('d-none', true);
 
         // If no search query, no need to search
-        const query = $(this).val();
+        const query = $searchQuery.val();
         if (query) {
             // Fetch the index file, if not already loaded
             if (searchIndex) {
@@ -136,41 +145,79 @@ $(function () {
     }
 
     function doSearch(query) {
+        // Convert the query to lowercase for a case-insensitive search
         query = query.toLowerCase();
+
+        // Collect all matches
         const matches = [];
         searchIndex.forEach(item => {
-            let idx;
-            if ((idx = item.text.toLowerCase().indexOf(query)) >= 0) {
-                item.pos = idx;
-                matches.push(item);
-            } else if (item.title.toLowerCase().includes(query) || item.tags?.some(s => s.toLowerCase().includes(query))) {
-                matches.push(item);
+            let rank = 0;
+
+            // First, check the tags: a tag match has the rank of 1000. Look for an exact match only
+            if (item.tags?.some(s => s.toLowerCase() === query)) {
+                rank += 1000;
+            }
+
+            // Next, the title: a match has a rank of 100
+            if (item.title.toLowerCase().includes(query)) {
+                rank += 100;
+            }
+
+            // Finally, search the item's text: each occurrence yields a rank of one
+            rank += countOccurrences(item.text.toLowerCase(), query);
+
+            // If there's any match
+            if (rank) {
+                matches.push({rank, ...item});
             }
         });
 
-        // Render the results
-        matches.forEach((item, index) => {
-            // Prepare tags
-            let tags = item.tags?.map(s => `<span class="me-2">${searchMark(s, query)}</span>`).join('');
-            if (tags) {
-                tags = `<div class="card-footer small text-muted">${tags}</div>`;
-            }
+        // Append results
+        matches
+            // Sort by the rank, descending
+            .sort((a, b) => b.rank - a.rank)
+            // Render the results
+            .forEach((item, index) => {
+                // Prepare tags
+                let tags;
+                if (item.tags?.some(s => s.toLowerCase() === query)) {
+                    const tagItems = item.tags?.map(s => `<span class="me-2">${searchMark(s, query)}</span>`).join('');
+                    tags = `<div class="card-footer small text-muted"><i class="fa-solid fa-tags"></i> ${tagItems}</div>`;
+                }
 
-            // Add a result card
-            $searchResults.append(`
-                <a href="${item.link}" id="search-result-${index}" class="card mb-3">
-                    <div class="card-body">
-                        <h5 class="card-title">${searchMark(item.title, query)}</h5>
-                        <p>${(searchMark(searchSnippet(item.text, item.pos), query))}</p>
-                    </div>
-                    ${tags ?? ''}
-                </a>
-            `);
-        });
+                // Add a result card
+                $searchResults.append(`
+                    <a href="${item.link}" id="search-result-${index}" class="card card-hover mb-3">
+                        <div class="card-body">
+                            <h5 class="card-title">${searchMark(item.title, query)}</h5>
+                            <p>${(searchMark(searchSnippet(item.text, item.pos), query))}</p>
+                        </div>
+                        ${tags ?? ''}
+                    </a>
+                `);
+            });
 
         // Show or hide elements based on the presence of matches
         const found = !!matches.length;
         $searchNoResults.toggleClass('d-none', found);
+        $searchResultCountVal.text(matches.length);
+        $searchResultCount.toggleClass('d-none', !found);
         $searchResults.toggleClass('d-none', !found);
+    }
+
+    /**
+     * Count the number of occurrences of a substring in a string.
+     * @param s {string} string to search
+     * @param substr {string} substring to count occurrences of
+     * @return {number}
+     */
+    function countOccurrences(s, substr) {
+        let count = 0;
+        let i = s.indexOf(substr);
+        while (i !== -1) {
+            count++;
+            i = s.indexOf(substr, i + 1);
+        }
+        return count;
     }
 });
