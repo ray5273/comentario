@@ -711,6 +711,24 @@ definitions:
         x-isnullable: false
         description: Whether the Live update is enabled globally
 
+  keyValue:
+    description: Key-value pair
+    type: object
+    required:
+      - key
+      - value
+    properties:
+      key:
+        type: string
+        maxLength: 255
+        description: Item key
+        x-omitempty: false
+      value:
+        type: string
+        maxLength: 255
+        description: Item value
+        x-omitempty: false
+
   pageInfo:
     description: Information about a page displaying comments
     type: object
@@ -3396,6 +3414,11 @@ paths:
             properties:
               user:
                 $ref: "#/definitions/user"
+              attributes:
+                type: array
+                items:
+                  $ref: "#/definitions/keyValue"
+                description: User's attributes
               domainUsers:
                 type: array
                 items:
