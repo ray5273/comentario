@@ -29,6 +29,10 @@ section {
     }
 }
 
+.desaturate {
+    filter: saturate(0%);
+}
+
 // Collapse toggler
 .collapse-toggler {
 
