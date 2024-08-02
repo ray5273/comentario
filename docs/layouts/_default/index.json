@@ -1,5 +1,7 @@
 {{- $j := slice }}
-{{- range .Site.RegularPages }}
-    {{- $j = $j | append (dict "title" .Title "tags" .Params.tags "text" .Plain "link" .Permalink) }}
+{{- range where .Site.AllPages "Kind" "in" (slice "section" "page") }}
+    {{- if ne .Params.searchable false }}
+        {{- $j = $j | append (dict "title" .Title "tags" .Params.tags "text" .Plain "link" .Permalink "kind" .Kind) }}
+    {{- end }}
 {{- end }}
 {{- $j | jsonify }}

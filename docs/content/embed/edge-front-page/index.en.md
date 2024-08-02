@@ -1,6 +1,7 @@
 ---
 title: edge.comentario.app
 layout: front-page
+searchable: false
 ---
 
 ## Comentario Demo
