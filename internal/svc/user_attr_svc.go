@@ -22,10 +22,11 @@ type userAttrService struct{}
 
 func (svc *userAttrService) GetAll(userID *uuid.UUID) (map[string]string, error) {
 	logger.Debugf("userAttrService.GetAll(%s)", userID)
+	res := map[string]string{}
 
-	// User cannot be anonymous
+	// Anonymous user has no attributes
 	if *userID == data.AnonymousUser.ID {
-		return nil, ErrNotFound
+		return res, nil
 	}
 
 	// Query the database
@@ -37,7 +38,6 @@ func (svc *userAttrService) GetAll(userID *uuid.UUID) (map[string]string, error)
 	defer rows.Close()
 
 	// Fetch the sessions
-	res := map[string]string{}
 	for rows.Next() {
 		var k, v string
 		if err := rows.Scan(&k, &v); err != nil {
