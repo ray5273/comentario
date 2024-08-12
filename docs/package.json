@@ -5,8 +5,8 @@
     "private": true,
     "scripts": {
         "clean": "rm -rf ../build/docs/",
-        "build": "hugo -DF --gc --minify --baseURL=https://edge.docs.comentario.app/",
-        "build:prod": "hugo --gc --minify",
+        "build": "hugo -DF --gc --minify --environment=edge",
+        "build:prod": "hugo --gc --minify --environment=production",
         "postbuild": "npm run write-headers",
         "postbuild:prod": "npm run write-headers",
         "prebuild": "npm run clean",

@@ -1,7 +1,6 @@
-baseURL: https://docs.comentario.app/
+baseURL: https://edge.docs.comentario.app/
 languageCode: en
-title: 'Comentario Documentation'
-googleAnalytics: 'G-E2705JHXPL'
+title: 'Comentario Documentation [edge]'
 
 publishDir: ../build/docs
 
@@ -23,7 +22,7 @@ languages:
 module:
   hugoVersion:
     extended: true
-    min: "0.123.6"
+    min: "0.131.0"
   mounts:
     - source: ../node_modules
       target: assets/node_modules
@@ -49,8 +48,10 @@ sectionPagesMenu: sidebar
 params:
   description: 'Documentation for Comentario, the powerful commenting tool for web pages.'
   contactAction: 'https://formspree.io/f/mjvqwoaa'
-  # Will replace googleAnalytics for a dev (edge) build
-  googleAnalyticsDev: 'G-03C68PL4NZ'
+
+services:
+  googleAnalytics:
+    id: 'G-03C68PL4NZ'
 
 menu:
   # Will be lowercased in the template

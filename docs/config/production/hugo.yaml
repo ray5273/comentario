@@ -1,0 +1,8 @@
+# Production configuration overrides
+
+baseURL: https://docs.comentario.app/
+title: 'Comentario Documentation'
+
+services:
+  googleAnalytics:
+    id: 'G-E2705JHXPL'
