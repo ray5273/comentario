@@ -3,17 +3,19 @@ import { UIToolkit } from './ui-toolkit';
 import { PageInfo, TranslateFunc } from './models';
 import { Utils } from './utils';
 
-export type CommentEditorCallback = (ce: CommentEditor) => void;
+export type CommentEditorCallback = (ce: CommentEditor) => Promise<void>;
 export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
 
 export class CommentEditor extends Wrap<HTMLFormElement>{
 
     private readonly textarea:   Wrap<HTMLTextAreaElement>;
     private readonly preview:    Wrap<HTMLDivElement>;
+    private readonly btnCancel:  Wrap<HTMLButtonElement>;
     private readonly btnPreview: Wrap<HTMLButtonElement>;
     private readonly btnSubmit:  Wrap<HTMLButtonElement>;
     private readonly toolbar:    Wrap<HTMLDivElement>;
     private previewing = false;
+    private submitting = false;
 
     /**
      * Create a new editor for editing comment text.
@@ -32,11 +34,11 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         isEdit: boolean,
         initialText: string,
         private readonly pageInfo: PageInfo,
-        onCancel: CommentEditorCallback,
-        onSubmit: CommentEditorCallback,
+        private readonly onCancel: CommentEditorCallback,
+        private readonly onSubmit: CommentEditorCallback,
         private readonly onPreview: CommentEditorPreviewCallback,
     ) {
-        super(UIToolkit.form(() => onSubmit(this), () => onCancel(this)).element);
+        super(UIToolkit.form(() => this.submitEdit(), () => this.cancelEdit()).element);
 
         // Render the toolbar
         this.toolbar = this.renderToolbar();
@@ -50,14 +52,14 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                 this.textarea = UIToolkit.textarea(null, true, true)
                     .attr({name: 'comentario-comment-editor', maxlength: '4096'})
                     .value(initialText)
-                    .on('input', () => this.textChanged()),
+                    .on('input', () => this.updateControls()),
                 // Preview
                 this.preview = UIToolkit.div('comment-editor-preview', 'hidden'),
                 // Editor footer
                 UIToolkit.div('comment-editor-footer')
                     .append(
                         // Cancel
-                        UIToolkit.button(this.t('actionCancel'), () => onCancel(this), 'btn-link'),
+                        this.btnCancel = UIToolkit.button(this.t('actionCancel'), () => onCancel(this), 'btn-link'),
                         // Preview
                         this.btnPreview = UIToolkit.button(this.t('actionPreview'), () => this.togglePreview(), 'btn-secondary'),
                         // Submit
@@ -68,7 +70,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         this.parent.classes('editor-inserted').prepend(this);
 
         // Update the buttons
-        this.textChanged();
+        this.updateControls();
 
         // Focus the textarea
         this.textarea.focus();
@@ -93,14 +95,6 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         // Toggle the value
         this.previewing = !this.previewing;
 
-        // Hide the toolbar/textarea and show the preview in the preview mode
-        this.toolbar .setClasses(this.previewing, 'disabled');
-        this.textarea.setClasses(this.previewing, 'hidden');
-        this.preview .setClasses(!this.previewing, 'hidden');
-
-        // Update the button
-        this.btnPreview.setClasses(this.previewing, 'btn-active');
-
         // Request a comment text rendering
         let html = '';
         if (this.previewing) {
@@ -112,17 +106,35 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         }
         this.preview.html(html);
 
+        // Update control states
+        this.updateControls();
+
         // Focus the editor after leaving the preview
         if (!this.previewing) {
             this.textarea.focus();
         }
     }
 
-    private textChanged() {
-        // Disable the preview/submit buttons if the text is empty
-        const attr = {disabled: this.markdown ? undefined : 'disabled'};
-        this.btnPreview.attr(attr);
-        this.btnSubmit.attr(attr);
+    /**
+     * Update the editor controls' state according to the current situation.
+     * @private
+     */
+    private updateControls() {
+        // Disable the toolbar while previewing or submitting
+        this.toolbar.setClasses(this.previewing || this.submitting, 'disabled');
+
+        // Disable the textarea and the Cancel button during submission
+        this.textarea.disabled(this.submitting);
+        this.btnCancel.disabled(this.submitting);
+
+        // Disable the Preview/Submit buttons if the text is empty or during submission
+        const cannotPost = !this.markdown || this.submitting;
+        this.btnPreview.disabled(cannotPost).setClasses(this.previewing, 'btn-active');
+        this.btnSubmit.disabled(cannotPost);
+
+        // Hide the textarea and show the preview in the preview mode
+        this.textarea.setClasses(this.previewing, 'hidden');
+        this.preview.setClasses(!this.previewing, 'hidden');
     }
 
     /**
@@ -166,7 +178,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         // Replace the selected text with the processed pattern
         ta.setRangeText(sel);
         ta.setSelectionRange(ips1, ips2);
-        this.textChanged();
+        this.updateControls();
         ta.focus();
     }
 
@@ -210,7 +222,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
 
         // Set the cursor at the original position within the text
         ta.setSelectionRange(iStart + pLen, iStart + pLen);
-        this.textChanged();
+        this.updateControls();
         ta.focus();
     }
 
@@ -240,5 +252,41 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                     .attr({title: this.t('btnMarkdownHelp')})
                     .append(UIToolkit.icon('help')),
             ));
+    }
+
+    /**
+     * Cancel the editor.
+     * @private
+     */
+    private cancelEdit() {
+        // Ignore while submitting
+        if (this.submitting) {
+            return;
+        }
+
+        // Invoke the callback
+        this.onCancel(this);
+    }
+
+    /**
+     * Submit the form.
+     * @private
+     */
+    private async submitEdit(): Promise<void> {
+        // Don't allow resubmissions
+        if (this.submitting) {
+            return;
+        }
+
+        // Disable the toolbar and the buttons
+        this.submitting = true;
+        this.updateControls();
+        try {
+            // Invoke the callback
+            await this.onSubmit(this);
+        } finally {
+            this.submitting = false;
+            this.updateControls();
+        }
     }
 }

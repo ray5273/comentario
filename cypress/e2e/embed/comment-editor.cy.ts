@@ -102,6 +102,61 @@ context('Comment Editor', () => {
             cy.commentTree().should('have.length', 1);
         });
 
+        context('submission', () => {
+
+            beforeEach(() => {
+                // Open the test page
+                cy.testSiteLoginViaApi(USERS.commenterOne, TEST_PATHS.comments);
+                EmbedUtils.makeAliases();
+            });
+
+            it('disables controls while submitting', () => {
+                // Simulate a slow API response
+                cy.intercept(
+                    {method: 'PUT', url: '/api/embed/comments'},
+                    req => req.continue(res => void res.setDelay(2000))).as('apiComments');
+
+                // Add a comment
+                cy.get('.comentario-root .comentario-add-comment-host').focus();
+                cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+                cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue('Let\'s wait').type('{ctrl+enter}');
+
+                // All controls should be disabled now
+                cy.get('@editor').find('.comentario-toolbar').should('have.class', 'comentario-disabled');
+                cy.get('@textarea').should('be.disabled');
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Cancel')     .should('be.disabled');
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview')    .should('be.disabled');
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Add Comment').should('be.disabled');
+
+                // Wait for the request to finish: the editor's gone
+                cy.wait('@apiComments');
+                cy.get('@editor').should('not.exist');
+            });
+
+            it('re-enables controls on failure', () => {
+                // Simulate an API failure
+                cy.intercept({method: 'PUT', url: '/api/embed/comments'}, {forceNetworkError: true}).as('apiComments');
+
+                // Add a comment
+                cy.get('.comentario-root .comentario-add-comment-host').focus();
+                cy.get('.comentario-root form.comentario-comment-editor').as('editor').should('be.visible');
+                cy.get('@editor').find('textarea').as('textarea').should('be.focused').setValue('About to crash').type('{ctrl+enter}');
+
+                // Wait for the request to finish
+                cy.wait('@apiComments');
+
+                // There's an error notice
+                cy.testSiteCheckMessage('Error: Unknown error.', false);
+
+                // The editor's still there and all controls re-enabled
+                cy.get('@editor').find('.comentario-toolbar').should('not.have.class', 'comentario-disabled');
+                cy.get('@textarea').should('be.enabled');
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Cancel')     .should('be.enabled');
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Preview')    .should('be.enabled');
+                cy.get('@editor').contains('.comentario-comment-editor-footer button', 'Add Comment').should('be.enabled');
+            });
+        });
+
         context('without registration', () => {
 
             it('submits comment anonymously', () => {
@@ -170,7 +225,7 @@ context('Comment Editor', () => {
         });
 
         it('submits non-anonymous comment', () => {
-            // Visit the page as anonymous
+            // Visit the page as commenter
             cy.testSiteLoginViaApi(USERS.commenterOne, TEST_PATHS.comments);
             EmbedUtils.makeAliases();
 

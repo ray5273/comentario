@@ -511,8 +511,8 @@ export class Comentario extends HTMLElement {
             false,
             '',
             this.pageInfo!,
-            () => this.cancelCommentEdits(),
-            async editor => await this.submitNewComment(parentCard, editor.markdown),
+            async () => this.cancelCommentEdits(),
+            editor => this.submitNewComment(parentCard, editor.markdown),
             s => this.apiService.commentPreview(this.pageInfo!.domainId, s));
     }
 
@@ -531,8 +531,8 @@ export class Comentario extends HTMLElement {
             true,
             card.comment.markdown!,
             this.pageInfo!,
-            () => this.cancelCommentEdits(),
-            async editor => await this.submitCommentEdits(card, editor.markdown),
+            async () => this.cancelCommentEdits(),
+            editor => this.submitCommentEdits(card, editor.markdown),
             s => this.apiService.commentPreview(this.pageInfo!.domainId, s));
     }
 

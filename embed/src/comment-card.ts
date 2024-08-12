@@ -394,11 +394,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Upvote / Downvote buttons and the score
         if (ctx.enableVoting) {
             left.append(
-                this.btnUpvote = UIToolkit.toolButton('arrowUp', this.t('actionUpvote'), () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))
-                    .attr(ownComment && {disabled: 'true'}),
+                this.btnUpvote = UIToolkit.toolButton('arrowUp', this.t('actionUpvote'), () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1)).disabled(ownComment),
                 this.eScore = UIToolkit.div('score').attr({title: this.t('commentScore')}),
-                this.btnDownvote = UIToolkit.toolButton('arrowDown', this.t('actionDownvote'), () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))
-                    .attr(ownComment && {disabled: 'true'}));
+                this.btnDownvote = UIToolkit.toolButton('arrowDown', this.t('actionDownvote'), () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1)).disabled(ownComment));
         }
 
         // Reply button
@@ -415,7 +413,7 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Sticky toggle button (top-level comments only)
         if (!this._comment.parentId) {
             this.btnSticky = UIToolkit.toolButton('star', '', () => ctx.onSticky(this))
-                .attr({disabled: this.isModerator ? null : 'true'})
+                .disabled(!this.isModerator)
                 .appendTo(right);
         }
 

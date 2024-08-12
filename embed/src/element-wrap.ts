@@ -258,6 +258,15 @@ export class Wrap<T extends HTMLElement | SVGElement> {
     }
 
     /**
+     * Set the value of the disabled property of the underlying (button) element.
+     * @param b New value of disabled.
+     */
+    disabled(b: boolean | null | undefined): Wrap<T> {
+        this.attr({disabled: b ? '' : undefined});
+        return this;
+    }
+
+    /**
      * Focus the underlying element.
      */
     focus(): Wrap<T> {
