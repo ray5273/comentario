@@ -1,7 +1,6 @@
 ---
 title: Live update
 description: Comentario allows for live comment updates
-weight: 50
 tags:
     - about
     - features

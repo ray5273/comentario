@@ -10,7 +10,7 @@ tags:
     - Administration UI
 ---
 
-Although there's already a built-in support for translating the front-end, this feature is considered low-priority at the moment and hence not available yet.
+Although there's already a built-in support for translating the frontend, this feature is considered low-priority at the moment and hence not available yet.
 
 <!--more-->
 
