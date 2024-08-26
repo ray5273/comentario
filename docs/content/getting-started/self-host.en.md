@@ -1,7 +1,7 @@
 ---
 title: Self-hosting
 description: How to start self-hosting Comentario
-weight: 100
+weight: 110
 tags:
     - getting started
     - self-hosting
@@ -14,7 +14,7 @@ To self-host a Comentario instance, you'll need two components: a database and a
 
 ## Database
 
-Have a look at the [](installation/requirements) document to learn about the database component.
+In the simplest of setups, you can opt to use a local, file-based **SQLite** database; however, it's recommended to use a dedicated, much more robust **PostgreSQL** database in a production environment. Have a look at the [](installation/requirements) document to learn about the database component.
 
 ## Server
 

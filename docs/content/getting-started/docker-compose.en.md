@@ -1,7 +1,7 @@
 ---
 title: Docker playground
 description: You can easily try Comentario out with Docker 
-weight: 10
+weight: 100
 tags:
     - getting started
     - Docker

@@ -18,6 +18,7 @@
 - {id: messageBody,       translation: Your message}
 - {id: noResults,         translation: No matches found.}
 - {id: pagesFound,        translation: page(s) found.}
+- {id: readOn,            translation: Read on}
 - {id: seeAlso,           translation: See also}
 - {id: signUp,            translation: Sign Up}
 - {id: slogan1,           translation: Comments.}

@@ -12,8 +12,13 @@
         </a></p>
 
         <!-- Child page description -->
-        <div class="ms-5 mb-4">
+        <div class="ms-5 article-snippet">
             {{ .Summary }}
+        </div>
+
+        <!-- Read on link -->
+        <div class="ms-5 mb-4">
+            <a href="{{ .RelPermalink }}">{{ T "readOn" }}&nbsp;<i class="fas fa-angles-right"></i></a>
         </div>
     {{- end }}
 

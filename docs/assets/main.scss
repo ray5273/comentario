@@ -107,6 +107,14 @@ section {
     margin-bottom: 2rem;
 }
 
+
+// Remove bottom space between the last paragraph and the "Read on »" link
+.article-snippet {
+    p:last-child {
+        margin-bottom: 0;
+    }
+}
+
 // Anchors
 a {
     &.internal {
