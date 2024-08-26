@@ -21,7 +21,7 @@ This page explains how you can build Comentario **frontend** (UI) and **backend*
 
 In order to build Comentario, you'll need a few tools:
 
-* [Go](https://go.dev/) 1.21+
+* [Go](https://go.dev/) 1.22+
 * [go-swagger](https://github.com/go-swagger/go-swagger) 0.30+
 * [Node.js](https://nodejs.org/) 20.x
 * [Yarn](https://yarnpkg.com/) 1.22+
