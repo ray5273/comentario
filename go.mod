@@ -1,6 +1,6 @@
 module gitlab.com/comentario/comentario
 
-go 1.22
+go 1.23
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.5.0
