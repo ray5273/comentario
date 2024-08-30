@@ -314,6 +314,23 @@ export class Wrap<T extends HTMLElement | SVGElement> {
     }
 
     /**
+     * Show a spinner on the underlying element while invoking an asynchronous worker routine.
+     * @param worker Worker callback.
+     * @return Whatever the worker has returned.
+     */
+    async spin<R>(worker: () => Promise<R>): Promise<R> {
+        // Disable and add a spinner
+        this.disabled(true).classes('spinner');
+        try {
+            // Invoke the worker callback
+            return await worker();
+        } finally {
+            // Re-enable and remove the spinner
+            this.disabled(false).noClasses('spinner');
+        }
+    }
+
+    /**
      * Return whether the underlying element is fully visible on the screen along its vertical axis.
      */
     private vertVisible(): boolean {

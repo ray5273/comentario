@@ -7,6 +7,9 @@ export type TranslateFunc = (id: string) => string;
 
 export type StringBooleanMap = Record<string, boolean>;
 
+export type AsyncProc = () => Promise<void>;
+export type AsyncProcWithArg<T> = (arg: T) => Promise<void>;
+
 /** Federated identity provider info */
 export interface FederatedIdentityProvider {
     /** Provider ID */

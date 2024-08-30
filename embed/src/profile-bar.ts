@@ -1,6 +1,15 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { LoginChoice, LoginData, PageInfo, Principal, SignupData, TranslateFunc, UserSettings } from './models';
+import {
+    AsyncProc, AsyncProcWithArg,
+    LoginChoice,
+    LoginData,
+    PageInfo,
+    Principal,
+    SignupData,
+    TranslateFunc,
+    UserSettings,
+} from './models';
 import { LoginDialog } from './login-dialog';
 import { SignupDialog } from './signup-dialog';
 import { SettingsDialog } from './settings-dialog';
@@ -29,12 +38,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         private readonly baseUrl: string,
         private readonly root: Wrap<any>,
         private readonly onGetAvatar: () => Wrap<any> | undefined,
-        private readonly onLogin: (data: LoginData) => void,
-        private readonly onLogout: () => void,
-        private readonly onSignup: (data: SignupData) => Promise<void>,
-        private readonly onSaveSettings: (data: UserSettings) => Promise<void>,
-        private readonly onToggleLock: () => Promise<void>,
-        private readonly onOpenProfile: () => Promise<void>,
+        private readonly onLogin: AsyncProcWithArg<LoginData>,
+        private readonly onLogout: AsyncProc,
+        private readonly onSignup: AsyncProcWithArg<SignupData>,
+        private readonly onSaveSettings: AsyncProcWithArg<UserSettings>,
+        private readonly onToggleLock: AsyncProc,
+        private readonly onOpenProfile: AsyncProc,
     ) {
         super(UIToolkit.div('profile-bar', 'toolbar', 'py-2').element);
     }
@@ -83,13 +92,13 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                 // If only SSO is enabled: trigger an SSO login
                 case 0:
                     if (this._pageInfo.authSso) {
-                        return this.onLogin({choice: LoginChoice.federatedAuth, idp: 'sso'});
+                        return this.login({choice: LoginChoice.federatedAuth, idp: 'sso'});
                     }
                     break;
 
                 // A single federated IdP is enabled: turn to that IdP
                 case 1:
-                    return this.onLogin({choice: LoginChoice.federatedAuth, idp: this._pageInfo.idps![0].id});
+                    return this.login({choice: LoginChoice.federatedAuth, idp: this._pageInfo.idps![0].id});
             }
         }
 
@@ -104,33 +113,39 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
         // IF the dialog is confirmed, either switch to signup or execute a login, depending on the user's choice
         if (dlg.confirmed) {
             const data = dlg.data;
-            return data.choice === LoginChoice.signup ? this.signupUser() : this.onLogin(data);
+            return data.choice === LoginChoice.signup ? this.signupUser() : this.login(data);
         }
     }
 
     /**
-     * Show a signup dialog and return a promise that's resolved when the dialog is closed.
+     * Show a signup dialog and return a promise that's resolved when the dialog is closed and the submission is
+     * complete.
      */
     private async signupUser(): Promise<void> {
         const dlg = await SignupDialog.run(this.t, this.root, {ref: this._btnLogin!, placement: 'bottom-end'}, this._pageInfo!);
         if (dlg.confirmed) {
-            await this.onSignup(dlg.data);
+            return this._btnLogin!.spin(() => this.onSignup(dlg.data));
         }
+    }
+
+    /**
+     * Invoke the login callback while showing a spinner on the Login button.
+     */
+    private async login(data: LoginData): Promise<void> {
+        return this._btnLogin!.spin(() => this.onLogin(data));
     }
 
     /**
      * Show the settings dialog and return a promise that's resolved when the dialog is closed.
      */
     private async editSettings(): Promise<void> {
-        const dlg = await SettingsDialog.run(
+        await SettingsDialog.run(
             this.t,
             this.root,
             {ref: this._btnSettings!, placement: 'bottom-end'},
             this._principal!,
+            us => this.onSaveSettings(us),
             this.onOpenProfile);
-        if (dlg.confirmed) {
-            await this.onSaveSettings(dlg.data);
-        }
     }
 
     /**
@@ -169,12 +184,12 @@ export class ProfileBar extends Wrap<HTMLDivElement> {
                             UIToolkit.toolButton(
                                 isPageRO ? 'unlock' : 'lock',
                                 this.t(isPageRO ? 'btnUnlock' : 'btnLock'),
-                                () => this.onToggleLock(),
+                                btn => btn.spin(this.onToggleLock),
                                 'btn-lg'),
                         // Settings button
                         this._btnSettings = UIToolkit.toolButton('gear', this.t('btnSettings'), () => this.editSettings(), 'btn-lg'),
                         // Logout button
-                        UIToolkit.toolButton('exit', this.t('btnLogout'), () => this.onLogout(), 'btn-lg')));
+                        UIToolkit.toolButton('exit', this.t('btnLogout'), btn => btn.spin(this.onLogout), 'btn-lg')));
             return;
         }
 

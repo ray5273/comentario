@@ -1,9 +1,8 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
-import { PageInfo, TranslateFunc } from './models';
+import { AsyncProcWithArg, PageInfo, TranslateFunc } from './models';
 import { Utils } from './utils';
 
-export type CommentEditorCallback = (ce: CommentEditor) => Promise<void>;
 export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
 
 export class CommentEditor extends Wrap<HTMLFormElement>{
@@ -34,8 +33,8 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         isEdit: boolean,
         initialText: string,
         private readonly pageInfo: PageInfo,
-        private readonly onCancel: CommentEditorCallback,
-        private readonly onSubmit: CommentEditorCallback,
+        private readonly onCancel: AsyncProcWithArg<CommentEditor>,
+        private readonly onSubmit: AsyncProcWithArg<CommentEditor>,
         private readonly onPreview: CommentEditorPreviewCallback,
     ) {
         super(UIToolkit.form(() => this.submitEdit(), () => this.cancelEdit()).element);
@@ -99,7 +98,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         let html = '';
         if (this.previewing) {
             try {
-                html = await this.onPreview(this.markdown);
+                html = await this.btnPreview.spin(() => this.onPreview(this.markdown));
             } catch (e: any) {
                 html = `${this.t('previewFailed')}: ${e.message || '(unknown error)'}`;
             }
@@ -130,7 +129,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         // Disable the Preview/Submit buttons if the text is empty or during submission
         const cannotPost = !this.markdown || this.submitting;
         this.btnPreview.disabled(cannotPost).setClasses(this.previewing, 'btn-active');
-        this.btnSubmit.disabled(cannotPost);
+        this.btnSubmit.disabled(cannotPost).setClasses(this.submitting, 'spinner');
 
         // Hide the textarea and show the preview in the preview mode
         this.textarea.setClasses(this.previewing, 'hidden');

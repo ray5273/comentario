@@ -1,6 +1,6 @@
 import { Wrap } from './element-wrap';
 import {
-    ANONYMOUS_ID,
+    ANONYMOUS_ID, AsyncProcWithArg,
     Comment,
     CommenterMap,
     CommentSort,
@@ -16,8 +16,8 @@ import { ConfirmDialog } from './confirm-dialog';
 
 export type CommentCardEventHandler = (c: CommentCard) => void;
 export type CommentCardGetAvatarHandler = (user: User | undefined) => Wrap<any>;
-export type CommentCardModerateEventHandler = (c: CommentCard, approve: boolean) => void;
-export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1) => void;
+export type CommentCardModerateEventHandler = (c: CommentCard, approve: boolean) => Promise<void>;
+export type CommentCardVoteEventHandler = (c: CommentCard, direction: -1 | 0 | 1) => Promise<void>;
 
 /**
  * Extension of Comment that can hold a link to the card associated with the comment.
@@ -171,10 +171,10 @@ export interface CommentRenderingContext {
     // Events
     readonly onGetAvatar: CommentCardGetAvatarHandler;
     readonly onModerate:  CommentCardModerateEventHandler;
-    readonly onDelete:    CommentCardEventHandler;
+    readonly onDelete:    AsyncProcWithArg<CommentCard>;
     readonly onEdit:      CommentCardEventHandler;
     readonly onReply:     CommentCardEventHandler;
-    readonly onSticky:    CommentCardEventHandler;
+    readonly onSticky:    AsyncProcWithArg<CommentCard>;
     readonly onVote:      CommentCardVoteEventHandler;
 }
 
@@ -394,9 +394,9 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         // Upvote / Downvote buttons and the score
         if (ctx.enableVoting) {
             left.append(
-                this.btnUpvote = UIToolkit.toolButton('arrowUp', this.t('actionUpvote'), () => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1)).disabled(ownComment),
+                this.btnUpvote = UIToolkit.toolButton('arrowUp', this.t('actionUpvote'), btn => btn.spin(() => ctx.onVote(this, this._comment.direction > 0 ? 0 : 1))).disabled(ownComment),
                 this.eScore = UIToolkit.div('score').attr({title: this.t('commentScore')}),
-                this.btnDownvote = UIToolkit.toolButton('arrowDown', this.t('actionDownvote'), () => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1)).disabled(ownComment));
+                this.btnDownvote = UIToolkit.toolButton('arrowDown', this.t('actionDownvote'), btn => btn.spin(() => ctx.onVote(this, this._comment.direction < 0 ? 0 : -1))).disabled(ownComment));
         }
 
         // Reply button
@@ -406,13 +406,13 @@ export class CommentCard extends Wrap<HTMLDivElement> {
 
         // Approve/reject buttons
         if (this.isModerator && this._comment.isPending) {
-            this.btnApprove = UIToolkit.toolButton('check', this.t('actionApprove'), () => ctx.onModerate(this, true),  'text-success').appendTo(right);
-            this.btnReject  = UIToolkit.toolButton('times', this.t('actionReject'),  () => ctx.onModerate(this, false), 'text-warning').appendTo(right);
+            this.btnApprove = UIToolkit.toolButton('check', this.t('actionApprove'), btn => btn.spin(() => ctx.onModerate(this, true)),  'text-success').appendTo(right);
+            this.btnReject  = UIToolkit.toolButton('times', this.t('actionReject'),  btn => btn.spin(() => ctx.onModerate(this, false)), 'text-warning').appendTo(right);
         }
 
         // Sticky toggle button (top-level comments only)
         if (!this._comment.parentId) {
-            this.btnSticky = UIToolkit.toolButton('star', '', () => ctx.onSticky(this))
+            this.btnSticky = UIToolkit.toolButton('star', '', btn => btn.spin(() => ctx.onSticky(this)))
                 .disabled(!this.isModerator)
                 .appendTo(right);
         }
@@ -429,11 +429,11 @@ export class CommentCard extends Wrap<HTMLDivElement> {
         return toolbar;
     }
 
-    private async deleteComment(btn: Wrap<any>, ctx: CommentRenderingContext) {
+    private async deleteComment(btn: Wrap<HTMLButtonElement>, ctx: CommentRenderingContext) {
         // Confirm deletion
         if (await ConfirmDialog.run(this.t, ctx.root, {ref: btn, placement: 'bottom-end'}, this.t('confirmCommentDeletion'))) {
             // Notify the callback
-            ctx.onDelete(this);
+            await btn.spin(() => ctx.onDelete(this));
         }
     }
 

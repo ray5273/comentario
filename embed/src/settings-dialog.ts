@@ -1,20 +1,22 @@
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { Dialog, DialogPositioning } from './dialog';
-import { Principal, TranslateFunc, UserSettings } from './models';
+import { AsyncProc, AsyncProcWithArg, Principal, TranslateFunc, UserSettings } from './models';
 
 export class SettingsDialog extends Dialog {
 
     private _cbNotifyModerator?: Wrap<HTMLInputElement>;
     private _cbNotifyReplies?: Wrap<HTMLInputElement>;
     private _cbNotifyCommentStatus?: Wrap<HTMLInputElement>;
+    private _btnSave?: Wrap<HTMLButtonElement>;
 
     private constructor(
         t: TranslateFunc,
         parent: Wrap<any>,
         pos: DialogPositioning,
         private readonly principal: Principal,
-        private readonly onOpenProfile: () => void,
+        private readonly onSave: AsyncProcWithArg<UserSettings>,
+        private readonly onOpenProfile: AsyncProc,
     ) {
         super(t, parent, t('dlgTitleUserSettings'), pos);
     }
@@ -25,27 +27,17 @@ export class SettingsDialog extends Dialog {
      * @param parent Parent element for the dialog.
      * @param pos Positioning options.
      * @param principal Principal whose settings are being edited.
-     * @param onOpenProfile Callback for Edit Comentario profile click
+     * @param onSave Callback for applying the changed settings.
+     * @param onOpenProfile Callback for Edit Comentario profile click.
      */
-    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, principal: Principal, onOpenProfile: () => void): Promise<SettingsDialog> {
-        const dlg = new SettingsDialog(t, parent, pos, principal, onOpenProfile);
+    static run(t: TranslateFunc, parent: Wrap<any>, pos: DialogPositioning, principal: Principal, onSave: AsyncProcWithArg<UserSettings>, onOpenProfile: AsyncProc): Promise<SettingsDialog> {
+        const dlg = new SettingsDialog(t, parent, pos, principal, onSave, onOpenProfile);
         return dlg.run(dlg);
-    }
-
-    /**
-     * Entered settings.
-     */
-    get data(): UserSettings {
-        return {
-            notifyModerator:     !!this._cbNotifyModerator?.isChecked,
-            notifyReplies:       !!this._cbNotifyReplies?.isChecked,
-            notifyCommentStatus: !!this._cbNotifyCommentStatus?.isChecked,
-        };
     }
 
     override renderContent(): Wrap<any> {
         const isModerator = this.principal && (this.principal.isSuperuser || this.principal.isOwner || this.principal.isModerator);
-        return UIToolkit.form(() => this.dismiss(true), () => this.dismiss())
+        return UIToolkit.form(() => this.save(), () => this.dismiss())
             .append(
                 // Checkboxes
                 UIToolkit.div('checkbox-group').append(
@@ -74,18 +66,39 @@ export class SettingsDialog extends Dialog {
                                 .checked(this.principal.notifyCommentStatus),
                             Wrap.new('label').attr({for: this._cbNotifyCommentStatus.getAttr('id')}).inner(this.t('fieldComStatusNotifications')))),
                 // Submit button
-                UIToolkit.div('dialog-centered').append(UIToolkit.submit(this.t('actionSave'), false)),
+                UIToolkit.div('dialog-centered')
+                    .append(this._btnSave = UIToolkit.submit(this.t('actionSave'), false)),
                 // Edit profile link (non-SSO only)
                 !this.principal.isSso && Wrap.new('hr'),
                 !this.principal.isSso &&
                     UIToolkit.div('dialog-centered')
                         .append(
-                            UIToolkit.button(this.t('actionEditComentarioProfile'), () => this.openProfile(), 'btn-link')
+                            UIToolkit.button(this.t('actionEditComentarioProfile'), btn => this.openProfile(btn), 'btn-link')
                                 .append(UIToolkit.icon('newTab').classes('ms-1'))));
     }
 
-    private openProfile() {
+    /**
+     * Invoke the open profile callback while showing a spinner on the Open profile button.
+     * @private
+     */
+    private async openProfile(btn: Wrap<HTMLButtonElement>) {
+        await btn.spin(() => this.onOpenProfile());
         this.dismiss(false);
-        this.onOpenProfile();
+    }
+
+    /**
+     * Invoke the save callback while showing a spinner on the Save button.
+     * @private
+     */
+    private async save() {
+        // Show a spinner on the button while invoking the save callback
+        await this._btnSave!.spin(() => this.onSave({
+                notifyModerator:     !!this._cbNotifyModerator?.isChecked,
+                notifyReplies:       !!this._cbNotifyReplies?.isChecked,
+                notifyCommentStatus: !!this._cbNotifyCommentStatus?.isChecked,
+            }));
+
+        // Close the dialog
+        this.dismiss(true);
     }
 }
