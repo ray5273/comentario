@@ -759,6 +759,12 @@ func TestMarkdownToHTML(t *testing.T) {
 		{"HTML                   ", "<b>not bold</b>", false, false, false, "<p>not bold</p>"},
 		{"Table, tables off      ", "| H1 | H2 |\n|----|----|\n| ab | cd |\n| ef | gh |", false, false, false, "<p>| H1 | H2 |<br>\n|----|----|<br>\n| ab | cd |<br>\n| ef | gh |</p>"},
 		{"Table, tables on       ", "| H1 | H2 |\n|----|----|\n| ab | cd |\n| ef | gh |", false, false, true, "<table>\n<thead>\n<tr>\n<th>H1</th>\n<th>H2</th>\n</tr>\n</thead>\n<tbody>\n<tr>\n<td>ab</td>\n<td>cd</td>\n</tr>\n<tr>\n<td>ef</td>\n<td>gh</td>\n</tr>\n</tbody>\n</table>"},
+		{"Spoiler",
+			">! Some title",
+			false,
+			false,
+			false,
+			"<p></p>"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

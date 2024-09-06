@@ -17,8 +17,6 @@ workflow:
     - if: $CI_COMMIT_SHORT_SHA
       variables:
         VERSION: "$CI_COMMIT_SHORT_SHA"
-        ENV_HOST:
-        HELM_CHANNEL:
 
 stages:
   - build
@@ -34,6 +32,8 @@ variables:
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
   PUSH_IMAGE: "false"
+  ENV_HOST: ""
+  HELM_CHANNEL: ""
   SKIP_TESTS:
     value: "false"
     description: Whether to skip executing front-end tests

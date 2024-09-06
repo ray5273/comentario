@@ -18,6 +18,7 @@ import (
 	"github.com/yuin/goldmark/extension"
 	gmhtml "github.com/yuin/goldmark/renderer/html"
 	"gitlab.com/comentario/comentario/internal/intf"
+	"gitlab.com/comentario/comentario/internal/util/mdext"
 	"golang.org/x/net/html"
 	"io"
 	"math/rand"
@@ -389,7 +390,8 @@ func MarkdownToHTML(markdown string, links, images, tables bool) string {
 	md := goldmark.New(
 		goldmark.WithExtensions(
 			extension.Strikethrough,
-			extension.DefinitionList),
+			extension.DefinitionList,
+			mdext.BlockSpoilerExtension),
 		goldmark.WithParserOptions(),
 		goldmark.WithRendererOptions(
 			gmhtml.WithHardWraps(),
