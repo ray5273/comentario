@@ -3,14 +3,22 @@ workflow:
     - if: $CI_COMMIT_TAG
       variables:
         VERSION: "$CI_COMMIT_TAG"
+        PUSH_IMAGE: "true"
         ENV_HOST: comentario.app
         HELM_CHANNEL: stable
 
     - if: $CI_COMMIT_BRANCH == "dev"
       variables:
         VERSION: "$CI_COMMIT_BRANCH-$CI_COMMIT_SHORT_SHA"
+        PUSH_IMAGE: "true"
         ENV_HOST: edge.comentario.app
         HELM_CHANNEL: edge
+
+    - if: $CI_COMMIT_SHORT_SHA
+      variables:
+        VERSION: "$CI_COMMIT_SHORT_SHA"
+        ENV_HOST:
+        HELM_CHANNEL:
 
 stages:
   - build
@@ -25,6 +33,7 @@ variables:
   DEPLOYER_IMAGE: "alpine/k8s:1.29.2"
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
+  PUSH_IMAGE: "false"
   SKIP_TESTS:
     value: "false"
     description: Whether to skip executing front-end tests
@@ -216,12 +225,9 @@ docker-image:
     # Login to the Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
-    # Build and push the images
+    # Build and optionally push the images
     - echo "Building tag '$IMG_TAG_CURRENT$suffix'"
     - docker build -t "$IMG_TAG_CURRENT$suffix" -f "Dockerfile$suffix" .
-    - docker push "$IMG_TAG_CURRENT$suffix"
-
-    # Push extra tags
     - |
       push_tag() {
           tag="$1$suffix"
@@ -230,14 +236,19 @@ docker-image:
           docker push "$tag"
       }
 
-      # For a tag, also push it as 'latest'
-      if [[ -n "$CI_COMMIT_TAG" ]]; then
-          push_tag "$IMG_TAG_LATEST"
-      fi
-
-      # For dev, also push it as 'edge'
-      if [[ "$CI_COMMIT_BRANCH" == "dev" ]]; then
-          push_tag "$IMG_TAG_EDGE"
+      # Push the "main" tag (main repo only)
+      if [[ $CI_PROJECT_NAMESPACE == 'comentario' && $PUSH_IMAGE == 'true' ]]; then
+          docker push "$IMG_TAG_CURRENT$suffix"
+      
+          # For a tag, also push it as 'latest'
+          if [[ -n "$CI_COMMIT_TAG" ]]; then
+              push_tag "$IMG_TAG_LATEST"
+          fi
+    
+          # For dev, also push it as 'edge'
+          if [[ "$CI_COMMIT_BRANCH" == "dev" ]]; then
+              push_tag "$IMG_TAG_EDGE"
+          fi
       fi
 
 helm-chart:
@@ -251,13 +262,16 @@ helm-chart:
     # Package the chart into a tarball
     - helm package resources/helm/comentario
 
-    # Publish the package into the Helm repository
-    - curl
-        --fail-with-body
-        --request POST
-        --user gitlab-ci-token:$CI_JOB_TOKEN
-        --form "chart=@comentario-$CHART_VERSION.tgz" 
-        "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/helm/api/$HELM_CHANNEL/charts"
+    # If there's a channel specified, publish the package into the Helm repository
+    - |
+      if [[ -n "$HELM_CHANNEL" ]]; then
+          curl \
+            --fail-with-body \
+            --request POST \
+            --user gitlab-ci-token:$CI_JOB_TOKEN \
+            --form "chart=@comentario-$CHART_VERSION.tgz" \
+            "$CI_API_V4_URL/projects/$CI_PROJECT_ID/packages/helm/api/$HELM_CHANNEL/charts"
+      fi
 
 # Verify the .deb package
 verify-package-deb:
