@@ -6,6 +6,7 @@ import { provideRouter, RouterModule, Routes, withComponentInputBinding, withInM
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
+import { provideHighlightOptions } from 'ngx-highlightjs';
 import { AppComponent } from './app/app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { FooterComponent } from './footer/footer.component';
@@ -70,6 +71,14 @@ const routes: Routes = [
         ToolsModule,
     ],
     providers: [
+        // ngx-highlightjs
+        provideHighlightOptions({
+            coreLibraryLoader: () => import('highlight.js/lib/core'),
+            languages: {
+                html:     () => import('highlight.js/lib/languages/xml'),
+                markdown: () => import('highlight.js/lib/languages/markdown'),
+            }
+        }),
         // API configuration
         {provide: Configuration, useFactory: () => new Configuration({basePath: environment.apiBaseUrl})},
         {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},

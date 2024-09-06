@@ -1,8 +1,9 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
-import { MockProvider } from 'ng-mocks';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
+import { Highlight } from 'ngx-highlightjs';
+import { MockProvider } from 'ng-mocks';
 import { DomainInstallComponent } from './domain-install.component';
 import { ConfigService } from '../../../../../_services/config.service';
 import { InstanceStaticConfig } from '../../../../../../generated-api';
@@ -16,7 +17,7 @@ describe('DomainInstallComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [DomainInstallComponent],
-            imports: [ReactiveFormsModule, NgbCollapseModule, FontAwesomeTestingModule, ToolsModule],
+            imports: [ReactiveFormsModule, NgbCollapseModule, FontAwesomeTestingModule, Highlight, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig}),
             ],

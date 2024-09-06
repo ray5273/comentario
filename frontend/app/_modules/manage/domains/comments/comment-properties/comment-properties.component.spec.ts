@@ -2,6 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
+import { Highlight } from 'ngx-highlightjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { CommentPropertiesComponent } from './comment-properties.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
@@ -18,7 +19,7 @@ describe('CommentPropertiesComponent', () => {
     beforeEach(() => {
         TestBed.configureTestingModule({
             declarations: [CommentPropertiesComponent, MockComponents(NoDataComponent, UserLinkComponent)],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NgbModalModule, ToolsModule],
+            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NgbModalModule, Highlight, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),

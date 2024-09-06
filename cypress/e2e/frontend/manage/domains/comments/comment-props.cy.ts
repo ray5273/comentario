@@ -4,9 +4,10 @@ context('Comment Properties page', () => {
 
     const pagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).comments + '/64fb0078-92c8-419d-98ec-7f22c270ef3a';
     const commentText = 'Captain, I\'ve plotted our course, and I suggest we take the eastern route. It\'ll take us a bit longer, but we\'ll avoid any bad weather.';
+    const commentHtml = '<p>Captain, I&#39;ve plotted our course, and I suggest we take the eastern route. It&#39;ll take us a bit longer, but we&#39;ll avoid any bad weather.</p>';
     const commentLink = 'http://localhost:8000/#comentario-64fb0078-92c8-419d-98ec-7f22c270ef3a';
 
-    const makeAliases = (modButtons: boolean, delButton: boolean) => {
+    const makeAliases = (markdownTab: boolean, modButtons: boolean, delButton: boolean) => {
         cy.get('app-comment-properties').as('commentProps');
 
         // Heading
@@ -15,8 +16,15 @@ context('Comment Properties page', () => {
         // Details
         cy.get('@commentProps').find('#comment-detail-table').as('commentDetails');
 
-        // Text
-        cy.get('@commentProps').find('.comment-text').as('commentText');
+        // Text tabs
+        cy.get('@commentProps').find('#comment-text-tabs').as('commentTabs');
+        cy.get('@commentTabs').contains('button', 'Formatted').as('commentTabFormatted')  .should('be.visible').and('have.class', 'active');
+        cy.get('@commentTabs').contains('button', 'HTML')     .as('commentTabHtml')       .should('be.visible');
+        if (markdownTab) {
+            cy.get('@commentTabs').contains('button', 'Markdown').as('commentTabMarkdown').should('be.visible');
+        } else {
+            cy.get('@commentTabs').contains('button', 'Markdown').should('not.exist');
+        }
 
         // Buttons
         if (modButtons) {
@@ -44,6 +52,22 @@ context('Comment Properties page', () => {
         cy.get('@btnDelete') .hasClass('active').its(0).should('eq', deleted);
     };
 
+    const checkCommentText = (markdown: boolean) => {
+        // Formatted text is initially visible
+        cy.get('@commentTabFormatted').should('have.class', 'active');
+        cy.get('@commentProps').find('.comment-text').should('be.visible').and('have.text', commentText);
+
+        // Check HTML
+        cy.get('@commentTabHtml').click().should('have.class', 'active');
+        cy.get('@commentProps').find('pre code').should('be.visible').and('have.text', commentHtml);
+
+        // Check Markdown: its value is the same as the text
+        if (markdown) {
+            cy.get('@commentTabMarkdown').click().should('have.class', 'active');
+            cy.get('@commentProps').find('pre code').should('be.visible').and('have.text', commentText);
+        }
+    }
+
     //------------------------------------------------------------------------------------------------------------------
 
     beforeEach(cy.backendReset);
@@ -70,7 +94,7 @@ context('Comment Properties page', () => {
 
         it('for superuser', () => {
             cy.loginViaApi(USERS.root, pagePath);
-            makeAliases(true, true);
+            makeAliases(true, true, true);
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -92,7 +116,7 @@ context('Comment Properties page', () => {
             checkButtonsActive(true, false, false);
 
             // Check text
-            cy.get('@commentText').should('be.visible').and('have.text', commentText);
+            checkCommentText(true);
 
             // Unapprove the comment
             cy.get('@btnApprove').click();
@@ -130,12 +154,12 @@ context('Comment Properties page', () => {
             checkButtonsActive(false, false, false);
             cy.get('@commentDetails').ddItem('Status').should('have.text', 'Pending');
 
-            // Delete the comment - all buttons and the text disappear
+            // Delete the comment - all buttons and the text tabs disappear
             delComment();
             cy.get('@btnApprove') .should('not.exist');
             cy.get('@btnReject')  .should('not.exist');
             cy.get('@btnDelete')  .should('not.exist');
-            cy.get('@commentText').should('not.exist');
+            cy.get('@commentTabs').should('not.exist');
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -158,7 +182,7 @@ context('Comment Properties page', () => {
 
         it('for owner user', () => {
             cy.loginViaApi(USERS.ace, pagePath);
-            makeAliases(true, true);
+            makeAliases(true, true, true);
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -179,7 +203,7 @@ context('Comment Properties page', () => {
             checkButtonsActive(true, false, false);
 
             // Check text
-            cy.get('@commentText').should('be.visible').and('have.text', commentText);
+            checkCommentText(true);
 
             // Unapprove the comment
             cy.get('@btnApprove').click();
@@ -207,7 +231,7 @@ context('Comment Properties page', () => {
             cy.get('@btnApprove') .should('not.exist');
             cy.get('@btnReject')  .should('not.exist');
             cy.get('@btnDelete')  .should('not.exist');
-            cy.get('@commentText').should('not.exist');
+            cy.get('@commentTabs').should('not.exist');
             cy.get('@commentDetails').ddItem('Status').should('have.text', 'Deleted');
 
             // Check properties
@@ -230,7 +254,7 @@ context('Comment Properties page', () => {
 
         it('for moderator user', () => {
             cy.loginViaApi(USERS.king, pagePath);
-            makeAliases(true, true);
+            makeAliases(true, true, true);
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -250,7 +274,7 @@ context('Comment Properties page', () => {
             checkButtonsActive(true, false, false);
 
             // Check text
-            cy.get('@commentText').should('be.visible').and('have.text', commentText);
+            checkCommentText(true);
 
             // Unapprove the comment
             cy.get('@btnApprove').click();
@@ -278,7 +302,7 @@ context('Comment Properties page', () => {
             cy.get('@btnApprove') .should('not.exist');
             cy.get('@btnReject')  .should('not.exist');
             cy.get('@btnDelete')  .should('not.exist');
-            cy.get('@commentText').should('not.exist');
+            cy.get('@commentTabs').should('not.exist');
             cy.get('@commentDetails').ddItem('Status').should('have.text', 'Deleted');
 
             // Check properties
@@ -301,7 +325,7 @@ context('Comment Properties page', () => {
 
         it('for commenter who is comment author', () => {
             cy.loginViaApi(USERS.commenterTwo, pagePath);
-            makeAliases(false, true);
+            makeAliases(true, false, true);
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -318,12 +342,12 @@ context('Comment Properties page', () => {
             ]);
 
             // Check text
-            cy.get('@commentText').should('be.visible').and('have.text', commentText);
+            checkCommentText(true);
 
             // Delete the comment - the button and the text disappear
             delComment();
             cy.get('@btnDelete')  .should('not.exist');
-            cy.get('@commentText').should('not.exist');
+            cy.get('@commentTabs').should('not.exist');
             cy.get('@commentDetails').ddItem('Status').should('have.text', 'Deleted');
 
             // Check properties
@@ -345,7 +369,7 @@ context('Comment Properties page', () => {
 
         it('for another commenter', () => {
             cy.loginViaApi(USERS.commenterThree, pagePath);
-            makeAliases(false, false);
+            makeAliases(false, false, false);
 
             // Check properties
             cy.get('@commentDetails').dlTexts().should('matrixMatch', [
@@ -360,7 +384,7 @@ context('Comment Properties page', () => {
             ]);
 
             // Check text
-            cy.get('@commentText').should('be.visible').and('have.text', commentText);
+            checkCommentText(false);
         });
     });
 });

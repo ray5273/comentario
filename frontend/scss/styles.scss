@@ -7,6 +7,9 @@
 // Import Bootstrap
 @import "bootstrap/scss/bootstrap";
 
+// highlight.js theme
+@import 'highlight.js/styles/stackoverflow-light';
+
 // Give all root elements full height so that we can position the footer at the bottom of the screen
 html, body, app-root {
     height: 100%;
@@ -178,6 +181,10 @@ dl.detail-table, dl.detail-table > div {
 }
 
 .comment-text {
+    // Let's try to match the "native" comment card
+    font-family: 'Source Sans Pro', sans-serif;
+    font-size: 15px;
+
     // Remove the default margin from the bottom after the comment text
     p:last-child {
         margin-bottom: 0 !important;

@@ -5,6 +5,7 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbCollapseModule, NgbDropdownModule, NgbNavModule, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { NgChartsModule } from 'ng2-charts';
+import { Highlight } from 'ngx-highlightjs';
 import { ManageRoutingModule } from './manage-routing.module';
 import { ControlCenterComponent } from './control-center/control-center.component';
 import { ToolsModule } from '../tools/tools.module';
@@ -116,6 +117,7 @@ import { CountryNamePipe } from './_pipes/country-name.pipe';
     ],
     imports: [
         CommonModule,
+        NgOptimizedImage,
         RouterModule,
         FormsModule,
         ReactiveFormsModule,
@@ -125,9 +127,9 @@ import { CountryNamePipe } from './_pipes/country-name.pipe';
         NgbNavModule,
         NgbTooltip,
         NgChartsModule,
+        Highlight,
         ToolsModule,
         ManageRoutingModule,
-        NgOptimizedImage,
     ],
     providers: [
         CommentService,

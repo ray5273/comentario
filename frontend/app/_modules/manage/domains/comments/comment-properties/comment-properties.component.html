@@ -164,8 +164,34 @@
         @if (comment.html) {
             <section>
                 <h3 i18n>Comment text</h3>
-                <div class="card">
-                    <div class="card-body comment-text" [innerHTML]="comment.html"></div>
+
+                <!-- Tabs -->
+                <ul ngbNav #commentTextTab="ngbNav" class="nav-tabs" id="comment-text-tabs">
+                    <li ngbNavItem>
+                        <button ngbNavLink i18n>Formatted</button>
+                        <ng-template ngbNavContent>
+                            <div class="comment-text" [innerHTML]="comment.html"></div>
+                        </ng-template>
+                    </li>
+                    <li ngbNavItem>
+                        <button ngbNavLink i18n>HTML</button>
+                        <ng-template ngbNavContent>
+                            <pre class="text-wrap mb-0"><code [highlight]="comment.html" language="html"></code></pre>
+                        </ng-template>
+                    </li>
+                    @if (comment.markdown) {
+                        <li ngbNavItem>
+                            <button ngbNavLink i18n>Markdown</button>
+                            <ng-template ngbNavContent>
+                                <pre class="text-wrap mb-0"><code [highlight]="comment.markdown" language="markdown"></code></pre>
+                            </ng-template>
+                        </li>
+                    }
+                </ul>
+
+                <!-- Tab content -->
+                <div class="p-3 border border-top-0">
+                    <div [ngbNavOutlet]="commentTextTab"></div>
                 </div>
             </section>
         }
