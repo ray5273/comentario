@@ -1,7 +1,7 @@
 <!-- User avatar, only when there's one -->
 @if (user?.hasAvatar) {
     <div>
-        <app-user-avatar [user]="user" size="L"></app-user-avatar>
+        <app-user-avatar [user]="user" size="L"/>
     </div>
 }
 
@@ -163,6 +163,27 @@
                                     class="ms-2 btn btn-outline-secondary btn-sm" i18n>Unlock</button>
                         }
                     </dd>
+                </div>
+            }
+            <!-- Signup IP -->
+            @if (user.signupIP; as v) {
+                <div>
+                    <dt i18n>Signup IP</dt>
+                    <dd><span appCopyText class="text-copyable">{{ v }}</span></dd>
+                </div>
+            }
+            <!-- Signup country -->
+            @if (user.signupCountry; as v) {
+                <div>
+                    <dt i18n>Signup country</dt>
+                    <dd>{{ v }} — {{ v | countryName }}</dd>
+                </div>
+            }
+            <!-- Signup host -->
+            @if (user.signupHost; as v) {
+                <div>
+                    <dt i18n>Signup host</dt>
+                    <dd>{{ v }}</dd>
                 </div>
             }
         }

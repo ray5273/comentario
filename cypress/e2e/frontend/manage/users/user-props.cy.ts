@@ -89,6 +89,8 @@ context('User Properties page', () => {
                 ['Created',              REGEXES.datetime],
                 ['Last password change', REGEXES.datetime],
                 ['Last login',           REGEXES.datetime],
+                ['Signup IP',            '12.13.14.15'],
+                ['Signup country',       'KZ — Kazakhstan'],
             ]);
 
             // Verify domain roles
@@ -254,6 +256,8 @@ context('User Properties page', () => {
                 ['Created',              REGEXES.datetime],
                 ['Last password change', REGEXES.datetime],
                 ['Last login',           '(never)'],
+                ['Signup IP',            '251.248.14.143'],
+                ['Signup country',       'UA — Ukraine'],
             ]);
         });
     });

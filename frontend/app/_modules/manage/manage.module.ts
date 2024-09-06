@@ -59,6 +59,7 @@ import { DomainEditAuthComponent } from './domains/domain-edit/domain-edit-auth/
 import { DomainEditModerationComponent } from './domains/domain-edit/domain-edit-moderation/domain-edit-moderation.component';
 import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit-extensions/domain-edit-extensions.component';
 import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.component';
+import { CountryNamePipe } from './_pipes/country-name.pipe';
 
 @NgModule({
     declarations: [
@@ -71,6 +72,7 @@ import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.comp
         ConfigManagerComponent,
         ConfigSectionEditComponent,
         ControlCenterComponent,
+        CountryNamePipe,
         CurrentUserBadgeComponent,
         DashboardComponent,
         DatetimePipe,

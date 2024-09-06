@@ -61,7 +61,7 @@
                     <!-- Status -->
                     <div>
                         <dt i18n>Status</dt>
-                        <dd><app-comment-status-badge [comment]="comment"></app-comment-status-badge></dd>
+                        <dd><app-comment-status-badge [comment]="comment"/></dd>
                     </div>
                     <!-- Reason for pending status -->
                     @if (comment.isPending && comment.pendingReason) {
@@ -100,6 +100,20 @@
                             }
                         </dd>
                     </div>
+                    <!-- Author IP -->
+                    @if (comment.authorIP; as v) {
+                        <div>
+                            <dt i18n>Author IP</dt>
+                            <dd><span appCopyText class="text-copyable">{{ v }}</span></dd>
+                        </div>
+                    }
+                    <!-- Author country -->
+                    @if (comment.authorCountry; as v) {
+                        <div>
+                            <dt i18n>Author country</dt>
+                            <dd>{{ v }} — {{ v | countryName }}</dd>
+                        </div>
+                    }
                     <!-- Moderated -->
                     @if (comment.moderatedTime | datetime; as v) {
                         <div>

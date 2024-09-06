@@ -82,6 +82,8 @@ context('Comment Properties page', () => {
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
                 ['Created by',     'C\nCommenter Two (two@blog.com)'],
+                ['Author IP',      '239.106.211.148'],
+                ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
                 ['Moderated by',   'C\nCommenter Two (two@blog.com)'],
             ]);
@@ -107,6 +109,8 @@ context('Comment Properties page', () => {
                 ['Sticky',                    ''],
                 ['Created',                   REGEXES.datetime],
                 ['Created by',                'C\nCommenter Two (two@blog.com)'],
+                ['Author IP',                 '239.106.211.148'],
+                ['Author country',            'GB — United Kingdom'],
                 ['Moderated',                 REGEXES.datetime],
                 ['Moderated by',              'R\nRoot (root@comentario.app)' + 'YOU'],
             ]);
@@ -143,6 +147,8 @@ context('Comment Properties page', () => {
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
                 ['Created by',     'C\nCommenter Two (two@blog.com)'],
+                ['Author IP',      '239.106.211.148'],
+                ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
                 ['Moderated by',   'R\nRoot (root@comentario.app)' + 'YOU'],
                 ['Deleted',        REGEXES.datetime],
@@ -164,6 +170,7 @@ context('Comment Properties page', () => {
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
                 ['Created by',     'C\nCommenter Two (two@blog.com)'],
+                ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
                 ['Moderated by',   'C\nCommenter Two'],
             ]);
@@ -190,6 +197,7 @@ context('Comment Properties page', () => {
                 ['Sticky',                    ''],
                 ['Created',                   REGEXES.datetime],
                 ['Created by',                'C\nCommenter Two (two@blog.com)'],
+                ['Author country',            'GB — United Kingdom'],
                 ['Moderated',                 REGEXES.datetime],
                 ['Moderated by',              'Captain Ace' + 'YOU'],
             ]);
@@ -212,6 +220,7 @@ context('Comment Properties page', () => {
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
                 ['Created by',     'C\nCommenter Two (two@blog.com)'],
+                ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
                 ['Moderated by',   'Captain Ace' + 'YOU'],
                 ['Deleted',        REGEXES.datetime],
@@ -233,6 +242,7 @@ context('Comment Properties page', () => {
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
                 ['Created by',     'C\nCommenter Two'],
+                ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
             ]);
 
@@ -258,6 +268,7 @@ context('Comment Properties page', () => {
                 ['Sticky',                    ''],
                 ['Created',                   REGEXES.datetime],
                 ['Created by',                'C\nCommenter Two'],
+                ['Author country',            'GB — United Kingdom'],
                 ['Moderated',                 REGEXES.datetime],
                 ['Moderated by',              'E\nEngineer King' + 'YOU'],
             ]);
@@ -280,6 +291,7 @@ context('Comment Properties page', () => {
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
                 ['Created by',     'C\nCommenter Two'],
+                ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
                 ['Moderated by',   'E\nEngineer King' + 'YOU'],
                 ['Deleted',        REGEXES.datetime],

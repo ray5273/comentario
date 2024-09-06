@@ -146,6 +146,12 @@ definitions:
       authorName:
         type: string
         description: Name of the author, in case the user isn't registered
+      authorIP:
+        type: string
+        description: IP address of the author, visible to superusers only
+      authorCountry:
+        type: string
+        description: Country matching the authorIP, visible to moderators only
       direction:
         type: integer
         format: int8
@@ -1290,7 +1296,7 @@ definitions:
       signupCountry:
         type: string
         readOnly: true
-        description: 2-letter country code matching the SignupIP
+        description: 2-letter country code matching the signupIP
       signupHost:
         type: string
         readOnly: true

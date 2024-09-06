@@ -1010,6 +1010,8 @@ func (c *Comment) IsRoot() bool {
 // NB: leaves the Direction at 0
 func (c *Comment) ToDTO(https bool, host, path string) *models.Comment {
 	return &models.Comment{
+		AuthorCountry: c.AuthorCountry,
+		AuthorIP:      c.AuthorIP,
 		AuthorName:    c.AuthorName,
 		CreatedTime:   strfmt.DateTime(c.CreatedTime),
 		DeletedTime:   NullDateTime(c.DeletedTime),
