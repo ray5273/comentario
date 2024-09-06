@@ -1,10 +1,12 @@
 /** Expected available UI languages. */
 export const UI_LANGUAGES = {
-    'en':    'English (English)',
-    'nl':    'Nederlands (Dutch)',
-    'pt-BR': 'português (Brazilian Portuguese)',
-    'ru':    'русский (Russian)',
-    'vi':    'Tiếng Việt (Vietnamese)',
+    'en':      'English (English)',
+    'nl':      'Nederlands (Dutch)',
+    'pt-BR':   'português (Brazilian Portuguese)',
+    'ru':      'русский (Russian)',
+    'vi':      'Tiếng Việt (Vietnamese)',
+    'zh-Hans': '简体中文 (Simplified Chinese)',
+    'zh-Hant': '繁體中文 (Traditional Chinese)',
 };
 
 /** Canned regular expressions. */
