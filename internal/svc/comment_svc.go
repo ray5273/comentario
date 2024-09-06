@@ -148,12 +148,6 @@ func (svc *commentService) Count(
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 
-	// Working around #95: the database field only accommodates IPv4 at the moment, so we ignore IPv6 addresses
-	var authorIP string
-	if util.IsValidIPv4(c.AuthorIP) {
-		authorIP = config.MaskIP(c.AuthorIP)
-	}
-
 	// Insert a record into the database
 	if err := db.ExecuteOne(
 		db.Dialect().
@@ -179,7 +173,7 @@ func (svc *commentService) Create(c *data.Comment) error {
 				"user_edited":    &c.UserEdited,
 				"pending_reason": util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength),
 				"author_name":    c.AuthorName,
-				"author_ip":      authorIP,
+				"author_ip":      config.MaskIP(c.AuthorIP),
 				"author_country": c.AuthorCountry,
 			}),
 	); err != nil {

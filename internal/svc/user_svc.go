@@ -149,12 +149,6 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
-	// Working around #95: the database field only accommodates IPv4 at the moment, so we ignore IPv6 addresses
-	var signupIP string
-	if util.IsValidIPv4(u.SignupIP) {
-		signupIP = config.MaskIP(u.SignupIP)
-	}
-
 	// Insert a new record
 	if err := db.ExecuteOne(
 		db.Dialect().
@@ -171,7 +165,7 @@ func (svc *userService) Create(u *data.User) error {
 				"ts_confirmed":          u.ConfirmedTime,
 				"ts_created":            u.CreatedTime,
 				"user_created":          u.UserCreated,
-				"signup_ip":             signupIP,
+				"signup_ip":             config.MaskIP(u.SignupIP),
 				"signup_country":        u.SignupCountry,
 				"signup_host":           u.SignupHost,
 				"banned":                u.Banned,
