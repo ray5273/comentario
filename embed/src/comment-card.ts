@@ -563,24 +563,24 @@ export class CommentCard extends Wrap<HTMLDivElement> {
      */
     private updateSubtitle(c: Comment) {
         const curTime     = new Date().getTime();
-        const createdTime = Utils.parseDate(c.createdTime)?.getTime();
+        const createdDate = Utils.parseDate(c.createdTime);
 
         this.eSubtitleLink!
             // Replace the link content
             .inner('')
             .append(
                 // Comment creation time text
-                UIToolkit.span(Utils.timeAgo(this.t, curTime, createdTime)).attr({title: c.createdTime}));
+                UIToolkit.span(Utils.timeAgo(this.t, curTime, createdDate?.getTime())).attr({title: createdDate?.toLocaleString()}));
 
         /** Add a '[done] by [user] [time] ago' message to the subtitle, if the time value is provided. */
         const addTime = (timeStr: string | undefined, byId: UUID | undefined, idByAuthor: string, idByMod: string) => {
-            const time = Utils.parseDate(timeStr)?.getTime();
-            if (time && c.userCreated) {
+            const date = Utils.parseDate(timeStr);
+            if (date && c.userCreated) {
                 this.eSubtitleLink!.append(
                     // "by …"
                     UIToolkit.span(', ' + this.t(byId === c.userCreated ? idByAuthor : idByMod) + ' '),
                     // Time ago
-                    UIToolkit.span(Utils.timeAgo(this.t, curTime, time)).attr({title: timeStr}));
+                    UIToolkit.span(Utils.timeAgo(this.t, curTime, date.getTime())).attr({title: date.toLocaleString()}));
             }
         };
 
