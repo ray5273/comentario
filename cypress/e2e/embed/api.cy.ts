@@ -17,8 +17,11 @@ context('API', () => {
                 it(`serves messages in ${code} - ${name}`, () => {
                     cy.request({url: `/api/embed/i18n/${code}/messages`, followRedirect: false}).then(r => {
                         expect(r.status).eq(200);
-                        expect(Array.isArray(r.body)).true;
-                        expect(r.body.length).eq(numAssets);
+                        expect(typeof r.body === 'object' && !Array.isArray(r.body) && r.body !== null).true;
+
+                        const { _lang: lang, ...messages } = r.body;
+                        expect(lang).eq(code);
+                        expect(Object.keys(messages).length).eq(numAssets);
                     });
                 }));
 

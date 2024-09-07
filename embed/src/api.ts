@@ -8,10 +8,7 @@ export interface ApiErrorResponse {
     readonly details?: string;
 }
 
-export interface ApiI18nMessageResponse {
-    readonly id:          string;
-    readonly translation: string;
-}
+export type ApiI18nMessageResponse = Record<string, string>;
 
 export interface ApiCommentListResponse {
     /** Page info. */
@@ -163,8 +160,8 @@ export class ApiService {
         }
     }
 
-    async i18nMessages(lang: string | null | undefined): Promise<ApiI18nMessageResponse[]> {
-        return await this.httpClient.get<ApiI18nMessageResponse[]>(`embed/i18n/${lang || 'unknown'}/messages`);
+    async i18nMessages(lang: string | null | undefined): Promise<ApiI18nMessageResponse> {
+        return await this.httpClient.get<ApiI18nMessageResponse>(`embed/i18n/${lang || 'unknown'}/messages`);
     }
 
     /**
