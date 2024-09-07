@@ -176,14 +176,14 @@
                     <li ngbNavItem>
                         <button ngbNavLink i18n>HTML</button>
                         <ng-template ngbNavContent>
-                            <pre class="text-wrap mb-0"><code [highlight]="comment.html" language="html"></code></pre>
+                            <pre class="mb-0"><code [highlight]="comment.html" language="html"></code></pre>
                         </ng-template>
                     </li>
                     @if (comment.markdown) {
                         <li ngbNavItem>
                             <button ngbNavLink i18n>Markdown</button>
                             <ng-template ngbNavContent>
-                                <pre class="text-wrap mb-0"><code [highlight]="comment.markdown" language="markdown"></code></pre>
+                                <pre class="mb-0"><code [highlight]="comment.markdown" language="markdown"></code></pre>
                             </ng-template>
                         </li>
                     }
