@@ -2050,9 +2050,16 @@ paths:
           type: string
       responses:
         200:
-          description: List of all messages for the specified language
+          description: >
+            Map of all messages for the specified language, indexed by message ID. The map is enriched with the extra
+            "_lang" parameter, which indicates the actual language being served; it can be different from the requested
+            one (after a redirect)
           schema:
             type: object
+            x-go-type:
+              import:
+                package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+              type: "I18nMessageMap"
         307:
           description: Specified language isn't available, redirecting to the default message endpoint
           headers:
