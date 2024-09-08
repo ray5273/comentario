@@ -4,6 +4,7 @@ import gulp from 'gulp';
 import * as dartSass from 'sass';
 import gulpSass from 'gulp-sass';
 import gif from 'gulp-if';
+import jest from 'gulp-jest';
 import sourcemaps from 'gulp-sourcemaps';
 import cleanCss from 'gulp-clean-css';
 import gulpESLintNew from 'gulp-eslint-new';
@@ -57,6 +58,21 @@ const compileTypescript = () =>
 /** Run all build tasks in parallel. */
 export const build = parallel(compileCss, compileTypescript);
 
+/** Run unit tests. */
+export const test = () =>
+    src('./src')
+        .pipe(jest.default({
+            automock: false,
+        }));
+
+/** Run unit tests and watch. */
+export const testWatch = () =>
+    src('./src')
+        .pipe(jest.default({
+            automock: false,
+            watch:    true,
+        }));
+
 /** Watch the source tree and rebuild the code on changes. */
 export const start = () => {
     build();
@@ -65,4 +81,4 @@ export const start = () => {
 }
 
 /** Lint and build all by default. */
-export default series(lint, build);
+export default series(lint, build, test);
