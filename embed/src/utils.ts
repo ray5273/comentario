@@ -40,50 +40,36 @@ export class Utils {
 
         // Calculate number of seconds between the two timestamps
         const seconds = Math.floor((current-previous) / 1000);
+        const formatter = new Intl.RelativeTimeFormat(t('_lang'), {numeric: 'auto'});
 
         // Years
         let interval = Math.floor(seconds / 31536000);
-        if (interval > 1) {
-            return `${interval} ${t('timeYearsAgo')}`;
-        }
-        if (interval === 1) {
-            return t('timeYearAgo');
+        if (interval >= 1) {
+            return formatter.format(-interval, 'year');
         }
 
         // Months
         interval = Math.floor(seconds / 2592000);
-        if (interval > 1) {
-            return `${interval} ${t('timeMonthsAgo')}`;
-        }
-        if (interval === 1) {
-            return t('timeMonthAgo');
+        if (interval >= 1) {
+            return formatter.format(-interval, 'month');
         }
 
         // Days
         interval = Math.floor(seconds / 86400);
-        if (interval > 1) {
-            return `${interval} ${t('timeDaysAgo')}`;
-        }
-        if (interval === 1) {
-            return t('timeYesterday');
+        if (interval >= 1) {
+            return formatter.format(-interval, 'day');
         }
 
         // Hours
         interval = Math.floor(seconds / 3600);
-        if (interval > 1) {
-            return `${interval} ${t('timeHoursAgo')}`;
-        }
-        if (interval === 1) {
-            return t('timeHourAgo');
+        if (interval >= 1) {
+            return formatter.format(-interval, 'hour');
         }
 
         // Minutes
         interval = Math.floor(seconds / 60);
-        if (interval > 1) {
-            return `${interval} ${t('timeMinutesAgo')}`;
-        }
-        if (interval === 1) {
-            return t('timeMinuteAgo');
+        if (interval >= 1) {
+            return formatter.format(-interval, 'minute');
         }
 
         // Less than a minute

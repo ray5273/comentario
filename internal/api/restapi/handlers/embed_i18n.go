@@ -4,7 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -26,12 +26,12 @@ func EmbedI18nMessages(params api_embed.EmbedI18nMessagesParams) middleware.Resp
 		return respServiceError(err)
 	}
 
-	// Convert the messages into DTOs
-	var dtos []*models.I18nMessage
-	for id, msg := range ms {
-		dtos = append(dtos, &models.I18nMessage{ID: id, Translation: msg})
-	}
+	// Convert the source message map into an API map
+	mm := exmodels.I18nMessageMap(ms)
+
+	// Let the client know what language we are serving, in case of a redirect
+	mm["_lang"] = params.Lang
 
 	// Succeeded
-	return api_embed.NewEmbedI18nMessagesOK().WithPayload(dtos)
+	return api_embed.NewEmbedI18nMessagesOK().WithPayload(mm)
 }

@@ -29,6 +29,6 @@ export class I18nService {
     async init(lang: string | null | undefined): Promise<void> {
         const ms = await this.api.i18nMessages(lang);
         this.messages.clear();
-        ms.forEach(m => this.messages.set(m.id, m.translation));
+        Object.entries(ms).forEach(([id, translation]) => this.messages.set(id, translation));
     }
 }

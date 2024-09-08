@@ -538,18 +538,6 @@ definitions:
     pattern: "[-.a-z0-9]{1,253}(:[0-9]{1-5})?"
     x-isnullable: false
 
-  i18nMessage:
-    description: Message for i18n
-    type: object
-    readOnly: true
-    properties:
-      id:
-        type: string
-        description: Message ID
-      translation:
-        type: string
-        description: Message translation in the target language
-
   importResult:
     description: Comment import result
     type: object
@@ -2062,11 +2050,16 @@ paths:
           type: string
       responses:
         200:
-          description: List of all messages for the specified language
+          description: >
+            Map of all messages for the specified language, indexed by message ID. The map is enriched with the extra
+            "_lang" parameter, which indicates the actual language being served; it can be different from the requested
+            one (after a redirect)
           schema:
-            type: array
-            items:
-              $ref: "#/definitions/i18nMessage"
+            type: object
+            x-go-type:
+              import:
+                package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+              type: "I18nMessageMap"
         307:
           description: Specified language isn't available, redirecting to the default message endpoint
           headers:

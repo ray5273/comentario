@@ -15,7 +15,8 @@
         "ng": "npm run -w frontend ng",
         "start": "npm run -w frontend start",
         "test": "npm run -w frontend test",
-        "test:ci": "npm run -w frontend test:ci"
+        "test:embed": "npm run -w embed test",
+        "test:ci": "npm run -w frontend test:ci && npm run -w embed test:ci"
     },
     "workspaces": [
         "embed",
@@ -24,16 +25,16 @@
     ],
     "devDependencies": {
         "@eslint/js": "^9.6.0",
+        "@types/yamljs": "^0.2.34",
         "@typescript-eslint/eslint-plugin": "^7.16.0",
         "@typescript-eslint/parser": "^7.16.0",
         "@typescript-eslint/utils": "^7.16.0",
-        "@types/yamljs": "^0.2.34",
         "cypress": "^13.13.0",
         "eslint": "^9.6.0",
         "eslint-plugin-cypress": "^3.3.0",
         "eslint-plugin-import": "^2.29.1",
-        "eslint-plugin-mocha": "^10.4.3",
         "eslint-plugin-jsdoc": "^48.6.0",
+        "eslint-plugin-mocha": "^10.4.3",
         "eslint-plugin-no-only-or-skip-tests": "^2.6.2",
         "eslint-plugin-prefer-arrow": "^1.2.3",
         "eslint-scope": "^8.0.1",
