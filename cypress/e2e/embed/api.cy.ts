@@ -12,36 +12,45 @@ context('API', () => {
         before(() => cy.readFile('resources/i18n/en.yaml', 'utf-8')
             .then((data: string) => numAssets = data.match(/\{id:/g).length));
 
-        const expectMessagesLang = (code: string, expected: string) => {
+        const expectMessagesLang = (code: string, lang: string) => {
             cy.request({url: `/api/embed/i18n/${code}/messages`, followRedirect: false}).then(r => {
                 expect(r.status).eq(200);
-                expect(typeof r.body === 'object' && !Array.isArray(r.body) && r.body !== null).true;
-
-                const { _lang: lang, ...messages } = r.body;
-                expect(lang).eq(expected);
-                expect(Object.keys(messages).length).eq(numAssets);
+                expect(r.body).to.not.be.null;
+                expect(Object.keys(r.body)).to.have.length(numAssets + 1); // An extra item for _lang
+                expect(r.body._lang).to.equal(lang);
             });
         }
 
-        Object.entries(UI_LANGUAGES)
-            .forEach(([code, name]) =>
-                it(`serves messages in ${code} - ${name}`, () => expectMessagesLang(code, code)));
+        context('known languages', () => {
 
-        const expectedLang = {
-            'unknown': 'en',
-            'pt-br': 'pt-BR',
-            'pt': 'pt-BR',
-            'zh': 'zh-Hans',
-            'zh-hans': 'zh-Hans',
-            'zh-hans-my': 'zh-Hans',
-            'zh-my': 'zh-Hant', // This is unexpected, but may not worth to hard-code it, so leave it anyway
-            'zh-sg': 'zh-Hans',
-            'zh-tw': 'zh-Hant',
-        }
+            Object.entries(UI_LANGUAGES)
+                .forEach(([code, name]) =>
+                    it(`serves messages in ${code} - ${name}`, () => expectMessagesLang(code, code)));
+        });
 
-        Object.entries(expectedLang)
-            .forEach(([code, expected]) =>
-                it(`serves messages for unsupported languages or fallbacks: ${code} -> ${expected}`, () => expectMessagesLang(code, expected)));
+        context('fallback languages', () => {
+            [
+                {code: 'unknown',    want: 'en'},
+                {code: 'en-US',      want: 'en'},
+                {code: 'en-GB',      want: 'en'},
+                {code: 'en-AU',      want: 'en'},
+                {code: 'pt-br',      want: 'pt-BR'},
+                {code: 'pt',         want: 'pt-BR'},
+                {code: 'ru',         want: 'ru'},
+                {code: 'ru-ru',      want: 'ru'},
+                {code: 'ru-by',      want: 'ru'},
+                {code: 'ru-UNKNOWN', want: 'ru'},
+                {code: 'zh',         want: 'zh-Hans'},
+                {code: 'zh-hans',    want: 'zh-Hans'},
+                {code: 'zh-hans-my', want: 'zh-Hans'},
+                {code: 'zh-my',      want: 'zh-Hant'}, // This is unexpected, but may not worth to hard-code it, so leave it anyway
+                {code: 'zh-sg',      want: 'zh-Hans'},
+                {code: 'zh-tw',      want: 'zh-Hant'},
+            ]
+                .forEach(test =>
+                    it(`serves messages for ${test.code} as ${test.want}`,
+                        () => expectMessagesLang(test.code, test.want)));
+        });
     });
 
     context('EmbedCommentCount', () => {

@@ -34,7 +34,8 @@ type I18nService interface {
 	IsFrontendTag(tag language.Tag) bool
 	// LangTags returns tags of supported interface languages
 	LangTags() []language.Tag
-	// Messages returns all messages in the form of an ID-indexed map for the given language
+	// Messages returns all messages in the form of an ID-indexed map, either for the given language or a fallback, and
+	// the actual language the messages are from
 	Messages(lang string) (map[string]string, string)
 	// Translate translates the provided ID into the given language
 	Translate(lang, id string, args ...reflect.Value) string
@@ -159,34 +160,37 @@ func (svc *i18nService) LangTags() []language.Tag {
 }
 
 func (svc *i18nService) Messages(lang string) (map[string]string, string) {
-	// Try to find the messages map for the required language
-	tag, _, confidence := svc.beMatcher.Match(language.Make(lang))
-	base, script, region := tag.Raw()
+	// Try to identify the language tag for the requested language
+	if tag, _, confidence := svc.beMatcher.Match(language.Make(lang)); confidence >= language.High {
+		// The tag is likely identified. Fetch its script and region
+		base, script, region := tag.Raw()
 
-	// Serve messages without an extra redirect for performance in case of fallbacks
-	if confidence >= language.High {
+		// If there's a direct match, return it
 		if ms, ok := svc.msgs[tag.String()]; ok {
 			return ms, tag.String()
 		}
 
-		// The library considers some subtags a more specific variant of the base language,
-		// so the `Tag.Parent` method is not for us. e.g. zh-Hans-CN -> zh-Hans, but zh-Hans-MY -> zh
+		// Next, consider a regional variant of the base
 		if regionLang, err := language.Compose(base, region); err == nil {
 			if ms, ok := svc.msgs[regionLang.String()]; ok {
 				return ms, regionLang.String()
 			}
 		}
+
+		// Then, a script variant of the base
 		if scriptLang, err := language.Compose(base, script); err == nil {
 			if ms, ok := svc.msgs[scriptLang.String()]; ok {
 				return ms, scriptLang.String()
 			}
 		}
+
+		// Finally, look up the unaltered base
 		if ms, ok := svc.msgs[base.String()]; ok {
 			return ms, base.String()
 		}
 	}
 
-	// Serve messages in the default language in case of unsupported languages
+	// Fall back to the default language in case no better match is identified or language is unknown
 	lang = util.DefaultLanguage.String()
 	return svc.msgs[lang], lang
 }
