@@ -35,7 +35,7 @@ type I18nService interface {
 	// LangTags returns tags of supported interface languages
 	LangTags() []language.Tag
 	// Messages returns all messages in the form of an ID-indexed map for the given language
-	Messages(lang string) (map[string]string, error)
+	Messages(lang string) (map[string]string, string)
 	// Translate translates the provided ID into the given language
 	Translate(lang, id string, args ...reflect.Value) string
 }
@@ -59,6 +59,7 @@ type i18nService struct {
 	locs      map[string]*i18n.Localizer   // Map of localizers by the language
 	msgs      map[string]map[string]string // Map of messages[ID] by the language
 	feMatcher language.Matcher             // Frontend language matcher
+	beMatcher language.Matcher             // Backend language matcher
 }
 
 func (svc *i18nService) FrontendURL(lang, subPath string, queryParams map[string]string) string {
@@ -110,6 +111,8 @@ func (svc *i18nService) Init() error {
 		return strings.Compare(a.String(), b.String())
 	})
 
+	svc.beMatcher = language.NewMatcher(svc.tags)
+
 	// Identify the fallback localizer
 	if loc, ok := svc.locs[util.DefaultLanguage.String()]; !ok {
 		return fmt.Errorf("unable to find localizer for language %q", util.DefaultLanguage)
@@ -155,12 +158,37 @@ func (svc *i18nService) LangTags() []language.Tag {
 	return svc.tags
 }
 
-func (svc *i18nService) Messages(lang string) (map[string]string, error) {
+func (svc *i18nService) Messages(lang string) (map[string]string, string) {
 	// Try to find the messages map for the required language
-	if ms, ok := svc.msgs[lang]; ok {
-		return ms, nil
+	tag, _, confidence := svc.beMatcher.Match(language.Make(lang))
+	base, script, region := tag.Raw()
+
+	// Serve messages without an extra redirect for performance in case of fallbacks
+	if confidence >= language.High {
+		if ms, ok := svc.msgs[tag.String()]; ok {
+			return ms, tag.String()
+		}
+
+		// The library considers some subtags a more specific variant of the base language,
+		// so the `Tag.Parent` method is not for us. e.g. zh-Hans-CN -> zh-Hans, but zh-Hans-MY -> zh
+		if regionLang, err := language.Compose(base, region); err == nil {
+			if ms, ok := svc.msgs[regionLang.String()]; ok {
+				return ms, regionLang.String()
+			}
+		}
+		if scriptLang, err := language.Compose(base, script); err == nil {
+			if ms, ok := svc.msgs[scriptLang.String()]; ok {
+				return ms, scriptLang.String()
+			}
+		}
+		if ms, ok := svc.msgs[base.String()]; ok {
+			return ms, base.String()
+		}
 	}
-	return nil, ErrNotFound
+
+	// Serve messages in the default language in case of unsupported languages
+	lang = util.DefaultLanguage.String()
+	return svc.msgs[lang], lang
 }
 
 func (svc *i18nService) Translate(lang, id string, args ...reflect.Value) string {

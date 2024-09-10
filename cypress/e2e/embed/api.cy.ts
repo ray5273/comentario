@@ -12,25 +12,36 @@ context('API', () => {
         before(() => cy.readFile('resources/i18n/en.yaml', 'utf-8')
             .then((data: string) => numAssets = data.match(/\{id:/g).length));
 
+        const expectMessagesLang = (code: string, expected: string) => {
+            cy.request({url: `/api/embed/i18n/${code}/messages`, followRedirect: false}).then(r => {
+                expect(r.status).eq(200);
+                expect(typeof r.body === 'object' && !Array.isArray(r.body) && r.body !== null).true;
+
+                const { _lang: lang, ...messages } = r.body;
+                expect(lang).eq(expected);
+                expect(Object.keys(messages).length).eq(numAssets);
+            });
+        }
+
         Object.entries(UI_LANGUAGES)
             .forEach(([code, name]) =>
-                it(`serves messages in ${code} - ${name}`, () => {
-                    cy.request({url: `/api/embed/i18n/${code}/messages`, followRedirect: false}).then(r => {
-                        expect(r.status).eq(200);
-                        expect(typeof r.body === 'object' && !Array.isArray(r.body) && r.body !== null).true;
+                it(`serves messages in ${code} - ${name}`, () => expectMessagesLang(code, code)));
 
-                        const { _lang: lang, ...messages } = r.body;
-                        expect(lang).eq(code);
-                        expect(Object.keys(messages).length).eq(numAssets);
-                    });
-                }));
+        const expectedLang = {
+            'unknown': 'en',
+            'pt-br': 'pt-BR',
+            'pt': 'pt-BR',
+            'zh': 'zh-Hans',
+            'zh-hans': 'zh-Hans',
+            'zh-hans-my': 'zh-Hans',
+            'zh-my': 'zh-Hant', // This is unexpected, but may not worth to hard-code it, so leave it anyway
+            'zh-sg': 'zh-Hans',
+            'zh-tw': 'zh-Hant',
+        }
 
-        it('redirects to en on an unknown language', () => {
-            cy.request({url: '/api/embed/i18n/xx-yz/messages', followRedirect: false}).then(r => {
-                expect(r.status).eq(307);
-                expect(r.headers.location).eq(`${Cypress.config().baseUrl}/api/embed/i18n/en/messages`);
-            });
-        });
+        Object.entries(expectedLang)
+            .forEach(([code, expected]) =>
+                it(`serves messages for unsupported languages or fallbacks: ${code} -> ${expected}`, () => expectMessagesLang(code, expected)));
     });
 
     context('EmbedCommentCount', () => {
