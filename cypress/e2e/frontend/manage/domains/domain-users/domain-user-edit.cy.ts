@@ -1,4 +1,5 @@
-import { DOMAINS, PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
+import { EmbedUtils } from '../../../../../support/cy-embed-utils';
 
 context('Domain User Edit page', () => {
 
@@ -14,10 +15,13 @@ context('Domain User Edit page', () => {
         cy.get('@userEdit').find('#domain-user-email').should('have.text', user.email).and('be.visible');
 
         // Form controls
-        cy.get('@userEdit').find('#role-owner')    .as('roleOwner')    .next().should('have.text', 'Owner');
-        cy.get('@userEdit').find('#role-moderator').as('roleModerator').next().should('have.text', 'Moderator');
-        cy.get('@userEdit').find('#role-commenter').as('roleCommenter').next().should('have.text', 'Commenter');
-        cy.get('@userEdit').find('#role-readonly') .as('roleReadonly') .next().should('have.text', 'Read-only');
+        cy.get('@userEdit').find('#role-owner')           .as('roleOwner')    .next().should('have.text', 'Owner');
+        cy.get('@userEdit').find('#role-moderator')       .as('roleModerator').next().should('have.text', 'Moderator');
+        cy.get('@userEdit').find('#role-commenter')       .as('roleCommenter').next().should('have.text', 'Commenter');
+        cy.get('@userEdit').find('#role-readonly')        .as('roleReadonly') .next().should('have.text', 'Read-only');
+        cy.get('@userEdit').find('#notify-replies')       .as('notifyReplies')       .should('be.enabled');
+        cy.get('@userEdit').find('#notify-moderator')     .as('notifyModerator')     .should('be.enabled');
+        cy.get('@userEdit').find('#notify-comment-status').as('notifyCommentStatus') .should('be.enabled');
 
         // Buttons
         cy.get('@userEdit').contains('.form-footer a', 'Cancel')    .as('btnCancel');
@@ -60,27 +64,76 @@ context('Domain User Edit page', () => {
         .forEach(test => context(`allows ${test.name} to edit`, () => {
 
             [
-                {name: 'moderator', user: USERS.king,           from: '@roleModerator', to: '@roleOwner',     expect: 'Owner'},
-                {name: 'commenter', user: USERS.commenterTwo,   from: '@roleCommenter', to: '@roleModerator', expect: 'Moderator'},
-                {name: 'read-only', user: USERS.commenterThree, from: '@roleReadonly',  to: '@roleCommenter', expect: 'Commenter'},
+                {name: 'moderator', user: USERS.king,           from: '@roleModerator', to: '@roleOwner',     expect: 'Owner',     isModerator: true},
+                {name: 'commenter', user: USERS.commenterTwo,   from: '@roleCommenter', to: '@roleModerator', expect: 'Moderator', isModerator: true},
+                {name: 'read-only', user: USERS.commenterThree, from: '@roleReadonly',  to: '@roleCommenter', expect: 'Commenter', isModerator: false},
             ]
                 .forEach(subj => it(`${subj.name} user`, () => {
                     // Login
                     cy.loginViaApi(test.user, `${usersPath}/${subj.user.id}/edit`);
                     makeAliases(subj.user);
 
-                    // Check the correct role is selected
-                    cy.get(subj.from).should('be.checked');
+                    // Check the input values are correct
+                    cy.get(subj.from)             .should('be.checked');
+                    cy.get('@notifyReplies')      .should('be.checked');
+                    cy.get('@notifyModerator')    .should('be.checked');
+                    cy.get('@notifyCommentStatus').should('be.checked');
 
-                    // Select a new role and save
+                    // Select a new role and toggle notifications
                     cy.get(subj.to).clickLabel();
+                    cy.get('@notifyReplies')      .click().should('not.be.checked');
+                    cy.get('@notifyModerator')    .click().should('not.be.checked');
+                    cy.get('@notifyCommentStatus').click().should('not.be.checked');
+
+                    // Submit the form
                     cy.get('@btnSubmit').click();
 
                     // We're back to user props
                     cy.isAt(`${usersPath}/${subj.user.id}`);
                     cy.toastCheckAndClose('data-saved');
-                    cy.contains('app-domain-user-properties #domain-user-detail-table dt', 'Role')
-                        .next().should('have.text', subj.expect);
+                    cy.get('app-domain-user-properties').as('userProps')
+                        .find('#domain-user-detail-table').as('userDetails')
+                        .dlTexts().should('matrixMatch', [
+                            ['Role',                         subj.expect],
+                            ['Reply notifications',          ''],
+                            ['Moderator notifications',      ''],
+                            ['Comment status notifications', ''],
+                            ['Created',                      REGEXES.datetime],
+                        ]);
+
+                    // Edit the user again
+                    cy.get('@userProps').contains('a', 'Edit').click();
+                    cy.get('@notifyReplies')      .should('not.be.checked').click();
+                    cy.get('@notifyModerator')    .should('not.be.checked');
+                    cy.get('@notifyCommentStatus').should('not.be.checked').click();
+                    cy.get('@btnSubmit').click();
+
+                    // Verify the updated properties
+                    cy.isAt(`${usersPath}/${subj.user.id}`);
+                    cy.toastCheckAndClose('data-saved');
+                    cy.get('app-domain-user-properties').as('userProps')
+                        .find('#domain-user-detail-table').as('userDetails')
+                        .dlTexts().should('matrixMatch', [
+                        ['Role',                         subj.expect],
+                        ['Reply notifications',          '✔'],
+                        ['Moderator notifications',      ''],
+                        ['Comment status notifications', '✔'],
+                        ['Created',                      REGEXES.datetime],
+                    ]);
+
+                    // Login into a comment page and check the user's settings there
+                    cy.testSiteLoginViaApi(subj.user, TEST_PATHS.noComment);
+                    EmbedUtils.makeAliases({hasSortBar: false});
+
+                    // Open the Settings dialog
+                    cy.get('@profileBar').find('button[title="Settings"]').click();
+                    cy.get('@root').find('.comentario-dialog').as('settingsDialog').should('be.visible')
+                        .contains('.comentario-dialog-header', 'User settings').should('be.visible');
+
+                    // Check the user's settings
+                    cy.get('@settingsDialog').find('#comentario-cb-notify-replies')       .should('be.checked');
+                    cy.get('@settingsDialog').find('#comentario-cb-notify-moderator')     .should(subj.isModerator ? 'not.be.checked' : 'not.exist');
+                    cy.get('@settingsDialog').find('#comentario-cb-notify-comment-status').should('be.checked');
                 }));
         }));
 });

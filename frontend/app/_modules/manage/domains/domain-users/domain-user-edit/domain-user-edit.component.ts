@@ -28,7 +28,10 @@ export class DomainUserEditComponent implements OnInit {
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
-        role: ['commenter' as UserRole, [Validators.required]],
+        role:                ['commenter' as UserRole, [Validators.required]],
+        notifyReplies:       false,
+        notifyModerator:     false,
+        notifyCommentStatus: false,
     });
 
     private readonly id$ = new ReplaySubject<string>();
@@ -59,15 +62,13 @@ export class DomainUserEditComponent implements OnInit {
                 switchMap(([meta, id]) => this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing())))
             .subscribe(r => {
                 this.domainUser = r.domainUser;
-                this.email = r.user!.email;
+                this.email      = r.user!.email;
+                const du = this.domainUser!;
                 this.form.setValue({
-                    role: this.domainUser!.isOwner ?
-                        'owner' :
-                        this.domainUser!.isModerator ?
-                            'moderator' :
-                            this.domainUser!.isCommenter ?
-                            'commenter' :
-                            'readonly',
+                    role:                du.isOwner ? 'owner' : du.isModerator ? 'moderator' : du.isCommenter ? 'commenter' : 'readonly',
+                    notifyReplies:       !!du.notifyReplies,
+                    notifyModerator:     !!du.notifyModerator,
+                    notifyCommentStatus: !!du.notifyCommentStatus,
                 });
             });
     }
@@ -78,14 +79,17 @@ export class DomainUserEditComponent implements OnInit {
 
         // Submit the form if it's valid
         if (this.form.valid) {
-            const role = this.form.value.role;
+            const val = this.form.value;
             this.api.domainUserUpdate(
                     this.domainUser!.userId!,
                     {
-                        domainId:    this.domainUser!.domainId!,
-                        isOwner:     role === 'owner',
-                        isModerator: role === 'moderator',
-                        isCommenter: role === 'commenter',
+                        domainId:            this.domainUser!.domainId!,
+                        isOwner:             val.role === 'owner',
+                        isModerator:         val.role === 'moderator',
+                        isCommenter:         val.role === 'commenter',
+                        notifyReplies:       val.notifyReplies,
+                        notifyModerator:     val.notifyModerator,
+                        notifyCommentStatus: val.notifyCommentStatus,
                     })
                 .pipe(this.saving.processing())
                 .subscribe(() => {

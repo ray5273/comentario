@@ -136,7 +136,7 @@ declare namespace Cypress {
         dlTexts(): Chainable<string[][]>;
 
         /**
-         * Return the <dd> element immediately following the <dt> containing the given text. Must be chained off a
+         * Return the `<dd>` element immediately following the `<dt>` containing the given text. Must be chained off a
          * `<dl>` element.
          */
         ddItem(dtText: string): Chainable<JQueryWithSelector>

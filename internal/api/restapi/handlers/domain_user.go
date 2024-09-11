@@ -72,6 +72,9 @@ func DomainUserUpdate(params api_general.DomainUserUpdateParams, user *data.User
 	du.IsOwner = params.Body.IsOwner
 	du.IsModerator = du.IsOwner || params.Body.IsModerator
 	du.IsCommenter = du.IsModerator || params.Body.IsCommenter
+	du.NotifyReplies = params.Body.NotifyReplies
+	du.NotifyModerator = params.Body.NotifyModerator
+	du.NotifyCommentStatus = params.Body.NotifyCommentStatus
 	if err := svc.TheDomainService.UserModify(du); err != nil {
 		return respServiceError(err)
 	}

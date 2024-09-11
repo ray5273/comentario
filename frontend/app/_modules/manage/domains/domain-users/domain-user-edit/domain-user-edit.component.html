@@ -40,6 +40,31 @@
             </div>
         </div>
 
+        <!-- Settings -->
+        <div class="mb-3 row">
+            <div class="col-sm-3">
+                <span class="colon fw-bold" i18n>Settings</span>
+            </div>
+            <div class="col-sm-9">
+                <!-- Reply notifications -->
+                <div class="form-check form-switch">
+                    <input formControlName="notifyReplies" class="form-check-input" type="checkbox" id="notify-replies">
+                    <label class="form-check-label" for="notify-replies" i18n>Reply notifications</label>
+                </div>
+                <!-- Moderator notifications -->
+                <div class="form-check form-switch">
+                    <input formControlName="notifyModerator" class="form-check-input" type="checkbox" id="notify-moderator">
+                    <label class="form-check-label" for="notify-moderator" i18n>Moderator notifications</label>
+                    <div class="form-text" i18n>Only relevant if the user is a moderator.</div>
+                </div>
+                <!-- Comment status notifications -->
+                <div class="form-check form-switch">
+                    <input formControlName="notifyCommentStatus" class="form-check-input" type="checkbox" id="notify-comment-status">
+                    <label class="form-check-label" for="notify-comment-status" i18n>Comment status notifications</label>
+                </div>
+            </div>
+        </div>
+
         <!-- Buttons -->
         <div class="form-footer">
             <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>

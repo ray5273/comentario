@@ -3352,6 +3352,15 @@ paths:
               isCommenter:
                 type: boolean
                 description: Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+              notifyReplies:
+                type: boolean
+                description: Whether the user is to be notified about replies to their comments
+              notifyModerator:
+                type: boolean
+                description: Whether the user is to receive moderator notifications
+              notifyCommentStatus:
+                type: boolean
+                description: Whether the user is to be notified about status changes (approved/rejected) of their comments
       responses:
         204:
           description: Domain user properties have been updated
