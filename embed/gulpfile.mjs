@@ -11,7 +11,7 @@ import gulpESLintNew from 'gulp-eslint-new';
 import webpack from 'webpack-stream';
 
 const sass = gulpSass(dartSass);
-const { dest, parallel, series, src, watch } = gulp;
+const { dest, parallel, src, watch } = gulp;
 
 /** Whether we're running in the production mode (default). */
 const isProd = ((process.env.NODE_ENV || 'production').trim().toLowerCase() === 'production');
@@ -80,5 +80,5 @@ export const start = () => {
     watch(sources.typescript, compileTypescript);
 }
 
-/** Lint and build all by default. */
-export default series(lint, build, test);
+/** The default is to build. */
+export default build;
