@@ -13,6 +13,7 @@ menu:
 {{< button "/about/features" "Features" "outline-primary mb-2" >}}
 {{< button "/getting-started" "Get Started" "cta mb-2" >}}
 {{< button "https://demo.comentario.app/" `View Demo<i class="fas fa-external-link ms-2"></i>` "primary mb-2" "BFOR" >}}
+{{< button "https://yktoo.com/en/blog/series/comentario/" `Blog<i class="fas fa-external-link ms-2"></i>` "outline-primary mb-2" "BFOR" >}}
 </p>
 
 **[Comentario](https://comentario.app)** is an open-source web comment engine, which adds discussion functionality to plain, boring web pages.

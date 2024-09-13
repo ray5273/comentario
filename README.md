@@ -1,6 +1,6 @@
 # Comentario
 
-[Homepage](https://comentario.app/) · [Live Demo](https://demo.comentario.app) · [Docs](https://docs.comentario.app/) · [Author's Blog](https://yktoo.com/)
+[Homepage](https://comentario.app/) · [Live Demo](https://demo.comentario.app) · [Docs](https://docs.comentario.app/) · [Blog](https://yktoo.com/en/blog/series/comentario/)
 
 ---
 
