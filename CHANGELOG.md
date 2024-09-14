@@ -1,10 +1,10 @@
 # Comentario changelog
 
-### Changes
+## v3.10.0 Donaghadee
 
 In this version we've improved language support by applying a fallback path for language variants and by adding Chinese Simplified and Traditional (thanks [@Func86](https://gitlab.com/Func86)!), added spinners to embedded comments for time-consuming API calls, extended the Comment properties page with comment text in HTML and Markdown — with syntax highlighting! — and fixed outstanding issues preventing IPv6 addresses from being registered. We also made changing a user's notification settings possible for domain owners, and massively improved doc search functionality.
 
-## v3.10.0 Donaghadee
+### Changes
 
 * Embed: add spinners to buttons running API calls (#94) - f6e755ad
 * Embed: disable comment resubmissions (#116) - e09e73a3
