@@ -1,6 +1,38 @@
 # Comentario changelog
 
-## v3.9.0
+### Changes
+
+In this version we've improved language support by applying a fallback path for language variants and by adding Chinese Simplified and Traditional (thanks [@Func86](https://gitlab.com/Func86)!), added spinners to embedded comments for time-consuming API calls, extended the Comment properties page with comment text in HTML and Markdown — with syntax highlighting! — and fixed outstanding issues preventing IPv6 addresses from being registered. We also made changing a user's notification settings possible for domain owners, and massively improved doc search functionality.
+
+## v3.10.0 Donaghadee
+
+* Embed: add spinners to buttons running API calls (#94) - f6e755ad
+* Embed: disable comment resubmissions (#116) - e09e73a3
+* Embed: use `Intl.RelativeTimeFormat` for relative time (#122) - c445983b, 0cd63e9d, 2abe30e3, 583d8241
+* Embed: display localized date and time - 7278b0b7, 7becc866
+* Embed: fix code blocks expanding beyond the card's width (#110) - a0ea36ec
+* Embed: add Jest and unit tests for `Utils` - 1d1f1dfb
+* Embed: only *build* by default; *test* and *lint* are executed separately - 8f6b9008
+* Admin UI: domain user edit page: add notification settings (#119) - bd2c48a4
+* Admin UI: comment props: show HTML/markdown; add syntax highlighting to install snippet - a069a4f3, 0a810fe1
+* Admin UI: show user signup & comment author data - 4f896d4e
+* Admin UI: improve front page placeholder display, replace deprecated test code - bf08870f
+* Backend: support IPv6 in `cm_users.signup_ip`, `cm_comments.author_ip` (#95) - 46d7456d
+* I18n: serve embed & backend messages with fallbacks applied (#121) - b27dc5cf, a26fef23, 6d498a2f, 473f1c8b
+* I18n: add translations for Chinese - 5f856615, 057f1f0b
+* I18n: enlarge user `lang_id` col to 255 chars (#107) - 66694713
+* Docs: add Read on link to section children snippets - d0eeef9f
+* Docs: expand self-host desc somewhat - d0eeef9f
+* Docs: add Architecture section (#117) - f6c44900
+* Docs: switch to using Hugo environments - 0bd269bf
+* Docs: fix and improve search, rank results based on location and number of occurrences, re-search on back/forward navigation, add result count display - ae6d2821
+* Docs: README: update blog link - 0ed9064f
+* Support for custom user attributes - d456bd04, 25cbea37
+* Docker: fix `ENV` warning - f6df3d77
+* CI: run the pipeline for each commit, but publish stuff in dev/tag only - 1c54406d
+* Code: require Go 1.23.0 - 5d17c53b, fe830021
+
+## v3.9.0 Crossgar
 
 This release implements external OIDC authentication, including login via LinkedIn, adds dark theme support to embedded comments, allows a direct database migration from Commento++, and fixes a number of issues. It also adds Vietnamese to the list of available languages.
 
@@ -26,7 +58,7 @@ From now on, the `latest` Docker image tag will refer to the most recent *releas
 * Fix: Embed: non-interactive SSO message handler removal (#96) - 07f3c519
 * Fix: Embed: remove Comentario background (#105) - af827099
 
-## v3.8.0
+## v3.8.0 Belfast
 
 This release adds own comment/page counts to the Dashboard, enables automatic Admin UI login from the user settings dialog on a comment page, adds Comentario version upgrade checks, improves embedded engine error handling, and fixes a number of issues. It also adds Brazilian Portuguese to the list of available languages.
 
@@ -46,7 +78,7 @@ This release adds own comment/page counts to the Dashboard, enables automatic Ad
 * Fix: also mask `author_ip` - fb844b1
 * Fix: reset failed login counter on unlock (#91) - c21175b
 
-## v3.7.0
+## v3.7.0 Armagh
 
 In this release we've introduced domain-level dynamic configuration, added support for unregistered commenters with a name (previously they were always "Anonymous"), a new setting for email notifications about comment approval/rejection, extended comment metadata with details about its editing, added failed login tracking, and more.
 
