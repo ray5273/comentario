@@ -1,4 +1,5 @@
-import { APP_INITIALIZER, LOCALE_ID, NgModule } from '@angular/core';
+import { APP_INITIALIZER, LOCALE_ID, NgModule, Provider } from '@angular/core';
+import { PlatformLocation } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
@@ -22,6 +23,7 @@ import { ConfigService } from './_services/config.service';
 import { LANGUAGE, provideLanguage } from '../environments/languages';
 import { AuthGuard } from './_guards/auth.guard';
 import { PluginService } from './_services/plugin.service';
+import { Utils } from './_utils/utils';
 
 const routes: Routes = [
     // Auth
@@ -47,6 +49,17 @@ const routes: Routes = [
     {path: '', pathMatch: 'full', component: HomeComponent},
     {path: '**',                  component: PageNotFoundComponent},
 ];
+
+const provideApiConfig = (): Provider =>
+    ({
+        provide: Configuration,
+        useFactory: (pl: PlatformLocation) => new Configuration({
+            // Extract the base HREF from the current document, remove the language root (such as 'en/') from the base,
+            // and append the API base path
+            basePath: Utils.joinUrl(pl.getBaseHrefFromDOM().replace(/[\w-]+\/$/, ''), environment.apiBasePath),
+        }),
+        deps: [PlatformLocation],
+    });
 
 @NgModule({
     declarations: [
@@ -80,7 +93,7 @@ const routes: Routes = [
             }
         }),
         // API configuration
-        {provide: Configuration, useFactory: () => new Configuration({basePath: environment.apiBaseUrl})},
+        provideApiConfig(),
         {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
         provideRouter(

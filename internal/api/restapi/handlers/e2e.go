@@ -17,7 +17,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
-	"net/url"
 	"os"
 	"path"
 	"plugin"
@@ -263,9 +262,7 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 	}
 
 	// Calculate the callback URL, including the payload and its HMAC signature
-	u := &url.URL{}
-	*u = *config.ServerConfig.ParsedBaseURL()
-	u.Path = path.Join(u.Path, util.APIPath, "oauth/sso/callback")
+	u := config.ServerConfig.ParsedBaseURL().JoinPath(util.APIPath, "oauth/sso/callback")
 	q := u.Query()
 	q.Set("payload", hex.EncodeToString(payloadBytes))
 	q.Set("hmac", hex.EncodeToString(util.HMACSign(payloadBytes, domain.SSOSecret)))

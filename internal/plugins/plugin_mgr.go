@@ -177,8 +177,7 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 			// Check if it's a plugin API call
 			if strings.HasPrefix(p, util.APIPath) {
 				if pe := pm.findByPath(p, util.APIPath); pe != nil {
-					r.URL.Path = "/" + p
-					pe.p.APIHandler().ServeHTTP(w, r)
+					pe.p.APIHandler().ServeHTTP(w, util.RequestReplacePath(r, p))
 					return
 				}
 			}
@@ -186,8 +185,7 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 			// Not an API call. Check if it's a statics request: resource can only be served via GET/HEAD/OPTIONS
 			if r.Method == http.MethodGet || r.Method == http.MethodHead || r.Method == http.MethodOptions {
 				if pe := pm.findByPath(p, ""); pe != nil {
-					r.URL.Path = "/" + p
-					pe.p.StaticHandler().ServeHTTP(w, r)
+					pe.p.StaticHandler().ServeHTTP(w, util.RequestReplacePath(r, p))
 					return
 				}
 			}

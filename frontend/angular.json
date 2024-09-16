@@ -24,6 +24,7 @@
                     "options": {
                         "outputPath": "../build/frontend",
                         "index": "./index.html",
+                        "baseHref": "[[[.OriginPath]]]",
                         "main": "./main.ts",
                         "polyfills": [
                             "zone.js"

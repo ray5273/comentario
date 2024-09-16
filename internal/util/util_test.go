@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"net/http"
 	"net/http/httptest"
+	"net/url"
 	"reflect"
 	"strings"
 	"testing"
@@ -787,6 +788,48 @@ func TestRandomBytesLength(t *testing.T) {
 				t.Errorf("RandomBytes() errored with %v", err)
 			} else if got := len(b); got != tt.len {
 				t.Errorf("RandomBytes() length = %v, want %v", got, tt.len)
+			}
+		})
+	}
+}
+
+func TestRequestReplacePath(t *testing.T) {
+	tests := []struct {
+		name    string
+		origUrl string
+		newPath string
+		wantUrl string
+	}{
+		{"no path       => empty", "http://foo", "", "http://foo/"},
+		{"no path       => /    ", "http://foo", "/", "http://foo/"},
+		{"no path       => bar  ", "http://foo", "bar", "http://foo/bar"},
+		{"no path       => /bar ", "http://foo", "/bar", "http://foo/bar"},
+		{"root path     => empty", "http://foo/", "", "http://foo/"},
+		{"root path     => /    ", "http://foo/", "/", "http://foo/"},
+		{"root path     => bar  ", "http://foo/", "bar", "http://foo/bar"},
+		{"root path     => /bar ", "http://foo/", "/bar", "http://foo/bar"},
+		{"/baz          => empty", "http://foo/baz", "", "http://foo/"},
+		{"/baz          => /    ", "http://foo/baz", "/", "http://foo/"},
+		{"/baz          => bar  ", "http://foo/baz", "bar", "http://foo/bar"},
+		{"/baz          => /bar ", "http://foo/baz", "/bar", "http://foo/bar"},
+		{"/baz?abc=42   => empty", "http://foo/baz?abc=42", "", "http://foo/?abc=42"},
+		{"/baz?abc=42   => /    ", "http://foo/baz?abc=42", "/", "http://foo/?abc=42"},
+		{"/baz?abc=42   => bar  ", "http://foo/baz?abc=42", "bar", "http://foo/bar?abc=42"},
+		{"/baz?abc=42   => /bar ", "http://foo/baz?abc=42", "/bar", "http://foo/bar?abc=42"},
+		{"/baz#fragment => empty", "http://foo/baz#fragment", "", "http://foo/#fragment"},
+		{"/baz#fragment => /    ", "http://foo/baz#fragment", "/", "http://foo/#fragment"},
+		{"/baz#fragment => bar  ", "http://foo/baz#fragment", "bar", "http://foo/bar#fragment"},
+		{"/baz#fragment => /bar ", "http://foo/baz#fragment", "/bar", "http://foo/bar#fragment"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			u, err := url.Parse(tt.origUrl)
+			if err != nil {
+				panic(err)
+			}
+			r := &http.Request{URL: u}
+			if rNew := RequestReplacePath(r, tt.newPath); rNew.URL.String() != tt.wantUrl {
+				t.Errorf("RequestReplacePath(), URL = %s, want URL = %s", rNew.URL, tt.wantUrl)
 			}
 		})
 	}

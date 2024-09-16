@@ -86,8 +86,7 @@ func makeAPIHandler(apiHandler http.Handler) alice.Constructor {
 				isAPIPath := strings.HasPrefix(p, util.APIPath)
 				isSwaggerPath := p == "swagger.json" || strings.HasPrefix(p, util.SwaggerUIPath)
 				if !isSwaggerPath && isAPIPath || isSwaggerPath && config.ServerConfig.EnableSwaggerUI {
-					r.URL.Path = "/" + p
-					apiHandler.ServeHTTP(w, r)
+					apiHandler.ServeHTTP(w, util.RequestReplacePath(r, p))
 					return
 				}
 			}
@@ -107,9 +106,9 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 		cu := *u
 		// Wipe out any user info
 		cu.User = nil
-		// Replace the path
-		cu.Path = p
-		return cu.String()
+		// Replace the path, prepending it with the base path
+		cu.Path = config.ServerConfig.ParsedBaseURL().Path
+		return cu.JoinPath(p).String()
 	}
 
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -181,8 +180,9 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 	s := string(b)
 	if strings.Contains(s, "[[[.") {
 		b = []byte(
-			strings.Replace(strings.Replace(s,
+			strings.Replace(strings.Replace(strings.Replace(s,
 				"[[[.Origin]]]", strings.TrimSuffix(config.ServerConfig.ParsedBaseURL().String(), "/"), -1),
+				"[[[.OriginPath]]]", strings.TrimSuffix(config.ServerConfig.ParsedBaseURL().Path, "/"), -1),
 				"[[[.CdnPrefix]]]", strings.TrimSuffix(config.ServerConfig.ParsedCDNURL().String(), "/"), -1))
 	}
 
@@ -235,8 +235,8 @@ func staticHandler(next http.Handler) http.Handler {
 						// Make a "fake" (bypassing) response writer
 						bypassWriter := &notFoundBypassWriter{ResponseWriter: w}
 
-						// Try to serve the requested static content
-						fileHandler.ServeHTTP(bypassWriter, r)
+						// Try to serve the requested static content, using a path relative to the base
+						fileHandler.ServeHTTP(bypassWriter, util.RequestReplacePath(r, p))
 
 						// If the content was found, we're done
 						if bypassWriter.status != http.StatusNotFound {
@@ -347,10 +347,17 @@ func xsrfCookieHandler(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		// Don't bother if it's an "XSRF-safe" request
 		if !config.IsXSRFSafe(r) {
-			// Set a cookie with the generated token whenever Gorilla's session cookie is not present or the auth status
-			// is requested
+			// XSRF cookie is necessary if Gorilla's session cookie is not present...
 			_, err := r.Cookie(util.CookieNameXSRFSession)
-			if err != nil || r.URL.Path == "/"+util.APIPath+"user" {
+			needCookie := err != nil
+			if !needCookie {
+				// ... or the auth status is requested
+				ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path)
+				needCookie = ok && p == "/"+util.APIPath+"user"
+			}
+
+			// Set an XSRF cookie with the generated token
+			if needCookie {
 				http.SetCookie(w, &http.Cookie{
 					Name:     util.CookieNameXSRFToken,
 					Value:    csrf.Token(r),

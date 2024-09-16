@@ -502,6 +502,17 @@ func RandomSleep(min, max time.Duration) {
 	}
 }
 
+// RequestReplacePath returns a clone of the provided HTTP request with its URL's path replaced with the given new one
+func RequestReplacePath(req *http.Request, newPath string) *http.Request {
+	// Clone the original request
+	cr := req.Clone(req.Context())
+	// Replace the path, making sure the path starts with a slash
+	cr.URL.Path = "/" + strings.TrimPrefix(newPath, "/")
+	// Make sure no raw path leftover is stored
+	cr.URL.RawPath = ""
+	return cr
+}
+
 // StripPort returns the provided hostname or IP address string with any port number part (':xxxx') removed
 func StripPort(hostOrIP string) string {
 	s := rePortInHostname.ReplaceAllString(hostOrIP, "")

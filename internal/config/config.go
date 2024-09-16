@@ -73,11 +73,10 @@ func (sc *ServerConfiguration) PathOfBaseURL(path string) (bool, string) {
 
 // URLFor returns the complete absolute URL for the given path, with optional query params
 func (sc *ServerConfiguration) URLFor(path string, queryParams map[string]string) string {
-	u := url.URL{
-		Scheme: sc.parsedBaseURL.Scheme,
-		Host:   sc.parsedBaseURL.Host,
-		Path:   strings.TrimSuffix(sc.parsedBaseURL.Path, "/") + "/" + strings.TrimPrefix(path, "/"),
+	if path == "" {
+		path = "/"
 	}
+	u := sc.parsedBaseURL.JoinPath(path)
 	if queryParams != nil {
 		q := url.Values{}
 		for k, v := range queryParams {
