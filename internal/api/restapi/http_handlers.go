@@ -353,7 +353,7 @@ func xsrfCookieHandler(next http.Handler) http.Handler {
 			if !needCookie {
 				// ... or the auth status is requested
 				ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path)
-				needCookie = ok && p == "/"+util.APIPath+"user"
+				needCookie = ok && p == util.APIPath+"user"
 			}
 
 			// Set an XSRF cookie with the generated token
