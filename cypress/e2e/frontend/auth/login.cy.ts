@@ -22,6 +22,14 @@ context('Login', () => {
         cy.isAt(PATHS.manage.dashboard);
     });
 
+    it('XSRF Token cookie can be renewed when logged in', () => {
+        cy.loginViaApi(USERS.commenterOne, PATHS.manage.dashboard);
+        cy.clearCookie('XSRF-TOKEN');
+        cy.request('GET', '/api/user').then(r => {
+            expect(r.headers['set-cookie'].some(cookie => cookie.includes('XSRF-TOKEN='))).true;
+        });
+    });
+
     it('has all necessary controls', () => {
         // Check page content
         cy.get('h1').should('have.text', 'Log in');
