@@ -52,6 +52,24 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     }
 
     /**
+     * The "pixel size" of the avatar, which takes the current device pixel ratio into account.
+     */
+    get pixelSize(): 'S' | 'M' | 'L' {
+        switch (true) {
+            // For smaller ratios just use the "CSS size"
+            case devicePixelRatio < 2:
+                return this.size;
+
+            // For larger ratios raise the size up a notch
+            case this.size === 'S':
+                return 'M';
+
+            default:
+                return 'L';
+        }
+    }
+
+    /**
      * Avatar override. If set, will take precedence over the user's avatar.
      * @param b File or blob to load the override from. null value removes the avatar, undefined removes the override.
      */
@@ -66,7 +84,7 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
     }
 
     ngOnChanges(changes: SimpleChanges): void {
-        if ('user' in changes) {
+        if ('user' in changes || 'size' in changes) {
             this.updateSrc();
             this.isAnonymous = this.user?.id === AnonymousUser.id;
         }
@@ -93,7 +111,7 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
             // Otherwise, use the user's avatar, if any
             (this.urlOverride === undefined) && this.user?.hasAvatar && this.user?.id ?
                 this.sanitizer.bypassSecurityTrustResourceUrl(
-                    `${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.size}` +
+                    `${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.pixelSize}` +
                     (this.updated ? `&_ts=${this.updated}` : '')) :
                 undefined;
     }

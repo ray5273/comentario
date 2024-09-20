@@ -51,6 +51,9 @@ export class Comentario extends HTMLElement {
      */
     private readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
 
+    /** Size of the avatar image to request. For pixel ratios < 2 use 'M' (32 px) avatars, 2 and up 'L' (128 px). */
+    private readonly avatarSize = devicePixelRatio < 2 ? 'M' : 'L';
+
     /** The root element of Comentario embed. */
     private root!: Wrap<HTMLDivElement>;
 
@@ -980,7 +983,7 @@ export class Comentario extends HTMLElement {
             case user!.hasAvatar:
                 return Wrap.new('img')
                     .classes('avatar-img')
-                    .attr({src: this.apiService.getAvatarUrl(user!.id, 'M'), loading: 'lazy', alt: ''});
+                    .attr({src: this.apiService.getAvatarUrl(user!.id, this.avatarSize), loading: 'lazy', alt: ''});
 
             // The user has no avatar: render a circle containing their initial
             default:
