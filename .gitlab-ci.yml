@@ -81,6 +81,7 @@ build:
     - go generate               # Generate code
     - go mod download           # Fetch the dependencies explicitly (not exactly necessary, but makes it easier to spot problems)
     - test -z "$(go fmt ./...)" # Make sure there are no formatting issues
+    - go vet ./...              # Look for code quirks
     - go test -v ./...          # Run unit tests
 
     # Frontend build
