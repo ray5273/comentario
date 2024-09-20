@@ -2,6 +2,7 @@ package config
 
 import (
 	"fmt"
+	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"net/url"
 	"testing"
@@ -236,6 +237,63 @@ func TestMaskIP(t *testing.T) {
 			ServerConfig.LogFullIPs = tt.fullIPs
 			if got := MaskIP(tt.ip); got != tt.want {
 				t.Errorf("MaskIP() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+type stubMailer struct{}
+
+func (m *stubMailer) Operational() bool                                    { return false }
+func (m *stubMailer) Mail(string, string, string, string, ...string) error { return nil }
+
+func Test_configureMailer(t *testing.T) {
+	tests := []struct {
+		name           string
+		emailFrom      string
+		smtpHost       string
+		smtpPort       int
+		smtpUser       string
+		smtpPass       string
+		smtpEncryption SMTPEncryption
+		smtpInsecure   bool
+		errText        string
+		wantMailerOp   bool
+	}{
+		{"no SMTP config  + no email       ", "", "", 0, "", "", SMTPEncryptionDefault, false, "", false},
+		{"host only       + no email       ", "", "foo.bar", 0, "", "", SMTPEncryptionNone, false, `invalid 'From' email address "": mail: no address`, false},
+		{"unknown encryption               ", "", "foo.bar", 0, "", "", "brute", false, `invalid SMTP encryption: "brute"`, false},
+		{"host only       + bad email      ", "brick", "foo.bar", 0, "", "", SMTPEncryptionSSL, false, `invalid 'From' email address "brick": mail: missing '@' or angle-addr`, false},
+		{"host only       + good email     ", "foo@bar", "foo.bar", 0, "", "", SMTPEncryptionTLS, false, "", true},
+		{"host only       + good email/name", "Goblin <foo@bar>", "foo.bar", 0, "", "", SMTPEncryptionNone, false, "", true},
+		{"complete SMTP   + no email       ", "", "foo.bar", 465, "username", "password", SMTPEncryptionDefault, false, `invalid 'From' email address "": mail: no address`, false},
+		{"complete SMTP   + bad email      ", "ouchie", "mail.host.com", 587, "username", "password", SMTPEncryptionDefault, false, `invalid 'From' email address "ouchie": mail: missing '@' or angle-addr`, false},
+		{"complete SMTP   + good email     ", "ben@kenobi.org", "mail.host.com", 587, "username", "password", SMTPEncryptionDefault, false, "", true},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			// Init configs
+			util.TheMailer = &stubMailer{}
+			ServerConfig.EmailFrom = tt.emailFrom
+			SecretsConfig.SMTPServer.Host = tt.smtpHost
+			SecretsConfig.SMTPServer.Port = tt.smtpPort
+			SecretsConfig.SMTPServer.User = tt.smtpUser
+			SecretsConfig.SMTPServer.Pass = tt.smtpPass
+			SecretsConfig.SMTPServer.Encryption = tt.smtpEncryption
+			SecretsConfig.SMTPServer.Insecure = tt.smtpInsecure
+
+			// Run and check for error
+			if err := configureMailer(); err == nil && tt.errText != "" {
+				t.Errorf("configureMailer() no error, wanted error %s", tt.errText)
+			} else if err != nil && tt.errText == "" {
+				t.Errorf("configureMailer() error = %v, wanted no error", err)
+			} else if err != nil && err.Error() != tt.errText {
+				t.Errorf("configureMailer() error = %q, wanted %q", err, tt.errText)
+			}
+
+			// Check the mailer
+			if mo := util.TheMailer.Operational(); mo != tt.wantMailerOp {
+				t.Errorf("TheMailer.Operational = %v, wanted %v", mo, tt.wantMailerOp)
 			}
 		})
 	}

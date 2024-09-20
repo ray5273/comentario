@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"gopkg.in/yaml.v3"
 	"net/http"
+	"net/mail"
 	"net/url"
 	"os"
 	"strings"
@@ -144,6 +145,11 @@ func (sc *ServerConfiguration) postProcess() error {
 		return err
 	}
 
+	// From email address defaults to SMTP username. It will be validated during SMTP mailer setup
+	if sc.EmailFrom == "" {
+		sc.EmailFrom = SecretsConfig.SMTPServer.User
+	}
+
 	// Succeeded
 	return nil
 }
@@ -262,13 +268,18 @@ func configureMailer() error {
 		return fmt.Errorf("invalid SMTP encryption: %q", cfg.Encryption)
 	}
 
+	// Validate the From email address
+	if _, err := mail.ParseAddress(ServerConfig.EmailFrom); err != nil {
+		return fmt.Errorf("invalid 'From' email address %q: %w", ServerConfig.EmailFrom, err)
+	}
+
 	// Create a mailer
 	util.TheMailer = util.NewSMTPMailer(
 		cfg.Host,
 		cfg.Port,
 		cfg.User,
 		cfg.Pass,
-		util.If(ServerConfig.EmailFrom == "", cfg.User, ServerConfig.EmailFrom),
+		ServerConfig.EmailFrom,
 		cfg.Insecure,
 		useSSL,
 		useTLS)
