@@ -7,6 +7,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"os"
@@ -15,7 +16,7 @@ import (
 	"strings"
 )
 
-// PluginManager is a service interface for managing plugins
+// PluginManager is a service interface for managing plugins, and a HostApp implementation
 type PluginManager interface {
 	complugin.HostApp
 	// Init initialises the manager
@@ -134,6 +135,10 @@ func (pm *pluginManager) CreateLogger(module string) complugin.Logger {
 	return &pluginLogger{l: logging.MustGetLogger(module)}
 }
 
+func (pm *pluginManager) DomainAttrService() complugin.DomainAttrService {
+	return svc.TheDomainAttrService
+}
+
 func (pm *pluginManager) Init() error {
 	// Don't bother if plugin dir not provided
 	if config.ServerConfig.PluginPath == "" {
@@ -194,6 +199,10 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 		// Not handled, pass on to the next handler
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (pm *pluginManager) UserAttrService() complugin.UserAttrService {
+	return svc.TheUserAttrService
 }
 
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found

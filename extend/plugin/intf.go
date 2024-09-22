@@ -31,6 +31,10 @@ type HostApp interface {
 	AuthenticateBySessionCookie(value string) (Principal, error)
 	// CreateLogger creates and returns a logger used for logging plugin messages
 	CreateLogger(module string) Logger
+	// DomainAttrService returns an instance of the domain attributes service
+	DomainAttrService() DomainAttrService
+	// UserAttrService returns an instance of the user attributes service
+	UserAttrService() UserAttrService
 }
 
 // UIResource describes a UI resource required by the plugin
