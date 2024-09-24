@@ -33,27 +33,19 @@ func (svc *attrService) GetAll(ownerID *uuid.UUID) (map[string]string, error) {
 	}
 
 	// Query the database
-	rows, err := db.Select(db.Dialect().From(svc.tableName).Select("key", "value").Where(goqu.Ex{svc.keyColName: ownerID}))
-	if err != nil {
-		logger.Errorf("attrService.GetAll: Select() failed: %v", err)
+	type attr struct {
+		Key   string `db:"key"`   // Attribute key
+		Value string `db:"value"` // Attribute value
+	}
+	var attrs []attr
+	if err := db.SelectStructs(db.DB().From(svc.tableName).Select(&attr{}).Where(goqu.Ex{svc.keyColName: ownerID}), &attrs); err != nil {
+		logger.Errorf("attrService.GetAll: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
-	// Fetch the sessions
-	for rows.Next() {
-		var k, v string
-		if err := rows.Scan(&k, &v); err != nil {
-			logger.Errorf("attrService.GetAll: Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-		res[k] = v
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("attrService.GetAll: rows.Next() failed: %v", err)
-		return nil, err
+	// Convert the slice into a map
+	for _, a := range attrs {
+		res[a.Key] = a.Value
 	}
 
 	// Succeeded

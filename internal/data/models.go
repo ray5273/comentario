@@ -854,14 +854,14 @@ func (du *DomainUser) ToDTO() *models.DomainUser {
 
 // DomainPage represents a page on a specific domain
 type DomainPage struct {
-	ID            uuid.UUID // Unique record ID
-	DomainID      uuid.UUID // ID of the domain
-	Path          string    // Page path
-	Title         string    // Page title
-	IsReadonly    bool      // Whether the page is readonly (no new comments are allowed)
-	CreatedTime   time.Time // When the record was created
-	CountComments int64     // Total number of comments
-	CountViews    int64     // Total number of views
+	ID            uuid.UUID `db:"id"`             // Unique record ID
+	DomainID      uuid.UUID `db:"domain_id"`      // ID of the domain
+	Path          string    `db:"path"`           // Page path
+	Title         string    `db:"title"`          // Page title
+	IsReadonly    bool      `db:"is_readonly"`    // Whether the page is readonly (no new comments are allowed)
+	CreatedTime   time.Time `db:"ts_created"`     // When the record was created
+	CountComments int64     `db:"count_comments"` // Total number of comments
+	CountViews    int64     `db:"count_views"`    // Total number of views
 }
 
 // CloneWithClearance returns a clone of the page with a limited set of properties, depending on the specified

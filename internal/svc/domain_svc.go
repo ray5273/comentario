@@ -470,42 +470,28 @@ func (svc *domainService) ListDomainExtensions(domainID *uuid.UUID) ([]*data.Dom
 	logger.Debugf("domainService.ListDomainExtensions(%s)", domainID)
 
 	// Query domain's extensions
-	q := db.Dialect().
-		From("cm_domains_extensions").
-		Select("extension_id", "config").
-		Where(goqu.Ex{"domain_id": domainID})
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("domainService.ListDomainExtensions: Select() failed: %v", err)
+	var dbExts []struct {
+		ID     models.DomainExtensionID `db:"extension_id"`
+		Config string                   `db:"config"`
+	}
+	if err := db.SelectStructs(db.DB().From("cm_domains_extensions").Select("extension_id", "config").Where(goqu.Ex{"domain_id": domainID}), &dbExts); err != nil {
+		logger.Errorf("domainService.ListDomainExtensions: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
-	// Fetch the extension data
+	// Filter extensions by only keeping those known and enabled globally
 	var res []*data.DomainExtension
-	for rows.Next() {
-		var de data.DomainExtension
-		if err := rows.Scan(&de.ID, &de.Config); err != nil {
-			logger.Errorf("domainService.ListDomainExtensions: rows.Scan() failed: %v", err)
-			return nil, err
-
-			// Only add the extension if it's known and enabled globally
-		} else if ext, ok := data.DomainExtensions[de.ID]; ok && ext.Enabled {
-			de.KeyRequired = ext.KeyRequired
-			de.KeyProvided = ext.KeyProvided
-
-			// Empty config means default config
-			if de.Config == "" {
-				de.Config = ext.Config
-			}
-			res = append(res, &de)
+	for _, dbExt := range dbExts {
+		if ext, ok := data.DomainExtensions[dbExt.ID]; ok && ext.Enabled {
+			res = append(res, &data.DomainExtension{
+				ID:          dbExt.ID,
+				Name:        ext.Name,
+				Config:      util.If(dbExt.Config == "", ext.Config, dbExt.Config), // Empty config means default config
+				KeyRequired: ext.KeyRequired,
+				KeyProvided: ext.KeyProvided,
+				Enabled:     true,
+			})
 		}
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("domainService.ListDomainExtensions: rows.Next() failed: %v", err)
-		return nil, err
 	}
 
 	// Sort the extensions by ID for a stable ordering
@@ -519,35 +505,18 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 	logger.Debugf("domainService.ListDomainFederatedIdPs(%s)", domainID)
 
 	// Query domain's IdPs
-	q := db.Dialect().
-		From("cm_domains_idps").
-		Select("fed_idp_id").
-		Where(goqu.Ex{"domain_id": domainID})
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("domainService.ListDomainFederatedIdPs: Select() failed: %v", err)
+	var idps []models.FederatedIdpID
+	if err := db.SelectVals(db.DB().From("cm_domains_idps").Select("fed_idp_id").Where(goqu.Ex{"domain_id": domainID}), &idps); err != nil {
+		logger.Errorf("domainService.ListDomainFederatedIdPs: SelectVals() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
-	// Fetch the IDs
+	// Filter providers by keeping only those enabled globally
 	var res []models.FederatedIdpID
-	for rows.Next() {
-		var id models.FederatedIdpID
-		if err := rows.Scan(&id); err != nil {
-			logger.Errorf("domainService.ListDomainFederatedIdPs: rows.Scan() failed: %v", err)
-			return nil, err
-
-			// Only add a provider if it's enabled globally
-		} else if _, ok, _, _ := config.GetFederatedIdP(id); ok {
+	for _, id := range idps {
+		if _, ok, _, _ := config.GetFederatedIdP(id); ok {
 			res = append(res, id)
 		}
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("domainService.ListDomainFederatedIdPs: rows.Next() failed: %v", err)
-		return nil, err
 	}
 
 	// Sort the providers by ID for a stable ordering

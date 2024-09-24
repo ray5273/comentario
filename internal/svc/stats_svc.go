@@ -331,35 +331,24 @@ func (svc *statsService) fillOwnStats(curUser *data.User, totals *StatsTotals) e
 
 // fillUserStats fills the statistics for users in totals
 func (svc *statsService) fillUserStats(totals *StatsTotals) error {
-	rows, err := db.Select(db.Dialect().From("cm_users").Select("banned", goqu.COUNT("*")).GroupBy("banned"))
-	if err != nil {
-		logger.Errorf("statsService.fillUserStats: Select() failed: %v", err)
+	// Query the user stats
+	var stats []struct {
+		Banned bool  `db:"banned"`
+		Count  int64 `db:"cnt"`
+	}
+	if err := db.SelectStructs(db.DB().From("cm_users").Select("banned", goqu.COUNT("*").As("cnt")).GroupBy("banned"), &stats); err != nil {
+		logger.Errorf("statsService.fillUserStats: SelectStructs() failed: %v", err)
 		return err
 	}
-	defer rows.Close()
 
-	// Accumulate counts
-	for rows.Next() {
-		var banned bool
-		var cnt int64
-		if err := rows.Scan(&banned, &cnt); err != nil {
-			logger.Errorf("statsService.fillUserStats: Scan() failed: %v", err)
-			return err
-		}
-
-		// Increment the relevant user counters
-		totals.CountUsersTotal += cnt
-		if banned {
-			totals.CountUsersBanned += cnt
+	// Accumulate counts by incrementing the relevant user counters
+	for _, stat := range stats {
+		totals.CountUsersTotal += stat.Count
+		if stat.Banned {
+			totals.CountUsersBanned += stat.Count
 		} else {
-			totals.CountUsersNonBanned += cnt
+			totals.CountUsersNonBanned += stat.Count
 		}
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("statsService.fillUserStats: Next() failed: %v", err)
-		return err
 	}
 
 	// Succeeded

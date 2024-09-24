@@ -58,33 +58,25 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
 
 	// Query paths/comment counts
-	rows, err := db.Select(
-		db.Dialect().
+	var pathCounts []struct {
+		Path  string `db:"path"`
+		Count int    `db:"count_comments"`
+	}
+	if err := db.SelectStructs(
+		db.DB().
 			From("cm_domain_pages").
 			Select("path", "count_comments").
-			Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)))
-	if err != nil {
-		logger.Errorf("pageService.CommentCounts: Select() failed: %v", err)
+			Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)),
+		&pathCounts,
+	); err != nil {
+		logger.Errorf("pageService.CommentCounts: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
-	// Fetch the paths and count, converting them into a map
-	res := make(map[string]int)
-	for rows.Next() {
-		var p string
-		var c int
-		if err = rows.Scan(&p, &c); err != nil {
-			logger.Errorf("pageService.CommentCounts: rows.Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-		res[p] = c
-	}
-
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("pageService.CommentCounts: rows.Next() failed: %v", err)
-		return nil, translateDBErrors(err)
+	// Convert the slice into a map
+	res := map[string]int{}
+	for _, pc := range pathCounts {
+		res[pc.Path] = pc.Count
 	}
 
 	// Succeeded
@@ -198,35 +190,9 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 func (svc *pageService) ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, error) {
 	logger.Debugf("pageService.ListByDomain(%s)", domainID)
 
-	// Prepare a statement
-	q := db.Dialect().
-		From(goqu.T("cm_domain_pages").As("p")).
-		Select(
-			"p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments",
-			"p.count_views").
-		Where(goqu.Ex{"p.domain_id": domainID})
-
-	// Query pages
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("pageService.ListByDomain: Select() failed: %v", err)
-		return nil, translateDBErrors(err)
-	}
-	defer rows.Close()
-
-	// Fetch the pages
 	var ps []*data.DomainPage
-	for rows.Next() {
-		var p data.DomainPage
-		if err := rows.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
-			logger.Errorf("pageService.ListByDomain: Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-		ps = append(ps, &p)
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
+	if err := db.SelectStructs(db.DB().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}), &ps); err != nil {
+		logger.Errorf("pageService.ListByDomain: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -238,21 +204,19 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_domain_pages").As("p")).
-		Select(
-			"p.id", "p.domain_id", "p.path", "p.title", "p.is_readonly", "p.ts_created", "p.count_comments",
-			"p.count_views").
+		Select("p.*").
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		Where(goqu.Ex{"d.id": domainID})
 
 	// Add filter by domain user unless it's a superuser
 	if superuser {
-		q = q.SelectAppend(goqu.L("null"))
+		q = q.SelectAppend(goqu.L("null").As(goqu.C("is_owner")))
 	} else {
 		// For regular users, only those pages are visible that the user has a domain record for
 		q = q.
-			SelectAppend("du.is_owner").
+			SelectAppend(goqu.I("du.is_owner").As(goqu.C("is_owner"))).
 			Join(
 				goqu.T("cm_domains_users").As("du"),
 				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")}),
@@ -304,30 +268,19 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	}
 
 	// Query pages
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("pageService.ListByDomainUser: Select() failed: %v", err)
+	var pages []struct {
+		data.DomainPage
+		IsOwner sql.NullBool `db:"is_owner"`
+	}
+	if err := db.SelectStructs(q, &pages); err != nil {
+		logger.Errorf("pageService.ListByDomainUser: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
-	// Fetch the pages
+	// Convert the page list, applying the current user's authorisations
 	var ps []*data.DomainPage
-	var isOwner sql.NullBool
-	for rows.Next() {
-		var p data.DomainPage
-		if err := rows.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews, &isOwner); err != nil {
-			logger.Errorf("pageService.ListByDomainUser: Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-
-		// Accumulate pages, applying the current user's authorisations
-		ps = append(ps, p.CloneWithClearance(superuser, isOwner.Valid && isOwner.Bool))
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		return nil, translateDBErrors(err)
+	for _, p := range pages {
+		ps = append(ps, p.DomainPage.CloneWithClearance(superuser, p.IsOwner.Valid && p.IsOwner.Bool))
 	}
 
 	// Succeeded

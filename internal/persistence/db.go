@@ -93,6 +93,11 @@ func (db *Database) Dialect() goqu.DialectWrapper {
 	return db.dialect.dialectWrapper()
 }
 
+// DB returns a goqu.Database to use for queries
+func (db *Database) DB() *goqu.Database {
+	return db.Dialect().DB(db.db)
+}
+
 // Execute executes the provided goqu expression against the database
 func (db *Database) Execute(e exp.SQLExpression) error {
 	_, err := db.ExecuteRes(e)
@@ -107,10 +112,8 @@ func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 		return err
 	}
 
-	// Debug logging, if activated
-	if db.debug {
-		logger.Debugf("db.ExecuteOne()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
-	}
+	// Debug logging
+	db.debugLogSQL("ExecuteOne", eSQL, eParams)
 
 	// Run the statement
 	if res, err := db.db.Exec(eSQL, eParams...); err != nil {
@@ -135,10 +138,8 @@ func (db *Database) ExecuteRes(e exp.SQLExpression) (sql.Result, error) {
 		return nil, err
 	}
 
-	// Debug logging, if activated
-	if db.debug {
-		logger.Debugf("db.ExecuteRes()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
-	}
+	// Debug logging
+	db.debugLogSQL("ExecuteRes", eSQL, eParams)
 
 	// Execute the statement
 	return db.db.Exec(eSQL, eParams...)
@@ -293,13 +294,23 @@ func (db *Database) Select(e exp.SQLExpression) (*sql.Rows, error) {
 		return nil, err
 	}
 
-	// Debug logging, if activated
-	if db.debug {
-		logger.Debugf("db.Select()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
-	}
+	// Debug logging
+	db.debugLogSQL("Select", eSQL, eParams)
 
 	// Execute the query
 	return db.db.Query(eSQL, eParams...)
+}
+
+// SelectStructs executes the provided goqu query against the database and populates the provided target []struct
+func (db *Database) SelectStructs(ds *goqu.SelectDataset, target any) error {
+	// Turn Prepared on
+	ds = ds.Prepared(true)
+
+	// Debug logging
+	db.debugLog("SelectStructs", ds)
+
+	// Execute the query and collect the results
+	return ds.ScanStructs(target)
 }
 
 // SelectRow executes the provided goqu query against the database, returning a single row
@@ -310,13 +321,24 @@ func (db *Database) SelectRow(e exp.SQLExpression) intf.Scanner {
 		return util.NewErrScanner(err)
 	}
 
-	// Debug logging, if activated
-	if db.debug {
-		logger.Debugf("db.SelectRow()\n - SQL: %s\n - Args: %#v", eSQL, eParams)
-	}
+	// Debug logging
+	db.debugLogSQL("SelectRow", eSQL, eParams)
 
 	// Execute the query
 	return db.db.QueryRow(eSQL, eParams...)
+}
+
+// SelectVals executes the provided single-column goqu query against the database and populates the provided slice of a
+// primitive type
+func (db *Database) SelectVals(ds *goqu.SelectDataset, target any) error {
+	// Turn Prepared on
+	ds = ds.Prepared(true)
+
+	// Debug logging
+	db.debugLog("SelectVals", ds)
+
+	// Execute the query and collect the results
+	return ds.ScanVals(target)
 }
 
 // Shutdown ends the database connection and shuts down all dependent services
@@ -436,6 +458,25 @@ func (db *Database) connect() error {
 	return nil
 }
 
+// debugLog logs the SQL statement in the passed expression, if database debug logging is on
+func (db *Database) debugLog(methodName string, e exp.SQLExpression) exp.SQLExpression {
+	if db.debug {
+		if s, a, err := e.ToSQL(); err != nil {
+			logger.Errorf("db.%s(): failed to generate SQL for expression: %v", methodName, err)
+		} else {
+			db.debugLogSQL(methodName, s, a)
+		}
+	}
+	return e
+}
+
+// debugLog logs an already generated SQL statement, if database debug logging is on
+func (db *Database) debugLogSQL(methodName, statement string, args any) {
+	if db.debug {
+		logger.Debugf("db.%s()\n - SQL: %s\n - Args: %#v", methodName, statement, args)
+	}
+}
+
 // getAvailableMigrations returns a list of available database migration files
 func (db *Database) getAvailableMigrations() ([]string, error) {
 	// Scan the migrations dir for available migration files. Files reside in a subdirectory whose name matches the DB
@@ -490,41 +531,34 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 		return nil, nil
 	}
 
-	// Query the migrations table
-	rows, err := db.Select(db.Dialect().From("cm_migrations").Select("filename", "md5"))
-	if err != nil {
-		return nil, fmt.Errorf("getInstalledMigrations: Select() failed: %v", err)
+	type migrationRec struct {
+		Filename string `db:"filename"`
+		MD5      string `db:"md5"`
 	}
-	defer rows.Close()
+
+	// Query the migrations table
+	var recs []migrationRec
+	if err := db.SelectStructs(db.DB().From("cm_migrations").Select(&migrationRec{}), &recs); err != nil {
+		return nil, fmt.Errorf("getInstalledMigrations: SelectStructs() failed: %w", err)
+	}
 
 	// Convert the files into a map
-	m := make(map[string][16]byte)
-	for rows.Next() {
-		var filename, checksum string
-		if err = rows.Scan(&filename, &checksum); err != nil {
-			return nil, fmt.Errorf("getInstalledMigrations: Scan() failed: %v", err)
-		}
-
+	migMap := make(map[string][16]byte)
+	for _, mr := range recs {
 		// Parse the sum as binary
-		if b, err := hex.DecodeString(checksum); err != nil {
-			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", filename, err)
+		if b, err := hex.DecodeString(mr.MD5); err != nil {
+			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", mr.Filename, err)
 		} else if l := len(b); l != 16 {
-			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", filename, l)
+			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", mr.Filename, l)
 		} else {
 			var b16 [16]byte
 			copy(b16[:], b)
-			m[filename] = b16
+			migMap[mr.Filename] = b16
 		}
 	}
 
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("getInstalledMigrations: Next() failed: %v", err)
-		return nil, err
-	}
-
 	// Succeeded
-	return m, nil
+	return migMap, nil
 }
 
 // installMigration installs a database migration contained in the given file, returning its actual MD5 checksum and the
