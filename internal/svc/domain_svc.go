@@ -470,23 +470,23 @@ func (svc *domainService) ListDomainExtensions(domainID *uuid.UUID) ([]*data.Dom
 	logger.Debugf("domainService.ListDomainExtensions(%s)", domainID)
 
 	// Query domain's extensions
-	var dbExts []struct {
+	var dbRecs []struct {
 		ID     models.DomainExtensionID `db:"extension_id"`
 		Config string                   `db:"config"`
 	}
-	if err := db.SelectStructs(db.DB().From("cm_domains_extensions").Select("extension_id", "config").Where(goqu.Ex{"domain_id": domainID}), &dbExts); err != nil {
+	if err := db.SelectStructs(db.DB().From("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID}), &dbRecs); err != nil {
 		logger.Errorf("domainService.ListDomainExtensions: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
 	// Filter extensions by only keeping those known and enabled globally
 	var res []*data.DomainExtension
-	for _, dbExt := range dbExts {
-		if ext, ok := data.DomainExtensions[dbExt.ID]; ok && ext.Enabled {
+	for _, r := range dbRecs {
+		if ext, ok := data.DomainExtensions[r.ID]; ok && ext.Enabled {
 			res = append(res, &data.DomainExtension{
-				ID:          dbExt.ID,
+				ID:          r.ID,
 				Name:        ext.Name,
-				Config:      util.If(dbExt.Config == "", ext.Config, dbExt.Config), // Empty config means default config
+				Config:      util.If(r.Config == "", ext.Config, r.Config), // Empty config means default config
 				KeyRequired: ext.KeyRequired,
 				KeyProvided: ext.KeyProvided,
 				Enabled:     true,

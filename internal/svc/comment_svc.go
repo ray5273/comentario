@@ -229,22 +229,8 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 
 	// Query the database
 	var c data.Comment
-	q := db.Dialect().
-		From("cm_comments").
-		Select(
-			"id", "parent_id", "page_id", "markdown", "html", "score", "is_sticky", "is_approved", "is_pending",
-			"is_deleted", "ts_created", "ts_moderated", "ts_deleted", "ts_edited", "user_created", "user_moderated",
-			"user_deleted", "user_edited", "pending_reason", "author_name", "author_ip", "author_country").
-		Where(goqu.Ex{"id": id})
-
-	if err := db.SelectRow(q).
-		Scan(
-			&c.ID, &c.ParentID, &c.PageID, &c.Markdown, &c.HTML, &c.Score, &c.IsSticky, &c.IsApproved, &c.IsPending,
-			&c.IsDeleted, &c.CreatedTime, &c.ModeratedTime, &c.DeletedTime, &c.EditedTime, &c.UserCreated,
-			&c.UserModerated, &c.UserDeleted, &c.UserEdited, &c.PendingReason, &c.AuthorName, &c.AuthorIP,
-			&c.AuthorCountry,
-		); err != nil {
-		logger.Errorf("commentService.FindByID: SelectRow() failed: %v", err)
+	if err := db.SelectStruct(db.DB().From("cm_comments").Where(goqu.Ex{"id": id}), &c); err != nil {
+		logger.Errorf("commentService.FindByID: SelectStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -256,18 +242,9 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 	logger.Debugf("commentService.ListByDomain(%s)", domainID)
 
 	// Prepare a query
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_comments").As("c")).
-		Select(
-			// Comment fields
-			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
-			"c.is_pending", "c.is_deleted", "c.ts_created", "c.ts_moderated", "c.ts_deleted", "c.ts_edited",
-			"c.user_created", "c.user_moderated", "c.user_deleted", "c.user_edited", "c.pending_reason",
-			"c.author_name", "c.author_ip", "c.author_country",
-			// Page fields
-			"p.path",
-			// Domain fields
-			"d.host", "d.is_https").
+		Select("c.*", "p.path", "d.host", "d.is_https").
 		// Join comment pages
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Join domain
@@ -276,64 +253,21 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 		Where(goqu.Ex{"p.domain_id": domainID})
 
 	// Fetch the comments
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("commentService.ListByDomain: Select() failed: %v", err)
+	var dbRecs []struct {
+		data.Comment
+		PagePath    string `db:"path"`
+		DomainHost  string `db:"host"`
+		DomainHTTPS bool   `db:"is_https"`
+	}
+	if err := db.SelectStructs(q, &dbRecs); err != nil {
+		logger.Errorf("commentService.ListByDomain: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
-	// Iterate result rows
+	// Convert models into DTOs
 	var comments []*models.Comment
-	for rows.Next() {
-		// Fetch the comment
-		c := data.Comment{}
-		var pagePath, domainHost string
-		var domainHTTPS bool
-		err := rows.Scan(
-			// Comment
-			&c.ID,
-			&c.ParentID,
-			&c.PageID,
-			&c.Markdown,
-			&c.HTML,
-			&c.Score,
-			&c.IsSticky,
-			&c.IsApproved,
-			&c.IsPending,
-			&c.IsDeleted,
-			&c.CreatedTime,
-			&c.ModeratedTime,
-			&c.DeletedTime,
-			&c.EditedTime,
-			&c.UserCreated,
-			&c.UserModerated,
-			&c.UserDeleted,
-			&c.UserEdited,
-			&c.PendingReason,
-			&c.AuthorName,
-			&c.AuthorIP,
-			&c.AuthorCountry,
-			// Page
-			&pagePath,
-			// Domain
-			&domainHost,
-			&domainHTTPS)
-		if err != nil {
-			logger.Errorf("commentService.ListByDomain: Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-
-		// Convert the comment
-		cm := c.ToDTO(domainHTTPS, domainHost, pagePath)
-
-		// Append the comment to the list
-		comments = append(comments, cm)
-	}
-
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		return nil, err
+	for _, r := range dbRecs {
+		comments = append(comments, r.Comment.ToDTO(r.DomainHTTPS, r.DomainHost, r.PagePath))
 	}
 
 	// Succeeded
@@ -350,25 +284,29 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		removeOrphans, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_comments").As("c")).
 		Select(
 			// Comment fields
-			"c.id", "c.parent_id", "c.page_id", "c.markdown", "c.html", "c.score", "c.is_sticky", "c.is_approved",
-			"c.is_pending", "c.is_deleted", "c.ts_created", "c.ts_moderated", "c.ts_deleted", "c.ts_edited",
-			"c.user_created", "c.user_moderated", "c.user_deleted", "c.user_edited", "c.pending_reason",
-			"c.author_name", "c.author_ip", "c.author_country",
+			"c.*",
 			// Commenter fields
-			"u.id", "u.email", "u.name", "u.website_url", "u.is_superuser", "du.is_owner", "du.is_moderator",
-			"du.is_commenter",
+			goqu.I("u.id").As(goqu.C("u_id")),
+			goqu.I("u.email").As(goqu.C("u_email")),
+			goqu.I("u.name").As(goqu.C("u_name")),
+			goqu.I("u.website_url").As(goqu.C("u_website_url")),
+			goqu.I("u.is_superuser").As(goqu.C("u_is_superuser")),
+			goqu.I("du.is_owner").As(goqu.C("du_is_owner")),
+			goqu.I("du.is_moderator").As(goqu.C("du_is_moderator")),
+			goqu.I("du.is_commenter").As(goqu.C("du_is_commenter")),
 			// Avatar fields
-			"a.user_id",
+			goqu.I("a.user_id").As(goqu.C("a_user_id")),
 			// Votes fields
-			"v.negative",
+			goqu.I("v.negative").As(goqu.C("v_negative")),
 			// Page fields
-			"p.path",
+			goqu.I("p.path").As(goqu.C("p_path")),
 			// Domain fields
-			"d.host", "d.is_https").
+			goqu.I("d.host").As(goqu.C("d_host")),
+			goqu.I("d.is_https").As(goqu.C("d_is_https"))).
 		// Join comment pages
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Join domain
@@ -451,12 +389,26 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	}
 
 	// Fetch the comments
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("commentService.ListWithCommentersByDomainPage: Select() failed: %v", err)
+	var dbRecs []struct {
+		data.Comment
+		UserID          uuid.NullUUID  `db:"u_id"`
+		UserEmail       sql.NullString `db:"u_email"`
+		UserName        sql.NullString `db:"u_name"`
+		UserWebsiteUrl  sql.NullString `db:"u_website_url"`
+		UserIsSuperuser sql.NullBool   `db:"u_is_superuser"`
+		UserIsOwner     sql.NullBool   `db:"du_is_owner"`
+		UserIsModerator sql.NullBool   `db:"du_is_moderator"`
+		UserIsCommenter sql.NullBool   `db:"du_is_commenter"`
+		AvatarID        uuid.NullUUID  `db:"a_user_id"`
+		VoteNegative    sql.NullBool   `db:"v_negative"`
+		PagePath        string         `db:"p_path"`
+		DomainHost      string         `db:"d_host"`
+		DomainHTTPS     bool           `db:"d_is_https"`
+	}
+	if err := db.SelectStructs(q, &dbRecs); err != nil {
+		logger.Errorf("commentService.ListWithCommentersByDomainPage: SelectStructs() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
 	// Prepare commenter map: begin with only the "anonymous" one
 	commenterMap := map[uuid.UUID]*models.Commenter{data.AnonymousUser.ID: data.AnonymousUser.ToCommenter(true, false)}
@@ -464,93 +416,39 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	// Iterate result rows
 	var comments []*models.Comment
 	commentMap := make(map[strfmt.UUID]bool)
-	for rows.Next() {
-		// Fetch the comment and the related commenter
-		c := data.Comment{}
-		var uID, avatarID uuid.NullUUID
-		var uEmail, uName, uWebsite sql.NullString
-		var uSuper, duIsOwner, duIsModerator, duIsCommenter, negVote sql.NullBool
-		var pagePath, domainHost string
-		var domainHTTPS bool
-		err := rows.Scan(
-			// Comment
-			&c.ID,
-			&c.ParentID,
-			&c.PageID,
-			&c.Markdown,
-			&c.HTML,
-			&c.Score,
-			&c.IsSticky,
-			&c.IsApproved,
-			&c.IsPending,
-			&c.IsDeleted,
-			&c.CreatedTime,
-			&c.ModeratedTime,
-			&c.DeletedTime,
-			&c.EditedTime,
-			&c.UserCreated,
-			&c.UserModerated,
-			&c.UserDeleted,
-			&c.UserEdited,
-			&c.PendingReason,
-			&c.AuthorName,
-			&c.AuthorIP,
-			&c.AuthorCountry,
-			// User
-			&uID,
-			&uEmail,
-			&uName,
-			&uWebsite,
-			&uSuper,
-			&duIsOwner,
-			&duIsModerator,
-			&duIsCommenter,
-			// Avatar
-			&avatarID,
-			// Vote
-			&negVote,
-			// Page
-			&pagePath,
-			// Domain
-			&domainHost,
-			&domainHTTPS)
-		if err != nil {
-			logger.Errorf("commentService.ListWithCommentersByDomainPage: Scan() failed: %v", err)
-			return nil, nil, translateDBErrors(err)
-		}
-
+	for _, r := range dbRecs {
 		// Convert the comment, applying the required access privileges
-		cm := c.
+		cm := r.Comment.
 			CloneWithClearance(curUser, curDomainUser).
-			ToDTO(domainHTTPS, domainHost, pagePath)
+			ToDTO(r.DomainHTTPS, r.DomainHost, r.PagePath)
 
 		// If the user exists and isn't anonymous
-		if uID.Valid && uID.UUID != data.AnonymousUser.ID {
+		if r.UserID.Valid && r.UserID.UUID != data.AnonymousUser.ID {
 			// If the commenter isn't present in the map yet
-			if _, ok := commenterMap[uID.UUID]; !ok {
+			if _, ok := commenterMap[r.UserID.UUID]; !ok {
 				u := data.User{
-					ID:          uID.UUID,
-					Email:       uEmail.String,
-					Name:        uName.String,
-					IsSuperuser: uSuper.Valid && uSuper.Bool,
-					WebsiteURL:  uWebsite.String,
-					HasAvatar:   avatarID.Valid,
+					ID:          r.UserID.UUID,
+					Email:       r.UserEmail.String,
+					Name:        r.UserName.String,
+					IsSuperuser: r.UserIsSuperuser.Valid && r.UserIsSuperuser.Bool,
+					WebsiteURL:  r.UserWebsiteUrl.String,
+					HasAvatar:   r.AvatarID.Valid,
 				}
 
 				// Calculate commenter roles
-				uIsOwner := u.IsSuperuser || duIsOwner.Valid && duIsOwner.Bool
-				uIsModerator := uIsOwner || duIsModerator.Valid && duIsModerator.Bool
+				uIsOwner := u.IsSuperuser || r.UserIsOwner.Valid && r.UserIsOwner.Bool
+				uIsModerator := uIsOwner || r.UserIsModerator.Valid && r.UserIsModerator.Bool
 
 				// Convert the user into a commenter and add it to the map
-				commenterMap[uID.UUID] = u.
+				commenterMap[r.UserID.UUID] = u.
 					CloneWithClearance(curUser.IsSuperuser, curDomainUser.IsAnOwner(), curDomainUser.IsAModerator()).
-					ToCommenter(uIsModerator || !duIsCommenter.Valid || duIsCommenter.Bool, uIsModerator)
+					ToCommenter(uIsModerator || !r.UserIsCommenter.Valid || r.UserIsCommenter.Bool, uIsModerator)
 			}
 		}
 
 		// Determine comment vote direction for the user
-		if negVote.Valid {
-			if negVote.Bool {
+		if r.VoteNegative.Valid {
+			if r.VoteNegative.Bool {
 				cm.Direction = -1
 			} else {
 				cm.Direction = 1
@@ -560,11 +458,6 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		// Append the comment to the list and a flag to the map
 		comments = append(comments, cm)
 		commentMap[cm.ID] = true
-	}
-
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		return nil, nil, err
 	}
 
 	// Remove orphaned comments, if requested. Also clean up "unused" commenters

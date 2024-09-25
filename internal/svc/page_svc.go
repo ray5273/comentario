@@ -58,25 +58,19 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
 
 	// Query paths/comment counts
-	var pathCounts []struct {
+	var dbRecs []struct {
 		Path  string `db:"path"`
 		Count int    `db:"count_comments"`
 	}
-	if err := db.SelectStructs(
-		db.DB().
-			From("cm_domain_pages").
-			Select("path", "count_comments").
-			Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)),
-		&pathCounts,
-	); err != nil {
+	if err := db.SelectStructs(db.DB().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)), &dbRecs); err != nil {
 		logger.Errorf("pageService.CommentCounts: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
 	// Convert the slice into a map
 	res := map[string]int{}
-	for _, pc := range pathCounts {
-		res[pc.Path] = pc.Count
+	for _, r := range dbRecs {
+		res[r.Path] = r.Count
 	}
 
 	// Succeeded
@@ -216,7 +210,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	} else {
 		// For regular users, only those pages are visible that the user has a domain record for
 		q = q.
-			SelectAppend(goqu.I("du.is_owner").As(goqu.C("is_owner"))).
+			SelectAppend(goqu.I("du.is_owner")).
 			Join(
 				goqu.T("cm_domains_users").As("du"),
 				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id")}),
@@ -268,19 +262,19 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	}
 
 	// Query pages
-	var pages []struct {
+	var dbRecs []struct {
 		data.DomainPage
 		IsOwner sql.NullBool `db:"is_owner"`
 	}
-	if err := db.SelectStructs(q, &pages); err != nil {
+	if err := db.SelectStructs(q, &dbRecs); err != nil {
 		logger.Errorf("pageService.ListByDomainUser: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
 	// Convert the page list, applying the current user's authorisations
 	var ps []*data.DomainPage
-	for _, p := range pages {
-		ps = append(ps, p.DomainPage.CloneWithClearance(superuser, p.IsOwner.Valid && p.IsOwner.Bool))
+	for _, r := range dbRecs {
+		ps = append(ps, r.DomainPage.CloneWithClearance(superuser, r.IsOwner.Valid && r.IsOwner.Bool))
 	}
 
 	// Succeeded

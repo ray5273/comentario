@@ -56,6 +56,9 @@ type Database struct {
 
 // InitDB establishes a database connection
 func InitDB() (*Database, error) {
+	// Set up goqu options
+	goqu.SetIgnoreUntaggedFields(true)
+
 	// Determine the DB dialect to use and validate config
 	var dialect dbDialect
 	switch {
@@ -301,18 +304,6 @@ func (db *Database) Select(e exp.SQLExpression) (*sql.Rows, error) {
 	return db.db.Query(eSQL, eParams...)
 }
 
-// SelectStructs executes the provided goqu query against the database and populates the provided target []struct
-func (db *Database) SelectStructs(ds *goqu.SelectDataset, target any) error {
-	// Turn Prepared on
-	ds = ds.Prepared(true)
-
-	// Debug logging
-	db.debugLog("SelectStructs", ds)
-
-	// Execute the query and collect the results
-	return ds.ScanStructs(target)
-}
-
 // SelectRow executes the provided goqu query against the database, returning a single row
 func (db *Database) SelectRow(e exp.SQLExpression) intf.Scanner {
 	// Convert the expression into SQL and params
@@ -326,6 +317,49 @@ func (db *Database) SelectRow(e exp.SQLExpression) intf.Scanner {
 
 	// Execute the query
 	return db.db.QueryRow(eSQL, eParams...)
+}
+
+// SelectStruct executes the provided goqu query against the database, which is expected to return exactly one record.
+// The record is used to populate the provided target *struct
+func (db *Database) SelectStruct(ds *goqu.SelectDataset, target any) error {
+	// Turn Prepared on
+	ds = ds.Prepared(true)
+
+	// Debug logging
+	db.debugLog("SelectStruct", ds)
+
+	// Execute the query and collect the results
+	if b, err := ds.ScanStruct(target); err != nil {
+		return err
+	} else if !b {
+		return sql.ErrNoRows
+	}
+
+	// Succeeded
+	return nil
+}
+
+// SelectStructs executes the provided goqu query against the database and populates the provided target *[]struct
+func (db *Database) SelectStructs(ds *goqu.SelectDataset, target any) error {
+	// Turn Prepared on
+	ds = ds.Prepared(true)
+
+	// If nothing provided for SELECT, pass the target as the select list. This is to work around the goqu's
+	// shortcoming, which concerns the supposedly incorrect statement in the docs (see
+	// https://doug-martin.github.io/goqu/docs/selecting.html#scan-structs):
+	// > When calling ScanStructs without a select already defined it will automatically only SELECT the columns found
+	// > in the struct, omitting any that are tagged with db:"-"
+	if cols := ds.GetClauses().Select().Columns(); len(cols) == 1 {
+		if le, ok := cols[0].(exp.LiteralExpression); ok && le.Literal() == "*" {
+			ds = ds.Select(target)
+		}
+	}
+
+	// Debug logging
+	db.debugLog("SelectStructs", ds)
+
+	// Execute the query and collect the results
+	return ds.ScanStructs(target)
 }
 
 // SelectVals executes the provided single-column goqu query against the database and populates the provided slice of a
@@ -531,29 +565,27 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 		return nil, nil
 	}
 
-	type migrationRec struct {
+	// Query the migrations table
+	var dbRecs []struct {
 		Filename string `db:"filename"`
 		MD5      string `db:"md5"`
 	}
-
-	// Query the migrations table
-	var recs []migrationRec
-	if err := db.SelectStructs(db.DB().From("cm_migrations").Select(&migrationRec{}), &recs); err != nil {
+	if err := db.SelectStructs(db.DB().From("cm_migrations"), &dbRecs); err != nil {
 		return nil, fmt.Errorf("getInstalledMigrations: SelectStructs() failed: %w", err)
 	}
 
 	// Convert the files into a map
 	migMap := make(map[string][16]byte)
-	for _, mr := range recs {
+	for _, r := range dbRecs {
 		// Parse the sum as binary
-		if b, err := hex.DecodeString(mr.MD5); err != nil {
-			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", mr.Filename, err)
+		if b, err := hex.DecodeString(r.MD5); err != nil {
+			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", r.Filename, err)
 		} else if l := len(b); l != 16 {
-			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", mr.Filename, l)
+			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", r.Filename, l)
 		} else {
 			var b16 [16]byte
 			copy(b16[:], b)
-			migMap[mr.Filename] = b16
+			migMap[r.Filename] = b16
 		}
 	}
 

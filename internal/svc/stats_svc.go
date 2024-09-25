@@ -332,22 +332,22 @@ func (svc *statsService) fillOwnStats(curUser *data.User, totals *StatsTotals) e
 // fillUserStats fills the statistics for users in totals
 func (svc *statsService) fillUserStats(totals *StatsTotals) error {
 	// Query the user stats
-	var stats []struct {
+	var dbRecs []struct {
 		Banned bool  `db:"banned"`
 		Count  int64 `db:"cnt"`
 	}
-	if err := db.SelectStructs(db.DB().From("cm_users").Select("banned", goqu.COUNT("*").As("cnt")).GroupBy("banned"), &stats); err != nil {
+	if err := db.SelectStructs(db.DB().From("cm_users").Select("banned", goqu.COUNT("*").As("cnt")).GroupBy("banned"), &dbRecs); err != nil {
 		logger.Errorf("statsService.fillUserStats: SelectStructs() failed: %v", err)
 		return err
 	}
 
 	// Accumulate counts by incrementing the relevant user counters
-	for _, stat := range stats {
-		totals.CountUsersTotal += stat.Count
-		if stat.Banned {
-			totals.CountUsersBanned += stat.Count
+	for _, r := range dbRecs {
+		totals.CountUsersTotal += r.Count
+		if r.Banned {
+			totals.CountUsersBanned += r.Count
 		} else {
-			totals.CountUsersNonBanned += stat.Count
+			totals.CountUsersNonBanned += r.Count
 		}
 	}
 

@@ -917,28 +917,28 @@ func (p *DomainPage) WithIsReadonly(b bool) *DomainPage {
 
 // Comment represents a comment
 type Comment struct {
-	ID            uuid.UUID     // Unique record ID
-	ParentID      uuid.NullUUID // Parent record ID, null if it's a root comment on the page
-	PageID        uuid.UUID     // Reference to the page
-	Markdown      string        // Comment text in markdown
-	HTML          string        // Rendered comment text in HTML
-	Score         int           // Comment score
-	IsSticky      bool          // Whether the comment is sticky (attached to the top of page)
-	IsApproved    bool          // Whether the comment is approved and can be seen by everyone
-	IsPending     bool          // Whether the comment is pending approval
-	IsDeleted     bool          // Whether the comment is marked as deleted
-	CreatedTime   time.Time     // When the comment was created
-	ModeratedTime sql.NullTime  // When a moderation action has last been applied to the comment
-	DeletedTime   sql.NullTime  // When the comment was marked as deleted
-	EditedTime    sql.NullTime  // When the comment text was last updated
-	UserCreated   uuid.NullUUID // Reference to the user who created the comment
-	UserModerated uuid.NullUUID // Reference to the user who last moderated the comment
-	UserDeleted   uuid.NullUUID // Reference to the user who deleted the comment
-	UserEdited    uuid.NullUUID // Reference to the user who last updated the comment text
-	PendingReason string        // The reason for the pending status
-	AuthorName    string        // Name of the author, in case the user isn't registered
-	AuthorIP      string        // IP address of the author
-	AuthorCountry string        // 2-letter country code matching the AuthorIP
+	ID            uuid.UUID     `db:"id"`             // Unique record ID
+	ParentID      uuid.NullUUID `db:"parent_id"`      // Parent record ID, null if it's a root comment on the page
+	PageID        uuid.UUID     `db:"page_id"`        // Reference to the page
+	Markdown      string        `db:"markdown"`       // Comment text in markdown
+	HTML          string        `db:"html"`           // Rendered comment text in HTML
+	Score         int           `db:"score"`          // Comment score
+	IsSticky      bool          `db:"is_sticky"`      // Whether the comment is sticky (attached to the top of page)
+	IsApproved    bool          `db:"is_approved"`    // Whether the comment is approved and can be seen by everyone
+	IsPending     bool          `db:"is_pending"`     // Whether the comment is pending approval
+	IsDeleted     bool          `db:"is_deleted"`     // Whether the comment is marked as deleted
+	CreatedTime   time.Time     `db:"ts_created"`     // When the comment was created
+	ModeratedTime sql.NullTime  `db:"ts_moderated"`   // When a moderation action has last been applied to the comment
+	DeletedTime   sql.NullTime  `db:"ts_deleted"`     // When the comment was marked as deleted
+	EditedTime    sql.NullTime  `db:"ts_edited"`      // When the comment text was last updated
+	UserCreated   uuid.NullUUID `db:"user_created"`   // Reference to the user who created the comment
+	UserModerated uuid.NullUUID `db:"user_moderated"` // Reference to the user who last moderated the comment
+	UserDeleted   uuid.NullUUID `db:"user_deleted"`   // Reference to the user who deleted the comment
+	UserEdited    uuid.NullUUID `db:"user_edited"`    // Reference to the user who last updated the comment text
+	PendingReason string        `db:"pending_reason"` // The reason for the pending status
+	AuthorName    string        `db:"author_name"`    // Name of the author, in case the user isn't registered
+	AuthorIP      string        `db:"author_ip"`      // IP address of the author
+	AuthorCountry string        `db:"author_country"` // 2-letter country code matching the AuthorIP
 }
 
 // CloneWithClearance returns a clone of the comment with a limited set of properties, depending on the specified
