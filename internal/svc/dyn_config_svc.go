@@ -120,38 +120,25 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 	cs.items = items
 
 	// Query the data
-	rows, err := db.Select(db.Dialect().
-		From(goqu.T(tableName)).
-		Select("key", "value", "ts_updated", "user_updated").
-		Where(extraKeyCols))
-	if err != nil {
-		logger.Errorf("ConfigStore.Load: Select() failed: %v", err)
+	var dbRecs []struct {
+		Key         data.DynConfigItemKey `db:"key"`
+		Value       string                `db:"value"`
+		UpdatedTime time.Time             `db:"ts_updated"`
+		UserUpdated uuid.NullUUID         `db:"user_updated"`
+	}
+	if err := db.SelectStructs(db.DB().From(goqu.T(tableName)).Where(extraKeyCols), &dbRecs); err != nil {
+		logger.Errorf("ConfigStore.Load: SelectStructs() failed: %v", err)
 		return err
 	}
-	defer rows.Close()
 
-	// Fetch the items
-	for rows.Next() {
-		var key data.DynConfigItemKey
-		var value string
-		var updatedTime time.Time
-		var userUpdated uuid.NullUUID
-		if err := rows.Scan(&key, &value, &updatedTime, &userUpdated); err != nil {
-			logger.Errorf("ConfigStore.Load: rows.Scan() failed: %v", err)
-			return err
-		}
-
+	// Process the fetched items
+	for _, r := range dbRecs {
 		// If the item is a valid one
-		if ci, ok := cs.items[key]; ok && value != ci.DefaultValue {
-			ci.Value = value
-			ci.UpdatedTime = updatedTime
-			ci.UserUpdated = userUpdated
+		if ci, ok := cs.items[r.Key]; ok && r.Value != ci.DefaultValue {
+			ci.Value = r.Value
+			ci.UpdatedTime = r.UpdatedTime
+			ci.UserUpdated = r.UserUpdated
 		}
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		return translateDBErrors(err)
 	}
 
 	// Succeeded

@@ -246,7 +246,7 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 	}
 
 	// Verify the token signature
-	if !hmac.Equal(tokenHMAC, util.HMACSign(token, domain.SSOSecret)) {
+	if !hmac.Equal(tokenHMAC, util.HMACSign(token, domain.SSOSecretBytes())) {
 		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("HMAC signature doesn't check out"))
 	}
 
@@ -265,7 +265,7 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 	u := config.ServerConfig.ParsedBaseURL().JoinPath(util.APIPath, "oauth/sso/callback")
 	q := u.Query()
 	q.Set("payload", hex.EncodeToString(payloadBytes))
-	q.Set("hmac", hex.EncodeToString(util.HMACSign(payloadBytes, domain.SSOSecret)))
+	q.Set("hmac", hex.EncodeToString(util.HMACSign(payloadBytes, domain.SSOSecretBytes())))
 	u.RawQuery = q.Encode()
 
 	// Succeeded

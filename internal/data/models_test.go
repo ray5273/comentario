@@ -1,6 +1,7 @@
 package data
 
 import (
+	"database/sql"
 	"github.com/google/uuid"
 	"reflect"
 	"testing"
@@ -281,7 +282,7 @@ func TestDomain_CloneWithClearance(t *testing.T) {
 		AuthLocal:         true,
 		AuthSSO:           true,
 		SSOURL:            "https://foo.com",
-		SSOSecret:         []byte("secret"),
+		SSOSecret:         sql.NullString{Valid: true, String: "c0ffee"},
 		SSONonInteractive: true,
 		ModAnonymous:      true,
 		ModAuthenticated:  true,

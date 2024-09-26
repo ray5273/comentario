@@ -115,7 +115,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailure(nonIntSSO, "hmac is missing", nil)
 		} else if signature, err := hex.DecodeString(s); err != nil {
 			return oauthFailure(nonIntSSO, "hmac: invalid hex encoding", err)
-		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, domain.SSOSecret)) {
+		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, domain.SSOSecretBytes())) {
 			return oauthFailure(nonIntSSO, "hmac: signature verification failed", nil)
 		}
 
@@ -239,8 +239,8 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return oauthFailure(nonIntSSO, exmodels.ErrorLoginLocally.Message, nil)
 
 		// Existing account is a federated one. Make sure the user isn't changing their IdP
-	} else if provider != nil && user.FederatedIdP != idpID {
-		return oauthFailure(nonIntSSO, exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP).String(), nil)
+	} else if provider != nil && user.FederatedIdP.String != idpID {
+		return oauthFailure(nonIntSSO, exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP.String).String(), nil)
 
 		// If user is authenticating via SSO, it must stay that way
 	} else if provider == nil && !user.FederatedSSO {
@@ -363,7 +363,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		// Add the token and its HMAC signature to the SSO URL
 		q := ssoURL.Query()
 		q.Set("token", token.String())
-		q.Set("hmac", hex.EncodeToString(util.HMACSign(token.Value, domain.SSOSecret)))
+		q.Set("hmac", hex.EncodeToString(util.HMACSign(token.Value, domain.SSOSecretBytes())))
 		ssoURL.RawQuery = q.Encode()
 		authURL = ssoURL.String()
 

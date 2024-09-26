@@ -3,7 +3,6 @@ package svc
 import (
 	"database/sql"
 	"github.com/doug-martin/goqu/v9"
-	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -41,9 +40,9 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 
 	// Prepare a query for comment counts, grouped by day
 	date := db.StartOfDay("c.ts_created")
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_comments").As("c")).
-		Select(goqu.COUNT("*"), date).
+		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
@@ -74,9 +73,9 @@ func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, doma
 
 	// Prepare a query for comment counts, grouped by day
 	date := db.StartOfDay("u.ts_created")
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_domains_users").As("u")).
-		Select(goqu.COUNT("*"), date).
+		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("u.domain_id")})).
 		// Select only last N days
@@ -106,9 +105,9 @@ func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, doma
 
 	// Prepare a query for comment counts, grouped by day
 	date := db.StartOfDay("p.ts_created")
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_domain_pages").As("p")).
-		Select(goqu.COUNT("*"), date).
+		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		// Select only last N days
@@ -138,9 +137,9 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 
 	// Prepare a query for view counts, grouped by day
 	date := db.StartOfDay("v.ts_created")
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_domain_page_views").As("v")).
-		Select(goqu.COUNT("*"), date).
+		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("v.page_id")})).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
@@ -226,7 +225,7 @@ func (svc *statsService) fillCommentCommenterStats(curUser *data.User, totals *S
 // fillDomainPageUserStats fills the statistics for domains, domain pages, and domain users in totals
 func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *StatsTotals) error {
 	// Prepare a query
-	q := db.Dialect().
+	q := db.DB().
 		From(goqu.T("cm_domains").As("d")).
 		Select(
 			"cdu.is_owner",
@@ -240,7 +239,8 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 					db.Dialect().
 						From(goqu.T("cm_domain_pages").As("p")).
 						Select(goqu.COUNT("*")).
-						Where(goqu.Ex{"p.domain_id": goqu.I("d.id")})),
+						Where(goqu.Ex{"p.domain_id": goqu.I("d.id")})).
+				As("cnt_pages"),
 			// Select count of domain users where the current user is a superuser or domain owner, otherwise select null
 			goqu.Case().
 				When(
@@ -248,7 +248,8 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 					db.Dialect().
 						From(goqu.T("cm_domains_users").As("du")).
 						Select(goqu.COUNT("*")).
-						Where(goqu.Ex{"du.domain_id": goqu.I("d.id")})))
+						Where(goqu.Ex{"du.domain_id": goqu.I("d.id")})).
+				As("cnt_domains"))
 
 	// Join the domain users table. If the current user is a superuser, they may see any domain, so use an outer join
 	cduTable := goqu.T("cm_domains_users").As("cdu")
@@ -260,29 +261,27 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 	}
 
 	// Run the query
-	rows, err := db.Select(q)
-	if err != nil {
-		logger.Errorf("statsService.fillDomainPageUserStats: Select() failed: %v", err)
+	var dbRecs []struct {
+		IsOwner      sql.NullBool  `db:"is_owner"`
+		IsModerator  sql.NullBool  `db:"is_moderator"`
+		IsCommenter  sql.NullBool  `db:"is_commenter"`
+		CountPages   sql.NullInt64 `db:"cnt_pages"`
+		CountDomains sql.NullInt64 `db:"cnt_domains"`
+	}
+	if err := db.SelectStructs(q, &dbRecs); err != nil {
+		logger.Errorf("statsService.fillDomainPageUserStats: SelectStructs() failed: %v", err)
 		return err
 	}
-	defer rows.Close()
 
 	// Accumulate counts
-	for rows.Next() {
-		var isOwner, isModerator, isCommenter sql.NullBool
-		var cntPages, cntDomainUsers sql.NullInt64
-		if err := rows.Scan(&isOwner, &isModerator, &isCommenter, &cntPages, &cntDomainUsers); err != nil {
-			logger.Errorf("statsService.fillDomainPageUserStats: Scan() failed: %v", err)
-			return err
-		}
-
+	for _, r := range dbRecs {
 		// Increment the relevant domain role counter
-		if isOwner.Valid && isOwner.Bool {
+		if r.IsOwner.Valid && r.IsOwner.Bool {
 			totals.CountDomainsOwned++
-		} else if isModerator.Valid && isModerator.Bool {
+		} else if r.IsModerator.Valid && r.IsModerator.Bool {
 			totals.CountDomainsModerated++
-		} else if isCommenter.Valid {
-			if isCommenter.Bool {
+		} else if r.IsCommenter.Valid {
+			if r.IsCommenter.Bool {
 				totals.CountDomainsCommenter++
 			} else {
 				totals.CountDomainsReadonly++
@@ -290,20 +289,14 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 		}
 
 		// Increment page counter
-		if cntPages.Valid {
-			totals.CountPagesModerated += cntPages.Int64
+		if r.CountPages.Valid {
+			totals.CountPagesModerated += r.CountPages.Int64
 		}
 
 		// Increment domain user counter
-		if cntDomainUsers.Valid {
-			totals.CountDomainUsers += cntDomainUsers.Int64
+		if r.CountDomains.Valid {
+			totals.CountDomainUsers += r.CountDomains.Int64
 		}
-	}
-
-	// Verify Next() didn't error
-	if err := rows.Err(); err != nil {
-		logger.Errorf("statsService.fillDomainPageUserStats: Next() failed: %v", err)
-		return err
 	}
 
 	// Succeeded
@@ -356,30 +349,25 @@ func (svc *statsService) fillUserStats(totals *StatsTotals) error {
 }
 
 // queryStats collects and returns a daily statistics using the provided database rows
-func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num int) ([]uint64, error) {
-	var rows *sql.Rows
-	rows, err := db.Select(e)
-	if err != nil {
-		logger.Errorf("statsService.queryStats: Select() failed: %v", err)
+func (svc *statsService) queryStats(ds *goqu.SelectDataset, start time.Time, num int) ([]uint64, error) {
+	// Query the data
+	var dbRecs []struct {
+		// The date has to be fetched as a string and parsed afterwards due to SQLite3 limitation on type detection when
+		// using a function, see https://github.com/mattn/go-sqlite3/issues/951
+		Date  string `db:"date"`
+		Count uint64 `db:"cnt"`
+	}
+	if err := db.SelectStructs(ds, &dbRecs); err != nil {
+		logger.Errorf("statsService.queryStats: SelectStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
-	defer rows.Close()
 
 	// Iterate data rows
 	var res []uint64
-	for rows.Next() {
-		// Fetch a count and a date. The date has to be fetched as a string and parsed afterwards due to SQLite3
-		// limitation on type detection when using a function, see https://github.com/mattn/go-sqlite3/issues/951
-		var i uint64
-		var dateStr string
-		if err := rows.Scan(&i, &dateStr); err != nil {
-			logger.Errorf("statsService.queryStats: rs.Scan() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-
+	for _, r := range dbRecs {
 		// Parse the returned string into time
-		var t time.Time
-		if t, err = time.Parse(time.RFC3339, dateStr); err != nil {
+		t, err := time.Parse(time.RFC3339, r.Date)
+		if err != nil {
 			logger.Errorf("statsService.queryStats: failed to parse datetime string: %v", err)
 			return nil, translateDBErrors(err)
 		}
@@ -394,13 +382,8 @@ func (svc *statsService) queryStats(e exp.SQLExpression, start time.Time, num in
 		}
 
 		// Append a "real" data row
-		res = append(res, i)
+		res = append(res, r.Count)
 		start = start.AddDate(0, 0, 1)
-	}
-
-	// Check that Next() didn't error
-	if err := rows.Err(); err != nil {
-		return nil, translateDBErrors(err)
 	}
 
 	// Add missing rows up to the requested number (fill any gap at the end)

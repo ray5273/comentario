@@ -290,23 +290,23 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 			// Comment fields
 			"c.*",
 			// Commenter fields
-			goqu.I("u.id").As(goqu.C("u_id")),
-			goqu.I("u.email").As(goqu.C("u_email")),
-			goqu.I("u.name").As(goqu.C("u_name")),
-			goqu.I("u.website_url").As(goqu.C("u_website_url")),
-			goqu.I("u.is_superuser").As(goqu.C("u_is_superuser")),
-			goqu.I("du.is_owner").As(goqu.C("du_is_owner")),
-			goqu.I("du.is_moderator").As(goqu.C("du_is_moderator")),
-			goqu.I("du.is_commenter").As(goqu.C("du_is_commenter")),
+			goqu.I("u.id").As("u_id"),
+			goqu.I("u.email").As("u_email"),
+			goqu.I("u.name").As("u_name"),
+			goqu.I("u.website_url").As("u_website_url"),
+			goqu.I("u.is_superuser").As("u_is_superuser"),
+			goqu.I("du.is_owner").As("du_is_owner"),
+			goqu.I("du.is_moderator").As("du_is_moderator"),
+			goqu.I("du.is_commenter").As("du_is_commenter"),
 			// Avatar fields
-			goqu.I("a.user_id").As(goqu.C("a_user_id")),
+			goqu.I("a.user_id").As("a_user_id"),
 			// Votes fields
-			goqu.I("v.negative").As(goqu.C("v_negative")),
+			goqu.I("v.negative").As("v_negative"),
 			// Page fields
-			goqu.I("p.path").As(goqu.C("p_path")),
+			goqu.I("p.path").As("p_path"),
 			// Domain fields
-			goqu.I("d.host").As(goqu.C("d_host")),
-			goqu.I("d.is_https").As(goqu.C("d_is_https"))).
+			goqu.I("d.host").As("d_host"),
+			goqu.I("d.is_https").As("d_is_https")).
 		// Join comment pages
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Join domain

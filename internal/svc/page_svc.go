@@ -206,7 +206,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 
 	// Add filter by domain user unless it's a superuser
 	if superuser {
-		q = q.SelectAppend(goqu.L("null").As(goqu.C("is_owner")))
+		q = q.SelectAppend(goqu.L("null").As("is_owner"))
 	} else {
 		// For regular users, only those pages are visible that the user has a domain record for
 		q = q.

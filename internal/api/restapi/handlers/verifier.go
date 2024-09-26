@@ -112,7 +112,7 @@ func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails(err.Error()))
 
 		// Verify SSO secret is configured
-	} else if !domain.SSOSecretStr().Valid {
+	} else if domain.SSOSecretBytes() == nil {
 		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails("SSO secret isn't configured"))
 	}
 
@@ -251,7 +251,7 @@ func (v *verifier) UserCanSignupWithEmail(email string) (*exmodels.Error, middle
 	}
 
 	// User logs in using a federated IdP
-	ee := exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP)
+	ee := exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP.String)
 	return ee, respUnauthorized(ee)
 }
 
