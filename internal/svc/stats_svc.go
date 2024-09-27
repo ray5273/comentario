@@ -40,8 +40,7 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 
 	// Prepare a query for comment counts, grouped by day
 	date := db.StartOfDay("c.ts_created")
-	q := db.DB().
-		From(goqu.T("cm_comments").As("c")).
+	q := db.From(goqu.T("cm_comments").As("c")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Filter by domain
@@ -73,8 +72,7 @@ func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, doma
 
 	// Prepare a query for comment counts, grouped by day
 	date := db.StartOfDay("u.ts_created")
-	q := db.DB().
-		From(goqu.T("cm_domains_users").As("u")).
+	q := db.From(goqu.T("cm_domains_users").As("u")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("u.domain_id")})).
@@ -105,8 +103,7 @@ func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, doma
 
 	// Prepare a query for comment counts, grouped by day
 	date := db.StartOfDay("p.ts_created")
-	q := db.DB().
-		From(goqu.T("cm_domain_pages").As("p")).
+	q := db.From(goqu.T("cm_domain_pages").As("p")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		// Filter by domain
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
@@ -137,8 +134,7 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 
 	// Prepare a query for view counts, grouped by day
 	date := db.StartOfDay("v.ts_created")
-	q := db.DB().
-		From(goqu.T("cm_domain_page_views").As("v")).
+	q := db.From(goqu.T("cm_domain_page_views").As("v")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("v.page_id")})).
 		// Filter by domain
@@ -225,8 +221,7 @@ func (svc *statsService) fillCommentCommenterStats(curUser *data.User, totals *S
 // fillDomainPageUserStats fills the statistics for domains, domain pages, and domain users in totals
 func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *StatsTotals) error {
 	// Prepare a query
-	q := db.DB().
-		From(goqu.T("cm_domains").As("d")).
+	q := db.From(goqu.T("cm_domains").As("d")).
 		Select(
 			"cdu.is_owner",
 			"cdu.is_moderator",
@@ -268,8 +263,8 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 		CountPages   sql.NullInt64 `db:"cnt_pages"`
 		CountDomains sql.NullInt64 `db:"cnt_domains"`
 	}
-	if err := db.SelectStructs(q, &dbRecs); err != nil {
-		logger.Errorf("statsService.fillDomainPageUserStats: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("statsService.fillDomainPageUserStats: ScanStructs() failed: %v", err)
 		return err
 	}
 
@@ -329,8 +324,8 @@ func (svc *statsService) fillUserStats(totals *StatsTotals) error {
 		Banned bool  `db:"banned"`
 		Count  int64 `db:"cnt"`
 	}
-	if err := db.SelectStructs(db.DB().From("cm_users").Select("banned", goqu.COUNT("*").As("cnt")).GroupBy("banned"), &dbRecs); err != nil {
-		logger.Errorf("statsService.fillUserStats: SelectStructs() failed: %v", err)
+	if err := db.From("cm_users").Select("banned", goqu.COUNT("*").As("cnt")).GroupBy("banned").ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("statsService.fillUserStats: ScanStructs() failed: %v", err)
 		return err
 	}
 
@@ -357,8 +352,8 @@ func (svc *statsService) queryStats(ds *goqu.SelectDataset, start time.Time, num
 		Date  string `db:"date"`
 		Count uint64 `db:"cnt"`
 	}
-	if err := db.SelectStructs(ds, &dbRecs); err != nil {
-		logger.Errorf("statsService.queryStats: SelectStructs() failed: %v", err)
+	if err := ds.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("statsService.queryStats: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 

@@ -129,12 +129,12 @@ func (t *Token) String() string {
 
 // AuthSession holds information about federated authentication session
 type AuthSession struct {
-	ID          uuid.UUID // Unique session ID
-	TokenValue  []byte    // Reference to the anonymous token authenticated was initiated with
-	Data        string    // Opaque serialised session data
-	Host        string    // Optional source page host
-	CreatedTime time.Time // When the session was created
-	ExpiresTime time.Time // When the session expires
+	ID          uuid.UUID `db:"id"`          // Unique session ID
+	TokenValue  string    `db:"token_value"` // Reference to the anonymous token authenticated was initiated with, as a hex string
+	Data        string    `db:"data"`        // Opaque serialised session data
+	Host        string    `db:"host"`        // Optional source page host
+	CreatedTime time.Time `db:"ts_created"`  // When the session was created
+	ExpiresTime time.Time `db:"ts_expires"`  // When the session expires
 }
 
 // NewAuthSession instantiates a new AuthSession
@@ -142,12 +142,17 @@ func NewAuthSession(data, host string, token []byte) *AuthSession {
 	now := time.Now().UTC()
 	return &AuthSession{
 		ID:          uuid.New(),
-		TokenValue:  token,
+		TokenValue:  hex.EncodeToString(token),
 		Data:        data,
 		Host:        host,
 		CreatedTime: now,
 		ExpiresTime: now.Add(util.AuthSessionDuration),
 	}
+}
+
+// TokenValueBytes returns token value decoded into a byte slice
+func (a *AuthSession) TokenValueBytes() ([]byte, error) {
+	return hex.DecodeString(a.TokenValue)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -489,12 +494,12 @@ var UserAvatarSizes = map[UserAvatarSize]int{UserAvatarSizeS: 16, UserAvatarSize
 
 // UserAvatar represents a set of avatar images for a user
 type UserAvatar struct {
-	UserID      uuid.UUID // Unique user ID
-	UpdatedTime time.Time // When the user was last updated
-	IsCustom    bool      // Whether the user has customised their avatar, meaning it shouldn't be re-fetched from the IdP
-	AvatarS     []byte    // Small avatar image (16x16)
-	AvatarM     []byte    // Medium-sized avatar image (32x32)
-	AvatarL     []byte    // Large avatar image (128x128)
+	UserID      uuid.UUID `db:"user_id" goqu:"skipupdate"` // Unique user ID
+	UpdatedTime time.Time `db:"ts_updated"`                // When the user was last updated
+	IsCustom    bool      `db:"is_custom"`                 // Whether the user has customised their avatar, meaning it shouldn't be re-fetched from the IdP
+	AvatarS     []byte    `db:"avatar_s"`                  // Small avatar image (16x16)
+	AvatarM     []byte    `db:"avatar_m"`                  // Medium-sized avatar image (32x32)
+	AvatarL     []byte    `db:"avatar_l"`                  // Large avatar image (128x128)
 }
 
 // Get returns an avatar image of the given size

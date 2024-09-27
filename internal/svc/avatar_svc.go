@@ -4,8 +4,6 @@ import (
 	"bytes"
 	"container/list"
 	"crypto/sha256"
-	"database/sql"
-	"errors"
 	"fmt"
 	"github.com/disintegration/imaging"
 	"github.com/doug-martin/goqu/v9"
@@ -121,23 +119,16 @@ func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, erro
 	}
 
 	// Query the database
-	q := db.Dialect().
-		Select("ts_updated", "is_custom", "avatar_s", "avatar_m", "avatar_l").
-		From("cm_user_avatars").
-		Where(goqu.Ex{"user_id": userID})
-
-	ua := &data.UserAvatar{UserID: *userID}
-	if err := db.SelectRow(q).Scan(&ua.UpdatedTime, &ua.IsCustom, &ua.AvatarS, &ua.AvatarM, &ua.AvatarL); errors.Is(err, sql.ErrNoRows) {
+	var ua data.UserAvatar
+	if b, err := db.From("cm_user_avatars").Where(goqu.Ex{"user_id": userID}).ScanStruct(&ua); err != nil {
+		return nil, translateDBErrors(err)
+	} else if !b {
 		// No avatar exists
 		return nil, nil
-
-	} else if err != nil {
-		// Any other DB error
-		return nil, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return ua, nil
+	return &ua, nil
 }
 
 func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCustom bool) error {
@@ -158,7 +149,7 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 	if r == nil {
 		// If a database record exists, delete it
 		if ua != nil {
-			if err = db.ExecuteOne(db.Dialect().Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID})); err != nil {
+			if err = db.ExecOne(db.Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID})); err != nil {
 				return err
 			}
 		}
@@ -169,20 +160,11 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 		if err = svc.readImage(r, ua); err != nil {
 			return err
 		}
+		ua.UpdatedTime = time.Now().UTC()
+		ua.IsCustom = isCustom
 
 		// Update the database record
-		if err = db.ExecuteOne(
-			db.Dialect().
-				Update("cm_user_avatars").
-				Set(goqu.Record{
-					"ts_updated": time.Now().UTC(),
-					"is_custom":  isCustom,
-					"avatar_s":   ua.AvatarS,
-					"avatar_m":   ua.AvatarM,
-					"avatar_l":   ua.AvatarL,
-				}).
-				Where(goqu.Ex{"user_id": userID}),
-		); err != nil {
+		if err = db.ExecOne(db.Update("cm_user_avatars").Set(ua).Where(goqu.Ex{"user_id": userID})); err != nil {
 			return err
 		}
 
@@ -196,18 +178,7 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 		}
 
 		// Insert a new avatar database record
-		if err = db.ExecuteOne(
-			db.Dialect().
-				Insert("cm_user_avatars").
-				Rows(goqu.Record{
-					"user_id":    &ua.UserID,
-					"ts_updated": ua.UpdatedTime,
-					"is_custom":  ua.IsCustom,
-					"avatar_s":   ua.AvatarS,
-					"avatar_m":   ua.AvatarM,
-					"avatar_l":   ua.AvatarL,
-				}),
-		); err != nil {
+		if err = db.ExecOne(db.Insert("cm_user_avatars").Rows(ua)); err != nil {
 			return err
 		}
 	}

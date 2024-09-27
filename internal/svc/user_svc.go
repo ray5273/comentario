@@ -113,9 +113,7 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 	logger.Debug("userService.CountUsers(%v, %v, %v, %v, %v)", inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated)
 
 	// Prepare the query
-	q := db.Dialect().
-		From("cm_users").
-		Select(goqu.COUNT("*"))
+	q := db.From("cm_users")
 	if !inclSuper {
 		q = q.Where(goqu.Ex{"is_superuser": false})
 	}
@@ -133,13 +131,13 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 	}
 
 	// Query the count
-	var i int
-	if err := db.SelectRow(q).Scan(&i); err != nil {
+	cnt, err := q.Count()
+	if err != nil {
 		return 0, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return i, nil
+	return int(cnt), nil
 }
 
 func (svc *userService) Create(u *data.User) error {
@@ -326,8 +324,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	}
 
 	// Query the database
-	q := db.DB().
-		From(goqu.T("cm_users").As("u")).
+	q := db.From(goqu.T("cm_users").As("u")).
 		Select(
 			// User columns
 			"u.*",
@@ -353,8 +350,11 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		data.User
 		data.NullDomainUser
 	}
-	if err := db.SelectStruct(q, &r); err != nil {
+	if b, err := q.ScanStruct(&r); err != nil {
+		logger.Errorf("userService.FindDomainUserByID: ScanStruct() failed: %v", err)
 		return nil, nil, err
+	} else if !b {
+		return nil, nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -365,8 +365,7 @@ func (svc *userService) FindUserByEmail(email string) (*data.User, error) {
 	logger.Debugf("userService.FindUserByEmail(%q)", email)
 
 	// Prepare the query
-	q := db.DB().
-		From(goqu.T("cm_users").As("u")).
+	q := db.From(goqu.T("cm_users").As("u")).
 		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
 		Where(goqu.Ex{"u.email": email}).
 		// Outer-join user avatars
@@ -374,9 +373,11 @@ func (svc *userService) FindUserByEmail(email string) (*data.User, error) {
 
 	// Query the user
 	u := data.User{}
-	if err := db.SelectStruct(q, &u); err != nil {
-		logger.Errorf("userService.FindUserByEmail: SelectStruct() failed: %v", err)
+	if b, err := q.ScanStruct(&u); err != nil {
+		logger.Errorf("userService.FindUserByEmail: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -387,8 +388,7 @@ func (svc *userService) FindUserByFederatedID(idp, id string) (*data.User, error
 	logger.Debugf("userService.FindUserByFederatedID(%q, %q)", idp, id)
 
 	// Prepare the query
-	q := db.DB().
-		From(goqu.T("cm_users").As("u")).
+	q := db.From(goqu.T("cm_users").As("u")).
 		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
 		Where(goqu.Ex{"u.federated_id": id}).
 		// Outer-join user avatars
@@ -403,9 +403,11 @@ func (svc *userService) FindUserByFederatedID(idp, id string) (*data.User, error
 
 	// Query the user
 	u := data.User{}
-	if err := db.SelectStruct(q, &u); err != nil {
-		logger.Errorf("userService.FindUserByFederatedID: SelectStruct() failed: %v", err)
+	if b, err := q.ScanStruct(&u); err != nil {
+		logger.Errorf("userService.FindUserByFederatedID: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -421,8 +423,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	}
 
 	// Prepare the query
-	q := db.DB().
-		From(goqu.T("cm_users").As("u")).
+	q := db.From(goqu.T("cm_users").As("u")).
 		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
 		Where(goqu.Ex{"u.id": id}).
 		// Outer-join user avatars
@@ -430,9 +431,11 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 
 	// Query the user
 	u := data.User{}
-	if err := db.SelectStruct(q, &u); err != nil {
-		logger.Errorf("userService.FindUserByID: SelectStruct() failed: %v", err)
+	if b, err := q.ScanStruct(&u); err != nil {
+		logger.Errorf("userService.FindUserByID: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -449,8 +452,7 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 
 	// Prepare the query
 	now := time.Now().UTC()
-	q := db.DB().
-		From(goqu.T("cm_users").As("u")).
+	q := db.From(goqu.T("cm_users").As("u")).
 		Select(
 			// User columns
 			"u.*",
@@ -498,8 +500,10 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 		OSVersion      string    `db:"s_ua_os_version"`
 		Device         string    `db:"s_ua_device"`
 	}
-	if err := db.SelectStruct(q, &r); err != nil {
+	if b, err := q.ScanStruct(&r); err != nil {
 		return nil, nil, translateDBErrors(err)
+	} else if !b {
+		return nil, nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -526,8 +530,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	logger.Debugf("userService.List('%s', '%s', %s, %d)", filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := db.DB().
-		From(goqu.T("cm_users").As("u")).
+	q := db.From(goqu.T("cm_users").As("u")).
 		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
@@ -565,8 +568,8 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 
 	// Query users
 	var users []*data.User
-	if err := db.SelectStructs(q, &users); err != nil {
-		logger.Errorf("userService.List: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&users); err != nil {
+		logger.Errorf("userService.List: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -578,8 +581,7 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 	logger.Debugf("userService.ListByDomain(%s, %v, '%s', '%s', %s, %d)", domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
-	q := db.DB().
-		From(goqu.T("cm_domains_users").As("du")).
+	q := db.From(goqu.T("cm_domains_users").As("du")).
 		Select(
 			// User columns
 			"u.*",
@@ -632,8 +634,8 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 		data.User
 		data.NullDomainUser
 	}
-	if err := db.SelectStructs(q, &dbRecs); err != nil {
-		logger.Errorf("userService.ListByDomainUser: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("userService.ListByDomainUser: ScanStructs() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
 
@@ -658,8 +660,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
 
 	// Prepare a query
-	q := db.DB().
-		From(goqu.T("cm_domains_users").As("du")).
+	q := db.From(goqu.T("cm_domains_users").As("du")).
 		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
 		// Join users
 		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
@@ -674,8 +675,8 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 
 	// Query domain's moderator users
 	var users []*data.User
-	if err := db.SelectStructs(q, &users); err != nil {
-		logger.Errorf("userService.ListDomainModerators: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&users); err != nil {
+		logger.Errorf("userService.ListDomainModerators: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -687,8 +688,7 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 	logger.Debugf("userService.ListUserSessions(%s, %d)", userID, pageIndex)
 
 	// Prepare a query
-	q := db.DB().
-		From("cm_user_sessions").
+	q := db.From("cm_user_sessions").
 		Where(goqu.Ex{"user_id": userID}).
 		Order(goqu.I("ts_created").Desc())
 
@@ -699,8 +699,8 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 
 	// Query user sessions
 	var us []*data.UserSession
-	if err := db.SelectStructs(q, &us); err != nil {
-		logger.Errorf("userService.ListUserSessions: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&us); err != nil {
+		logger.Errorf("userService.ListUserSessions: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 

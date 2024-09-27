@@ -64,8 +64,14 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return oauthFailureInternal(false, err)
 	}
 
-	// Obtain the token linked by the auth session
-	token, err := svc.TheTokenService.FindByValue(authSession.TokenValue, false)
+	// Decode the value of the token linked by the auth session
+	tokenBytes, err := authSession.TokenValueBytes()
+	if err != nil {
+		return oauthFailureInternal(false, err)
+	}
+
+	// Obtain the token
+	token, err := svc.TheTokenService.FindByValue(tokenBytes, false)
 	if err != nil {
 		return oauthFailureInternal(false, err)
 

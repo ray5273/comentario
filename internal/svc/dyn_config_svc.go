@@ -126,8 +126,8 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 		UpdatedTime time.Time             `db:"ts_updated"`
 		UserUpdated uuid.NullUUID         `db:"user_updated"`
 	}
-	if err := db.SelectStructs(db.DB().From(goqu.T(tableName)).Where(extraKeyCols), &dbRecs); err != nil {
-		logger.Errorf("ConfigStore.Load: SelectStructs() failed: %v", err)
+	if err := db.From(goqu.T(tableName)).Where(extraKeyCols).ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("ConfigStore.Load: ScanStructs() failed: %v", err)
 		return err
 	}
 

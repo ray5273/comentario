@@ -1,7 +1,6 @@
 package svc
 
 import (
-	"encoding/hex"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -31,19 +30,8 @@ func (svc *authSessionService) Create(sessData, host string, token []byte) (*dat
 	as := data.NewAuthSession(sessData, host, token)
 
 	// Persist the session
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_auth_sessions").
-			Rows(goqu.Record{
-				"id":          &as.ID,
-				"token_value": hex.EncodeToString(as.TokenValue),
-				"data":        as.Data,
-				"host":        as.Host,
-				"ts_created":  as.CreatedTime,
-				"ts_expires":  as.ExpiresTime,
-			}),
-	); err != nil {
-		logger.Errorf("authSessionService.Create: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Insert("cm_auth_sessions").Rows(as)); err != nil {
+		logger.Errorf("authSessionService.Create: ExecOne() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -56,21 +44,16 @@ func (svc *authSessionService) TakeByID(id *uuid.UUID) (*data.AuthSession, error
 
 	// Query and delete the session
 	var as data.AuthSession
-	var tv string
-	err := db.SelectRow(
-		db.Dialect().
-			Delete("cm_auth_sessions").
-			Where(goqu.C("id").Eq(id), goqu.C("ts_expires").Gt(time.Now().UTC())).
-			Returning("id", "token_value", "data", "host", "ts_created", "ts_expires")).
-		Scan(&as.ID, &tv, &as.Data, &as.Host, &as.CreatedTime, &as.ExpiresTime)
+	b, err := db.Delete("cm_auth_sessions").
+		Where(goqu.C("id").Eq(id), goqu.C("ts_expires").Gt(time.Now().UTC())).
+		Returning("id", "token_value", "data", "host", "ts_created", "ts_expires").
+		Executor().
+		ScanStruct(&as)
 	if err != nil {
-		logger.Errorf("authSessionService.TakeByID: SelectRow() failed: %v", err)
+		logger.Errorf("authSessionService.TakeByID: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
-	}
-
-	// Decode the hex token value
-	if as.TokenValue, err = hex.DecodeString(tv); err != nil {
-		return nil, err
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded

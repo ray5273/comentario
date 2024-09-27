@@ -9,6 +9,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exec"
 	"github.com/doug-martin/goqu/v9/exp"
 	_ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
@@ -45,19 +46,37 @@ const (
 
 var errUnknownDialect = errors.New("unknown DB dialect")
 
+// Executable encapsulates a method that returns a query executor. Declared here for the lack of one in goqu
+type Executable interface {
+	Executor() exec.QueryExecutor
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// goquLoggerFunc is an adapter that turns a compatible function into a goqu.Logger implementation
+type goquLoggerFunc func(format string, v ...any)
+
+func (f goquLoggerFunc) Printf(format string, v ...any) {
+	f(format, v...)
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 // Database is an opaque structure providing database operations
 type Database struct {
-	dialect  dbDialect // Database dialect in use
-	debug    bool      // Whether debug logging is enabled
-	db       *sql.DB   // Internal SQL database instance
-	doneConn chan bool // Receives a true when the connection process has been finished (successfully or not)
-	version  string    // Actual database server version
+	dialect     dbDialect   // Database dialect in use
+	debug       bool        // Whether debug logging is enabled
+	debugLogger goqu.Logger // Database logger instance when debug logging is enabled
+	db          *sql.DB     // Internal SQL database instance
+	doneConn    chan bool   // Receives a true when the connection process has been finished (successfully or not)
+	version     string      // Actual database server version
 }
 
 // InitDB establishes a database connection
 func InitDB() (*Database, error) {
 	// Set up goqu options
 	goqu.SetIgnoreUntaggedFields(true)
+	goqu.SetDefaultPrepared(true)
 
 	// Determine the DB dialect to use and validate config
 	var dialect dbDialect
@@ -77,6 +96,11 @@ func InitDB() (*Database, error) {
 	logger.Infof("Using database dialect: %s", dialect)
 	db := &Database{dialect: dialect, debug: config.ServerConfig.DBDebug, doneConn: make(chan bool, 1)}
 
+	// Create a logger if debug logging is enabled
+	if db.debug {
+		db.debugLogger = goquLoggerFunc(logger.Debugf)
+	}
+
 	// Try to connect
 	if err := db.connect(); err != nil {
 		return nil, err
@@ -91,6 +115,11 @@ func InitDB() (*Database, error) {
 	return db, nil
 }
 
+// Delete is a shorthand for DB().Delete(...)
+func (db *Database) Delete(table any) *goqu.DeleteDataset {
+	return db.DB().Delete(table)
+}
+
 // Dialect returns the goqu dialect to use for this database
 func (db *Database) Dialect() goqu.DialectWrapper {
 	return db.dialect.dialectWrapper()
@@ -98,7 +127,32 @@ func (db *Database) Dialect() goqu.DialectWrapper {
 
 // DB returns a goqu.Database to use for queries
 func (db *Database) DB() *goqu.Database {
-	return db.Dialect().DB(db.db)
+	gd := db.Dialect().DB(db.db)
+	gd.Logger(db.debugLogger)
+	return gd
+}
+
+// Exec executes the provided Executable statement against the database and discards the returned result
+func (db *Database) Exec(x Executable) error {
+	_, err := x.Executor().Exec()
+	return err
+}
+
+// ExecOne executes the provided Executable statement against the database and verifies there's exactly one row affected
+func (db *Database) ExecOne(x Executable) error {
+	// Run the statement
+	if res, err := x.Executor().Exec(); err != nil {
+		return err
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("RowsAffected() failed: %v", err)
+	} else if cnt == 0 {
+		return sql.ErrNoRows
+	} else if cnt != 1 {
+		return fmt.Errorf("statement affected %d rows, want 1", cnt)
+	}
+
+	// Succeeded
+	return nil
 }
 
 // Execute executes the provided goqu expression against the database
@@ -110,13 +164,10 @@ func (db *Database) Execute(e exp.SQLExpression) error {
 // ExecuteOne executes the provided goqu expression against the database and verifies there's exactly one row affected
 func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 	// Convert the expression into SQL and params
-	eSQL, eParams, err := setPrepared(e).ToSQL()
+	eSQL, eParams, err := e.ToSQL()
 	if err != nil {
 		return err
 	}
-
-	// Debug logging
-	db.debugLogSQL("ExecuteOne", eSQL, eParams)
 
 	// Run the statement
 	if res, err := db.db.Exec(eSQL, eParams...); err != nil {
@@ -136,16 +187,23 @@ func (db *Database) ExecuteOne(e exp.SQLExpression) error {
 // ExecuteRes executes the provided goqu expression against the database and returns its result
 func (db *Database) ExecuteRes(e exp.SQLExpression) (sql.Result, error) {
 	// Convert the expression into SQL and params
-	eSQL, eParams, err := setPrepared(e).ToSQL()
+	eSQL, eParams, err := e.ToSQL()
 	if err != nil {
 		return nil, err
 	}
 
-	// Debug logging
-	db.debugLogSQL("ExecuteRes", eSQL, eParams)
-
 	// Execute the statement
 	return db.db.Exec(eSQL, eParams...)
+}
+
+// From is a shorthand for DB().From(...)
+func (db *Database) From(v ...any) *goqu.SelectDataset {
+	return db.DB().From(v...)
+}
+
+// Insert is a shorthand for DB().Insert(...)
+func (db *Database) Insert(table any) *goqu.InsertDataset {
+	return db.DB().Insert(table)
 }
 
 // Migrate installs necessary migrations, and, optionally the passed seed SQL
@@ -289,90 +347,16 @@ func (db *Database) RecreateSchema() error {
 	return nil
 }
 
-// Select executes the provided goqu query against the database
-func (db *Database) Select(e exp.SQLExpression) (*sql.Rows, error) {
-	// Convert the expression into SQL and params
-	eSQL, eParams, err := setPrepared(e).ToSQL()
-	if err != nil {
-		return nil, err
-	}
-
-	// Debug logging
-	db.debugLogSQL("Select", eSQL, eParams)
-
-	// Execute the query
-	return db.db.Query(eSQL, eParams...)
-}
-
 // SelectRow executes the provided goqu query against the database, returning a single row
 func (db *Database) SelectRow(e exp.SQLExpression) intf.Scanner {
 	// Convert the expression into SQL and params
-	eSQL, eParams, err := setPrepared(e).ToSQL()
+	eSQL, eParams, err := e.ToSQL()
 	if err != nil {
 		return util.NewErrScanner(err)
 	}
 
-	// Debug logging
-	db.debugLogSQL("SelectRow", eSQL, eParams)
-
 	// Execute the query
 	return db.db.QueryRow(eSQL, eParams...)
-}
-
-// SelectStruct executes the provided goqu query against the database, which is expected to return exactly one record.
-// The record is used to populate the provided target *struct
-func (db *Database) SelectStruct(ds *goqu.SelectDataset, target any) error {
-	// Turn Prepared on
-	ds = ds.Prepared(true)
-
-	// Debug logging
-	db.debugLog("SelectStruct", ds)
-
-	// Execute the query and collect the results
-	if b, err := ds.ScanStruct(target); err != nil {
-		return err
-	} else if !b {
-		return sql.ErrNoRows
-	}
-
-	// Succeeded
-	return nil
-}
-
-// SelectStructs executes the provided goqu query against the database and populates the provided target *[]struct
-func (db *Database) SelectStructs(ds *goqu.SelectDataset, target any) error {
-	// Turn Prepared on
-	ds = ds.Prepared(true)
-
-	// If nothing provided for SELECT, pass the target as the select list. This is to work around the goqu's
-	// shortcoming, which concerns the supposedly incorrect statement in the docs (see
-	// https://doug-martin.github.io/goqu/docs/selecting.html#scan-structs):
-	// > When calling ScanStructs without a select already defined it will automatically only SELECT the columns found
-	// > in the struct, omitting any that are tagged with db:"-"
-	if cols := ds.GetClauses().Select().Columns(); len(cols) == 1 {
-		if le, ok := cols[0].(exp.LiteralExpression); ok && le.Literal() == "*" {
-			ds = ds.Select(target)
-		}
-	}
-
-	// Debug logging
-	db.debugLog("SelectStructs", ds)
-
-	// Execute the query and collect the results
-	return ds.ScanStructs(target)
-}
-
-// SelectVals executes the provided single-column goqu query against the database and populates the provided slice of a
-// primitive type
-func (db *Database) SelectVals(ds *goqu.SelectDataset, target any) error {
-	// Turn Prepared on
-	ds = ds.Prepared(true)
-
-	// Debug logging
-	db.debugLog("SelectVals", ds)
-
-	// Execute the query and collect the results
-	return ds.ScanVals(target)
 }
 
 // Shutdown ends the database connection and shuts down all dependent services
@@ -399,6 +383,11 @@ func (db *Database) StartOfDay(col string) exp.LiteralExpression {
 		col = fmt.Sprintf("strftime('%%FT00:00:00Z', %s)", col)
 	}
 	return goqu.L(col)
+}
+
+// Update is a shorthand for DB().Update(...)
+func (db *Database) Update(table any) *goqu.UpdateDataset {
+	return db.DB().Update(table)
 }
 
 // Version returns the actual database server version
@@ -492,25 +481,6 @@ func (db *Database) connect() error {
 	return nil
 }
 
-// debugLog logs the SQL statement in the passed expression, if database debug logging is on
-func (db *Database) debugLog(methodName string, e exp.SQLExpression) exp.SQLExpression {
-	if db.debug {
-		if s, a, err := e.ToSQL(); err != nil {
-			logger.Errorf("db.%s(): failed to generate SQL for expression: %v", methodName, err)
-		} else {
-			db.debugLogSQL(methodName, s, a)
-		}
-	}
-	return e
-}
-
-// debugLog logs an already generated SQL statement, if database debug logging is on
-func (db *Database) debugLogSQL(methodName, statement string, args any) {
-	if db.debug {
-		logger.Debugf("db.%s()\n - SQL: %s\n - Args: %#v", methodName, statement, args)
-	}
-}
-
 // getAvailableMigrations returns a list of available database migration files
 func (db *Database) getAvailableMigrations() ([]string, error) {
 	// Scan the migrations dir for available migration files. Files reside in a subdirectory whose name matches the DB
@@ -570,8 +540,8 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 		Filename string `db:"filename"`
 		MD5      string `db:"md5"`
 	}
-	if err := db.SelectStructs(db.DB().From("cm_migrations"), &dbRecs); err != nil {
-		return nil, fmt.Errorf("getInstalledMigrations: SelectStructs() failed: %w", err)
+	if err := db.From("cm_migrations").ScanStructs(&dbRecs); err != nil {
+		return nil, fmt.Errorf("getInstalledMigrations: ScanStructs() failed: %w", err)
 	}
 
 	// Convert the files into a map
@@ -723,16 +693,16 @@ func (db *Database) tableExists(name string) (bool, error) {
 	var sd *goqu.SelectDataset
 	switch db.dialect {
 	case dbPostgres:
-		sd = db.Dialect().From("pg_tables").Select(goqu.COUNT("*")).Where(goqu.Ex{"schemaname": "public", "tablename": name})
+		sd = db.From("pg_tables").Where(goqu.Ex{"schemaname": "public", "tablename": name})
 	case dbSQLite3:
-		sd = db.Dialect().From("sqlite_master").Select(goqu.COUNT("*")).Where(goqu.Ex{"type": "table", "name": name})
+		sd = db.From("sqlite_master").Where(goqu.Ex{"type": "table", "name": name})
 	default:
 		return false, errUnknownDialect
 	}
 
 	// Query the DB
-	var cnt int
-	if err := db.SelectRow(sd).Scan(&cnt); err != nil {
+	cnt, err := sd.Count()
+	if err != nil {
 		return false, err
 	}
 
@@ -756,23 +726,4 @@ func (db *Database) tryConnect(num, total int) (err error) {
 		logger.Warningf("[Attempt %d/%d] Failed to ping database: %v", num, total, err)
 	}
 	return
-}
-
-// setPrepared tries to set the Prepared to true on the given expression
-func setPrepared(e exp.SQLExpression) exp.SQLExpression {
-	switch x := e.(type) {
-	case *goqu.DeleteDataset:
-		return x.Prepared(true)
-	case *goqu.InsertDataset:
-		return x.Prepared(true)
-	case *goqu.SelectDataset:
-		return x.Prepared(true)
-	case *goqu.TruncateDataset:
-		return x.Prepared(true)
-	case *goqu.UpdateDataset:
-		return x.Prepared(true)
-	}
-
-	// No luck, pass e through
-	return e
 }

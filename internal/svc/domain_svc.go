@@ -113,10 +113,7 @@ func (svc *domainService) CountForUser(userID *uuid.UUID, owner, moderator bool)
 	logger.Debugf("domainService.CountForUser(%s)", userID)
 
 	// Prepare a query
-	q := db.Dialect().
-		From("cm_domains_users").
-		Select(goqu.COUNT("*")).
-		Where(goqu.Ex{"user_id": userID})
+	q := db.From("cm_domains_users").Where(goqu.Ex{"user_id": userID})
 	if moderator {
 		q = q.Where(goqu.ExOr{"is_owner": true, "is_moderator": true})
 	} else if owner {
@@ -124,14 +121,14 @@ func (svc *domainService) CountForUser(userID *uuid.UUID, owner, moderator bool)
 	}
 
 	// Query the domain count
-	var i int
-	if err := db.SelectRow(q).Scan(&i); err != nil {
-		logger.Errorf("domainService.CountForUser: SelectRow() failed: %v", err)
+	cnt, err := q.Count()
+	if err != nil {
+		logger.Errorf("domainService.CountForUser: Count() failed: %v", err)
 		return 0, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return i, nil
+	return int(cnt), nil
 }
 
 func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
@@ -202,8 +199,11 @@ func (svc *domainService) FindByHost(host string) (*data.Domain, error) {
 
 	// Query the domain
 	d := data.Domain{}
-	if err := db.SelectStruct(db.DB().From("cm_domains").Where(goqu.Ex{"host": host}), &d); err != nil {
+	if b, err := db.From("cm_domains").Where(goqu.Ex{"host": host}).ScanStruct(&d); err != nil {
+		logger.Errorf("domainService.FindByHost: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -215,8 +215,11 @@ func (svc *domainService) FindByID(id *uuid.UUID) (*data.Domain, error) {
 
 	// Query the domain
 	d := data.Domain{}
-	if err := db.SelectStruct(db.DB().From("cm_domains").Where(goqu.Ex{"id": id}), &d); err != nil {
+	if b, err := db.From("cm_domains").Where(goqu.Ex{"id": id}).ScanStruct(&d); err != nil {
+		logger.Errorf("domainService.FindByID: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -227,8 +230,7 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 	logger.Debugf("domainService.FindDomainUserByHost('%s', %s, %v)", host, userID, createIfMissing)
 
 	// Query domain and domain user
-	q := db.DB().
-		From(goqu.T("cm_domains").As("d")).
+	q := db.From(goqu.T("cm_domains").As("d")).
 		Select(
 			// Domain fields
 			"d.*",
@@ -251,8 +253,11 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 		data.Domain
 		data.NullDomainUser
 	}
-	if err := db.SelectStruct(q, &r); err != nil {
+	if b, err := q.ScanStruct(&r); err != nil {
+		logger.Errorf("domainService.FindDomainUserByHost: ScanStruct() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
+	} else if !b {
+		return nil, nil, ErrNotFound
 	}
 
 	// If no domain user found, and we need to create one
@@ -281,8 +286,7 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 	logger.Debugf("domainService.FindDomainUserByID(%s, %s)", domainID, userID)
 
 	// Query the row
-	q := db.DB().
-		From(goqu.T("cm_domains").As("d")).
+	q := db.From(goqu.T("cm_domains").As("d")).
 		Select(
 			// Domain fields
 			"d.*",
@@ -305,8 +309,11 @@ func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data
 		data.Domain
 		data.NullDomainUser
 	}
-	if err := db.SelectStruct(q, &r); err != nil {
+	if b, err := q.ScanStruct(&r); err != nil {
+		logger.Errorf("domainService.FindDomainUserByID: ScanStruct() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
+	} else if !b {
+		return nil, nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -358,8 +365,7 @@ func (svc *domainService) ListByDomainUser(userID, curUserID *uuid.UUID, superus
 	logger.Debugf("domainService.ListByDomainUser(%s, %s, %v, %v, '%s', '%s', %s, %d)", userID, curUserID, superuser, withDomainUserOnly, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := db.DB().
-		From(goqu.T("cm_domains").As("d")).
+	q := db.From(goqu.T("cm_domains").As("d")).
 		Select(
 			// Domain fields
 			"d.*",
@@ -434,8 +440,8 @@ func (svc *domainService) ListByDomainUser(userID, curUserID *uuid.UUID, superus
 		data.NullDomainUser
 		CurUserIsOwner sql.NullBool `db:"duc_is_owner"`
 	}
-	if err := db.SelectStructs(q, &dbRecs); err != nil {
-		logger.Errorf("domainService.ListByDomainUser: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("domainService.ListByDomainUser: ScanStructs() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
 
@@ -464,8 +470,8 @@ func (svc *domainService) ListDomainExtensions(domainID *uuid.UUID) ([]*data.Dom
 		ID     models.DomainExtensionID `db:"extension_id"`
 		Config string                   `db:"config"`
 	}
-	if err := db.SelectStructs(db.DB().From("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID}), &dbRecs); err != nil {
-		logger.Errorf("domainService.ListDomainExtensions: SelectStructs() failed: %v", err)
+	if err := db.From("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID}).ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("domainService.ListDomainExtensions: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -496,8 +502,8 @@ func (svc *domainService) ListDomainFederatedIdPs(domainID *uuid.UUID) ([]models
 
 	// Query domain's IdPs
 	var idps []models.FederatedIdpID
-	if err := db.SelectVals(db.DB().From("cm_domains_idps").Select("fed_idp_id").Where(goqu.Ex{"domain_id": domainID}), &idps); err != nil {
-		logger.Errorf("domainService.ListDomainFederatedIdPs: SelectVals() failed: %v", err)
+	if err := db.From("cm_domains_idps").Select("fed_idp_id").Where(goqu.Ex{"domain_id": domainID}).ScanVals(&idps); err != nil {
+		logger.Errorf("domainService.ListDomainFederatedIdPs: ScanVals() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 

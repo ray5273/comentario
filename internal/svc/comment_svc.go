@@ -93,9 +93,7 @@ func (svc *commentService) Count(
 		&curUser.ID, curDomainUser, domainID, pageID, userID, inclApproved, inclPending, inclRejected, inclDeleted)
 
 	// Prepare a query
-	q := db.Dialect().
-		From(goqu.T("cm_comments").As("c")).
-		Select(goqu.COUNT("*")).
+	q := db.From(goqu.T("cm_comments").As("c")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		Where(goqu.Ex{"p.domain_id": domainID})
 
@@ -135,9 +133,9 @@ func (svc *commentService) Count(
 			goqu.Ex{"c.user_created": &curUser.ID}))
 	}
 
-	var cnt int64
-	if err := db.SelectRow(q).Scan(&cnt); err != nil {
-		logger.Errorf("commentService.Count: SelectRow() failed: %v", err)
+	cnt, err := q.Count()
+	if err != nil {
+		logger.Errorf("commentService.Count: Count() failed: %v", err)
 		return 0, translateDBErrors(err)
 	}
 
@@ -229,9 +227,11 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 
 	// Query the database
 	var c data.Comment
-	if err := db.SelectStruct(db.DB().From("cm_comments").Where(goqu.Ex{"id": id}), &c); err != nil {
-		logger.Errorf("commentService.FindByID: SelectStruct() failed: %v", err)
+	if b, err := db.From("cm_comments").Where(goqu.Ex{"id": id}).ScanStruct(&c); err != nil {
+		logger.Errorf("commentService.FindByID: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -242,8 +242,7 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 	logger.Debugf("commentService.ListByDomain(%s)", domainID)
 
 	// Prepare a query
-	q := db.DB().
-		From(goqu.T("cm_comments").As("c")).
+	q := db.From(goqu.T("cm_comments").As("c")).
 		Select("c.*", "p.path", "d.host", "d.is_https").
 		// Join comment pages
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
@@ -259,8 +258,8 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 		DomainHost  string `db:"host"`
 		DomainHTTPS bool   `db:"is_https"`
 	}
-	if err := db.SelectStructs(q, &dbRecs); err != nil {
-		logger.Errorf("commentService.ListByDomain: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("commentService.ListByDomain: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -284,8 +283,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		removeOrphans, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
-	q := db.DB().
-		From(goqu.T("cm_comments").As("c")).
+	q := db.From(goqu.T("cm_comments").As("c")).
 		Select(
 			// Comment fields
 			"c.*",
@@ -405,8 +403,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		DomainHost      string         `db:"d_host"`
 		DomainHTTPS     bool           `db:"d_is_https"`
 	}
-	if err := db.SelectStructs(q, &dbRecs); err != nil {
-		logger.Errorf("commentService.ListWithCommentersByDomainPage: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("commentService.ListWithCommentersByDomainPage: ScanStructs() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
 

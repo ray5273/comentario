@@ -37,8 +37,8 @@ func (svc *attrService) GetAll(ownerID *uuid.UUID) (map[string]string, error) {
 		Key   string `db:"key"`   // Attribute key
 		Value string `db:"value"` // Attribute value
 	}
-	if err := db.SelectStructs(db.DB().From(svc.tableName).Where(goqu.Ex{svc.keyColName: ownerID}), &attrs); err != nil {
-		logger.Errorf("attrService.GetAll: SelectStructs() failed: %v", err)
+	if err := db.From(svc.tableName).Where(goqu.Ex{svc.keyColName: ownerID}).ScanStructs(&attrs); err != nil {
+		logger.Errorf("attrService.GetAll: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 

@@ -62,8 +62,8 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 		Path  string `db:"path"`
 		Count int    `db:"count_comments"`
 	}
-	if err := db.SelectStructs(db.DB().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)), &dbRecs); err != nil {
-		logger.Errorf("pageService.CommentCounts: SelectStructs() failed: %v", err)
+	if err := db.From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)).ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("pageService.CommentCounts: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -185,8 +185,8 @@ func (svc *pageService) ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, e
 	logger.Debugf("pageService.ListByDomain(%s)", domainID)
 
 	var ps []*data.DomainPage
-	if err := db.SelectStructs(db.DB().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}), &ps); err != nil {
-		logger.Errorf("pageService.ListByDomain: SelectStructs() failed: %v", err)
+	if err := db.From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}).ScanStructs(&ps); err != nil {
+		logger.Errorf("pageService.ListByDomain: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -198,8 +198,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := db.DB().
-		From(goqu.T("cm_domain_pages").As("p")).
+	q := db.From(goqu.T("cm_domain_pages").As("p")).
 		Select("p.*").
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		Where(goqu.Ex{"d.id": domainID})
@@ -266,8 +265,8 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 		data.DomainPage
 		IsOwner sql.NullBool `db:"is_owner"`
 	}
-	if err := db.SelectStructs(q, &dbRecs); err != nil {
-		logger.Errorf("pageService.ListByDomainUser: SelectStructs() failed: %v", err)
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("pageService.ListByDomainUser: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
