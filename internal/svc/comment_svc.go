@@ -146,36 +146,14 @@ func (svc *commentService) Count(
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 
+	// Clone the comment and prepare it to be inserted
+	cc := *c
+	cc.PendingReason = util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength)
+	cc.AuthorIP = config.MaskIP(c.AuthorIP)
+
 	// Insert a record into the database
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_comments").
-			Rows(goqu.Record{
-				"id":             &c.ID,
-				"parent_id":      &c.ParentID,
-				"page_id":        c.PageID,
-				"markdown":       c.Markdown,
-				"html":           c.HTML,
-				"score":          c.Score,
-				"is_sticky":      c.IsSticky,
-				"is_approved":    c.IsApproved,
-				"is_pending":     c.IsPending,
-				"is_deleted":     c.IsDeleted,
-				"ts_created":     c.CreatedTime,
-				"ts_moderated":   c.ModeratedTime,
-				"ts_deleted":     c.DeletedTime,
-				"ts_edited":      c.EditedTime,
-				"user_created":   &c.UserCreated,
-				"user_moderated": &c.UserModerated,
-				"user_deleted":   &c.UserDeleted,
-				"user_edited":    &c.UserEdited,
-				"pending_reason": util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength),
-				"author_name":    c.AuthorName,
-				"author_ip":      config.MaskIP(c.AuthorIP),
-				"author_country": c.AuthorCountry,
-			}),
-	); err != nil {
-		logger.Errorf("commentService.Create: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Insert("cm_comments").Rows(&cc)); err != nil {
+		logger.Errorf("commentService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -187,8 +165,8 @@ func (svc *commentService) DeleteByUser(userID *uuid.UUID) (int64, error) {
 	logger.Debugf("commentService.DeleteByUser(%s)", userID)
 
 	// Purge all comments created by the user. This will also remove all child comments thanks to the foreign key
-	if res, err := db.ExecuteRes(db.Dialect().Delete("cm_comments").Where(goqu.Ex{"user_created": userID})); err != nil {
-		logger.Errorf("userService.DeleteUserByID: ExecuteOne() failed for purging comments: %v", err)
+	if res, err := db.Delete("cm_comments").Where(goqu.Ex{"user_created": userID}).Executor().Exec(); err != nil {
+		logger.Errorf("userService.DeleteUserByID: Exec() failed for purging comments: %v", err)
 		return 0, err
 	} else if cnt, err := res.RowsAffected(); err != nil {
 		logger.Errorf("userService.DeleteUserByID: RowsAffected() failed: %v", err)
@@ -203,9 +181,8 @@ func (svc *commentService) Edited(comment *data.Comment) error {
 	logger.Debugf("commentService.Edited(%#v)", comment)
 
 	// Update the row in the database
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_comments").
+	if err := db.ExecOne(
+		db.Update("cm_comments").
 			Set(goqu.Record{
 				"markdown":    comment.Markdown,
 				"html":        comment.HTML,
@@ -214,7 +191,7 @@ func (svc *commentService) Edited(comment *data.Comment) error {
 			}).
 			Where(goqu.Ex{"id": &comment.ID}),
 	); err != nil {
-		logger.Errorf("commentService.Edited: ExecuteOne() failed: %v", err)
+		logger.Errorf("commentService.Edited: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -508,9 +485,8 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 	logger.Debugf("commentService.MarkDeleted(%s, %s)", commentID, userID)
 
 	// Update the record in the database
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_comments").
+	if err := db.ExecOne(
+		db.Update("cm_comments").
 			Set(goqu.Record{
 				"is_deleted":     true,
 				"markdown":       "",
@@ -521,7 +497,7 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 			}).
 			Where(goqu.Ex{"id": commentID}),
 	); err != nil {
-		logger.Errorf("commentService.MarkDeleted: ExecuteOne() failed: %v", err)
+		logger.Errorf("commentService.MarkDeleted: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -532,21 +508,17 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 func (svc *commentService) MarkDeletedByUser(curUserID, userID *uuid.UUID) (int64, error) {
 	logger.Debugf("commentService.MarkDeletedByUser(%s, %s)", curUserID, userID)
 
-	// Delete records from the database
-	q := db.Dialect().
-		Update("cm_comments").
-		Set(goqu.Record{
-			"is_deleted":     true,
-			"markdown":       "",
-			"html":           "",
-			"pending_reason": "",
-			"ts_deleted":     time.Now().UTC(),
-			"user_deleted":   curUserID,
-		}).
-		Where(goqu.Ex{"user_created": userID})
-
-	if res, err := db.ExecuteRes(q); err != nil {
-		logger.Errorf("commentService.MarkDeletedByUser: ExecuteRes() failed: %v", err)
+	// Update records from the database
+	r := goqu.Record{
+		"is_deleted":     true,
+		"markdown":       "",
+		"html":           "",
+		"pending_reason": "",
+		"ts_deleted":     time.Now().UTC(),
+		"user_deleted":   curUserID,
+	}
+	if res, err := db.Update("cm_comments").Set(r).Where(goqu.Ex{"user_created": userID}).Executor().Exec(); err != nil {
+		logger.Errorf("commentService.MarkDeletedByUser: Exec() failed: %v", err)
 		return 0, translateDBErrors(err)
 	} else if cnt, err := res.RowsAffected(); err != nil {
 		logger.Errorf("commentService.MarkDeletedByUser: RowsAffected() failed: %v", err)
@@ -561,9 +533,8 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 	logger.Debugf("commentService.Moderated(%#v)", comment)
 
 	// Update the record in the database
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_comments").
+	if err := db.ExecOne(
+		db.Update("cm_comments").
 			Set(goqu.Record{
 				"is_pending":     comment.IsPending,
 				"is_approved":    comment.IsApproved,
@@ -573,7 +544,7 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 			}).
 			Where(goqu.Ex{"id": &comment.ID}),
 	); err != nil {
-		logger.Errorf("commentService.Moderated: ExecuteOne() failed: %v", err)
+		logger.Errorf("commentService.Moderated: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -602,13 +573,8 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	logger.Debugf("commentService.UpdateSticky(%s, %v)", commentID, sticky)
 
 	// Update the row in the database
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_comments").
-			Set(goqu.Record{"is_sticky": sticky}).
-			Where(goqu.Ex{"id": commentID}),
-	); err != nil {
-		logger.Errorf("commentService.UpdateSticky: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_comments").Set(goqu.Record{"is_sticky": sticky}).Where(goqu.Ex{"id": commentID})); err != nil {
+		logger.Errorf("commentService.UpdateSticky: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -617,77 +583,70 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 }
 
 func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (int, error) {
+	logger.Debugf("commentService.Vote(%s, %s, %v)", commentID, userID, direction)
+
 	// Retrieve the current score and any vote for the user
-	var score int
-	var neg sql.NullBool
-	q := db.Dialect().
-		From(goqu.T("cm_comments").As("c")).
+	var r struct {
+		Score    int          `db:"score"`
+		Negative sql.NullBool `db:"negative" goqu:"skipupdate"`
+	}
+	b, err := db.From(goqu.T("cm_comments").As("c")).
 		Select("c.score", "v.negative").
 		LeftJoin(goqu.T("cm_comment_votes").As("v"), goqu.On(goqu.Ex{"v.comment_id": goqu.I("c.id"), "v.user_id": userID})).
-		Where(goqu.Ex{"c.id": commentID})
-	if err := db.SelectRow(q).Scan(&score, &neg); err != nil {
+		Where(goqu.Ex{"c.id": commentID}).
+		ScanStruct(&r)
+	if err != nil {
 		return 0, translateDBErrors(err)
+	} else if !b {
+		return 0, ErrNotFound
 	}
 
 	// Determine if a change is necessary
-	if !neg.Valid {
+	if !r.Negative.Valid {
 		// No vote exists: don't bother if direction is 0
 		if direction == 0 {
-			return score, nil
+			return r.Score, nil
 		}
 	} else {
 		// Vote exists: don't bother if the direction already matches the vote
-		if direction < 0 && neg.Bool || direction > 0 && !neg.Bool {
-			return score, nil
+		if direction < 0 && r.Negative.Bool || direction > 0 && !r.Negative.Bool {
+			return r.Score, nil
 		}
 	}
 
 	// A change is necessary
-	var err error
 	inc := 0
-	if !neg.Valid {
+	vote := &data.CommentVote{
+		CommentID:  *commentID,
+		UserID:     *userID,
+		IsNegative: direction < 0,
+		VotedTime:  time.Now().UTC(),
+	}
+	if !r.Negative.Valid {
 		// No vote exists, an insert is needed
-		err = db.ExecuteOne(
-			db.Dialect().
-				Insert("cm_comment_votes").
-				Rows(goqu.Record{"comment_id": commentID, "user_id": userID, "negative": direction < 0, "ts_voted": time.Now().UTC()}))
-		if direction < 0 {
-			inc = -1
-		} else {
-			inc = 1
-		}
+		err = db.ExecOne(db.Insert("cm_comment_votes").Rows(vote))
+		inc = util.If(direction < 0, -1, 1)
 
 	} else if direction == 0 {
 		// Vote exists and must be removed
-		err = db.ExecuteOne(db.Dialect().Delete("cm_comment_votes").Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
-		if neg.Bool {
-			inc = 1
-		} else {
-			inc = -1
-		}
+		err = db.ExecOne(db.Delete("cm_comment_votes").Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
+		inc = util.If(r.Negative.Bool, 1, -1)
 
 	} else {
 		// Vote exists and must be updated
-		err = db.ExecuteOne(
-			db.Dialect().
-				Update("cm_comment_votes").
-				Set(goqu.Record{"negative": direction < 0, "ts_voted": time.Now().UTC()}).
-				Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
-		if neg.Bool {
-			inc = 2
-		} else {
-			inc = -2
-		}
+		err = db.ExecOne(db.Update("cm_comment_votes").Set(&vote).Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
+		inc = util.If(r.Negative.Bool, 2, -2)
 	}
 	if err != nil {
 		return 0, translateDBErrors(err)
 	}
 
 	// Update the comment score
-	if err := db.ExecuteOne(db.Dialect().Update("cm_comments").Set(goqu.Record{"score": score + inc}).Where(goqu.Ex{"id": commentID})); err != nil {
+	r.Score += inc
+	if err := db.ExecOne(db.Update("cm_comments").Set(r).Where(goqu.Ex{"id": commentID})); err != nil {
 		return 0, translateDBErrors(err)
 	}
 
 	// Succeeded
-	return score + inc, nil
+	return r.Score, nil
 }

@@ -64,14 +64,8 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		return oauthFailureInternal(false, err)
 	}
 
-	// Decode the value of the token linked by the auth session
-	tokenBytes, err := authSession.TokenValueBytes()
-	if err != nil {
-		return oauthFailureInternal(false, err)
-	}
-
 	// Obtain the token
-	token, err := svc.TheTokenService.FindByValue(tokenBytes, false)
+	token, err := svc.TheTokenService.FindByValue(authSession.TokenValue, false)
 	if err != nil {
 		return oauthFailureInternal(false, err)
 
@@ -112,7 +106,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailure(nonIntSSO, "payload: invalid hex encoding", err)
 		} else if err = json.Unmarshal(payloadBytes, &payload); err != nil {
 			return oauthFailureInternal(nonIntSSO, fmt.Errorf("payload: failed to unmarshal: %w", err))
-		} else if payload.Token != token.String() {
+		} else if payload.Token != token.Value {
 			return oauthFailure(nonIntSSO, "payload: invalid token", nil)
 		}
 
@@ -121,7 +115,11 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailure(nonIntSSO, "hmac is missing", nil)
 		} else if signature, err := hex.DecodeString(s); err != nil {
 			return oauthFailure(nonIntSSO, "hmac: invalid hex encoding", err)
-		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, domain.SSOSecretBytes())) {
+		} else if secBytes, err := domain.SSOSecretBytes(); err != nil {
+			return oauthFailure(nonIntSSO, "domain SSO secret: invalid hex encoding", err)
+		} else if secBytes == nil {
+			return oauthFailure(nonIntSSO, "domain SSO secret not set", nil)
+		} else if !hmac.Equal(signature, util.HMACSign(payloadBytes, secBytes)) {
 			return oauthFailure(nonIntSSO, "hmac: signature verification failed", nil)
 		}
 
@@ -331,7 +329,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 	}
 
 	// Try to find the passed anonymous token
-	token, err := svc.TheTokenService.FindByStrValue(params.Token, false)
+	token, err := svc.TheTokenService.FindByValue(params.Token, false)
 	if errors.Is(err, svc.ErrNotFound) {
 		// Token not found
 		return oauthFailure(false, exmodels.ErrorBadToken.Message, nil)
@@ -368,8 +366,16 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 
 		// Add the token and its HMAC signature to the SSO URL
 		q := ssoURL.Query()
-		q.Set("token", token.String())
-		q.Set("hmac", hex.EncodeToString(util.HMACSign(token.Value, domain.SSOSecretBytes())))
+		q.Set("token", token.Value)
+		if tokenBytes, err := token.ValueBytes(); err != nil {
+			return oauthFailure(false, "failed to parse token value", err)
+		} else if secBytes, err := domain.SSOSecretBytes(); err != nil {
+			return oauthFailure(false, "failed to parse domain SSO secret", err)
+		} else if secBytes == nil {
+			return oauthFailure(false, "domain SSO secret not set", nil)
+		} else {
+			q.Set("hmac", hex.EncodeToString(util.HMACSign(tokenBytes, secBytes)))
+		}
 		ssoURL.RawQuery = q.Encode()
 		authURL = ssoURL.String()
 

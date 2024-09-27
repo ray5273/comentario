@@ -35,6 +35,15 @@ type DTOAware[T any] interface {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// Attribute represents a key-value pair with a timestamp
+type Attribute struct {
+	Key         string    `db:"key"`        // Key
+	Value       string    `db:"value"`      // Value
+	UpdatedTime time.Time `db:"ts_updated"` // Timestamp when the record was last updated
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 type SortDirection bool
 
 const (
@@ -85,11 +94,11 @@ const (
 
 // Token is, well, a token
 type Token struct {
-	Value       []byte     // Token value, a random byte sequence
-	Owner       uuid.UUID  // UUID of the user owning the token. If zero (i.e. AnonymousUser.ID), the token is anonymous
-	Scope       TokenScope // Token's scope
-	ExpiresTime time.Time  // UTC timestamp of the expiration
-	Multiuse    bool       // Whether the token is to be kept until expired; if false, the token gets deleted after first use
+	Value       string     `db:"value" goqu:"skipupdate"` // Token value, a random byte sequence, as a hex string
+	Owner       uuid.UUID  `db:"user_id"`                 // UUID of the user owning the token. If zero (i.e. AnonymousUser.ID), the token is anonymous
+	Scope       TokenScope `db:"scope"`                   // Token's scope
+	ExpiresTime time.Time  `db:"ts_expires"`              // UTC timestamp of the expiration
+	Multiuse    bool       `db:"multiuse"`                // Whether the token is to be kept until expired; if false, the token gets deleted after first use
 }
 
 // NewToken creates a new token instance. If owner == nil, an anonymous token is created
@@ -99,20 +108,19 @@ func NewToken(owner *uuid.UUID, scope TokenScope, maxAge time.Duration, multiuse
 		owner = &AnonymousUser.ID
 	}
 
-	// Instantiate a new token
-	t := &Token{
-		Owner:       *owner,
-		Scope:       scope,
-		ExpiresTime: time.Now().UTC().Add(maxAge),
-		Multiuse:    multiuse,
-	}
-
 	// Generate a random 32-byte value
-	var err error
-	if t.Value, err = util.RandomBytes(32); err != nil {
+	if b, err := util.RandomBytes(32); err != nil {
 		return nil, err
+	} else {
+		return &Token{
+				Value:       hex.EncodeToString(b),
+				Owner:       *owner,
+				Scope:       scope,
+				ExpiresTime: time.Now().UTC().Add(maxAge),
+				Multiuse:    multiuse,
+			},
+			nil
 	}
-	return t, nil
 }
 
 // IsAnonymous returns whether the token is anonymous (i.e. belonging to an anonymous user)
@@ -120,9 +128,9 @@ func (t *Token) IsAnonymous() bool {
 	return t.Owner == AnonymousUser.ID
 }
 
-// String converts the token's value into a hex string
-func (t *Token) String() string {
-	return hex.EncodeToString(t.Value)
+// ValueBytes returns the token's value as a byte slice
+func (t *Token) ValueBytes() ([]byte, error) {
+	return hex.DecodeString(t.Value)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
@@ -138,11 +146,11 @@ type AuthSession struct {
 }
 
 // NewAuthSession instantiates a new AuthSession
-func NewAuthSession(data, host string, token []byte) *AuthSession {
+func NewAuthSession(data, host string, token string) *AuthSession {
 	now := time.Now().UTC()
 	return &AuthSession{
 		ID:          uuid.New(),
-		TokenValue:  hex.EncodeToString(token),
+		TokenValue:  token,
 		Data:        data,
 		Host:        host,
 		CreatedTime: now,
@@ -150,45 +158,40 @@ func NewAuthSession(data, host string, token []byte) *AuthSession {
 	}
 }
 
-// TokenValueBytes returns token value decoded into a byte slice
-func (a *AuthSession) TokenValueBytes() ([]byte, error) {
-	return hex.DecodeString(a.TokenValue)
-}
-
 // ---------------------------------------------------------------------------------------------------------------------
 
 // User represents an authenticated or an anonymous user
 type User struct {
-	ID                  uuid.UUID      `db:"id"`                    // Unique user ID
-	Email               string         `db:"email"`                 // Unique user email
-	Name                string         `db:"name"`                  // User's full name
-	LangID              string         `db:"lang_id"`               // User's interface language ID
-	PasswordHash        string         `db:"password_hash"`         // Password hash
-	SystemAccount       bool           `db:"system_account"`        // Whether the user is a system account (cannot sign in)
-	IsSuperuser         bool           `db:"is_superuser"`          // Whether the user is a "superuser" (instance admin)
-	Confirmed           bool           `db:"confirmed"`             // Whether the user's email has been confirmed
-	ConfirmedTime       sql.NullTime   `db:"ts_confirmed"`          // When the user's email has been confirmed
-	CreatedTime         time.Time      `db:"ts_created"`            // When the user was created
-	UserCreated         uuid.NullUUID  `db:"user_created"`          // Reference to the user who created this one. null if the used signed up themselves
-	SignupIP            string         `db:"signup_ip"`             // IP address the user signed up or was created from
-	SignupCountry       string         `db:"signup_country"`        // 2-letter country code matching the SignupIP
-	SignupHost          string         `db:"signup_host"`           // Host the user signed up on (only for commenter signup, empty for UI signup)
-	Banned              bool           `db:"banned"`                // Whether the user is banned
-	BannedTime          sql.NullTime   `db:"ts_banned"`             // When the user was banned
-	UserBanned          uuid.NullUUID  `db:"user_banned"`           // Reference to the user who banned this one
-	Remarks             string         `db:"remarks"`               // Optional remarks for the user
-	FederatedIdP        sql.NullString `db:"federated_idp"`         // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
-	FederatedSSO        bool           `db:"federated_sso"`         // Whether the user is authenticated via SSO
-	FederatedID         string         `db:"federated_id"`          // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
-	WebsiteURL          string         `db:"website_url"`           // Optional user's website URL
-	SecretToken         uuid.UUID      `db:"secret_token"`          // User's secret token, for example, for unsubscribing from notifications
-	PasswordChangeTime  time.Time      `db:"ts_password_change"`    // When the user last changed their password
-	LastLoginTime       sql.NullTime   `db:"ts_last_login"`         // When the user last logged in successfully
-	LastFailedLoginTime sql.NullTime   `db:"ts_last_failed_login"`  // When the user last failed to log in due to wrong credentials
-	FailedLoginAttempts int            `db:"failed_login_attempts"` // Number of failed login attempts
-	IsLocked            bool           `db:"is_locked"`             // Whether the user is locked out
-	LockedTime          sql.NullTime   `db:"ts_locked"`             // When the user was locked
-	HasAvatar           bool           `db:"has_avatar"`            // Whether the user has an avatar image. Calculated field populated only while loading from the DB
+	ID                  uuid.UUID      `db:"id"`                                      // Unique user ID
+	Email               string         `db:"email"`                                   // Unique user email
+	Name                string         `db:"name"`                                    // User's full name
+	LangID              string         `db:"lang_id"`                                 // User's interface language ID
+	PasswordHash        string         `db:"password_hash"`                           // Password hash
+	SystemAccount       bool           `db:"system_account"`                          // Whether the user is a system account (cannot sign in)
+	IsSuperuser         bool           `db:"is_superuser"`                            // Whether the user is a "superuser" (instance admin)
+	Confirmed           bool           `db:"confirmed"`                               // Whether the user's email has been confirmed
+	ConfirmedTime       sql.NullTime   `db:"ts_confirmed"`                            // When the user's email has been confirmed
+	CreatedTime         time.Time      `db:"ts_created"`                              // When the user was created
+	UserCreated         uuid.NullUUID  `db:"user_created"`                            // Reference to the user who created this one. null if the used signed up themselves
+	SignupIP            string         `db:"signup_ip"`                               // IP address the user signed up or was created from
+	SignupCountry       string         `db:"signup_country"`                          // 2-letter country code matching the SignupIP
+	SignupHost          string         `db:"signup_host"`                             // Host the user signed up on (only for commenter signup, empty for UI signup)
+	Banned              bool           `db:"banned"`                                  // Whether the user is banned
+	BannedTime          sql.NullTime   `db:"ts_banned"`                               // When the user was banned
+	UserBanned          uuid.NullUUID  `db:"user_banned"`                             // Reference to the user who banned this one
+	Remarks             string         `db:"remarks"`                                 // Optional remarks for the user
+	FederatedIdP        sql.NullString `db:"federated_idp"`                           // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
+	FederatedSSO        bool           `db:"federated_sso"`                           // Whether the user is authenticated via SSO
+	FederatedID         string         `db:"federated_id"`                            // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
+	WebsiteURL          string         `db:"website_url"`                             // Optional user's website URL
+	SecretToken         uuid.UUID      `db:"secret_token"`                            // User's secret token, for example, for unsubscribing from notifications
+	PasswordChangeTime  time.Time      `db:"ts_password_change"`                      // When the user last changed their password
+	LastLoginTime       sql.NullTime   `db:"ts_last_login"`                           // When the user last logged in successfully
+	LastFailedLoginTime sql.NullTime   `db:"ts_last_failed_login"`                    // When the user last failed to log in due to wrong credentials
+	FailedLoginAttempts int            `db:"failed_login_attempts"`                   // Number of failed login attempts
+	IsLocked            bool           `db:"is_locked"`                               // Whether the user is locked out
+	LockedTime          sql.NullTime   `db:"ts_locked"`                               // When the user was locked
+	HasAvatar           bool           `db:"has_avatar" goqu:"skipinsert,skipupdate"` // Whether the user has an avatar image. Calculated field populated only while loading from the DB
 }
 
 // NewUser instantiates a new User
@@ -616,28 +619,28 @@ const (
 
 // Domain holds domain configuration
 type Domain struct {
-	ID                uuid.UUID             `db:"id"`                 // Unique record ID
-	Name              string                `db:"name"`               // Domain display name
-	Host              string                `db:"host"`               // Domain host
-	CreatedTime       time.Time             `db:"ts_created"`         // When the domain was created
-	IsHTTPS           bool                  `db:"is_https"`           // Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
-	IsReadonly        bool                  `db:"is_readonly"`        // Whether the domain is readonly (no new comments are allowed)
-	AuthAnonymous     bool                  `db:"auth_anonymous"`     // Whether anonymous comments are allowed
-	AuthLocal         bool                  `db:"auth_local"`         // Whether local authentication is allowed
-	AuthSSO           bool                  `db:"auth_sso"`           // Whether SSO authentication is allowed
-	SSOURL            string                `db:"sso_url"`            // SSO provider URL
-	SSOSecret         sql.NullString        `db:"sso_secret"`         // SSO secret as a hex string
-	SSONonInteractive bool                  `db:"sso_noninteractive"` // Whether to use a non-interactive SSO login
-	ModAnonymous      bool                  `db:"mod_anonymous"`      // Whether all anonymous comments are to be approved by a moderator
-	ModAuthenticated  bool                  `db:"mod_authenticated"`  // Whether all non-anonymous comments are to be approved by a moderator
-	ModNumComments    int                   `db:"mod_num_comments"`   // Number of first comments by user on this domain that require a moderator approval
-	ModUserAgeDays    int                   `db:"mod_user_age_days"`  // Number of first days since user has registered on this domain to require a moderator approval on their comments
-	ModLinks          bool                  `db:"mod_links"`          // Whether all comments containing a link are to be approved by a moderator
-	ModImages         bool                  `db:"mod_images"`         // Whether all comments containing an image are to be approved by a moderator
-	ModNotifyPolicy   DomainModNotifyPolicy `db:"mod_notify_policy"`  // Moderator notification policy for domain: 'none', 'pending', 'all'
-	DefaultSort       string                `db:"default_sort"`       // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
-	CountComments     int64                 `db:"count_comments"`     // Total number of comments
-	CountViews        int64                 `db:"count_views"`        // Total number of views
+	ID                uuid.UUID             `db:"id"         goqu:"skipupdate"` // Unique record ID
+	Name              string                `db:"name"`                         // Domain display name
+	Host              string                `db:"host"       goqu:"skipupdate"` // Domain host
+	CreatedTime       time.Time             `db:"ts_created" goqu:"skipupdate"` // When the domain was created
+	IsHTTPS           bool                  `db:"is_https"`                     // Whether HTTPS should be used to resolve URLs on this domain (as opposed to HTTP)
+	IsReadonly        bool                  `db:"is_readonly"`                  // Whether the domain is readonly (no new comments are allowed)
+	AuthAnonymous     bool                  `db:"auth_anonymous"`               // Whether anonymous comments are allowed
+	AuthLocal         bool                  `db:"auth_local"`                   // Whether local authentication is allowed
+	AuthSSO           bool                  `db:"auth_sso"`                     // Whether SSO authentication is allowed
+	SSOURL            string                `db:"sso_url"`                      // SSO provider URL
+	SSOSecret         sql.NullString        `db:"sso_secret"`                   // SSO secret as a hex string
+	SSONonInteractive bool                  `db:"sso_noninteractive"`           // Whether to use a non-interactive SSO login
+	ModAnonymous      bool                  `db:"mod_anonymous"`                // Whether all anonymous comments are to be approved by a moderator
+	ModAuthenticated  bool                  `db:"mod_authenticated"`            // Whether all non-anonymous comments are to be approved by a moderator
+	ModNumComments    int                   `db:"mod_num_comments"`             // Number of first comments by user on this domain that require a moderator approval
+	ModUserAgeDays    int                   `db:"mod_user_age_days"`            // Number of first days since user has registered on this domain to require a moderator approval on their comments
+	ModLinks          bool                  `db:"mod_links"`                    // Whether all comments containing a link are to be approved by a moderator
+	ModImages         bool                  `db:"mod_images"`                   // Whether all comments containing an image are to be approved by a moderator
+	ModNotifyPolicy   DomainModNotifyPolicy `db:"mod_notify_policy"`            // Moderator notification policy for domain: 'none', 'pending', 'all'
+	DefaultSort       string                `db:"default_sort"`                 // Default comment sorting for domain. 1st letter: s = score, t = timestamp; 2nd letter: a = asc, d = desc
+	CountComments     int64                 `db:"count_comments"`               // Total number of comments
+	CountViews        int64                 `db:"count_views"`                  // Total number of views
 }
 
 // CloneWithClearance returns a clone of the domain with a limited set of properties, depending on the specified
@@ -710,18 +713,21 @@ func (d *Domain) Scheme() string {
 }
 
 // SSOSecretBytes returns the domain's SSO secret as a byte slice
-func (d *Domain) SSOSecretBytes() []byte {
-	// If there's a non-null value
-	if d.SSOSecret.Valid {
-		// Try to decode
-		if b, err := hex.DecodeString(d.SSOSecret.String); err == nil && len(b) == 32 {
-			// Succeeded
-			return b
-		}
+func (d *Domain) SSOSecretBytes() ([]byte, error) {
+	// If the value is null, no secret is set
+	if !d.SSOSecret.Valid {
+		return nil, nil
 	}
 
-	// None set or an error occurred
-	return nil
+	// Try to decode
+	if b, err := hex.DecodeString(d.SSOSecret.String); err != nil {
+		return nil, err
+	} else if l := len(b); l != 32 {
+		return nil, fmt.Errorf("invalid SSO secret bytes length %d, want 32", l)
+	} else {
+		// Succeeded
+		return b, nil
+	}
 }
 
 // SSOSecretNew generates a new SSO secret for the domain
@@ -758,7 +764,7 @@ func (d *Domain) ToDTO() *models.Domain {
 		Name:                d.Name,
 		RootURL:             strfmt.URI(d.RootURL()),
 		SsoNonInteractive:   d.SSONonInteractive,
-		SsoSecretConfigured: d.SSOSecretBytes() != nil,
+		SsoSecretConfigured: d.SSOSecret.Valid,
 		SsoURL:              d.SSOURL,
 	}
 }
@@ -767,15 +773,15 @@ func (d *Domain) ToDTO() *models.Domain {
 
 // DomainUser represents user configuration in a specific domain
 type DomainUser struct {
-	DomainID            uuid.UUID `db:"domain_id"`             // ID of the domain
-	UserID              uuid.UUID `db:"user_id"`               // ID of the user
-	IsOwner             bool      `db:"is_owner"`              // Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
-	IsModerator         bool      `db:"is_moderator"`          // Whether the user is a moderator of the domain (assumes is_commenter)
-	IsCommenter         bool      `db:"is_commenter"`          // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
-	NotifyReplies       bool      `db:"notify_replies"`        // Whether the user is to be notified about replies to their comments
-	NotifyModerator     bool      `db:"notify_moderator"`      // Whether the user is to receive moderator notifications (only when is_moderator is true)
-	NotifyCommentStatus bool      `db:"notify_comment_status"` // Whether the user is to be notified about status changes (approved/rejected) of their comments
-	CreatedTime         time.Time `db:"ts_created"`            // When the domain user was created
+	DomainID            uuid.UUID `db:"domain_id"  goqu:"skipupdate"` // ID of the domain
+	UserID              uuid.UUID `db:"user_id"    goqu:"skipupdate"` // ID of the user
+	IsOwner             bool      `db:"is_owner"`                     // Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
+	IsModerator         bool      `db:"is_moderator"`                 // Whether the user is a moderator of the domain (assumes is_commenter)
+	IsCommenter         bool      `db:"is_commenter"`                 // Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+	NotifyReplies       bool      `db:"notify_replies"`               // Whether the user is to be notified about replies to their comments
+	NotifyModerator     bool      `db:"notify_moderator"`             // Whether the user is to receive moderator notifications (only when is_moderator is true)
+	NotifyCommentStatus bool      `db:"notify_comment_status"`        // Whether the user is to be notified about status changes (approved/rejected) of their comments
+	CreatedTime         time.Time `db:"ts_created" goqu:"skipupdate"` // When the domain user was created
 }
 
 // AgeInDays returns the number of full days passed since the user was created. Can be called against a nil receiver
@@ -935,6 +941,22 @@ func (p *DomainPage) WithIsReadonly(b bool) *DomainPage {
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// DomainPageView is a domain page view database record
+type DomainPageView struct {
+	PageID         uuid.UUID `db:"page_id"`            // Reference to the page
+	CreatedTime    time.Time `db:"ts_created"`         // When the record was created
+	Proto          string    `db:"proto"`              // The protocol version, like "HTTP/1.0"
+	IP             string    `db:"ip"`                 // IP address the session was created from
+	Country        string    `db:"country"`            // 2-letter country code matching the ip
+	BrowserName    string    `db:"ua_browser_name"`    // Name of the user's browser
+	BrowserVersion string    `db:"ua_browser_version"` // Version of the user's browser
+	OSName         string    `db:"ua_os_name"`         // Name of the user's OS
+	OSVersion      string    `db:"ua_os_version"`      // Version of the user's OS
+	Device         string    `db:"ua_device"`          // User's device type
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 // Comment represents a comment
 type Comment struct {
 	ID            uuid.UUID     `db:"id"`             // Unique record ID
@@ -1075,6 +1097,16 @@ func (c *Comment) WithModerated(userID *uuid.UUID, pending, approved bool, reaso
 
 // ---------------------------------------------------------------------------------------------------------------------
 
+// CommentVote represents a comment vote database record
+type CommentVote struct {
+	CommentID  uuid.UUID `db:"comment_id" goqu:"skipupdate"` // Reference to the comment
+	UserID     uuid.UUID `db:"user_id"    goqu:"skipupdate"` // Reference to the user
+	IsNegative bool      `db:"negative"`                     // Whether the vote is negative (true) or positive (false)
+	VotedTime  time.Time `db:"ts_voted"`                     // When the vote was created or updated
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
 // DomainExtension represents a known domain extension
 type DomainExtension struct {
 	ID          models.DomainExtensionID // Extension ID
@@ -1144,4 +1176,13 @@ var DomainExtensions = map[models.DomainExtensionID]*DomainExtension{
 		Config:      "#apiKey=...\nthreshold=5",
 		KeyRequired: true,
 	},
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// DomainExtensionConfig represents a domain extension configured for a specific domain
+type DomainExtensionConfig struct {
+	DomainID    uuid.UUID                `db:"domain_id"`    // Reference to the domain
+	ExtensionID models.DomainExtensionID `db:"extension_id"` // Extension ID
+	Config      string                   `db:"config"`       // Extension configuration parameters
 }

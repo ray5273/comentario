@@ -94,14 +94,14 @@ func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.ClearByID(%s)", id)
 
 	// Remove all domain's pages, which will also cause the removal of all comments, votes, and view stats
-	if err := db.Execute(db.Dialect().Delete("cm_domain_pages").Where(goqu.Ex{"domain_id": id})); err != nil {
-		logger.Errorf("domainService.ClearByID: Execute() for page removal failed: %v", err)
+	if _, err := db.Delete("cm_domain_pages").Where(goqu.Ex{"domain_id": id}).Executor().Exec(); err != nil {
+		logger.Errorf("domainService.ClearByID: Exec() for page removal failed: %v", err)
 		return translateDBErrors(err)
 	}
 
 	// Zero the domain's counters
-	if err := db.Execute(db.Dialect().Update("cm_domains").Set(goqu.Record{"count_comments": 0, "count_views": 0}).Where(goqu.Ex{"id": id})); err != nil {
-		logger.Errorf("domainService.ClearByID: Execute() for domain update failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domains").Set(goqu.Record{"count_comments": 0, "count_views": 0}).Where(goqu.Ex{"id": id})); err != nil {
+		logger.Errorf("domainService.ClearByID: ExecOne() for domain update failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -135,32 +135,8 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
 	logger.Debugf("domainService.Create(%s, %#v)", userID, domain)
 
 	// Insert a new domain record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_domains").
-			Rows(goqu.Record{
-				"id":                 &domain.ID,
-				"name":               domain.Name,
-				"host":               domain.Host,
-				"ts_created":         domain.CreatedTime,
-				"is_https":           domain.IsHTTPS,
-				"is_readonly":        false,
-				"auth_anonymous":     domain.AuthAnonymous,
-				"auth_local":         domain.AuthLocal,
-				"auth_sso":           domain.AuthSSO,
-				"sso_url":            domain.SSOURL,
-				"sso_noninteractive": domain.SSONonInteractive,
-				"mod_anonymous":      domain.ModAnonymous,
-				"mod_authenticated":  domain.ModAuthenticated,
-				"mod_num_comments":   domain.ModNumComments,
-				"mod_user_age_days":  domain.ModUserAgeDays,
-				"mod_links":          domain.ModLinks,
-				"mod_images":         domain.ModImages,
-				"mod_notify_policy":  domain.ModNotifyPolicy,
-				"default_sort":       domain.DefaultSort,
-			}),
-	); err != nil {
-		logger.Errorf("domainService.Create: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Insert("cm_domains").Rows(domain)); err != nil {
+		logger.Errorf("domainService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -185,8 +161,8 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
 
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.DeleteByID(%s)", id)
-	if err := db.ExecuteOne(db.Dialect().Delete("cm_domains").Where(goqu.Ex{"id": id})); err != nil {
-		logger.Errorf("domainService.DeleteByID: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Delete("cm_domains").Where(goqu.Ex{"id": id})); err != nil {
+		logger.Errorf("domainService.DeleteByID: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -331,8 +307,8 @@ func (svc *domainService) GenerateSSOSecret(domainID *uuid.UUID) (string, error)
 	}
 
 	// Update the domain record
-	if err := db.ExecuteOne(db.Dialect().Update("cm_domains").Set(goqu.Record{"sso_secret": d.SSOSecret}).Where(goqu.Ex{"id": &d.ID})); err != nil {
-		logger.Errorf("domainService.GenerateSSOSecret: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domains").Set(goqu.Record{"sso_secret": d.SSOSecret}).Where(goqu.Ex{"id": &d.ID})); err != nil {
+		logger.Errorf("domainService.GenerateSSOSecret: ExecOne() failed: %v", err)
 		return "", translateDBErrors(err)
 	}
 
@@ -344,16 +320,15 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	logger.Debugf("domainService.IncrementCounts(%s, %d, %d)", domainID, incComments, incViews)
 
 	// Update the domain record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_domains").
+	if err := db.ExecOne(
+		db.Update("cm_domains").
 			Set(goqu.Record{
 				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
 				"count_views":    goqu.L("? + ?", goqu.I("count_views"), incViews),
 			}).
 			Where(goqu.Ex{"id": domainID}),
 	); err != nil {
-		logger.Errorf("domainService.IncrementCounts: ExecuteOne() failed: %v", err)
+		logger.Errorf("domainService.IncrementCounts: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -541,14 +516,14 @@ func (svc *domainService) PurgeByID(id *uuid.UUID, deleted, userDeleted bool) (i
 
 	// Delete all comments for the domain that are marked for deletion and/or created by now deleted users
 	var cnt int64
-	if res, err := db.ExecuteRes(
-		db.Dialect().
-			Delete("cm_comments").
-			Where(
-				goqu.I("page_id").In(db.Dialect().From("cm_domain_pages").Select("id").Where(goqu.Ex{"domain_id": id})),
-				goqu.Or(filter...)),
-	); err != nil {
-		logger.Errorf("domainService.PurgeByID: ExecuteRes() failed: %v", err)
+	res, err := db.Delete("cm_comments").
+		Where(
+			goqu.I("page_id").In(db.From("cm_domain_pages").Select("id").Where(goqu.Ex{"domain_id": id})),
+			goqu.Or(filter...)).
+		Executor().
+		Exec()
+	if err != nil {
+		logger.Errorf("domainService.PurgeByID: Exec() failed: %v", err)
 		return 0, translateDBErrors(err)
 	} else if cnt, err = res.RowsAffected(); err != nil {
 		logger.Errorf("domainService.PurgeByID: RowsAffected() failed: %v", err)
@@ -563,26 +538,26 @@ func (svc *domainService) SaveExtensions(domainID *uuid.UUID, extensions []*data
 	logger.Debugf("domainService.SaveExtensions(%v)", extensions)
 
 	// Delete any existing links
-	if err := db.Execute(db.Dialect().Delete("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID})); err != nil {
-		logger.Errorf("domainService.SaveExtensions: Execute() failed for deleting links: %v", err)
+	if _, err := db.Delete("cm_domains_extensions").Where(goqu.Ex{"domain_id": domainID}).Executor().Exec(); err != nil {
+		logger.Errorf("domainService.SaveExtensions: Exec() failed for deleting records: %v", err)
 		return translateDBErrors(err)
 	}
 
 	// Insert domain IdP records, if any
 	if len(extensions) > 0 {
 		// Prepare rows for inserting
-		var rows []goqu.Record
+		var dbRecs []data.DomainExtensionConfig
 		for _, de := range extensions {
-			rows = append(rows, goqu.Record{
-				"domain_id":    domainID,
-				"extension_id": de.ID,
-				"config":       util.If(de.HasDefaultConfig(), "", de.Config), // Empty config if it matches the default
+			dbRecs = append(dbRecs, data.DomainExtensionConfig{
+				DomainID:    *domainID,
+				ExtensionID: de.ID,
+				Config:      util.If(de.HasDefaultConfig(), "", de.Config), // Empty config if it matches the default,
 			})
 		}
 
 		// Execute the statement
-		if err := db.Execute(db.Dialect().Insert("cm_domains_extensions").Rows(rows)); err != nil {
-			logger.Errorf("domainService.SaveExtensions: Execute() failed for inserting links: %v", err)
+		if _, err := db.Insert("cm_domains_extensions").Rows(dbRecs).Executor().Exec(); err != nil {
+			logger.Errorf("domainService.SaveExtensions: Exec() failed for inserting records: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -595,8 +570,8 @@ func (svc *domainService) SaveIdPs(domainID *uuid.UUID, idps []models.FederatedI
 	logger.Debugf("domainService.SaveIdPs(%v)", idps)
 
 	// Delete any existing links
-	if err := db.Execute(db.Dialect().Delete("cm_domains_idps").Where(goqu.Ex{"domain_id": domainID})); err != nil {
-		logger.Errorf("domainService.SaveIdPs: Execute() failed for deleting links: %v", err)
+	if _, err := db.Delete("cm_domains_idps").Where(goqu.Ex{"domain_id": domainID}).Executor().Exec(); err != nil {
+		logger.Errorf("domainService.SaveIdPs: Exec() failed for deleting records: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -609,8 +584,8 @@ func (svc *domainService) SaveIdPs(domainID *uuid.UUID, idps []models.FederatedI
 		}
 
 		// Execute the statement
-		if err := db.Execute(db.Dialect().Insert("cm_domains_idps").Rows(rows)); err != nil {
-			logger.Errorf("domainService.SaveIdPs: Execute() failed for inserting links: %v", err)
+		if _, err := db.Insert("cm_domains_idps").Rows(rows).Executor().Exec(); err != nil {
+			logger.Errorf("domainService.SaveIdPs: Exec() failed for inserting records: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -623,8 +598,8 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	logger.Debugf("domainService.SetReadonly(%s, %v)", domainID, readonly)
 
 	// Update the domain record
-	if err := db.ExecuteOne(db.Dialect().Update("cm_domains").Set(goqu.Record{"is_readonly": readonly}).Where(goqu.Ex{"id": domainID})); err != nil {
-		logger.Errorf("domainService.SetReadonly: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domains").Set(goqu.Record{"is_readonly": readonly}).Where(goqu.Ex{"id": domainID})); err != nil {
+		logger.Errorf("domainService.SetReadonly: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -636,28 +611,8 @@ func (svc *domainService) Update(domain *data.Domain) error {
 	logger.Debugf("domainService.Update(%#v)", domain)
 
 	// Update the domain record
-	q := db.Dialect().
-		Update("cm_domains").
-		Set(goqu.Record{
-			"name":               domain.Name,
-			"is_https":           domain.IsHTTPS,
-			"auth_anonymous":     domain.AuthAnonymous,
-			"auth_local":         domain.AuthLocal,
-			"auth_sso":           domain.AuthSSO,
-			"sso_url":            domain.SSOURL,
-			"sso_noninteractive": domain.SSONonInteractive,
-			"mod_anonymous":      domain.ModAnonymous,
-			"mod_authenticated":  domain.ModAuthenticated,
-			"mod_num_comments":   domain.ModNumComments,
-			"mod_user_age_days":  domain.ModUserAgeDays,
-			"mod_links":          domain.ModLinks,
-			"mod_images":         domain.ModImages,
-			"mod_notify_policy":  domain.ModNotifyPolicy,
-			"default_sort":       domain.DefaultSort,
-		}).
-		Where(goqu.Ex{"id": &domain.ID})
-	if err := db.ExecuteOne(q); err != nil {
-		logger.Errorf("domainService.Update: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domains").Set(domain).Where(goqu.Ex{"id": &domain.ID})); err != nil {
+		logger.Errorf("domainService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -671,22 +626,8 @@ func (svc *domainService) UserAdd(du *data.DomainUser) error {
 	// Don't bother if the user is an anonymous one
 	if du.UserID != data.AnonymousUser.ID {
 		// Insert a new domain-user link record
-		if err := db.ExecuteOne(
-			db.Dialect().
-				Insert("cm_domains_users").
-				Rows(goqu.Record{
-					"domain_id":             &du.DomainID,
-					"user_id":               &du.UserID,
-					"is_owner":              du.IsOwner,
-					"is_moderator":          du.IsModerator,
-					"is_commenter":          du.IsCommenter,
-					"notify_replies":        du.NotifyReplies,
-					"notify_moderator":      du.NotifyModerator,
-					"notify_comment_status": du.NotifyCommentStatus,
-					"ts_created":            du.CreatedTime,
-				}),
-		); err != nil {
-			logger.Errorf("domainService.UserAdd: ExecuteOne() failed: %v", err)
+		if err := db.ExecOne(db.Insert("cm_domains_users").Rows(du)); err != nil {
+			logger.Errorf("domainService.UserAdd: ExecOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -701,20 +642,8 @@ func (svc *domainService) UserModify(du *data.DomainUser) error {
 	// Don't bother if the user is an anonymous one
 	if du.UserID != data.AnonymousUser.ID {
 		// Update the domain-user link record
-		if err := db.ExecuteOne(
-			db.Dialect().
-				Update("cm_domains_users").
-				Set(goqu.Record{
-					"is_owner":              du.IsOwner,
-					"is_moderator":          du.IsModerator,
-					"is_commenter":          du.IsCommenter,
-					"notify_replies":        du.NotifyReplies,
-					"notify_moderator":      du.NotifyModerator,
-					"notify_comment_status": du.NotifyCommentStatus,
-				}).
-				Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID}),
-		); err != nil {
-			logger.Errorf("domainService.UserModify: ExecuteOne() failed: %v", err)
+		if err := db.ExecOne(db.Update("cm_domains_users").Set(du).Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID})); err != nil {
+			logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
 	}
@@ -729,8 +658,8 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 	// Don't bother if the user is an anonymous one
 	if *userID != data.AnonymousUser.ID {
 		// Delete the domain-user link record
-		if err := db.ExecuteOne(db.Dialect().Delete("cm_domains_users").Where(goqu.Ex{"domain_id": domainID, "user_id": userID})); err != nil {
-			logger.Errorf("domainService.UserRemove: ExecuteOne() failed: %v", err)
+		if err := db.ExecOne(db.Delete("cm_domains_users").Where(goqu.Ex{"domain_id": domainID, "user_id": userID})); err != nil {
+			logger.Errorf("domainService.UserRemove: ExecOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
 	}

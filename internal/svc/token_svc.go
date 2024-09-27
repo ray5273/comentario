@@ -2,7 +2,6 @@ package svc
 
 import (
 	"database/sql"
-	"encoding/hex"
 	"errors"
 	"github.com/doug-martin/goqu/v9"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -16,12 +15,10 @@ var TheTokenService TokenService = &tokenService{}
 type TokenService interface {
 	// Create persists a new token
 	Create(t *data.Token) error
-	// DeleteByValue deletes a token by its binary value
-	DeleteByValue(value []byte) error
-	// FindByStrValue finds and returns a token by its string value
-	FindByStrValue(s string, allowExpired bool) (*data.Token, error)
-	// FindByValue finds and returns a token by its binary value
-	FindByValue(value []byte, allowExpired bool) (*data.Token, error)
+	// DeleteByValue deletes a token by its (string) value
+	DeleteByValue(s string) error
+	// FindByValue finds and returns a token by its (string) value
+	FindByValue(s string, allowExpired bool) (*data.Token, error)
 	// Update updates the token record in the database
 	Update(t *data.Token) error
 }
@@ -32,21 +29,11 @@ type TokenService interface {
 type tokenService struct{}
 
 func (svc *tokenService) Create(t *data.Token) error {
-	logger.Debugf("tokenService.Create(%v)", t)
+	logger.Debugf("tokenService.Create(%#v)", t)
 
 	// Insert a new record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_tokens").
-			Rows(goqu.Record{
-				"value":      t.String(),
-				"user_id":    t.Owner,
-				"scope":      t.Scope,
-				"ts_expires": t.ExpiresTime,
-				"multiuse":   t.Multiuse,
-			}),
-	); err != nil {
-		logger.Errorf("tokenService.Create: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Insert("cm_tokens").Rows(t)); err != nil {
+		logger.Errorf("tokenService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -54,17 +41,17 @@ func (svc *tokenService) Create(t *data.Token) error {
 	return nil
 }
 
-func (svc *tokenService) DeleteByValue(value []byte) error {
-	logger.Debugf("tokenService.DeleteByValue(%x)", value)
+func (svc *tokenService) DeleteByValue(s string) error {
+	logger.Debugf("tokenService.DeleteByValue(%q)", s)
 
 	// Delete the record
-	err := db.ExecuteOne(db.Dialect().Delete("cm_tokens").Where(goqu.Ex{"value": hex.EncodeToString(value)}))
+	err := db.ExecOne(db.Delete("cm_tokens").Where(goqu.Ex{"value": s}))
 	if errors.Is(err, sql.ErrNoRows) {
 		// No rows affected
 		return ErrBadToken
 	} else if err != nil {
 		// Any other error
-		logger.Errorf("tokenService.DeleteByValue: ExecuteOne() failed: %v", err)
+		logger.Errorf("tokenService.DeleteByValue: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -72,38 +59,21 @@ func (svc *tokenService) DeleteByValue(value []byte) error {
 	return nil
 }
 
-func (svc *tokenService) FindByStrValue(s string, allowExpired bool) (*data.Token, error) {
-	logger.Debugf("tokenService.FindByStrValue(%x, %v)", s, allowExpired)
+func (svc *tokenService) FindByValue(s string, allowExpired bool) (*data.Token, error) {
+	logger.Debugf("tokenService.FindByValue(%x, %v)", s, allowExpired)
 
-	// Try to parse the value
-	if val, err := hex.DecodeString(s); err != nil || len(val) != 32 {
-		return nil, ErrBadToken
-	} else {
-		return svc.FindByValue(val, allowExpired)
-	}
-}
-
-func (svc *tokenService) FindByValue(value []byte, allowExpired bool) (*data.Token, error) {
-	logger.Debugf("tokenService.FindByValue(%x, %v)", value, allowExpired)
-
-	// Prepare the query
-	q := db.Dialect().
-		From("cm_tokens").
-		Select("value", "user_id", "scope", "ts_expires", "multiuse").
-		Where(goqu.Ex{"value": hex.EncodeToString(value)})
+	q := db.From("cm_tokens").Where(goqu.Ex{"value": s})
 	if !allowExpired {
 		q = q.Where(goqu.C("ts_expires").Gt(time.Now().UTC()))
 	}
 
 	// Query the token
-	var v string
 	var t data.Token
-	if err := db.SelectRow(q).Scan(&v, &t.Owner, &t.Scope, &t.ExpiresTime, &t.Multiuse); err != nil {
-		logger.Errorf("tokenService.FindByValue: Scan() failed: %v", err)
+	if b, err := q.ScanStruct(&t); err != nil {
+		logger.Errorf("tokenService.FindByValue: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
-	} else if t.Value, err = hex.DecodeString(v); err != nil {
-		logger.Errorf("tokenService.FindByValue: DecodeString() failed: %v", err)
-		return nil, err
+	} else if !b {
+		return nil, ErrBadToken
 	}
 
 	// Succeeded
@@ -113,14 +83,9 @@ func (svc *tokenService) FindByValue(value []byte, allowExpired bool) (*data.Tok
 func (svc *tokenService) Update(t *data.Token) error {
 	logger.Debugf("tokenService.Update(%v)", t)
 
-	// Insert a new record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_tokens").
-			Set(goqu.Record{"user_id": t.Owner, "scope": t.Scope, "ts_expires": t.ExpiresTime, "multiuse": t.Multiuse}).
-			Where(goqu.Ex{"value": t.String()}),
-	); err != nil {
-		logger.Errorf("tokenService.Update: ExecuteOne() failed: %v", err)
+	// Update the token record
+	if err := db.ExecOne(db.Update("cm_tokens").Set(t).Where(goqu.Ex{"value": t.Value})); err != nil {
+		logger.Errorf("tokenService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

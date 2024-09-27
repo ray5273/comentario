@@ -15,7 +15,6 @@ import (
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
 	"os/signal"
@@ -58,6 +57,32 @@ type goquLoggerFunc func(format string, v ...any)
 
 func (f goquLoggerFunc) Printf(format string, v ...any) {
 	f(format, v...)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// Migration represents a database migration record
+type Migration struct {
+	Filename      string    `db:"filename" goqu:"skipupdate"` // Unique DB migration file name
+	InstalledTime time.Time `db:"ts_installed"`               // Timestamp when the migration was installed
+	MD5           string    `db:"md5"`                        // MD5 checksum of the migration file content
+}
+
+// MD5Bytes returns the migration's MD5 checksum as a byte slice
+func (m *Migration) MD5Bytes() ([]byte, error) {
+	return hex.DecodeString(m.MD5)
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+
+// MigrationLogEntry represents a database migration log record
+type MigrationLogEntry struct {
+	Filename    string         `db:"filename"`     // DB migration file name
+	CreatedTime time.Time      `db:"ts_created"`   // Timestamp when the record was created
+	MD5Expected string         `db:"md5_expected"` // Expected MD5 checksum of the migration file content
+	MD5Actual   string         `db:"md5_actual"`   // Actual MD5 checksum of the migration file content
+	Status      string         `db:"status"`       // Migration status: 'installed', 'reinstalled', 'failed', 'skipped'
+	ErrorText   sql.NullString `db:"error_text"`   // Optional error text is is_ok is false
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -115,27 +140,16 @@ func InitDB() (*Database, error) {
 	return db, nil
 }
 
-// Delete is a shorthand for DB().Delete(...)
+// Delete returns a new DeleteDataset
 func (db *Database) Delete(table any) *goqu.DeleteDataset {
-	return db.DB().Delete(table)
+	return db.goquDB().Delete(table)
 }
 
-// Dialect returns the goqu dialect to use for this database
-func (db *Database) Dialect() goqu.DialectWrapper {
-	return db.dialect.dialectWrapper()
-}
-
-// DB returns a goqu.Database to use for queries
-func (db *Database) DB() *goqu.Database {
-	gd := db.Dialect().DB(db.db)
+// goquDB returns a goqu.Database to use for queries
+func (db *Database) goquDB() *goqu.Database {
+	gd := db.dialect.dialectWrapper().DB(db.db)
 	gd.Logger(db.debugLogger)
 	return gd
-}
-
-// Exec executes the provided Executable statement against the database and discards the returned result
-func (db *Database) Exec(x Executable) error {
-	_, err := x.Executor().Exec()
-	return err
 }
 
 // ExecOne executes the provided Executable statement against the database and verifies there's exactly one row affected
@@ -155,55 +169,14 @@ func (db *Database) ExecOne(x Executable) error {
 	return nil
 }
 
-// Execute executes the provided goqu expression against the database
-func (db *Database) Execute(e exp.SQLExpression) error {
-	_, err := db.ExecuteRes(e)
-	return err
-}
-
-// ExecuteOne executes the provided goqu expression against the database and verifies there's exactly one row affected
-func (db *Database) ExecuteOne(e exp.SQLExpression) error {
-	// Convert the expression into SQL and params
-	eSQL, eParams, err := e.ToSQL()
-	if err != nil {
-		return err
-	}
-
-	// Run the statement
-	if res, err := db.db.Exec(eSQL, eParams...); err != nil {
-		return err
-	} else if cnt, err := res.RowsAffected(); err != nil {
-		return fmt.Errorf("RowsAffected() failed: %v", err)
-	} else if cnt == 0 {
-		return sql.ErrNoRows
-	} else if cnt != 1 {
-		return fmt.Errorf("statement affected %d rows, want 1", cnt)
-	}
-
-	// Succeeded
-	return nil
-}
-
-// ExecuteRes executes the provided goqu expression against the database and returns its result
-func (db *Database) ExecuteRes(e exp.SQLExpression) (sql.Result, error) {
-	// Convert the expression into SQL and params
-	eSQL, eParams, err := e.ToSQL()
-	if err != nil {
-		return nil, err
-	}
-
-	// Execute the statement
-	return db.db.Exec(eSQL, eParams...)
-}
-
-// From is a shorthand for DB().From(...)
+// From returns a new SelectDataset
 func (db *Database) From(v ...any) *goqu.SelectDataset {
-	return db.DB().From(v...)
+	return db.goquDB().From(v...)
 }
 
-// Insert is a shorthand for DB().Insert(...)
+// Insert returns a new InsertDataset
 func (db *Database) Insert(table any) *goqu.InsertDataset {
-	return db.DB().Insert(table)
+	return db.goquDB().Insert(table)
 }
 
 // Migrate installs necessary migrations, and, optionally the passed seed SQL
@@ -228,25 +201,23 @@ func (db *Database) Migrate(seed string) error {
 
 		// Install the migration
 		csActual, status, err := db.installMigration(filename, csExpected)
-		var errMsg string
+		var errMsg sql.NullString
 		if err != nil {
-			errMsg = err.Error()
+			errMsg.Valid = true
+			errMsg.String = err.Error()
 		}
 
 		// If something was actually done
 		if status != "" {
 			// Add a log record, logging any error to the console
-			if dbErr := db.ExecuteOne(
-				db.Dialect().
-					Insert("cm_migration_log").
-					Rows(goqu.Record{
-						"filename":     filename,
-						"md5_expected": util.MD5ToHex(csExpected),
-						"md5_actual":   util.MD5ToHex(&csActual),
-						"status":       status,
-						"error_text":   errMsg,
-					}),
-			); dbErr != nil {
+			if dbErr := db.ExecOne(db.Insert("cm_migration_log").Rows(&MigrationLogEntry{
+				Filename:    filename,
+				CreatedTime: time.Now().UTC(),
+				MD5Expected: util.MD5ToHex(csExpected),
+				MD5Actual:   util.MD5ToHex(&csActual),
+				Status:      status,
+				ErrorText:   errMsg,
+			})); dbErr != nil {
 				logger.Errorf("Failed to add migration log record for '%s' (status '%s'): %v", filename, status, dbErr)
 			}
 		}
@@ -257,17 +228,12 @@ func (db *Database) Migrate(seed string) error {
 		}
 
 		// Migration processed successfully: register it in the database, updating the checksum if necessary
-		if err := db.ExecuteOne(
-			db.Dialect().
-				Insert("cm_migrations").
-				Rows(goqu.Record{
-					"filename": filename,
-					"md5":      util.MD5ToHex(&csActual),
-				}).
-				OnConflict(goqu.DoUpdate(
-					"filename",
-					goqu.Record{"md5": util.MD5ToHex(&csActual), "ts_installed": time.Now().UTC()})),
-		); err != nil {
+		mig := &Migration{
+			Filename:      filename,
+			InstalledTime: time.Now().UTC(),
+			MD5:           util.MD5ToHex(&csActual),
+		}
+		if err := db.ExecOne(db.Insert("cm_migrations").Rows(mig).OnConflict(goqu.DoUpdate("filename", mig))); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
 		}
 
@@ -347,18 +313,6 @@ func (db *Database) RecreateSchema() error {
 	return nil
 }
 
-// SelectRow executes the provided goqu query against the database, returning a single row
-func (db *Database) SelectRow(e exp.SQLExpression) intf.Scanner {
-	// Convert the expression into SQL and params
-	eSQL, eParams, err := e.ToSQL()
-	if err != nil {
-		return util.NewErrScanner(err)
-	}
-
-	// Execute the query
-	return db.db.QueryRow(eSQL, eParams...)
-}
-
 // Shutdown ends the database connection and shuts down all dependent services
 func (db *Database) Shutdown() error {
 	// If there's a connection, try to disconnect
@@ -385,9 +339,9 @@ func (db *Database) StartOfDay(col string) exp.LiteralExpression {
 	return goqu.L(col)
 }
 
-// Update is a shorthand for DB().Update(...)
+// Update returns a new UpdateDataset
 func (db *Database) Update(table any) *goqu.UpdateDataset {
-	return db.DB().Update(table)
+	return db.goquDB().Update(table)
 }
 
 // Version returns the actual database server version
@@ -536,10 +490,7 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	}
 
 	// Query the migrations table
-	var dbRecs []struct {
-		Filename string `db:"filename"`
-		MD5      string `db:"md5"`
-	}
+	var dbRecs []Migration
 	if err := db.From("cm_migrations").ScanStructs(&dbRecs); err != nil {
 		return nil, fmt.Errorf("getInstalledMigrations: ScanStructs() failed: %w", err)
 	}
@@ -548,7 +499,7 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	migMap := make(map[string][16]byte)
 	for _, r := range dbRecs {
 		// Parse the sum as binary
-		if b, err := hex.DecodeString(r.MD5); err != nil {
+		if b, err := r.MD5Bytes(); err != nil {
 			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", r.Filename, err)
 		} else if l := len(b); l != 16 {
 			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", r.Filename, l)

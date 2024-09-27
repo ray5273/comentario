@@ -191,9 +191,10 @@ func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
 // fillCommentCommenterStats fills the statistics for comments and commenters in totals
 func (svc *statsService) fillCommentCommenterStats(curUser *data.User, totals *StatsTotals) error {
 	// Prepare a query
-	q := db.Dialect().
-		From(goqu.T("cm_comments").As("c")).
-		Select(goqu.COUNT(goqu.I("c.id")), goqu.COUNT(goqu.I("c.user_created").Distinct())).
+	q := db.From(goqu.T("cm_comments").As("c")).
+		Select(
+			goqu.COUNT(goqu.I("c.id")).As("cnt_comments"),
+			goqu.COUNT(goqu.I("c.user_created").Distinct()).As("cnt_commenters")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
 		// Exclude deleted comments
 		Where(goqu.I("c.is_deleted").IsFalse())
@@ -208,11 +209,19 @@ func (svc *statsService) fillCommentCommenterStats(curUser *data.User, totals *S
 					goqu.ExOr{"du.is_owner": true, "du.is_moderator": true}))
 	}
 
-	// Run the query
-	if err := db.SelectRow(q).Scan(&totals.CountComments, &totals.CountCommenters); err != nil {
-		logger.Errorf("statsService.fillCommentCommenterStats: SelectRow() failed: %v", err)
-		return err
+	// Query the stats
+	var r struct {
+		CountComments   int64 `db:"cnt_comments"`
+		CountCommenters int64 `db:"cnt_commenters"`
 	}
+	if b, err := q.ScanStruct(&r); err != nil {
+		logger.Errorf("statsService.fillCommentCommenterStats: ScanStruct() failed: %v", err)
+		return err
+	} else if !b {
+		return ErrNotFound
+	}
+	totals.CountComments = r.CountComments
+	totals.CountCommenters = r.CountCommenters
 
 	// Succeeded
 	return nil
@@ -231,8 +240,7 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 			goqu.Case().
 				When(
 					util.If[any](curUser.IsSuperuser, true, goqu.ExOr{"cdu.is_owner": true, "cdu.is_moderator": true}),
-					db.Dialect().
-						From(goqu.T("cm_domain_pages").As("p")).
+					db.From(goqu.T("cm_domain_pages").As("p")).
 						Select(goqu.COUNT("*")).
 						Where(goqu.Ex{"p.domain_id": goqu.I("d.id")})).
 				As("cnt_pages"),
@@ -240,8 +248,7 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 			goqu.Case().
 				When(
 					util.If[any](curUser.IsSuperuser, true, goqu.Ex{"cdu.is_owner": true}),
-					db.Dialect().
-						From(goqu.T("cm_domains_users").As("du")).
+					db.From(goqu.T("cm_domains_users").As("du")).
 						Select(goqu.COUNT("*")).
 						Where(goqu.Ex{"du.domain_id": goqu.I("d.id")})).
 				As("cnt_domains"))
@@ -301,17 +308,25 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 // fillOwnStats fills the statistics for own comments and pages in totals
 func (svc *statsService) fillOwnStats(curUser *data.User, totals *StatsTotals) error {
 	// Prepare a query
-	q := db.Dialect().
-		From(goqu.T("cm_comments").As("c")).
-		Select(goqu.COUNT("*"), goqu.COUNT(goqu.I("c.page_id").Distinct())).
+	q := db.From(goqu.T("cm_comments").As("c")).
+		Select(
+			goqu.COUNT("*").As("cnt_comments"),
+			goqu.COUNT(goqu.I("c.page_id").Distinct()).As("cnt_pages")).
 		// Only include own comments and exclude deleted
 		Where(goqu.Ex{"c.user_created": &curUser.ID, "c.is_deleted": false})
 
-	// Run the query
-	if err := db.SelectRow(q).Scan(&totals.CountOwnComments, &totals.CountPagesCommented); err != nil {
-		logger.Errorf("statsService.fillOwnStats: SelectRow() failed: %v", err)
-		return err
+	var r struct {
+		CountComments int64 `db:"cnt_comments"`
+		CountPages    int64 `db:"cnt_pages"`
 	}
+	if b, err := q.ScanStruct(&r); err != nil {
+		logger.Errorf("statsService.fillOwnStats: ScanStruct() failed: %v", err)
+		return err
+	} else if !b {
+		return ErrNotFound
+	}
+	totals.CountOwnComments = r.CountComments
+	totals.CountPagesCommented = r.CountPages
 
 	// Succeeded
 	return nil

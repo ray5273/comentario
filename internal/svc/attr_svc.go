@@ -5,6 +5,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
+	"gitlab.com/comentario/comentario/internal/data"
 	"time"
 )
 
@@ -33,10 +34,7 @@ func (svc *attrService) GetAll(ownerID *uuid.UUID) (map[string]string, error) {
 	}
 
 	// Query the database
-	var attrs []struct {
-		Key   string `db:"key"`   // Attribute key
-		Value string `db:"value"` // Attribute value
-	}
+	var attrs []data.Attribute
 	if err := db.From(svc.tableName).Where(goqu.Ex{svc.keyColName: ownerID}).ScanStructs(&attrs); err != nil {
 		logger.Errorf("attrService.GetAll: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
@@ -60,12 +58,13 @@ func (svc *attrService) Set(ownerID *uuid.UUID, key, value string) error {
 	}
 
 	// Update the record
-	q := db.Dialect().
-		Update(svc.tableName).
-		Set(goqu.Record{"value": value, "ts_updated": time.Now().UTC()}).
-		Where(goqu.Ex{svc.keyColName: ownerID, "key": key})
-	if err := db.ExecuteOne(q); err != nil {
-		logger.Errorf("attrService.Set: ExecuteOne() failed for ownerID=%s, key=%s: %v", ownerID, key, err)
+	a := &data.Attribute{
+		Key:         key,
+		Value:       value,
+		UpdatedTime: time.Now().UTC(),
+	}
+	if err := db.ExecOne(db.Update(svc.tableName).Set(a).Where(goqu.Ex{svc.keyColName: ownerID, "key": key})); err != nil {
+		logger.Errorf("attrService.Set: ExecOne() failed for ownerID=%s, key=%s: %v", ownerID, key, err)
 		return translateDBErrors(err)
 	}
 

@@ -95,13 +95,8 @@ func (svc *userService) ConfirmUser(id *uuid.UUID) error {
 	}
 
 	// Update the owner's record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_users").
-			Set(goqu.Record{"confirmed": true, "ts_confirmed": time.Now().UTC()}).
-			Where(goqu.Ex{"id": id}),
-	); err != nil {
-		logger.Errorf("userService.ConfirmUser: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_users").Set(goqu.Record{"confirmed": true, "ts_confirmed": time.Now().UTC()}).Where(goqu.Ex{"id": id})); err != nil {
+		logger.Errorf("userService.ConfirmUser: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -144,42 +139,8 @@ func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
 	// Insert a new record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_users").
-			Rows(goqu.Record{
-				"id":                    u.ID,
-				"email":                 u.Email,
-				"name":                  u.Name,
-				"lang_id":               u.LangID,
-				"password_hash":         u.PasswordHash,
-				"system_account":        u.SystemAccount,
-				"is_superuser":          u.IsSuperuser,
-				"confirmed":             u.Confirmed,
-				"ts_confirmed":          u.ConfirmedTime,
-				"ts_created":            u.CreatedTime,
-				"user_created":          u.UserCreated,
-				"signup_ip":             config.MaskIP(u.SignupIP),
-				"signup_country":        u.SignupCountry,
-				"signup_host":           u.SignupHost,
-				"banned":                u.Banned,
-				"ts_banned":             u.BannedTime,
-				"user_banned":           u.UserBanned,
-				"remarks":               u.Remarks,
-				"federated_idp":         u.FederatedIdP,
-				"federated_sso":         u.FederatedSSO,
-				"federated_id":          u.FederatedID,
-				"website_url":           u.WebsiteURL,
-				"secret_token":          u.SecretToken,
-				"ts_password_change":    u.PasswordChangeTime,
-				"ts_last_login":         u.LastLoginTime,
-				"ts_last_failed_login":  u.LastFailedLoginTime,
-				"failed_login_attempts": u.FailedLoginAttempts,
-				"is_locked":             u.IsLocked,
-				"ts_locked":             u.LockedTime,
-			}),
-	); err != nil {
-		logger.Errorf("userService.Create: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Insert("cm_users").Rows(u)); err != nil {
+		logger.Errorf("userService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -190,27 +151,13 @@ func (svc *userService) Create(u *data.User) error {
 func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	logger.Debugf("userService.CreateUserSession(%#v)", s)
 
+	// Clone the session and prepare for insertion
+	sc := *s
+	sc.IP = config.MaskIP(s.IP)
+
 	// Insert a new record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_user_sessions").
-			Rows(goqu.Record{
-				"id":                 s.ID,
-				"user_id":            s.UserID,
-				"ts_created":         s.CreatedTime,
-				"ts_expires":         s.ExpiresTime,
-				"host":               s.Host,
-				"proto":              s.Proto,
-				"ip":                 config.MaskIP(s.IP),
-				"country":            s.Country,
-				"ua_browser_name":    s.BrowserName,
-				"ua_browser_version": s.BrowserVersion,
-				"ua_os_name":         s.OSName,
-				"ua_os_version":      s.OSVersion,
-				"ua_device":          s.Device,
-			}),
-	); err != nil {
-		logger.Errorf("userService.CreateUserSession: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Insert("cm_user_sessions").Rows(&sc)); err != nil {
+		logger.Errorf("userService.CreateUserSession: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -247,8 +194,8 @@ func (svc *userService) DeleteUserByID(id *uuid.UUID, delComments, purgeComments
 	}
 
 	// Delete the user
-	if err := db.ExecuteOne(db.Dialect().Delete("cm_users").Where(goqu.Ex{"id": id})); err != nil {
-		logger.Errorf("userService.DeleteUserByID: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Delete("cm_users").Where(goqu.Ex{"id": id})); err != nil {
+		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
 		return 0, translateDBErrors(err)
 	}
 
@@ -260,8 +207,8 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserSession(%s)", id)
 
 	// Delete the record
-	if err := db.ExecuteOne(db.Dialect().Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
-		logger.Errorf("userService.DeleteUserSession: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
+		logger.Errorf("userService.DeleteUserSession: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -288,8 +235,8 @@ func (svc *userService) EnsureSuperuser(idOrEmail string) error {
 	}
 
 	// Update the user
-	if err := db.ExecuteOne(db.Dialect().Update("cm_users").Set(goqu.Record{"is_superuser": true}).Where(where)); err != nil {
-		logger.Errorf("userService.EnsureSuperuser: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_users").Set(goqu.Record{"is_superuser": true}).Where(where)); err != nil {
+		logger.Errorf("userService.EnsureSuperuser: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -301,13 +248,8 @@ func (svc *userService) ExpireUserSessions(userID *uuid.UUID) error {
 	logger.Debugf("userService.ExpireUserSessions(%s)", userID)
 
 	// Update all user's sessions
-	if err := db.Execute(
-		db.Dialect().
-			Update("cm_user_sessions").
-			Set(goqu.Record{"ts_expires": time.Now().UTC()}).
-			Where(goqu.Ex{"user_id": userID}),
-	); err != nil {
-		logger.Errorf("userService.ExpireUserSessions: Execute() failed: %v", err)
+	if _, err := db.Update("cm_user_sessions").Set(goqu.Record{"ts_expires": time.Now().UTC()}).Where(goqu.Ex{"user_id": userID}).Executor().Exec(); err != nil {
+		logger.Errorf("userService.ExpireUserSessions: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -712,24 +654,20 @@ func (svc *userService) Update(user *data.User) error {
 	logger.Debugf("userService.Update(%#v)", user)
 
 	// Update the record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_users").
-			Set(goqu.Record{
-				"email":              user.Email,
-				"name":               user.Name,
-				"password_hash":      user.PasswordHash,
-				"is_superuser":       user.IsSuperuser,
-				"confirmed":          user.Confirmed,
-				"ts_confirmed":       user.ConfirmedTime,
-				"remarks":            user.Remarks,
-				"website_url":        user.WebsiteURL,
-				"federated_id":       user.FederatedID,
-				"ts_password_change": user.PasswordChangeTime,
-			}).
-			Where(goqu.Ex{"id": &user.ID}),
-	); err != nil {
-		logger.Errorf("userService.Update: ExecuteOne() failed: %v", err)
+	r := goqu.Record{
+		"email":              user.Email,
+		"name":               user.Name,
+		"password_hash":      user.PasswordHash,
+		"is_superuser":       user.IsSuperuser,
+		"confirmed":          user.Confirmed,
+		"ts_confirmed":       user.ConfirmedTime,
+		"remarks":            user.Remarks,
+		"website_url":        user.WebsiteURL,
+		"federated_id":       user.FederatedID,
+		"ts_password_change": user.PasswordChangeTime,
+	}
+	if err := db.ExecOne(db.Update("cm_users").Set(r).Where(goqu.Ex{"id": &user.ID})); err != nil {
+		logger.Errorf("userService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -746,14 +684,14 @@ func (svc *userService) UpdateBanned(curUserID, userID *uuid.UUID, banned bool) 
 	}
 
 	// Update the record
-	q := db.Dialect().Update("cm_users").Where(goqu.Ex{"id": userID})
+	q := db.Update("cm_users").Where(goqu.Ex{"id": userID})
 	if banned {
 		q = q.Set(goqu.Record{"banned": true, "ts_banned": time.Now().UTC(), "user_banned": curUserID})
 	} else {
 		q = q.Set(goqu.Record{"banned": false, "ts_banned": nil, "user_banned": nil})
 	}
-	if err := db.ExecuteOne(q); err != nil {
-		logger.Errorf("userService.UpdateBanned: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(q); err != nil {
+		logger.Errorf("userService.UpdateBanned: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -770,18 +708,15 @@ func (svc *userService) UpdateLoginLocked(user *data.User) error {
 	}
 
 	// Update the record
-	q := db.Dialect().
-		Update("cm_users").
-		Set(goqu.Record{
-			"ts_last_login":         user.LastLoginTime,
-			"ts_last_failed_login":  user.LastFailedLoginTime,
-			"failed_login_attempts": user.FailedLoginAttempts,
-			"is_locked":             user.IsLocked,
-			"ts_locked":             user.LockedTime,
-		}).
-		Where(goqu.Ex{"id": &user.ID})
-	if err := db.ExecuteOne(q); err != nil {
-		logger.Errorf("userService.UpdateLoginLocked: ExecuteOne() failed: %v", err)
+	r := goqu.Record{
+		"ts_last_login":         user.LastLoginTime,
+		"ts_last_failed_login":  user.LastFailedLoginTime,
+		"failed_login_attempts": user.FailedLoginAttempts,
+		"is_locked":             user.IsLocked,
+		"ts_locked":             user.LockedTime,
+	}
+	if err := db.ExecOne(db.Update("cm_users").Set(r).Where(goqu.Ex{"id": &user.ID})); err != nil {
+		logger.Errorf("userService.UpdateLoginLocked: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

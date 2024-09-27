@@ -33,6 +33,14 @@ type DynConfigService interface {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// dynConfigRecord represents a dynamic config database record
+type dynConfigRecord struct {
+	Key         data.DynConfigItemKey `db:"key"`
+	Value       string                `db:"value"`
+	UpdatedTime time.Time             `db:"ts_updated"`
+	UserUpdated uuid.NullUUID         `db:"user_updated"`
+}
+
 var errConfigUninitialised = errors.New("config is not initialised")
 
 // ConfigStore is a transient, concurrent store for DynConfigItem's
@@ -120,12 +128,7 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 	cs.items = items
 
 	// Query the data
-	var dbRecs []struct {
-		Key         data.DynConfigItemKey `db:"key"`
-		Value       string                `db:"value"`
-		UpdatedTime time.Time             `db:"ts_updated"`
-		UserUpdated uuid.NullUUID         `db:"user_updated"`
-	}
+	var dbRecs []dynConfigRecord
 	if err := db.From(goqu.T(tableName)).Where(extraKeyCols).ScanStructs(&dbRecs); err != nil {
 		logger.Errorf("ConfigStore.Load: ScanStructs() failed: %v", err)
 		return err
@@ -183,9 +186,15 @@ func (cs *ConfigStore) dbSave(tableName string, extraKeyCols goqu.Ex) error {
 	}
 
 	// Remove and reinsert all items in scope
-	return translateDBErrors(
-		db.Execute(db.Dialect().Delete(tableName).Where(extraKeyCols)),
-		db.Execute(db.Dialect().Insert(tableName).Rows(rows...)))
+	if _, err := db.Delete(tableName).Where(extraKeyCols).Executor().Exec(); err != nil {
+		return translateDBErrors(err)
+	}
+	if _, err := db.Insert(tableName).Rows(rows...).Executor().Exec(); err != nil {
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 // get returns a configuration item by its key, without locking

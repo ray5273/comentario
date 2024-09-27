@@ -52,27 +52,6 @@ var (
 
 // ----------------------------------------------------------------------------------------------------------------------
 
-// ErrScanner is a Scanner implementation that only holds an error. Exists for the lack of any way to instantiate an
-// sql.Row (with an error)
-type ErrScanner struct {
-	err error
-}
-
-// NewErrScanner returns a new ErrScanner instance
-func NewErrScanner(err error) *ErrScanner {
-	return &ErrScanner{err: err}
-}
-
-func (s *ErrScanner) Err() error {
-	return s.err
-}
-
-func (s *ErrScanner) Scan(...any) error {
-	return s.err
-}
-
-// ----------------------------------------------------------------------------------------------------------------------
-
 // noOpMailer is an intf.Mailer implementation that doesn't send any emails
 type noOpMailer struct{}
 

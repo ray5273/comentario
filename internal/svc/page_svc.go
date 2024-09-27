@@ -104,13 +104,8 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 	}
 
 	// Update the page in the database
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_domain_pages").
-			Set(goqu.Record{"title": title}).
-			Where(goqu.Ex{"id": &page.ID}),
-	); err != nil {
-		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domain_pages").Set(goqu.Record{"title": title}).Where(goqu.Ex{"id": &page.ID})); err != nil {
+		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecOne() failed: %v", err)
 		return false, err
 	}
 
@@ -123,16 +118,11 @@ func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*dat
 
 	// Query a page row
 	var p data.DomainPage
-	if err := db.SelectRow(
-		db.Dialect().
-			From("cm_domain_pages").
-			Select("id", "domain_id", "path", "title", "is_readonly", "ts_created", "count_comments", "count_views").
-			Where(goqu.Ex{"domain_id": domainID, "path": path}),
-	).Scan(
-		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
-	); err != nil {
-		logger.Errorf("pageService.FindByDomainPath: Scan() failed: %v", err)
+	if b, err := db.From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID, "path": path}).ScanStruct(&p); err != nil {
+		logger.Errorf("pageService.FindByDomainPath: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -144,16 +134,11 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 
 	// Query a page row
 	var p data.DomainPage
-	if err := db.SelectRow(
-		db.Dialect().
-			From("cm_domain_pages").
-			Select("id", "domain_id", "path", "title", "is_readonly", "ts_created", "count_comments", "count_views").
-			Where(goqu.Ex{"id": id}),
-	).Scan(
-		&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews,
-	); err != nil {
+	if b, err := db.From("cm_domain_pages").Where(goqu.Ex{"id": id}).ScanStruct(&p); err != nil {
 		logger.Errorf("pageService.FindByID: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
+	} else if !b {
+		return nil, ErrNotFound
 	}
 
 	// Succeeded
@@ -164,16 +149,15 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 	logger.Debugf("pageService.IncrementCounts(%s, %d, %d)", pageID, incComments, incViews)
 
 	// Update the page record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_domain_pages").
+	if err := db.ExecOne(
+		db.Update("cm_domain_pages").
 			Set(goqu.Record{
 				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
 				"count_views":    goqu.L("? + ?", goqu.I("count_views"), incViews),
 			}).
 			Where(goqu.Ex{"id": pageID}),
 	); err != nil {
-		logger.Errorf("pageService.IncrementCounts: ExecuteOne() failed: %v", err)
+		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -223,8 +207,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 					goqu.L(
 						// Work around extra parens not understood by SQLite: https://github.com/doug-martin/goqu/issues/204
 						"exists ?",
-						db.Dialect().
-							From(goqu.T("cm_comments").As("c")).
+						db.From(goqu.T("cm_comments").As("c")).
 							Where(goqu.Ex{"c.page_id": goqu.I("p.id"), "c.user_created": userID})),
 				))
 	}
@@ -284,13 +267,8 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 	logger.Debugf("pageService.UpdateReadonly(%#v)", page)
 
 	// Update the page record
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Update("cm_domain_pages").
-			Set(goqu.Record{"is_readonly": page.IsReadonly}).
-			Where(goqu.Ex{"id": &page.ID}),
-	); err != nil {
-		logger.Errorf("pageService.UpdateReadonly: ExecuteOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domain_pages").Set(goqu.Record{"is_readonly": page.IsReadonly}).Where(goqu.Ex{"id": &page.ID})); err != nil {
+		logger.Errorf("pageService.UpdateReadonly: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
@@ -301,58 +279,54 @@ func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
 func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path, title string, req *http.Request) (*data.DomainPage, bool, error) {
 	logger.Debugf("pageService.UpsertByDomainPath(%#v, %q, %q, ...)", domain, path, title)
 
-	// Prepare a new UUID
-	id := uuid.New()
-
-	// Query a page row
-	increment := util.If(req != nil, 1, 0)
-	row := db.SelectRow(
-		db.Dialect().
-			Insert(goqu.T("cm_domain_pages").As("p")).
-			Rows(goqu.Record{
-				"id":             &id,
-				"domain_id":      &domain.ID,
-				"path":           path,
-				"title":          util.TruncateStr(title, data.MaxPageTitleLength), // Make sure the title doesn't exceed the size of the database field
-				"is_readonly":    false,
-				"ts_created":     time.Now().UTC(),
-				"count_comments": 0,
-				"count_views":    increment,
-			}).
-			OnConflict(goqu.DoUpdate("domain_id, path", goqu.C("count_views").Set(goqu.L("p.count_views + ?", increment)))).
-			Returning("id", "domain_id", "path", "title", "is_readonly", "ts_created", "count_comments", "count_views"))
-
-	// Fetch the row
-	var p data.DomainPage
-	if err := row.Scan(&p.ID, &p.DomainID, &p.Path, &p.Title, &p.IsReadonly, &p.CreatedTime, &p.CountComments, &p.CountViews); err != nil {
-		logger.Errorf("pageService.UpsertByDomainPath: Scan() failed: %v", err)
+	// Try to insert a page, querying the resulting page
+	pOrig := data.DomainPage{
+		ID:            uuid.New(),
+		DomainID:      domain.ID,
+		Path:          path,
+		Title:         util.TruncateStr(title, data.MaxPageTitleLength), // Make sure the title doesn't exceed the size of the database field
+		IsReadonly:    false,
+		CreatedTime:   time.Now().UTC(),
+		CountComments: 0,
+		CountViews:    util.If(req != nil, int64(1), 0),
+	}
+	var pResult data.DomainPage
+	b, err := db.Insert(goqu.T("cm_domain_pages").As("p")).
+		Rows(&pOrig).
+		OnConflict(goqu.DoUpdate("domain_id, path", goqu.C("count_views").Set(goqu.L("p.count_views + ?", pOrig.CountViews)))).
+		Returning(&pResult).
+		Executor().
+		ScanStruct(&pResult)
+	if err != nil {
+		logger.Errorf("pageService.UpsertByDomainPath: ScanStruct() failed: %v", err)
 		return nil, false, translateDBErrors(err)
+	} else if !b {
+		return nil, false, ErrNotFound
 	}
 
 	// If the page was added
-	added := p.ID == id
+	added := pOrig.ID == pResult.ID
 	if added {
-		logger.Debug("pageService.UpsertByDomainPath: page didn't exist, created a new one with ID=%s", &id)
+		logger.Debug("pageService.UpsertByDomainPath: page didn't exist, created a new one with ID=%s", &pResult.ID)
 
 		// If no title was provided, fetch it in the background, ignoring possible errors
 		if title == "" {
-			go func() { _, _ = svc.FetchUpdatePageTitle(domain, &p) }()
+			go func() { _, _ = svc.FetchUpdatePageTitle(domain, &pResult) }()
 		}
 	}
 
 	// Also register visit details in the background, if required
 	if req != nil {
-		go svc.insertPageView(p, req)
+		go svc.insertPageView(&pResult.ID, req)
 	}
 
 	// Succeeded
-	return &p, added, nil
+	return &pResult, added, nil
 }
 
 // insertPageView registers a new page visit in the database
-// NB: page isn't a pointer to isolate it from the calling code
-func (svc *pageService) insertPageView(page data.DomainPage, req *http.Request) {
-	logger.Debugf("pageService.insertPageView(%#v, ...)", page)
+func (svc *pageService) insertPageView(pageID *uuid.UUID, req *http.Request) {
+	logger.Debugf("pageService.insertPageView(%s, ...)", pageID)
 
 	// Extract the remote IP and country
 	ip, country := util.UserIPCountry(req)
@@ -361,22 +335,19 @@ func (svc *pageService) insertPageView(page data.DomainPage, req *http.Request) 
 	ua := uasurfer.Parse(util.UserAgent(req))
 
 	// Register the visit
-	if err := db.ExecuteOne(
-		db.Dialect().
-			Insert("cm_domain_page_views").
-			Rows(goqu.Record{
-				"page_id":            &page.ID,
-				"ts_created":         time.Now().UTC(),
-				"proto":              req.Proto,
-				"ip":                 config.MaskIP(ip),
-				"country":            country,
-				"ua_browser_name":    ua.Browser.Name.StringTrimPrefix(),
-				"ua_browser_version": util.FormatVersion(&ua.Browser.Version),
-				"ua_os_name":         ua.OS.Name.StringTrimPrefix(),
-				"ua_os_version":      util.FormatVersion(&ua.OS.Version),
-				"ua_device":          ua.DeviceType.StringTrimPrefix(),
-			}),
-	); err != nil {
-		logger.Errorf("pageService.insertPageView: ExecuteOne() failed: %v", err)
+	r := &data.DomainPageView{
+		PageID:         *pageID,
+		CreatedTime:    time.Now().UTC(),
+		Proto:          req.Proto,
+		IP:             config.MaskIP(ip),
+		Country:        country,
+		BrowserName:    ua.Browser.Name.StringTrimPrefix(),
+		BrowserVersion: util.FormatVersion(&ua.Browser.Version),
+		OSName:         ua.OS.Name.StringTrimPrefix(),
+		OSVersion:      util.FormatVersion(&ua.OS.Version),
+		Device:         ua.DeviceType.StringTrimPrefix(),
+	}
+	if err := db.ExecOne(db.Insert("cm_domain_page_views").Rows(r)); err != nil {
+		logger.Errorf("pageService.insertPageView: ExecOne() failed: %v", err)
 	}
 }

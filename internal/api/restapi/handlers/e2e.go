@@ -245,8 +245,17 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("hmac"))
 	}
 
+	secBytes, err := domain.SSOSecretBytes()
+	if err != nil {
+		logger.Errorf("Failed to decode domain (ID=%s) SSO secret: %v", domainID, err)
+		return respInternalError(nil)
+	} else if secBytes == nil {
+		logger.Errorf("Domain (ID=%d) SSO secret not set", domainID)
+		return respInternalError(nil)
+	}
+
 	// Verify the token signature
-	if !hmac.Equal(tokenHMAC, util.HMACSign(token, domain.SSOSecretBytes())) {
+	if !hmac.Equal(tokenHMAC, util.HMACSign(token, secBytes)) {
 		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("HMAC signature doesn't check out"))
 	}
 
@@ -265,7 +274,7 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 	u := config.ServerConfig.ParsedBaseURL().JoinPath(util.APIPath, "oauth/sso/callback")
 	q := u.Query()
 	q.Set("payload", hex.EncodeToString(payloadBytes))
-	q.Set("hmac", hex.EncodeToString(util.HMACSign(payloadBytes, domain.SSOSecretBytes())))
+	q.Set("hmac", hex.EncodeToString(util.HMACSign(payloadBytes, secBytes)))
 	u.RawQuery = q.Encode()
 
 	// Succeeded

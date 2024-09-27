@@ -28,7 +28,7 @@ var logger = logging.MustGetLogger("auth")
 // the provided scopes
 func AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error) {
 	// Try to find the token
-	token, err := svc.TheTokenService.FindByStrValue(tokenStr, false)
+	token, err := svc.TheTokenService.FindByValue(tokenStr, false)
 	if err != nil {
 		return nil, ErrUnauthorised
 	}

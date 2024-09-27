@@ -101,7 +101,7 @@ func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) err
 		TheI18nService.Translate(user.LangID, "confirmYourEmail"),
 		"confirm-email.gohtml",
 		map[string]any{
-			"ConfirmURL": config.ServerConfig.URLForAPI("auth/confirm", map[string]string{"access_token": token.String()}),
+			"ConfirmURL": config.ServerConfig.URLForAPI("auth/confirm", map[string]string{"access_token": token.Value}),
 			"Name":       user.Name,
 		})
 }
@@ -114,7 +114,7 @@ func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) er
 		TheI18nService.Translate(user.LangID, "resetYourPassword"),
 		"reset-password.gohtml",
 		map[string]any{
-			"ResetURL": TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.String()}),
+			"ResetURL": TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.Value}),
 			"Name":     user.Name,
 		})
 }

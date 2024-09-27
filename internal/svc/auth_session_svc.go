@@ -13,7 +13,7 @@ var TheAuthSessionService AuthSessionService = &authSessionService{}
 // AuthSessionService is a service interface for dealing with AuthSession objects
 type AuthSessionService interface {
 	// Create saves a new auth session
-	Create(sessData, host string, token []byte) (*data.AuthSession, error)
+	Create(sessData, host, token string) (*data.AuthSession, error)
 	// TakeByID returns and deletes an existing auth session by its ID
 	TakeByID(id *uuid.UUID) (*data.AuthSession, error)
 }
@@ -23,8 +23,8 @@ type AuthSessionService interface {
 // authSessionService is a blueprint AuthSessionService implementation
 type authSessionService struct{}
 
-func (svc *authSessionService) Create(sessData, host string, token []byte) (*data.AuthSession, error) {
-	logger.Debugf("authSessionService.Create('%s', '%s')", sessData, host)
+func (svc *authSessionService) Create(sessData, host, token string) (*data.AuthSession, error) {
+	logger.Debugf("authSessionService.Create(%q, %q, %q)", sessData, host, token)
 
 	// Create a session
 	as := data.NewAuthSession(sessData, host, token)

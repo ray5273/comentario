@@ -111,8 +111,12 @@ func (v *verifier) DomainSSOConfig(domain *data.Domain) middleware.Responder {
 	} else if _, err := util.ParseAbsoluteURL(domain.SSOURL, config.ServerConfig.E2e, false); err != nil {
 		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails(err.Error()))
 
-		// Verify SSO secret is configured
-	} else if domain.SSOSecretBytes() == nil {
+		// Verify SSO secret is encoded properly
+	} else if sec, err := domain.SSOSecretBytes(); err != nil {
+		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails("SSO secret is invalid"))
+
+		// Verify SSO secret is set
+	} else if sec == nil {
 		respBadRequest(exmodels.ErrorSSOMisconfigured.WithDetails("SSO secret isn't configured"))
 	}
 

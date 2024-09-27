@@ -59,7 +59,7 @@ func EmbedAuthLoginTokenNew(params api_embed.EmbedAuthLoginTokenNewParams) middl
 	}
 
 	// Succeeded
-	return api_embed.NewEmbedAuthLoginTokenNewOK().WithPayload(&api_embed.EmbedAuthLoginTokenNewOKBody{Token: t.String()})
+	return api_embed.NewEmbedAuthLoginTokenNewOK().WithPayload(&api_embed.EmbedAuthLoginTokenNewOKBody{Token: t.Value})
 }
 
 func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams, user *data.User) middleware.Responder {

@@ -132,7 +132,7 @@ func AuthLoginTokenNew(_ api_general.AuthLoginTokenNewParams) middleware.Respond
 	}
 
 	// Succeeded
-	return api_general.NewAuthLoginTokenNewOK().WithPayload(&api_general.AuthLoginTokenNewOKBody{Token: t.String()})
+	return api_general.NewAuthLoginTokenNewOK().WithPayload(&api_general.AuthLoginTokenNewOKBody{Token: t.Value})
 }
 
 func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *data.User) middleware.Responder {
