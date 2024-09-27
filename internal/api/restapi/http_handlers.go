@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"mime"
 	"net/http"
 	"net/url"
 	"os"
@@ -208,6 +209,8 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 // - stuff listed in UIStaticPaths[] (favicon and such)
 // - paths starting from a language root ('/en/', '/ru/' etc.)
 func staticHandler(next http.Handler) http.Handler {
+	// Set the correct MIME type for the web app manifest
+	mime.AddExtensionType(".webmanifest", "application/manifest+json")
 	// Instantiate a file server for static content
 	fileHandler := http.FileServer(http.Dir(config.ServerConfig.StaticPath))
 

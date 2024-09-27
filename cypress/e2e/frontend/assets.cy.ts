@@ -18,9 +18,9 @@ context('Static assets', () => {
         {path: '/safari-pinned-tab.svg',      dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/svg+xml'},
 
         // Text resources
-        {path: '/browserconfig.xml', dir: 'frontend/assets/misc', encoding: 'binary', ctype: 'text/xml; charset=utf-8'},
-        {path: '/robots.txt',        dir: 'frontend/assets/misc', encoding: 'binary', ctype: 'text/plain; charset=utf-8'},
-        {path: '/site.webmanifest',  dir: 'frontend/assets/misc', encoding: 'binary', ctype: 'text/plain; charset=utf-8'},
+        {path: '/browserconfig.xml', dir: 'frontend/assets/misc', encoding: 'utf-8', ctype: 'text/xml; charset=utf-8'},
+        {path: '/robots.txt',        dir: 'frontend/assets/misc', encoding: 'utf-8', ctype: 'text/plain; charset=utf-8'},
+        {path: '/site.webmanifest',  dir: 'frontend/assets/misc', encoding: 'utf-8', ctype: 'application/manifest+json'},
 
         // Fonts
         {path: '/en/fonts/source-sans-300-cyrillic.woff2',     dir: 'frontend/assets/fonts', encoding: 'binary', ctype: 'font/woff2'},
@@ -65,8 +65,13 @@ context('Static assets', () => {
                     // If there's a source dir provided, verify the contents by comparing to the source file
                     if (asset.dir) {
                         cy.readFile(`${asset.dir}/${asset.path.replace(/^.*\/([^/]+)$/, '$1')}`, asset.encoding as Encodings)
-                            .then(data => data === r.body)
-                            .should('be.true');
+                            .then(data => {
+                                if (typeof r.body === 'object') {
+                                    expect(r.body).to.deep.equal(JSON.parse(data));
+                                } else {
+                                    expect(r.body).to.equal(data);
+                                }
+                            });
 
                     // If there's a content expectation, verify it
                     } else if (asset.contains) {
