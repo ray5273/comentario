@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { concat, EMPTY, Observable } from 'rxjs';
@@ -11,6 +11,8 @@ import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { Utils } from '../../../../_utils/utils';
+import { Paths } from '../../../../_utils/consts';
+import { PluginService } from '../../../plugin/plugin.service';
 
 @UntilDestroy()
 @Component({
@@ -40,6 +42,9 @@ export class ProfileComponent implements OnInit {
     /** Selected (but not yet uploaded) avatar image. */
     avatarFile?: File | null;
 
+    /** UI plugs destined for the profile page. */
+    readonly plugs = this.pluginSvc.uiPlugsForLocation('profile');
+
     /** Processing statuses. */
     readonly saving          = new ProcessingStatus();
     readonly deleting        = new ProcessingStatus();
@@ -66,11 +71,13 @@ export class ProfileComponent implements OnInit {
     readonly faTrashAlt        = faTrashAlt;
 
     constructor(
+        private readonly renderer: Renderer2,
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
+        private readonly pluginSvc: PluginService,
     ) {
         // Disable Purge comments if Delete comments is off
         this.deleteConfirmationForm.controls.deleteComments.valueChanges
@@ -222,4 +229,6 @@ export class ProfileComponent implements OnInit {
             newPassword: vals.newPassword,
         });
     }
+
+    protected readonly Paths = Paths;
 }

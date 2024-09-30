@@ -37,9 +37,9 @@ type DTOAware[T any] interface {
 
 // Attribute represents a key-value pair with a timestamp
 type Attribute struct {
-	Key         string    `db:"key"`        // Key
-	Value       string    `db:"value"`      // Value
-	UpdatedTime time.Time `db:"ts_updated"` // Timestamp when the record was last updated
+	Key         string    `db:"key" goqu:"skipupdate"` // Key
+	Value       string    `db:"value"`                 // Value
+	UpdatedTime time.Time `db:"ts_updated"`            // Timestamp when the record was last updated
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

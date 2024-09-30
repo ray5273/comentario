@@ -5,7 +5,7 @@ import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { ConfigService } from '../_services/config.service';
 import { AuthService } from '../_services/auth.service';
-import { PluginService } from '../_services/plugin.service';
+import { PluginService } from '../_modules/plugin/plugin.service';
 
 @UntilDestroy()
 @Component({
@@ -22,7 +22,7 @@ export class FooterComponent {
     readonly year = `2022–${new Date().getFullYear()}`;
     readonly version = this.configSvc.staticConfig.version;
 
-    /** UI plugs destined for the navbar. */
+    /** UI plugs destined for the footer. */
     readonly plugs = this.pluginSvc.uiPlugsForLocation('footer.menu');
 
     // Icons

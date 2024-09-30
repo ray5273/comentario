@@ -49,8 +49,9 @@ type UIPlugLocation string
 
 //goland:noinspection GoUnusedConst
 const (
-	UIPLugLocationNavbarMenu UIPlugLocation = "navbar.menu"
-	UIPLugLocationFooterMenu UIPlugLocation = "footer.menu"
+	UIPLugLocationNavbarMenu  UIPlugLocation = "navbar.menu"
+	UIPLugLocationFooterMenu  UIPlugLocation = "footer.menu"
+	UIPLugLocationUserProfile UIPlugLocation = "profile"
 )
 
 // UILabel provides a label displayed in the UI for a specific language
@@ -65,7 +66,7 @@ type UIPlug struct {
 	Location     UIPlugLocation // Where to plug the specified component
 	Labels       []UILabel      // Plug labels, provided at least for the default UI language ("en")
 	ComponentTag string         // HTML tag of the component to plug
-	Path         string         // Path the plug's component will be available at
+	Path         string         // Path the plug's component will be available at. Only required for "standalone" components available on a path
 }
 
 // Config describes plugin configuration

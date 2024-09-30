@@ -253,7 +253,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 		// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID. It will
 		// also be the fallback, should parent ID not exist in the map
 		parentCommentID := uuid.NullUUID{}
-		pzID := uuid.UUID{}
+		pzID := util.ZeroUUID
 		if id, ok := commentHexToIDMap[comment.ParentHex]; ok {
 			parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
 			pzID = id
@@ -291,7 +291,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	// Recurse the comment tree (map) to insert the comments in the right order (parents-to-children), starting with the
 	// root (= zero UUID)
 	countsPerPage := map[uuid.UUID]int{}
-	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(util.ZeroUUID, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
 	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
@@ -415,7 +415,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 		// Find the parent comment ID. For indexing purposes only, root ID will be represented by a zero UUID. It will
 		// also be the fallback, should parent ID not exist in the map
 		parentCommentID := uuid.NullUUID{}
-		pzID := uuid.UUID{}
+		pzID := util.ZeroUUID
 		if id, ok := commentIDMap[comment.ParentID]; ok {
 			parentCommentID = uuid.NullUUID{UUID: id, Valid: true}
 			pzID = id
@@ -460,7 +460,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	// Recurse the comment tree (map) to insert the comments in the right order (parents-to-children), starting with the
 	// root (= zero UUID)
 	countsPerPage := map[uuid.UUID]int{}
-	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(uuid.UUID{}, commentParentIDMap, countsPerPage)
+	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(util.ZeroUUID, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
 	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)

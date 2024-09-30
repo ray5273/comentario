@@ -61,6 +61,7 @@ import { DomainEditModerationComponent } from './domains/domain-edit/domain-edit
 import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit-extensions/domain-edit-extensions.component';
 import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.component';
 import { CountryNamePipe } from './_pipes/country-name.pipe';
+import { PluginModule } from '../plugin/plugin.module';
 
 @NgModule({
     declarations: [
@@ -129,6 +130,7 @@ import { CountryNamePipe } from './_pipes/country-name.pipe';
         NgChartsModule,
         Highlight,
         ToolsModule,
+        PluginModule,
         ManageRoutingModule,
     ],
     providers: [

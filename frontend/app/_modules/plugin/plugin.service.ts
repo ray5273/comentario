@@ -1,10 +1,12 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT, Location } from '@angular/common';
+import { Route, Router } from '@angular/router';
 import { merge, Observable, Subject, switchMap, takeUntil, tap, throwError, timeout } from 'rxjs';
-import { ConfigService } from './config.service';
-import { PluginConfig, PluginUIPlugConfig } from '../../generated-api';
-import { LANGUAGE } from '../../environments/languages';
-import { Language } from '../_models/models';
+import { PluginPlugComponent } from './plugin-plug/plugin-plug.component';
+import { ConfigService } from '../../_services/config.service';
+import { LANGUAGE } from '../../../environments/languages';
+import { Language, PluginRouteData } from '../../_models/models';
+import { InstancePluginConfig, PluginConfig, PluginUIPlugConfig } from '../../../generated-api';
 
 /** An easy-to-consume data structure describing a UI plug. */
 export interface UIPlug {
@@ -30,8 +32,24 @@ export class PluginService {
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
         @Inject(LANGUAGE) private readonly lang: Language,
+        private readonly router: Router,
         private readonly configSvc: ConfigService,
     ) {}
+
+    /**
+     * Update the currently configured routing data by adding plugin routes to the list.
+     */
+    private updateRoutes(pluginCfg: InstancePluginConfig) {
+        // Prepare plugin routes
+        const routes = pluginCfg.plugins
+                ?.flatMap(plugin => plugin.uiPlugs?.map(plug => this.getPlugRoute(plugin, plug)) ?? []);
+
+        // If there's any route, replace the plugin routes with an up-to-date route list
+        if (routes?.length) {
+            this.router.resetConfig(
+                this.router.config.map(r => r.path === 'plugin' ? {...r, children: routes} : r));
+        }
+    }
 
     /**
      * Initialise the service
@@ -41,14 +59,17 @@ export class PluginService {
         const loaded = new Subject<void>();
         return this.configSvc.config$
             .pipe(
+                // Reload the routing config when ready
+                tap(cfg => this.updateRoutes(cfg.pluginConfig)),
                 // Embed the necessary plugin resources, waiting for all of them to complete loading or error
                 switchMap(cfg =>
                     merge(
                         cfg.pluginConfig.plugins?.flatMap(plugin => this.pluginResources(cfg.staticConfig.baseUrl, plugin)) ??
                         // Complete immediately when no resource is needed
                         [])
-                        // Signal the load completion to the outer observable
-                        .pipe(tap({complete: () => loaded.next()}))),
+                        .pipe(
+                            // Signal the load completion to the outer observable
+                            tap({complete: () => loaded.next()}))),
                 // Force the outer observable to complete after the inner (merge()) has
                 takeUntil(loaded));
     }
@@ -81,6 +102,22 @@ export class PluginService {
                         path:         plug.path,
                     })) ??
                 []);
+    }
+
+    /**
+     * Add an arbitrary element the current DOM.
+     * @param parent Parent element.
+     * @param tag Element tag to instantiate.
+     * @param attrs Any additional element attributes.
+     * @return Observable for the script load or error.
+     */
+    insertElement(parent: HTMLElement, tag: string, attrs?: Record<string, any>): HTMLElement {
+        const el = this.doc.createElement(tag);
+        if (attrs) {
+            Object.entries(attrs).forEach(([k, v]) => el.setAttribute(k, String(v)));
+        }
+        parent.appendChild(el);
+        return el;
     }
 
     /**
@@ -137,4 +174,15 @@ export class PluginService {
                 meta:  {message: 'Script load timeout', url: script.src},
             }));
     }
+
+    /**
+     * Return a route spec for the given plugin and UI plug.
+     */
+    private getPlugRoute = (plugin: PluginConfig, plug: PluginUIPlugConfig): Route => {
+        return {
+            path:      `${plugin.path}/${plug.path}`,
+            component: PluginPlugComponent,
+            data:      {plugin, plug} as PluginRouteData,
+        };
+    };
 }

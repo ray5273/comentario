@@ -1,3 +1,5 @@
+import { PluginConfig, PluginUIPlugConfig } from '../../generated-api';
+
 /**
  * An UI language.
  */
@@ -12,4 +14,12 @@ export interface Language {
     dateFormat: string;
     /** Datetime format for the language. */
     datetimeFormat: string;
+}
+
+/**
+ * Data associated with a plugin route.
+ */
+export interface PluginRouteData {
+    plugin: PluginConfig;
+    plug:   PluginUIPlugConfig;
 }

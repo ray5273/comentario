@@ -96,6 +96,18 @@
         </form>
     </section>
 
+    <!-- Plugin items -->
+    @for (plug of plugs; track plug) {
+        <section>
+            <!-- Heading -->
+            <h2>{{ plug.label }}</h2>
+
+            <!-- Component -->
+            <app-plugin-plug [plug]="plug"></app-plugin-plug>
+        </section>
+    }
+
+
     <!-- Danger zone -->
     <section class="danger text-center p-4">
         <!-- Collapse link -->

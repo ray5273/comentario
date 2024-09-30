@@ -3,7 +3,7 @@ import { PlatformLocation } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
 import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
-import { provideRouter, RouterModule, Routes, withComponentInputBinding, withInMemoryScrolling } from '@angular/router';
+import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
@@ -21,34 +21,9 @@ import { environment } from '../environments/environment';
 import { ToolsModule } from './_modules/tools/tools.module';
 import { ConfigService } from './_services/config.service';
 import { LANGUAGE, provideLanguage } from '../environments/languages';
-import { AuthGuard } from './_guards/auth.guard';
-import { PluginService } from './_services/plugin.service';
 import { Utils } from './_utils/utils';
-
-const routes: Routes = [
-    // Auth
-    {
-        path:         'auth',
-        loadChildren: () => import('./_modules/auth/auth.module').then(m => m.AuthModule),
-    },
-
-    // Control Center
-    {
-        path:         'manage',
-        loadChildren: () => import('./_modules/manage/manage.module').then(m => m.ManageModule),
-        canMatch:     [AuthGuard.isAuthenticatedMatch],
-    },
-
-    // Plugins
-    {
-        path:         'plugin',
-        loadChildren: () => import('./_modules/plugin/plugin.module').then(m => m.PluginModule),
-    },
-
-    // Fallback routes
-    {path: '', pathMatch: 'full', component: HomeComponent},
-    {path: '**',                  component: PageNotFoundComponent},
-];
+import { provideRouting } from './provide-routing';
+import { PluginService } from './_modules/plugin/plugin.service';
 
 const provideApiConfig = (): Provider =>
     ({
@@ -88,21 +63,28 @@ const provideApiConfig = (): Provider =>
         provideHighlightOptions({
             coreLibraryLoader: () => import('highlight.js/lib/core'),
             languages: {
-                html:     () => import('highlight.js/lib/languages/xml'),
+                html: () => import('highlight.js/lib/languages/xml'),
                 markdown: () => import('highlight.js/lib/languages/markdown'),
-            }
+            },
         }),
         // API configuration
         provideApiConfig(),
         {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},
         {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
-        provideRouter(
-            routes,
-            withComponentInputBinding(),
-            withInMemoryScrolling({scrollPositionRestoration: 'enabled'})),
         // Initialise the services
-        {provide: APP_INITIALIZER, useFactory: (cs: ConfigService) => () => cs.init(), deps: [ConfigService], multi: true},
-        {provide: APP_INITIALIZER, useFactory: (ps: PluginService) => () => ps.init(), deps: [PluginService], multi: true},
+        {
+            provide: APP_INITIALIZER,
+            useFactory: (cs: ConfigService) => () => cs.init(),
+            deps: [ConfigService],
+            multi: true,
+        },
+        {
+            provide: APP_INITIALIZER,
+            useFactory: (ps: PluginService) => () => ps.init(),
+            deps: [PluginService],
+            multi: true,
+        },
+        provideRouting(),
     ],
     bootstrap: [AppComponent],
 })

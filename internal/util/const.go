@@ -1,6 +1,7 @@
 package util
 
 import (
+	"github.com/google/uuid"
 	"golang.org/x/text/language"
 	"time"
 )
@@ -56,6 +57,8 @@ const (
 )
 
 var (
+	ZeroUUID = uuid.UUID{}
+
 	WrongAuthDelayMin = 100 * time.Millisecond // Minimal delay to exercise on a wrong email, password etc.
 	WrongAuthDelayMax = 4 * time.Second        // Maximal delay to exercise on a wrong email, password etc.
 

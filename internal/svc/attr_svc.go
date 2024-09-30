@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
 
@@ -29,7 +30,7 @@ func (svc *attrService) GetAll(ownerID *uuid.UUID) (map[string]string, error) {
 	res := map[string]string{}
 
 	// Anonymous owner has no attributes
-	if svc.checkAnon && *ownerID == (uuid.UUID{}) {
+	if svc.checkAnon && *ownerID == util.ZeroUUID {
 		return res, nil
 	}
 
@@ -53,17 +54,35 @@ func (svc *attrService) Set(ownerID *uuid.UUID, key, value string) error {
 	logger.Debugf("attrService.Set(%s, %s, %s)", ownerID, key, value)
 
 	// Anonymous owner cannot have attributes
-	if svc.checkAnon && *ownerID == (uuid.UUID{}) {
+	if svc.checkAnon && *ownerID == util.ZeroUUID {
 		return errors.New("cannot set attributes for anonymous owner")
 	}
 
-	// Update the record
+	// Prepare a lookup condition
+	where := goqu.Ex{svc.keyColName: ownerID, "key": key}
+
+	// Value removal
+	if value == "" {
+		// We don't want to use ExecOne() here since the value may well not exist anymore, which we don't care about, so
+		// simply nothing will be deleted
+		if _, err := db.Delete(svc.tableName).Where(where).Executor().Exec(); err != nil {
+			logger.Errorf("attrService.Set: Delete() failed for ownerID=%s, key=%s: %v", ownerID, key, err)
+			return translateDBErrors(err)
+		}
+		return nil
+	}
+
+	// Insert or update the record
 	a := &data.Attribute{
 		Key:         key,
 		Value:       value,
 		UpdatedTime: time.Now().UTC(),
 	}
-	if err := db.ExecOne(db.Update(svc.tableName).Set(a).Where(goqu.Ex{svc.keyColName: ownerID, "key": key})); err != nil {
+	err := db.ExecOne(db.Insert(goqu.T(svc.tableName).As("t")).
+		// Can't just pass a struct here since we depend on the variable key column name
+		Rows(goqu.Record{svc.keyColName: ownerID, "key": a.Key, "value": a.Value, "ts_updated": a.UpdatedTime}).
+		OnConflict(goqu.DoUpdate(svc.keyColName+",key", a)))
+	if err != nil {
 		logger.Errorf("attrService.Set: ExecOne() failed for ownerID=%s, key=%s: %v", ownerID, key, err)
 		return translateDBErrors(err)
 	}
