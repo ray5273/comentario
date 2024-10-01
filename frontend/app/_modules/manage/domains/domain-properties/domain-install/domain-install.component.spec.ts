@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
 import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
-import { Highlight } from 'ngx-highlightjs';
+import { Highlight, HighlightLoader } from 'ngx-highlightjs';
 import { MockProvider } from 'ng-mocks';
 import { DomainInstallComponent } from './domain-install.component';
 import { ConfigService } from '../../../../../_services/config.service';
@@ -19,6 +19,7 @@ describe('DomainInstallComponent', () => {
             declarations: [DomainInstallComponent],
             imports: [ReactiveFormsModule, NgbCollapseModule, FontAwesomeTestingModule, Highlight, ToolsModule],
             providers: [
+                MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
                 MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig}),
             ],
         });

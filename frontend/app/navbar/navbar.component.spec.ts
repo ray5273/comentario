@@ -5,7 +5,7 @@ import { MockProvider } from 'ng-mocks';
 import { NavbarComponent } from './navbar.component';
 import { DocsService } from '../_services/docs.service';
 import { mockAuthService } from '../_utils/_mocks.spec';
-import { PluginService } from '../_services/plugin.service';
+import { PluginService } from '../_modules/plugin/_services/plugin.service';
 
 describe('NavbarComponent', () => {
     let component: NavbarComponent;

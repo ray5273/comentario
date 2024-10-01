@@ -2,7 +2,7 @@ import { Component } from '@angular/core';
 import { Paths } from '../_utils/consts';
 import { DocsService } from '../_services/docs.service';
 import { AuthService } from '../_services/auth.service';
-import { PluginService } from '../_modules/plugin/plugin.service';
+import { PluginService } from '../_modules/plugin/_services/plugin.service';
 
 @Component({
     selector: 'app-navbar',

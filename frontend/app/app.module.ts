@@ -23,7 +23,7 @@ import { ConfigService } from './_services/config.service';
 import { LANGUAGE, provideLanguage } from '../environments/languages';
 import { Utils } from './_utils/utils';
 import { provideRouting } from './provide-routing';
-import { PluginService } from './_modules/plugin/plugin.service';
+import { PluginService } from './_modules/plugin/_services/plugin.service';
 
 const provideApiConfig = (): Provider =>
     ({

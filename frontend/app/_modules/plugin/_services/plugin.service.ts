@@ -2,11 +2,11 @@ import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT, Location } from '@angular/common';
 import { Route, Router } from '@angular/router';
 import { merge, Observable, Subject, switchMap, takeUntil, tap, throwError, timeout } from 'rxjs';
-import { PluginPlugComponent } from './plugin-plug/plugin-plug.component';
-import { ConfigService } from '../../_services/config.service';
-import { LANGUAGE } from '../../../environments/languages';
-import { Language, PluginRouteData } from '../../_models/models';
-import { InstancePluginConfig, PluginConfig, PluginUIPlugConfig } from '../../../generated-api';
+import { PluginPlugComponent } from '../plugin-plug/plugin-plug.component';
+import { ConfigService } from '../../../_services/config.service';
+import { LANGUAGE } from '../../../../environments/languages';
+import { Language, PluginRouteData } from '../../../_models/models';
+import { InstancePluginConfig, PluginConfig, PluginUIPlugConfig } from '../../../../generated-api';
 
 /** An easy-to-consume data structure describing a UI plug. */
 export interface UIPlug {
@@ -37,21 +37,6 @@ export class PluginService {
     ) {}
 
     /**
-     * Update the currently configured routing data by adding plugin routes to the list.
-     */
-    private updateRoutes(pluginCfg: InstancePluginConfig) {
-        // Prepare plugin routes
-        const routes = pluginCfg.plugins
-                ?.flatMap(plugin => plugin.uiPlugs?.map(plug => this.getPlugRoute(plugin, plug)) ?? []);
-
-        // If there's any route, replace the plugin routes with an up-to-date route list
-        if (routes?.length) {
-            this.router.resetConfig(
-                this.router.config.map(r => r.path === 'plugin' ? {...r, children: routes} : r));
-        }
-    }
-
-    /**
      * Initialise the service
      */
     init(): Observable<unknown> {
@@ -67,9 +52,8 @@ export class PluginService {
                         cfg.pluginConfig.plugins?.flatMap(plugin => this.pluginResources(cfg.staticConfig.baseUrl, plugin)) ??
                         // Complete immediately when no resource is needed
                         [])
-                        .pipe(
-                            // Signal the load completion to the outer observable
-                            tap({complete: () => loaded.next()}))),
+                        // Signal the load completion to the outer observable
+                        .pipe(tap({complete: () => loaded.next()}))),
                 // Force the outer observable to complete after the inner (merge()) has
                 takeUntil(loaded));
     }
@@ -109,7 +93,7 @@ export class PluginService {
      * @param parent Parent element.
      * @param tag Element tag to instantiate.
      * @param attrs Any additional element attributes.
-     * @return Observable for the script load or error.
+     * @return The created element.
      */
     insertElement(parent: HTMLElement, tag: string, attrs?: Record<string, any>): HTMLElement {
         const el = this.doc.createElement(tag);
@@ -176,7 +160,23 @@ export class PluginService {
     }
 
     /**
-     * Return a route spec for the given plugin and UI plug.
+     * Update the currently configured routing data by adding plugin routes to the list.
+     */
+    private updateRoutes(pluginCfg: InstancePluginConfig) {
+        // Prepare plugin routes
+        const routes = pluginCfg.plugins
+            ?.flatMap(plugin => plugin.uiPlugs?.map(plug => this.getPlugRoute(plugin, plug)) ?? []);
+
+        // If there's any route, replace the plugin routes with an up-to-date route list
+        if (routes?.length) {
+            this.router.resetConfig(
+                this.router.config.map(r => r.path === 'plugin' ? {...r, children: routes} : r));
+        }
+    }
+
+    /**
+     * Return a route spec for the given plugin and UI plug. The route maps to the PluginPlugComponent, which is used
+     * for rendering "standalone" components, i.e. those having an own path.
      */
     private getPlugRoute = (plugin: PluginConfig, plug: PluginUIPlugConfig): Route => {
         return {

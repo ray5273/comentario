@@ -1,8 +1,8 @@
 import { TestBed } from '@angular/core/testing';
 import { MockProvider } from 'ng-mocks';
 import { PluginService } from './plugin.service';
-import { ConfigService } from './config.service';
-import { LANGUAGE } from '../../environments/languages';
+import { LANGUAGE } from '../../../../environments/languages';
+import { ConfigService } from '../../../_services/config.service';
 
 describe('PluginService', () => {
 

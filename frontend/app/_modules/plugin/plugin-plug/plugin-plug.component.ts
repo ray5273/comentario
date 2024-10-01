@@ -1,6 +1,6 @@
 import { AfterContentInit, Component, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { PluginService, UIPlug } from '../plugin.service';
+import { PluginService, UIPlug } from '../_services/plugin.service';
 import { PluginRouteData } from '../../../_models/models';
 
 @Component({

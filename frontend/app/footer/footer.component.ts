@@ -5,7 +5,7 @@ import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { ConfigService } from '../_services/config.service';
 import { AuthService } from '../_services/auth.service';
-import { PluginService } from '../_modules/plugin/plugin.service';
+import { PluginService } from '../_modules/plugin/_services/plugin.service';
 
 @UntilDestroy()
 @Component({

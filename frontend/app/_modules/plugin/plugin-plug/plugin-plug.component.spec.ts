@@ -2,7 +2,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MockProvider } from 'ng-mocks';
 import { PluginPlugComponent } from './plugin-plug.component';
-import { PluginService } from '../../../_services/plugin.service';
+import { PluginService } from '../_services/plugin.service';
 
 describe('PluginPlugComponent', () => {
 

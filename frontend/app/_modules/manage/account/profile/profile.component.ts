@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, Renderer2, ViewChild } from '@angular/core';
+import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { concat, EMPTY, Observable } from 'rxjs';
@@ -11,8 +11,7 @@ import { ToastService } from '../../../../_services/toast.service';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { Utils } from '../../../../_utils/utils';
-import { Paths } from '../../../../_utils/consts';
-import { PluginService } from '../../../plugin/plugin.service';
+import { PluginService } from '../../../plugin/_services/plugin.service';
 
 @UntilDestroy()
 @Component({
@@ -71,7 +70,6 @@ export class ProfileComponent implements OnInit {
     readonly faTrashAlt        = faTrashAlt;
 
     constructor(
-        private readonly renderer: Renderer2,
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly authSvc: AuthService,
@@ -229,6 +227,4 @@ export class ProfileComponent implements OnInit {
             newPassword: vals.newPassword,
         });
     }
-
-    protected readonly Paths = Paths;
 }

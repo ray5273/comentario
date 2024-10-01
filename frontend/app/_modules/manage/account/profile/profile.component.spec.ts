@@ -3,6 +3,7 @@ import { MockProvider } from 'ng-mocks';
 import { ProfileComponent } from './profile.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { mockAuthService } from '../../../../_utils/_mocks.spec';
+import { PluginService } from '../../../plugin/_services/plugin.service';
 
 describe('ProfileComponent', () => {
 
@@ -14,6 +15,7 @@ describe('ProfileComponent', () => {
             declarations: [ProfileComponent],
             providers: [
                 MockProvider(ApiGeneralService),
+                MockProvider(PluginService),
                 mockAuthService(),
             ],
         })

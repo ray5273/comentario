@@ -98,15 +98,14 @@
 
     <!-- Plugin items -->
     @for (plug of plugs; track plug) {
-        <section>
+        <section [id]="plug.pluginId + '-' + plug.location">
             <!-- Heading -->
             <h2>{{ plug.label }}</h2>
 
             <!-- Component -->
-            <app-plugin-plug [plug]="plug"></app-plugin-plug>
+            <app-plugin-plug [plug]="plug"/>
         </section>
     }
-
 
     <!-- Danger zone -->
     <section class="danger text-center p-4">
