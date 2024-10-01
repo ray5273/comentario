@@ -8,13 +8,11 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/justinas/alice"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/plugins"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
@@ -60,9 +58,9 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	}
 
 	// Set up auth handlers
-	api.TokenAuth = auth.AuthenticateBearerToken
-	api.UserSessionHeaderAuth = auth.AuthenticateUserBySessionHeader
-	api.UserCookieAuth = auth.AuthenticateUserByCookieHeader
+	api.TokenAuth = svc.TheAuthService.AuthenticateBearerToken
+	api.UserSessionHeaderAuth = svc.TheAuthService.AuthenticateUserBySessionHeader
+	api.UserCookieAuth = svc.TheAuthService.AuthenticateUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
 	// General API
@@ -193,7 +191,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// must be delivered), and the API handler
 	chain = chain.Append(
 		securityHeadersHandler,
-		plugins.ThePluginManager.ServeHandler, // Comes before "regular" statics/API handlers because it can serve both
+		svc.ThePluginManager.ServeHandler, // Comes before "regular" statics/API handlers because it can serve both
 		staticHandler,
 		makeAPIHandler(api.Serve(nil)),
 	)

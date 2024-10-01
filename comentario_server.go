@@ -12,7 +12,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/plugins"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
@@ -51,7 +50,7 @@ func main() {
 	}
 
 	// Load plugins
-	if err := plugins.ThePluginManager.Init(); err != nil {
+	if err := svc.ThePluginManager.Init(); err != nil {
 		logger.Fatalf("Failed to init plugin manager: %v", err)
 	}
 

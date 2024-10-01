@@ -11,7 +11,6 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
-	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -259,7 +258,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			fmt.Errorf("federated ID from IdP (%q) didn't match one user has (%q)", fedUser.UserID, user.FederatedID))
 
 		// Verify they're allowed to log in
-	} else if errm := auth.UserCanAuthenticate(user, true); r != nil {
+	} else if errm := svc.TheAuthService.UserCanAuthenticate(user, true); r != nil {
 		return respUnauthorized(errm)
 
 	} else {

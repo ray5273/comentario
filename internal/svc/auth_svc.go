@@ -1,4 +1,4 @@
-package auth
+package svc
 
 import (
 	"encoding/base64"
@@ -6,10 +6,8 @@ import (
 	"fmt"
 	oaerrors "github.com/go-openapi/errors"
 	"github.com/google/uuid"
-	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 )
@@ -21,14 +19,44 @@ var (
 	ErrInternalError = oaerrors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
 )
 
-// logger represents a package-wide logger instance
-var logger = logging.MustGetLogger("auth")
+// TheAuthService is a global AuthService implementation
+var TheAuthService AuthService = &authService{}
+
+// AuthService is a service interface to authenticate users
+type AuthService interface {
+	// AuthenticateBearerToken inspects the token (usually provided in a header) and determines if the token is of one of
+	// the provided scopes
+	AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error)
+	// AuthenticateUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header
+	AuthenticateUserByCookieHeader(headerValue string) (*data.User, error)
+	// AuthenticateUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
+	AuthenticateUserBySessionHeader(headerValue string) (*data.User, error)
+	// ExtractUserSessionIDs parses and return the given string value that combines user and session ID
+	ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error)
+	// FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
+	// X-User-Session header. Returns ErrSessionHeaderMissing if there's no headerValue passed
+	FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error)
+	// FetchUserSessionIDFromCookie extracts user ID and session ID from a session cookie contained in the given request
+	FetchUserSessionIDFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error)
+	// GetUserBySessionCookie parses the session cookie contained in the given request and returns the corresponding user
+	GetUserBySessionCookie(r *http.Request) (*data.User, error)
+	// GetUserSessionBySessionHeader parses the session header contained in the given request and returns the corresponding user
+	GetUserSessionBySessionHeader(r *http.Request) (*data.User, *data.UserSession, error)
+	// UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
+	// indicates if the user must also have a confirmed email
+	UserCanAuthenticate(user *data.User, requireConfirmed bool) *exmodels.Error
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// authService is a blueprint AuthSessionService implementation
+type authService struct{}
 
 // AuthenticateBearerToken inspects the token (usually provided in a header) and determines if the token is of one of
 // the provided scopes
-func AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error) {
+func (svc *authService) AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error) {
 	// Try to find the token
-	token, err := svc.TheTokenService.FindByValue(tokenStr, false)
+	token, err := TheTokenService.FindByValue(tokenStr, false)
 	if err != nil {
 		return nil, ErrUnauthorised
 	}
@@ -40,18 +68,18 @@ func AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, erro
 
 	// Token seems legitimate, now find its owner
 	var user *data.User
-	if user, err = svc.TheUserService.FindUserByID(&token.Owner); err != nil {
+	if user, err = TheUserService.FindUserByID(&token.Owner); err != nil {
 		return nil, ErrInternalError
 
 		// Verify the user is allowed to authenticate at all
-	} else if err := UserCanAuthenticate(user, false); err != nil {
+	} else if err := svc.UserCanAuthenticate(user, false); err != nil {
 		// Not allowed
 		return nil, ErrUnauthorised
 	}
 
 	// If it's a disposable token, revoke it, ignoring any error
 	if !token.Multiuse {
-		_ = svc.TheTokenService.DeleteByValue(token.Value)
+		_ = TheTokenService.DeleteByValue(token.Value)
 	}
 
 	// Succeeded
@@ -59,13 +87,13 @@ func AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, erro
 }
 
 // AuthenticateUserByCookieHeader tries to fetch the user owning the session contained in the Cookie header
-func AuthenticateUserByCookieHeader(headerValue string) (*data.User, error) {
+func (svc *authService) AuthenticateUserByCookieHeader(headerValue string) (*data.User, error) {
 	// Hack to parse the provided data (which is in fact the "Cookie" header, but Swagger 2.0 doesn't support
 	// auth cookies, only headers)
 	r := &http.Request{Header: http.Header{"Cookie": []string{headerValue}}}
 
 	// Authenticate the user
-	u, err := GetUserBySessionCookie(r)
+	u, err := svc.GetUserBySessionCookie(r)
 	if err != nil {
 		// Authentication failed
 		logger.Warningf("Failed to authenticate user: %v", err)
@@ -77,8 +105,8 @@ func AuthenticateUserByCookieHeader(headerValue string) (*data.User, error) {
 }
 
 // AuthenticateUserBySessionHeader tries to fetch the user owning the session contained in the X-User-Session header
-func AuthenticateUserBySessionHeader(headerValue string) (*data.User, error) {
-	if user, _, err := FetchUserBySessionHeader(headerValue); err != nil {
+func (svc *authService) AuthenticateUserBySessionHeader(headerValue string) (*data.User, error) {
+	if user, _, err := svc.FetchUserBySessionHeader(headerValue); err != nil {
 		// Authentication failed
 		return nil, ErrUnauthorised
 	} else {
@@ -88,7 +116,7 @@ func AuthenticateUserBySessionHeader(headerValue string) (*data.User, error) {
 }
 
 // ExtractUserSessionIDs parses and return the given string value that combines user and session ID
-func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
+func (svc *authService) ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 	// Decode the value from base64
 	b, err := base64.RawURLEncoding.DecodeString(s)
 	if err != nil {
@@ -113,22 +141,22 @@ func ExtractUserSessionIDs(s string) (*uuid.UUID, *uuid.UUID, error) {
 
 // FetchUserBySessionHeader tries to fetch the user and their session by the session token contained in the
 // X-User-Session header. Returns ErrSessionHeaderMissing if there's no headerValue passed
-func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
+func (svc *authService) FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession, error) {
 	// Make sure there's a value to parse
 	if headerValue == "" {
 		return nil, nil, ErrSessionHeaderMissing
 	}
 
 	// Extract session from the header value
-	if userID, sessionID, err := ExtractUserSessionIDs(headerValue); err != nil {
+	if userID, sessionID, err := svc.ExtractUserSessionIDs(headerValue); err != nil {
 		return nil, nil, err
 
 		// Find the user and the session
-	} else if user, us, err := svc.TheUserService.FindUserBySession(userID, sessionID); err != nil {
+	} else if user, us, err := TheUserService.FindUserBySession(userID, sessionID); err != nil {
 		return nil, nil, err
 
 		// Verify the user is allowed to authenticate
-	} else if errm := UserCanAuthenticate(user, true); errm != nil {
+	} else if errm := svc.UserCanAuthenticate(user, true); errm != nil {
 		return nil, nil, errm.Error()
 
 	} else {
@@ -138,7 +166,7 @@ func FetchUserBySessionHeader(headerValue string) (*data.User, *data.UserSession
 }
 
 // FetchUserSessionIDFromCookie extracts user ID and session ID from a session cookie contained in the given request
-func FetchUserSessionIDFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error) {
+func (svc *authService) FetchUserSessionIDFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, error) {
 	// Extract user-session data from the cookie
 	cookie, err := r.Cookie(util.CookieNameUserSession)
 	if err != nil {
@@ -146,25 +174,25 @@ func FetchUserSessionIDFromCookie(r *http.Request) (*uuid.UUID, *uuid.UUID, erro
 	}
 
 	// Decode and parse the value
-	return ExtractUserSessionIDs(cookie.Value)
+	return svc.ExtractUserSessionIDs(cookie.Value)
 }
 
 // GetUserBySessionCookie parses the session cookie contained in the given request and returns the corresponding user
-func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
+func (svc *authService) GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 	// Extract session from the cookie
-	userID, sessionID, err := FetchUserSessionIDFromCookie(r)
+	userID, sessionID, err := svc.FetchUserSessionIDFromCookie(r)
 	if err != nil {
 		return nil, err
 	}
 
 	// Find the user
-	user, _, err := svc.TheUserService.FindUserBySession(userID, sessionID)
+	user, _, err := TheUserService.FindUserBySession(userID, sessionID)
 	if err != nil {
 		return nil, err
 	}
 
 	// Verify the user is allowed to authenticate
-	if errm := UserCanAuthenticate(user, true); errm != nil {
+	if errm := svc.UserCanAuthenticate(user, true); errm != nil {
 		return nil, errm.Error()
 	}
 
@@ -173,13 +201,13 @@ func GetUserBySessionCookie(r *http.Request) (*data.User, error) {
 }
 
 // GetUserSessionBySessionHeader parses the session header contained in the given request and returns the corresponding user
-func GetUserSessionBySessionHeader(r *http.Request) (*data.User, *data.UserSession, error) {
-	return FetchUserBySessionHeader(r.Header.Get(util.HeaderUserSession))
+func (svc *authService) GetUserSessionBySessionHeader(r *http.Request) (*data.User, *data.UserSession, error) {
+	return svc.FetchUserBySessionHeader(r.Header.Get(util.HeaderUserSession))
 }
 
 // UserCanAuthenticate checks if the provided user is allowed to authenticate with the backend. requireConfirmed
 // indicates if the user must also have a confirmed email
-func UserCanAuthenticate(user *data.User, requireConfirmed bool) *exmodels.Error {
+func (svc *authService) UserCanAuthenticate(user *data.User, requireConfirmed bool) *exmodels.Error {
 	switch {
 	// Only non-system, non-anonymous users may login
 	case user.SystemAccount || user.IsAnonymous():

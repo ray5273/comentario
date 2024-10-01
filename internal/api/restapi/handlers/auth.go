@@ -5,7 +5,6 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -148,7 +147,7 @@ func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *d
 
 func AuthLogout(params api_general.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
-	_, sessionID, err := auth.FetchUserSessionIDFromCookie(params.HTTPRequest)
+	_, sessionID, err := svc.TheAuthService.FetchUserSessionIDFromCookie(params.HTTPRequest)
 	if err != nil {
 		return respUnauthorized(nil)
 	}
@@ -324,7 +323,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 // case of error an error responder is returned
 func loginUser(user *data.User, host string, req *http.Request) (*data.UserSession, middleware.Responder) {
 	// Verify the user is allowed to log in
-	if errm := auth.UserCanAuthenticate(user, true); errm != nil {
+	if errm := svc.TheAuthService.UserCanAuthenticate(user, true); errm != nil {
 		return nil, respUnauthorized(errm)
 	}
 

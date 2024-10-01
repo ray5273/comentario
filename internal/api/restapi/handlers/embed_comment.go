@@ -6,7 +6,6 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
@@ -47,7 +46,7 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 
 func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responder {
 	// Try to authenticate the user
-	user, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest)
+	user, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
 		// Failed, consider the user anonymous
 		user = data.AnonymousUser
@@ -101,7 +100,7 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 
 func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Responder {
 	// Try to authenticate the user
-	user, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest)
+	user, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
 		// Failed, consider the user anonymous
 		user = data.AnonymousUser
@@ -214,7 +213,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 
 	// If the comment isn't submitted as a unregistered, authenticate the user
 	if !params.Body.Unregistered {
-		if u, _, err := auth.GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
+		if u, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
 			return respUnauthorized(exmodels.ErrorUnauthenticated)
 		} else {
 			// Successfully authenticated

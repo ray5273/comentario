@@ -31,10 +31,18 @@ type HostApp interface {
 	AuthenticateBySessionCookie(value string) (Principal, error)
 	// CreateLogger creates and returns a logger used for logging plugin messages
 	CreateLogger(module string) Logger
-	// DomainAttrService returns an instance of the domain attributes service
-	DomainAttrService() DomainAttrService
-	// UserAttrService returns an instance of the user attributes service
-	UserAttrService() UserAttrService
+	// DomainAttrStore returns an instance of the domain attributes store for the plugin
+	DomainAttrStore() AttrStore
+	// UserAttrStore returns an instance of the user attributes store for the plugin
+	UserAttrStore() AttrStore
+}
+
+// AttrStore allows to store and retrieve attributes consisting of a string key and a string value
+type AttrStore interface {
+	// GetAll returns all attributes of an owner with the given ID
+	GetAll(ownerID *uuid.UUID) (map[string]string, error)
+	// Set an attribute value for the given owner by the attribute key
+	Set(userID *uuid.UUID, key, value string) error
 }
 
 // UIResource describes a UI resource required by the plugin

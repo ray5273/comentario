@@ -1,13 +1,11 @@
-package plugins
+package svc
 
 import (
 	"fmt"
 	"github.com/op/go-logging"
 	complugin "gitlab.com/comentario/comentario/extend/plugin"
-	"gitlab.com/comentario/comentario/internal/api/auth"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"os"
@@ -16,9 +14,8 @@ import (
 	"strings"
 )
 
-// PluginManager is a service interface for managing plugins, and a HostApp implementation
+// PluginManager is a service interface for managing plugins
 type PluginManager interface {
-	complugin.HostApp
 	// Init initialises the manager
 	Init() error
 	// PluginConfig returns configuration of all registered plugins as DTOs
@@ -27,12 +24,16 @@ type PluginManager interface {
 	ServeHandler(next http.Handler) http.Handler
 }
 
-// logger represents a package-wide logger instance
-var logger = logging.MustGetLogger("plugins")
-
 // ThePluginManager is a global plugin manager instance
 var ThePluginManager PluginManager = &pluginManager{
 	plugs: map[string]*pluginEntry{},
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// PluginConnector is a HostApp implementation aimed at a specific plugin instance
+type PluginConnector interface {
+	complugin.HostApp
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -72,6 +73,42 @@ func (p *pluginLogger) Debug(args ...any) {
 
 func (p *pluginLogger) Debugf(format string, args ...any) {
 	p.l.Debugf(format, args...)
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// pluginConnector implements PluginConnector
+type pluginConnector struct {
+	pluginID        string              // ID of the plugin the connector is created for
+	userAttrStore   complugin.AttrStore // User attribute store
+	domainAttrStore complugin.AttrStore // Domain attribute store
+}
+
+// newPluginConnector returns a new PluginConnector instance
+func newPluginConnector(pluginID string) PluginConnector {
+	prefix := pluginID + "/"
+	return &pluginConnector{
+		pluginID:        pluginID,
+		domainAttrStore: NewAttrStore(prefix, "cm_domain_attrs", "domain_id", false),
+		userAttrStore:   NewAttrStore(prefix, "cm_user_attrs", "user_id", true),
+	}
+}
+
+func (c *pluginConnector) AuthenticateBySessionCookie(value string) (complugin.Principal, error) {
+	// User implements Principal, so simply hand over to the cookie auth handler
+	return TheAuthService.AuthenticateUserByCookieHeader(value)
+}
+
+func (c *pluginConnector) CreateLogger(module string) complugin.Logger {
+	return &pluginLogger{l: logging.MustGetLogger(module)}
+}
+
+func (c *pluginConnector) DomainAttrStore() complugin.AttrStore {
+	return c.domainAttrStore
+}
+
+func (c *pluginConnector) UserAttrStore() complugin.AttrStore {
+	return c.userAttrStore
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -124,19 +161,6 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
-}
-
-func (pm *pluginManager) AuthenticateBySessionCookie(value string) (complugin.Principal, error) {
-	// User implements Principal, so simply hand over to the cookie auth handler
-	return auth.AuthenticateUserByCookieHeader(value)
-}
-
-func (pm *pluginManager) CreateLogger(module string) complugin.Logger {
-	return &pluginLogger{l: logging.MustGetLogger(module)}
-}
-
-func (pm *pluginManager) DomainAttrService() complugin.DomainAttrService {
-	return svc.TheDomainAttrService
 }
 
 func (pm *pluginManager) Init() error {
@@ -201,10 +225,6 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 	})
 }
 
-func (pm *pluginManager) UserAttrService() complugin.UserAttrService {
-	return svc.TheUserAttrService
-}
-
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found
 func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
 	for _, plug := range pm.plugs {
@@ -219,7 +239,7 @@ func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
 // initPlugin initialises the given plugin and fetches its config
 func (pm *pluginManager) initPlugin(p complugin.ComentarioPlugin, secrets complugin.YAMLDecoder) (*complugin.Config, error) {
 	// Initialise the plugin
-	if err := p.Init(pm, secrets); err != nil {
+	if err := p.Init(newPluginConnector(p.ID()), secrets); err != nil {
 		return nil, err
 	}
 
