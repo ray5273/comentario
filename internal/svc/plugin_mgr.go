@@ -100,7 +100,7 @@ func (c *pluginConnector) AuthenticateBySessionCookie(value string) (complugin.P
 }
 
 func (c *pluginConnector) CreateLogger(module string) complugin.Logger {
-	return &pluginLogger{l: logging.MustGetLogger(module)}
+	return &pluginLogger{l: logging.MustGetLogger(c.pluginID + "." + module)}
 }
 
 func (c *pluginConnector) DomainAttrStore() complugin.AttrStore {
