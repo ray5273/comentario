@@ -9,6 +9,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
+	_ "github.com/doug-martin/goqu/v9/dialect/postgres" // PostgreSQL goqu dialect
+	_ "github.com/doug-martin/goqu/v9/dialect/sqlite3"  // SQLite3 goqu dialect
 	"github.com/doug-martin/goqu/v9/exec"
 	"github.com/doug-martin/goqu/v9/exp"
 	_ "github.com/lib/pq"           // PostgreSQL driver

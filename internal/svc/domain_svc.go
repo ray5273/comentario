@@ -3,7 +3,6 @@ package svc
 import (
 	"database/sql"
 	"github.com/doug-martin/goqu/v9"
-	_ "github.com/doug-martin/goqu/v9/dialect/postgres"
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
