@@ -11,6 +11,7 @@ import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToolsModule } from '../../../tools/tools.module';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
 
 describe('DomainPropertiesComponent', () => {
 
@@ -21,7 +22,7 @@ describe('DomainPropertiesComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [
                 DomainPropertiesComponent,
-                MockComponents(DomainBadgeComponent, NoDataComponent, InfoIconComponent),
+                MockComponents(DomainBadgeComponent, NoDataComponent, InfoIconComponent, AttributeTableComponent),
             ],
             imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, ToolsModule],
             providers: [

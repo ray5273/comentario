@@ -88,6 +88,9 @@ rm -rf "$build_dir/db" "$build_dir/templates"
 if ((do_db)); then
     docker compose -f "$root_dir/docker-compose.yml" down -v
     docker compose -f "$root_dir/docker-compose.yml" up -d
+
+    # Remove any SQLite DB
+    rm -f "$build_dir/comentario.sqlite"
 fi
 
 # Copy required assets

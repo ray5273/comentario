@@ -15,8 +15,8 @@ describe('UserManagerComponent', () => {
     let component: UserManagerComponent;
     let fixture: ComponentFixture<UserManagerComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [
                 UserManagerComponent,
                 MockComponents(SortSelectorComponent, SortPropertyComponent, IdentityProviderIconComponent),
@@ -26,7 +26,8 @@ describe('UserManagerComponent', () => {
                 MockProvider(ApiGeneralService),
                 MockProvider(ConfigService),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(UserManagerComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

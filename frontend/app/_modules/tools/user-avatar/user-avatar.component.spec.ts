@@ -7,13 +7,14 @@ describe('UserAvatarComponent', () => {
     let component: UserAvatarComponent;
     let fixture: ComponentFixture<UserAvatarComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [UserAvatarComponent],
             providers: [
                 {provide: Configuration, useValue: {}},
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(UserAvatarComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

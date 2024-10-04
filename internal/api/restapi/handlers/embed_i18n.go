@@ -12,7 +12,7 @@ func EmbedI18nMessages(params api_embed.EmbedI18nMessagesParams) middleware.Resp
 	ms, lang := svc.TheI18nService.Messages(params.Lang)
 
 	// Convert the source message map into an API map
-	mm := exmodels.I18nMessageMap(ms)
+	mm := exmodels.KeyValueMap(ms)
 
 	// Let the client know what language we are serving, in case of unsupported languages or fallbacks
 	mm["_lang"] = lang

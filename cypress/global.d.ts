@@ -431,9 +431,17 @@ declare namespace Cypress {
         backendPatchDomain(id: string, values: any): Chainable<void>;
 
         /**
+         * Update attributes for the specified domain.
+         * @param id ID of the domain.
+         * @param values New attributes values.
+         * @param clean Whether to clean up all attributes prior to updating
+         */
+        backendUpdateDomainAttrs(id: string, values: Record<string, string>, clean: boolean): Chainable<void>;
+
+        /**
          * Update the value of the given config item for the specified domain.
          * @param id ID of the domain to patch.
-         * @param values New configuration item values
+         * @param values New configuration item values.
          */
         backendUpdateDomainConfig(id: string, values: Record<string, string | number | boolean>): Chainable<void>;
 
@@ -443,6 +451,14 @@ declare namespace Cypress {
          * @param idps List of enabled IdP IDs.
          */
         backendUpdateDomainIdps(id: string, idps: string[]): Chainable<void>;
+
+        /**
+         * Update attributes for the specified user.
+         * @param id ID of the user.
+         * @param values New attributes values.
+         * @param clean Whether to clean up all attributes prior to updating
+         */
+        backendUpdateUserAttrs(id: string, values: Record<string, string>, clean: boolean): Chainable<void>;
     }
 
     // noinspection JSUnusedGlobalSymbols

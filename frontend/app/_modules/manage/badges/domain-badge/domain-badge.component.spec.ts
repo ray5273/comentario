@@ -7,13 +7,14 @@ describe('DomainBadgeComponent', () => {
     let component: DomainBadgeComponent;
     let fixture: ComponentFixture<DomainBadgeComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainBadgeComponent],
             providers: [
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainBadgeComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

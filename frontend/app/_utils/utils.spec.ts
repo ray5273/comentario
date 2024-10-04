@@ -57,4 +57,18 @@ describe('Utils', () => {
             .forEach(test => it(`given '${test.v}', returns ${test.want}`, () =>
                 expect(Utils.joinUrl(...test.v)).toBe(test.want)));
     });
+
+    describe('sortByKey', () => {
+        [
+            {v: undefined,                               want: undefined},
+            {v: {},                                      want: {}},
+            {v: {x: 42},                                 want: {x: 42}},
+            {v: {x: 42, y: 'bar'},                       want: {x: 42, y: 'bar'}},
+            {v: {y: 'bar', x: 42},                       want: {x: 42, y: 'bar'}},
+            {v: {y: 'bar', z: 'foo', foo: false, x: 42}, want: {foo: false, x: 42, y: 'bar', z: 'foo'}},
+        ]
+            .forEach(test => it(`given '${test.v}', returns ${test.want}`, () =>
+                // Compare as JSON strings to enforce order check
+                expect(JSON.stringify(Utils.sortByKey(test.v))).toBe(JSON.stringify(test.want))));
+    });
 });

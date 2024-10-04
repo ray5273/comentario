@@ -13,8 +13,8 @@ describe('FederatedLoginComponent', () => {
     let component: FederatedLoginComponent;
     let fixture: ComponentFixture<FederatedLoginComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [FederatedLoginComponent],
             imports: [RouterModule.forRoot([]), ToolsModule],
             providers: [
@@ -24,7 +24,8 @@ describe('FederatedLoginComponent', () => {
                 MockProvider(ToastService),
                 mockAuthService(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(FederatedLoginComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

@@ -8,11 +8,12 @@ describe('ConfigManagerComponent', () => {
     let component: ConfigManagerComponent;
     let fixture: ComponentFixture<ConfigManagerComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [ConfigManagerComponent],
             imports: [RouterModule.forRoot([]), NgbNavModule],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(ConfigManagerComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

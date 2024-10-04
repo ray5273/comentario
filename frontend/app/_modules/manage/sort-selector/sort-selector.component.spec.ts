@@ -6,10 +6,11 @@ describe('SortSelectorComponent', () => {
     let component: SortSelectorComponent;
     let fixture: ComponentFixture<SortSelectorComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [SortSelectorComponent],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(SortSelectorComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

@@ -1,0 +1,19 @@
+<!-- Attributes content -->
+@if (attributes) {
+    <!-- Collapse link -->
+    <button [class.collapsed]="collapsed" [attr.aria-expanded]="!collapsed" [attr.aria-controls]="'attributes-container-' + id"
+            (click)="collapse.toggle()" type="button" class="btn btn-outline-secondary collapse-toggler mb-2">
+        <span class="me-2" i18n>Attributes</span>
+        <fa-icon [icon]="faAngleDown"/>
+    </button>
+    <div #collapse="ngbCollapse" [(ngbCollapse)]="collapsed" [id]="'attributes-container-' + id">
+        <dl class="detail-table">
+            @for (a of attributes | keyvalue; track a.key) {
+                <div>
+                    <dt>{{ a.key }}</dt>
+                    <dd>{{ a.value }}</dd>
+                </div>
+            }
+        </dl>
+    </div>
+}

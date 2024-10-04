@@ -8,15 +8,16 @@ import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
 import { mockAuthService } from '../../../../_utils/_mocks.spec';
 import { ConfigService } from '../../../../_services/config.service';
+import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
 
 describe('UserPropertiesComponent', () => {
 
     let component: UserPropertiesComponent;
     let fixture: ComponentFixture<UserPropertiesComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
-            declarations: [UserPropertiesComponent, MockComponents(NoDataComponent)],
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
+            declarations: [UserPropertiesComponent, MockComponents(NoDataComponent, AttributeTableComponent)],
             imports: [ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
@@ -24,7 +25,8 @@ describe('UserPropertiesComponent', () => {
                 MockProvider(ConfigService),
                 mockAuthService(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(UserPropertiesComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

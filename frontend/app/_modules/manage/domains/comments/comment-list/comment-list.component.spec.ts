@@ -16,8 +16,8 @@ describe('CommentListComponent', () => {
     let component: CommentListComponent;
     let fixture: ComponentFixture<CommentListComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [CommentListComponent, MockComponents(SortSelectorComponent, SortPropertyComponent, UserLinkComponent)],
             imports: [ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
             providers: [
@@ -25,7 +25,8 @@ describe('CommentListComponent', () => {
                 MockProvider(ConfigService),
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(CommentListComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

@@ -14,15 +14,16 @@ describe('DomainInstallComponent', () => {
     let component: DomainInstallComponent;
     let fixture: ComponentFixture<DomainInstallComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainInstallComponent],
             imports: [ReactiveFormsModule, NgbCollapseModule, FontAwesomeTestingModule, Highlight, ToolsModule],
             providers: [
                 MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
                 MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig}),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainInstallComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

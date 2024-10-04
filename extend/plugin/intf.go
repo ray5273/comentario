@@ -41,8 +41,8 @@ type HostApp interface {
 type AttrStore interface {
 	// GetAll returns all attributes of an owner with the given ID
 	GetAll(ownerID *uuid.UUID) (map[string]string, error)
-	// Set an attribute value for the given owner by the attribute key
-	Set(userID *uuid.UUID, key, value string) error
+	// Set given attribute values for the given owner by key, optionally cleaning up all values beforehand
+	Set(ownerID *uuid.UUID, attr map[string]string, clean bool) error
 }
 
 // UIResource describes a UI resource required by the plugin

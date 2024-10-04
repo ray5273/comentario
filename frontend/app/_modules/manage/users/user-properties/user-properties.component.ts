@@ -3,8 +3,8 @@ import { Router } from '@angular/router';
 import { FormBuilder } from '@angular/forms';
 import { BehaviorSubject, combineLatestWith, mergeWith, of, Subject, switchMap, tap, throwError } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faAngleDown, faBan, faCalendarXmark, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Domain, DomainUser, KeyValue, User, UserSession } from '../../../../../generated-api';
+import { faBan, faCalendarXmark, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { ApiGeneralService, Domain, DomainUser, User, UserSession } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
@@ -31,7 +31,7 @@ export class UserPropertiesComponent {
     domains = new Map<string, Domain>();
 
     /** The selected user's attributes. */
-    userAttrs?: KeyValue[];
+    userAttrs?: Record<string, string>;
 
     /** User sessions. */
     userSessions?: UserSession[];
@@ -41,9 +41,6 @@ export class UserPropertiesComponent {
 
     /** Whether the user is the currently authenticated principal. */
     isSelf = false;
-
-    /** Whether the Attribute section, if any, is collapsed. */
-    isAttrsCollapsed = true;
 
     /** Observable triggering a sessions load, while indicating whether a reset is needed. */
     readonly loadSessions$ = new Subject<boolean>();
@@ -66,7 +63,6 @@ export class UserPropertiesComponent {
     });
 
     // Icons
-    readonly faAngleDown     = faAngleDown;
     readonly faBan           = faBan;
     readonly faCalendarXmark = faCalendarXmark;
     readonly faEdit          = faEdit;
@@ -109,7 +105,7 @@ export class UserPropertiesComponent {
                     }
 
                     this.user        = r.user;
-                    this.userAttrs   = r.attributes;
+                    this.userAttrs   = Utils.sortByKey(r.attributes) as Record<string, string> | undefined;
                     this.domainUsers = r.domainUsers;
                     this.isSelf      = principal?.id === this.user?.id;
 

@@ -12,15 +12,16 @@ describe('UserEditComponent', () => {
     let component: UserEditComponent;
     let fixture: ComponentFixture<UserEditComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [UserEditComponent, MockComponents(InfoIconComponent)],
             imports: [ReactiveFormsModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockAuthService(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(UserEditComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

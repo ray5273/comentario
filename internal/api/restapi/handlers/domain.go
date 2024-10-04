@@ -104,8 +104,17 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 		return respServiceError(err)
 	}
 
+	// If the user is a superuser, fetch domain attributes
+	var attr exmodels.KeyValueMap
+	if user.IsSuperuser {
+		if attr, err = svc.TheDomainAttrService.GetAll(&d.ID); err != nil {
+			return respServiceError(err)
+		}
+	}
+
 	// Succeeded
 	return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
+		Attributes:      attr,
 		Configuration:   data.DynConfigMapToDTOs(cfg),
 		Domain:          d.ToDTO(),
 		DomainUser:      du.ToDTO(),

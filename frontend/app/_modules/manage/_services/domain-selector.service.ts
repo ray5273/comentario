@@ -16,6 +16,7 @@ import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { DynamicConfig } from '../../../_models/config';
+import { Utils } from '../../../_utils/utils';
 
 interface DomainSelectorSettings {
     domainId?: string;
@@ -47,6 +48,8 @@ export class DomainMeta {
         readonly federatedIdpIds?: string[],
         /** List of extensions enabled for the domain. */
         readonly extensions?: DomainExtension[],
+        /** Domain attributes (superuser only). */
+        readonly attributes?: Record<string, string>,
         /** Authenticated principal, if any. */
         readonly principal?: Principal,
         /** Timestamp of the last time the principal was updated (fetched or reset). */
@@ -180,6 +183,7 @@ export class DomainSelectorService {
             v?.configuration ? new DynamicConfig(v.configuration) : undefined,
             v?.federatedIdpIds,
             v?.extensions,
+            Utils.sortByKey(v?.attributes) as Record<string, string> | undefined,
             this.principal,
             this.authSvc.principalUpdated));
 

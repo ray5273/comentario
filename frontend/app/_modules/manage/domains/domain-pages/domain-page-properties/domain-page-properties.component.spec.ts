@@ -12,15 +12,16 @@ describe('DomainPagePropertiesComponent', () => {
     let component: DomainPagePropertiesComponent;
     let fixture: ComponentFixture<DomainPagePropertiesComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainPagePropertiesComponent, MockComponents(NoDataComponent)],
             imports: [RouterModule.forRoot([]), ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),
             ]
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainPagePropertiesComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

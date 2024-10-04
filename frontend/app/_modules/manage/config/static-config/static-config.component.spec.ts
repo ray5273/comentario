@@ -11,8 +11,8 @@ describe('StaticConfigComponent', () => {
     let component: StaticConfigComponent;
     let fixture: ComponentFixture<StaticConfigComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [StaticConfigComponent, MockPipes(DatetimePipe)],
             imports: [ToolsModule],
             providers: [
@@ -25,7 +25,8 @@ describe('StaticConfigComponent', () => {
                         latestRelease: EMPTY,
                     }),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(StaticConfigComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

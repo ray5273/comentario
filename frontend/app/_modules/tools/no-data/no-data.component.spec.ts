@@ -6,10 +6,11 @@ describe('NoDataComponent', () => {
     let component: NoDataComponent;
     let fixture: ComponentFixture<NoDataComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [NoDataComponent],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(NoDataComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

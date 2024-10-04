@@ -17,8 +17,8 @@ describe('DomainUserManagerComponent', () => {
     let component: DomainUserManagerComponent;
     let fixture: ComponentFixture<DomainUserManagerComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [
                 DomainUserManagerComponent,
                 MockComponents(DomainBadgeComponent, ListFooterComponent, SortSelectorComponent, SortPropertyComponent)],
@@ -28,7 +28,8 @@ describe('DomainUserManagerComponent', () => {
                 MockProvider(ConfigService),
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainUserManagerComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

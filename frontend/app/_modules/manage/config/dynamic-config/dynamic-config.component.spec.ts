@@ -13,15 +13,16 @@ describe('DynamicConfigComponent', () => {
     let component: DynamicConfigComponent;
     let fixture: ComponentFixture<DynamicConfigComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DynamicConfigComponent],
             imports: [FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ConfigService, {dynamicConfig: of(new DynamicConfig())}),
                 MockProvider(ApiGeneralService),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DynamicConfigComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

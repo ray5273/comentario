@@ -17,8 +17,8 @@ describe('DomainPageManagerComponent', () => {
     let component: DomainPageManagerComponent;
     let fixture: ComponentFixture<DomainPageManagerComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainPageManagerComponent, MockComponents(DomainBadgeComponent, SortSelectorComponent, SortPropertyComponent)],
             imports: [RouterModule.forRoot([]), ReactiveFormsModule, ToolsModule],
             providers: [
@@ -26,7 +26,8 @@ describe('DomainPageManagerComponent', () => {
                 mockDomainSelector(),
                 MockProvider(ConfigService),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainPageManagerComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

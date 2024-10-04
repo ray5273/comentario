@@ -14,8 +14,8 @@ describe('ConfigEditComponent', () => {
     let component: ConfigEditComponent;
     let fixture: ComponentFixture<ConfigEditComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [ConfigEditComponent],
             imports: [ReactiveFormsModule, ToolsModule],
             providers: [
@@ -23,7 +23,8 @@ describe('ConfigEditComponent', () => {
                 MockProvider(ApiGeneralService),
                 MockProvider(ToastService),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(ConfigEditComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

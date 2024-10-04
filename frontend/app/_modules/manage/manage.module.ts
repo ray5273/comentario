@@ -62,9 +62,11 @@ import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit
 import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.component';
 import { CountryNamePipe } from './_pipes/country-name.pipe';
 import { PluginModule } from '../plugin/plugin.module';
+import { AttributeTableComponent } from './attribute-table/attribute-table.component';
 
 @NgModule({
     declarations: [
+        AttributeTableComponent,
         CommentListComponent,
         CommentManagerComponent,
         CommentPropertiesComponent,

@@ -46,7 +46,7 @@ context('Domain Properties page', () => {
 
     const checkAllProperties = () => {
         cy.contains('h2', 'Properties').should('be.visible');
-        cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+        cy.get('@domainProps').find('#domain-detail-table').dlTexts().should('matrixMatch', [
             ['Host',                                                    DOMAINS.localhost.host],
             ['Name',                                                    DOMAINS.localhost.name],
             ['Read-only',                                               ''],
@@ -87,6 +87,8 @@ context('Domain Properties page', () => {
             ['Number of views',                           '5'],
         ]);
     };
+
+    const checkNoAttributes = () => cy.get('@domainProps').find('app-attribute-table').should('not.exist');
 
     //------------------------------------------------------------------------------------------------------------------
 
@@ -133,6 +135,7 @@ context('Domain Properties page', () => {
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',                                  ['Commenting without registration', 'Local (password-based)']],
         ]);
+        checkNoAttributes();
     });
 
     it('shows properties for commenter user', () => {
@@ -159,6 +162,7 @@ context('Domain Properties page', () => {
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',                                  'Local (password-based)'],
         ]);
+        checkNoAttributes();
     });
 
     it('shows properties for moderator user', () => {
@@ -198,6 +202,7 @@ context('Domain Properties page', () => {
                 ],
             ],
         ]);
+        checkNoAttributes();
     });
 
     context('for owner user', () => {
@@ -327,12 +332,14 @@ context('Domain Properties page', () => {
             cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
             makeAliases(DOMAINS.localhost.host, true, true, true);
             checkAllProperties();
+            checkNoAttributes();
             checkEditButtons(DOMAINS.localhost.id, true);
         });
 
         it('shows properties for non-SSO-enabled domain', () => {
             cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.factor.id).props);
             makeAliases(DOMAINS.factor.host, true, true, false);
+            checkNoAttributes();
             checkEditButtons(DOMAINS.factor.id, false);
         });
     });
@@ -341,6 +348,44 @@ context('Domain Properties page', () => {
         cy.loginViaApi(USERS.root, localhostPagePath);
         makeAliases(DOMAINS.localhost.host, false, true, true);
         checkAllProperties();
+
+        // No attributes initially
+        checkNoAttributes();
+
+        // Check edit buttons
         checkEditButtons(DOMAINS.localhost.id, true);
+
+        // Check attributes
+        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {hoho: 'xyz'}, false);
+        cy.visit(localhostPagePath);
+        cy.get('@domainProps').find('app-attribute-table').as('attrs')
+            .contains('button', 'Attributes').as('attrBtn');
+
+        // Attributes are collapsed initially
+        cy.get('@attrBtn').should('have.attr', 'aria-expanded', 'false');
+        cy.get('@attrs').find('#attributes-container-1').should('not.be.visible');
+
+        // Expand attributes
+        cy.get('@attrBtn').click().should('have.attr', 'aria-expanded', 'true');
+        cy.get('@attrs').find('#attributes-container-1').should('be.visible')
+            .find('.detail-table').dlTexts()
+            .should('matrixMatch', [['hoho', 'xyz']]);
+
+        // Replace attributes and reload
+        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {subscriptionId: '1234567890', active: 'true'}, true);
+        cy.reload();
+        cy.get('@attrBtn').click();
+        cy.get('@attrs').find('#attributes-container-1').should('be.visible')
+            .find('.detail-table').dlTexts()
+            // Attributes must be sorted by key
+            .should('matrixMatch', [
+                ['active',         'true'],
+                ['subscriptionId', '1234567890'],
+            ]);
+
+        // Clean all and reload: no attributes section anymore
+        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {}, true);
+        cy.reload();
+        checkNoAttributes();
     });
 });

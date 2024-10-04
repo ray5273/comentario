@@ -7,11 +7,12 @@ describe('InfoBlockComponent', () => {
     let component: InfoBlockComponent;
     let fixture: ComponentFixture<InfoBlockComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [InfoBlockComponent],
             imports: [FontAwesomeTestingModule],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(InfoBlockComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

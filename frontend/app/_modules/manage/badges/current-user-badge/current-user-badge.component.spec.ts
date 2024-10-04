@@ -7,13 +7,14 @@ describe('CurrentUserBadgeComponent', () => {
     let component: CurrentUserBadgeComponent;
     let fixture: ComponentFixture<CurrentUserBadgeComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [CurrentUserBadgeComponent],
             providers: [
                 mockAuthService(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(CurrentUserBadgeComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

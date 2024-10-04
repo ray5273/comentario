@@ -185,6 +185,11 @@
                         </div>
                     }
                 </dl>
+
+                <!-- Attributes -->
+                @if (domainMeta?.attributes) {
+                    <app-attribute-table [attributes]="domainMeta!.attributes"/>
+                }
             </div>
         </div>
     }

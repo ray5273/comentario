@@ -6,10 +6,11 @@ describe('CommentStatusBadgeComponent', () => {
     let component: CommentStatusBadgeComponent;
     let fixture: ComponentFixture<CommentStatusBadgeComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [CommentStatusBadgeComponent],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(CommentStatusBadgeComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

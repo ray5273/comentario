@@ -8,10 +8,11 @@ describe('ListFooterComponent', () => {
     let component: ListFooterComponent;
     let fixture: ComponentFixture<ListFooterComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [ListFooterComponent, MockComponents(NoDataComponent)],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(ListFooterComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

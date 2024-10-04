@@ -12,12 +12,13 @@ describe('UserDetailsComponent', () => {
     let component: UserDetailsComponent;
     let fixture: ComponentFixture<UserDetailsComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [UserDetailsComponent, MockComponents(UserAvatarComponent)],
             imports: [RouterModule.forRoot([]), ToolsModule],
             providers: MockProviders(ToastService, ApiGeneralService),
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(UserDetailsComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

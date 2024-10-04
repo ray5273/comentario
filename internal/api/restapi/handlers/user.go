@@ -6,7 +6,6 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -130,10 +129,6 @@ func UserGet(params api_general.UserGetParams, user *data.User) middleware.Respo
 	if err != nil {
 		return respServiceError(err)
 	}
-	var attrDTOs []*models.KeyValue
-	for k, v := range attr {
-		attrDTOs = append(attrDTOs, &models.KeyValue{Key: swag.String(k), Value: swag.String(v)})
-	}
 
 	// Fetch domains the current user has access to, and the corresponding domain users in relation to the user in
 	// question
@@ -145,7 +140,7 @@ func UserGet(params api_general.UserGetParams, user *data.User) middleware.Respo
 	// Succeeded
 	return api_general.NewUserGetOK().
 		WithPayload(&api_general.UserGetOKBody{
-			Attributes:  attrDTOs,
+			Attributes:  attr,
 			DomainUsers: data.SliceToDTOs(dus),
 			Domains:     data.SliceToDTOs(ds),
 			User:        u.ToDTO(),

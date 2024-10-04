@@ -62,4 +62,21 @@ export class Utils {
             },
             '');
     }
+
+    /**
+     * Return a record consisting of all entries from the passed record, but sorted by key
+     * @param r Input record
+     */
+    static sortByKey<T>(r: T): T {
+        return r ?
+            Object.keys(r)
+                .sort()
+                .reduce(
+                    (acc, k) => {
+                        (acc as any)[k] = (r as any)[k];
+                        return acc;
+                    },
+                    {} as T) :
+            r;
+    }
 }

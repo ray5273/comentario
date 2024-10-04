@@ -6,10 +6,11 @@ describe('DomainUserBadgeComponent', () => {
     let component: DomainUserBadgeComponent;
     let fixture: ComponentFixture<DomainUserBadgeComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainUserBadgeComponent]
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainUserBadgeComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

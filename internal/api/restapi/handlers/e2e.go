@@ -92,10 +92,12 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 	api.APIE2eE2eConfigVersionLatestReleaseUpdateHandler = api_e2e.E2eConfigVersionLatestReleaseUpdateHandlerFunc(E2eConfigVersionLatestReleaseUpdate)
 	api.APIE2eE2eDomainPatchHandler = api_e2e.E2eDomainPatchHandlerFunc(E2eDomainPatch)
 	api.APIE2eE2eDomainConfigUpdateHandler = api_e2e.E2eDomainConfigUpdateHandlerFunc(E2eDomainConfigUpdate)
+	api.APIE2eE2eDomainUpdateAttrsHandler = api_e2e.E2eDomainUpdateAttrsHandlerFunc(E2eDomainUpdateAttrs)
 	api.APIE2eE2eDomainUpdateIdpsHandler = api_e2e.E2eDomainUpdateIdpsHandlerFunc(E2eDomainUpdateIdps)
 	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
 	api.APIE2eE2eOAuthSSONonInteractiveHandler = api_e2e.E2eOAuthSSONonInteractiveHandlerFunc(E2eOAuthSSONonInteractive)
 	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(E2eReset)
+	api.APIE2eE2eUserUpdateAttrsHandler = api_e2e.E2eUserUpdateAttrsHandlerFunc(E2eUserUpdateAttrs)
 
 	// Reduce delays during end-2-end tests
 	util.WrongAuthDelayMin = 0
@@ -182,6 +184,22 @@ func E2eDomainConfigUpdate(params api_e2e.E2eDomainConfigUpdateParams) middlewar
 
 	// Succeeded
 	return api_e2e.NewE2eDomainConfigUpdateNoContent()
+}
+
+func E2eDomainUpdateAttrs(params api_e2e.E2eDomainUpdateAttrsParams) middleware.Responder {
+	// Parse domain ID
+	domainID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Update the attributes
+	if err := svc.TheDomainAttrService.Set(domainID, *params.Body.Values, params.Body.Clean); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_e2e.NewE2eDomainUpdateAttrsNoContent()
 }
 
 func E2eDomainUpdateIdps(params api_e2e.E2eDomainUpdateIdpsParams) middleware.Responder {
@@ -287,4 +305,20 @@ func E2eReset(api_e2e.E2eResetParams) middleware.Responder {
 		return api_general.NewGenericInternalServerError()
 	}
 	return api_e2e.NewE2eResetNoContent()
+}
+
+func E2eUserUpdateAttrs(params api_e2e.E2eUserUpdateAttrsParams) middleware.Responder {
+	// Parse domain ID
+	userID, r := parseUUID(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Update the attributes
+	if err := svc.TheUserAttrService.Set(userID, *params.Body.Values, params.Body.Clean); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_e2e.NewE2eUserUpdateAttrsNoContent()
 }

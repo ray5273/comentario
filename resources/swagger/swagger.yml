@@ -705,23 +705,13 @@ definitions:
         x-isnullable: false
         description: Whether the Live update is enabled globally
 
-  keyValue:
-    description: Key-value pair
+  keyValueMap:
+    description: Map of key-value strings
     type: object
-    required:
-      - key
-      - value
-    properties:
-      key:
-        type: string
-        maxLength: 255
-        description: Item key
-        x-omitempty: false
-      value:
-        type: string
-        maxLength: 255
-        description: Item value
-        x-omitempty: false
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: "KeyValueMap"
 
   pageInfo:
     description: Information about a page displaying comments
@@ -2059,7 +2049,7 @@ paths:
             x-go-type:
               import:
                 package: "gitlab.com/comentario/comentario/internal/api/exmodels"
-              type: "I18nMessageMap"
+              type: "KeyValueMap"
 
   # Auth
 
@@ -2801,6 +2791,9 @@ paths:
                 items:
                   $ref: "#/definitions/domainExtension"
                 description: List of extensions enabled for the domain, and their configurations
+              attributes:
+                $ref: "#/definitions/keyValueMap"
+                description: Domain's attributes, only for superuser
 
     put:
       operationId: DomainUpdate
@@ -3418,9 +3411,7 @@ paths:
               user:
                 $ref: "#/definitions/user"
               attributes:
-                type: array
-                items:
-                  $ref: "#/definitions/keyValue"
+                $ref: "#/definitions/keyValueMap"
                 description: User's attributes
               domainUsers:
                 type: array
@@ -3746,6 +3737,33 @@ paths:
         204:
           description: Domain properties have been updated
 
+  /e2e/domains/{uuid}/attrs:
+    put:
+      operationId: E2eDomainUpdateAttrs
+      summary: Update the attributes of specified domain
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - values
+            properties:
+              values:
+                $ref: "#/definitions/keyValueMap"
+                description: Attributes to set for the domain
+              clean:
+                type: boolean
+                description: Whether to clean up all attributes prior to updating
+      responses:
+        204:
+          description: Domain's attributes have been updated
+
   /e2e/domains/{uuid}/config:
     put:
       operationId: E2eDomainConfigUpdate
@@ -3841,3 +3859,30 @@ paths:
           headers:
             Location:
               type: string
+
+  /e2e/users/{uuid}/attrs:
+    put:
+      operationId: E2eUserUpdateAttrs
+      summary: Update the attributes of specified user
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - values
+            properties:
+              values:
+                $ref: "#/definitions/keyValueMap"
+                description: Attributes to set for the user
+              clean:
+                type: boolean
+                description: Whether to clean up all attributes prior to updating
+      responses:
+        204:
+          description: User's attributes have been updated

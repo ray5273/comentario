@@ -15,8 +15,8 @@ describe('DomainUserEditComponent', () => {
     let component: DomainUserEditComponent;
     let fixture: ComponentFixture<DomainUserEditComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainUserEditComponent, MockComponents(DomainUserBadgeComponent, InfoIconComponent)],
             imports: [RouterModule.forRoot([]), ReactiveFormsModule, ToolsModule],
             providers: [
@@ -24,7 +24,8 @@ describe('DomainUserEditComponent', () => {
                 MockProvider(ToastService),
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainUserEditComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

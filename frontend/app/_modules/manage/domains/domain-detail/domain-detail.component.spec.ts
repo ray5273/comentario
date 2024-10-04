@@ -8,14 +8,15 @@ describe('DomainDetailComponent', () => {
     let component: DomainDetailComponent;
     let fixture: ComponentFixture<DomainDetailComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainDetailComponent],
             imports: [RouterModule.forRoot([])],
             providers: [
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainDetailComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

@@ -12,15 +12,16 @@ describe('DomainUserPropertiesComponent', () => {
     let component: DomainUserPropertiesComponent;
     let fixture: ComponentFixture<DomainUserPropertiesComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainUserPropertiesComponent, MockComponents(NoDataComponent)],
             imports: [FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainUserPropertiesComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

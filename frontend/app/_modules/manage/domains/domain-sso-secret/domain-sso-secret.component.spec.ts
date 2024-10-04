@@ -13,15 +13,16 @@ describe('DomainSsoSecretComponent', () => {
     let component: DomainSsoSecretComponent;
     let fixture: ComponentFixture<DomainSsoSecretComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [DomainSsoSecretComponent, MockComponents(DomainBadgeComponent)],
             imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, ToolsModule],
             providers: [
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(DomainSsoSecretComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

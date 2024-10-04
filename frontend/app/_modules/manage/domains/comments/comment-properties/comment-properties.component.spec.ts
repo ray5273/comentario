@@ -16,8 +16,8 @@ describe('CommentPropertiesComponent', () => {
     let component: CommentPropertiesComponent;
     let fixture: ComponentFixture<CommentPropertiesComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [CommentPropertiesComponent, MockComponents(NoDataComponent, UserLinkComponent)],
             imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NgbModalModule, Highlight, ToolsModule],
             providers: [
@@ -25,7 +25,8 @@ describe('CommentPropertiesComponent', () => {
                 MockProvider(ApiGeneralService),
                 mockDomainSelector(),
             ],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(CommentPropertiesComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

@@ -6,10 +6,11 @@ describe('SortPropertyComponent', () => {
     let component: SortPropertyComponent;
     let fixture: ComponentFixture<SortPropertyComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [SortPropertyComponent],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(SortPropertyComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();

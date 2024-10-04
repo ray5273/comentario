@@ -41,6 +41,8 @@ context('User Properties page', () => {
         cy.get('@sessions').verifyListFooter(numSessions, false);
     };
 
+    const checkNoAttributes = () => cy.get('@userProps').find('app-attribute-table').should('not.exist');
+
     //------------------------------------------------------------------------------------------------------------------
 
     beforeEach(cy.backendReset);
@@ -69,6 +71,9 @@ context('User Properties page', () => {
                 ['System account', '✔'],
             ]);
 
+            // Verify no attributes section
+            checkNoAttributes();
+
             // Verify domain roles
             cy.get('@domainRoles').verifyListFooter(0, false);
         });
@@ -92,6 +97,9 @@ context('User Properties page', () => {
                 ['Signup IP',            '12.13.14.15'],
                 ['Signup country',       'KZ — Kazakhstan'],
             ]);
+
+            // Verify no attributes section
+            checkNoAttributes();
 
             // Verify domain roles
             cy.get('@domainRoles').verifyListFooter(0, false);
@@ -201,6 +209,9 @@ context('User Properties page', () => {
                 ['Last login',           REGEXES.datetime],
             ]);
 
+            // Verify no attributes section
+            checkNoAttributes();
+
             // Verify domain roles
             cy.get('@domainRoles').verifyListFooter(4, false);
             cy.get('@domainRoles').texts('.domain-host').should('arrayMatch', [
@@ -239,6 +250,39 @@ context('User Properties page', () => {
             cy.get('@sessions').find('.list-group-item').should('have.length', 3)
                 .texts()
                 .each(s => expect(s).contains('Expired'));
+
+            // Check attributes
+            cy.backendUpdateUserAttrs(USERS.king.id, {hoho: 'xyz'}, false);
+            cy.reload();
+            cy.get('@userProps').find('app-attribute-table').as('attrs')
+                .contains('button', 'Attributes').as('attrBtn');
+
+            // Attributes are collapsed initially
+            cy.get('@attrBtn').should('have.attr', 'aria-expanded', 'false');
+            cy.get('@attrs').find('#attributes-container-1').should('not.be.visible');
+
+            // Expand attributes
+            cy.get('@attrBtn').click().should('have.attr', 'aria-expanded', 'true');
+            cy.get('@attrs').find('#attributes-container-1').should('be.visible')
+                .find('.detail-table').dlTexts()
+                .should('matrixMatch', [['hoho', 'xyz']]);
+
+            // Replace attributes and reload
+            cy.backendUpdateUserAttrs(USERS.king.id, {subscriptionId: '1234567890', active: 'true'}, true);
+            cy.reload();
+            cy.get('@attrBtn').click();
+            cy.get('@attrs').find('#attributes-container-1').should('be.visible')
+                .find('.detail-table').dlTexts()
+                // Attributes must be sorted by key
+                .should('matrixMatch', [
+                    ['active',         'true'],
+                    ['subscriptionId', '1234567890'],
+                ]);
+
+            // Clean all and reload: no attributes section anymore
+            cy.backendUpdateUserAttrs(USERS.king.id, {}, true);
+            cy.reload();
+            checkNoAttributes();
         });
 
         it('of banned user', () => {
@@ -259,6 +303,9 @@ context('User Properties page', () => {
                 ['Signup IP',            '251.248.14.143'],
                 ['Signup country',       'UA — Ukraine'],
             ]);
+
+            // Verify no attributes section
+            checkNoAttributes();
         });
     });
 

@@ -6,10 +6,11 @@ describe('MetricCardComponent', () => {
     let component: MetricCardComponent;
     let fixture: ComponentFixture<MetricCardComponent>;
 
-    beforeEach(() => {
-        TestBed.configureTestingModule({
+    beforeEach(async () => {
+        await TestBed.configureTestingModule({
             declarations: [MetricCardComponent],
-        });
+        })
+            .compileComponents();
         fixture = TestBed.createComponent(MetricCardComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
