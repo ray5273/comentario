@@ -1,6 +1,7 @@
 /** Expected available UI languages. */
 export const UI_LANGUAGES = {
     'en':      'English (English)',
+    'fr':      'français (French)',
     'nl':      'Nederlands (Dutch)',
     'pt-BR':   'português (Brazilian Portuguese)',
     'ru':      'русский (Russian)',
