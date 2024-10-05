@@ -10,7 +10,6 @@ import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	_ "github.com/doug-martin/goqu/v9/dialect/postgres" // PostgreSQL goqu dialect
-	_ "github.com/doug-martin/goqu/v9/dialect/sqlite3"  // SQLite3 goqu dialect
 	"github.com/doug-martin/goqu/v9/exec"
 	"github.com/doug-martin/goqu/v9/exp"
 	_ "github.com/lib/pq"           // PostgreSQL driver
@@ -37,7 +36,12 @@ type dbDialect string
 
 // dialectWrapper returns the goqu dialect wrapper to use for this dialect
 func (d dbDialect) dialectWrapper() goqu.DialectWrapper {
-	return goqu.Dialect(string(d))
+	// Replace the sqlite3 dialect with our own fixed implementation
+	s := string(d)
+	if s == "sqlite3" {
+		s = "sqlite3ex"
+	}
+	return goqu.Dialect(s)
 }
 
 const (
