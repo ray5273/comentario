@@ -376,8 +376,9 @@ context('Comment Editor', () => {
 
         it('shows buttons based on domain config', () => {
             const btns = [
-                'Bold', 'Italic', 'Strikethrough', 'Link', 'Quote', 'Code', 'Image', 'Table', 'Bullet list',
-                'Numbered list', 'Markdown help'];
+                'Bold (Ctrl+B)', 'Italic (Ctrl+I)', 'Strikethrough (Ctrl+Shift+X)', 'Link (Ctrl+K)',
+                'Quote (Ctrl+Shift+.)', 'Code (Ctrl+E)', 'Image', 'Table', 'Bullet list (Ctrl+Shift+8)',
+                'Numbered list (Ctrl+Shift+7)', 'Markdown help'];
 
             /** Disable the given config value, visit the site and check the toolbar buttons. */
             const checkSetting = (key: string, hidesButton: string) => {
@@ -385,7 +386,7 @@ context('Comment Editor', () => {
                 cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[key]: false});
                 visitAndEdit();
                 cy.get('@toolbar').find('.comentario-btn').attrValues('title')
-                    .should('arrayMatch', btns.filter(b => b !== hidesButton));
+                    .should('arrayMatch', btns.filter(b => !b.startsWith(hidesButton)));
 
                 // Revert the domain setting
                 cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[key]: true});
@@ -419,7 +420,7 @@ context('Comment Editor', () => {
                                 ta[0].setSelectionRange(test.sel[0], test.sel[1]));
 
                         // Click the button
-                        cy.get('@toolbar').find(`.comentario-btn[title='${button}']`).click();
+                        cy.get('@toolbar').find(`.comentario-btn[title^='${button}']`).click();
 
                         // Verify the editor
                         cy.get('@textarea')

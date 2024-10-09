@@ -2,10 +2,18 @@ import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { AsyncProcWithArg, PageInfo, TranslateFunc } from './models';
 import { Utils } from './utils';
+import { BlockEditorCommand, EditorCommand, InlineEditorCommand } from './editor-command';
 
 export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>;
 
 export class CommentEditor extends Wrap<HTMLFormElement>{
+
+    // noinspection JSDeprecatedSymbols
+    /**
+     * Whether we're running on a Mac. `platform` is technically deprecated, but there's no real alternative at the
+     * moment so keep it that way.
+     */
+    private readonly isMac = navigator.platform.toLowerCase().includes('mac');
 
     private readonly textarea:   Wrap<HTMLTextAreaElement>;
     private readonly preview:    Wrap<HTMLDivElement>;
@@ -13,6 +21,8 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
     private readonly btnPreview: Wrap<HTMLButtonElement>;
     private readonly btnSubmit:  Wrap<HTMLButtonElement>;
     private readonly toolbar:    Wrap<HTMLDivElement>;
+    private readonly commands = this.createCommands();
+
     private previewing = false;
     private submitting = false;
 
@@ -65,6 +75,9 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                         this.btnSubmit = UIToolkit.submit(this.t(isEdit ? 'actionSave' : 'actionAddComment'), false),
                     ));
 
+        // Install keyboard shortcuts
+        this.installShortcuts();
+
         // Update the parent
         this.parent.classes('editor-inserted').prepend(this);
 
@@ -115,6 +128,118 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
     }
 
     /**
+     * Create and return a list of applicable editor commands.
+     * @private
+     */
+    private createCommands(): EditorCommand[] {
+        const r: EditorCommand[] = [];
+        // Use Cmd+Key combinations on Mac, Ctrl+Key otherwise
+        const keyCtrl  = !this.isMac;
+        const keyMeta  = this.isMac;
+        const keyShift = true;
+        const placeholder = this.t('sampleText');
+        r.push(
+            new InlineEditorCommand({
+                icon:    'bold',
+                titleId: 'btnBold',
+                pattern: '**$**{}',
+                keyCtrl,
+                keyMeta,
+                keyCode: 'KeyB',
+                placeholder,
+            }),
+            new InlineEditorCommand({
+                icon:    'italic',
+                titleId: 'btnItalic',
+                pattern: '*$*{}',
+                keyCtrl,
+                keyMeta,
+                keyCode: 'KeyI',
+                placeholder,
+            }),
+            new InlineEditorCommand({
+                icon:    'strikethrough',
+                titleId: 'btnStrikethrough',
+                pattern: '~~$~~{}',
+                keyCtrl,
+                keyMeta,
+                keyShift,
+                keyCode: 'KeyX',
+                placeholder,
+            }));
+        if (this.pageInfo.markdownLinksEnabled) {
+            r.push(
+                new InlineEditorCommand({
+                    icon:    'link',
+                    titleId: 'btnLink',
+                    pattern: '[$]({https://example.com})',
+                    keyCtrl,
+                    keyMeta,
+                    keyCode: 'KeyK',
+                    placeholder,
+                }));
+        }
+        r.push(
+            new BlockEditorCommand({
+                icon:    'quote',
+                titleId: 'btnQuote',
+                pattern: '> ',
+                keyCtrl,
+                keyMeta,
+                keyShift,
+                keyCode: 'Period',
+                keyName: '.',
+            }),
+            new InlineEditorCommand({
+                icon:    'code',
+                titleId: 'btnCode',
+                pattern: '`$`{}',
+                keyCtrl,
+                keyMeta,
+                keyCode: 'KeyE',
+                placeholder,
+            }));
+        if (this.pageInfo.markdownImagesEnabled) {
+            r.push(
+                new InlineEditorCommand({
+                    icon:        'image',
+                    titleId:     'btnImage',
+                    pattern:     '![]($){}',
+                    placeholder: 'https://example.com/image.png',
+                }));
+        }
+        if (this.pageInfo.markdownTablesEnabled) {
+            r.push(
+                new InlineEditorCommand({
+                    icon:        'table',
+                    titleId:     'btnTable',
+                    pattern:     '\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n',
+                    placeholder: 'Heading',
+                }));
+        }
+        r.push(
+            new BlockEditorCommand({
+                icon:    'bulletList',
+                titleId: 'btnBulletList',
+                pattern: '* ',
+                keyCtrl,
+                keyMeta,
+                keyShift,
+                keyCode: 'Digit8',
+            }),
+            new BlockEditorCommand({
+                icon:    'numberedList',
+                titleId: 'btnNumberedList',
+                pattern: '1. ',
+                keyCtrl,
+                keyMeta,
+                keyShift,
+                keyCode: 'Digit7',
+            }));
+        return r;
+    }
+
+    /**
      * Update the editor controls' state according to the current situation.
      * @private
      */
@@ -136,113 +261,12 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
         this.preview.setClasses(!this.previewing, 'hidden');
     }
 
-    /**
-     * Apply the given "inline" pattern to the current editor selection.
-     * @param pattern Pattern that provides the rule for transforming the selection:
-     *   * `$` is replaced with the selected text, if any, or with a placeholder otherwise
-     *   * `{}` denotes the new selection boundaries. Only used when there was a selection, otherwise the inserted
-     *     placeholder is selected
-     * @param placeholder Text to use when no selection. Defaults to 'text'.
-     * @private
-     */
-    private applyInlinePattern(pattern: string, placeholder?: string) {
-        // Fetch the selected text
-        const ta = this.textarea.element;
-        const is1 = ta.selectionStart, is2 = ta.selectionEnd;
-        const text = ta.value;
-        let sel = text.substring(is1, is2) || placeholder || this.t('sampleText');
-        const selLen = sel.length;
-
-        // Parse the pattern
-        const ip$ = pattern.indexOf('$');
-        let ips1 = pattern.indexOf('{'), ips2 = pattern.indexOf('}');
-
-        // Compose the replacement
-        sel = pattern.substring(0, ip$) + // Part before the '$'
-            sel +                                // The selection (or the placeholder)
-            pattern.substring(ip$+1, ips1) +     // Part between the '$' and the '{'
-            pattern.substring(ips1+1, ips2) +    // Part between the '{' and the '}'
-            pattern.substring(ips2+1);           // The rest of the pattern beyond the '}'
-
-        // Calculate the new selection boundaries. If there was no selection, select the inserted placeholder
-        if (is2 <= is1 + 1) {
-            ips1 = is1 + ip$;
-            ips2 = ips1 + selLen;
-        } else {
-            // Shift the selection boundaries accordingly otherwise
-            ips1 += is1 + selLen - 1; // Account for the '$' (let's assume it's always left of the '{')
-            ips2 += is1 + selLen - 2; // Account for '$' and '{'
-        }
-
-        // Replace the selected text with the processed pattern
-        ta.setRangeText(sel);
-        ta.setSelectionRange(ips1, ips2);
-        this.updateControls();
-        ta.focus();
-    }
-
-    /**
-     * Apply the given "block" pattern to the current editor selection.
-     * @param pattern Pattern that gets inserted at the beginning of the line.
-     * @private
-     */
-    private applyBlockPattern(pattern: string) {
-        // Fetch the selected text
-        const ta = this.textarea.element;
-        const iStart = ta.selectionStart;
-        let text = ta.value;
-        const pLen = pattern.length;
-
-        // Rewind selection start to the nearest line start
-        let iPos = iStart;
-        while (iPos > 0 && !['\r', '\n'].includes(text.charAt(iPos - 1))) {
-            iPos--;
-        }
-
-        // Insert the pattern at every line's beginning within the selection range
-        let iEnd = ta.selectionEnd;
-        do {
-            text = text.substring(0, iPos) + pattern + text.substring(iPos);
-
-            // Search for the next linebreak, starting after the insertion point
-            if ((iPos = text.indexOf('\n', iPos + pLen)) < 0) {
-                break;
-            }
-
-            // We're going to insert the pattern AFTER the linebreak
-            iPos++;
-
-            // The end position must shift as the text grows
-            iEnd += pLen;
-        } while (iPos < iEnd);
-
-        // Replace the text
-        ta.value = text;
-
-        // Set the cursor at the original position within the text
-        ta.setSelectionRange(iStart + pLen, iStart + pLen);
-        this.updateControls();
-        ta.focus();
-    }
-
     private renderToolbar(): Wrap<HTMLDivElement> {
         return UIToolkit.div('toolbar').append(
-            // Left section
-            UIToolkit.div('toolbar-section').append(
-                UIToolkit.toolButton('bold',          this.t('btnBold'),          () => this.applyInlinePattern('**$**{}')),
-                UIToolkit.toolButton('italic',        this.t('btnItalic'),        () => this.applyInlinePattern('*$*{}')),
-                UIToolkit.toolButton('strikethrough', this.t('btnStrikethrough'), () => this.applyInlinePattern('~~$~~{}')),
-                this.pageInfo.markdownLinksEnabled &&
-                    UIToolkit.toolButton('link',      this.t('btnLink'),          () => this.applyInlinePattern('[$]({https://example.com})', this.t('sampleText'))),
-                UIToolkit.toolButton('quote',         this.t('btnQuote'),         () => this.applyBlockPattern('> ')),
-                UIToolkit.toolButton('code',          this.t('btnCode'),          () => this.applyInlinePattern('`$`{}')),
-                this.pageInfo.markdownImagesEnabled &&
-                    UIToolkit.toolButton('image',     this.t('btnImage'),         () => this.applyInlinePattern('![]($){}', 'https://example.com/image.png')),
-                this.pageInfo.markdownTablesEnabled &&
-                    UIToolkit.toolButton('table',     this.t('btnTable'),         () => this.applyInlinePattern('\n| $ | {Heading} |\n|---------|---------|\n| Text    | Text    |\n', 'Heading')),
-                UIToolkit.toolButton('bulletList',    this.t('btnBulletList'),    () => this.applyBlockPattern('* ')),
-                UIToolkit.toolButton('numberedList',  this.t('btnNumberedList'),  () => this.applyBlockPattern('1. ')),
-            ),
+            // Left section: add a button for each command
+            UIToolkit.div('toolbar-section')
+                .append(...this.commands.map(
+                    c => UIToolkit.toolButton(c.icon, this.t(c.titleId) + c.keyTitle, () => this.runCommand(c)))),
             // Right section
             UIToolkit.div('toolbar-section').append(
                 // Markdown help link
@@ -251,6 +275,41 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                     .attr({title: this.t('btnMarkdownHelp')})
                     .append(UIToolkit.icon('help')),
             ));
+    }
+
+    /**
+     * Install keyboard shortcuts on the editor.
+     * @private
+     */
+    private installShortcuts() {
+        this.textarea.keydown((_, e) => {
+            // Try to find a command that matches the key combination
+            const cmd = this.commands.find(c => c.matchesKeyEvent(e));
+            if (cmd) {
+                // Command found: cancel the default handling of the event in the browser
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Invoke the command
+                this.runCommand(cmd);
+            }
+        });
+    }
+
+    /**
+     * Run the given command against the current editor.
+     * @param c Command to run.
+     * @private
+     */
+    private runCommand(c: EditorCommand) {
+        // Apply the command
+        c.apply(this.textarea.element);
+
+        // Update controls to reflect changes in the text
+        this.updateControls();
+
+        // Re-focus the textarea
+        this.textarea.focus();
     }
 
     /**
