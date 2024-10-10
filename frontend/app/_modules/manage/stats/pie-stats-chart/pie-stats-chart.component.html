@@ -1,0 +1,11 @@
+<div [appSpinner]="loading.active" spinnerSize="lg">
+    @if (chartData) {
+        <!-- Chart -->
+        <div class="chart-container">
+            <canvas baseChart type="pie" [options]="chartOptions" [data]="chartData"></canvas>
+        </div>
+    } @else {
+        <!-- Placeholder when no data -->
+        <app-no-data/>
+    }
+</div>

@@ -1,9 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MockComponents } from 'ng-mocks';
 import { DomainStatsComponent } from './domain-stats.component';
-import { StatsChartComponent } from '../../stats-chart/stats-chart.component';
+import { DailyStatsChartComponent } from '../../stats/daily-stats-chart/daily-stats-chart.component';
 import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { PieStatsChartComponent } from '../../stats/pie-stats-chart/pie-stats-chart.component';
 
 describe('DomainStatsComponent', () => {
 
@@ -12,7 +13,7 @@ describe('DomainStatsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainStatsComponent, MockComponents(StatsChartComponent, DomainBadgeComponent)],
+            declarations: [DomainStatsComponent, MockComponents(DailyStatsChartComponent, DomainBadgeComponent, PieStatsChartComponent)],
             providers: [
                 mockDomainSelector(),
             ],

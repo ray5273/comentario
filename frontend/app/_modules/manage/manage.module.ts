@@ -17,7 +17,7 @@ import { DomainImportComponent } from './domains/domain-import/domain-import.com
 import { DomainPropertiesComponent } from './domains/domain-properties/domain-properties.component';
 import { DomainStatsComponent } from './domains/domain-stats/domain-stats.component';
 import { DomainOperationsComponent } from './domains/domain-operations/domain-operations.component';
-import { StatsChartComponent } from './stats-chart/stats-chart.component';
+import { DailyStatsChartComponent } from './stats/daily-stats-chart/daily-stats-chart.component';
 import { DomainSelectorService } from './_services/domain-selector.service';
 import { CommentManagerComponent } from './domains/comments/comment-manager/comment-manager.component';
 import { UserManagerComponent } from './users/user-manager/user-manager.component';
@@ -63,6 +63,7 @@ import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.comp
 import { CountryNamePipe } from './_pipes/country-name.pipe';
 import { PluginModule } from '../plugin/plugin.module';
 import { AttributeTableComponent } from './attribute-table/attribute-table.component';
+import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.component';
 
 @NgModule({
     declarations: [
@@ -78,6 +79,7 @@ import { AttributeTableComponent } from './attribute-table/attribute-table.compo
         ControlCenterComponent,
         CountryNamePipe,
         CurrentUserBadgeComponent,
+        DailyStatsChartComponent,
         DashboardComponent,
         DatetimePipe,
         DomainBadgeComponent,
@@ -106,11 +108,11 @@ import { AttributeTableComponent } from './attribute-table/attribute-table.compo
         DynConfigSectionNamePipe,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
+        PieStatsChartComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
         StaticConfigComponent,
-        StatsChartComponent,
         UpdatesBadgeComponent,
         UserDetailsComponent,
         UserEditComponent,

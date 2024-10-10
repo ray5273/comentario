@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -15,16 +16,21 @@ var TheStatsService StatsService = &statsService{}
 
 // StatsService is a service interface for dealing with stats
 type StatsService interface {
-	// GetDailyCommentCounts collects and returns a daily statistics for comments
+	// GetDailyCommentCounts collects and returns a daily statistics for comments, optionally limited to a specific
+	// domain
 	GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
-	// GetDailyDomainPageCounts collects and returns a daily statistics for domain pages
+	// GetDailyDomainPageCounts collects and returns a daily statistics for domain pages, optionally limited to a
+	// specific domain
 	GetDailyDomainPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
-	// GetDailyDomainUserCounts collects and returns a daily statistics for domain users
+	// GetDailyDomainUserCounts collects and returns a daily statistics for domain users, optionally limited to a
+	// specific domain
 	GetDailyDomainUserCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
-	// GetDailyViewCounts collects and returns a daily statistics for views
+	// GetDailyViewCounts collects and returns a daily statistics for views, optionally limited to a specific domain
 	GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
 	// GetTotals collects and returns total figures for all domains accessible to the specified user
 	GetTotals(curUser *data.User) (*StatsTotals, error)
+	// GetViewStats returns view numbers for the given dimension values, optionally limited to a specific domain
+	GetViewStats(isSuperuser bool, dimension string, userID, domainID *uuid.UUID, numDays int) (exmodels.StatsDimensionCounts, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -61,7 +67,7 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 	}
 
 	// Query data
-	return svc.queryStats(q, start, numDays)
+	return svc.queryDailyStats(q, start, numDays)
 }
 
 func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
@@ -92,7 +98,7 @@ func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, doma
 	}
 
 	// Query data
-	return svc.queryStats(q, start, numDays)
+	return svc.queryDailyStats(q, start, numDays)
 }
 
 func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
@@ -123,7 +129,7 @@ func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, doma
 	}
 
 	// Query data
-	return svc.queryStats(q, start, numDays)
+	return svc.queryDailyStats(q, start, numDays)
 }
 
 func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
@@ -155,7 +161,7 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 	}
 
 	// Query view data
-	return svc.queryStats(q, start, numDays)
+	return svc.queryDailyStats(q, start, numDays)
 }
 
 func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
@@ -186,6 +192,44 @@ func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
 
 	// Succeeded
 	return totals, nil
+}
+func (svc *statsService) GetViewStats(isSuperuser bool, dimension string, userID, domainID *uuid.UUID, numDays int) (exmodels.StatsDimensionCounts, error) {
+	logger.Debugf("statsService.GetViewStats(%v, %q, %s, %s, %d)", isSuperuser, dimension, userID, domainID, numDays)
+
+	// Calculate the start date
+	_, start := getStatsStartDate(numDays)
+
+	// Prepare a query for view counts, grouped by the specified dimension
+	q := db.From(goqu.T("cm_domain_page_views").As("v")).
+		Select(goqu.COUNT("*").As("cnt"), goqu.I(dimension).As("el")).
+		// Join the page in question
+		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("v.page_id")})).
+		// Filter by domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
+		// Select only last N days
+		Where(goqu.I("v.ts_created").Gte(start)).
+		GroupBy(dimension).
+		Order(goqu.I("cnt").Desc())
+
+	// Filter by domain, if any
+	if domainID != nil {
+		q = q.Where(goqu.Ex{"d.id": domainID})
+	}
+
+	// If the user isn't a superuser, filter by owned domains
+	if !isSuperuser {
+		q = addStatsOwnedDomainFilter(q, userID)
+	}
+
+	// Query the data
+	var res exmodels.StatsDimensionCounts
+	if err := q.ScanStructs(&res); err != nil {
+		logger.Errorf("statsService.GetViewStats: ScanStructs() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return res, nil
 }
 
 // fillCommentCommenterStats fills the statistics for comments and commenters in totals
@@ -358,8 +402,8 @@ func (svc *statsService) fillUserStats(totals *StatsTotals) error {
 	return nil
 }
 
-// queryStats collects and returns a daily statistics using the provided database rows
-func (svc *statsService) queryStats(ds *goqu.SelectDataset, start time.Time, num int) ([]uint64, error) {
+// queryDailyStats collects and returns a daily statistics using the provided database rows
+func (svc *statsService) queryDailyStats(ds *goqu.SelectDataset, start time.Time, num int) ([]uint64, error) {
 	// Query the data
 	var dbRecs []struct {
 		// The date has to be fetched as a string and parsed afterwards due to SQLite3 limitation on type detection when
@@ -368,7 +412,7 @@ func (svc *statsService) queryStats(ds *goqu.SelectDataset, start time.Time, num
 		Count uint64 `db:"cnt"`
 	}
 	if err := ds.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("statsService.queryStats: ScanStructs() failed: %v", err)
+		logger.Errorf("statsService.queryDailyStats: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
 
@@ -378,7 +422,7 @@ func (svc *statsService) queryStats(ds *goqu.SelectDataset, start time.Time, num
 		// Parse the returned string into time
 		t, err := time.Parse(time.RFC3339, r.Date)
 		if err != nil {
-			logger.Errorf("statsService.queryStats: failed to parse datetime string: %v", err)
+			logger.Errorf("statsService.queryDailyStats: failed to parse datetime string: %v", err)
 			return nil, translateDBErrors(err)
 		}
 

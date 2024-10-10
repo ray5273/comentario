@@ -2,15 +2,15 @@ import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { debounceTime, Subject } from 'rxjs';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { ApiGeneralService } from '../../../../generated-api';
-import { ProcessingStatus } from '../../../_utils/processing-status';
+import { ApiGeneralService } from '../../../../../generated-api';
+import { ProcessingStatus } from '../../../../_utils/processing-status';
 
 @Component({
-    selector: 'app-stats-chart',
-    templateUrl: './stats-chart.component.html',
-    styleUrls: ['./stats-chart.component.scss'],
+    selector: 'app-daily-stats-chart',
+    templateUrl: './daily-stats-chart.component.html',
+    styleUrls: ['./daily-stats-chart.component.scss'],
 })
-export class StatsChartComponent {
+export class DailyStatsChartComponent {
 
     /** Actual number of days of statistics provided by the backend. */
     countDays = 0;

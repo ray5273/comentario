@@ -1095,6 +1095,38 @@ definitions:
       type: integer
       format: uint
 
+  statsDimensionItem:
+    description: Dimension element with a count
+    type: object
+    readOnly: true
+    required:
+      - element
+      - count
+    properties:
+      element:
+        type: string
+        x-isnullable: false
+      count:
+        type: number
+        format: uint
+        x-omitempty: false
+        x-isnullable: false
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: "StatsDimensionItem"
+
+  statsDimensionCounts:
+    description: Counts per dimension element
+    type: array
+    readOnly: true
+    items:
+      $ref: "#/definitions/statsDimensionItem"
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: "StatsDimensionCounts"
+
   statsTotals:
     description: Total statistical figures for Comentario dashboard
     type: object
@@ -1496,6 +1528,19 @@ parameters:
     type: string
     format: uuid
     x-isnullable: false
+
+  pathViewStatsDimension:
+    name: dimension
+    in: path
+    required: true
+    description: Dimension of view stats
+    type: string
+    enum:
+      - proto
+      - country
+      - browser
+      - os
+      - device
 
   queryDomainId:
     in: query
@@ -2651,6 +2696,22 @@ paths:
           description: Daily statistical data
           schema:
             $ref: "#/definitions/statsDailyCounts"
+
+  /dashboard/stats/views/{dimension}:
+    get:
+      operationId: DashboardPageViewStats
+      summary: Get page view numbers for the given dimension and the current user and, optionally, specified domain
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathViewStatsDimension"
+        - $ref: "#/parameters/queryStatsDays"
+        - $ref: "#/parameters/queryOptionalDomain"
+      responses:
+        200:
+          description: Page view counts data for the given dimension
+          schema:
+            $ref: "#/definitions/statsDimensionCounts"
 
   #---------------------------------------------------------------------------------------------------------------------
   # Domains

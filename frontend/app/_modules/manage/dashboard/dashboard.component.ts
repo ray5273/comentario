@@ -1,9 +1,9 @@
 import { Component, OnInit } from '@angular/core';
+import { concatMap, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Principal, StatsTotals } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { AuthService } from '../../../_services/auth.service';
-import { concatMap, tap } from 'rxjs';
 
 @UntilDestroy()
 @Component({

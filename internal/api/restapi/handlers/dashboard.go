@@ -9,17 +9,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 )
 
-func DashboardTotals(_ api_general.DashboardTotalsParams, user *data.User) middleware.Responder {
-	// Query the data
-	totals, err := svc.TheStatsService.GetTotals(user)
-	if err != nil {
-		return respServiceError(err)
-	}
-
-	// Succeeded
-	return api_general.NewDashboardTotalsOK().WithPayload(totals.ToDTO())
-}
-
 func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *data.User) middleware.Responder {
 	numDays := int(swag.Uint64Value(params.Days))
 	domainID, r := parseUUIDPtr(params.Domain)
@@ -54,4 +43,49 @@ func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *dat
 
 	// Succeeded
 	return api_general.NewDashboardDailyStatsOK().WithPayload(counts)
+}
+
+func DashboardPageViewStats(params api_general.DashboardPageViewStatsParams, user *data.User) middleware.Responder {
+	numDays := int(swag.Uint64Value(params.Days))
+	domainID, r := parseUUIDPtr(params.Domain)
+	if r != nil {
+		return r
+	}
+
+	// Translate the dimension into a column name
+	var dim string
+	switch params.Dimension {
+	case "proto":
+		dim = "proto"
+	case "country":
+		dim = "country"
+	case "browser":
+		dim = "ua_browser_name"
+	case "os":
+		dim = "ua_os_name"
+	case "device":
+		dim = "ua_device"
+	default:
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("dimension"))
+	}
+
+	// Collect stats
+	stats, err := svc.TheStatsService.GetViewStats(user.IsSuperuser, dim, &user.ID, domainID, numDays)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDashboardPageViewStatsOK().WithPayload(stats)
+}
+
+func DashboardTotals(_ api_general.DashboardTotalsParams, user *data.User) middleware.Responder {
+	// Query the data
+	totals, err := svc.TheStatsService.GetTotals(user)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDashboardTotalsOK().WithPayload(totals.ToDTO())
 }
