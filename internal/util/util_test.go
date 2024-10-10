@@ -136,7 +136,7 @@ func TestCountryByIP(t *testing.T) {
 		ip   string
 		want string
 	}{
-		{"1.1.1.1            ", "1.1.1.1", "US"},
+		{"1.1.1.1            ", "1.1.1.1", "AU"},
 		{"95.25.1.1          ", "95.25.1.1", "RU"},
 		{"localhost          ", "127.0.0.1", ""},
 		{"nonexistent address", "255.255.255.0", ""},

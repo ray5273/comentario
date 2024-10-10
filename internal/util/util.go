@@ -117,7 +117,7 @@ func CompressGzip(b []byte) ([]byte, error) {
 // CountryByIP tries to determine the country code for the given IP address
 func CountryByIP(ip string) string {
 	// Parse the IP and convert it to a country code. Convert "ZZ" (=unknown) into an empty string
-	if country := string(iploc.Country(net.ParseIP(ip))); country != "ZZ" {
+	if country := iploc.Country(net.ParseIP(ip)); country != "ZZ" {
 		return country
 	}
 	return ""
