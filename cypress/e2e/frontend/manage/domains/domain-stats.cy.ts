@@ -52,7 +52,7 @@ context('Domain Statistics page', () => {
 
                     // Back to the stats page
                     cy.visit(pagePath);
-                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 218}, {label: Comments, value: 40}]');
+                    cy.get('app-daily-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 218}, {label: Comments, value: 40}]');
 
                     // Visit another page and leave a comment
                     cy.testSiteVisit(TEST_PATHS.noComment);
@@ -61,7 +61,7 @@ context('Domain Statistics page', () => {
 
                     // Back to the stats page
                     cy.visit(pagePath);
-                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 219}, {label: Comments, value: 41}]');
+                    cy.get('app-daily-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 219}, {label: Comments, value: 41}]');
                 }));
     });
 });

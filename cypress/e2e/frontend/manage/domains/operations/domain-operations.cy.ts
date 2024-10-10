@@ -173,7 +173,7 @@ context('Domain Operations page', () => {
 
                     // Verify the numbers in stats
                     cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).stats);
-                    cy.get('app-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 0}, {label: Comments, value: 0}]');
+                    cy.get('app-daily-stats-chart').metricCards().should('yamlMatch', '[{label: Views, value: 0}, {label: Comments, value: 0}]');
                 });
 
                 it('allows to delete domain', () => {
