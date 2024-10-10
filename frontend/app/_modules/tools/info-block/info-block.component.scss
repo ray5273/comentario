@@ -2,7 +2,7 @@
 
 .info-block {
     display: flex;
-    background-color: transparentize($primary, 0.9);
+    background-color: adjust-color($primary, $alpha: -0.9);
     color: $text-muted;
     border-radius: $border-radius-sm;
     margin-top: 0.5rem;

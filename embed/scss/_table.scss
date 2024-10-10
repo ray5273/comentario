@@ -8,7 +8,7 @@
 .comentario-table {
     tr {
         &:not(:last-child) {
-            border-bottom: 1px solid transparentize($gray-6, 0.5);
+            border-bottom: 1px solid adjust-color($gray-6, $alpha: -0.5);
         }
         td {
             padding: 4px 8px;

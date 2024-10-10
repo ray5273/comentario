@@ -147,7 +147,7 @@ h2 {
 
     &:hover, &:focus {
         text-decoration: none;
-        background-color: transparentize($primary, 0.75);
+        background-color: adjust-color($primary, $alpha: -0.75);
     }
     &.active {
         background-color: $primary;

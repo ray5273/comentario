@@ -118,7 +118,7 @@ section {
 // Anchors
 a {
     &.internal {
-        border-bottom: 1px dashed transparentize($primary, 0.5);
+        border-bottom: 1px dashed adjust-color($primary, $alpha: -0.5);
     }
 }
 
@@ -129,7 +129,7 @@ a {
 
     &:after {
         content: "\f0c1"; // fa-link
-        color: transparentize($primary, 0.75);
+        color: adjust-color($primary, $alpha: -0.75);
         font-family: $fa-style-family;
     }
 }
@@ -177,9 +177,8 @@ a {
         top: 0;
         bottom: 0;
         width: 100%;
-        background-color: transparentize($dark, 0.6);
+        background-color: adjust-color($dark, $alpha: -0.6);
         backdrop-filter: blur(3px);
-       // opacity: 0.2;
         transition: opacity 0.6s ease;
 
         @include media-breakpoint-up(md) {
@@ -437,7 +436,7 @@ footer {
     font-size: 1.5em;
 
     &:hover, &:focus, &:active {
-        background-color: lighten($sidebar-color, 0.2);
+        background-color: adjust-color($sidebar-color, $lightness: 20%);
         color: $light;
     }
 }
