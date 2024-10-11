@@ -16,6 +16,8 @@ import (
 
 // PluginManager is a service interface for managing plugins
 type PluginManager interface {
+	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled
+	HandleEvent(event any) (*complugin.HandleEventResult, error)
 	// Init initialises the manager
 	Init() error
 	// PluginConfig returns configuration of all registered plugins as DTOs
@@ -94,9 +96,13 @@ func newPluginConnector(pluginID string) PluginConnector {
 	}
 }
 
-func (c *pluginConnector) AuthenticateBySessionCookie(value string) (complugin.Principal, error) {
-	// User implements Principal, so simply hand over to the cookie auth handler
-	return TheAuthService.AuthenticateUserByCookieHeader(value)
+func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*complugin.Principal, error) {
+	// Hand over to the cookie auth handler
+	u, err := TheAuthService.AuthenticateUserByCookieHeader(value)
+	if err != nil {
+		return nil, err
+	}
+	return u.ToPluginPrincipal(), nil
 }
 
 func (c *pluginConnector) CreateLogger(module string) complugin.Logger {
@@ -125,7 +131,7 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 	// Convert plugs to DTOs
 	var plugs []*models.PluginUIPlugConfig
 	for _, p := range pe.c.UIPlugs {
-		// Convert the plug's labels into DTO's
+		// Convert the plug's labels into DTOs
 		var labels []*models.PluginUILabel
 		for _, l := range p.Labels {
 			labels = append(labels, &models.PluginUILabel{Language: l.Language, Text: l.Text})
@@ -161,6 +167,23 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
+}
+
+func (pm *pluginManager) HandleEvent(event any) (*complugin.HandleEventResult, error) {
+	// Iterate over plugins
+	for _, pe := range pm.plugs {
+		// Try to handle the event
+		if res, err := pe.p.HandleEvent(event); err != nil {
+			// Event handling errored
+			logger.Warningf("Plugin %q returned error while handling event %T: %v", pe.id, event, err)
+			return nil, err
+
+		} else if res.IsHandled() {
+			// Event has been successfully handled, exit the loop
+			return res, nil
+		}
+	}
+	return nil, nil
 }
 
 func (pm *pluginManager) Init() error {

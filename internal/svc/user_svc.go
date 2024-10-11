@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -138,10 +139,21 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
+	// Fire a BEFORE event
+	baseEvt := plugin.UserEvent{User: u.ToPluginUser()}
+	if _, err := ThePluginManager.HandleEvent(&plugin.UserCreateBeforeEvent{UserEvent: baseEvt}); err != nil {
+		return err
+	}
+
 	// Insert a new record
 	if err := db.ExecOne(db.Insert("cm_users").Rows(u)); err != nil {
 		logger.Errorf("userService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
+	}
+
+	// Fire an AFTER event
+	if _, err := ThePluginManager.HandleEvent(&plugin.UserCreateAfterEvent{UserEvent: baseEvt}); err != nil {
+		return err
 	}
 
 	// Succeeded
@@ -168,9 +180,16 @@ func (svc *userService) CreateUserSession(s *data.UserSession) error {
 func (svc *userService) DeleteUserByID(id *uuid.UUID, delComments, purgeComments bool) (int64, error) {
 	logger.Debugf("userService.DeleteUserByID(%s, %v, %v)", id, delComments, purgeComments)
 
-	// User cannot be anonymous
-	if *id == data.AnonymousUser.ID {
-		return 0, ErrNotFound
+	// Load the user
+	user, err := svc.FindUserByID(id)
+	if err != nil {
+		return 0, err
+	}
+
+	// Fire a BEFORE event
+	baseEvt := plugin.UserEvent{User: user.ToPluginUser()}
+	if _, err := ThePluginManager.HandleEvent(&plugin.UserDeleteBeforeEvent{UserEvent: baseEvt}); err != nil {
+		return 0, err
 	}
 
 	// If comments are to be deleted
@@ -197,6 +216,11 @@ func (svc *userService) DeleteUserByID(id *uuid.UUID, delComments, purgeComments
 	if err := db.ExecOne(db.Delete("cm_users").Where(goqu.Ex{"id": id})); err != nil {
 		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
 		return 0, translateDBErrors(err)
+	}
+
+	// Fire an AFTER event
+	if _, err := ThePluginManager.HandleEvent(&plugin.UserDeleteAfterEvent{UserEvent: baseEvt}); err != nil {
+		return 0, err
 	}
 
 	// Succeeded

@@ -28,7 +28,7 @@ type Logger interface {
 // HostApp represents the host application, which hosts plugins
 type HostApp interface {
 	// AuthenticateBySessionCookie authenticates a principal given a session cookie value
-	AuthenticateBySessionCookie(value string) (Principal, error)
+	AuthenticateBySessionCookie(value string) (*Principal, error)
 	// CreateLogger creates and returns a logger used for logging plugin messages
 	CreateLogger(module string) Logger
 	// DomainAttrStore returns an instance of the domain attributes store for the plugin
@@ -105,14 +105,7 @@ type ComentarioPlugin interface {
 	// StaticHandler returns a handler that serves static content relevant to the plugin. Each HTTP request passed to
 	// the handler will have a path conforming "<base_path>/<plugin_path>[/<subpath>]"
 	StaticHandler() http.Handler
-}
-
-// Principal represents an authenticated user
-type Principal interface {
-	// GetID returns the unique user ID
-	GetID() uuid.UUID
-	// GetEmail returns the unique user email
-	GetEmail() string
-	// GetName returns the user's full name
-	GetName() string
+	// HandleEvent notifies the plugin of a certain event. The plugin can return (nil, nil) if it isn't interested in
+	// this event
+	HandleEvent(event any) (*HandleEventResult, error)
 }

@@ -11,6 +11,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/crypto/bcrypt"
@@ -330,6 +331,29 @@ func (u *User) ToDTO() *models.User {
 		UserBanned:          NullUUIDStr(&u.UserBanned),
 		UserCreated:         NullUUIDStr(&u.UserCreated),
 		WebsiteURL:          strfmt.URI(u.WebsiteURL),
+	}
+}
+
+// ToPluginPrincipal returns a new plugin.Principal instance for this user
+func (u *User) ToPluginPrincipal() *plugin.Principal {
+	return &plugin.Principal{
+		ID:    u.ID,
+		Email: u.Email,
+		Name:  u.Name,
+	}
+}
+
+// ToPluginUser returns a new plugin.User instance for this user
+func (u *User) ToPluginUser() *plugin.User {
+	return &plugin.User{
+		ID:          u.ID,
+		Email:       u.Email,
+		Name:        u.Name,
+		LangID:      u.LangID,
+		IsSuperuser: u.IsSuperuser,
+		Confirmed:   u.Confirmed,
+		Banned:      u.Banned,
+		IsLocked:    u.IsLocked,
 	}
 }
 
