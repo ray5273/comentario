@@ -1,6 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { UserAvatarComponent } from './user-avatar.component';
 import { Configuration } from '../../../../generated-api';
+import { HashColourPipe } from '../_pipes/hash-colour.pipe';
 
 describe('UserAvatarComponent', () => {
 
@@ -9,7 +10,7 @@ describe('UserAvatarComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [UserAvatarComponent],
+            declarations: [UserAvatarComponent, HashColourPipe],
             providers: [
                 {provide: Configuration, useValue: {}},
             ],

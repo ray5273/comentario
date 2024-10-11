@@ -17,6 +17,7 @@ import { ServerMessageComponent } from './server-message/server-message.componen
 import { SpinnerDirective } from './_directives/spinner.directive';
 import { UserAvatarComponent } from './user-avatar/user-avatar.component';
 import { ExternalLinkDirective } from './_directives/external-link.directive';
+import { HashColourPipe } from './_pipes/hash-colour.pipe';
 
 @NgModule({
     declarations: [
@@ -25,6 +26,7 @@ import { ExternalLinkDirective } from './_directives/external-link.directive';
         ConfirmDirective,
         CopyTextDirective,
         ExternalLinkDirective,
+        HashColourPipe,
         IdentityProviderIconComponent,
         InfoBlockComponent,
         InfoIconComponent,
@@ -48,6 +50,7 @@ import { ExternalLinkDirective } from './_directives/external-link.directive';
         ConfirmDirective,
         CopyTextDirective,
         ExternalLinkDirective,
+        HashColourPipe,
         IdentityProviderIconComponent,
         InfoBlockComponent,
         InfoIconComponent,

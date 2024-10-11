@@ -4,7 +4,7 @@ import { DomainStatsComponent } from './domain-stats.component';
 import { DailyStatsChartComponent } from '../../stats/daily-stats-chart/daily-stats-chart.component';
 import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
-import { PieStatsChartComponent } from '../../stats/pie-stats-chart/pie-stats-chart.component';
+import { PageViewStatsComponent } from '../../stats/page-view-stats/page-view-stats.component';
 
 describe('DomainStatsComponent', () => {
 
@@ -13,7 +13,10 @@ describe('DomainStatsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainStatsComponent, MockComponents(DailyStatsChartComponent, DomainBadgeComponent, PieStatsChartComponent)],
+            declarations: [
+                DomainStatsComponent,
+                MockComponents(DailyStatsChartComponent, DomainBadgeComponent, PageViewStatsComponent),
+            ],
             providers: [
                 mockDomainSelector(),
             ],

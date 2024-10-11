@@ -64,6 +64,7 @@ import { CountryNamePipe } from './_pipes/country-name.pipe';
 import { PluginModule } from '../plugin/plugin.module';
 import { AttributeTableComponent } from './attribute-table/attribute-table.component';
 import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.component';
+import { PageViewStatsComponent } from './stats/page-view-stats/page-view-stats.component';
 
 @NgModule({
     declarations: [
@@ -108,6 +109,7 @@ import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.
         DynConfigSectionNamePipe,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
+        PageViewStatsComponent,
         PieStatsChartComponent,
         ProfileComponent,
         SortPropertyComponent,

@@ -1,4 +1,4 @@
-import { Component, HostBinding, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
+import { Component, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { Commenter, Configuration, Principal, User } from '../../../../generated-api';
@@ -34,22 +34,6 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
         @Inject(Configuration) private readonly API_CONFIG: Configuration,
         private readonly sanitizer: DomSanitizer,
     ) {}
-
-    @HostBinding('class')
-    get classes(): string[] {
-        // Size class
-        const c = [`size-${this.size.toLowerCase()}`];
-
-        // Anonymous user
-        if (this.isAnonymous) {
-            c.push('avatar-anonymous');
-
-        // If no picture, add initial and background colour classes
-        } else if (!this._src) {
-            c.push('avatar-initial', `user-bg-colour-${this.user?.colourIndex || 0}`);
-        }
-        return c;
-    }
 
     /**
      * The "pixel size" of the avatar, which takes the current device pixel ratio into account.

@@ -3,6 +3,7 @@ import { debounceTime, Subject } from 'rxjs';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ApiGeneralService, StatsDimensionItem } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
+import { HashColourPipe } from '../../../tools/_pipes/hash-colour.pipe';
 
 @Component({
     selector: 'app-pie-stats-chart',
@@ -11,19 +12,27 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 })
 export class PieStatsChartComponent {
 
-    /** Chart colours used for pie segments. */
-    static readonly ChartColours = [
-        '#83adec', '#f35f90', '#55bfa8', '#90c73e',
-        '#cd8777', '#c0c0c0',
-    ];
-
     /** Number of top items to display. */
     static readonly MaxItems = 5;
 
     chartData?: ChartConfiguration['data'];
     chartOptions: ChartOptions = {
         maintainAspectRatio: false,
+        plugins: {
+            legend: {
+                display: false,
+            }
+        }
     };
+
+    /** Item data points. */
+    values?: number[];
+
+    /** Item labels. */
+    labels?: string[];
+
+    /** Item colours. */
+    colours?: string[];
 
     readonly loading = new ProcessingStatus();
 
@@ -51,9 +60,9 @@ export class PieStatsChartComponent {
 
     /**
      * ID of the domain to collect the statistics for. If an empty string, statistics for all domains of the current
-     * user is collected.
+     * user is collected. If undefined, it means no data is available yet.
      */
-    @Input()
+    @Input({required: true})
     set domainId(id: string | undefined) {
         this._domainId = id;
         this.reload$.next();
@@ -82,22 +91,30 @@ export class PieStatsChartComponent {
     }
 
     private getChartData(items: StatsDimensionItem[]): ChartConfiguration['data'] {
+        // Limit the number of segments to MaxItems
+        this.labels = items.slice(0, PieStatsChartComponent.MaxItems).map(item => item.element);
+        this.values = items.splice(0, PieStatsChartComponent.MaxItems).map(item => item.count);
+
+        // Calculate segment colours based on label hash
+        const pipe = new HashColourPipe();
+        this.colours = this.labels.map(s => pipe.transform(s));
+
         // Roll up counts beyond MaxItems
-        const labels = items.slice(0, PieStatsChartComponent.MaxItems).map(item => item.element);
-        const data = items.splice(0, PieStatsChartComponent.MaxItems).map(item => item.count);
         if (items.length) {
-            labels.push($localize`Others`);
-            data.push(items.reduce((acc, item) => acc + item.count, 0));
+            this.labels.push($localize`Others`);
+            this.values.push(items.reduce((acc, item) => acc + item.count, 0));
+            this.colours.push(HashColourPipe.DefaultColour);
         }
 
+        // Make up a configuration object
         return {
             datasets: [{
-                data,
+                data:                 this.values,
                 borderColor:          '#ffffff',
-                backgroundColor:      PieStatsChartComponent.ChartColours,
-                hoverBackgroundColor: PieStatsChartComponent.ChartColours,
+                backgroundColor:      this.colours,
+                hoverBackgroundColor: this.colours,
             }],
-            labels,
+            labels: this.labels,
         };
     }
 }

@@ -4,10 +4,31 @@
     display: inline-block;
     position: relative;
     width: 100%;
-    min-height: 12rem;
-    height: 12rem;
+    min-height: 7rem;
+    height: 7rem;
 
-    @include media-breakpoint-up(lg) {
-        height: 20rem;
+    @include media-breakpoint-up(md) {
+        height: 8rem;
     }
+    @include media-breakpoint-up(lg) {
+        height: 10rem;
+    }
+}
+
+.chart-legend {
+    text-align: center;
+    font-size: 0.75rem;
+}
+
+.chart-legend-item {
+    display: inline-flex;
+    align-items: center;
+    padding: 0 0.33em;
+}
+
+.chart-legend-colour {
+    width: 0.75rem;
+    height: 0.75rem;
+    border: 1px solid white;
+    margin-right: 0.1em;
 }

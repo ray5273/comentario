@@ -71,4 +71,20 @@ describe('Utils', () => {
                 // Compare as JSON strings to enforce order check
                 expect(JSON.stringify(Utils.sortByKey(test.v))).toBe(JSON.stringify(test.want))));
     });
+
+    describe('hashString', () => {
+        [
+            {v: '',                           max:   1, want: 0},
+            {v: '',                           max:  99, want: 0},
+            {v: '1',                          max:  60, want: 19},
+            {v: '1',                          max:  10, want: 9},
+            {v: 'Lorem',                      max:  60, want: 41},
+            {v: 'Lorem',                      max:  37, want: 26},
+            {v: 'Lorem ipsum dolor sit amet', max: 200, want: 100},
+            {v: 'Lorem ipsum dolor sit amet', max:  60, want: 0},
+            {v: 'Lorem ipsum dolor sit amet', max:  25, want: 0},
+        ]
+            .forEach(test => it(`given v='${test.v}' and max=${test.max}, returns ${test.want}`, () =>
+                expect(Utils.hashString(test.v, test.max)).toBe(test.want)));
+    });
 });

@@ -5,31 +5,11 @@
 </header>
 
 @if ((domainMeta$ | async)?.domain?.id; as id) {
-
     <!-- Stats chart -->
     <app-daily-stats-chart [domainId]="id"/>
 
     <!-- Pageview statistics -->
-    <div class="mt-3" id="dashboard-pageview-stats">
-        <h2 i18n="heading">Pageview statistics</h2>
-
-        <div class="row row-cols-2 row-cols-lg-4 g-2">
-            <div class="col">
-                <h5 i18n>Countries</h5>
-                <app-pie-stats-chart dimension="country" [domainId]="id"/>
-            </div>
-            <div class="col">
-                <h5 i18n>Devices</h5>
-                <app-pie-stats-chart dimension="device" [domainId]="id"/>
-            </div>
-            <div class="col">
-                <h5 i18n>Browsers</h5>
-                <app-pie-stats-chart dimension="browser" [domainId]="id"/>
-            </div>
-            <div class="col">
-                <h5 i18n>Operating systems</h5>
-                <app-pie-stats-chart dimension="os" [domainId]="id"/>
-            </div>
-        </div>
+    <div class="mt-3" id="domain-pageview-stats">
+        <app-page-view-stats [domainId]="id"/>
     </div>
 }

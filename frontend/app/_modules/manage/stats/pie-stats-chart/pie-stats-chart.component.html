@@ -4,6 +4,15 @@
         <div class="chart-container">
             <canvas baseChart type="pie" [options]="chartOptions" [data]="chartData"></canvas>
         </div>
+        <!-- Legend -->
+        <div class="chart-legend">
+            @for (l of labels; track l; let idx = $index) {
+                <div class="chart-legend-item">
+                    <span class="chart-legend-colour" [style.background-color]="colours![idx]"></span>
+                    <span><strong>{{ l }}</strong>&nbsp;<span class="text-black-50">{{ values![idx] | number }}</span></span>
+                </div>
+            }
+        </div>
     } @else {
         <!-- Placeholder when no data -->
         <app-no-data/>

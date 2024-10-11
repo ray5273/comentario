@@ -1,0 +1,36 @@
+<h2 i18n="heading">Page view statistics</h2>
+
+<div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2">
+    <div class="col">
+        <div class="card shadow-none border-0 text-center">
+            <div class="card-title fw-bold" i18n>Countries</div>
+            <div class="card-body">
+                <app-pie-stats-chart dimension="country" [domainId]="domainId"/>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-none border-0 text-center">
+            <div class="card-title fw-bold" i18n>Devices</div>
+            <div class="card-body">
+                <app-pie-stats-chart dimension="device" [domainId]="domainId"/>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-none border-0 text-center">
+            <div class="card-title fw-bold" i18n>Browsers</div>
+            <div class="card-body">
+                <app-pie-stats-chart dimension="browser" [domainId]="domainId"/>
+            </div>
+        </div>
+    </div>
+    <div class="col">
+        <div class="card shadow-none border-0 text-center">
+            <div class="card-title fw-bold" i18n>Operating systems</div>
+            <div class="card-body">
+                <app-pie-stats-chart dimension="os" [domainId]="domainId"/>
+            </div>
+        </div>
+    </div>
+</div>

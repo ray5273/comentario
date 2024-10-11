@@ -79,4 +79,15 @@ export class Utils {
                     {} as T) :
             r;
     }
+
+    /**
+     * Hash the given string and return an integer in the range [0..max-1] based on the hash.
+     * @param s Input string to hash.
+     * @param max Maximum number to return (exclusive).
+     */
+    static hashString(s: string, max: number): number {
+        // Sum the string's bytes, not codepoints — just like User.ColourIndex() does on the backend, but make it more
+        // "hashy"
+        return new TextEncoder().encode(s).reduce((a, b) => (a * 67 + b * 31) % 2281, 0) % max;
+    }
 }

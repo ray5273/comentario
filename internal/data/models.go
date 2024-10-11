@@ -255,7 +255,7 @@ func (u *User) ColourIndex() byte {
 		n += int(b)
 	}
 
-	// Range to 0..23
+	// Range to 0..ColourIndexCount-1
 	return byte(n % ColourIndexCount)
 }
 

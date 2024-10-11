@@ -7,7 +7,7 @@ import { ToolsModule } from '../../tools/tools.module';
 import { DailyStatsChartComponent } from '../stats/daily-stats-chart/daily-stats-chart.component';
 import { MetricCardComponent } from './metric-card/metric-card.component';
 import { mockAuthService } from '../../../_utils/_mocks.spec';
-import { PieStatsChartComponent } from '../stats/pie-stats-chart/pie-stats-chart.component';
+import { PageViewStatsComponent } from '../stats/page-view-stats/page-view-stats.component';
 
 describe('DashboardComponent', () => {
 
@@ -16,7 +16,10 @@ describe('DashboardComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DashboardComponent, MockComponents(MetricCardComponent, DailyStatsChartComponent, PieStatsChartComponent)],
+            declarations: [
+                DashboardComponent,
+                MockComponents(MetricCardComponent, DailyStatsChartComponent, PageViewStatsComponent),
+            ],
             imports: [ToolsModule],
             providers: [
                 MockProvider(

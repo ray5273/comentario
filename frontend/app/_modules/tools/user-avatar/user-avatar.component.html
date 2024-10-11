@@ -1,10 +1,15 @@
-@if (isAnonymous) {
-    <!-- Anonymous user -->
-    <fa-icon [icon]="faUser"/>
-} @else if (_src) {
-    <!-- User avatar image -->
-    <img [src]="_src" alt="">
-} @else {
-    <!-- User initial in case there's no avatar -->
-    <span>{{ user?.name?.substring(0, 1)?.toUpperCase() || '*' }}</span>
-}
+<div [class.avatar-anonymous]="isAnonymous"
+     [class.avatar-initial]="!isAnonymous && !_src"
+     [style.background-color]="isAnonymous ? null : user?.colourIndex | hashColour"
+     class="avatar-backdrop size-{{ size.toLowerCase() }}">
+    @if (isAnonymous) {
+        <!-- Anonymous user -->
+        <fa-icon [icon]="faUser"/>
+    } @else if (_src) {
+        <!-- User avatar image -->
+        <img [src]="_src" alt="">
+    } @else {
+        <!-- User initial in case there's no avatar -->
+        <span>{{ user?.name?.substring(0, 1)?.toUpperCase() || '*' }}</span>
+    }
+</div>
