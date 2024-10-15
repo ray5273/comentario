@@ -8,13 +8,6 @@ export type CommentEditorPreviewCallback = (markdown: string) => Promise<string>
 
 export class CommentEditor extends Wrap<HTMLFormElement>{
 
-    // noinspection JSDeprecatedSymbols
-    /**
-     * Whether we're running on a Mac. `platform` is technically deprecated, but there's no real alternative at the
-     * moment so keep it that way.
-     */
-    private readonly isMac = navigator.platform.toLowerCase().includes('mac');
-
     private readonly textarea:   Wrap<HTMLTextAreaElement>;
     private readonly preview:    Wrap<HTMLDivElement>;
     private readonly btnCancel:  Wrap<HTMLButtonElement>;
@@ -134,8 +127,8 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
     private createCommands(): EditorCommand[] {
         const r: EditorCommand[] = [];
         // Use Cmd+Key combinations on Mac, Ctrl+Key otherwise
-        const keyCtrl  = !this.isMac;
-        const keyMeta  = this.isMac;
+        const keyCtrl  = !UIToolkit.isMac;
+        const keyMeta  = UIToolkit.isMac;
         const keyShift = true;
         const placeholder = this.t('sampleText');
         r.push(
@@ -269,10 +262,10 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                     c => UIToolkit.toolButton(c.icon, this.t(c.titleId) + c.keyTitle, () => this.runCommand(c)))),
             // Right section
             UIToolkit.div('toolbar-section').append(
-                // Markdown help link
-                UIToolkit.a('', Utils.joinUrl(this.pageInfo.baseDocsUrl, this.pageInfo.defaultLangId, 'kb/markdown/'))
+                // Editor help link
+                UIToolkit.a('', Utils.joinUrl(this.pageInfo.baseDocsUrl, this.pageInfo.defaultLangId, 'kb/comment-editor/'))
                     .classes('btn', 'btn-tool')
-                    .attr({title: this.t('btnMarkdownHelp')})
+                    .attr({title: this.t('btnEditorHelp')})
                     .append(UIToolkit.icon('help')),
             ));
     }

@@ -32,12 +32,12 @@
 - {id: btnBold,                     translation: 'Gras'}
 - {id: btnBulletList,               translation: 'Liste à puce'}
 - {id: btnCode,                     translation: 'Code'}
+- {id: btnEditorHelp,               translation: 'Aide à l''éditeur'}
 - {id: btnImage,                    translation: 'Image'}
 - {id: btnItalic,                   translation: 'Italique'}
 - {id: btnLink,                     translation: 'Lien'}
 - {id: btnLock,                     translation: 'Vérouiller'}
 - {id: btnLogout,                   translation: 'Déconnecter'}
-- {id: btnMarkdownHelp,             translation: 'Aide Markdown'}
 - {id: btnNumberedList,             translation: 'Liste numérotée'}
 - {id: btnQuote,                    translation: 'Citation'}
 - {id: btnSettings,                 translation: 'Paramètre'}

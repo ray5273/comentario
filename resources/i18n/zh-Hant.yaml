@@ -32,12 +32,12 @@
 - {id: btnBold,                     translation: '粗體'}
 - {id: btnBulletList,               translation: '無序列表'}
 - {id: btnCode,                     translation: '代碼'}
+- {id: btnEditorHelp,               translation: '編輯器幫助'}
 - {id: btnImage,                    translation: '圖片'}
 - {id: btnItalic,                   translation: '斜體'}
 - {id: btnLink,                     translation: '連結'}
 - {id: btnLock,                     translation: '鎖定'}
 - {id: btnLogout,                   translation: '登出'}
-- {id: btnMarkdownHelp,             translation: 'Markdown幫助'}
 - {id: btnNumberedList,             translation: '有序列表'}
 - {id: btnQuote,                    translation: '引用'}
 - {id: btnSettings,                 translation: '設置'}

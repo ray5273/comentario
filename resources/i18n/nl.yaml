@@ -32,12 +32,12 @@
 - {id: btnBold,                     translation: 'Vetgedrukt'}
 - {id: btnBulletList,               translation: 'Bulletlist'}
 - {id: btnCode,                     translation: 'Code'}
+- {id: btnEditorHelp,               translation: 'Editorhulp'}
 - {id: btnImage,                    translation: 'Afbeelding'}
 - {id: btnItalic,                   translation: 'Cursief'}
 - {id: btnLink,                     translation: 'Link'}
 - {id: btnLock,                     translation: 'Vergrendelen'}
 - {id: btnLogout,                   translation: 'Uitloggen'}
-- {id: btnMarkdownHelp,             translation: 'Markdown-help'}
 - {id: btnNumberedList,             translation: 'Genummerde lijst'}
 - {id: btnQuote,                    translation: 'Citaat'}
 - {id: btnSettings,                 translation: 'Instellingen'}

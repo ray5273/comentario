@@ -399,6 +399,7 @@ footer {
 .highlight {
     pre {
         padding: 1rem;
+        background-color: adjust-color($primary, $saturation: -25%, $alpha: -0.95) !important;
     }
 }
 

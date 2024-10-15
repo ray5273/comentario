@@ -39,6 +39,13 @@ const SVG_ICONS = {
  */
 export class UIToolkit {
 
+    // noinspection JSDeprecatedSymbols
+    /**
+     * Whether we're running on a Mac. `platform` is technically deprecated, but there's no real alternative at the
+     * moment so keep it that way.
+     */
+    static readonly isMac = navigator.platform.toLowerCase().includes('mac');
+
     /**
      * Create and return a new link (anchor) element.
      * @param text Link text.
@@ -107,7 +114,11 @@ export class UIToolkit {
             .on('keydown', (f, e) => {
                 switch (e.code) {
                     case 'Enter':
-                        return e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && submit(f, e);
+                        // Mac OS requires pressing Cmd (= Meta), all others Ctrl
+                        return (this.isMac !== e.ctrlKey) && (this.isMac === e.metaKey) &&
+                            !e.shiftKey &&
+                            !e.altKey &&
+                            submit(f, e);
                     case 'Escape':
                         return !e.ctrlKey && !e.shiftKey && !e.altKey && !e.metaKey && cancel(e);
                 }

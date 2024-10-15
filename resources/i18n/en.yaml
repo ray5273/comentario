@@ -35,12 +35,12 @@
 - {id: btnBold,                     translation: 'Bold'}
 - {id: btnBulletList,               translation: 'Bullet list'}
 - {id: btnCode,                     translation: 'Code'}
+- {id: btnEditorHelp,               translation: 'Editor help'}
 - {id: btnImage,                    translation: 'Image'}
 - {id: btnItalic,                   translation: 'Italic'}
 - {id: btnLink,                     translation: 'Link'}
 - {id: btnLock,                     translation: 'Lock'}
 - {id: btnLogout,                   translation: 'Logout'}
-- {id: btnMarkdownHelp,             translation: 'Markdown help'}
 - {id: btnNumberedList,             translation: 'Numbered list'}
 - {id: btnQuote,                    translation: 'Quote'}
 - {id: btnSettings,                 translation: 'Settings'}

@@ -32,12 +32,12 @@
 - {id: btnBold,                     translation: 'In đậm'}
 - {id: btnBulletList,               translation: 'Danh sách đánh dấu'}
 - {id: btnCode,                     translation: 'Mã'}
+- {id: btnEditorHelp,               translation: 'Trợ giúp biên tập'}
 - {id: btnImage,                    translation: 'Hình ảnh'}
 - {id: btnItalic,                   translation: 'In nghiêng'}
 - {id: btnLink,                     translation: 'Liên kết'}
 - {id: btnLock,                     translation: 'Khóa'}
 - {id: btnLogout,                   translation: 'Đăng xuất'}
-- {id: btnMarkdownHelp,             translation: 'Trợ giúp Markdown'}
 - {id: btnNumberedList,             translation: 'Danh sách đánh số'}
 - {id: btnQuote,                    translation: 'Trích dẫn'}
 - {id: btnSettings,                 translation: 'Cài đặt'}

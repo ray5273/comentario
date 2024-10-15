@@ -32,12 +32,12 @@
 - {id: btnBold,                     translation: 'Жирный'}
 - {id: btnBulletList,               translation: 'Маркированный список'}
 - {id: btnCode,                     translation: 'Код'}
+- {id: btnEditorHelp,               translation: 'Справка по редактору'}
 - {id: btnImage,                    translation: 'Изображение'}
 - {id: btnItalic,                   translation: 'Курсив'}
 - {id: btnLink,                     translation: 'Ссылка'}
 - {id: btnLock,                     translation: 'Заблокировать'}
 - {id: btnLogout,                   translation: 'Выйти'}
-- {id: btnMarkdownHelp,             translation: 'Справка по Markdown'}
 - {id: btnNumberedList,             translation: 'Нумерованный список'}
 - {id: btnQuote,                    translation: 'Цитата'}
 - {id: btnSettings,                 translation: 'Настройки'}
