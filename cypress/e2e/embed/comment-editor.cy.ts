@@ -378,7 +378,7 @@ context('Comment Editor', () => {
             const btns = [
                 'Bold (Ctrl+B)', 'Italic (Ctrl+I)', 'Strikethrough (Ctrl+Shift+X)', 'Link (Ctrl+K)',
                 'Quote (Ctrl+Shift+.)', 'Code (Ctrl+E)', 'Image', 'Table', 'Bullet list (Ctrl+Shift+8)',
-                'Numbered list (Ctrl+Shift+7)', 'Markdown help'];
+                'Numbered list (Ctrl+Shift+7)', 'Editor help'];
 
             /** Disable the given config value, visit the site and check the toolbar buttons. */
             const checkSetting = (key: string, hidesButton: string) => {
@@ -438,12 +438,12 @@ context('Comment Editor', () => {
                             .should('eq', test.wantHtml);
                     }))));
 
-        it('has Markdown help button', () => {
+        it('has Editor help button', () => {
             visitAndEdit();
-            cy.get('@toolbar').find('.comentario-btn[title="Markdown help"]')
+            cy.get('@toolbar').find('.comentario-btn[title="Editor help"]')
                 .should(
                     'be.anchor',
-                    'https://edge.docs.comentario.app/en/kb/markdown/',
+                    'https://edge.docs.comentario.app/en/kb/comment-editor/',
                     {newTab: true, noOpener: true, noReferrer: false, noFollow: false});
         });
     });
