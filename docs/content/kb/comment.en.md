@@ -9,6 +9,7 @@ seeAlso:
     - domain
     - domain-page
     - comment-tree
+    - comment-editor
 ---
 
 A **comment** is, just like [domain](domain), a basic building block in Comentario. A comment represents a piece of text, multiple comments are arranged in a tree structure called [comment tree](comment-tree).

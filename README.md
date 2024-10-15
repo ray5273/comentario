@@ -20,6 +20,7 @@ Available features:
   * Optional commenting without registration, including anonymous comments;
   * Local authentication with email and password;
   * Social login via Google, Twitter/X, Facebook, GitHub, GitLab;
+  * Any generic OpenID Connect (OIDC) provider, e.g. LinkedIn;
   * Single Sign-On (interactive and non-interactive).
 * **Hierarchical comments**\
   Each comment can be replied to, which results in nested comments. The number of nesting levels is unlimited, but you can opt to limit the maximum visual nesting level.

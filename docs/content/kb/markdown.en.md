@@ -3,6 +3,9 @@ title: Markdown
 description: Markdown format used in Comentario comments
 tags:
     - Markdown
+seeAlso:
+    - comment
+    - comment-editor
 ---
 
 Comentario allows to write comments with rich formatting by using the so-called **Markdown format** (or language).
