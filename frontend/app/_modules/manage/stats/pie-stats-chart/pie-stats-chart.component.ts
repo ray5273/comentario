@@ -1,4 +1,4 @@
-import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { debounceTime, Subject } from 'rxjs';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { ApiGeneralService, StatsDimensionItem } from '../../../../../generated-api';
@@ -42,7 +42,6 @@ export class PieStatsChartComponent {
     private reload$ = new Subject<void>();
 
     constructor(
-        @Inject(LOCALE_ID) private readonly locale: string,
         private readonly api: ApiGeneralService,
     ) {
         // Reload on a property change, with some delay

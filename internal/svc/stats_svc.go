@@ -2,6 +2,7 @@ package svc
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
@@ -27,6 +28,9 @@ type StatsService interface {
 	GetDailyDomainUserCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
 	// GetDailyViewCounts collects and returns a daily statistics for views, optionally limited to a specific domain
 	GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
+	// GetTopPages collects and returns top num performing page items by the given property prop (either "views" or
+	// "comments")
+	GetTopPages(isSuperuser bool, prop string, userID, domainID *uuid.UUID, numDays, num int) ([]*exmodels.PageStatsItem, error)
 	// GetTotals collects and returns total figures for all domains accessible to the specified user
 	GetTotals(curUser *data.User) (*StatsTotals, error)
 	// GetViewStats returns view numbers for the given dimension values, optionally limited to a specific domain
@@ -162,6 +166,67 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 
 	// Query view data
 	return svc.queryDailyStats(q, start, numDays)
+}
+
+func (svc *statsService) GetTopPages(isSuperuser bool, prop string, userID, domainID *uuid.UUID, numDays, num int) ([]*exmodels.PageStatsItem, error) {
+	logger.Debugf("statsService.GetTopPages(%v, %q, %s, %s, %d, %d)", isSuperuser, prop, userID, domainID, numDays, num)
+
+	// Calculate the start date
+	numDays, start := getStatsStartDate(numDays)
+
+	// Prepare a counting query, grouped by page
+	q := db.From(goqu.T("cm_domain_pages").As("p")).
+		Select(
+			// Domain page fields
+			"p.domain_id", "p.id", "p.path", "p.title",
+			// Domain fields
+			goqu.I("d.host").As("domain_host"),
+			// Aggregate count
+			goqu.COUNT("*").As("cnt")).
+		// Join the domain
+		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
+		GroupBy("d.host", "p.id").
+		// Sort by count, descending, then, additionally, by page ID for stable ordering
+		Order(goqu.I("cnt").Desc(), goqu.I("p.id").Asc()).
+		Limit(uint(num))
+
+	// Set up a roll-up condition
+	switch prop {
+	case "views":
+		q = q.
+			// Join the page's views
+			Join(goqu.T("cm_domain_page_views").As("v"), goqu.On(goqu.Ex{"v.page_id": goqu.I("p.id")})).
+			// Select only last N days
+			Where(goqu.I("v.ts_created").Gte(start))
+	case "comments":
+		q = q.
+			// Join the page's comments
+			Join(goqu.T("cm_comments").As("c"), goqu.On(goqu.Ex{"c.page_id": goqu.I("p.id")})).
+			// Select only last N days, and exclude deleted
+			Where(goqu.I("c.ts_created").Gte(start), goqu.I("c.is_deleted").IsFalse())
+	default:
+		return nil, fmt.Errorf("statsService.GetTopPages: invalid prop value %q", prop)
+	}
+
+	// Filter by domain, if any
+	if domainID != nil {
+		q = q.Where(goqu.Ex{"d.id": domainID})
+	}
+
+	// If the user isn't a superuser, filter by owned domains
+	if !isSuperuser {
+		q = addStatsOwnedDomainFilter(q, userID)
+	}
+
+	// Query the data
+	var dbRecs []*exmodels.PageStatsItem
+	if err := q.ScanStructs(&dbRecs); err != nil {
+		logger.Errorf("statsService.GetTopPages: ScanStructs() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// Succeeded
+	return dbRecs, nil
 }
 
 func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {

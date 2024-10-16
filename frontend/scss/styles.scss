@@ -35,6 +35,10 @@ section {
     filter: saturate(0%);
 }
 
+.smaller {
+    font-size: $small-font-size * 0.9;
+}
+
 // Collapse toggler
 .collapse-toggler {
 

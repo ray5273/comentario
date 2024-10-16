@@ -890,6 +890,41 @@ definitions:
         x-isnullable: false
         x-omitempty: false
 
+  pageStatsItem:
+    description: Item of page statistics
+    type: object
+    readOnly: true
+    required:
+      - domainId
+      - domainHost
+      - id
+      - path
+      - count
+    properties:
+      domainId:
+        type: string
+        x-isnullable: false
+      domainHost:
+        type: string
+        x-isnullable: false
+      id:
+        type: string
+        x-isnullable: false
+      path:
+        type: string
+        x-isnullable: false
+      title:
+        type: string
+      count:
+        type: number
+        format: uint
+        x-omitempty: false
+        x-isnullable: false
+    x-go-type:
+      import:
+        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+      type: "PageStatsItem"
+
   path:
     description: Path on a certain host
     example: /foo
@@ -2696,6 +2731,32 @@ paths:
           description: Daily statistical data
           schema:
             $ref: "#/definitions/statsDailyCounts"
+
+  /dashboard/stats/pages:
+    get:
+      operationId: DashboardPageStats
+      summary: Get top performing pages by view/comment numbers for the current user and, optionally, specified domain
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/queryStatsDays"
+        - $ref: "#/parameters/queryOptionalDomain"
+      responses:
+        200:
+          description: Top performing pages by view/comment numbers
+          schema:
+            type: object
+            properties:
+              views:
+                type: array
+                items:
+                  $ref: "#/definitions/pageStatsItem"
+                description: List of top pages by number of views, sorted in descending order
+              comments:
+                type: array
+                items:
+                  $ref: "#/definitions/pageStatsItem"
+                description: List of top pages by number of comments, sorted in descending order
 
   /dashboard/stats/views/{dimension}:
     get:

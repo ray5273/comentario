@@ -65,6 +65,7 @@ import { PluginModule } from '../plugin/plugin.module';
 import { AttributeTableComponent } from './attribute-table/attribute-table.component';
 import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.component';
 import { PageViewStatsComponent } from './stats/page-view-stats/page-view-stats.component';
+import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.component';
 
 @NgModule({
     declarations: [
@@ -121,6 +122,7 @@ import { PageViewStatsComponent } from './stats/page-view-stats/page-view-stats.
         UserLinkComponent,
         UserManagerComponent,
         UserPropertiesComponent,
+        TopPagesStatsComponent,
     ],
     imports: [
         CommonModule,

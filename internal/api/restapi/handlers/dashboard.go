@@ -10,6 +10,7 @@ import (
 )
 
 func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *data.User) middleware.Responder {
+	// Extract and parse the parameters
 	numDays := int(swag.Uint64Value(params.Days))
 	domainID, r := parseUUIDPtr(params.Domain)
 	if r != nil {
@@ -45,7 +46,35 @@ func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *dat
 	return api_general.NewDashboardDailyStatsOK().WithPayload(counts)
 }
 
+func DashboardPageStats(params api_general.DashboardPageStatsParams, user *data.User) middleware.Responder {
+	// Extract and parse the parameters
+	numDays := int(swag.Uint64Value(params.Days))
+	domainID, r := parseUUIDPtr(params.Domain)
+	if r != nil {
+		return r
+	}
+
+	// Collect view stats
+	vc, err := svc.TheStatsService.GetTopPages(user.IsSuperuser, "views", &user.ID, domainID, numDays, 5)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Collect comment stats
+	cc, err := svc.TheStatsService.GetTopPages(user.IsSuperuser, "comments", &user.ID, domainID, numDays, 5)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDashboardPageStatsOK().WithPayload(&api_general.DashboardPageStatsOKBody{
+		Comments: cc,
+		Views:    vc,
+	})
+}
+
 func DashboardPageViewStats(params api_general.DashboardPageViewStatsParams, user *data.User) middleware.Responder {
+	// Extract and parse the parameters
 	numDays := int(swag.Uint64Value(params.Days))
 	domainID, r := parseUUIDPtr(params.Domain)
 	if r != nil {
