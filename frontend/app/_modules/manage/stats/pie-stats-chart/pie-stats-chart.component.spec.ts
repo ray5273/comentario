@@ -1,9 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { MockComponents, MockProvider } from 'ng-mocks';
+import { NgChartsModule } from 'ng2-charts';
 import { PieStatsChartComponent } from './pie-stats-chart.component';
-import { ApiGeneralService } from '../../../../../generated-api';
 import { ToolsModule } from '../../../tools/tools.module';
-import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 
 describe('PieStatsChartComponent', () => {
 
@@ -12,11 +10,8 @@ describe('PieStatsChartComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [PieStatsChartComponent, MockComponents(NoDataComponent)],
-            providers: [
-                MockProvider(ApiGeneralService),
-            ],
-            imports: [ToolsModule],
+            declarations: [PieStatsChartComponent],
+            imports: [ToolsModule, NgChartsModule],
         })
             .compileComponents();
 

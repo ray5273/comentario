@@ -64,8 +64,8 @@ import { CountryNamePipe } from './_pipes/country-name.pipe';
 import { PluginModule } from '../plugin/plugin.module';
 import { AttributeTableComponent } from './attribute-table/attribute-table.component';
 import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.component';
-import { PageViewStatsComponent } from './stats/page-view-stats/page-view-stats.component';
 import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.component';
+import { StatsComponent } from './stats/stats/stats.component';
 
 @NgModule({
     declarations: [
@@ -110,19 +110,19 @@ import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.
         DynConfigSectionNamePipe,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
-        PageViewStatsComponent,
         PieStatsChartComponent,
         ProfileComponent,
         SortPropertyComponent,
         SortSelectorComponent,
         StaticConfigComponent,
+        StatsComponent,
+        TopPagesStatsComponent,
         UpdatesBadgeComponent,
         UserDetailsComponent,
         UserEditComponent,
         UserLinkComponent,
         UserManagerComponent,
         UserPropertiesComponent,
-        TopPagesStatsComponent,
     ],
     imports: [
         CommonModule,

@@ -4,11 +4,9 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DashboardComponent } from './dashboard.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToolsModule } from '../../tools/tools.module';
-import { DailyStatsChartComponent } from '../stats/daily-stats-chart/daily-stats-chart.component';
 import { MetricCardComponent } from './metric-card/metric-card.component';
 import { mockAuthService } from '../../../_utils/_mocks.spec';
-import { PageViewStatsComponent } from '../stats/page-view-stats/page-view-stats.component';
-import { TopPagesStatsComponent } from '../stats/top-pages-stats/top-pages-stats.component';
+import { StatsComponent } from '../stats/stats/stats.component';
 
 describe('DashboardComponent', () => {
 
@@ -19,7 +17,7 @@ describe('DashboardComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [
                 DashboardComponent,
-                MockComponents(MetricCardComponent, DailyStatsChartComponent, PageViewStatsComponent, TopPagesStatsComponent),
+                MockComponents(MetricCardComponent, StatsComponent),
             ],
             imports: [ToolsModule],
             providers: [

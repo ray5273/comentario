@@ -4,17 +4,7 @@
     <app-domain-badge/>
 </header>
 
+<!-- Domain stats, when there's a domain -->
 @if ((domainMeta$ | async)?.domain?.id; as id) {
-    <!-- Stats chart -->
-    <app-daily-stats-chart [domainId]="id"/>
-
-    <!-- Pageview statistics -->
-    <div class="mt-3" id="domain-pageview-stats">
-        <app-page-view-stats [domainId]="id"/>
-    </div>
-
-    <!-- Top performing pages -->
-    <div class="mt-3" id="dashboard-top-pages-stats">
-        <app-top-pages-stats [domainId]="id"/>
-    </div>
+    <app-stats [domainId]="id"/>
 }

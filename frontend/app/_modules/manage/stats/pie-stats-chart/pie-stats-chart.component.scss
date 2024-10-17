@@ -26,9 +26,18 @@
     padding: 0 0.33em;
 }
 
-.chart-legend-colour {
+.chart-legend-item-colour {
     width: 0.75rem;
     height: 0.75rem;
     border: 1px solid white;
     margin-right: 0.1em;
+}
+
+.chart-legend-item-label {
+    font-weight: $font-weight-bold;
+}
+
+.chart-legend-item-value {
+    margin-left: 0.33em;
+    color: $secondary;
 }

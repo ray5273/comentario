@@ -1,13 +1,8 @@
-<!-- Info text -->
-@if (countDays) {
-    <p class="text-muted stats-chart-info" i18n>Last {{ countDays }} days.</p>
-}
-
 <div class="row row-cols-1 row-cols-lg-2 g-2">
     <!-- Views -->
-    <div [appSpinner]="loadingViews.active" spinnerSize="lg" class="col">
+    <div class="col">
         <!-- Numbers of views -->
-        <app-metric-card [value]="countViews" label="Views" i18n-label="metric-label|"/>
+        <app-metric-card [value]="totalViews" label="Views" i18n-label="metric-label|"/>
 
         <!-- Chart -->
         @if (chartDataViews; as d) {
@@ -18,9 +13,9 @@
     </div>
 
     <!-- Comments -->
-    <div [appSpinner]="loadingComments.active" spinnerSize="lg" class="col">
+    <div class="col">
         <!-- Numbers of comments -->
-        <app-metric-card [value]="countComments" label="Comments" i18n-label="metric-label|"/>
+        <app-metric-card [value]="totalComments" label="Comments" i18n-label="metric-label|"/>
 
         <!-- Chart -->
         @if (chartDataComments; as d) {
@@ -30,6 +25,3 @@
         }
     </div>
 </div>
-
-<!-- Placeholder when no data -->
-@if (!countDays) { <app-no-data/> }

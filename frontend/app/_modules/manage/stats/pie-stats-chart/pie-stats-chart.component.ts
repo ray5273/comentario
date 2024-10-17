@@ -1,8 +1,6 @@
 import { Component, Input } from '@angular/core';
-import { debounceTime, Subject } from 'rxjs';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { ApiGeneralService, StatsDimensionItem } from '../../../../../generated-api';
-import { ProcessingStatus } from '../../../../_utils/processing-status';
+import { StatsDimensionItem } from '../../../../../generated-api';
 import { HashColourPipe } from '../../../tools/_pipes/hash-colour.pipe';
 
 @Component({
@@ -34,86 +32,40 @@ export class PieStatsChartComponent {
     /** Item colours. */
     colours?: string[];
 
-    readonly loading = new ProcessingStatus();
-
-    private _dimension?: 'proto' | 'country' | 'browser' | 'os' | 'device';
-    private _domainId?: string;
-    private _numberOfDays?: number;
-    private reload$ = new Subject<void>();
-
-    constructor(
-        private readonly api: ApiGeneralService,
-    ) {
-        // Reload on a property change, with some delay
-        this.reload$.pipe(debounceTime(200)).subscribe(() => this.reload());
-    }
-
-    /**
-     * Dimension to load stats for.
-     */
+    /** Page view statistical data. */
     @Input({required: true})
-    set dimension(v: typeof this._dimension) {
-        this._dimension = v;
-        this.reload$.next();
-    }
+    set data(items: StatsDimensionItem[] | undefined) {
+        if (items) {
+            // Limit the number of segments to MaxItems
+            this.labels = items.slice(0, PieStatsChartComponent.MaxItems).map(item => item.element);
+            this.values = items.splice(0, PieStatsChartComponent.MaxItems).map(item => item.count);
 
-    /**
-     * ID of the domain to collect the statistics for. If an empty string, statistics for all domains of the current
-     * user is collected. If undefined, it means no data is available yet.
-     */
-    @Input({required: true})
-    set domainId(id: string | undefined) {
-        this._domainId = id;
-        this.reload$.next();
-    }
+            // Calculate segment colours based on label hash
+            const pipe = new HashColourPipe();
+            this.colours = this.labels.map(s => pipe.transform(s));
 
-    /**
-     * Number of days of statistics to request from the backend.
-     */
-    @Input()
-    set numberOfDays(n: number) {
-        this._numberOfDays = n;
-        this.reload$.next();
-    }
+            // Roll up counts beyond MaxItems
+            if (items.length) {
+                this.labels.push($localize`Others`);
+                this.values.push(items.reduce((acc, item) => acc + item.count, 0));
+                this.colours.push(HashColourPipe.DefaultColour);
+            }
 
-    private reload() {
-        // Undefined dimension or domain means the data is uninitialised yet
-        if (!this._dimension || this._domainId === undefined) {
+            // Make up a configuration object
+            this.chartData = {
+                datasets: [{
+                    data:                 this.values,
+                    borderColor:          '#ffffff',
+                    backgroundColor:      this.colours,
+                    hoverBackgroundColor: this.colours,
+                }],
+                labels: this.labels,
+            };
+        } else {
+            this.labels    = undefined;
+            this.values    = undefined;
+            this.colours   = undefined;
             this.chartData = undefined;
-            return;
         }
-
-        // Fetch view counts
-        this.api.dashboardPageViewStats(this._dimension, this._numberOfDays, this._domainId || undefined)
-            .pipe(this.loading.processing())
-            .subscribe(data => this.chartData = this.getChartData(data));
-    }
-
-    private getChartData(items: StatsDimensionItem[]): ChartConfiguration['data'] {
-        // Limit the number of segments to MaxItems
-        this.labels = items.slice(0, PieStatsChartComponent.MaxItems).map(item => item.element);
-        this.values = items.splice(0, PieStatsChartComponent.MaxItems).map(item => item.count);
-
-        // Calculate segment colours based on label hash
-        const pipe = new HashColourPipe();
-        this.colours = this.labels.map(s => pipe.transform(s));
-
-        // Roll up counts beyond MaxItems
-        if (items.length) {
-            this.labels.push($localize`Others`);
-            this.values.push(items.reduce((acc, item) => acc + item.count, 0));
-            this.colours.push(HashColourPipe.DefaultColour);
-        }
-
-        // Make up a configuration object
-        return {
-            datasets: [{
-                data:                 this.values,
-                borderColor:          '#ffffff',
-                backgroundColor:      this.colours,
-                hoverBackgroundColor: this.colours,
-            }],
-            labels: this.labels,
-        };
     }
 }

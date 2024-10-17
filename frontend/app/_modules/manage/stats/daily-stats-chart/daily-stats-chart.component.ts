@@ -1,9 +1,6 @@
 import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
-import { debounceTime, Subject } from 'rxjs';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
-import { ApiGeneralService } from '../../../../../generated-api';
-import { ProcessingStatus } from '../../../../_utils/processing-status';
 
 @Component({
     selector: 'app-daily-stats-chart',
@@ -12,86 +9,46 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 })
 export class DailyStatsChartComponent {
 
-    /** Actual number of days of statistics provided by the backend. */
-    countDays = 0;
     /** Total number of views over the returned stats period. */
-    countViews?: number;
-    /** Total number of comments over the returned stats period. */
-    countComments?: number;
+    @Input({required: true})
+    totalViews?: number;
 
+    /** Total number of comments over the returned stats period. */
+    @Input({required: true})
+    totalComments?: number;
+
+    // Chart data
     chartDataViews?: ChartConfiguration['data'];
     chartDataComments?: ChartConfiguration['data'];
     chartOptionsViews?: ChartOptions;
     chartOptionsComments?: ChartOptions;
 
-    readonly loadingComments = new ProcessingStatus();
-    readonly loadingViews    = new ProcessingStatus();
-
-    private _domainId?: string;
-    private _numberOfDays?: number;
-    private reload$ = new Subject<void>();
-
     constructor(
         @Inject(LOCALE_ID) private readonly locale: string,
-        private readonly api: ApiGeneralService,
-    ) {
-        // Reload on a property change, with some delay
-        this.reload$.pipe(debounceTime(200)).subscribe(() => this.reload());
-    }
+    ) {}
 
-    /**
-     * ID of the domain to collect the statistics for. If an empty string, statistics for all domains of the current
-     * user is collected.
-     */
-    @Input()
-    set domainId(id: string | undefined) {
-        this._domainId = id;
-        this.reload$.next();
-    }
-
-    /**
-     * Number of days of statistics to request from the backend.
-     */
-    @Input()
-    set numberOfDays(n: number) {
-        this._numberOfDays = n;
-        this.reload$.next();
-    }
-
-    private reload() {
-        // Undefined domain means it's uninitialised yet
-        if (this._domainId === undefined) {
-            this.chartDataViews = undefined;
-            this.chartDataComments = undefined;
-            return;
+    /** Daily numbers of views. */
+    @Input({required: true})
+    set countsViews(c: number[] | undefined) {
+        if (c) {
+            this.chartDataViews    = this.getChartConfig(c, $localize`Views`, '#339b11') ;
+            this.chartOptionsViews = this.getChartOptions(this.chartDataViews.labels as string[]);
+        } else {
+            this.chartDataViews    = undefined;
+            this.chartOptionsViews = undefined;
         }
+    }
 
-        // Fetch view counts
-        this.api.dashboardDailyStats('views', this._numberOfDays, this._domainId || undefined)
-            .pipe(this.loadingViews.processing())
-            .subscribe(counts => {
-                // Fetch the number of days
-                this.countDays = counts.length;
-
-                // Generate data
-                this.chartDataViews = this.getChartConfig(counts, $localize`Views`, '#339b11');
-                this.chartOptionsViews = this.getChartOptions(this.chartDataViews.labels as string[]);
-
-                // Count totals
-                this.countViews = counts!.reduce((acc, n) => acc + n, 0);
-            });
-
-        // Fetch comment counts
-        this.api.dashboardDailyStats('comments', this._numberOfDays, this._domainId || undefined)
-            .pipe(this.loadingComments.processing())
-            .subscribe(counts => {
-                // Generate data
-                this.chartDataComments = this.getChartConfig(counts, $localize`Comments`, '#376daf');
-                this.chartOptionsComments = this.getChartOptions(this.chartDataComments.labels as string[]);
-
-                // Count totals
-                this.countComments = counts!.reduce((acc, n) => acc + n, 0);
-            });
+    /** Daily numbers of comments. */
+    @Input({required: true})
+    set countsComments(c: number[] | undefined) {
+        if (c) {
+            this.chartDataComments    = this.getChartConfig(c, $localize`Comments`, '#376daf');
+            this.chartOptionsComments = this.getChartOptions(this.chartDataComments.labels as string[]);
+        } else {
+            this.chartDataComments    = undefined;
+            this.chartOptionsComments = undefined;
+        }
     }
 
     private getChartConfig(data: number[], label: string, colour: string): ChartConfiguration['data'] {

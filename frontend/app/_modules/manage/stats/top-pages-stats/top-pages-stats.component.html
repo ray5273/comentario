@@ -1,9 +1,7 @@
-<h2 i18n="heading">Top performing pages</h2>
-
 <div class="row row-cols-1 row-cols-lg-2 g-2">
     <!-- Stats by views -->
     <div class="col">
-        <div [appSpinner]="loading.active" spinnerSize="lg" class="card shadow-none border-0">
+        <div class="card shadow-none border-0">
             <div class="card-body">
                 <div class="card-title fw-bold" i18n>By views</div>
                 <div class="list-group">
@@ -14,11 +12,11 @@
     </div>
     <!-- Stats by comments -->
     <div class="col">
-        <div [appSpinner]="loading.active" spinnerSize="lg" class="card shadow-none border-0">
+        <div class="card shadow-none border-0">
             <div class="card-body">
                 <div class="card-title fw-bold" i18n>By comments</div>
                 <div class="list-group">
-                    <div [ngTemplateOutlet]="table" [ngTemplateOutletContext]="{list: pagesByComments, metric: commmentsHeading}"></div>
+                    <div [ngTemplateOutlet]="table" [ngTemplateOutletContext]="{list: pagesByComments, metric: commentsHeading}"></div>
                 </div>
             </div>
         </div>
@@ -31,7 +29,7 @@
             <div class="d-flex w-100 justify-content-between overflow-hidden">
                 <div>
                     <!-- Domain host (md+ and only when no specific domain is given) -->
-                    @if (!_domainId) {
+                    @if (!domainId) {
                         <span class="text-black-50 d-none d-md-inline domain-page-domain">{{ p.domainHost }}</span>
                     }
                     <!-- Page path -->
