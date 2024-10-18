@@ -82,9 +82,7 @@ context('Dashboard', () => {
                 metrics:
                     // language=yaml
                     `
-                    - label:    Domains
-                      sublabel: you're commenter on
-                      value:    0
+                    - {label: Domains, sublabel: you're commenter on, value: 0}
                     `,
             },
             {
@@ -92,16 +90,10 @@ context('Dashboard', () => {
                 user:         USERS.commenterTwo,
                 metrics:
                     // language=yaml
-                        `
-                    - label:    Domains
-                      sublabel: you're commenter on
-                      value:    1
-                    - label:    Pages
-                      sublabel: you commented on
-                      value:    3
-                    - label:    Comments
-                      sublabel: you authored
-                      value:    3
+                    `
+                    - {label: Domains,  sublabel: you're commenter on, value: 1}
+                    - {label: Pages,    sublabel: you commented on,    value: 3}
+                    - {label: Comments, sublabel: you authored,        value: 3}
                     `,
             },
             {
@@ -111,97 +103,58 @@ context('Dashboard', () => {
                 metrics:
                     // language=yaml
                     `
-                    - label:    Domains
-                      sublabel: you own
-                      value:    1
-                    - label:    Domains
-                      sublabel: you're commenter on
-                      value:    0
-                    - label:    Pages
-                      sublabel: you moderate
-                      value:    14
-                    - label:    Pages
-                      sublabel: you commented on
-                      value:    9
-                    - label:    Domain users
-                      sublabel: you manage
-                      value:    6
-                    - label:    Comments
-                      sublabel: total
-                      value:    40
-                    - label:    Comments
-                      sublabel: you authored
-                      value:    17
-                    - label:    Commenters
-                      sublabel: total
-                      value:    7
+                    - {label: Domains,      sublabel: you own,             value: 1}
+                    - {label: Domains,      sublabel: you're commenter on, value: 0}
+                    - {label: Pages,        sublabel: you moderate,        value: 14}
+                    - {label: Pages,        sublabel: you commented on,    value: 9}
+                    - {label: Domain users, sublabel: you manage,          value: 6}
+                    - {label: Comments,     sublabel: total,               value: 40}
+                    - {label: Comments,     sublabel: you authored,        value: 17}
+                    - {label: Commenters,   sublabel: total,               value: 7}
                     `,
                 dailyMetrics:
                     // language=yaml
                     `
-                    - label:    Views
-                      value:    217
-                    - label:    Comments
-                      value:    40
+                    - {label: Views,    value: 217}
+                    - {label: Comments, value: 40}
                     `,
                 pageViewMetrics: {
                     country:
                         // language=yaml
                         `
-                        - label: US
-                          value: 36
-                        - label: DE
-                          value: 19
-                        - label: NL
-                          value: 17
-                        - label: KR
-                          value: 11
-                        - label: ES
-                          value: 11
-                        - label: Others
-                          value: 123
+                        - {label: US,        value: 36}
+                        - {label: DE,        value: 19}
+                        - {label: NL,        value: 17}
+                        - {label: BR,        value: 11}
+                        - {label: ES,        value: 11}
+                        - {label: Others,    value: 123}
                         `,
                     device:
                         // language=yaml
                         `
-                        - label: Computer
-                          value: 187
-                        - label: Phone
-                          value: 26
-                        - label: Unknown
-                          value: 4
+                        - {label: Computer,  value: 187}
+                        - {label: Phone,     value: 26}
+                        - {label: Unknown,   value: 4}
                         `,
                     browser:
                         // language=yaml
                         `
-                        - label: Chrome
-                          value: 114
-                        - label: Firefox
-                          value: 56
-                        - label: IE
-                          value: 24
-                        - label: Safari
-                          value: 8
-                        - label: Unknown
-                          value: 4
-                        - label: Others
-                          value: 11
+                        - {label: Chrome,    value: 114}
+                        - {label: Firefox,   value: 56}
+                        - {label: IE,        value: 24}
+                        - {label: Safari,    value: 8}
+                        - {label: GoogleBot, value: 4}
+                        - {label: Others,    value: 11}
                         `,
                     os:
                         // language=yaml
                         `
-                        - label: Windows
-                          value: 90
-                        - label: MacOSX
-                          value: 48
-                        - label: Linux
-                          value: 44
-                        - label: Android
-                          value: 20
-                        - label: iOS
-                          value: 6
-                        - label: Others
-                          value: 9
+                        - {label: Windows,   value: 90}
+                        - {label: MacOSX,    value: 48}
+                        - {label: Linux,     value: 44}
+                        - {label: Android,   value: 20}
+                        - {label: iOS,       value: 6}
+                        - {label: Others,    value: 9}
                         `,
                 },
                 topPages: {
@@ -224,44 +177,22 @@ context('Dashboard', () => {
                 metrics:
                     // language=yaml
                     `
-                    - label:    Domains
-                      sublabel: you own
-                      value:    1
-                    - label:    Domains
-                      sublabel: you moderate
-                      value:    1
-                    - label:    Domains
-                      sublabel: you're commenter on
-                      value:    1
-                    - label:    Domains
-                      sublabel: you're read-only on
-                      value:    1
-                    - label:    Pages
-                      sublabel: you moderate
-                      value:    17
-                    - label:    Pages
-                      sublabel: you commented on
-                      value:    2
-                    - label:    Domain users
-                      sublabel: you manage
-                      value:    1
-                    - label:    Comments
-                      sublabel: total
-                      value:    40
-                    - label:    Comments
-                      sublabel: you authored
-                      value:    4
-                    - label:    Commenters
-                      sublabel: total
-                      value:    7
+                    - {label: Domains,      sublabel: you own,             value: 1}
+                    - {label: Domains,      sublabel: you moderate,        value: 1}
+                    - {label: Domains,      sublabel: you're commenter on, value: 1}
+                    - {label: Domains,      sublabel: you're read-only on, value: 1}
+                    - {label: Pages,        sublabel: you moderate,        value: 17}
+                    - {label: Pages,        sublabel: you commented on,    value: 2}
+                    - {label: Domain users, sublabel: you manage,          value: 1}
+                    - {label: Comments,     sublabel: total,               value: 40}
+                    - {label: Comments,     sublabel: you authored,        value: 4}
+                    - {label: Commenters,   sublabel: total,               value: 7}
                     `,
                 dailyMetrics:
                     // language=yaml
                     `
-                    - label:    Views
-                      value:    0
-                    - label:    Comments
-                      value:    0
+                    - {label: Views,    value: 0}
+                    - {label: Comments, value: 0}
                     `,
             },
             {
@@ -273,91 +204,56 @@ context('Dashboard', () => {
                 metrics:
                     // language=yaml
                     `
-                    - label:    Users
-                      sublabel: total
-                      value:    16
-                    - label:    Domains
-                      sublabel: you're commenter on
-                      value:    0
-                    - label:    Pages
-                      sublabel: you moderate
-                      value:    18
-                    - label:    Domain users
-                      sublabel: you manage
-                      value:    9
-                    - label:    Comments
-                      sublabel: total
-                      value:    41
-                    - label:    Commenters
-                      sublabel: total
-                      value:    7
+                    - {label: Users,        sublabel: total,               value: 16}
+                    - {label: Domains,      sublabel: you're commenter on, value: 0}
+                    - {label: Pages,        sublabel: you moderate,        value: 18}
+                    - {label: Domain users, sublabel: you manage,          value: 9}
+                    - {label: Comments,     sublabel: total,               value: 41}
+                    - {label: Commenters,   sublabel: total,               value: 7}
                     `,
                 dailyMetrics:
                     // language=yaml
                     `
-                    - label:    Views
-                      value:    217
-                    - label:    Comments
-                      value:    41
+                    - {label: Views,    value: 217}
+                    - {label: Comments, value: 41}
                     `,
                 pageViewMetrics: {
                     country:
                         // language=yaml
                         `
-                        - label: US
-                          value: 36
-                        - label: DE
-                          value: 19
-                        - label: NL
-                          value: 17
-                        - label: KR
-                          value: 11
-                        - label: ES
-                          value: 11
-                        - label: Others
-                          value: 123
+                        - {label: US,        value: 36}
+                        - {label: DE,        value: 19}
+                        - {label: NL,        value: 17}
+                        - {label: BR,        value: 11}
+                        - {label: ES,        value: 11}
+                        - {label: Others,    value: 123}
                         `,
                     device:
                         // language=yaml
                         `
-                        - label: Computer
-                          value: 187
-                        - label: Phone
-                          value: 26
-                        - label: Unknown
-                          value: 4
+                        - {label: Computer,  value: 187}
+                        - {label: Phone,     value: 26}
+                        - {label: Unknown,   value: 4}
                         `,
                     browser:
                         // language=yaml
                         `
-                        - label: Chrome
-                          value: 114
-                        - label: Firefox
-                          value: 56
-                        - label: IE
-                          value: 24
-                        - label: Safari
-                          value: 8
-                        - label: Unknown
-                          value: 4
-                        - label: Others
-                          value: 11
+                        - {label: Chrome,    value: 114}
+                        - {label: Firefox,   value: 56}
+                        - {label: IE,        value: 24}
+                        - {label: Safari,    value: 8}
+                        - {label: GoogleBot, value: 4}
+                        - {label: Others,    value: 11}
                         `,
                     os:
                         // language=yaml
                         `
-                        - label: Windows
-                          value: 90
-                        - label: MacOSX
-                          value: 48
-                        - label: Linux
-                          value: 44
-                        - label: Android
-                          value: 20
-                        - label: iOS
-                          value: 6
-                        - label: Others
-                          value: 9
+                        - {label: Windows,   value: 90}
+                        - {label: MacOSX,    value: 48}
+                        - {label: Linux,     value: 44}
+                        - {label: Android,   value: 20}
+                        - {label: iOS,       value: 6}
+                        - {label: Others,    value: 9}
                         `,
                 },
                 topPages: {

@@ -51,60 +51,39 @@ context('Domain Statistics page', () => {
                     cy.get('@pageViewCharts').find('#stats-page-views-country').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: US
-                          value: 36
-                        - label: DE
-                          value: 19
-                        - label: NL
-                          value: 17
-                        - label: KR
-                          value: 11
-                        - label: ES
-                          value: 11
-                        - label: Others
-                          value: 123
+                        - {label: US,     value: 36}
+                        - {label: DE,     value: 19}
+                        - {label: NL,     value: 17}
+                        - {label: BR,     value: 11}
+                        - {label: ES,     value: 11}
+                        - {label: Others, value: 123}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-device').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Computer
-                          value: 187
-                        - label: Phone
-                          value: 26
-                        - label: Unknown
-                          value: 4
+                        - {label: Computer, value: 187}
+                        - {label: Phone,    value: 26}
+                        - {label: Unknown,  value: 4}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-browser').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Chrome
-                          value: 114
-                        - label: Firefox
-                          value: 56
-                        - label: IE
-                          value: 24
-                        - label: Safari
-                          value: 8
-                        - label: Unknown
-                          value: 4
-                        - label: Others
-                          value: 11
+                        - {label: Chrome,    value: 114}
+                        - {label: Firefox,   value: 56}
+                        - {label: IE,        value: 24}
+                        - {label: Safari,    value: 8}
+                        - {label: GoogleBot, value: 4}
+                        - {label: Others,    value: 11}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-os').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Windows
-                          value: 90
-                        - label: MacOSX
-                          value: 48
-                        - label: Linux
-                          value: 44
-                        - label: Android
-                          value: 20
-                        - label: iOS
-                          value: 6
-                        - label: Others
-                          value: 9
+                        - {label: Windows, value: 90}
+                        - {label: MacOSX,  value: 48}
+                        - {label: Linux,   value: 44}
+                        - {label: Android, value: 20}
+                        - {label: iOS,     value: 6}
+                        - {label: Others,  value: 9}
                         `);
 
                     // Verify top pages
@@ -142,60 +121,39 @@ context('Domain Statistics page', () => {
                     cy.get('@pageViewCharts').find('#stats-page-views-country').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: US
-                          value: 36
-                        - label: DE
-                          value: 19
-                        - label: NL
-                          value: 17
-                        - label: KR
-                          value: 11
-                        - label: ES
-                          value: 11
-                        - label: Others
-                          value: 124  # Incremented
+                        - {label: US,     value: 36}
+                        - {label: DE,     value: 19}
+                        - {label: NL,     value: 17}
+                        - {label: BR,     value: 11}
+                        - {label: ES,     value: 11}
+                        - {label: Others, value: 124}  # Incremented
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-device').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Computer
-                          value: 188  # Incremented
-                        - label: Phone
-                          value: 26
-                        - label: Unknown
-                          value: 4
+                        - {label: Computer, value: 188}  # Incremented
+                        - {label: Phone,    value: 26}
+                        - {label: Unknown,  value: 4}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-browser').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Chrome
-                          value: 115  # Incremented
-                        - label: Firefox
-                          value: 56
-                        - label: IE
-                          value: 24
-                        - label: Safari
-                          value: 8
-                        - label: Unknown
-                          value: 4
-                        - label: Others
-                          value: 11
+                        - {label: Chrome,    value: 115}  # Incremented
+                        - {label: Firefox,   value: 56}
+                        - {label: IE,        value: 24}
+                        - {label: Safari,    value: 8}
+                        - {label: GoogleBot, value: 4}
+                        - {label: Others,    value: 11}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-os').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Windows
-                          value: 90
-                        - label: MacOSX
-                          value: 48
-                        - label: Linux
-                          value: 45  # Incremented
-                        - label: Android
-                          value: 20
-                        - label: iOS
-                          value: 6
-                        - label: Others
-                          value: 9
+                        - {label: Windows, value: 90}
+                        - {label: MacOSX,  value: 48}
+                        - {label: Linux,   value: 45}  # Incremented
+                        - {label: Android, value: 20}
+                        - {label: iOS,     value: 6}
+                        - {label: Others,  value: 9}
                         `);
                     cy.get('@byViews').texts('.domain-page-metric').should('arrayMatch', ['218 views']);
 
@@ -210,60 +168,39 @@ context('Domain Statistics page', () => {
                     cy.get('@pageViewCharts').find('#stats-page-views-country').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: US
-                          value: 36
-                        - label: DE
-                          value: 19
-                        - label: NL
-                          value: 17
-                        - label: KR
-                          value: 11
-                        - label: ES
-                          value: 11
-                        - label: Others
-                          value: 125  # Incremented
+                        - {label: US,     value: 36}
+                        - {label: DE,     value: 19}
+                        - {label: NL,     value: 17}
+                        - {label: BR,     value: 11}
+                        - {label: ES,     value: 11}
+                        - {label: Others, value: 125}  # Incremented
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-device').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Computer
-                          value: 189  # Incremented
-                        - label: Phone
-                          value: 26
-                        - label: Unknown
-                          value: 4
+                        - {label: Computer, value: 189}  # Incremented
+                        - {label: Phone,    value: 26}
+                        - {label: Unknown,  value: 4}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-browser').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Chrome
-                          value: 116  # Incremented
-                        - label: Firefox
-                          value: 56
-                        - label: IE
-                          value: 24
-                        - label: Safari
-                          value: 8
-                        - label: Unknown
-                          value: 4
-                        - label: Others
-                          value: 11
+                        - {label: Chrome,    value: 116}  # Incremented
+                        - {label: Firefox,   value: 56}
+                        - {label: IE,        value: 24}
+                        - {label: Safari,    value: 8}
+                        - {label: GoogleBot, value: 4}
+                        - {label: Others,    value: 11}
                         `);
                     cy.get('@pageViewCharts').find('#stats-page-views-os').pieChartLegend().should('yamlMatch',
                         // language=yaml
                         `
-                        - label: Windows
-                          value: 90
-                        - label: MacOSX
-                          value: 48
-                        - label: Linux
-                          value: 46  # Incremented
-                        - label: Android
-                          value: 20
-                        - label: iOS
-                          value: 6
-                        - label: Others
-                          value: 9
+                        - {label: Windows, value: 90}
+                        - {label: MacOSX,  value: 48}
+                        - {label: Linux,   value: 46}  # Incremented
+                        - {label: Android, value: 20}
+                        - {label: iOS,     value: 6}
+                        - {label: Others,  value: 9}
                         `);
                     cy.get('@byViews').texts('.domain-page-path')  .should('arrayMatch', [TEST_PATHS.home, TEST_PATHS.noComment]);
                     cy.get('@byViews').texts('.domain-page-metric').should('arrayMatch', ['218 views', '1 views']);

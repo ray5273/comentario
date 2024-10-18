@@ -274,7 +274,8 @@ func (svc *statsService) GetViewStats(isSuperuser bool, dimension string, userID
 		// Select only last N days
 		Where(goqu.I("v.ts_created").Gte(start)).
 		GroupBy(dimension).
-		Order(goqu.I("cnt").Desc())
+		// Sort by count in descending order, and by element - for stable ordering
+		Order(goqu.I("cnt").Desc(), goqu.I("el").Asc())
 
 	// Filter by domain, if any
 	if domainID != nil {
