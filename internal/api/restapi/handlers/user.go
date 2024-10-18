@@ -59,7 +59,7 @@ func UserBan(params api_general.UserBanParams, user *data.User) middleware.Respo
 	// Update the user if necessary
 	ban := swag.BoolValue(params.Body.Ban)
 	if u.Banned != ban {
-		if err := svc.TheUserService.UpdateBanned(&user.ID, &u.ID, ban); err != nil {
+		if err := svc.TheUserService.UpdateBanned(&user.ID, u, ban); err != nil {
 			return respServiceError(err)
 		}
 	}
@@ -104,7 +104,7 @@ func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware
 	}
 
 	// Delete the user, optionally deleting their comments
-	if cntDel, err := svc.TheUserService.DeleteUserByID(&u.ID, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
+	if cntDel, err := svc.TheUserService.DeleteUserByID(u, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
 		return respServiceError(err)
 	} else {
 		// Succeeded

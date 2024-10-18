@@ -260,6 +260,18 @@ func (u *User) ColourIndex() byte {
 	return byte(n % ColourIndexCount)
 }
 
+// FromPluginUser updates this user model from the provided plugin model
+func (u *User) FromPluginUser(pu *plugin.User) {
+	// ID is immutable
+	u.WithName(pu.Name).
+		WithLangID(pu.LangID).
+		WithEmail(pu.Email).
+		WithSuperuser(pu.IsSuperuser).
+		WithConfirmed(pu.Confirmed).
+		WithBanned(pu.Banned, nil).
+		WithLocked(pu.IsLocked)
+}
+
 func (u *User) GetEmail() string {
 	return u.Email
 }
@@ -334,15 +346,6 @@ func (u *User) ToDTO() *models.User {
 	}
 }
 
-// ToPluginPrincipal returns a new plugin.Principal instance for this user
-func (u *User) ToPluginPrincipal() *plugin.Principal {
-	return &plugin.Principal{
-		ID:    u.ID,
-		Email: u.Email,
-		Name:  u.Name,
-	}
-}
-
 // ToPluginUser returns a new plugin.User instance for this user
 func (u *User) ToPluginUser() *plugin.User {
 	return &plugin.User{
@@ -386,12 +389,29 @@ func (u *User) VerifyPassword(s string) bool {
 	return bcrypt.CompareHashAndPassword([]byte(u.PasswordHash), []byte(s)) == nil
 }
 
+// WithBanned sets the value of Banned, BannedTime, and UserBanned. byUser can be nil
+func (u *User) WithBanned(b bool, byUser *uuid.UUID) *User {
+	if u.Banned != b {
+		u.Banned = b
+		if b {
+			u.BannedTime = NowNullable()
+			u.UserBanned = *PtrToNullUUID(byUser)
+		} else {
+			u.BannedTime = sql.NullTime{}
+			u.UserBanned = uuid.NullUUID{}
+		}
+	}
+	return u
+}
+
 // WithConfirmed sets the value of Confirmed and ConfirmedTime
 func (u *User) WithConfirmed(b bool) *User {
 	if u.Confirmed != b {
 		u.Confirmed = b
 		if b {
 			u.ConfirmedTime = NowNullable()
+		} else {
+			u.ConfirmedTime = sql.NullTime{}
 		}
 	}
 	return u
@@ -419,6 +439,12 @@ func (u *User) WithFederated(id, idpID string) *User {
 	} else {
 		u.FederatedIdP = sql.NullString{Valid: true, String: idpID}
 	}
+	return u
+}
+
+// WithLangID sets the LangID value
+func (u *User) WithLangID(s string) *User {
+	u.LangID = s
 	return u
 }
 

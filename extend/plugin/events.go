@@ -3,41 +3,60 @@
 
 package plugin
 
-// HandleEventResult is a result of handling an event
-type HandleEventResult struct {
-	// Handled, when true, indicates the event has been successfully handled and is not subject to further processing
-	Handled bool
+// UserPayload is implemented by events carrying a user
+type UserPayload interface {
+	// User payload
+	User() *User
+	// SetUser updates the user payload
+	SetUser(u *User)
 }
 
-// IsHandled returns whether this result indicates successful handling of an event
-func (r *HandleEventResult) IsHandled() bool {
-	return r != nil && r.Handled
+// UserEvent is an event related to user, which implements UserPayload
+type UserEvent struct {
+	user *User
+}
+
+func (e *UserEvent) User() *User {
+	return e.user
+}
+
+func (e *UserEvent) SetUser(u *User) {
+	e.user = u
 }
 
 // ---------------------------------------------------------------------------------------------------------------------
 
-// UserEvent is an event related to user
-type UserEvent struct {
-	// User in question
-	User *User
-}
-
-// UserCreateBeforeEvent represents an event fired before user creation
-type UserCreateBeforeEvent struct {
+// UserCreateEvent is fired on user creation
+type UserCreateEvent struct {
 	UserEvent
 }
 
-// UserCreateAfterEvent represents an event fired after user creation
-type UserCreateAfterEvent struct {
+// UserUpdateEvent is fired on updating a user
+type UserUpdateEvent struct {
 	UserEvent
 }
 
-// UserDeleteBeforeEvent represents an event fired before user deletion
-type UserDeleteBeforeEvent struct {
+// UserDeleteEvent is fired on user deletion
+type UserDeleteEvent struct {
 	UserEvent
 }
 
-// UserDeleteAfterEvent represents an event fired after user deletion
-type UserDeleteAfterEvent struct {
-	UserEvent
+// UserBanStatusEvent is fired when a user gets banned or unbanned
+type UserBanStatusEvent struct {
+	UserUpdateEvent
+}
+
+// UserConfirmedEvent is fired when a user confirms their email
+type UserConfirmedEvent struct {
+	UserUpdateEvent
+}
+
+// UserLoginLockedStatusEvent is fired when a user's LastLogin or Locked status gets changed
+type UserLoginLockedStatusEvent struct {
+	UserUpdateEvent
+}
+
+// UserMadeSuperuserEvent is fired when a user is made a superuser using a command-line option (or equivalent)
+type UserMadeSuperuserEvent struct {
+	UserUpdateEvent
 }

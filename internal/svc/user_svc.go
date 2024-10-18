@@ -17,8 +17,8 @@ var TheUserService UserService = &userService{}
 
 // UserService is a service interface for dealing with users
 type UserService interface {
-	// ConfirmUser confirms the user's email by their ID
-	ConfirmUser(id *uuid.UUID) error
+	// ConfirmUser sets the confirmed status of the user
+	ConfirmUser(u *data.User) error
 	// CountUsers returns a number of registered users.
 	//   - inclSuper: if false, skips superusers
 	//   - inclNonSuper: if false, skips non-superusers
@@ -34,7 +34,7 @@ type UserService interface {
 	//   - delComments: if true, deletes all comments made by the user
 	//   - purgeComments: if true, permanently removes all comments and replies
 	// Returns number of deleted comments.
-	DeleteUserByID(id *uuid.UUID, delComments, purgeComments bool) (int64, error)
+	DeleteUserByID(u *data.User, delComments, purgeComments bool) (int64, error)
 	// DeleteUserSession removes a user session from the database
 	DeleteUserSession(id *uuid.UUID) error
 	// EnsureSuperuser ensures that the user with the given ID or email is a superuser
@@ -75,11 +75,11 @@ type UserService interface {
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*data.UserSession, error)
 	// Update updates the given user's data in the database
-	Update(user *data.User) error
+	Update(u *data.User) error
 	// UpdateBanned updates the given user's banned status in the database
-	UpdateBanned(curUserID, userID *uuid.UUID, banned bool) error
+	UpdateBanned(curUserID *uuid.UUID, u *data.User, banned bool) error
 	// UpdateLoginLocked updates the given user's last login and lockout fields in the database
-	UpdateLoginLocked(user *data.User) error
+	UpdateLoginLocked(u *data.User) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -87,22 +87,24 @@ type UserService interface {
 // userService is a blueprint UserService implementation
 type userService struct{}
 
-func (svc *userService) ConfirmUser(id *uuid.UUID) error {
-	logger.Debugf("userService.ConfirmUser(%s)", id)
+func (svc *userService) ConfirmUser(u *data.User) error {
+	logger.Debugf("userService.ConfirmUser(%v)", u)
 
 	// User cannot be anonymous
-	if *id == data.AnonymousUser.ID {
+	if u.IsAnonymous() {
 		return ErrNotFound
 	}
 
-	// Update the owner's record
-	if err := db.ExecOne(db.Update("cm_users").Set(goqu.Record{"confirmed": true, "ts_confirmed": time.Now().UTC()}).Where(goqu.Ex{"id": id})); err != nil {
-		logger.Errorf("userService.ConfirmUser: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+	// Update the user
+	u.WithConfirmed(true)
+
+	// Fire an event
+	if _, err := handleUserEvent(&plugin.UserConfirmedEvent{}, u); err != nil {
+		return err
 	}
 
-	// Succeeded
-	return nil
+	// Update the user's record
+	return svc.updateByID(u)
 }
 
 func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated bool) (int, error) {
@@ -139,9 +141,8 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
-	// Fire a BEFORE event
-	baseEvt := plugin.UserEvent{User: u.ToPluginUser()}
-	if _, err := ThePluginManager.HandleEvent(&plugin.UserCreateBeforeEvent{UserEvent: baseEvt}); err != nil {
+	// Fire an event
+	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u); err != nil {
 		return err
 	}
 
@@ -149,11 +150,6 @@ func (svc *userService) Create(u *data.User) error {
 	if err := db.ExecOne(db.Insert("cm_users").Rows(u)); err != nil {
 		logger.Errorf("userService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
-	}
-
-	// Fire an AFTER event
-	if _, err := ThePluginManager.HandleEvent(&plugin.UserCreateAfterEvent{UserEvent: baseEvt}); err != nil {
-		return err
 	}
 
 	// Succeeded
@@ -177,18 +173,11 @@ func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	return nil
 }
 
-func (svc *userService) DeleteUserByID(id *uuid.UUID, delComments, purgeComments bool) (int64, error) {
-	logger.Debugf("userService.DeleteUserByID(%s, %v, %v)", id, delComments, purgeComments)
+func (svc *userService) DeleteUserByID(u *data.User, delComments, purgeComments bool) (int64, error) {
+	logger.Debugf("userService.DeleteUserByID(%v, %v, %v)", u, delComments, purgeComments)
 
-	// Load the user
-	user, err := svc.FindUserByID(id)
-	if err != nil {
-		return 0, err
-	}
-
-	// Fire a BEFORE event
-	baseEvt := plugin.UserEvent{User: user.ToPluginUser()}
-	if _, err := ThePluginManager.HandleEvent(&plugin.UserDeleteBeforeEvent{UserEvent: baseEvt}); err != nil {
+	// Fire an event (we don't care if anything was changed)
+	if _, err := handleUserEvent(&plugin.UserDeleteEvent{}, u); err != nil {
 		return 0, err
 	}
 
@@ -199,28 +188,22 @@ func (svc *userService) DeleteUserByID(id *uuid.UUID, delComments, purgeComments
 		// If comments need to be purged
 		if purgeComments {
 			// Purge all comments created by the user
-			if cntDel, err = TheCommentService.DeleteByUser(id); err != nil {
+			if cntDel, err = TheCommentService.DeleteByUser(&u.ID); err != nil {
 				logger.Errorf("userService.DeleteUserByID: DeleteByUser() failed: %v", err)
 				return 0, err
 			}
 
 			// Mark all comments created by the user as deleted
-		} else if cntDel, err = TheCommentService.MarkDeletedByUser(id, id); err != nil {
+		} else if cntDel, err = TheCommentService.MarkDeletedByUser(&u.ID, &u.ID); err != nil {
 			logger.Errorf("userService.DeleteUserByID: MarkDeletedByUser() failed: %v", err)
 			return 0, err
 		}
-
 	}
 
 	// Delete the user
-	if err := db.ExecOne(db.Delete("cm_users").Where(goqu.Ex{"id": id})); err != nil {
+	if err := db.ExecOne(db.Delete("cm_users").Where(goqu.Ex{"id": &u.ID})); err != nil {
 		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
 		return 0, translateDBErrors(err)
-	}
-
-	// Fire an AFTER event
-	if _, err := ThePluginManager.HandleEvent(&plugin.UserDeleteAfterEvent{UserEvent: baseEvt}); err != nil {
-		return 0, err
 	}
 
 	// Succeeded
@@ -244,10 +227,11 @@ func (svc *userService) EnsureSuperuser(idOrEmail string) error {
 	logger.Debugf("userService.EnsureSuperuser(%q)", idOrEmail)
 
 	// Try to parse the input as a UUID
-	var where goqu.Ex
+	var u *data.User
+	var uErr error
 	if id, err := uuid.Parse(idOrEmail); err == nil {
 		// It's an ID indeed
-		where = goqu.Ex{"id": id}
+		u, uErr = svc.FindUserByID(&id)
 
 		// Not an ID, perhaps an email?
 	} else if !util.IsValidEmail(idOrEmail) {
@@ -255,17 +239,29 @@ func (svc *userService) EnsureSuperuser(idOrEmail string) error {
 
 	} else {
 		// It's an email
-		where = goqu.Ex{"email": idOrEmail}
+		u, uErr = svc.FindUserByEmail(idOrEmail)
+	}
+
+	// Check for error
+	if uErr != nil {
+		return uErr
+	}
+
+	// Don't bother if the user is already a superuser
+	if u.IsSuperuser {
+		return nil
 	}
 
 	// Update the user
-	if err := db.ExecOne(db.Update("cm_users").Set(goqu.Record{"is_superuser": true}).Where(where)); err != nil {
-		logger.Errorf("userService.EnsureSuperuser: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+	u.WithSuperuser(true)
+
+	// Fire an event
+	if _, err := handleUserEvent(&plugin.UserMadeSuperuserEvent{}, u); err != nil {
+		return err
 	}
 
-	// Succeeded
-	return nil
+	// Update the user in the database
+	return svc.updateByID(u)
 }
 
 func (svc *userService) ExpireUserSessions(userID *uuid.UUID) error {
@@ -674,73 +670,83 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 	return us, nil
 }
 
-func (svc *userService) Update(user *data.User) error {
-	logger.Debugf("userService.Update(%#v)", user)
+func (svc *userService) Update(u *data.User) error {
+	logger.Debugf("userService.Update(%#v)", u)
+
+	// Fire an event
+	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u); err != nil {
+		return err
+	}
 
 	// Update the record
-	r := goqu.Record{
-		"email":              user.Email,
-		"name":               user.Name,
-		"password_hash":      user.PasswordHash,
-		"is_superuser":       user.IsSuperuser,
-		"confirmed":          user.Confirmed,
-		"ts_confirmed":       user.ConfirmedTime,
-		"remarks":            user.Remarks,
-		"website_url":        user.WebsiteURL,
-		"federated_id":       user.FederatedID,
-		"ts_password_change": user.PasswordChangeTime,
-	}
-	if err := db.ExecOne(db.Update("cm_users").Set(r).Where(goqu.Ex{"id": &user.ID})); err != nil {
-		logger.Errorf("userService.Update: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
+	return svc.updateByID(u)
 }
 
-func (svc *userService) UpdateBanned(curUserID, userID *uuid.UUID, banned bool) error {
-	logger.Debugf("userService.UpdateBanned(%s, %s, %v)", curUserID, userID, banned)
+func (svc *userService) UpdateBanned(curUserID *uuid.UUID, u *data.User, banned bool) error {
+	logger.Debugf("userService.UpdateBanned(%s, %v, %v)", curUserID, u, banned)
 
 	// User cannot be anonymous
-	if *userID == data.AnonymousUser.ID {
+	if u.IsAnonymous() {
 		return ErrNotFound
 	}
 
-	// Update the record
-	q := db.Update("cm_users").Where(goqu.Ex{"id": userID})
-	if banned {
-		q = q.Set(goqu.Record{"banned": true, "ts_banned": time.Now().UTC(), "user_banned": curUserID})
-	} else {
-		q = q.Set(goqu.Record{"banned": false, "ts_banned": nil, "user_banned": nil})
-	}
-	if err := db.ExecOne(q); err != nil {
-		logger.Errorf("userService.UpdateBanned: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+	// Update the user
+	u.WithBanned(banned, curUserID)
+
+	// Fire an event
+	if _, err := handleUserEvent(&plugin.UserBanStatusEvent{}, u); err != nil {
+		return err
 	}
 
-	// Succeeded
-	return nil
+	// Update the record
+	return svc.updateByID(u)
 }
 
-func (svc *userService) UpdateLoginLocked(user *data.User) error {
-	logger.Debugf("userService.UpdateLoginLocked(%v)", user)
+func (svc *userService) UpdateLoginLocked(u *data.User) error {
+	logger.Debugf("userService.UpdateLoginLocked(%v)", u)
 
 	// User cannot be anonymous
-	if user.IsAnonymous() {
+	if u.IsAnonymous() {
 		return ErrNotFound
 	}
 
-	// Update the record
-	r := goqu.Record{
-		"ts_last_login":         user.LastLoginTime,
-		"ts_last_failed_login":  user.LastFailedLoginTime,
-		"failed_login_attempts": user.FailedLoginAttempts,
-		"is_locked":             user.IsLocked,
-		"ts_locked":             user.LockedTime,
+	// Fire an event
+	if _, err := handleUserEvent(&plugin.UserLoginLockedStatusEvent{}, u); err != nil {
+		return err
 	}
-	if err := db.ExecOne(db.Update("cm_users").Set(r).Where(goqu.Ex{"id": &user.ID})); err != nil {
-		logger.Errorf("userService.UpdateLoginLocked: ExecOne() failed: %v", err)
+
+	// Update the record
+	return svc.updateByID(u)
+}
+
+// handleUserEvent fires a user event. It returns true if the user has been modified during the event handling
+func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (bool, error) {
+	// Set the event's payload
+	up := u.ToPluginUser()
+	e.SetUser(up)
+
+	// Make a clone of the original user
+	uc := u.ToPluginUser()
+
+	// Fire an event
+	if err := ThePluginManager.HandleEvent(e); err != nil {
+		return false, err
+	}
+
+	// If event handling changed the user, update the working model
+	if *e.User() != *uc {
+		u.FromPluginUser(e.User())
+		return true, nil
+	}
+
+	// No change
+	return false, nil
+}
+
+// updateByID updates the given user in the database by their ID
+func (svc *userService) updateByID(u *data.User) error {
+	if err := db.ExecOne(db.Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
+		logger.Errorf("userService.update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 

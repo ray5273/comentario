@@ -16,8 +16,8 @@ import (
 
 // PluginManager is a service interface for managing plugins
 type PluginManager interface {
-	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled
-	HandleEvent(event any) (*complugin.HandleEventResult, error)
+	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled or errored
+	HandleEvent(event any) error
 	// Init initialises the manager
 	Init() error
 	// PluginConfig returns configuration of all registered plugins as DTOs
@@ -96,13 +96,13 @@ func newPluginConnector(pluginID string) PluginConnector {
 	}
 }
 
-func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*complugin.Principal, error) {
+func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*complugin.User, error) {
 	// Hand over to the cookie auth handler
 	u, err := TheAuthService.AuthenticateUserByCookieHeader(value)
 	if err != nil {
 		return nil, err
 	}
-	return u.ToPluginPrincipal(), nil
+	return u.ToPluginUser(), nil
 }
 
 func (c *pluginConnector) CreateLogger(module string) complugin.Logger {
@@ -169,21 +169,19 @@ type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
 }
 
-func (pm *pluginManager) HandleEvent(event any) (*complugin.HandleEventResult, error) {
+func (pm *pluginManager) HandleEvent(event any) error {
 	// Iterate over plugins
 	for _, pe := range pm.plugs {
 		// Try to handle the event
-		if res, err := pe.p.HandleEvent(event); err != nil {
+		if err := pe.p.HandleEvent(event); err != nil {
 			// Event handling errored
 			logger.Warningf("Plugin %q returned error while handling event %T: %v", pe.id, event, err)
-			return nil, err
-
-		} else if res.IsHandled() {
-			// Event has been successfully handled, exit the loop
-			return res, nil
+			return err
 		}
 	}
-	return nil, nil
+
+	// Succeeded (or no plugins)
+	return nil
 }
 
 func (pm *pluginManager) Init() error {

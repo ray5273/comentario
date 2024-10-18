@@ -25,7 +25,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 	// Don't bother if the user is already confirmed
 	if !user.Confirmed {
 		// Update the user
-		if err := svc.TheUserService.ConfirmUser(&user.ID); err != nil {
+		if err := svc.TheUserService.ConfirmUser(user); err != nil {
 			return respServiceError(err)
 		}
 	}
@@ -98,7 +98,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 	}
 
 	// Delete the user, optionally deleting their comments
-	if cntDel, err := svc.TheUserService.DeleteUserByID(&user.ID, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
+	if cntDel, err := svc.TheUserService.DeleteUserByID(user, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
 		return respServiceError(err)
 	} else {
 		// Succeeded
