@@ -46,7 +46,8 @@ declare namespace Cypress {
         children?:  Comment[];
     }
 
-    interface MetricCardContent {
+    /** A labeled metric with a numeric value and an optional sublabel. */
+    interface Metric {
         label:     string;
         sublabel?: string;
         value:     number;
@@ -144,7 +145,13 @@ declare namespace Cypress {
         /**
          * Collect metric cards and return them in an array. Must be chained off an element that contains cards.
          */
-        metricCards(): Chainable<MetricCardContent[]>;
+        metricCards(): Chainable<Metric[]>;
+
+        /**
+         * Collect labels and number from a pie chart legend and return them in an array. Must be chained off a pie
+         * chart element having a legend.
+         */
+        pieChartLegend(): Chainable<Metric[]>;
 
         /**
          * Verify the passed element has no invalid feedback.
@@ -339,12 +346,14 @@ declare namespace Cypress {
         commentVoteViaApi(id: string, direction: -1 | 0 | 1): Chainable<Response<void>>;
 
         /**
-         * Update the setting of the currently logged-in commenter (domain user) for a specific domain directly via API.
+         * Update the setting of the currently logged-in commenter (domain user) for a specific domain directly via
+         * API.
          * The user must be authenticated (i.e. session cookie must be present).
          * @param domainId ID of the domain to apply user notification settings on.
          * @param notifyReplies Whether the user is to be notified about replies to their comments.
          * @param notifyModerator Whether the user is to receive moderator notifications.
-         * @param notifyCommentStatus Whether the user is to be notified about status changes (approved/rejected) of their comments.
+         * @param notifyCommentStatus Whether the user is to be notified about status changes (approved/rejected) of
+         *     their comments.
          */
         commenterUpdateSettingsViaApi(domainId: string, notifyReplies: boolean, notifyModerator: boolean, notifyCommentStatus: boolean): Chainable<Response<void>>;
 

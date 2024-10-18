@@ -1,20 +1,21 @@
 <!-- Daily counts -->
-<div class="mt-3" id="dashboard-daily-stats">
+<div class="mt-3" id="stats-daily">
     <!-- Subheading -->
     <h2 i18n="heading">Daily statistics</h2>
 
     <!-- Info text -->
-    @if (dailyCountsViews?.length; as cnt) {
+    @if (dailyStats?.views?.length; as cnt) {
         <p class="text-muted stats-chart-info" i18n>Last {{ cnt | number }} days.</p>
     }
 
     <!-- Daily charts -->
     <div [appSpinner]="loadingDaily.active" spinnerSize="lg">
-        @if (dailyCountsViews || dailyCountsComments) {
-            <app-daily-stats-chart [totalViews]="totalCountViews"
-                                   [totalComments]="totalCountComments"
-                                   [countsViews]="dailyCountsViews"
-                                   [countsComments]="dailyCountsComments"/>
+        @if (dailyStats?.views || dailyStats?.comments) {
+            <app-daily-stats-chart [totalViews]="totalCounts?.views"
+                                   [totalComments]="totalCounts?.comments"
+                                   [countsViews]="dailyStats!.views"
+                                   [countsComments]="dailyStats!.comments"
+                                   id="stats-daily-charts"/>
         } @else {
             <app-no-data/>
         }
@@ -22,19 +23,19 @@
 </div>
 
 <!-- Page view statistics -->
-<div class="mt-3" id="dashboard-pageview-stats">
+<div class="mt-3" id="stats-page-views">
     <!-- Subheading -->
     <h2 i18n="heading">Page view statistics</h2>
 
     <!-- Page view pie charts, if there are any views -->
     <div [appSpinner]="loadingPageViews.active" spinnerSize="lg">
-        @if (totalCountViews) {
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2">
+        @if (pageViewsStats) {
+            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2" id="stats-page-view-charts">
                 <div class="col">
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Countries</div>
                         <div class="card-body">
-                            <app-pie-stats-chart [data]="pageViewsStats?.countries"/>
+                            <app-pie-stats-chart [data]="pageViewsStats.country" id="stats-page-views-country"/>
                         </div>
                     </div>
                 </div>
@@ -42,7 +43,7 @@
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Devices</div>
                         <div class="card-body">
-                            <app-pie-stats-chart [data]="pageViewsStats?.devices"/>
+                            <app-pie-stats-chart [data]="pageViewsStats.device" id="stats-page-views-device"/>
                         </div>
                     </div>
                 </div>
@@ -50,7 +51,7 @@
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Browsers</div>
                         <div class="card-body">
-                            <app-pie-stats-chart [data]="pageViewsStats?.browsers"/>
+                            <app-pie-stats-chart [data]="pageViewsStats.browser" id="stats-page-views-browser"/>
                         </div>
                     </div>
                 </div>
@@ -58,7 +59,7 @@
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Operating systems</div>
                         <div class="card-body">
-                            <app-pie-stats-chart [data]="pageViewsStats?.oses"/>
+                            <app-pie-stats-chart [data]="pageViewsStats.os" id="stats-page-views-os"/>
                         </div>
                     </div>
                 </div>
@@ -70,16 +71,17 @@
 </div>
 
 <!-- Top performing pages -->
-<div class="mt-3" id="dashboard-top-pages-stats">
+<div class="mt-3" id="stats-top-pages">
     <!-- Subheading -->
     <h2 i18n="heading">Top performing pages</h2>
 
     <!-- Top pages tables, if there are any views or comments -->
     <div [appSpinner]="loadingTopPages.active" spinnerSize="lg">
-        @if (totalCountViews || totalCountComments) {
+        @if (topPagesByViews || topPagesByComments) {
             <app-top-pages-stats [pagesByViews]="topPagesByViews"
                                  [pagesByComments]="topPagesByComments"
-                                 [domainId]="_domainId"/>
+                                 [domainId]="_domainId"
+                                 id="stats-top-page-tables"/>
 
         } @else {
             <app-no-data/>

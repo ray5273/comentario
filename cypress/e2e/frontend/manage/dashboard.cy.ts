@@ -1,8 +1,8 @@
-import { PATHS, USERS } from '../../../support/cy-utils';
+import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../support/cy-utils';
 
 context('Dashboard', () => {
 
-    const makeAliases = (chart: boolean) => {
+    const makeAliases = (hasStats: boolean, hasDaily?: boolean, hasPageViews?: boolean, hasTopPages?: boolean) => {
         cy.get('app-dashboard').as('dashboard');
 
         // Check heading
@@ -11,13 +11,43 @@ context('Dashboard', () => {
         // Totals
         cy.get('@dashboard').find('#dashboard-totals').as('totals');
 
-        // Daily stats chart
-        if (chart) {
-            cy.get('@dashboard').find('#dashboard-daily-stats').as('dailyStats');
-            cy.get('@dailyStats').find('h2').should('have.text', 'Daily statistics').and('be.visible');
-            cy.get('@dailyStats').find('.stats-chart-info').should('have.text', 'Last 30 days.').and('be.visible');
+        // If there are any stats at all
+        if (hasStats) {
+            // Daily section
+            cy.get('@dashboard').find('#stats-daily').as('daily');
+            cy.get('@daily').find('h2').should('have.text', 'Daily statistics').and('be.visible');
+            cy.get('@daily').find('.stats-chart-info').should('have.text', 'Last 30 days.').and('be.visible');
+            // Page views section
+            cy.get('@dashboard').find('#stats-page-views').as('pageViews');
+            cy.get('@pageViews').find('h2').should('have.text', 'Page view statistics').and('be.visible');
+            // Top pages section
+            cy.get('@dashboard').find('#stats-top-pages').as('topPages');
+            cy.get('@topPages').find('h2').should('have.text', 'Top performing pages').and('be.visible');
         } else {
-            cy.get('@dashboard').find('#dashboard-daily-stats').should('not.exist');
+            cy.get('@dashboard').find('#stats-daily')     .should('not.exist');
+            cy.get('@dashboard').find('#stats-page-views').should('not.exist');
+            cy.get('@dashboard').find('#stats-top-pages') .should('not.exist');
+        }
+
+        // If there are daily stats charts
+        if (hasDaily) {
+            cy.get('@daily').find('#stats-daily-charts').as('dailyCharts');
+        } else {
+            cy.get('@dashboard').find('#stats-daily-charts').should('not.exist');
+        }
+
+        // If there are page view stats charts
+        if (hasPageViews) {
+            cy.get('@pageViews').find('#stats-page-view-charts').as('pageViewCharts');
+        } else {
+            cy.get('@dashboard').find('#stats-page-view-charts') .should('not.exist');
+        }
+
+        // If there are top pages tables
+        if (hasTopPages) {
+            cy.get('@topPages').find('#stats-top-page-tables').as('topPagesTables');
+        } else {
+            cy.get('@dashboard').find('#stats-top-page-tables').should('not.exist');
         }
     };
 
@@ -42,13 +72,13 @@ context('Dashboard', () => {
 
     it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.dashboard, USERS.commenterOne));
 
-    context('shows metrics', () => {
+    context('shows metrics and statistics', () => {
 
         [
             {
-                name:     'user without domains',
-                user:     USERS.commenterOne,
-                hasChart: false,
+                name:         'user without domains',
+                user:         USERS.commenterOne,
+                hasStats:     false,
                 metrics:
                     // language=yaml
                     `
@@ -58,9 +88,8 @@ context('Dashboard', () => {
                     `,
             },
             {
-                name: 'commenter user',
-                user: USERS.commenterTwo,
-                hasChart: false,
+                name:         'commenter user',
+                user:         USERS.commenterTwo,
                 metrics:
                     // language=yaml
                         `
@@ -76,9 +105,9 @@ context('Dashboard', () => {
                     `,
             },
             {
-                name: 'owner user',
-                user: USERS.ace,
-                hasChart: true,
+                name:         'owner user',
+                user:         USERS.ace,
+                hasStats:     true,
                 metrics:
                     // language=yaml
                     `
@@ -115,11 +144,83 @@ context('Dashboard', () => {
                     - label:    Comments
                       value:    40
                     `,
+                pageViewMetrics: {
+                    country:
+                        // language=yaml
+                        `
+                        - label: US
+                          value: 36
+                        - label: DE
+                          value: 19
+                        - label: NL
+                          value: 17
+                        - label: KR
+                          value: 11
+                        - label: ES
+                          value: 11
+                        - label: Others
+                          value: 123
+                        `,
+                    device:
+                        // language=yaml
+                        `
+                        - label: Computer
+                          value: 187
+                        - label: Phone
+                          value: 26
+                        - label: Unknown
+                          value: 4
+                        `,
+                    browser:
+                        // language=yaml
+                        `
+                        - label: Chrome
+                          value: 114
+                        - label: Firefox
+                          value: 56
+                        - label: IE
+                          value: 24
+                        - label: Safari
+                          value: 8
+                        - label: Unknown
+                          value: 4
+                        - label: Others
+                          value: 11
+                        `,
+                    os:
+                        // language=yaml
+                        `
+                        - label: Windows
+                          value: 90
+                        - label: MacOSX
+                          value: 48
+                        - label: Linux
+                          value: 44
+                        - label: Android
+                          value: 20
+                        - label: iOS
+                          value: 6
+                        - label: Others
+                          value: 9
+                        `,
+                },
+                topPages: {
+                    byViews: [
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.home,          metric: '217 views'},
+                    ],
+                    byComments: [
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.home,          metric: '16 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.attr.maxLevel, metric: '6 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.dynamic,       metric: '3 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.double,        metric: '2 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.darkMode,      metric: '2 comments'},
+                    ],
+                },
             },
             {
-                name: 'user with multiple roles',
-                user: USERS.king,
-                hasChart: true,
+                name:         'user with multiple roles',
+                user:         USERS.king,
+                hasStats:     true,
                 metrics:
                     // language=yaml
                     `
@@ -164,9 +265,11 @@ context('Dashboard', () => {
                     `,
             },
             {
-                name: 'superuser',
-                user: USERS.root,
-                hasChart: true,
+                name:         'superuser',
+                user:         USERS.root,
+                hasStats:     true,
+                hasDaily:     true,
+                hasTopPages:  true,
                 metrics:
                     // language=yaml
                     `
@@ -197,15 +300,115 @@ context('Dashboard', () => {
                     - label:    Comments
                       value:    41
                     `,
+                pageViewMetrics: {
+                    country:
+                        // language=yaml
+                        `
+                        - label: US
+                          value: 36
+                        - label: DE
+                          value: 19
+                        - label: NL
+                          value: 17
+                        - label: KR
+                          value: 11
+                        - label: ES
+                          value: 11
+                        - label: Others
+                          value: 123
+                        `,
+                    device:
+                        // language=yaml
+                        `
+                        - label: Computer
+                          value: 187
+                        - label: Phone
+                          value: 26
+                        - label: Unknown
+                          value: 4
+                        `,
+                    browser:
+                        // language=yaml
+                        `
+                        - label: Chrome
+                          value: 114
+                        - label: Firefox
+                          value: 56
+                        - label: IE
+                          value: 24
+                        - label: Safari
+                          value: 8
+                        - label: Unknown
+                          value: 4
+                        - label: Others
+                          value: 11
+                        `,
+                    os:
+                        // language=yaml
+                        `
+                        - label: Windows
+                          value: 90
+                        - label: MacOSX
+                          value: 48
+                        - label: Linux
+                          value: 44
+                        - label: Android
+                          value: 20
+                        - label: iOS
+                          value: 6
+                        - label: Others
+                          value: 9
+                        `,
+                },
+                topPages: {
+                    byViews: [
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.home,          metric: '217 views'},
+                    ],
+                    byComments: [
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.home,          metric: '16 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.attr.maxLevel, metric: '6 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.dynamic,       metric: '3 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.double,        metric: '2 comments'},
+                        {domain: DOMAINS.localhost.host, path: TEST_PATHS.darkMode,      metric: '2 comments'},
+                    ],
+                },
             },
         ]
             .forEach(test =>
                 it(`for ${test.name}`, () => {
                     cy.loginViaApi(test.user, PATHS.manage.dashboard);
-                    makeAliases(test.hasChart);
+                    makeAliases(test.hasStats, !!test.dailyMetrics, !!test.pageViewMetrics, !!test.topPages);
+
+                    // Verify metric cards
                     cy.get('@totals').metricCards().should('yamlMatch', test.metrics);
-                    if (test.hasChart) {
-                        cy.get('@dailyStats').metricCards().should('yamlMatch', test.dailyMetrics);
+
+                    // Verify total figures above the daily charts
+                    if (test.dailyMetrics) {
+                        cy.get('@dailyCharts').metricCards().should('yamlMatch', test.dailyMetrics);
+                    }
+
+                    // Verify page view stats in the legends of pie charts
+                    if (test.pageViewMetrics) {
+                        Object.entries(test.pageViewMetrics)
+                            .forEach(([dim, yaml]) =>
+                                cy.get('@pageViewCharts')
+                                    .find(`#stats-page-views-${dim}`)
+                                    .pieChartLegend()
+                                    .should('yamlMatch', yaml));
+                    }
+
+                    // Verify top pages tables
+                    if (test.topPages) {
+                        // By views
+                        cy.get('@topPagesTables').find('.top-pages-by-views').as('byViews');
+                        cy.get('@byViews').texts('.domain-page-domain').should('arrayMatch', test.topPages.byViews.map(p => p.domain));
+                        cy.get('@byViews').texts('.domain-page-path')  .should('arrayMatch', test.topPages.byViews.map(p => p.path));
+                        cy.get('@byViews').texts('.domain-page-metric').should('arrayMatch', test.topPages.byViews.map(p => p.metric));
+                        // By comments
+                        cy.get('@topPagesTables').find('.top-pages-by-comments').as('byComments');
+                        cy.get('@byComments').texts('.domain-page-domain').should('arrayMatch', test.topPages.byComments.map(p => p.domain));
+                        cy.get('@byComments').texts('.domain-page-path')  .should('arrayMatch', test.topPages.byComments.map(p => p.path));
+                        cy.get('@byComments').texts('.domain-page-metric').should('arrayMatch', test.topPages.byComments.map(p => p.metric));
                     }
                 }));
     });

@@ -181,6 +181,20 @@ Cypress.Commands.addQuery(
             .get();
     });
 
+Cypress.Commands.addQuery(
+    'pieChartLegend',
+    function pieChartLegend() {
+        return (element: JQueryWithSelector) => element.find('.chart-legend-item')
+            .map((_, item) => {
+                const i = $(item);
+                return {
+                    label: i.find('.chart-legend-item-label').text(),
+                    value: Number(i.find('.chart-legend-item-value').text()),
+                };
+            })
+            .get();
+    });
+
 Cypress.Commands.add(
     'isValid',
     {prevSubject: 'element'},
