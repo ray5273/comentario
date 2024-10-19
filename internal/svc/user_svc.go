@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
+	"maps"
 	"strings"
 	"time"
 )
@@ -141,9 +142,16 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
-	// Fire an event
+	// Fire a user creation event
 	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u); err != nil {
 		return err
+	}
+
+	// If the user is created confirmed, also fire a user confirmation event
+	if u.Confirmed {
+		if _, err := handleUserEvent(&plugin.UserConfirmedEvent{}, u); err != nil {
+			return err
+		}
 	}
 
 	// Insert a new record
@@ -720,27 +728,47 @@ func (svc *userService) UpdateLoginLocked(u *data.User) error {
 }
 
 // handleUserEvent fires a user event. It returns true if the user has been modified during the event handling
-func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (bool, error) {
+func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err error) {
+	// Skip unless the plugin manager is active
+	if !ThePluginManager.Active() {
+		return
+	}
+
 	// Set the event's payload
 	up := u.ToPluginUser()
 	e.SetUser(up)
 
-	// Make a clone of the original user
+	// Fetch the user's attributes
+	var ap map[string]string
+	if ap, err = TheUserAttrService.GetAll(&u.ID); err != nil {
+		return
+	}
+	e.SetUserAttributes(ap)
+
+	// Make a clone of the original user and the attributes
 	uc := u.ToPluginUser()
+	ac := maps.Clone(ap)
 
 	// Fire an event
-	if err := ThePluginManager.HandleEvent(e); err != nil {
-		return false, err
+	if err = ThePluginManager.HandleEvent(e); err != nil {
+		return
 	}
 
 	// If event handling changed the user, update the working model
 	if *e.User() != *uc {
 		u.FromPluginUser(e.User())
-		return true, nil
+		changed = true
 	}
 
-	// No change
-	return false, nil
+	// Check for attribute change
+	if !maps.Equal(ap, ac) {
+		// Overwrite all attributes
+		if err = TheUserAttrService.Set(&u.ID, ap, true); err != nil {
+			return
+		}
+		changed = true
+	}
+	return
 }
 
 // updateByID updates the given user in the database by their ID

@@ -8,12 +8,17 @@ type UserPayload interface {
 	// User payload
 	User() *User
 	// SetUser updates the user payload
-	SetUser(u *User)
+	SetUser(*User)
+	// UserAttributes provides attributes of the user
+	UserAttributes() map[string]string
+	// SetUserAttributes updates the user's attributes
+	SetUserAttributes(map[string]string)
 }
 
 // UserEvent is an event related to user, which implements UserPayload
 type UserEvent struct {
-	user *User
+	user      *User
+	userAttrs map[string]string
 }
 
 func (e *UserEvent) User() *User {
@@ -22,6 +27,14 @@ func (e *UserEvent) User() *User {
 
 func (e *UserEvent) SetUser(u *User) {
 	e.user = u
+}
+
+func (e *UserEvent) UserAttributes() map[string]string {
+	return e.userAttrs
+}
+
+func (e *UserEvent) SetUserAttributes(a map[string]string) {
+	e.userAttrs = a
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

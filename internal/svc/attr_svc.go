@@ -109,8 +109,8 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr map[string]string, clean bool)
 
 		// Value removal. Only necessary if the values weren't cleaned beforehand
 		if value == "" && !clean {
-			// We don't want to use ExecOne() here since the value may well not exist anymore, which we don't care about, so
-			// simply nothing will be deleted
+			// We don't want to use ExecOne() here since the value may well not exist anymore, which we don't care
+			// about, so simply nothing will be deleted
 			if _, err := db.Delete(as.tableName).Where((goqu.Ex{as.keyColName: ownerID, "key": prefixedKey})).Executor().Exec(); err != nil {
 				logger.Errorf("attrStore.Set: Delete() failed for ownerID=%s, prefix=%q, key=%q: %v", ownerID, as.prefix, key, err)
 				return translateDBErrors(err)

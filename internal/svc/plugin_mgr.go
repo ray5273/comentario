@@ -16,6 +16,8 @@ import (
 
 // PluginManager is a service interface for managing plugins
 type PluginManager interface {
+	// Active returns whether the plugin manager is active (i.e. there's at least one plugin)
+	Active() bool
 	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled or errored
 	HandleEvent(event any) error
 	// Init initialises the manager
@@ -167,6 +169,10 @@ func (pe pluginEntry) ToDTO() *models.PluginConfig {
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
+}
+
+func (pm *pluginManager) Active() bool {
+	return len(pm.plugs) > 0
 }
 
 func (pm *pluginManager) HandleEvent(event any) error {
