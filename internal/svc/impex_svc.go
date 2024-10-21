@@ -123,7 +123,7 @@ func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID]
 }
 
 // importUserByEmail adds the specified user/domain user, returning the user and whether user and domain user were added
-func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, realEmail bool, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
+func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, realEmail, federatedSSO bool, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
 	// Try to find an existing user with the same email
 	var user *data.User
 	if u, err := TheUserService.FindUserByEmail(email); err == nil {
@@ -149,9 +149,11 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 	if user == nil {
 		user = data.NewUser(email, name).
 			WithCreated(creationTime, curUserID).
-			WithFederated("", federatedIdpID).
 			WithWebsiteURL(websiteURL).
 			WithRemarks(remarks)
+		if federatedSSO || federatedIdpID != "" {
+			user.WithFederated("", federatedIdpID)
+		}
 		if err := TheUserService.Create(user); err != nil {
 			return nil, false, false, err
 		}

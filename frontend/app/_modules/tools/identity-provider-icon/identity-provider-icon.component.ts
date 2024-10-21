@@ -1,43 +1,44 @@
 import { Component, Input } from '@angular/core';
-import { faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { faIdCard, faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faFacebook, faGithub, faGitlab, faGoogle, faOpenid, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
 @Component({
     selector: 'app-idp-icon',
-    template: '<fa-icon [icon]="icon"/>',
+    templateUrl: './identity-provider-icon.component.html',
 })
 export class IdentityProviderIconComponent {
 
-    icon: IconDefinition = faQuestionCircle;
+    /** Whether it's an SSO federated user. */
+    @Input({})
+    sso: boolean | null | undefined;
 
-    /**
-     * Federated identity provider ID.
-     */
+    /** Federated identity provider ID. Ignored if it's an SSO user. */
     @Input({required: true})
-    set idpId(id: string) {
-        switch (id) {
+    idpId: string | null | undefined;
+
+    /** Icon to render. */
+    get icon(): IconDefinition | undefined {
+        switch (this.idpId) {
             case 'facebook':
-                this.icon = faFacebook;
-                break;
+                return faFacebook;
 
             case 'github':
-                this.icon = faGithub;
-                break;
+                return faGithub;
 
             case 'gitlab':
-                this.icon = faGitlab;
-                break;
+                return faGitlab;
 
             case 'google':
-                this.icon = faGoogle;
-                break;
+                return faGoogle;
 
             case 'twitter':
-                this.icon = faTwitter;
-                break;
+                return faTwitter;
 
-            default:
-                this.icon = id?.startsWith('oidc:') ? faOpenid : faQuestionCircle;
+            case null:
+            case undefined:
+            case '':
+                return this.sso ? faIdCard : undefined;
         }
+        return this.idpId.startsWith('oidc:') ? faOpenid : faQuestionCircle;
     }
 }

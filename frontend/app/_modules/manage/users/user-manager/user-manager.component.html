@@ -69,16 +69,14 @@
                                     <fa-icon [icon]="faUserLock" class="me-1"/>
                                     <ng-container i18n>Locked</ng-container>
                                 </span>
-                        }
+                            }
                             <!-- Current user badge -->
                             <app-current-user-badge [userId]="u.id" badgeClasses="ms-2"/>
                         </div>
                         <!-- Provider icon and email -->
                         <div>
-                            @if (u.federatedSso) {
-                                <span class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                            } @else if (u.federatedIdP) {
-                                <app-idp-icon [idpId]="u.federatedIdP" class="me-2"/>
+                            @if (u.federatedSso || u.federatedIdP) {
+                                <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-2"/>
                             }
                             <span class="user-email">{{ u.email }}</span>
                         </div>

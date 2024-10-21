@@ -254,6 +254,7 @@ func disqusMakeUserMap(curUserID, domainID *uuid.UUID, exp disqusXML) (userIDMap
 			"", // Website URL isn't available
 			"Imported from Disqus",
 			false, // The email is a fake one
+			false, // No SSO flag support in the export
 			curUserID,
 			domainID,
 			post.CreationDate,

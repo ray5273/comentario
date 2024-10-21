@@ -25,16 +25,14 @@
             </dd>
         </div>
         <!-- Federated user -->
-        @if (user.federatedIdP; as v) {
+        @if (user.federatedSso || user.federatedIdP) {
             <div>
                 <dt i18n>Federated user</dt>
                 <dd>
-                    @if (user.federatedSso) {
-                        <span class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
-                    } @else {
-                        <app-idp-icon [idpId]="v" class="me-1"/>{{ v }}
+                    <app-idp-icon [sso]="user.federatedSso" [idpId]="user.federatedIdP" class="me-1"/>
+                    @if (user.federatedIdP) {
+                        <ng-container>{{ user.federatedIdP }}/{{ user.federatedId || '*' }}</ng-container>
                     }
-                    <ng-container>/{{ user.federatedId || '*' }}</ng-container>
                 </dd>
             </div>
         }

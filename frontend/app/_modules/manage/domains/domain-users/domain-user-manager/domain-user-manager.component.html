@@ -85,11 +85,8 @@
                             </div>
                             <!-- Provider icon and email -->
                             <div>
-                                @if (!u.federatedSso && u.federatedIdP) {
-                                    <app-idp-icon [idpId]="u.federatedIdP" class="me-2"/>
-                                }
-                                @if (u.federatedSso) {
-                                    <span class="badge rounded-pill border border-dark text-dark me-2">SSO</span>
+                                @if (u.federatedSso || u.federatedIdP) {
+                                    <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-2"/>
                                 }
                                 <span class="domain-user-email">{{ u.email }}</span>
                             </div>

@@ -14,6 +14,8 @@ export const UI_LANGUAGES = {
 export const REGEXES = {
     datetime:      /^\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)$/,
     checkDatetime: /^✔\s*\(\d{1,2}\/\d{1,2}\/\d{4}, \d{1,2}:\d{2} (?:AM|PM)\)$/,
+    uuid:          /^[\da-f]{8}-[\da-f]{4}-[\da-f]{4}-[\da-f]{4}-[\da-f]{12}$/,
+
 };
 
 /** Paths in the administration UI. */

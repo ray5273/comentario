@@ -226,6 +226,7 @@ func wordpressMakeUserMap(curUserID, domainID *uuid.UUID, exp rssXML) (userMap m
 					comment.AuthorURL,
 					"Imported from WordPress",
 					true,
+					false, // No SSO flag support in the export
 					curUserID,
 					domainID,
 					wordpressParseDate(comment.Date),

@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAINS, PATHS, REGEXES, USERS } from '../../../../../support/cy-utils';
 
 context('Domain Import page', () => {
 
@@ -113,10 +113,10 @@ context('Domain Import page', () => {
                 [
                     {file: 'comentario-ok-empty-v1.json.gz',  count: 0},
                     {file: 'comentario-ok-empty-v3.json.gz',  count: 0},
-                    {file: 'comentario-ok-single-v1.json.gz', count: 1},
-                    {file: 'comentario-ok-single-v3.json.gz', count: 1},
+                    {file: 'comentario-ok-single-v1.json.gz', count: 1, remark: 'Imported from Commento/Comentario'},
+                    {file: 'comentario-ok-single-v3.json.gz', count: 1, remark: 'Imported from Comentario V3'},
                 ]
-                    .forEach(({file, count}) =>
+                    .forEach(({file, count, remark}) =>
                         it(`handles valid file ${file}`, () => {
                             cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
                             cy.get('@btnSubmit').click();
@@ -141,6 +141,21 @@ context('Domain Import page', () => {
                             if (count) {
                                 cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Bugs Bunny']);
                                 cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
+
+                                // If it's a superuser, verify the imported user's properties
+                                if (user.isSuper) {
+                                    cy.sidebarClick('Users', PATHS.manage.users);
+                                    cy.contains('app-user-manager #user-list a', 'Bugs Bunny').click();
+                                    cy.get('app-user-properties #user-details .detail-table').dlTexts().should('matrixMatch', [
+                                        ['ID',         REGEXES.uuid],
+                                        ['Name',       'Bugs Bunny'],
+                                        ['Email',      'bugsy@bigsy'],
+                                        ['Language',   'en'],
+                                        ['Remarks',    remark],
+                                        ['Created',    REGEXES.datetime],
+                                        ['Last login', '(never)'],
+                                    ]);
+                                }
                             }
                         }));
 
@@ -163,9 +178,9 @@ context('Domain Import page', () => {
 
                 [
                     {file: 'disqus-ok-empty.xml.gz',  count: 0},
-                    {file: 'disqus-ok-single.xml.gz', count: 1},
+                    {file: 'disqus-ok-single.xml.gz', count: 1, remark: 'Imported from Disqus'},
                 ]
-                    .forEach(({file, count}) =>
+                    .forEach(({file, count, remark}) =>
                         it(`handles valid file ${file}`, () => {
                             cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
                             cy.get('@btnSubmit').click();
@@ -190,6 +205,21 @@ context('Domain Import page', () => {
                             if (count) {
                                 cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Bugs Bunny']);
                                 cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
+
+                                // If it's a superuser, verify the imported user's properties
+                                if (user.isSuper) {
+                                    cy.sidebarClick('Users', PATHS.manage.users);
+                                    cy.contains('app-user-manager #user-list a', 'Bugs Bunny').click();
+                                    cy.get('app-user-properties #user-details .detail-table').dlTexts().should('matrixMatch', [
+                                        ['ID',         REGEXES.uuid],
+                                        ['Name',       'Bugs Bunny'],
+                                        ['Email',      'bugsy@disqus-user'],
+                                        ['Language',   'en'],
+                                        ['Remarks',    remark],
+                                        ['Created',    REGEXES.datetime],
+                                        ['Last login', '(never)'],
+                                    ]);
+                                }
                             }
                         }));
 
@@ -211,9 +241,9 @@ context('Domain Import page', () => {
 
                 [
                     {file: 'wordpress-ok-empty.zip',  count: 0},
-                    {file: 'wordpress-ok-single.zip', count: 1},
+                    {file: 'wordpress-ok-single.zip', count: 1, remark: 'Imported from WordPress'},
                 ]
-                    .forEach(({file, count}) =>
+                    .forEach(({file, count, remark}) =>
                         it(`handles valid file ${file}`, () => {
                             cy.get('@importFileSelect').selectFile(`cypress/fixtures/import/${file}`);
                             cy.get('@btnSubmit').click();
@@ -238,6 +268,22 @@ context('Domain Import page', () => {
                             if (count) {
                                 cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Luke Skywalker']);
                                 cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
+
+                                // If it's a superuser, verify the imported user's properties
+                                if (user.isSuper) {
+                                    cy.sidebarClick('Users', PATHS.manage.users);
+                                    cy.contains('app-user-manager #user-list a', 'Luke Skywalker').click();
+                                    cy.get('app-user-properties #user-details .detail-table').dlTexts().should('matrixMatch', [
+                                        ['ID',          REGEXES.uuid],
+                                        ['Name',        'Luke Skywalker'],
+                                        ['Email',       'luke@skywalker.com'],
+                                        ['Language',    'en'],
+                                        ['Remarks',     remark],
+                                        ['Website URL', 'https://skywalker.com/'],
+                                        ['Created',     REGEXES.datetime],
+                                        ['Last login',  '(never)'],
+                                    ]);
+                                }
                             }
                         }));
 

@@ -172,6 +172,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			commenter.WebsiteURL,
 			"Imported from Commento/Comentario",
 			true,
+			false, // No SSO flag support in the export
 			&curUser.ID,
 			&domain.ID,
 			commenter.JoinDate,
@@ -333,6 +334,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			string(commenter.WebsiteURL),
 			"Imported from Comentario V3",
 			true,
+			commenter.FederatedSso,
 			&curUser.ID,
 			&domain.ID,
 			time.Time(commenter.CreatedTime),
