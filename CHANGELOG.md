@@ -1,5 +1,31 @@
 # Comentario changelog
 
+## v3.11.0 Enniskillen
+
+The most notable change in this release is the enhanced Dashboard and Domain Statistics page. You can now view pie charts of page views, broken down by country, device, browser, and operating system, along with the top five pages by views and comments. The embedded Comentario has also been improved: the comment editor now supports keyboard shortcuts, user avatars render better on high-DPI screens, and Comentario is now available in French (thanks to Eric Cambray).
+
+### Changes
+
+* Admin UI: add pageview stats by country, device, browser, OS - 8d586aff, c1829030, a9983587, 92cc9950
+* Admin UI: add top performing pages in stats - 955b391c, 753855e4, f9eb58f5
+* Admin UI: user details: fix SSO user property display - c7c63d49
+* Admin UI: fix the web app manifest for installation - 3a407dad
+* Admin UI: support non-root domain path (#126) - 4e35a801
+* Embed: comment editor: add keyboard shortcuts - 0d080d58
+* Embed: use Cmd+Enter in forms on Mac OS - c46d7eac
+* Embed, Admin UI: use larger avatars on devices with greater pixel ratio (#123) - b8a5fa42
+* I18n: French translation - 68b61e26
+* Backend: fix imported users being marked for SSO (#133)
+* Backend: validate "From" email address during startup (#129) - eed3a689
+* Backend: fix XSRF token renewal regression (#130) - a351b0c1, c88f401d
+* Backend: refactor DB statements to use ORM - 62aa8687, 0f2be712, 48c81fbe, df9b65ea, f8f2789a, 232ba6b0, 7d615e74
+* Backend: plugin support (work in progress) - c9832c30, 385d76f0, f1d2c762, 8e59b4b4, 200f15fa, 37f02d9d, a2821847, c05266f8, 126950c1
+* Docs: minor README and link update - 708d172c
+* Docs: add editor help - c46d7eac, 6f864f89
+* Docs: correct `--email-from=` default value (#129) - 81c02584
+* CI: add `go vet` - 9c0a9aa1
+* CI: demo: send emails from `@comentario.app` - 140bce2b
+
 ## v3.10.0 Donaghadee
 
 In this version we've improved language support by applying a fallback path for language variants and by adding Chinese Simplified and Traditional (thanks [@Func86](https://gitlab.com/Func86)!), added spinners to embedded comments for time-consuming API calls, extended the Comment properties page with comment text in HTML and Markdown — with syntax highlighting! — and fixed outstanding issues preventing IPv6 addresses from being registered. We also made changing a user's notification settings possible for domain owners, and massively improved doc search functionality.
