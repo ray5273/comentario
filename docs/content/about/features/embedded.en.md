@@ -18,7 +18,7 @@ Comentario's **embedded comment engine** allows to render a [comment thread (tre
 * Comments can be edited and deleted.
 * Other users can vote on comments they like or dislike (unless [disabled](/configuration/backend/dynamic/domain.defaults.comments.enablevoting)). Voting is reflected in the comment **score**.
 
-{{< imgfig "/img/comentario-embed-ui-elements.png" "Example of comment tree on a web page." "border shadow p-4" >}}
+{{< imgfig "/img/comentario-embed-ui-elements.png" "A (somewhat crowded) example of a comment tree on a web page." >}}
 
 * There's a variety of login options available for commenters; there's also an [option](/configuration/frontend/domain/authentication) to write a comment without logging in (with an optional name), should the site owner enable it for this specific domain.
 * Users can upload their own avatars, or opt to use [images from Gravatar](/configuration/backend/dynamic/integrations.usegravatar).

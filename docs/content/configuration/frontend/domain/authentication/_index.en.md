@@ -17,6 +17,8 @@ tags:
     - Google
     - Twitter
     - X
+    - OIDC
+    - OpenID Connect
     - SSO
     - Single Sign-On
 seeAlso:
@@ -26,6 +28,7 @@ seeAlso:
     - /configuration/idps/gitlab
     - /configuration/idps/google
     - /configuration/idps/twitter
+    - /configuration/idps/oidc
 ---
 
 The `Authentication` tab allows to configure commenter authentication options for the domain.
@@ -42,4 +45,5 @@ These options include:
     * [GitLab](/configuration/idps/gitlab)
     * [Google](/configuration/idps/google)
     * [Twitter/X](/configuration/idps/twitter)
+    * Any configured [OIDC](/configuration/idps/oidc) provider
 * [Single Sign-On](sso)
