@@ -9,7 +9,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
 	"io"
 	"strings"
 )
@@ -258,11 +257,14 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 	name := strings.TrimSpace(dto.Name)
 	password := dto.Password
 	if u.IsLocal() {
-		if !util.IsValidEmail(email) {
-			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("email"))
+		// Validate the email change
+		if r := Verifier.UserCanChangeEmailTo(u, email); r != nil {
+			return r
 		}
+
+		// Validate the name
 		if name == "" {
-			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("name"))
+			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("name"))
 		}
 		u.WithEmail(email).WithName(name)
 

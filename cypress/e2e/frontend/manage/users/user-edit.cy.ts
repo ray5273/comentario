@@ -65,7 +65,7 @@ context('User Edit page', () => {
 
     context('edit properties', () => {
 
-        it('of self-user is allowed', () => {
+        it('allows to edit the self-user', () => {
             cy.loginViaApi(USERS.root, pagePathRoot);
             makeAliases();
             cy.get('@name')      .should('have.value', USERS.root.name);
@@ -103,45 +103,151 @@ context('User Edit page', () => {
             ]);
         });
 
-        it('of other-user is allowed', () => {
-            cy.loginViaApi(USERS.root, pagePathKing);
-            makeAliases();
-            cy.get('@name')      .should('have.value', USERS.king.name);
-            cy.get('@email')     .should('have.value', USERS.king.email);
-            cy.get('@websiteUrl').should('have.value', '');
-            cy.get('@remarks')   .should('have.value', 'Almighty king');
-            cy.get('@confirmed') .should('be.checked')    .and('be.enabled');
-            cy.get('@superuser') .should('not.be.checked').and('be.enabled');
+        context('allows to edit a local user', () => {
 
-            // Update the values
-            cy.get('@name')      .setValue('King Lear');
-            cy.get('@email')     .setValue('lear@example.com');
-            cy.get('@websiteUrl').setValue('https://en.wikipedia.org/wiki/King_Lear');
-            cy.get('@remarks')   .setValue('Elderly and wanting to retire');
-            cy.get('@confirmed') .click();
-            cy.get('@superuser') .click();
+            beforeEach(() => {
+                // Open the user's edit page
+                cy.loginViaApi(USERS.root, pagePathKing);
+                makeAliases();
 
-            // Submit and get a success toast
-            cy.get('@btnSubmit').click();
-            cy.isAt(propsPagePathKing);
-            cy.toastCheckAndClose('data-saved');
+                // Verify the initial values
+                cy.get('@name')      .should('have.value', USERS.king.name);
+                cy.get('@email')     .should('have.value', USERS.king.email);
+                cy.get('@websiteUrl').should('have.value', '');
+                cy.get('@remarks')   .should('have.value', 'Almighty king');
+                cy.get('@confirmed') .should('be.checked')    .and('be.enabled');
+                cy.get('@superuser') .should('not.be.checked').and('be.enabled');
+            });
 
-            // Verify user details
-            cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                ['ID',                   USERS.king.id],
-                ['Name',                 'King Lear'],
-                ['Email',                'lear@example.com'],
-                ['Language',             'en'],
-                ['Remarks',              'Elderly and wanting to retire'],
-                ['Website URL',          'https://en.wikipedia.org/wiki/King_Lear'],
-                ['Superuser',            '✔'],
-                ['Created',              REGEXES.datetime],
-                ['Last password change', REGEXES.datetime],
-                ['Last login',           '(never)'],
-            ]);
+            it('keeping all values', () => {
+                // Submit without changing anything and get a success toast
+                cy.get('@btnSubmit').click();
+                cy.isAt(propsPagePathKing);
+                cy.toastCheckAndClose('data-saved');
+
+                // Verify user details
+                cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
+                    ['ID',                   USERS.king.id],
+                    ['Name',                 USERS.king.name],
+                    ['Email',                USERS.king.email],
+                    ['Language',             'en'],
+                    ['Remarks',              'Almighty king'],
+                    ['Confirmed',            REGEXES.checkDatetime],
+                    ['Created',              REGEXES.datetime],
+                    ['Last password change', REGEXES.datetime],
+                    ['Last login',           '(never)'],
+                ]);
+            });
+
+            it('changing values', () => {
+                // Update the values
+                cy.get('@name')      .setValue('King Lear');
+                cy.get('@email')     .setValue('lear@example.com');
+                cy.get('@websiteUrl').setValue('https://en.wikipedia.org/wiki/King_Lear');
+                cy.get('@remarks')   .setValue('Elderly and wanting to retire');
+                cy.get('@confirmed') .click();
+                cy.get('@superuser') .click();
+
+                // Submit and get a success toast
+                cy.get('@btnSubmit').click();
+                cy.isAt(propsPagePathKing);
+                cy.toastCheckAndClose('data-saved');
+
+                // Verify user details
+                cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
+                    ['ID',                   USERS.king.id],
+                    ['Name',                 'King Lear'],
+                    ['Email',                'lear@example.com'],
+                    ['Language',             'en'],
+                    ['Remarks',              'Elderly and wanting to retire'],
+                    ['Website URL',          'https://en.wikipedia.org/wiki/King_Lear'],
+                    ['Superuser',            '✔'],
+                    ['Created',              REGEXES.datetime],
+                    ['Last password change', REGEXES.datetime],
+                    ['Last login',           '(never)'],
+                ]);
+            });
         });
 
-        it('of Anonymous is disallowed', () => {
+        context('allows to edit a federated user', () => {
+
+            beforeEach(() => {
+                // Open the user's edit page
+                cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.facebookUser.id).edit);
+                makeAliases();
+
+                // Verify the initial values
+                cy.get('@name')      .should('have.value', USERS.facebookUser.name) .and('be.disabled');
+                cy.get('@email')     .should('have.value', USERS.facebookUser.email).and('be.disabled');
+                cy.get('@websiteUrl').should('have.value', '');
+                cy.get('@remarks')   .should('have.value', '');
+                cy.get('@confirmed') .should('be.checked')    .and('be.enabled');
+                cy.get('@superuser') .should('not.be.checked').and('be.enabled');
+            });
+
+            it('keeping values', () => {
+                // Submit without changing anything and get a success toast
+                cy.get('@btnSubmit').click();
+                cy.isAt(PATHS.manage.users.id(USERS.facebookUser.id).props);
+                cy.toastCheckAndClose('data-saved');
+
+                // Verify user details
+                cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
+                    ['ID',                   USERS.facebookUser.id],
+                    ['Federated user',       'facebook/30f5efad'],
+                    ['Name',                 USERS.facebookUser.name],
+                    ['Email',                USERS.facebookUser.email],
+                    ['Language',             'en'],
+                    ['Confirmed',            REGEXES.checkDatetime],
+                    ['Created',              REGEXES.datetime],
+                    ['Last password change', REGEXES.datetime],
+                    ['Last login',           '(never)'],
+                ]);
+            });
+
+            it('changing values', () => {
+                // Update the values
+                cy.get('@websiteUrl').setValue('https://facebook.com');
+                cy.get('@remarks')   .setValue('Internet troll');
+                cy.get('@confirmed') .click();
+                cy.get('@superuser') .click();
+
+                // Submit and get a success toast
+                cy.get('@btnSubmit').click();
+                cy.isAt(PATHS.manage.users.id(USERS.facebookUser.id).props);
+                cy.toastCheckAndClose('data-saved');
+
+                // Verify user details
+                cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
+                    ['ID',                   USERS.facebookUser.id],
+                    ['Federated user',       'facebook/30f5efad'],
+                    ['Name',                 USERS.facebookUser.name],
+                    ['Email',                USERS.facebookUser.email],
+                    ['Language',             'en'],
+                    ['Remarks',              'Internet troll'],
+                    ['Website URL',          'https://facebook.com'],
+                    ['Superuser',            '✔'],
+                    ['Created',              REGEXES.datetime],
+                    ['Last password change', REGEXES.datetime],
+                    ['Last login',           '(never)'],
+                ]);
+            });
+        });
+
+        it('disallows reusing an existing email', () => {
+            cy.loginViaApi(USERS.root, pagePathKing);
+            makeAliases();
+            cy.get('@email').setValue(USERS.ace.email);
+
+            // Submit and get an error toast
+            cy.get('@btnSubmit').click();
+            cy.isAt(pagePathKing);
+            cy.toastCheckAndClose('email-already-exists');
+        });
+
+        it('disallows editing Anonymous', () => {
+            // It isn't possible to click "Edit" on Anonymous' properties page, but we can approach their Edit user page
+            // directly
             const path = PATHS.manage.users.id(USERS.anonymous.id).edit;
             cy.loginViaApi(USERS.root, path);
             makeAliases();

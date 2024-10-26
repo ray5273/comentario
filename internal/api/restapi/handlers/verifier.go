@@ -37,6 +37,8 @@ type VerifierService interface {
 	LocalSignupEnabled(domainID *uuid.UUID) middleware.Responder
 	// UserCanAddDomain checks if the provided user is allowed to register a new domain (and become its owner)
 	UserCanAddDomain(user *data.User) middleware.Responder
+	// UserCanChangeEmailTo verifies the user can change their email to the new given value
+	UserCanChangeEmailTo(user *data.User, newEmail string) middleware.Responder
 	// UserCanDeleteComment verifies the given domain user is allowed to delete the specified comment. domainUser can be
 	// nil
 	UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
@@ -197,6 +199,35 @@ func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
 		}
 	}
 	return nil
+}
+
+func (v *verifier) UserCanChangeEmailTo(user *data.User, newEmail string) middleware.Responder {
+	// Make sure the user is local
+	if r := v.UserIsLocal(user); r != nil {
+		return r
+	}
+
+	// Don't bother if the email isn't changing
+	if user.Email == newEmail {
+		return nil
+	}
+
+	// Validate the new email
+	if !util.IsValidEmail(newEmail) {
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("email"))
+	}
+
+	// Try to find an existing user by email
+	if _, err := svc.TheUserService.FindUserByEmail(newEmail); errors.Is(err, svc.ErrNotFound) {
+		// Success: no such email yet
+		return nil
+	} else if err != nil {
+		// Any other DB error
+		return respServiceError(err)
+	}
+
+	// Email is already registered
+	return respBadRequest(exmodels.ErrorEmailAlreadyExists)
 }
 
 func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
