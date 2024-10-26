@@ -19,7 +19,7 @@ version: '3'
 
 services:
   db:
-    image: postgres:16-alpine
+    image: postgres:17-alpine
     environment:
       POSTGRES_DB: comentario
       POSTGRES_USER: postgres

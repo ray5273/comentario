@@ -49,7 +49,7 @@ helm repo update
 helm install \
     --namespace $NAMESPACE \
     --set "image.repository=postgres" \
-    --set "image.tag=16-alpine" \
+    --set "image.tag=17-alpine" \
     --set "primary.persistence.existingClaim=comentario-postgres-pvc" \
     --set "global.postgresql.auth.postgresPassword=SECR3t" \
     --set "global.postgresql.auth.database=comentario" \
@@ -58,7 +58,7 @@ helm install \
     bitnami/postgresql
 ```
 
-After this, a new release called `comentario-postgres` will be installed, with PostgreSQL version `16-alpine` (adjust values as needed), user `postgres` and password `SECR3t`.
+After this, a new release called `comentario-postgres` will be installed, with PostgreSQL version `17-alpine` (adjust values as needed), user `postgres` and password `SECR3t`.
 
 ## Deploy Comentario server
 

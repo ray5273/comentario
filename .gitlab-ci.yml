@@ -177,6 +177,7 @@ e2e-postgres:
     # Test against all supported PostgreSQL versions
     matrix:
       - POSTGRES_VERSION:
+          - 17-alpine
           - 16-alpine
           - 15-alpine
           - 14-alpine
