@@ -506,9 +506,10 @@ func (u *User) WithRemarks(s string) *User {
 	return u
 }
 
-// WithSignup sets the SignupIP and SignupCountry values based on the provided HTTP request and URL
-func (u *User) WithSignup(req *http.Request, url string) *User {
-	u.SignupIP, u.SignupCountry = util.UserIPCountry(req)
+// WithSignup sets the SignupIP and SignupCountry values based on the provided HTTP request and URL, optionally masking
+// the IP
+func (u *User) WithSignup(req *http.Request, url string, maskIP bool) *User {
+	u.SignupIP, u.SignupCountry = util.UserIPCountry(req, maskIP)
 	u.SignupHost = url
 	return u
 }
@@ -604,10 +605,10 @@ type UserSession struct {
 	Device         string    `db:"ua_device"`          // User's device type
 }
 
-// NewUserSession instantiates a new UserSession from the given request
-func NewUserSession(userID *uuid.UUID, host string, req *http.Request) *UserSession {
+// NewUserSession instantiates a new UserSession from the given request, optionally masking the IP
+func NewUserSession(userID *uuid.UUID, host string, req *http.Request, maskIP bool) *UserSession {
 	// Extract the remote IP and country
-	ip, country := util.UserIPCountry(req)
+	ip, country := util.UserIPCountry(req, maskIP)
 
 	// Parse the User Agent header
 	ua := uasurfer.Parse(util.UserAgent(req))
@@ -1137,7 +1138,7 @@ func (c *Comment) URL(https bool, host, path string) string {
 func (c *Comment) WithModerated(userID *uuid.UUID, pending, approved bool, reason string) *Comment {
 	c.IsPending = pending
 	c.IsApproved = approved
-	c.PendingReason = reason
+	c.PendingReason = util.TruncateStr(reason, MaxPendingReasonLength)
 	if userID != nil {
 		c.UserModerated = uuid.NullUUID{UUID: *userID, Valid: true}
 		c.ModeratedTime = NowNullable()

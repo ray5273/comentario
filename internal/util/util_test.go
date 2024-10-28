@@ -772,6 +772,40 @@ func TestMarkdownToHTML(t *testing.T) {
 	}
 }
 
+func TestMaskIP(t *testing.T) {
+	tests := []struct {
+		name string
+		ip   string
+		want string
+	}{
+		{"empty             ", "", ""},
+		{"short IPv4        ", "2.2.2.2", "2.2.x.x"},
+		{"long IPv4         ", "255.255.255.255", "255.255.x.x"},
+		{"short IPv6        ", "::1", "::x:x:x:x:x:x"},
+		{"long IPv6         ", "1637:4bf3:42cd:7980:220b:feb2:98e8:ff82", "1637:4bf3:x:x:x:x:x:x"},
+		{"short IPv4, masked", "2.2.x.x", "2.2.x.x"},
+		{"long IPv4, masked ", "255.255.x.x", "255.255.x.x"},
+		{"short IPv6, masked", "::x", "::x:x:x:x:x:x"},
+		{"long IPv6, masked ", "1637:4bf3:x:x:x:x:x:x", "1637:4bf3:x:x:x:x:x:x"},
+		{"dot               ", ".", "."},
+		{"2 dots            ", "..", "..x.x"},
+		{"3 dots            ", "...", "..x.x"},
+		{"4 dots            ", "....", "..x.x"},
+		{"5 dots            ", ".....", "..x.x"},
+		{"garbage           ", "Sunsets. Are red...", "Sunsets. Are red.x.x"},
+		{"garbage2          ", "Whatever", "Whatever"},
+		{"unicode           ", "🥕.🥔.🍅.🍎.🍐.🍌", "🥕.🥔.x.x"},
+		{"mix chars         ", "\x00.🥔.\t.🍎.🍐.🍌", "\x00.🥔.x.x"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			if got := MaskIP(tt.ip); got != tt.want {
+				t.Errorf("MaskIP() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestRandomBytesLength(t *testing.T) {
 	tests := []struct {
 		name string

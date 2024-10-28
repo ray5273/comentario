@@ -204,44 +204,6 @@ func TestIsXSRFSafe(t *testing.T) {
 	}
 }
 
-func TestMaskIP(t *testing.T) {
-	tests := []struct {
-		name    string
-		fullIPs bool
-		ip      string
-		want    string
-	}{
-		{"full on, empty      ", true, "", ""},
-		{"full on, short IPv4 ", true, "2.2.2.2", "2.2.2.2"},
-		{"full on, long IPv4  ", true, "255.255.255.255", "255.255.255.255"},
-		{"full on, short IPv6 ", true, "::1", "::1"},
-		{"full on, long IPv6  ", true, "1637:4bf3:42cd:7980:220b:feb2:98e8:ff82", "1637:4bf3:42cd:7980:220b:feb2:98e8:ff82"},
-		{"full on, garbage    ", true, "Sunsets. Are red...", "Sunsets. Are red..."},
-		{"full off, empty     ", false, "", ""},
-		{"full off, short IPv4", false, "2.2.2.2", "2.2.x.x"},
-		{"full off, long IPv4 ", false, "255.255.255.255", "255.255.x.x"},
-		{"full off, short IPv6", false, "::1", "::x:x:x:x:x:x"},
-		{"full off, long IPv6 ", false, "1637:4bf3:42cd:7980:220b:feb2:98e8:ff82", "1637:4bf3:x:x:x:x:x:x"},
-		{"full off, dot       ", false, ".", "."},
-		{"full off, 2 dots    ", false, "..", "..x.x"},
-		{"full off, 3 dots    ", false, "...", "..x.x"},
-		{"full off, 4 dots    ", false, "....", "..x.x"},
-		{"full off, 5 dots    ", false, ".....", "..x.x"},
-		{"full off, garbage   ", false, "Sunsets. Are red...", "Sunsets. Are red.x.x"},
-		{"full off, garbage2  ", false, "Whatever", "Whatever"},
-		{"full off, unicode   ", false, "🥕.🥔.🍅.🍎.🍐.🍌", "🥕.🥔.x.x"},
-		{"full off, mix chars ", false, "\x00.🥔.\t.🍎.🍐.🍌", "\x00.🥔.x.x"},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			ServerConfig.LogFullIPs = tt.fullIPs
-			if got := MaskIP(tt.ip); got != tt.want {
-				t.Errorf("MaskIP() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 type stubMailer struct{}
 
 func (m *stubMailer) Operational() bool                                    { return false }

@@ -329,7 +329,7 @@ func (svc *pageService) insertPageView(pageID *uuid.UUID, req *http.Request) {
 	logger.Debugf("pageService.insertPageView(%s, ...)", pageID)
 
 	// Extract the remote IP and country
-	ip, country := util.UserIPCountry(req)
+	ip, country := util.UserIPCountry(req, !config.ServerConfig.LogFullIPs)
 
 	// Parse the User Agent header
 	ua := uasurfer.Parse(util.UserAgent(req))
@@ -339,7 +339,7 @@ func (svc *pageService) insertPageView(pageID *uuid.UUID, req *http.Request) {
 		PageID:         *pageID,
 		CreatedTime:    time.Now().UTC(),
 		Proto:          req.Proto,
-		IP:             config.MaskIP(ip),
+		IP:             ip,
 		Country:        country,
 		BrowserName:    ua.Browser.Name.StringTrimPrefix(),
 		BrowserVersion: util.FormatVersion(&ua.Browser.Version),

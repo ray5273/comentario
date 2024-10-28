@@ -175,32 +175,6 @@ func IsXSRFSafe(r *http.Request) bool {
 	return false
 }
 
-// MaskIP hides a part of the given IPv4/IPv6 address if full IP logging isn't enabled, otherwise returns the IP as-is
-func MaskIP(ip string) string {
-	if !ServerConfig.LogFullIPs {
-		// Find the second dot
-		idx := 0
-		for i, c := range ip {
-			switch c {
-			case '.':
-				idx++
-				if idx == 2 {
-					// Second dot found, replace the rest of the string
-					return ip[:i] + ".x.x"
-				}
-
-			case ':':
-				idx++
-				if idx == 2 {
-					// Second colon found, replace the rest of the string
-					return ip[:i] + ":x:x:x:x:x:x"
-				}
-			}
-		}
-	}
-	return ip
-}
-
 // PostProcess signals the config the CLI flags have been parsed and assigned values
 func PostProcess() error {
 	if err := ServerConfig.postProcess(); err != nil {

@@ -7,7 +7,6 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
@@ -145,14 +144,7 @@ func (svc *commentService) Count(
 
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
-
-	// Clone the comment and prepare it to be inserted
-	cc := *c
-	cc.PendingReason = util.TruncateStr(c.PendingReason, data.MaxPendingReasonLength)
-	cc.AuthorIP = config.MaskIP(c.AuthorIP)
-
-	// Insert a record into the database
-	if err := db.ExecOne(db.Insert("cm_comments").Rows(&cc)); err != nil {
+	if err := db.ExecOne(db.Insert("cm_comments").Rows(c)); err != nil {
 		logger.Errorf("commentService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}

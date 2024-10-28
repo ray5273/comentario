@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -117,7 +118,7 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 	// Create a new user
 	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
 		WithPassword(data.PasswordPtrToString(params.Body.Password)).
-		WithSignup(params.HTTPRequest, data.URIPtrToString(params.Body.URL)).
+		WithSignup(params.HTTPRequest, data.URIPtrToString(params.Body.URL), !config.ServerConfig.LogFullIPs).
 		WithWebsiteURL(string(params.Body.WebsiteURL))
 
 	// If no operational mailer is configured, or confirmation is switched off in the config, mark the user confirmed

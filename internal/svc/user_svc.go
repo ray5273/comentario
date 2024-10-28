@@ -5,7 +5,6 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
-	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"maps"
@@ -166,13 +165,7 @@ func (svc *userService) Create(u *data.User) error {
 
 func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	logger.Debugf("userService.CreateUserSession(%#v)", s)
-
-	// Clone the session and prepare for insertion
-	sc := *s
-	sc.IP = config.MaskIP(s.IP)
-
-	// Insert a new record
-	if err := db.ExecOne(db.Insert("cm_user_sessions").Rows(&sc)); err != nil {
+	if err := db.ExecOne(db.Insert("cm_user_sessions").Rows(s)); err != nil {
 		logger.Errorf("userService.CreateUserSession: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}

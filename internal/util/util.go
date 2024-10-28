@@ -419,6 +419,30 @@ func MarkdownToHTML(markdown string, links, images, tables bool) string {
 	return p.Sanitize(buf.String())
 }
 
+// MaskIP hides a part of the given IPv4/IPv6 address
+func MaskIP(ip string) string {
+	// Find the second dot
+	idx := 0
+	for i, c := range ip {
+		switch c {
+		case '.':
+			idx++
+			if idx == 2 {
+				// Second dot found, replace the rest of the string
+				return ip[:i] + ".x.x"
+			}
+
+		case ':':
+			idx++
+			if idx == 2 {
+				// Second colon found, replace the rest of the string
+				return ip[:i] + ":x:x:x:x:x:x"
+			}
+		}
+	}
+	return ip
+}
+
 // MD5ToHex converts the given MD5 binary checksum into its string representation. If checksum is nil, return an empty
 // string
 func MD5ToHex(checksum *[16]byte) string {
@@ -567,9 +591,12 @@ func UserIP(r *http.Request) string {
 	return ""
 }
 
-// UserIPCountry tries to determine the IP address and country code of the user based on it
-func UserIPCountry(r *http.Request) (ip, country string) {
+// UserIPCountry tries to determine the IP address and country code of the user based on it, optionally masking the IP
+func UserIPCountry(r *http.Request, maskIP bool) (ip, country string) {
 	ip = UserIP(r)
 	country = CountryByIP(ip)
+	if maskIP {
+		ip = MaskIP(ip)
+	}
 	return
 }
