@@ -11,8 +11,6 @@ builds:
       - amd64
       - arm
       - arm64
-    env:
-      - CGO_ENABLED=1
   # Statically linked binary
   - id: comentario-static
     binary: comentario
