@@ -74,6 +74,7 @@ export const PATHS = {
         },
         account: {
             profile:    '/en/manage/account/profile',
+            email:      '/en/manage/account/email',
         },
     },
 };
@@ -176,6 +177,7 @@ export enum DomainConfigKey {
 
 /** Instance dynamic config item keys. */
 export enum InstanceConfigKey {
+    authEmailUpdateEnabled                 = 'auth.emailUpdate.enabled',
     authLoginLocalMaxAttempts              = "auth.login.local.maxAttempts",
     authSignupConfirmCommenter             = 'auth.signup.confirm.commenter',
     authSignupConfirmUser                  = 'auth.signup.confirm.user',

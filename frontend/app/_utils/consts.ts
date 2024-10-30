@@ -26,6 +26,7 @@ export const Paths = {
         // Account
         account: {
             profile:    '/manage/account/profile',
+            email:      '/manage/account/email',
         },
     },
 

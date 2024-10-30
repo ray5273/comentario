@@ -7,6 +7,7 @@ import { ConfigKeyDomainDefaultsPrefix, InstanceConfigItemKey } from '../../../_
 export class DynConfigItemNamePipe implements PipeTransform {
 
     private static ITEM_NAMES: { [k in InstanceConfigItemKey]: string } = {
+        [InstanceConfigItemKey.authEmailUpdateEnabled]:                 $localize`Allow users to update their emails`,
         [InstanceConfigItemKey.authLoginLocalMaxAttempts]:              $localize`Max. failed login attempts`,
         [InstanceConfigItemKey.authSignupConfirmCommenter]:             $localize`New commenters must confirm their email`,
         [InstanceConfigItemKey.authSignupConfirmUser]:                  $localize`New users must confirm their email`,

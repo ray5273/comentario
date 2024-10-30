@@ -6,6 +6,7 @@
 - {id: actionCollapseChildren,      translation: '折叠子评论'}
 - {id: actionCommentUnreg,          translation: '免注册评论'}
 - {id: actionConfirmEmail,          translation: '确认您的邮箱'}
+# TODO - {id: actionConfirmEmailUpdate,    translation: 'Confirm Updating Your Email'}
 - {id: actionContext,               translation: '上下文'}
 - {id: actionDelete,                translation: '删除'}
 - {id: actionDownvote,              translation: '踩'}
@@ -55,7 +56,11 @@
 - {id: confirmEmailAct,             translation: '如果您希望完成注册，请点击下方按钮。'}
 - {id: confirmEmailExplanation,     translation: '您收到此邮件是因为您（或其他人）在我们的服务中注册了此邮箱地址。'}
 - {id: confirmEmailRequest,         translation: '您最近使用此邮箱地址注册了新的Comentario账户。'}
+# TODO - {id: confirmEmailUpdateAct,       translation: 'To confirm updating your email, please click the button below.'}
+# TODO - {id: confirmEmailUpdateExpl,      translation: 'You''ve received this email because you (or someone else) requested an update to your email address in our service.'}
+# TODO - {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
 - {id: confirmYourEmail,            translation: '确认您的邮箱'}
+# TODO - {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
 - {id: dlgTitleConfirm,             translation: '确认'}
 - {id: dlgTitleCreateAccount,       translation: '创建账户'}
 - {id: dlgTitleLogIn,               translation: '登录'}

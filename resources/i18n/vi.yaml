@@ -6,6 +6,7 @@
 - {id: actionCollapseChildren,      translation: 'Thu gọn bình luận'}
 - {id: actionCommentUnreg,          translation: 'Bình luận không cần đăng ký'}
 - {id: actionConfirmEmail,          translation: 'Xác nhận email của bạn'}
+# TODO - {id: actionConfirmEmailUpdate,    translation: 'Confirm Updating Your Email'}
 - {id: actionContext,               translation: 'Ngữ cảnh'}
 - {id: actionDelete,                translation: 'Xóa'}
 - {id: actionDownvote,              translation: 'Không đồng ý'}
@@ -55,7 +56,11 @@
 - {id: confirmEmailAct,             translation: 'Để hoàn tất đăng ký, vui lòng nhấp vào nút bên dưới.'}
 - {id: confirmEmailExplanation,     translation: 'Bạn nhận được email này vì bạn (hoặc ai đó) đã đăng ký địa chỉ email này.'}
 - {id: confirmEmailRequest,         translation: 'Bạn đã đăng ký tài khoản Comentario mới với địa chỉ email này.'}
+# TODO - {id: confirmEmailUpdateAct,       translation: 'To confirm updating your email, please click the button below.'}
+# TODO - {id: confirmEmailUpdateExpl,      translation: 'You''ve received this email because you (or someone else) requested an update to your email address in our service.'}
+# TODO - {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
 - {id: confirmYourEmail,            translation: 'Xác nhận email của bạn'}
+# TODO - {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
 - {id: dlgTitleConfirm,             translation: 'Xác nhận'}
 - {id: dlgTitleCreateAccount,       translation: 'Tạo tài khoản'}
 - {id: dlgTitleLogIn,               translation: 'Đăng nhập'}

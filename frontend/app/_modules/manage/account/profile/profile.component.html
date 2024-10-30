@@ -21,8 +21,15 @@
                 <!-- Email -->
                 <div class="col-md-6">
                     <label for="email" class="form-label colon" i18n>Email</label>
-                    <input formControlName="email" type="email" class="form-control" id="email" size="45"
-                           autocomplete="email">
+                    <div class="input-group">
+                        <input formControlName="email" type="email" class="form-control" id="email" size="45"
+                               autocomplete="email">
+                        <!-- Update email button, local user only -->
+                        @if (principal.isLocal) {
+                            <a [routerLink]="[Paths.manage.account.email]" class="btn btn-outline-secondary"
+                               title="Update email" i18n-title><fa-icon [icon]="faCog"/></a>
+                        }
+                    </div>
                 </div>
 
                 <!-- Name -->

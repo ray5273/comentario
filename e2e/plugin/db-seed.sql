@@ -1,5 +1,6 @@
 insert into cm_configuration(key, value, ts_updated)
 values
+    ('auth.emailUpdate.enabled',                    'false', '0001-01-01 00:00:00.000000'),
     ('auth.login.local.maxAttempts',                '5',     '0001-01-01 00:00:00.000000'),
     ('auth.signup.confirm.commenter',               'false', '0001-01-01 00:00:00.000000'),
     ('auth.signup.confirm.user',                    'true',  '0001-01-01 00:00:00.000000'),

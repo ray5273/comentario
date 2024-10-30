@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"time"
 )
 
 // Verifier is a global VerifierService implementation
@@ -53,6 +54,9 @@ type VerifierService interface {
 	// UserCanUpdateComment verifies the given domain user is allowed to update the specified comment. domainUser can be
 	// nil
 	UserCanUpdateComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder
+	// UserCurrentPassword verifies the current user's password is correct. It also has a built-in sleep on a wrong
+	// password to discourage brute-force attacks
+	UserCurrentPassword(user *data.User, pwd string) middleware.Responder
 	// UserIsAuthenticated verifies the given user is an authenticated one
 	UserIsAuthenticated(user *data.User) middleware.Responder
 	// UserIsLocal verifies the user is a locally authenticated one
@@ -307,6 +311,15 @@ func (v *verifier) UserCanUpdateComment(domainID *uuid.UUID, user *data.User, do
 
 	// Editing not allowed
 	return respForbidden(exmodels.ErrorNotAllowed)
+}
+
+func (v *verifier) UserCurrentPassword(user *data.User, pwd string) middleware.Responder {
+	if !user.VerifyPassword(pwd) {
+		// Sleep a while to discourage brute-force attacks
+		time.Sleep(util.WrongAuthDelayMax)
+		return respBadRequest(exmodels.ErrorWrongCurPassword)
+	}
+	return nil
 }
 
 func (v *verifier) UserIsAuthenticated(user *data.User) middleware.Responder {

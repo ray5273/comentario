@@ -6,6 +6,7 @@
 - {id: actionCollapseChildren,      translation: 'Reacties inklappen'}
 - {id: actionCommentUnreg,          translation: 'Reageren zonder registratie'}
 - {id: actionConfirmEmail,          translation: 'Bevestig je e-mailadres'}
+- {id: actionConfirmEmailUpdate,    translation: 'Bevestig bewerken je e-mailadres'}
 - {id: actionContext,               translation: 'Context'}
 - {id: actionDelete,                translation: 'Verwijderen'}
 - {id: actionDownvote,              translation: 'Slecht comment'}
@@ -55,7 +56,11 @@
 - {id: confirmEmailAct,             translation: 'Klik op de knop hieronder om je registratie te voltooien.'}
 - {id: confirmEmailExplanation,     translation: 'Je hebt deze e-mail ontvangen omdat jij (of iemand anders) dit e-mailadres bij onze service hebt geregistreerd.'}
 - {id: confirmEmailRequest,         translation: 'Je hebt onlangs een nieuw Comentario-account geregistreerd met dit e-mailadres.'}
+- {id: confirmEmailUpdateAct,       translation: 'Klik op de knop hieronder om de wijziging van je e-mailadres te bevestigen.'}
+- {id: confirmEmailUpdateExpl,      translation: 'Je hebt deze e-mail ontvangen omdat jij (of iemand anders) een wijziging van je e-mailadres bij onze service hebt aangevraagd.'}
+- {id: confirmEmailUpdateRequest,   translation: 'Je hebt onlangs een wijziging van je Comentario account naar dit e-mailadres aangevraagd.'}
 - {id: confirmYourEmail,            translation: 'Bevestig je e-mailadres'}
+- {id: confirmYourEmailUpdate,      translation: 'Bevestig wijziging e-mailadres'}
 - {id: dlgTitleConfirm,             translation: 'Bevestiging'}
 - {id: dlgTitleCreateAccount,       translation: 'Account aanmaken'}
 - {id: dlgTitleLogIn,               translation: 'Inloggen'}

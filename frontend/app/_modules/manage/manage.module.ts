@@ -66,6 +66,7 @@ import { AttributeTableComponent } from './attribute-table/attribute-table.compo
 import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.component';
 import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.component';
 import { StatsComponent } from './stats/stats/stats.component';
+import { EmailUpdateComponent } from './account/email-update/email-update.component';
 
 @NgModule({
     declarations: [
@@ -108,6 +109,7 @@ import { StatsComponent } from './stats/stats/stats.component';
         DynConfigItemNamePipe,
         DynConfigItemValueComponent,
         DynConfigSectionNamePipe,
+        EmailUpdateComponent,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
         PieStatsChartComponent,

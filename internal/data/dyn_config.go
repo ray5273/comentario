@@ -131,6 +131,7 @@ const (
 
 // Instance (global) settings
 const (
+	ConfigKeyAuthEmailUpdateEnabled     DynConfigItemKey = "auth.emailUpdate.enabled"
 	ConfigKeyAuthLoginLocalMaxAttempts  DynConfigItemKey = "auth.login.local.maxAttempts"
 	ConfigKeyAuthSignupConfirmCommenter DynConfigItemKey = "auth.signup.confirm.commenter"
 	ConfigKeyAuthSignupConfirmUser      DynConfigItemKey = "auth.signup.confirm.user"
@@ -160,6 +161,7 @@ const ConfigKeyDomainDefaultsPrefix = "domain.defaults."
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
 var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
+	ConfigKeyAuthEmailUpdateEnabled:                                         {DefaultValue: "false", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyAuthLoginLocalMaxAttempts:                                      {DefaultValue: "10", Datatype: ConfigDatatypeInt, Section: DynConfigItemSectionAuth, Min: 0, Max: 1<<31 - 1},
 	ConfigKeyAuthSignupConfirmCommenter:                                     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyAuthSignupConfirmUser:                                          {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},

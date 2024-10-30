@@ -6,6 +6,7 @@
 - {id: actionCollapseChildren,      translation: 'Recolher'}
 - {id: actionCommentUnreg,          translation: 'Comentar anonimamente'}
 - {id: actionConfirmEmail,          translation: 'Confirme Seu Email'}
+# TODO - {id: actionConfirmEmailUpdate,    translation: 'Confirm Updating Your Email'}
 - {id: actionContext,               translation: 'Contexto'}
 - {id: actionDelete,                translation: 'Deletar'}
 - {id: actionDownvote,              translation: 'Votar negativamente'}
@@ -55,7 +56,11 @@
 - {id: confirmEmailAct,             translation: 'Se você quiser concluir o registro, clique no botão abaixo.'}
 - {id: confirmEmailExplanation,     translation: 'Você recebeu este email pois você (ou outra pessoa) registrou este endereço de email em nosso serviço.'}
 - {id: confirmEmailRequest,         translation: 'Você registrou recentemente uma nova conta no Comentario com esse endereço de email.'}
+# TODO - {id: confirmEmailUpdateAct,       translation: 'To confirm updating your email, please click the button below.'}
+# TODO - {id: confirmEmailUpdateExpl,      translation: 'You''ve received this email because you (or someone else) requested an update to your email address in our service.'}
+# TODO - {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
 - {id: confirmYourEmail,            translation: 'Confirme seu email'}
+# TODO - {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
 - {id: dlgTitleConfirm,             translation: 'Confirmar'}
 - {id: dlgTitleCreateAccount,       translation: 'Criar uma conta'}
 - {id: dlgTitleLogIn,               translation: 'Fazer login'}

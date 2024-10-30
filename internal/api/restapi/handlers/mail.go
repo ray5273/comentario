@@ -177,3 +177,25 @@ func sendConfirmationEmail(user *data.User) middleware.Responder {
 	// Succeeded
 	return nil
 }
+
+// sendEmailUpdateConfirmation sends an email containing a link for changing the email, to the given user
+func sendEmailUpdateConfirmation(user *data.User, newEmail string) middleware.Responder {
+	// Create a new confirmation token
+	token, err := data.NewToken(&user.ID, data.TokenScopeConfirmEmailUpdate, util.UserConfirmEmailDuration, false)
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Persist the token
+	if err := svc.TheTokenService.Create(token); err != nil {
+		return respServiceError(err)
+	}
+
+	// Send a confirmation email
+	if err = svc.TheMailService.SendEmailUpdateConfirmEmail(user, token, newEmail, signUserEmailUpdate(user, newEmail)); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return nil
+}

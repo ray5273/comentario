@@ -7,6 +7,7 @@ tags:
     - administration
     - local authentication
 seeAlso:
+    - auth.emailupdate.enabled
     - auth.signup.enabled
     - domain.defaults.signup.enablefederated
     - domain.defaults.signup.enablesso

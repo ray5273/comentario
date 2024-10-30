@@ -6,6 +6,7 @@
 - {id: actionCollapseChildren,      translation: 'Свернуть дочерние комментарии'}
 - {id: actionCommentUnreg,          translation: 'Комментировать без регистрации'}
 - {id: actionConfirmEmail,          translation: 'Подтвердить емэйл'}
+- {id: actionConfirmEmailUpdate,    translation: 'Подтвердить смену емэйла'}
 - {id: actionContext,               translation: 'Контекст'}
 - {id: actionDelete,                translation: 'Удалить'}
 - {id: actionDownvote,              translation: 'Плохой комментарий'}
@@ -55,7 +56,11 @@
 - {id: confirmEmailAct,             translation: 'Если вы желаете завершить регистрацию, кликните по кнопке ниже.'}
 - {id: confirmEmailExplanation,     translation: 'Вы получили это письмо, потому что вы (или кто-то ещё) зарегистрировался с этим емэйлом в нашем сервисе.'}
 - {id: confirmEmailRequest,         translation: 'Вы только что зарегистрировали новый аккаунт в Comentario с этим емэйлом.'}
+- {id: confirmEmailUpdateAct,       translation: 'Чтобы подтвердить смену вашего емэйла, кликните по кнопке ниже.'}
+- {id: confirmEmailUpdateExpl,      translation: 'Вы получили это письмо, потому что вы (или кто-то ещё) запросили смену вашего емэйл-адреса в нашем сервисе.'}
+- {id: confirmEmailUpdateRequest,   translation: 'Вы только что запросили изменение вашего емэйла в Comentario на данный адрес.'}
 - {id: confirmYourEmail,            translation: 'Подтверждение емэйла'}
+- {id: confirmYourEmailUpdate,      translation: 'Подтверждение смены емэйла'}
 - {id: dlgTitleConfirm,             translation: 'Подтверждение'}
 - {id: dlgTitleCreateAccount,       translation: 'Создать аккаунт'}
 - {id: dlgTitleLogIn,               translation: 'Войти'}

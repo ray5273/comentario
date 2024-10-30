@@ -16,6 +16,7 @@ describe('DynConfigItemNamePipe', () => {
         {in: '',                                            want: ''},
         {in: 'foo',                                         want: '[foo]'},
         // Instance settings
+        {in: 'auth.emailUpdate.enabled',                    want: 'Allow users to update their emails'},
         {in: 'auth.login.local.maxAttempts',                want: 'Max. failed login attempts'},
         {in: 'auth.signup.confirm.commenter',               want: 'New commenters must confirm their email'},
         {in: 'auth.signup.confirm.user',                    want: 'New users must confirm their email'},

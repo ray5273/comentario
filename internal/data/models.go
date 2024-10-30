@@ -88,9 +88,10 @@ func (p *FederatedIdentityProvider) ToDTO() *models.FederatedIdentityProvider {
 type TokenScope string
 
 const (
-	TokenScopeResetPassword = TokenScope("pwd-reset")     // Bearer can reset their password
-	TokenScopeConfirmEmail  = TokenScope("confirm-email") // Bearer makes their account confirmed
-	TokenScopeLogin         = TokenScope("login")         // Bearer is eligible for a one-time login
+	TokenScopeResetPassword      = TokenScope("pwd-reset")            // Bearer can reset their password
+	TokenScopeConfirmEmail       = TokenScope("confirm-email")        // Bearer makes their account confirmed
+	TokenScopeConfirmEmailUpdate = TokenScope("confirm-email-update") // Bearer confirms updating their email
+	TokenScopeLogin              = TokenScope("login")                // Bearer is eligible for a one-time login
 )
 
 // Token is, well, a token
@@ -480,7 +481,7 @@ func (u *User) WithName(s string) *User {
 	return u
 }
 
-// WithPassword updates the PasswordHash from the provided plain-test password. If s is empty, also sets the hash to
+// WithPassword updates the PasswordHash from the provided plain-text password. If s is empty, also sets the hash to
 // empty
 func (u *User) WithPassword(s string) *User {
 	// If no password is provided, remove the hash. This means the user won't be able to log in

@@ -2,6 +2,7 @@ package svc
 
 import (
 	"bytes"
+	"encoding/hex"
 	"fmt"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -31,6 +32,8 @@ type MailService interface {
 	SendCommentNotification(kind MailNotificationKind, recipient *data.User, canModerate bool, domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenterName string) error
 	// SendConfirmEmail sends an email with a confirmation link
 	SendConfirmEmail(user *data.User, token *data.Token) error
+	// SendEmailUpdateConfirmEmail sends an email for changing the given user's email address
+	SendEmailUpdateConfirmEmail(user *data.User, token *data.Token, newEmail string, hmacSignature []byte) error
 	// SendPasswordReset sends an email with a password reset link
 	SendPasswordReset(user *data.User, token *data.Token) error
 }
@@ -102,6 +105,19 @@ func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) err
 		"confirm-email.gohtml",
 		map[string]any{
 			"ConfirmURL": config.ServerConfig.URLForAPI("auth/confirm", map[string]string{"access_token": token.Value}),
+			"Name":       user.Name,
+		})
+}
+
+func (svc *mailService) SendEmailUpdateConfirmEmail(user *data.User, token *data.Token, newEmail string, hmacSignature []byte) error {
+	return svc.sendFromTemplate(
+		user.LangID,
+		"",
+		newEmail,
+		TheI18nService.Translate(user.LangID, "confirmYourEmailUpdate"),
+		"confirm-email-update.gohtml",
+		map[string]any{
+			"ConfirmURL": config.ServerConfig.URLForAPI("user/email/confirm", map[string]string{"access_token": token.Value, "hmac": hex.EncodeToString(hmacSignature)}),
 			"Name":       user.Name,
 		})
 }

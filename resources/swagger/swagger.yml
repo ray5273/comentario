@@ -32,6 +32,7 @@ securityDefinitions:
     tokenUrl: http://dummy/
     scopes:
       confirm-email: confirm user's email
+      confirm-email-update: confirm user's email update
       login: authenticate the user
       pwd-reset: reset user's password
 
@@ -2098,6 +2099,72 @@ paths:
       responses:
         204:
           description: Avatar has been successfully updated
+
+  /user/email:
+    put:
+      operationId: CurUserEmailUpdateRequest
+      summary: Request an update of the current user's email address. Only applicable to a local user
+      tags:
+        - ApiGeneral
+      parameters:
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - email
+              - password
+            properties:
+              email:
+                type: string
+                format: email
+                description: New email for the user
+              password:
+                type: string
+                minLength: 1
+                maxLength: 63
+                description: User's current password
+      responses:
+        200:
+          description: User's email update is complete or pending confirmation
+          schema:
+            type: object
+            properties:
+              confirmationExpected:
+                type: boolean
+                description: If false, the new email is already set. If true, a change confirmation was sent to the new email
+                x-omitempty: false
+
+  /user/email/confirm:
+    get:
+      operationId: CurUserEmailUpdateConfirm
+      summary: Confirm the user's email update using the provided token
+      tags:
+        - ApiGeneral
+      security:
+        - token: [confirm-email-update]
+      parameters:
+        - in: query
+          name: email
+          required: true
+          description: New email for the user
+          type: string
+          format: email
+        - in: query
+          name: hmac
+          required: true
+          type: string
+          minLength: 64
+          maxLength: 64
+          pattern: '[0-9a-f]{64}'
+          description: HMAC signature for the update
+      responses:
+        307:
+          description: Email has been updated, redirecting to the profile
+          headers:
+            Location:
+              type: string
 
   #---------------------------------------------------------------------------------------------------------------------
   # Embed API

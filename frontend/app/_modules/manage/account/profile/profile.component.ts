@@ -3,7 +3,7 @@ import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { concat, EMPTY, Observable } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faAngleDown, faCopy, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faCog, faCopy, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
@@ -12,6 +12,7 @@ import { PasswordInputComponent } from '../../../tools/password-input/password-i
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { Utils } from '../../../../_utils/utils';
 import { PluginService } from '../../../plugin/_services/plugin.service';
+import { Paths } from '../../../../_utils/consts';
 
 @UntilDestroy()
 @Component({
@@ -63,8 +64,11 @@ export class ProfileComponent implements OnInit {
         agreed:         false,
     });
 
+    readonly Paths = Paths;
+
     // Icons
     readonly faAngleDown       = faAngleDown;
+    readonly faCog             = faCog;
     readonly faCopy            = faCopy;
     readonly faSkullCrossbones = faSkullCrossbones;
     readonly faTrashAlt        = faTrashAlt;

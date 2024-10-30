@@ -27,6 +27,7 @@ import { ConfigManagerComponent } from './config/config-manager/config-manager.c
 import { StaticConfigComponent } from './config/static-config/static-config.component';
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 import { ConfigEditComponent } from './config/config-edit/config-edit.component';
+import { EmailUpdateComponent } from './account/email-update/email-update.component';
 
 const children: Routes = [
     // Default route
@@ -92,6 +93,7 @@ const children: Routes = [
 
     // Account
     {path: 'account/profile',      component: ProfileComponent},
+    {path: 'account/email',        component: EmailUpdateComponent},
 ];
 
 // Make a parent route object, protected by the AuthGuard

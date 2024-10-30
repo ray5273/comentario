@@ -9,6 +9,7 @@
 - {id: actionCollapseChildren,      translation: 'Collapse children'}
 - {id: actionCommentUnreg,          translation: 'Comment without registration'}
 - {id: actionConfirmEmail,          translation: 'Confirm Your Email'}
+- {id: actionConfirmEmailUpdate,    translation: 'Confirm Updating Your Email'}
 - {id: actionContext,               translation: 'Context'}
 - {id: actionDelete,                translation: 'Delete'}
 - {id: actionDownvote,              translation: 'Downvote'}
@@ -58,7 +59,11 @@
 - {id: confirmEmailAct,             translation: 'If you wish to complete registration, please click the button below.'}
 - {id: confirmEmailExplanation,     translation: 'You''ve received this email because you (or someone else) registered this email address in our service.'}
 - {id: confirmEmailRequest,         translation: 'You recently registered a new Comentario account with this email address.'}
+- {id: confirmEmailUpdateAct,       translation: 'To confirm updating your email, please click the button below.'}
+- {id: confirmEmailUpdateExpl,      translation: 'You''ve received this email because you (or someone else) requested an update to your email address in our service.'}
+- {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
 - {id: confirmYourEmail,            translation: 'Confirm Your Email'}
+- {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
 - {id: dlgTitleConfirm,             translation: 'Confirm'}
 - {id: dlgTitleCreateAccount,       translation: 'Create an account'}
 - {id: dlgTitleLogIn,               translation: 'Log in'}

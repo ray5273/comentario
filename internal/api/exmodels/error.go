@@ -42,6 +42,7 @@ var (
 	ErrorDeletingLastOwner     = &Error{ID: "deleting-last-owner", Message: "Can't delete the last owner in domain(s)"}
 	ErrorDomainReadonly        = &Error{ID: "domain-readonly", Message: "This domain is read-only"}
 	ErrorEmailAlreadyExists    = &Error{ID: "email-already-exists", Message: "This email address is already registered"}
+	ErrorEmailUpdateForbidden  = &Error{ID: "email-update-forbidden", Message: "You're not allowed to change email"}
 	ErrorEmailNotConfirmed     = &Error{ID: "email-not-confirmed", Message: "User's email address is not confirmed yet"}
 	ErrorEmailSendFailure      = &Error{ID: "email-send-failure", Message: "Failed to send email"}
 	ErrorFeatureDisabled       = &Error{ID: "feature-disabled", Message: "This feature is disabled"}
