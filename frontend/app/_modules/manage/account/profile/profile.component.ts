@@ -1,9 +1,9 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
 import { FormBuilder, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
-import { concat, EMPTY, Observable } from 'rxjs';
+import { concat, EMPTY, first, Observable } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faAngleDown, faCog, faCopy, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faAngleDown, faCopy, faPencil, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
@@ -13,6 +13,8 @@ import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { Utils } from '../../../../_utils/utils';
 import { PluginService } from '../../../plugin/_services/plugin.service';
 import { Paths } from '../../../../_utils/consts';
+import { ConfigService } from '../../../../_services/config.service';
+import { InstanceConfigItemKey } from '../../../../_models/config';
 
 @UntilDestroy()
 @Component({
@@ -42,6 +44,9 @@ export class ProfileComponent implements OnInit {
     /** Selected (but not yet uploaded) avatar image. */
     avatarFile?: File | null;
 
+    /** Whether editing email is enabled. */
+    canEditEmail = false;
+
     /** UI plugs destined for the profile page. */
     readonly plugs = this.pluginSvc.uiPlugsForLocation('profile');
 
@@ -68,8 +73,8 @@ export class ProfileComponent implements OnInit {
 
     // Icons
     readonly faAngleDown       = faAngleDown;
-    readonly faCog             = faCog;
     readonly faCopy            = faCopy;
+    readonly faPencil          = faPencil;
     readonly faSkullCrossbones = faSkullCrossbones;
     readonly faTrashAlt        = faTrashAlt;
 
@@ -80,7 +85,12 @@ export class ProfileComponent implements OnInit {
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
         private readonly pluginSvc: PluginService,
+        cfgSvc: ConfigService,
     ) {
+        cfgSvc.dynamicConfig
+            .pipe(first())
+            .subscribe(dc => this.canEditEmail = dc.getBool(InstanceConfigItemKey.authEmailUpdateEnabled));
+
         // Disable Purge comments if Delete comments is off
         this.deleteConfirmationForm.controls.deleteComments.valueChanges
             .pipe(untilDestroyed(this))

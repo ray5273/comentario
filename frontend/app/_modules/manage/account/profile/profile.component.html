@@ -23,13 +23,18 @@
                     <label for="email" class="form-label colon" i18n>Email</label>
                     <div class="input-group">
                         <input formControlName="email" type="email" class="form-control" id="email" size="45"
-                               autocomplete="email">
+                               autocomplete="email" aria-describedby="emailUpdateHelp">
                         <!-- Update email button, local user only -->
-                        @if (principal.isLocal) {
+                        @if (principal.isLocal && canEditEmail) {
                             <a [routerLink]="[Paths.manage.account.email]" class="btn btn-outline-secondary"
-                               title="Update email" i18n-title><fa-icon [icon]="faCog"/></a>
+                               title="Update email" i18n><fa-icon [icon]="faPencil"/></a>
                         }
                     </div>
+                    <!-- Update email info text if cannot edit -->
+                    @if (principal.isLocal && !principal.isSuperuser && !canEditEmail) {
+                        <div id="emailUpdateHelp" class="form-text"
+                             i18n>Contact your system administrator to change the email.</div>
+                    }
                 </div>
 
                 <!-- Name -->

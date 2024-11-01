@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { ProfileComponent } from './profile.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { mockAuthService } from '../../../../_utils/_mocks.spec';
 import { PluginService } from '../../../plugin/_services/plugin.service';
+import { ConfigService } from '../../../../_services/config.service';
+import { DynamicConfig } from '../../../../_models/config';
 
 describe('ProfileComponent', () => {
 
@@ -14,6 +17,7 @@ describe('ProfileComponent', () => {
         await TestBed.configureTestingModule({
             declarations: [ProfileComponent],
             providers: [
+                MockProvider(ConfigService, {dynamicConfig: of(new DynamicConfig())}),
                 MockProvider(ApiGeneralService),
                 MockProvider(PluginService),
                 mockAuthService(),

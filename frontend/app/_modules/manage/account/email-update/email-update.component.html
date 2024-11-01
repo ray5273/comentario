@@ -1,7 +1,7 @@
 <!-- Heading -->
-<h1 i18n="heading">Change email</h1>
+<h1 i18n="heading">Update email</h1>
 
-<!-- Change email form if not submitted yet -->
+<!-- Update email form if not submitted yet -->
 @if (!submitted) {
     <form [formGroup]="form" (ngSubmit)="submit()" id="email-update-form">
         <fieldset [disabled]="submitting.active">
@@ -28,7 +28,7 @@
              <!-- Buttons -->
             <div class="form-footer">
                 <a [routerLink]="Paths.manage.account.profile" class="btn btn-link" i18n="action">Cancel</a>
-                <button [appSpinner]="submitting.active" type="submit" class="btn btn-primary" i18n="action">Change email</button>
+                <button [appSpinner]="submitting.active" type="submit" class="btn btn-primary" i18n="action">Save</button>
             </div>
         </fieldset>
     </form>
