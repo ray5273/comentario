@@ -117,8 +117,14 @@ func (svc *mailService) SendEmailUpdateConfirmEmail(user *data.User, token *data
 		TheI18nService.Translate(user.LangID, "confirmYourEmailUpdate"),
 		"confirm-email-update.gohtml",
 		map[string]any{
-			"ConfirmURL": config.ServerConfig.URLForAPI("user/email/confirm", map[string]string{"access_token": token.Value, "hmac": hex.EncodeToString(hmacSignature)}),
-			"Name":       user.Name,
+			"ConfirmURL": config.ServerConfig.URLForAPI(
+				"user/email/confirm",
+				map[string]string{
+					"access_token": token.Value,
+					"email":        newEmail,
+					"hmac":         hex.EncodeToString(hmacSignature),
+				}),
+			"Name": user.Name,
 		})
 }
 

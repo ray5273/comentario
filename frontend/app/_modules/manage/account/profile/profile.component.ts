@@ -97,6 +97,26 @@ export class ProfileComponent implements OnInit {
             .subscribe(b => Utils.enableControls(b, this.deleteConfirmationForm.controls.purgeComments));
     }
 
+    /**
+     * Route to send the user to for changing their email. If undefined, email change by the user isn't possible.
+     */
+    get updateEmailRoute(): string | string[] | undefined {
+        // Email update is only possible when the user is local
+        if (this.principal?.isLocal) {
+            // User can edit email themselves
+            if (this.canEditEmail) {
+                return Paths.manage.account.email;
+
+            // User is a superuser
+            } else if (this.principal.isSuperuser) {
+                return [Paths.manage.users, this.principal.id!, 'edit'];
+            }
+        }
+
+        // Email change isn't possible
+        return undefined;
+    }
+
     ngOnInit(): void {
         // Monitor principal changes
         this.authSvc.principal.subscribe(p => {
