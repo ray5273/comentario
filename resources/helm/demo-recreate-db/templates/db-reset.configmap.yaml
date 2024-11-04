@@ -27,6 +27,11 @@ data:
     delete from cm_tokens;
     delete from cm_user_sessions;
 
+    -- Cleanup other irrelevant data
+    delete from cm_comment_votes;
+    delete from cm_domain_attrs;
+    delete from cm_user_attrs;
+
     -- Cleanup obsolete stats
     delete from cm_domain_page_views where ts_created < now() - interval '30 days';
 
