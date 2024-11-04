@@ -142,7 +142,7 @@ context('Profile', () => {
             // The avatar letter is replaced with a picture
             cy.get('@avatarPic').should('have.text', '');
 
-            // After saving it's also updated in the sidebar
+            // After saving, it's also updated in the sidebar
             cy.get('@submit').click();
             cy.toastCheckAndClose('data-saved');
             cy.get('app-control-center #sidebarProfile').should('have.text', 'Commenter One');
@@ -151,7 +151,7 @@ context('Profile', () => {
             cy.get('@avatarRemove').click();
             cy.get('@avatarPic').should('have.text', 'C');
 
-            // After saving it's also updated in the sidebar
+            // After saving, it's also updated in the sidebar
             cy.get('@submit').click();
             cy.toastCheckAndClose('data-saved');
             cy.get('app-control-center #sidebarProfile').should('have.text', 'C' + 'Commenter One');

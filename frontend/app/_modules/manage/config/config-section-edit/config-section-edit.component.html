@@ -1,52 +1,49 @@
 @if (items; as items) {
     <ng-container [formGroup]="formGroup!">
         @for (item of items; track item.key) {
-            <!-- Add a local var for control name (also use it for switch ID) -->
-            @if (ctlName(item.key); as k) {
-                <!-- Info icon template -->
-                <ng-template #infoIcon>
-                    <app-info-icon docLink="{{ docsBasePath }}/{{ item.key | lowercase }}/" class="ms-2"/>
-                </ng-template>
+            <!-- Info icon template -->
+            <ng-template #infoIcon>
+                <app-info-icon docLink="{{ docsBasePath }}/{{ item.key | lowercase }}/" class="ms-2"/>
+            </ng-template>
 
-                <!-- Non-default value template -->
-                <ng-template #nonDefault>
-                    <!-- Revert to default button -->
-                    <span [id]="k+'-revert'"
-                          (click)="revert(item, $event)"
-                          (keydown.enter)="revert(item, $event)"
-                          (keydown.space)="revert(item, $event)"
-                          tabindex="0" role="button" class="ms-2 px-2 text-warning"
-                          ngbTooltip="Revert to default" i18n-ngbTooltip>
-                        <fa-icon [icon]="faRotateLeft"/>
-                    </span>
-                </ng-template>
+            <!-- Non-default value template -->
+            <ng-template #nonDefault>
+                <!-- Revert to default button -->
+                <span [id]="item.controlName + '-revert'"
+                      (click)="revert(item, $event)"
+                      (keydown.enter)="revert(item, $event)"
+                      (keydown.space)="revert(item, $event)"
+                      tabindex="0" role="button" class="ms-2 px-2 text-warning"
+                      ngbTooltip="Revert to default" i18n-ngbTooltip>
+                    <fa-icon [icon]="faRotateLeft"/>
+                </span>
+            </ng-template>
 
-                <!-- Label with a control -->
-                @switch (item.datatype) {
-                    <!-- Boolean value -->
-                    @case ('bool') {
-                        <div class="form-check form-switch">
-                            <input [formControlName]="k" [id]="k" class="form-check-input" type="checkbox">
-                            <label [for]="k" class="form-check-label">{{ item.key | dynConfigItemName }}</label>
-                            @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
-                            @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
-                        </div>
-                    }
+            <!-- Label with a control -->
+            @switch (item.datatype) {
+                <!-- Boolean value -->
+                @case ('bool') {
+                    <div class="form-check form-switch">
+                        <input [formControlName]="item.controlName" [id]="item.controlName" class="form-check-input" type="checkbox">
+                        <label [for]="item.controlName" class="form-check-label">{{ item.key | dynConfigItemName }}</label>
+                        @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
+                        @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
+                    </div>
+                }
 
-                    <!-- Any other (string/numeric) value -->
-                    @default {
-                        <div class="mb-3">
-                            <label [for]="k" class="form-label colon">{{ item.key | dynConfigItemName }}</label>
-                            @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
-                            @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
-                            <input [formControlName]="k"
-                                   [id]="k"
-                                   [type]="item.datatype === 'int' ? 'number' : 'text'"
-                                   [min]="item.min"
-                                   [max]="item.max"
-                                   class="form-control">
-                        </div>
-                    }
+                <!-- Any other (string/numeric) value -->
+                @default {
+                    <div class="mb-3">
+                        <label [for]="item.controlName" class="form-label colon">{{ item.key | dynConfigItemName }}</label>
+                        @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
+                        @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
+                        <input [formControlName]="item.controlName"
+                               [id]="item.controlName"
+                               [type]="item.datatype === 'int' ? 'number' : 'text'"
+                               [min]="item.min"
+                               [max]="item.max"
+                               class="form-control">
+                    </div>
                 }
             }
         }

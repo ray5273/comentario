@@ -1,4 +1,5 @@
 import { DynamicConfigItem } from '../../generated-api';
+import { TypedConfigItem } from './typed-config-item';
 
 /** Instance domain defaults key prefix. */
 export const ConfigKeyDomainDefaultsPrefix = 'domain.defaults.';
@@ -50,24 +51,26 @@ export enum InstanceConfigItemKey {
 export class DynamicConfig {
 
     /** Configuration items, mapped by key. */
-    readonly byKey: Record<string, DynamicConfigItem>;
+    readonly byKey: Record<string, TypedConfigItem>;
 
     /** Configuration items, grouped by section key. */
-    readonly bySection: Record<string, DynamicConfigItem[]>;
+    readonly bySection: Record<string, TypedConfigItem[]>;
 
     constructor(
         configItems?: DynamicConfigItem[],
     ) {
-        // Sort configuration items by section, then by item key
-        configItems?.sort((a, b) => a.section?.localeCompare(b.section ?? '') || a.key.localeCompare(b.key));
+        // Convert configuration items into typed ones, and sort them by section, then by item key
+        const items = configItems
+            ?.map(i => new TypedConfigItem(i))
+            .sort((a, b) => a.section?.localeCompare(b.section ?? '') || a.key.localeCompare(b.key));
 
         // Create configuration item maps
-        this.byKey     = this.getConfigByKey(configItems);
-        this.bySection = this.getConfigBySection(configItems);
+        this.byKey     = this.getConfigByKey(items);
+        this.bySection = this.getConfigBySection(items);
     }
 
     /** All config items as a list. */
-    get items(): DynamicConfigItem[] {
+    get items(): TypedConfigItem[] {
         return Object.values(this.byKey);
     }
 
@@ -97,21 +100,14 @@ export class DynamicConfig {
     /**
      * Get config item by its key.
      */
-    get(key: DomainConfigItemKey | InstanceConfigItemKey): DynamicConfigItem {
+    get(key: DomainConfigItemKey | InstanceConfigItemKey): TypedConfigItem {
         return this.byKey?.[key];
-    }
-
-    /**
-     * Get a boolean config item value by its key.
-     */
-    getBool(key: DomainConfigItemKey | InstanceConfigItemKey): boolean {
-        return this.byKey?.[key]?.value === 'true';
     }
 
     /**
      * Return an object whose keys are configuration items' keys and values are the items.
      */
-    private getConfigByKey(items?: DynamicConfigItem[]): typeof this.byKey {
+    private getConfigByKey(items?: TypedConfigItem[]): typeof this.byKey {
         return items?.reduce(
             (acc, i) => {
                 acc[i.key] = i;
@@ -123,7 +119,7 @@ export class DynamicConfig {
     /**
      * Return an object whose keys are configuration items' section keys and values are the item lists.
      */
-    private getConfigBySection(items?: DynamicConfigItem[]): typeof this.bySection {
+    private getConfigBySection(items?: TypedConfigItem[]): typeof this.bySection {
         return items?.reduce(
             (acc, i) => {
                 const sec = i.section || '';

@@ -21,13 +21,13 @@ describe('DynamicConfig', () => {
 
         // Verify items by key
         expect(cfg.byKey).toEqual({
-            bar: {key: 'bar', value: '20', section: 'one'},
-            bax: {key: 'bax', value: '33', section: 'three'},
-            bay: {key: 'bay', value: '35', section: 'three'},
-            baz: {key: 'baz', value: '30', section: 'three'},
-            buz: {key: 'buz', value: '40', section: 'two'},
-            far: {key: 'far', value: '50', section: 'one'},
-            foo: {key: 'foo', value: '10', section: 'one'},
+            bar: jasmine.objectContaining({key: 'bar', value: '20', section: 'one'}),
+            bax: jasmine.objectContaining({key: 'bax', value: '33', section: 'three'}),
+            bay: jasmine.objectContaining({key: 'bay', value: '35', section: 'three'}),
+            baz: jasmine.objectContaining({key: 'baz', value: '30', section: 'three'}),
+            buz: jasmine.objectContaining({key: 'buz', value: '40', section: 'two'}),
+            far: jasmine.objectContaining({key: 'far', value: '50', section: 'one'}),
+            foo: jasmine.objectContaining({key: 'foo', value: '10', section: 'one'}),
         });
 
         // Verify section order, and orders within sections
@@ -39,17 +39,17 @@ describe('DynamicConfig', () => {
         // Verify items by section
         expect(cfg.bySection).toEqual({
             one: [
-                {key: 'bar', value: '20', section: 'one'},
-                {key: 'far', value: '50', section: 'one'},
-                {key: 'foo', value: '10', section: 'one'},
+                jasmine.objectContaining({key: 'bar', value: '20', section: 'one'}),
+                jasmine.objectContaining({key: 'far', value: '50', section: 'one'}),
+                jasmine.objectContaining({key: 'foo', value: '10', section: 'one'}),
             ],
             three: [
-                {key: 'bax', value: '33', section: 'three'},
-                {key: 'bay', value: '35', section: 'three'},
-                {key: 'baz', value: '30', section: 'three'},
+                jasmine.objectContaining({key: 'bax', value: '33', section: 'three'}),
+                jasmine.objectContaining({key: 'bay', value: '35', section: 'three'}),
+                jasmine.objectContaining({key: 'baz', value: '30', section: 'three'}),
             ],
             two: [
-                {key: 'buz', value: '40', section: 'two'},
+                jasmine.objectContaining({key: 'buz', value: '40', section: 'two'}),
             ],
         });
     });
@@ -58,18 +58,9 @@ describe('DynamicConfig', () => {
         const i1 = {key: DomainConfigItemKey.commentDeletionAuthor, value: 'x'};
         const i2 = {key: InstanceConfigItemKey.authSignupEnabled,   value: 'y'};
         const cfg = new DynamicConfig([i1, i2]);
-        expect(cfg.get(DomainConfigItemKey.commentDeletionAuthor))  .toBe(i1);
-        expect(cfg.get(InstanceConfigItemKey.authSignupEnabled))    .toBe(i2);
+        expect(cfg.get(DomainConfigItemKey.commentDeletionAuthor))  .toEqual(jasmine.objectContaining(i1));
+        expect(cfg.get(InstanceConfigItemKey.authSignupEnabled))    .toEqual(jasmine.objectContaining(i2));
         expect(cfg.get(InstanceConfigItemKey.authSignupConfirmUser)).toBeUndefined();
-    });
-
-    it('returns boolean value by key', () => {
-        const i1 = {key: DomainConfigItemKey.commentDeletionAuthor, value: 'true'};
-        const i2 = {key: InstanceConfigItemKey.authSignupEnabled,   value: 'false'};
-        const cfg = new DynamicConfig([i1, i2]);
-        expect(cfg.getBool(DomainConfigItemKey.commentDeletionAuthor))  .toBeTrue();
-        expect(cfg.getBool(InstanceConfigItemKey.authSignupEnabled))    .toBeFalse();
-        expect(cfg.getBool(InstanceConfigItemKey.authSignupConfirmUser)).toBeFalse();
     });
 });
 

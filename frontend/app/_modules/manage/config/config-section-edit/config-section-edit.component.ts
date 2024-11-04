@@ -2,7 +2,7 @@ import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup } from '@angular/forms';
 import { faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { DynamicConfig } from '../../../../_models/config';
-import { DynamicConfigItem } from '../../../../../generated-api';
+import { TypedConfigItem } from '../../../../_models/typed-config-item';
 
 @Component({
     selector: 'app-config-section-edit',
@@ -36,7 +36,7 @@ export class ConfigSectionEditComponent implements OnChanges {
         private readonly fb: FormBuilder,
     ) {}
 
-    get items(): DynamicConfigItem[] | undefined {
+    get items(): TypedConfigItem[] | undefined {
         return this.section ? this.config?.bySection[this.section] : undefined;
     }
 
@@ -44,14 +44,6 @@ export class ConfigSectionEditComponent implements OnChanges {
         if (changes.formGroup || changes.config || changes.section) {
             this.recreateControls();
         }
-    }
-
-    /**
-     * Return the name of a form control for the given item key.
-     */
-    ctlName(key: string) {
-        // Replace dots with underscores because a dot means a subproperty
-        return key.replaceAll('.', '_');
     }
 
     /**
@@ -68,18 +60,18 @@ export class ConfigSectionEditComponent implements OnChanges {
 
         // Create new controls
         this.items?.forEach(item => {
-            const ctl = this.fb.nonNullable.control(item.datatype === 'bool' ? item.value === 'true' : item.value);
-            this.formGroup!.addControl(this.ctlName(item.key), ctl, {emitEvent: false});
+            const ctl = this.fb.nonNullable.control(item.val);
+            this.formGroup!.addControl(item.controlName, ctl, {emitEvent: false});
             // Subscribe to the control's value changes to update the underlying config
-            ctl.valueChanges.subscribe(v => item.value = String(v));
+            ctl.valueChanges.subscribe(v => item.val = v);
         });
     }
 
     /**
      * Revert the value of a control with the given key value to the item's default.
      */
-    revert(item: DynamicConfigItem, event?: Event) {
+    revert(item: TypedConfigItem, event?: Event) {
         event?.preventDefault();
-        this.formGroup?.controls[this.ctlName(item.key)]?.setValue(item.defaultValue);
+        this.formGroup?.controls[item.controlName]?.setValue(item.defaultVal);
     }
 }

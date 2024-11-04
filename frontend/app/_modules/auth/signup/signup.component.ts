@@ -45,7 +45,7 @@ export class SignupComponent {
     ) {
         this.cfgSvc.dynamicConfig
             .pipe(first())
-            .subscribe(dc => this.signupAllowed = dc.getBool(InstanceConfigItemKey.authSignupEnabled));
+            .subscribe(dc => this.signupAllowed = dc.get(InstanceConfigItemKey.authSignupEnabled).val as boolean);
     }
 
     submit(): void {

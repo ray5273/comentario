@@ -68,7 +68,7 @@ export class DomainManagerComponent implements OnInit {
                 // new owners are allowed
                 switchMap(() => this.domainMeta?.principal?.isSuperuser ?
                     of(true) :
-                    this.configSvc.dynamicConfig.pipe(first(), map(dc => dc.getBool(InstanceConfigItemKey.operationNewOwnerEnabled)))),
+                    this.configSvc.dynamicConfig.pipe(first(), map(dc => dc.get(InstanceConfigItemKey.operationNewOwnerEnabled).val))),
                 // If no new owner enabled, the user must already own at least one domain
                 switchMap(enabled => enabled ?
                     of(true) :

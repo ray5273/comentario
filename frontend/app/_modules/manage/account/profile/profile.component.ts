@@ -89,7 +89,7 @@ export class ProfileComponent implements OnInit {
     ) {
         cfgSvc.dynamicConfig
             .pipe(first())
-            .subscribe(dc => this.canEditEmail = dc.getBool(InstanceConfigItemKey.authEmailUpdateEnabled));
+            .subscribe(dc => this.canEditEmail = dc.get(InstanceConfigItemKey.authEmailUpdateEnabled).val as boolean);
 
         // Disable Purge comments if Delete comments is off
         this.deleteConfirmationForm.controls.deleteComments.valueChanges

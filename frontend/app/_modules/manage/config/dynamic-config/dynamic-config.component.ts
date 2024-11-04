@@ -2,10 +2,11 @@ import { Component, OnInit } from '@angular/core';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faPencil, faStarOfLife, faUndo } from '@fortawesome/free-solid-svg-icons';
 import { ConfigService } from '../../../../_services/config.service';
-import { ApiGeneralService, DynamicConfigItem } from '../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { ConfigKeyDomainDefaultsPrefix } from '../../../../_models/config';
+import { TypedConfigItem } from '../../../../_models/typed-config-item';
 
 @UntilDestroy()
 @Component({
@@ -15,7 +16,7 @@ import { ConfigKeyDomainDefaultsPrefix } from '../../../../_models/config';
 export class DynamicConfigComponent implements OnInit {
 
     /** Config items, grouped by section. */
-    bySection?: Record<string, DynamicConfigItem[]>;
+    bySection?: Record<string, TypedConfigItem[]>;
 
     readonly resetting = new ProcessingStatus();
     readonly domainDefaultsPrefix = ConfigKeyDomainDefaultsPrefix;
