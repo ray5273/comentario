@@ -214,9 +214,9 @@ context('Profile', () => {
 
     context('account deletion', () => {
 
-        const loginAndDelete = (creds: Cypress.Credentials, delComments: boolean, purge: boolean, succeeds: boolean) => {
+        const loginAndDelete = (creds: Cypress.Credentials, canUpdateEmail: boolean, delComments: boolean, purge: boolean, succeeds: boolean) => {
             cy.loginViaApi(creds, PATHS.manage.account.profile);
-            makeAliases(false);
+            makeAliases(canUpdateEmail);
 
             // Expand the danger zone and click on Delete my account
             cy.get('@dzToggle').click();
@@ -259,7 +259,7 @@ context('Profile', () => {
         };
 
         it('allows deletion, keeping comments', () => {
-            loginAndDelete(USERS.commenterTwo, false, false, true);
+            loginAndDelete(USERS.commenterTwo, false, false, false, true);
             cy.testSiteVisit(TEST_PATHS.home);
             cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
@@ -312,7 +312,7 @@ context('Profile', () => {
         });
 
         it('allows deletion, deleting comments', () => {
-            loginAndDelete(USERS.queen, true, false, true);
+            loginAndDelete(USERS.queen, false, true, false, true);
             cy.testSiteVisit(TEST_PATHS.home);
             cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
@@ -365,7 +365,7 @@ context('Profile', () => {
         });
 
         it('allows deletion, purging comments', () => {
-            loginAndDelete(USERS.queen, true, true, true);
+            loginAndDelete(USERS.queen, false, true, true, true);
             cy.testSiteVisit(TEST_PATHS.home);
             cy.commentTree('author', 'html').should('yamlMatch',
                 // language=yaml
@@ -408,7 +408,7 @@ context('Profile', () => {
         context('isn\'t allowed', () => {
 
             it('for the only superuser', () => {
-                loginAndDelete(USERS.root, false, false, false);
+                loginAndDelete(USERS.root, true, false, false, false);
                 cy.toastCheckAndClose('deleting-last-superuser');
 
                 // Login still works
@@ -420,11 +420,11 @@ context('Profile', () => {
                 cy.toastCheckAndClose('data-saved');
 
                 // Now the deletion succeeds
-                loginAndDelete(USERS.root, false, false, true);
+                loginAndDelete(USERS.root, true, false, false, true);
             });
 
             it('for the last domain owner', () => {
-                loginAndDelete(USERS.ace, false, false, false);
+                loginAndDelete(USERS.ace, false, false, false, false);
                 cy.toastCheckAndClose('deleting-last-owner', `(${DOMAINS.localhost.host})`);
 
                 // Login still works
@@ -436,7 +436,7 @@ context('Profile', () => {
                 cy.toastCheckAndClose('data-saved');
 
                 // Now the deletion succeeds
-                loginAndDelete(USERS.ace, true, true, true);
+                loginAndDelete(USERS.ace, false, true, true, true);
 
                 // No comment on the test site homepage anymore
                 cy.testSiteVisit(TEST_PATHS.home);
