@@ -1,28 +1,35 @@
-import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../support/cy-utils';
+import { DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, USERS } from '../../../support/cy-utils';
 
 context('Profile', () => {
 
-    const makeAliases = () => {
+    const makeAliases = (canUpdateEmail: boolean) => {
+        cy.get('app-profile').as('profile');
+
         // Profile form
-        cy.get('#profile-form')      .as('form');
-        cy.get('#current-user-id')   .as('userId');
-        cy.get('#email')             .as('email');
-        cy.get('#name')              .as('name');
-        cy.get('#website-url')       .as('websiteUrl');
-        cy.get('#cur-password input').as('curPwd');
-        cy.get('#new-password input').as('newPwd');
+        cy.get('@profile').find('#profile-form')      .as('form');
+        cy.get('@profile').find('#current-user-id')   .as('userId');
+        cy.get('@profile').find('#email')             .as('email');
+        cy.get('@profile').find('#name')              .as('name');
+        cy.get('@profile').find('#website-url')       .as('websiteUrl');
+        cy.get('@profile').find('#cur-password input').as('curPwd');
+        cy.get('@profile').find('#new-password input').as('newPwd');
+        if (canUpdateEmail) {
+            cy.get('@profile').find('a[title="Update email"]').as('btnEmailUpdate').should('be.visible');
+        } else {
+            cy.get('@profile').find('a[title="Update email"]').should('not.exist');
+        }
         // Avatar
-        cy.get('#user-avatar')                                        .as('avatar');
-        cy.get('#user-avatar-picture')                                .as('avatarPic');
-        cy.get('#user-avatar-file')                                   .as('avatarFile');
+        cy.get('@profile').find('#user-avatar')                       .as('avatar');
+        cy.get('@profile').find('#user-avatar-picture')               .as('avatarPic');
+        cy.get('@profile').find('#user-avatar-file')                  .as('avatarFile');
         cy.get('@avatar').contains('button', 'Upload')                .as('avatarUpload');
         cy.get('@avatar').contains('button', 'Remove')                .as('avatarRemove');
         cy.get('@avatar').contains('button', 'Download from Gravatar').as('avatarGravatar');
         // Submit
-        cy.get('button[type=submit]').as('submit');
+        cy.get('@profile').find('button[type=submit]').as('submit');
         // Danger zone
-        cy.contains('button', 'Danger zone').as('dzToggle');
-        cy.get('#danger-zone-container')    .as('dzContainer');
+        cy.get('@profile').contains('button', 'Danger zone').as('dzToggle');
+        cy.get('@profile').find('#danger-zone-container')   .as('dzContainer');
     };
 
     const makeConfDialogAliases = () => {
@@ -44,7 +51,7 @@ context('Profile', () => {
         beforeEach(() => {
             cy.loginViaApi(USERS.commenterOne, PATHS.manage.account.profile);
             cy.isAt(PATHS.manage.account.profile);
-            makeAliases();
+            makeAliases(false);
         });
 
         it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.account.profile, USERS.commenterOne));
@@ -209,7 +216,7 @@ context('Profile', () => {
 
         const loginAndDelete = (creds: Cypress.Credentials, delComments: boolean, purge: boolean, succeeds: boolean) => {
             cy.loginViaApi(creds, PATHS.manage.account.profile);
-            makeAliases();
+            makeAliases(false);
 
             // Expand the danger zone and click on Delete my account
             cy.get('@dzToggle').click();
@@ -436,5 +443,47 @@ context('Profile', () => {
                 cy.commentTree().should('be.empty');
             });
         });
+    });
+
+    context('email update', () => {
+
+        [
+            {name: 'superuser',  user: USERS.root,           allowedAlways: true,  wantPath: PATHS.manage.users.id(USERS.root.id).edit},
+            {name: 'owner',      user: USERS.ace,            allowedAlways: false},
+            {name: 'moderator',  user: USERS.king,           allowedAlways: false},
+            {name: 'commenter',  user: USERS.commenterTwo,   allowedAlways: false},
+            {name: 'read-only',  user: USERS.commenterThree, allowedAlways: false},
+            {name: 'non-domain', user: USERS.commenterOne,   allowedAlways: false},
+        ]
+            .forEach(test =>
+                context(`for ${test.name} user`, () => {
+
+                    it(`${test.allowedAlways ? 'is' : 'is not'} allowed by default`, () => {
+                        // Login as the user and open the profile page
+                        cy.loginViaApi(test.user, PATHS.manage.account.profile);
+                        cy.isAt(PATHS.manage.account.profile);
+                        makeAliases(test.allowedAlways);
+
+                        // Check the Update email button
+                        if (test.allowedAlways) {
+                            cy.get('@btnEmailUpdate').click();
+                            cy.isAt(test.wantPath ?? PATHS.manage.account.email);
+                        }
+                    });
+
+                    it('is allowed when enabled in config', () => {
+                        // Enable email change in dynamic config
+                        cy.backendUpdateDynConfig({[InstanceConfigKey.authEmailUpdateEnabled]: true});
+
+                        // Login as the user and open the profile page
+                        cy.loginViaApi(test.user, PATHS.manage.account.profile);
+                        cy.isAt(PATHS.manage.account.profile);
+                        makeAliases(true);
+
+                        // Check the Update email button
+                        cy.get('@btnEmailUpdate').click();
+                        cy.isAt(PATHS.manage.account.email);
+                    });
+                }));
     });
 });
