@@ -11,6 +11,21 @@ builds:
       - amd64
       - arm
       - arm64
+    env:
+      # Force-enable cgo for every dynamically-linked build
+      - CGO_ENABLED=1
+    overrides:
+      # ARM builds require an explicit gcc specification
+      - goos: linux
+        goarch: arm
+        goarm: 6
+        env:
+          - CC=arm-linux-gnueabi-gcc
+      - goos: linux
+        goarch: arm64
+        env:
+          - CC=aarch64-linux-gnu-gcc
+
   # Statically linked binary
   - id: comentario-static
     binary: comentario
