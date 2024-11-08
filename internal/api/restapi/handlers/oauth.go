@@ -174,8 +174,12 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	if fedUser.Email == "" {
 		return oauthFailure(nonIntSSO, "user email missing", nil)
 	}
-	// -- Name
-	if fedUser.Name == "" {
+	// -- Name. Fall back to NickName should the Name prove empty
+	fedUserName := fedUser.Name
+	if fedUserName == "" {
+		fedUserName = fedUser.NickName
+	}
+	if fedUserName == "" {
 		return oauthFailure(nonIntSSO, "user name missing", nil)
 	}
 
@@ -228,7 +232,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		}
 
 		// Insert a new user
-		user = data.NewUser(fedUser.Email, fedUser.Name).
+		user = data.NewUser(fedUser.Email, fedUserName).
 			WithConfirmed(true). // Confirm the user right away as we trust the IdP
 			WithSignup(params.HTTPRequest, authSession.Host, !config.ServerConfig.LogFullIPs).
 			WithFederated(fedUser.UserID, idpID).
@@ -272,7 +276,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 		// Update user details
 		user.
-			WithName(fedUser.Name).
+			WithName(fedUserName).
 			WithFederated(fedUser.UserID, idpID).
 			WithWebsiteURL(userWebsiteURL)
 		if err := svc.TheUserService.Update(user); err != nil {
