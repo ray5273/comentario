@@ -1,4 +1,4 @@
-import { DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, USERS } from '../../../support/cy-utils';
+import { DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, USERS } from '../../../../support/cy-utils';
 
 context('Profile', () => {
 

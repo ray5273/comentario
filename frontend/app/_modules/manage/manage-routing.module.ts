@@ -93,7 +93,7 @@ const children: Routes = [
 
     // Account
     {path: 'account/profile',      component: ProfileComponent},
-    {path: 'account/email',        component: EmailUpdateComponent},
+    {path: 'account/email',        component: EmailUpdateComponent, canActivate: [ManageGuard.isLocal]},
 ];
 
 // Make a parent route object, protected by the AuthGuard

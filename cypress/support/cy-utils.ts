@@ -123,6 +123,13 @@ export class User implements Cypress.User {
     }
 
     /**
+     * Return a copy of this user with the given email.
+     */
+    withEmail(email: string): User {
+        return new User({...this, email});
+    }
+
+    /**
      * Return a copy of this user with the given password.
      */
     withPassword(password: string): User {

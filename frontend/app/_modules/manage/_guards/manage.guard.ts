@@ -16,6 +16,7 @@ export class ManageGuard {
     static readonly canManageDomain:    CanActivateFn = () => inject(ManageGuard).canManageDomain();
     static readonly canManageDomainSso: CanActivateFn = () => inject(ManageGuard).canManageDomainSso();
     static readonly isSuper:            CanActivateFn = () => inject(ManageGuard).isSuper();
+    static readonly isLocal:            CanActivateFn = () => inject(ManageGuard).isLocal();
 
     constructor(
         private readonly router: Router,
@@ -71,5 +72,15 @@ export class ManageGuard {
             .pipe(
                 first(),
                 map(meta => meta.principal?.isSuperuser || this.router.parseUrl(Paths.manage.dashboard)));
+    }
+
+    /**
+     * Check if the current user is a locally authenticated one, and return either true, or the profile route.
+     */
+    isLocal(): Observable<boolean | UrlTree> {
+        return this.domainSelectorSvc.domainMeta(false)
+            .pipe(
+                first(),
+                map(meta => meta.principal?.isLocal || this.router.parseUrl(Paths.manage.account.profile)));
     }
 }
