@@ -257,7 +257,7 @@ Cypress.Commands.add('noToast', () => void cy.get('#toast-0').should('not.exist'
 
 Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
     // Verify the toast's message ID
-    cy.get('#toast-0 .message-id').should('have.text', id);
+    cy.get('#toast-0').should('be.visible').find('.message-id').should('have.text', id);
 
     // Verify the toast's details text, if any
     if (details !== undefined) {
