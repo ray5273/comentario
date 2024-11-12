@@ -19,14 +19,14 @@ The `Moderation` tab defines moderation and moderator notification policies for 
 
 ## Require moderator approval on comment
 
-The moderation policy outlines situations the comment doesn't get automatically the `Approved` status in, queueing for moderation instead:
+The moderation policy outlines situations which the comment doesn't get automatically the `Approved` status in, queueing for moderation instead:
 
-* Author is unregistered
-* Author is authenticated
-* Author has less than N of approved comments
-* Author is registered less than N days ago
-* Comment contains link
-* Comment contains image
+* Author is unregistered;
+* Author is authenticated;
+* Author has less than `N` approved comments;
+* Author is registered less than `N` days ago;
+* Comment contains link;
+* Comment contains image.
 
 ### Extensions
 

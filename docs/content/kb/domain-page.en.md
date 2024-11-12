@@ -15,10 +15,10 @@ A **domain page** represents a website page on a certain [domain](domain). A pag
 
 <!--more-->
 
-This URL consists ow two parts:
+This URL consists of two parts:
 
 * **Host**, which comes from the page's [domain](domain);
-* **Path**, always starting with a `/`.
+* **Path**, always starting with a forward slash ("`/`").
 
 For example, `https://example.com/blog/post/id/0722` is a domain page with host `example.com` and path `/blog/post/id/0722`.
 
