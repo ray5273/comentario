@@ -4024,6 +4024,21 @@ paths:
                   type: boolean
                   x-omitempty: false
 
+  /e2e/oauth/login/{uuid}:
+    get:
+      operationId: E2eOAuthFederatedLogin
+      summary: Log in as a federated user with the given ID into Admin UI
+      tags:
+        - ApiE2e
+      security: []
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+      responses:
+        200:
+          description: Login successful
+          schema:
+            $ref: "#/definitions/principal"
+
   /e2e/oauth/{uuid}/sso/noninteractive:
     get:
       operationId: E2eOAuthSSONonInteractive

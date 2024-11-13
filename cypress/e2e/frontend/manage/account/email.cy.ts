@@ -197,4 +197,12 @@ context('Email update page', () => {
                     cy.isAt(pagePath);
                 });
             }));
+
+    it('redirects federated user to Profile', () => {
+        // Try to visit the path as a federated user
+        cy.loginFederatedViaApi(USERS.facebookUser.id, pagePath);
+
+        // We're redirected to the Profile
+        cy.isAt(PATHS.manage.account.profile);
+    });
 });

@@ -8,6 +8,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_e2e"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -95,6 +96,7 @@ func E2eConfigure(api *operations.ComentarioAPI) error {
 	api.APIE2eE2eDomainUpdateAttrsHandler = api_e2e.E2eDomainUpdateAttrsHandlerFunc(E2eDomainUpdateAttrs)
 	api.APIE2eE2eDomainUpdateIdpsHandler = api_e2e.E2eDomainUpdateIdpsHandlerFunc(E2eDomainUpdateIdps)
 	api.APIE2eE2eMailsGetHandler = api_e2e.E2eMailsGetHandlerFunc(E2eMailsGet)
+	api.APIE2eE2eOAuthFederatedLoginHandler = api_e2e.E2eOAuthFederatedLoginHandlerFunc(E2eOAuthFederatedLogin)
 	api.APIE2eE2eOAuthSSONonInteractiveHandler = api_e2e.E2eOAuthSSONonInteractiveHandlerFunc(E2eOAuthSSONonInteractive)
 	api.APIE2eE2eResetHandler = api_e2e.E2eResetHandlerFunc(E2eReset)
 	api.APIE2eE2eUserUpdateAttrsHandler = api_e2e.E2eUserUpdateAttrsHandlerFunc(E2eUserUpdateAttrs)
@@ -231,6 +233,36 @@ func E2eMailsGet(api_e2e.E2eMailsGetParams) middleware.Responder {
 		}
 	}
 	return api_e2e.NewE2eMailsGetOK().WithPayload(items)
+}
+
+func E2eOAuthFederatedLogin(params api_e2e.E2eOAuthFederatedLoginParams) middleware.Responder {
+	// Fetch the user
+	u, r := userGet(params.UUID)
+	if r != nil {
+		return r
+	}
+
+	// Check it's a federated user
+	if u.FederatedSSO {
+		return respUnauthorized(exmodels.ErrorNotAllowed.WithDetails("is an SSO user"))
+	}
+	if !u.FederatedIdP.Valid || u.FederatedIdP.String == "" {
+		return respUnauthorized(exmodels.ErrorNotAllowed.WithDetails("not a federated user"))
+	}
+
+	// Check the provider
+	if _, r := Verifier.FederatedIdProvider(models.FederatedIdpID(u.FederatedIdP.String)); r != nil {
+		return r
+	}
+
+	// Verify the user can log in and create a new session
+	us, r := loginUser(u, "", params.HTTPRequest)
+	if r != nil {
+		return r
+	}
+
+	// Succeeded. Return a principal and a session cookie
+	return authAddUserSessionToResponse(api_e2e.NewE2eOAuthFederatedLoginOK(), u, us)
 }
 
 func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) middleware.Responder {

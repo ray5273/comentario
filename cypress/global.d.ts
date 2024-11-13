@@ -10,9 +10,10 @@ declare namespace Cypress {
     }
 
     interface User extends CredentialsWithName {
-        isAnonymous: boolean;
-        id:          string;
-        isBanned?:   boolean;
+        isAnonymous:  boolean;
+        id:           string;
+        isBanned?:    boolean;
+        isFederated?: boolean;
     }
 
     interface Domain {
@@ -166,7 +167,7 @@ declare namespace Cypress {
         /**
          * Login as provided user via the UI.
          * @param creds Credentials to login with
-         * @param options Additional login options
+         * @param options Additional login options.
          */
         login(creds: Credentials, options?: LoginOptions): Chainable<void>;
 
@@ -177,12 +178,29 @@ declare namespace Cypress {
         logout(): Chainable<void>;
 
         /**
-         * Login as provided user directly, via an API call.
-         * @param creds Credentials to login with
+         * Login as provided user directly, via an API call: depending on the user kind, by calling loginViaApi() or
+         * loginFederatedViaApi().
+         * @param user User to login as.
+         * @param targetUrl URL to go to after the login.
+         * @param visitOptions Optional visit options.
+         */
+        loginUserViaApi(user: User, targetUrl: string, visitOptions?: Partial<VisitOptions>): Chainable<void>;
+
+        /**
+         * Login as provided local user directly, via an API call.
+         * @param creds Credentials to login with.
          * @param targetUrl URL to go to after the login.
          * @param visitOptions Optional visit options.
          */
         loginViaApi(creds: Credentials, targetUrl: string, visitOptions?: Partial<VisitOptions>): Chainable<void>;
+
+        /**
+         * Login as provided federated user directly, via an API call.
+         * @param id ID of the user to login as.
+         * @param targetUrl URL to go to after the login.
+         * @param visitOptions Optional visit options.
+         */
+        loginFederatedViaApi(id: string, targetUrl: string, visitOptions?: Partial<VisitOptions>): Chainable<void>;
 
         /**
          * Verify there is no toast.

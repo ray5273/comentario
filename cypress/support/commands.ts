@@ -243,11 +243,31 @@ Cypress.Commands.add('logout', () => {
     cy.isLoggedIn(false);
 });
 
+Cypress.Commands.add('loginUserViaApi', (user: Cypress.User, targetUrl: string, visitOptions?: Partial<Cypress.VisitOptions>) =>
+    user.isAnonymous ?
+        // If the user is anonymous, nothing to be done here
+        undefined :
+        user.isFederated ?
+            // If the user is federated
+            cy.loginFederatedViaApi(user.id, targetUrl, visitOptions) :
+            // User is local
+            cy.loginViaApi(user, targetUrl, visitOptions));
+
 Cypress.Commands.add('loginViaApi', (creds: Cypress.Credentials, targetUrl: string, visitOptions?: Partial<Cypress.VisitOptions>) => {
     cy.request('POST', '/api/auth/login', {email: creds.email, password: creds.password})
         .then(resp => {
             expect(resp.status).to.eq(200);
             expect(resp.body.email).to.eq(creds.email);
+        });
+    cy.visit(targetUrl, visitOptions);
+    cy.isLoggedIn();
+});
+
+Cypress.Commands.add('loginFederatedViaApi', (id: string, targetUrl: string, visitOptions?: Partial<Cypress.VisitOptions>) => {
+    cy.request(`/api/e2e/oauth/login/${id}`)
+        .then(resp => {
+            expect(resp.status).to.eq(200);
+            expect(resp.body.id).to.eq(id);
         });
     cy.visit(targetUrl, visitOptions);
     cy.isLoggedIn();
