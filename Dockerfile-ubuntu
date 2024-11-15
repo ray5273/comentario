@@ -23,7 +23,7 @@ COPY ./db /comentario/db
 COPY ./templates /comentario/templates
 
 # Copy the correct platform binary (dynamically linked)
-COPY ./dist/comentario_${TARGETOS}_${TARGETARCH}/comentario /comentario/
+COPY ./dist/comentario_${TARGETOS}_${TARGETARCH}_v1/comentario /comentario/
 
 # Make sure files were built and are available
 RUN ls -lAF /comentario/ && \

@@ -107,8 +107,6 @@ build:
     # Build the e2e plugin and relay, placing them next to the Linux AMD64 binary
     - go build -buildmode=plugin -o "./dist/comentario_linux_amd64_v1/comentario-e2e.so" "./e2e/plugin/"
     - go build -v -o "./dist/comentario_linux_amd64_v1/comentario-relay" "./e2e/relay/"
-    - cp -TR ./dist/comentario_linux_amd64_v1/ ./dist/comentario_linux_amd64/  #Copy for docker build
-    - cp -TR ./dist/comentario-static_linux_amd64_v1/ ./dist/comentario-static_linux_amd64/  #Copy for docker build
 
 # Base definition of an e2e-test job. Requires the variable $SECRETS_FILE to be set
 .e2e:
@@ -226,34 +224,29 @@ docker-image:
     - suffix="${FLAVOUR#-alpine}"
     - echo "Using image suffix '$suffix'"
 
-    # Create multiarch environment
-    - docker buildx create --driver docker-container --name multi-arch --use 
+    # Create a multi-arch environment
+    - docker buildx create --driver docker-container --name multi-arch --use
 
     # Login to the Container Registry
     - docker login -u $CI_REGISTRY_USER -p $CI_REGISTRY_PASSWORD $CI_REGISTRY
 
     # Build and optionally push the images
     - |
-      # Push the "main" tag (main repo only)
+      args="--platform 'linux/amd64,linux/arm64' -f 'Dockerfile$suffix'"
       if [[ $PUSH_IMAGE == 'true' ]]; then
-          echo "Enabling push and adding Docker tag '$IMG_TAG_CURRENT$suffix'"
-          pushandtag="--push -t $IMG_TAG_CURRENT$suffix "
+          # Build and push the "main" image tag
+          args="$args --push -t '$IMG_TAG_CURRENT$suffix'"
 
           # For a tag, also push it as 'latest'
-          if [[ -n "$CI_COMMIT_TAG" ]]; then
-              echo "Adding Docker tag '$IMG_TAG_LATEST$suffix'"
-              pushandtag="$pushandtag -t $IMG_TAG_LATEST$suffix "
-          fi
+          [[ -n "$CI_COMMIT_TAG" ]] && args="$args -t '$IMG_TAG_LATEST$suffix'"
     
           # For dev, also push it as 'edge'
-          if [[ "$CI_COMMIT_BRANCH" == "dev" ]]; then
-              echo "Adding Docker tag '$IMG_TAG_EDGE$suffix'"
-              pushandtag="$pushandtag -t $IMG_TAG_EDGE$suffix "
-          fi
+          [[ "$CI_COMMIT_BRANCH" == "dev" ]] && args="$args -t '$IMG_TAG_EDGE$suffix'"
       fi
-      echo "Building docker image"
-      docker buildx build --platform linux/amd64,linux/arm64 $pushandtag -f "Dockerfile$suffix" .
-      
+      echo "Building and pushing docker images"
+      echo "Arguments: '$args'"
+      docker buildx build $args .
+
 helm-chart:
   stage: package
   image: $DEPLOYER_IMAGE

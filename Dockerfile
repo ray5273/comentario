@@ -18,7 +18,7 @@ COPY ./db /comentario/db
 COPY ./templates /comentario/templates
 
 # Copy the correct platform binary (statically linked)
-COPY ./dist/comentario-static_${TARGETOS}_${TARGETARCH}/comentario /comentario/
+COPY ./dist/comentario-static_${TARGETOS}_${TARGETARCH}_v1/comentario /comentario/
 
 # Make sure files were built and are available
 RUN ls -lAF /comentario/ && \
