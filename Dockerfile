@@ -4,6 +4,9 @@
 #=======================================================================================================================
 FROM alpine:3
 
+ARG TARGETOS
+ARG TARGETARCH
+
 # Install CA certificates (for sending mail via SMTP TLS)
 RUN apk add --no-cache --update ca-certificates
 
@@ -14,8 +17,8 @@ COPY ./build/frontend /comentario/frontend
 COPY ./db /comentario/db
 COPY ./templates /comentario/templates
 
-# Copy the binary (statically linked)
-COPY ./dist/comentario-static_linux_amd64_v1/comentario /comentario/
+# Copy the correct platform binary (statically linked)
+COPY ./dist/comentario-static_${TARGETOS}_${TARGETARCH}/comentario /comentario/
 
 # Make sure files were built and are available
 RUN ls -lAF /comentario/ && \

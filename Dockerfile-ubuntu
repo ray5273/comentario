@@ -4,6 +4,9 @@
 #=======================================================================================================================
 FROM ubuntu:24.04
 
+ARG TARGETOS
+ARG TARGETARCH
+
 # Install locales and CA certificates (for sending mail via SMTP TLS)
 RUN apt-get update && \
     apt-get install -y locales ca-certificates && \
@@ -19,8 +22,8 @@ COPY ./build/frontend /comentario/frontend
 COPY ./db /comentario/db
 COPY ./templates /comentario/templates
 
-# Copy the binary (dynamically linked)
-COPY ./dist/comentario_linux_amd64_v1/comentario /comentario/
+# Copy the correct platform binary (dynamically linked)
+COPY ./dist/comentario_${TARGETOS}_${TARGETARCH}/comentario /comentario/
 
 # Make sure files were built and are available
 RUN ls -lAF /comentario/ && \
