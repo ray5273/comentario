@@ -107,6 +107,8 @@ build:
     # Remove arch version from dir name
     - mv dist/comentario_linux_amd64_v1 dist/comentario_linux_amd64
     - mv dist/comentario_linux_arm64_v8.0 dist/comentario_linux_arm64
+    - mv dist/comentario-static_linux_amd64_v1 dist/comentario-static_linux_amd64
+    - mv dist/comentario-static_linux_arm64_v8.0 dist/comentario-static_linux_arm64
 
     # Build the e2e plugin and relay, placing them next to the Linux AMD64 binary
     - go build -buildmode=plugin -o "./dist/comentario_linux_amd64/comentario-e2e.so" "./e2e/plugin/"
@@ -285,7 +287,7 @@ verify-package-deb:
     - apt-get install -y systemd jq
   script:
     # Install the package
-    - pkg_name="$(jq -r '.[] | select(.goos == "linux" and .goarch == "amd64" and .extra.Ext == "deb") | .path' dist/artifacts.json)"
+    - pkg_name="$(jq -r '.[] | select(.goos == "linux" and .goarch == "amd64" and .extra.Ext == ".deb") | .path' dist/artifacts.json)"
     - '[[ -z "$pkg_name" ]] && echo "Failed to find the .deb package" && exit 1'
     - dpkg -i "$pkg_name"
 
@@ -313,7 +315,7 @@ verify-package-rpm:
     - yum install -y jq
   script:
     # Install the package
-    - pkg_name="$(jq -r '.[] | select(.goos == "linux" and .goarch == "amd64" and .extra.Ext == "rpm") | .path' dist/artifacts.json)"
+    - pkg_name="$(jq -r '.[] | select(.goos == "linux" and .goarch == "amd64" and .extra.Ext == ".rpm") | .path' dist/artifacts.json)"
     - '[[ -z "$pkg_name" ]] && echo "Failed to find the .rpm package" && exit 1'
     - rpm -i "$pkg_name"
 
