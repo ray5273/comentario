@@ -59,6 +59,11 @@ type UserBanStatusEvent struct {
 	UserUpdateEvent
 }
 
+// UserBecameOwnerEvent is fired when a user receives their first Owner role (e.g., registers their first domain)
+type UserBecameOwnerEvent struct {
+	UserUpdateEvent
+}
+
 // UserConfirmedEvent is fired when a user confirms their email
 type UserConfirmedEvent struct {
 	UserUpdateEvent

@@ -11,7 +11,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"time"
 )
 
 func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder {
@@ -173,15 +172,10 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 	// If there's no user yet
 	if du == nil {
 		// Add a new domain user record
-		du = &data.DomainUser{
-			DomainID:            *domainID,
-			UserID:              user.ID,
-			IsCommenter:         true,
-			NotifyReplies:       params.Body.NotifyReplies,
-			NotifyModerator:     params.Body.NotifyModerator,
-			NotifyCommentStatus: params.Body.NotifyCommentStatus,
-			CreatedTime:         time.Now().UTC(),
-		}
+		du = data.NewDomainUser(domainID, &user.ID, false, false, true).
+			WithNotifyReplies(params.Body.NotifyReplies).
+			WithNotifyModerator(params.Body.NotifyModerator).
+			WithNotifyCommentStatus(params.Body.NotifyCommentStatus)
 		err = svc.TheDomainService.UserAdd(du)
 
 		// Domain user exists. Update it, if the settings change

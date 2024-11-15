@@ -190,16 +190,14 @@ func (v *verifier) LocalSignupEnabled(domainID *uuid.UUID) middleware.Responder 
 }
 
 func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
-	// If the user isn't a superuser
-	if !user.IsSuperuser {
-		// Check if new owners are allowed
-		if !svc.TheDynConfigService.GetBool(data.ConfigKeyOperationNewOwnerEnabled) {
-			// No new owners allowed: verify this user already owns at least one domain
-			if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
-				return respServiceError(err)
-			} else if i == 0 {
-				return respForbidden(exmodels.ErrorNewOwnersForbidden)
-			}
+	// If the user isn't a superuser and no new owners are allowed
+	if !user.IsSuperuser && !svc.TheDynConfigService.GetBool(data.ConfigKeyOperationNewOwnerEnabled) {
+		// Check if this user already owns any domain
+		if i, err := svc.TheDomainService.CountForUser(&user.ID, true, false); err != nil {
+			return respServiceError(err)
+		} else if i == 0 {
+			// Not an owner
+			return respForbidden(exmodels.ErrorNewOwnersForbidden)
 		}
 	}
 	return nil

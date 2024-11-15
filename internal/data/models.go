@@ -836,6 +836,21 @@ type DomainUser struct {
 	CreatedTime         time.Time `db:"ts_created" goqu:"skipupdate"` // When the domain user was created
 }
 
+// NewDomainUser creates a new DomainUser instance, with all notifications enabled
+func NewDomainUser(domainID, userID *uuid.UUID, owner, moderator, commenter bool) *DomainUser {
+	return &DomainUser{
+		DomainID:            *domainID,
+		UserID:              *userID,
+		IsOwner:             owner,
+		IsModerator:         moderator,
+		IsCommenter:         commenter,
+		NotifyReplies:       true,
+		NotifyModerator:     true,
+		NotifyCommentStatus: true,
+		CreatedTime:         time.Now().UTC(),
+	}
+}
+
 // AgeInDays returns the number of full days passed since the user was created. Can be called against a nil receiver
 func (du *DomainUser) AgeInDays() int {
 	if du == nil {
@@ -894,6 +909,30 @@ func (du *DomainUser) ToDTO() *models.DomainUser {
 	}
 }
 
+// WithCreated sets the CreatedTime value
+func (du *DomainUser) WithCreated(t time.Time) *DomainUser {
+	du.CreatedTime = t
+	return du
+}
+
+// WithNotifyCommentStatus sets the NotifyCommentStatus value
+func (du *DomainUser) WithNotifyCommentStatus(b bool) *DomainUser {
+	du.NotifyCommentStatus = b
+	return du
+}
+
+// WithNotifyModerator sets the NotifyModerator value
+func (du *DomainUser) WithNotifyModerator(b bool) *DomainUser {
+	du.NotifyModerator = b
+	return du
+}
+
+// WithNotifyReplies sets the NotifyReplies value
+func (du *DomainUser) WithNotifyReplies(b bool) *DomainUser {
+	du.NotifyReplies = b
+	return du
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // NullDomainUser is the same as DomainUser, but "optional", ie. having all fields nullable, and with the "du_" column
@@ -915,17 +954,11 @@ func (n *NullDomainUser) ToDomainUser() *DomainUser {
 	if n == nil || !n.UserID.Valid {
 		return nil
 	}
-	return &DomainUser{
-		DomainID:            n.DomainID.UUID,
-		UserID:              n.UserID.UUID,
-		IsOwner:             n.IsOwner.Bool,
-		IsModerator:         n.IsModerator.Bool,
-		IsCommenter:         n.IsCommenter.Bool,
-		NotifyReplies:       n.NotifyReplies.Bool,
-		NotifyModerator:     n.NotifyModerator.Bool,
-		NotifyCommentStatus: n.NotifyCommentStatus.Bool,
-		CreatedTime:         n.CreatedTime.Time,
-	}
+	return NewDomainUser(&n.DomainID.UUID, &n.UserID.UUID, n.IsOwner.Bool, n.IsModerator.Bool, n.IsCommenter.Bool).
+		WithNotifyReplies(n.NotifyReplies.Bool).
+		WithNotifyModerator(n.NotifyModerator.Bool).
+		WithNotifyCommentStatus(n.NotifyCommentStatus.Bool).
+		WithCreated(n.CreatedTime.Time)
 }
 
 // ---------------------------------------------------------------------------------------------------------------------

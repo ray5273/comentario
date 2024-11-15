@@ -74,6 +74,9 @@ type UserService interface {
 	//   - userID is ID of the user to fetch sessions for
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*data.UserSession, error)
+	// Persist persists the given user's data in the database, by updating it. It differs from Update() in that it
+	// doesn't fire the update event
+	Persist(u *data.User) error
 	// Update updates the given user's data in the database
 	Update(u *data.User) error
 	// UpdateBanned updates the given user's banned status in the database
@@ -104,7 +107,7 @@ func (svc *userService) ConfirmUser(u *data.User) error {
 	}
 
 	// Update the user's record
-	return svc.updateByID(u)
+	return svc.Persist(u)
 }
 
 func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated bool) (int, error) {
@@ -262,7 +265,7 @@ func (svc *userService) EnsureSuperuser(idOrEmail string) error {
 	}
 
 	// Update the user in the database
-	return svc.updateByID(u)
+	return svc.Persist(u)
 }
 
 func (svc *userService) ExpireUserSessions(userID *uuid.UUID) error {
@@ -671,6 +674,16 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 	return us, nil
 }
 
+func (svc *userService) Persist(u *data.User) error {
+	if err := db.ExecOne(db.Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
+		logger.Errorf("userService.Persist: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
+	}
+
+	// Succeeded
+	return nil
+}
+
 func (svc *userService) Update(u *data.User) error {
 	logger.Debugf("userService.Update(%#v)", u)
 
@@ -680,7 +693,7 @@ func (svc *userService) Update(u *data.User) error {
 	}
 
 	// Update the record
-	return svc.updateByID(u)
+	return svc.Persist(u)
 }
 
 func (svc *userService) UpdateBanned(curUserID *uuid.UUID, u *data.User, banned bool) error {
@@ -700,7 +713,7 @@ func (svc *userService) UpdateBanned(curUserID *uuid.UUID, u *data.User, banned 
 	}
 
 	// Update the record
-	return svc.updateByID(u)
+	return svc.Persist(u)
 }
 
 func (svc *userService) UpdateLoginLocked(u *data.User) error {
@@ -717,7 +730,7 @@ func (svc *userService) UpdateLoginLocked(u *data.User) error {
 	}
 
 	// Update the record
-	return svc.updateByID(u)
+	return svc.Persist(u)
 }
 
 // handleUserEvent fires a user event. It returns true if the user has been modified during the event handling
@@ -762,15 +775,4 @@ func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err
 		changed = true
 	}
 	return
-}
-
-// updateByID updates the given user in the database by their ID
-func (svc *userService) updateByID(u *data.User) error {
-	if err := db.ExecOne(db.Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
-		logger.Errorf("userService.update: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
-	}
-
-	// Succeeded
-	return nil
 }

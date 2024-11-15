@@ -5,13 +5,13 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"sort"
 	"strings"
-	"time"
 )
 
 // TheDomainService is a global DomainService implementation
@@ -140,17 +140,7 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
 	}
 
 	// Register the user as domain owner
-	if err := svc.UserAdd(&data.DomainUser{
-		DomainID:            domain.ID,
-		UserID:              *userID,
-		IsOwner:             true,
-		IsModerator:         true,
-		IsCommenter:         true,
-		NotifyReplies:       true,
-		NotifyModerator:     true,
-		NotifyCommentStatus: true,
-		CreatedTime:         time.Now().UTC(),
-	}); err != nil {
+	if err := svc.UserAdd(data.NewDomainUser(&domain.ID, userID, true, true, true)); err != nil {
 		return err
 	}
 
@@ -238,16 +228,8 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 	// If no domain user found, and we need to create one
 	du := r.NullDomainUser.ToDomainUser()
 	if du == nil && createIfMissing {
-		du = &data.DomainUser{
-			DomainID:            r.Domain.ID,
-			UserID:              *userID,
-			IsCommenter:         true, // User can comment by default, until made readonly
-			NotifyReplies:       true,
-			NotifyModerator:     true,
-			NotifyCommentStatus: true,
-			CreatedTime:         time.Now().UTC(),
-		}
-
+		// Make the user a commenter, which is the default
+		du = data.NewDomainUser(&r.Domain.ID, userID, false, false, true)
 		if err := svc.UserAdd(du); err != nil {
 			return nil, nil, err
 		}
@@ -623,12 +605,19 @@ func (svc *domainService) UserAdd(du *data.DomainUser) error {
 	logger.Debugf("domainService.UserAdd(%#v)", du)
 
 	// Don't bother if the user is an anonymous one
-	if du.UserID != data.AnonymousUser.ID {
-		// Insert a new domain-user link record
-		if err := db.ExecOne(db.Insert("cm_domains_users").Rows(du)); err != nil {
-			logger.Errorf("domainService.UserAdd: ExecOne() failed: %v", err)
-			return translateDBErrors(err)
-		}
+	if du.UserID == data.AnonymousUser.ID {
+		return nil
+	}
+
+	// Fire a new owner event, if necessary
+	if err := svc.checkFireNewOwnerEvent(du); err != nil {
+		return err
+	}
+
+	// Insert a new domain-user link record
+	if err := db.ExecOne(db.Insert("cm_domains_users").Rows(du)); err != nil {
+		logger.Errorf("domainService.UserAdd: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
 	}
 
 	// Succeeded
@@ -639,12 +628,19 @@ func (svc *domainService) UserModify(du *data.DomainUser) error {
 	logger.Debugf("domainService.UserModify(%#v)", du)
 
 	// Don't bother if the user is an anonymous one
-	if du.UserID != data.AnonymousUser.ID {
-		// Update the domain-user link record
-		if err := db.ExecOne(db.Update("cm_domains_users").Set(du).Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID})); err != nil {
-			logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
-			return translateDBErrors(err)
-		}
+	if du.UserID == data.AnonymousUser.ID {
+		return nil
+	}
+
+	// Fire a new owner event, if necessary
+	if err := svc.checkFireNewOwnerEvent(du); err != nil {
+		return err
+	}
+
+	// Update the domain-user link record
+	if err := db.ExecOne(db.Update("cm_domains_users").Set(du).Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID})); err != nil {
+		logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
+		return translateDBErrors(err)
 	}
 
 	// Succeeded
@@ -664,5 +660,38 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 	}
 
 	// Succeeded
+	return nil
+}
+
+// checkFireNewOwnerEvent fires a "user became owner" if necessary
+func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
+	// Skip unless it's about an owner user and the plugin manager is active
+	if !du.IsOwner || !ThePluginManager.Active() {
+		return nil
+	}
+
+	// Check whether the user is an owner of any domain yet
+	if i, err := svc.CountForUser(&du.UserID, true, false); err != nil {
+		return err
+	} else if i > 0 {
+		// Already an owner
+		return nil
+	}
+
+	// Not an owner yet: lookup the user by ID
+	u, err := TheUserService.FindUserByID(&du.UserID)
+	if err != nil {
+		return err
+	}
+
+	// Fire an event
+	if changed, err := handleUserEvent(&plugin.UserBecameOwnerEvent{}, u); err != nil {
+		return err
+	} else if changed {
+		// The user was modified while handling the event: we need to save it
+		return TheUserService.Persist(u)
+	}
+
+	// Successfully handled and no change from event
 	return nil
 }
