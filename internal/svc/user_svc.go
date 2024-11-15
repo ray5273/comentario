@@ -7,7 +7,6 @@ import (
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
-	"maps"
 	"strings"
 	"time"
 )
@@ -744,16 +743,8 @@ func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err
 	up := u.ToPluginUser()
 	e.SetUser(up)
 
-	// Fetch the user's attributes
-	var ap map[string]string
-	if ap, err = TheUserAttrService.GetAll(&u.ID); err != nil {
-		return
-	}
-	e.SetUserAttributes(ap)
-
-	// Make a clone of the original user and the attributes
+	// Make a clone of the original user
 	uc := u.ToPluginUser()
-	ac := maps.Clone(ap)
 
 	// Fire an event
 	if err = ThePluginManager.HandleEvent(e); err != nil {
@@ -763,15 +754,6 @@ func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err
 	// If event handling changed the user, update the working model
 	if *e.User() != *uc {
 		u.FromPluginUser(e.User())
-		changed = true
-	}
-
-	// Check for attribute change
-	if !maps.Equal(ap, ac) {
-		// Overwrite all attributes
-		if err = TheUserAttrService.Set(&u.ID, ap, true); err != nil {
-			return
-		}
 		changed = true
 	}
 	return

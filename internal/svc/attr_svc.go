@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
+	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
@@ -139,10 +140,11 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr map[string]string, clean bool)
 }
 
 // addPrefixCondition adds a prefix condition to restrict keys in scope, to the given WHERE clause, if necessary
-func (as *attrStore) addPrefixCondition(ex goqu.Ex) goqu.Ex {
-	if as.prefix != "" {
-		// Restrict the query by only allowing keys starting with the prefix
-		ex["key"] = goqu.C("key").Like(as.prefix + "%")
+func (as *attrStore) addPrefixCondition(ex goqu.Ex) exp.Expression {
+	if as.prefix == "" {
+		return ex
 	}
-	return ex
+
+	// Restrict the query by only allowing keys starting with the prefix
+	return goqu.And(goqu.C("key").Like(as.prefix+"%"), ex)
 }
