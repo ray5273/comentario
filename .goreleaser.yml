@@ -23,6 +23,7 @@ builds:
           - CC=arm-linux-gnueabi-gcc
       - goos: linux
         goarch: arm64
+        goarm64: v8.0
         env:
           - CC=aarch64-linux-gnu-gcc
 

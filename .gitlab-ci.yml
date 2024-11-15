@@ -104,9 +104,13 @@ build:
     - fi
     - goreleaser release $goreleaser_opts
 
+    # Remove arch version from dir name
+    - mv dist/comentario_linux_amd64_v1 dist/comentario_linux_amd64
+    - mv dist/comentario_linux_arm64_v8.0 dist/comentario_linux_arm64
+
     # Build the e2e plugin and relay, placing them next to the Linux AMD64 binary
-    - go build -buildmode=plugin -o "./dist/comentario_linux_amd64_v1/comentario-e2e.so" "./e2e/plugin/"
-    - go build -v -o "./dist/comentario_linux_amd64_v1/comentario-relay" "./e2e/relay/"
+    - go build -buildmode=plugin -o "./dist/comentario_linux_amd64/comentario-e2e.so" "./e2e/plugin/"
+    - go build -v -o "./dist/comentario_linux_amd64/comentario-relay" "./e2e/relay/"
 
 # Base definition of an e2e-test job. Requires the variable $SECRETS_FILE to be set
 .e2e:
@@ -147,7 +151,7 @@ build:
       }
 
     # Start the e2e backend
-    - ./dist/comentario_linux_amd64_v1/comentario -vv
+    - ./dist/comentario_linux_amd64/comentario -vv
           --no-color
           --e2e
           --port=8080
@@ -161,7 +165,7 @@ build:
     - waitFor http://localhost:8080/en/
 
     # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
-    - ./dist/comentario_linux_amd64_v1/comentario-relay 
+    - ./dist/comentario_linux_amd64/comentario-relay 
           -listen 127.0.0.1:8000
           -target http://comentario-test-site
           &> ./tmp/logs/comentario-relay.log &
