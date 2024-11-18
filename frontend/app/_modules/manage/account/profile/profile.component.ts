@@ -61,6 +61,7 @@ export class ProfileComponent implements OnInit {
         websiteUrl:  ['', [XtraValidators.url(false)]],
         curPassword: '',
         newPassword: '',
+        langId:      [this.cfgSvc.staticConfig.defaultLangId, [Validators.required, Validators.pattern(/^[a-z][-a-z\d]*$/i)]],
     });
 
     readonly deleteConfirmationForm = this.fb.nonNullable.group({
@@ -85,7 +86,7 @@ export class ProfileComponent implements OnInit {
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
         private readonly pluginSvc: PluginService,
-        cfgSvc: ConfigService,
+        private readonly cfgSvc: ConfigService,
     ) {
         cfgSvc.dynamicConfig
             .pipe(first())
@@ -125,7 +126,7 @@ export class ProfileComponent implements OnInit {
 
             // Update the form
             if (p) {
-                this.userForm.patchValue({email: p.email, name: p.name, websiteUrl: p.websiteUrl});
+                this.userForm.patchValue({email: p.email, name: p.name, websiteUrl: p.websiteUrl, langId: p.langId});
 
                 // Local user: the old password is required if there's a new one
                 if (p.isLocal) {
@@ -259,6 +260,7 @@ export class ProfileComponent implements OnInit {
             websiteUrl:  vals.websiteUrl,
             curPassword: vals.curPassword,
             newPassword: vals.newPassword,
+            langId:      vals.langId,
         });
     }
 }

@@ -139,6 +139,7 @@ func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) midd
 
 	// Update the user
 	user.
+		WithLangID(params.Body.LangID).
 		WithName(data.TrimmedString(params.Body.Name)).
 		WithWebsiteURL(string(params.Body.WebsiteURL))
 	if err := svc.TheUserService.Update(user); err != nil {

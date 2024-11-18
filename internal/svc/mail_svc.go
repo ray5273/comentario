@@ -150,8 +150,11 @@ func (svc *mailService) getTemplate(lang, name string) *template.Template {
 
 // execTemplateFile loads and executes a named template from the corresponding file. Returns the resulting string
 func (svc *mailService) execTemplateFile(lang, name string, data map[string]any) (string, error) {
+	// Identify a language best matching the requested one
+	langID := TheI18nService.BestLangFor(lang)
+
 	// If the template hasn't been loaded yet, load and parse it
-	templ := svc.getTemplate(lang, name)
+	templ := svc.getTemplate(langID, name)
 	if templ == nil {
 		// Create a new template
 		filePath := path.Join(config.ServerConfig.TemplatePath, name)
@@ -159,7 +162,7 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 		templ, err = template.New(name).
 			// Add required functions
 			Funcs(template.FuncMap{
-				"T": func(id string, args ...reflect.Value) string { return TheI18nService.Translate(lang, id, args...) },
+				"T": func(id string, args ...reflect.Value) string { return TheI18nService.Translate(langID, id, args...) },
 			}).
 			// Parse the file
 			ParseFiles(filePath)
@@ -170,7 +173,7 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 		// Cache the parsed template. We need to "namespace" them by language because the "T" (Translate) function,
 		// which takes language as an argument, has been bound during template compilation above
 		svc.templMu.Lock()
-		svc.templates[lang+"/"+name] = templ
+		svc.templates[langID+"/"+name] = templ
 		svc.templMu.Unlock()
 		logger.Debugf("Parsed HTML template %q", filePath)
 	}

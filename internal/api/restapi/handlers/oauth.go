@@ -238,6 +238,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		// Insert a new user
 		user = data.NewUser(fedUser.Email, fedUserName).
 			WithConfirmed(true). // Confirm the user right away as we trust the IdP
+			WithLangFromReq(params.HTTPRequest).
 			WithSignup(params.HTTPRequest, authSession.Host, !config.ServerConfig.LogFullIPs).
 			WithFederated(fedUser.UserID, idpID).
 			WithWebsiteURL(userWebsiteURL)

@@ -15,6 +15,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/crypto/bcrypt"
+	"golang.org/x/text/language"
 	"net/http"
 	"strings"
 	"time"
@@ -445,8 +446,18 @@ func (u *User) WithFederated(id, idpID string) *User {
 
 // WithLangID sets the LangID value
 func (u *User) WithLangID(s string) *User {
-	u.LangID = s
+	// Validate the language ID, falling back to the default if unparseable
+	tag, err := language.Parse(s)
+	if err != nil {
+		tag = util.DefaultLanguage
+	}
+	u.LangID = tag.String()
 	return u
+}
+
+// WithLangFromReq sets the user's LangID value based on the given HTTP request
+func (u *User) WithLangFromReq(req *http.Request) *User {
+	return u.WithLangID(req.Header.Get("Accept-Language"))
 }
 
 // WithLastLogin updates the user's last login info (either successful or failed)

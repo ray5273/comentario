@@ -76,6 +76,17 @@
                     </div>
                 }
 
+                <!-- Preferred language -->
+                <div class="col-md-6">
+                    <label for="lang" class="form-label colon" i18n>Preferred language</label>
+                    <input formControlName="langId" type="url" class="form-control" id="lang"
+                           [class.is-valid]="userForm.controls.langId.touched && userForm.controls.langId.valid"
+                           [class.is-invalid]="userForm.controls.langId.touched && userForm.controls.langId.invalid"
+                           autocomplete="language" placeholder="en-US">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback" i18n>Please enter a valid value.</div>
+                </div>
+
                 <!-- Avatar -->
                 <div class="col-12" id="user-avatar">
                     <label for="user-avatar-picture" class="form-label colon" i18n>Avatar</label>

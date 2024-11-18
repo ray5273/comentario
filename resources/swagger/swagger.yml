@@ -1047,7 +1047,7 @@ definitions:
         description: Full name of the user
       langId:
         type: string
-        description: User's interface language ID
+        description: User's preferred interface language ID (BCP47 tag)
       websiteUrl:
         type: string
         format: uri
@@ -1298,7 +1298,9 @@ definitions:
         description: User's full name
       langId:
         type: string
-        description: User's interface language ID
+        minLength: 1
+        maxLength: 255
+        description: User's preferred interface language ID (BCP47 tag)
       password:
         type: string
         format: password
@@ -2067,6 +2069,11 @@ paths:
                 type: string
                 format: uri
                 description: Optional website URL of the user
+              langId:
+                type: string
+                minLength: 1
+                maxLength: 255
+                description: User's preferred language ID (BCP 47 tag)
       responses:
         204:
           description: User profile has been updated

@@ -221,6 +221,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 
 	// Create a new user
 	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
+		WithLangFromReq(params.HTTPRequest).
 		WithPassword(data.PasswordPtrToString(params.Body.Password)).
 		WithSignup(params.HTTPRequest, "", !config.ServerConfig.LogFullIPs)
 

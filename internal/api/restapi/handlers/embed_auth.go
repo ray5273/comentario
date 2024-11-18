@@ -116,6 +116,7 @@ func EmbedAuthSignup(params api_embed.EmbedAuthSignupParams) middleware.Responde
 
 	// Create a new user
 	user := data.NewUser(email, data.TrimmedString(params.Body.Name)).
+		WithLangFromReq(params.HTTPRequest).
 		WithPassword(data.PasswordPtrToString(params.Body.Password)).
 		WithSignup(params.HTTPRequest, data.URIPtrToString(params.Body.URL), !config.ServerConfig.LogFullIPs).
 		WithWebsiteURL(string(params.Body.WebsiteURL))
