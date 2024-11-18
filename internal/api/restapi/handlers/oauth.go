@@ -80,6 +80,10 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		if err != nil {
 			return oauthFailureInternal(false, err)
 		}
+
+	} else if provider == nil {
+		// Host is mandatory for SSO
+		return oauthFailure(false, "host is missing in request", nil)
 	}
 
 	reqParams := params.HTTPRequest.URL.Query()
@@ -262,7 +266,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			fmt.Errorf("federated ID from IdP (%q) didn't match one user has (%q)", fedUser.UserID, user.FederatedID))
 
 		// Verify they're allowed to log in
-	} else if errm := svc.TheAuthService.UserCanAuthenticate(user, true); r != nil {
+	} else if errm := svc.TheAuthService.UserCanAuthenticate(user, true); errm != nil {
 		return respUnauthorized(errm)
 
 	} else {
