@@ -1,4 +1,4 @@
-import { Component, ElementRef, EventEmitter, forwardRef, HostBinding, Injector, Input, OnInit, Output, ViewChild } from '@angular/core';
+import { Component, EventEmitter, forwardRef, HostBinding, Injector, Input, OnInit, Output } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ValidationErrors } from '@angular/forms';
 import { faEye } from '@fortawesome/free-solid-svg-icons';
 
@@ -44,8 +44,6 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     @Output()
     readonly valueChange = new EventEmitter<string>();
 
-    @ViewChild('input', {static: true}) input?: ElementRef;
-
     @HostBinding('class')
     private readonly _hostClasses = 'input-group has-validation';
 
@@ -58,6 +56,9 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
 
     /** Whether to show/edit the password in plain text. */
     plain = false;
+
+    /** Whether the corresponding control is disabled. */
+    isDisabled = false;
 
     /** Errors discovered during validation, if any. */
     errors: ValidationErrors = {};
@@ -104,7 +105,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     }
 
     setDisabledState(isDisabled: boolean): void {
-        (this.input!.nativeElement as HTMLInputElement).disabled = isDisabled;
+        this.isDisabled = isDisabled;
     }
 
     writeValue(value: string): void {

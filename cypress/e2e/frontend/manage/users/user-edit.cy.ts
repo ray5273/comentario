@@ -16,7 +16,7 @@ context('User Edit page', () => {
         cy.get('@userEdit').find('#name')          .as('name');
         cy.get('@userEdit').find('#email')         .as('email');
         cy.get('@userEdit').find('#password input').as('password').should('have.value', '').and('have.attr', 'placeholder', '(unchanged)');
-        cy.get('@userEdit').find('#website-url')   .as('websiteUrl');
+        cy.get('@userEdit').find('#websiteUrl')    .as('websiteUrl');
         cy.get('@userEdit').find('#remarks')       .as('remarks');
         cy.get('@userEdit').find('#confirmed')     .as('confirmed');
         cy.get('@userEdit').find('#superuser')     .as('superuser');

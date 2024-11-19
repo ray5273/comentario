@@ -8,7 +8,6 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, Principal } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
-import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { Utils } from '../../../../_utils/utils';
 import { PluginService } from '../../../plugin/_services/plugin.service';
@@ -22,9 +21,6 @@ import { InstanceConfigItemKey } from '../../../../_models/config';
     templateUrl: './profile.component.html'
 })
 export class ProfileComponent implements OnInit {
-
-    @ViewChild('curPassword')
-    curPassword?: PasswordInputComponent;
 
     @ViewChild('avatarFileInput')
     avatarFileInput?: ElementRef<HTMLInputElement>;
@@ -50,6 +46,9 @@ export class ProfileComponent implements OnInit {
     /** UI plugs destined for the profile page. */
     readonly plugs = this.pluginSvc.uiPlugsForLocation('profile');
 
+    /** Available interface languages. */
+    readonly languages = this.cfgSvc.staticConfig.uiLanguages || [];
+
     /** Processing statuses. */
     readonly saving          = new ProcessingStatus();
     readonly deleting        = new ProcessingStatus();
@@ -59,8 +58,8 @@ export class ProfileComponent implements OnInit {
         email:       {value: '', disabled: true},
         name:        ['', [Validators.required, Validators.minLength(2), Validators.maxLength(63)]],
         websiteUrl:  ['', [XtraValidators.url(false)]],
-        curPassword: '',
         newPassword: '',
+        curPassword: [{value: '', disabled: true}],
         langId:      [this.cfgSvc.staticConfig.defaultLangId, [Validators.required, Validators.pattern(/^[a-z][-a-z\d]*$/i)]],
     });
 
@@ -124,22 +123,32 @@ export class ProfileComponent implements OnInit {
             this.principal = p;
             this.principalUpdated = this.authSvc.principalUpdated;
 
-            // Update the form
             if (p) {
+                // Make sure the current user's language is also on the list, event if it's not directly supported (in
+                // which case a reasonable fallback will be used)
+                if (!this.languages.find(l => l.id === p.langId)) {
+                    this.languages.splice(0, 0, {id: p.langId, nameNative: p.langId});
+                }
+
+                // Update the form
                 this.userForm.patchValue({email: p.email, name: p.name, websiteUrl: p.websiteUrl, langId: p.langId});
 
-                // Local user: the old password is required if there's a new one
+                // Local user: the old password is required and enabled if there's a new one
                 if (p.isLocal) {
                     this.userForm.controls.newPassword.valueChanges
                         .pipe(untilDestroyed(this))
                         .subscribe(s => {
-                            this.curPassword!.required = !!s;
+                            Utils.enableControls(!!s, this.userForm.controls.curPassword);
                             this.userForm.controls.curPassword.updateValueAndValidity();
                         });
 
                 } else {
-                    // Disable all profile controls for a federated user
-                    Object.values(this.userForm.controls).forEach(c => c.disable());
+                    // Disable profile controls for a federated user
+                    this.userForm.controls.email.disable();
+                    this.userForm.controls.name.disable();
+                    this.userForm.controls.websiteUrl.disable();
+                    this.userForm.controls.curPassword.disable();
+                    this.userForm.controls.newPassword.disable();
                 }
             }
         });

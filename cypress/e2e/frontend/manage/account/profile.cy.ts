@@ -6,23 +6,30 @@ context('Profile', () => {
         cy.get('app-profile').as('profile');
 
         // Profile form
-        cy.get('@profile').find('#profile-form')   .as('form');
-        cy.get('@profile').find('#current-user-id').as('userId')    .should('be.visible').and('be.disabled');
-        cy.get('@profile').find('#email')          .as('email')     .should('be.visible').and('be.disabled');
-        cy.get('@profile').find('#name')           .as('name')      .should('be.visible').and(nameEditable    ? 'be.enabled' : 'not.be.enabled');
-        cy.get('@profile').find('#website-url')    .as('websiteUrl').should('be.visible').and(websiteEditable ? 'be.enabled' : 'not.be.enabled');
-        if (hasPassword) {
-            cy.get('@profile').find('#cur-password input').as('curPwd').should('be.visible').and('be.enabled').and('have.value', '');
-            cy.get('@profile').find('#new-password input').as('newPwd').should('be.visible').and('be.enabled').and('have.value', '');
-        } else {
-            cy.get('@profile').find('#cur-password input').should('not.exist');
-            cy.get('@profile').find('#new-password input').should('not.exist');
-        }
+        cy.get('@profile').find('#profileForm')  .as('form');
+        cy.get('@profile').find('#currentUserId').as('userId')    .should('be.visible').and('be.disabled');
+        cy.get('@profile').find('#email')        .as('email')     .should('be.visible').and('be.disabled');
+        cy.get('@profile').find('#name')         .as('name')      .should('be.visible').and(nameEditable    ? 'be.enabled' : 'not.be.enabled');
+        cy.get('@profile').find('#websiteUrl')   .as('websiteUrl').should('be.visible').and(websiteEditable ? 'be.enabled' : 'not.be.enabled');
+        cy.get('@profile').find('#lang')         .as('lang')      .should('be.visible').and('be.enabled');
+
+        // Update email button
         if (canUpdateEmail) {
             cy.get('@profile').find('a[title="Update email"]').as('btnEmailUpdate').should('be.visible');
         } else {
             cy.get('@profile').find('a[title="Update email"]').should('not.exist');
         }
+
+        // Password fields
+        if (hasPassword) {
+            cy.get('@profile').find('#newPassword input').as('newPwd').should('be.visible').and('be.enabled').and('have.value', '');
+            // The Current password field is initially disabled, until the user types something into the New password
+            cy.get('@profile').find('#curPassword input').as('curPwd').should('be.visible').and('be.disabled').and('have.value', '');
+        } else {
+            cy.get('@profile').find('#curPassword input').should('not.exist');
+            cy.get('@profile').find('#newPassword input').should('not.exist');
+        }
+
         // Avatar
         cy.get('@profile').find('#user-avatar')                       .as('avatar');
         cy.get('@profile').find('#user-avatar-picture')               .as('avatarPic');
@@ -30,8 +37,10 @@ context('Profile', () => {
         cy.get('@avatar').contains('button', 'Upload')                .as('avatarUpload');
         cy.get('@avatar').contains('button', 'Remove')                .as('avatarRemove');
         cy.get('@avatar').contains('button', 'Download from Gravatar').as('avatarGravatar');
+
         // Submit
         cy.get('@profile').find('button[type=submit]').as('submit');
+
         // Danger zone
         cy.get('@profile').contains('button', 'Danger zone').as('dzToggle');
         cy.get('@profile').find('#danger-zone-container')   .as('dzContainer');
@@ -70,7 +79,6 @@ context('Profile', () => {
             cy.get('@email')     .should('have.value', USERS.commenterOne.email);
             cy.get('@name')      .should('have.value', USERS.commenterOne.name);
             cy.get('@websiteUrl').should('have.value', '');
-            cy.get('@curPwd')    .should('have.attr', 'placeholder', '(unchanged)');
             cy.get('@newPwd')    .should('have.attr', 'placeholder', '(unchanged)');
             // -- Avatar
             cy.get('@avatarPic')     .should('be.visible').and('have.text', 'C');
@@ -99,9 +107,16 @@ context('Profile', () => {
             // Website URL
             cy.get('@websiteUrl').verifyUrlInputValidation(false, false, 'Please enter a valid URL.');
 
-            // Passwords
-            cy.get('@curPwd').verifyPasswordInputValidation({required: false, strong: false});
+            // Verify the current password is disabled unless there's a value in the New password field
+            cy.get('@curPwd').should('be.disabled').isValid();
+            cy.get('@newPwd').setValue('x');
+            cy.get('@curPwd').should('be.enabled').isInvalid();
+            cy.get('@newPwd').clear();
+            cy.get('@curPwd').should('be.disabled').isValid();
+
+            // Check password input validations
             cy.get('@newPwd').verifyPasswordInputValidation({required: false, strong: true});
+            cy.get('@curPwd').verifyPasswordInputValidation({required: true,  strong: false});
         });
 
         it('allows to change profile', () => {
@@ -122,8 +137,8 @@ context('Profile', () => {
 
             // Try to change the password, giving a wrong current one
             const newPwd = 'Passw0rdy14!';
-            cy.get('@curPwd').setValue(USERS.commenterOne.password + '!');
             cy.get('@newPwd').setValue(newPwd);
+            cy.get('@curPwd').setValue(USERS.commenterOne.password + '!');
             cy.get('@submit').click();
             cy.toastCheckAndClose('wrong-cur-password');
 
@@ -131,8 +146,8 @@ context('Profile', () => {
             cy.loginViaApi(USERS.commenterOne, PATHS.manage.account.profile);
 
             // Change the password
-            cy.get('@curPwd').setValue(USERS.commenterOne.password);
             cy.get('@newPwd').setValue(newPwd);
+            cy.get('@curPwd').setValue(USERS.commenterOne.password);
             cy.get('@submit').click();
             cy.toastCheckAndClose('data-saved');
 
