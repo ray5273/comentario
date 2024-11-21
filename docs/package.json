@@ -11,7 +11,7 @@
         "postbuild:prod": "npm run write-headers",
         "prebuild": "npm run clean",
         "prebuild:prod": "npm run clean",
-        "start": "hugo server -DF",
+        "start": "hugo server -DFO",
         "write-headers": "echo '/*\\n  Access-Control-Allow-Origin: *' > ../build/docs/_headers"
     },
     "dependencies": {},
