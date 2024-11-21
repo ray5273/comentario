@@ -1,14 +1,18 @@
-import { DomainConfigKey, DOMAINS, InstanceConfigKey, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Signup dialog', () => {
 
-    const signupWith = (creds: Cypress.CredentialsWithName, website?: string) => {
+    const signupWith = (creds: Cypress.CredentialsWithName, website?: string, lang?: string) => {
         cy.get('@email')   .setValue(creds.email);
         cy.get('@name')    .setValue(creds.name);
         cy.get('@password').setValue(creds.password);
         if (website) {
             cy.get('@website').setValue(website);
+        }
+        // Modify the language header in the outgoing request, if necessary
+        if (lang) {
+            cy.intercept({method: 'POST', url: 'api/embed/auth/signup'}, req => req.headers['accept-language'] = lang);
         }
         cy.get('@submit').click();
         cy.get('@signupDialog').should('not.exist');
@@ -110,20 +114,32 @@ context('Signup dialog', () => {
             cy.backendGetSentEmails().should('be.empty');
         });
 
+        it('without confirmation, with custom language', () => {
+            // Fill out and submit the form
+            const user = {email: 'joe.vader@light.star', name: 'Joe', password: 'Passw0rd'};
+            signupWith(user, 'https://jedi.org', 'nl-BE;q=0.9,nl;q=0.8,en-GB;q=0.7,en;q=0.6');
+
+            // The user is immediately logged in
+            cy.testSiteIsLoggedIn('Joe');
+
+            // Check the language in the profile
+            cy.loginViaApi(user, PATHS.manage.account.profile);
+            cy.get('app-profile #lang').should('have.value', 'nl-BE');
+        });
+
         it('with confirmation', () => {
             // Enable commenter email confirmation
             cy.backendUpdateDynConfig({[InstanceConfigKey.authSignupConfirmCommenter]: true});
 
             // Fill out and submit the form
-            signupWith({email: 'obiwan@jedi.org', name: 'Obi-Wan Kenobi', password: '1wannaSandwich'}, 'https://jedi.org/lightsabers-for-sale');
+            const user = {email: 'obiwan@jedi.org', name: 'Obi-Wan Kenobi', password: '1wannaSandwich'};
+            signupWith(user, 'https://jedi.org/lightsabers-for-sale');
 
             // There's a success message
             cy.testSiteCheckMessage('Account is successfully created', true);
 
             // We can't log in yet
-            cy.testSiteLogin(
-                {email: 'obiwan@jedi.org', password: '1wannaSandwich', name: 'Obi-Wan Kenobi'},
-                {succeeds: false, errMessage: 'User\'s email address is not confirmed yet'});
+            cy.testSiteLogin(user, {succeeds: false, errMessage: 'User\'s email address is not confirmed yet'});
 
             // Fetch the sent email: there must be exactly one
             cy.backendGetSentEmails()
@@ -132,7 +148,7 @@ context('Signup dialog', () => {
                     // Verify the email's headers
                     expect(m.headers['Subject']).eq('Comentario: Confirm Your Email');
                     expect(m.headers['From'])   .eq('noreply@localhost');
-                    expect(m.headers['To'])     .eq('obiwan@jedi.org');
+                    expect(m.headers['To'])     .eq(user.email);
 
                     // Extract a confirmation link from the body
                     const matches = m.body.match(/http:\/\/localhost:8080\/api\/auth\/confirm\?access_token=[^"]+/g);
@@ -146,7 +162,50 @@ context('Signup dialog', () => {
             cy.isAt(TEST_PATHS.comments, {testSite: true});
 
             // Try to login, this time successfully
-            cy.testSiteLogin({email: 'obiwan@jedi.org', password: '1wannaSandwich', name: 'Obi-Wan Kenobi'});
+            cy.testSiteLogin(user);
+        });
+
+        it('with confirmation and custom language', () => {
+            // Enable commenter email confirmation
+            cy.backendUpdateDynConfig({[InstanceConfigKey.authSignupConfirmCommenter]: true});
+
+            // Fill out and submit the form
+            const user = {email: 'obitwo@jedi.org', name: 'Obi-Two Kenobi', password: 'Passw0rd'};
+            signupWith(user, undefined, 'en;q=0.3,nl;q=0.8,nl-NL;q=0.9');
+
+            // There's a success message
+            cy.testSiteCheckMessage('Account is successfully created', true);
+
+            // Fetch the sent email: there must be exactly one, and it's in Dutch
+            cy.backendGetSentEmails()
+                .should('have.length', 1)
+                .its(0).then(m => {
+                    // Verify the email's headers
+                    expect(m.headers['Subject']).eq('Comentario: Bevestig je e-mailadres');
+                    expect(m.headers['From'])   .eq('noreply@localhost');
+                    expect(m.headers['To'])     .eq(user.email);
+
+                    // Verify the body is also in Dutch
+                    expect(m.body).contains('Je hebt onlangs een nieuw Comentario-account geregistreerd met dit e-mailadres.');
+                    expect(m.body).contains('Klik op de knop hieronder om je registratie te voltooien.');
+
+                    // Extract a confirmation link from the body
+                    const matches = m.body.match(/http:\/\/localhost:8080\/api\/auth\/confirm\?access_token=[^"]+/g);
+                    expect(matches).length(1);
+
+                    // Confirm user's email address by following the link
+                    cy.visit(matches[0]);
+                });
+
+            // We're back to the same page
+            cy.isAt(TEST_PATHS.comments, {testSite: true});
+
+            // Verify login is possible
+            cy.testSiteLogin(user);
+
+            // Check the language in the profile
+            cy.loginViaApi(user, PATHS.manage.account.profile);
+            cy.get('app-profile #lang').should('have.value', 'nl-NL');
         });
     });
 

@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"slices"
 	"strings"
+	"sync"
 )
 
 // TheI18nService is a global I18nService implementation
@@ -52,6 +53,7 @@ func newI18nService() *i18nService {
 	return &i18nService{
 		locs:      make(map[string]*i18n.Localizer),
 		msgs:      make(map[string]map[string]string),
+		best:      make(map[string]string),
 		feMatcher: language.NewMatcher(util.FrontendLanguages),
 	}
 }
@@ -63,43 +65,27 @@ type i18nService struct {
 	tags      []language.Tag               // Available language tags
 	locs      map[string]*i18n.Localizer   // Map of localizers by the language
 	msgs      map[string]map[string]string // Map of messages[ID] by the language
+	best      map[string]string            // Map of the "best" interface language for the given language
+	bestMu    sync.Mutex                   // Lock for best
 	feMatcher language.Matcher             // Frontend language matcher
 	beMatcher language.Matcher             // Backend language matcher
 }
 
 func (svc *i18nService) BestLangFor(lang string) string {
-	// Try to identify the language tag for the requested language
-	if tag, _, confidence := svc.beMatcher.Match(language.Make(lang)); confidence >= language.High {
-		// The tag is likely identified. Fetch its script and region
-		base, script, region := tag.Raw()
+	svc.bestMu.Lock()
+	defer svc.bestMu.Unlock()
 
-		// If there's a direct match, return it
-		if l := tag.String(); svc.IsInterfaceLang(l) {
-			return l
-		}
-
-		// Next, consider a regional variant of the base
-		if regionLang, err := language.Compose(base, region); err == nil {
-			if l := regionLang.String(); svc.IsInterfaceLang(l) {
-				return l
-			}
-		}
-
-		// Then, a script variant of the base
-		if scriptLang, err := language.Compose(base, script); err == nil {
-			if l := scriptLang.String(); svc.IsInterfaceLang(l) {
-				return l
-			}
-		}
-
-		// Finally, look up the unaltered base
-		if l := base.String(); svc.IsInterfaceLang(l) {
-			return l
-		}
+	// Check if there's a cached entry available
+	if l, ok := svc.best[lang]; ok {
+		return l
 	}
 
-	// Fall back to the default language in case no better match is identified or language is unknown
-	return util.DefaultLanguage.String()
+	// Find the most appropriate language
+	l := svc.findBestLangFor(lang)
+
+	// Cache the value so that we don't have to search again
+	svc.best[lang] = l
+	return l
 }
 
 func (svc *i18nService) FrontendURL(lang, subPath string, queryParams map[string]string) string {
@@ -221,6 +207,43 @@ func (svc *i18nService) Translate(lang, id string, args ...reflect.Value) string
 	} else {
 		return fmt.Sprintf("!%v", err)
 	}
+}
+
+// findBestLangFor tries to identify the "best" interface language (from the list of supported ones) for the given user
+// language
+func (svc *i18nService) findBestLangFor(lang string) string {
+	// Try to identify the language tag for the requested language
+	if tag, _, confidence := svc.beMatcher.Match(language.Make(lang)); confidence >= language.High {
+		// The tag is likely identified. Fetch its script and region
+		base, script, region := tag.Raw()
+
+		// If there's a direct match, return it
+		if l := tag.String(); svc.IsInterfaceLang(l) {
+			return l
+		}
+
+		// Next, consider a regional variant of the base
+		if regionLang, err := language.Compose(base, region); err == nil {
+			if l := regionLang.String(); svc.IsInterfaceLang(l) {
+				return l
+			}
+		}
+
+		// Then, a script variant of the base
+		if scriptLang, err := language.Compose(base, script); err == nil {
+			if l := scriptLang.String(); svc.IsInterfaceLang(l) {
+				return l
+			}
+		}
+
+		// Finally, look up the unaltered base
+		if l := base.String(); svc.IsInterfaceLang(l) {
+			return l
+		}
+	}
+
+	// Fall back to the default language in case no better match is identified or language is unknown
+	return util.DefaultLanguage.String()
 }
 
 // scanDir recursively scans the provided directory and collects translations from found files

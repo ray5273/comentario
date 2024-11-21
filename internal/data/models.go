@@ -457,7 +457,13 @@ func (u *User) WithLangID(s string) *User {
 
 // WithLangFromReq sets the user's LangID value based on the given HTTP request
 func (u *User) WithLangFromReq(req *http.Request) *User {
-	return u.WithLangID(req.Header.Get("Accept-Language"))
+	// Parse the Accept-Language header, falling back to the default if unparseable
+	tag := util.DefaultLanguage
+	if tags, _, err := language.ParseAcceptLanguage(req.Header.Get("Accept-Language")); err == nil && len(tags) > 0 {
+		tag = tags[0]
+	}
+	u.LangID = tag.String()
+	return u
 }
 
 // WithLastLogin updates the user's last login info (either successful or failed)
