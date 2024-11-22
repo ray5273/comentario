@@ -142,5 +142,24 @@ context('Signup', () => {
             cy.isAt(PATHS.auth.login);
             cy.login(user, {goTo: false});
         });
+
+        it('allows user to sign up with a custom language', () => {
+            // Deactivate email confirmation (on by default)
+            cy.backendUpdateDynConfig({[InstanceConfigKey.authSignupConfirmUser]: false});
+
+            // Modify the language header in the outgoing request
+            cy.intercept(
+                {method: 'POST', url: 'api/auth/profile'},
+                req => req.headers['accept-language'] = 'nl-BE;q=0.9,nl;q=0.8,en-GB;q=0.7,en;q=0.6');
+
+            // Sign up
+            const user = {email: 'boo@example.test', name: 'Boo', password: 'Passw0rd'};
+            signup(user);
+            cy.isAt(PATHS.auth.login);
+
+            // Login and navigate to profile to check the language
+            cy.loginViaApi(user, PATHS.manage.account.profile);
+            cy.get('app-profile #lang').should('have.value', 'nl-BE');
+        });
     });
 });
