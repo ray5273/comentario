@@ -251,11 +251,12 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 		return r
 	}
 
-	// Email, name, password can only be updated for a local user (email and name are mandatory)
+	// Email, name, password, website can only be updated for a local user (email and name are mandatory)
 	dto := params.Body.User
 	email := data.EmailToString(dto.Email)
 	name := strings.TrimSpace(dto.Name)
 	password := dto.Password
+	website := data.URIToString(dto.WebsiteURL)
 	if u.IsLocal() {
 		// Validate the email change
 		if r := Verifier.UserCanChangeEmailTo(u, email); r != nil {
@@ -266,24 +267,25 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 		if name == "" {
 			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("name"))
 		}
-		u.WithEmail(email).WithName(name)
+		u.
+			WithEmail(email).
+			WithName(name).
+			WithWebsiteURL(website)
 
 		// Update password only if it's provided
 		if password != "" {
 			u.WithPassword(string(password))
 		}
 
-	} else {
 		// Federated user
-		if email != "" {
-			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("email"))
-		}
-		if name != "" {
-			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("name"))
-		}
-		if password != "" {
-			return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("password"))
-		}
+	} else if email != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("email"))
+	} else if name != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("name"))
+	} else if password != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("password"))
+	} else if website != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("websiteUrl"))
 	}
 
 	// A user cannot revoke their own superuser or confirmed status
@@ -299,7 +301,7 @@ func UserUpdate(params api_general.UserUpdateParams, user *data.User) middleware
 	u.WithConfirmed(dto.Confirmed).
 		WithRemarks(strings.TrimSpace(dto.Remarks)).
 		WithSuperuser(dto.IsSuperuser).
-		WithWebsiteURL(data.URIToString(dto.WebsiteURL))
+		WithLangID(swag.StringValue(dto.LangID))
 
 	// Persist the user
 	if err := svc.TheUserService.Update(u); err != nil {

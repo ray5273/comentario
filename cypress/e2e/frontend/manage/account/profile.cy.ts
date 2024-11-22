@@ -1,6 +1,8 @@
-import { DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, USERS } from '../../../../support/cy-utils';
+import { DOMAINS, InstanceConfigKey, PATHS, TEST_PATHS, UI_LANGUAGES, USERS } from '../../../../support/cy-utils';
 
 context('Profile', () => {
+
+    const pagePath = PATHS.manage.account.profile;
 
     const makeAliases = (hasPassword: boolean, nameEditable: boolean, websiteEditable: boolean, canUpdateEmail: boolean) => {
         cy.get('app-profile').as('profile');
@@ -58,28 +60,47 @@ context('Profile', () => {
 
     beforeEach(cy.backendReset);
 
-    it('redirects user to login and back', () => cy.verifyRedirectsAfterLogin(PATHS.manage.account.profile, USERS.commenterOne));
+    context('unauthenticated user', () => {
+
+        [
+            {name: 'superuser',  user: USERS.root},
+            {name: 'owner',      user: USERS.ace},
+            {name: 'moderator',  user: USERS.king},
+            {name: 'commenter',  user: USERS.commenterTwo},
+            {name: 'readonly',   user: USERS.commenterThree},
+            {name: 'non-domain', user: USERS.commenterOne},
+        ]
+            .forEach(test =>
+                it(`redirects ${test.name} user to login and back`, () =>
+                    cy.verifyRedirectsAfterLogin(pagePath, test.user)));
+    });
 
     context('commenter user', () => {
 
+        const user = USERS.commenterOne;
+
         beforeEach(() => {
-            cy.loginViaApi(USERS.commenterOne, PATHS.manage.account.profile);
-            cy.isAt(PATHS.manage.account.profile);
+            cy.loginViaApi(USERS.commenterOne, pagePath);
+            cy.isAt(pagePath);
             makeAliases(true, true, true, false);
         });
 
-        it('stays on the page after reload', () => cy.verifyStayOnReload(PATHS.manage.account.profile, USERS.commenterOne));
+        it('stays on the page after reload', () => cy.verifyStayOnReload(pagePath, user));
 
         it('has all necessary controls', () => {
             // Check page content
             cy.get('h1').should('have.text', 'My profile');
 
             // Check form content
-            cy.get('@userId')    .should('have.value', USERS.commenterOne.id);
-            cy.get('@email')     .should('have.value', USERS.commenterOne.email);
-            cy.get('@name')      .should('have.value', USERS.commenterOne.name);
+            cy.get('@userId')    .should('have.value', user.id);
+            cy.get('@email')     .should('have.value', user.email);
+            cy.get('@name')      .should('have.value', user.name);
             cy.get('@websiteUrl').should('have.value', '');
-            cy.get('@newPwd')    .should('have.attr', 'placeholder', '(unchanged)');
+            // -- Preferred language
+            cy.get('@lang').should('have.value', 'en').find('option:selected').should('have.text', 'English (English)');
+            cy.get('@lang').optionValuesTexts().should('matrixMatch', Object.entries(UI_LANGUAGES));
+            // -- Password
+            cy.get('@newPwd').should('have.attr', 'placeholder', '(unchanged)');
             // -- Avatar
             cy.get('@avatarPic')     .should('be.visible').and('have.text', 'C');
             cy.get('@avatarFile')    .should('exist')     .and('not.be.visible').and('be.enabled');
@@ -107,6 +128,11 @@ context('Profile', () => {
             // Website URL
             cy.get('@websiteUrl').verifyUrlInputValidation(false, false, 'Please enter a valid URL.');
 
+            // Preferred language
+            cy.get('@lang')
+                .setValue(null).isInvalid('Please select a value.')
+                .select(0).isValid();
+
             // Verify the current password is disabled unless there's a value in the New password field
             cy.get('@curPwd').should('be.disabled').isValid();
             cy.get('@newPwd').setValue('x');
@@ -123,6 +149,7 @@ context('Profile', () => {
             // Update name and website
             cy.get('@name')      .setValue('Sponge Bob');
             cy.get('@websiteUrl').setValue('https://spongebob.se');
+            cy.get('@lang')      .select('Nederlands (Dutch)').should('have.value', 'nl');
             cy.get('@submit').click();
             cy.toastCheckAndClose('data-saved');
 
@@ -130,29 +157,30 @@ context('Profile', () => {
             cy.get('app-control-center #sidebarProfile').should('have.text', 'S' + 'Sponge Bob');
 
             // Can still login with old password, data is the same after reload
-            cy.loginViaApi(USERS.commenterOne, PATHS.manage.account.profile);
+            cy.loginViaApi(user, pagePath);
             cy.get('@name')      .should('have.value', 'Sponge Bob');
             cy.get('@websiteUrl').should('have.value', 'https://spongebob.se');
+            cy.get('@lang')      .should('have.value', 'nl');
             cy.get('app-control-center #sidebarProfile').should('have.text', 'S' + 'Sponge Bob');
 
             // Try to change the password, giving a wrong current one
             const newPwd = 'Passw0rdy14!';
             cy.get('@newPwd').setValue(newPwd);
-            cy.get('@curPwd').setValue(USERS.commenterOne.password + '!');
+            cy.get('@curPwd').setValue(user.password + '!');
             cy.get('@submit').click();
             cy.toastCheckAndClose('wrong-cur-password');
 
             // The password is unchanged
-            cy.loginViaApi(USERS.commenterOne, PATHS.manage.account.profile);
+            cy.loginViaApi(user, pagePath);
 
             // Change the password
             cy.get('@newPwd').setValue(newPwd);
-            cy.get('@curPwd').setValue(USERS.commenterOne.password);
+            cy.get('@curPwd').setValue(user.password);
             cy.get('@submit').click();
             cy.toastCheckAndClose('data-saved');
 
             // Login with the new password
-            cy.loginViaApi(USERS.commenterOne.withPassword(newPwd), PATHS.manage.account.profile);
+            cy.loginViaApi(user.withPassword(newPwd), pagePath);
         });
 
         it('allows to change avatar', () => {
@@ -190,7 +218,7 @@ context('Profile', () => {
                 }));
 
                 // Also mock the avatar response from the API
-                cy.intercept('GET', `/api/users/${USERS.commenterOne.id}/avatar?**`, {fixture: 'avatar.png'}).as('apiGetAvatar');
+                cy.intercept('GET', `/api/users/${user.id}/avatar?**`, {fixture: 'avatar.png'}).as('apiGetAvatar');
 
                 // Click on Download from Gravatar
                 cy.get('@avatarGravatar').click();
@@ -226,10 +254,84 @@ context('Profile', () => {
         });
     });
 
+    context('federated user', () => {
+
+        const user = USERS.twitterUser;
+        const languages = [['fr-CH', 'fr-CH'], ...Object.entries(UI_LANGUAGES)];
+
+        beforeEach(() => {
+            cy.loginFederatedViaApi(USERS.twitterUser.id, pagePath);
+            cy.isAt(pagePath);
+            makeAliases(false, false, false, false);
+        });
+
+        it('stays on the page after reload', () => cy.verifyStayOnReload(pagePath, user));
+
+        it('has all necessary controls', () => {
+            // Check page content
+            cy.get('h1').should('have.text', 'My profile');
+
+            // Check form content
+            cy.get('@userId')    .should('have.value', user.id);
+            cy.get('@email')     .should('have.value', user.email);
+            cy.get('@name')      .should('have.value', user.name);
+            cy.get('@websiteUrl').should('have.value', '');
+            // -- Preferred language
+            cy.get('@lang').should('have.value', 'fr-CH').find('option:selected').should('have.text', 'fr-CH');
+            cy.get('@lang').optionValuesTexts().should('matrixMatch', languages);
+            // -- Avatar
+            cy.get('@avatarPic')     .should('be.visible').and('have.text', 'T');
+            cy.get('@avatarFile')    .should('exist')     .and('not.be.visible').and('be.enabled');
+            cy.get('@avatarUpload')  .should('be.visible').and('be.enabled');
+            cy.get('@avatarRemove')  .should('be.visible').and('be.enabled');
+            cy.get('@avatarGravatar').should('be.visible').and('be.enabled');
+            // -- Submit button is disabled when no changes
+            cy.get('@submit').should('be.visible').and('be.disabled').and('have.text', 'Save');
+
+            // Check danger zone
+            cy.get('@dzToggle')   .should('be.visible');
+            cy.get('@dzContainer').should('not.be.visible');
+            cy.get('@dzToggle').click();
+            cy.get('@dzContainer').should('be.visible');
+            cy.get('@dzToggle').click();
+            cy.get('@dzContainer').should('not.be.visible');
+        });
+
+        it('handles non-supported language variant', () => {
+            // Change the user's language
+            cy.get('@lang').select('简体中文 (Simplified Chinese)').should('have.value', 'zh-Hans');
+            cy.get('@submit').click();
+            cy.toastCheckAndClose('data-saved');
+
+            // The user's language is kept, but the original one is still there
+            cy.get('@lang').should('have.value', 'zh-Hans');
+            cy.get('@lang').optionValuesTexts().should('matrixMatch', languages);
+
+            // Select the original language again and save
+            cy.get('@lang').select(0).should('have.value', 'fr-CH');
+            cy.get('@submit').click();
+            cy.toastCheckAndClose('data-saved');
+
+            // Reload and the language is still the same
+            cy.reload();
+            cy.get('@lang').select(0).should('have.value', 'fr-CH');
+
+            // Change the language to a supported one and save
+            cy.get('@lang').select('русский (Russian)').should('have.value', 'ru');
+            cy.get('@submit').click();
+            cy.toastCheckAndClose('data-saved');
+
+            // Reload again: the original language is gone
+            cy.reload();
+            cy.get('@lang').should('have.value', 'ru')
+                .optionValuesTexts().should('matrixMatch', Object.entries(UI_LANGUAGES));
+        });
+    });
+
     context('account deletion', () => {
 
         const loginAndDelete = (creds: Cypress.Credentials, canUpdateEmail: boolean, delComments: boolean, purge: boolean, succeeds: boolean) => {
-            cy.loginViaApi(creds, PATHS.manage.account.profile);
+            cy.loginViaApi(creds, pagePath);
             makeAliases(true, true, true, canUpdateEmail);
 
             // Expand the danger zone and click on Delete my account
@@ -267,7 +369,7 @@ context('Profile', () => {
 
             } else {
                 // Deletion fails, we're still on the profile page
-                cy.isAt(PATHS.manage.account.profile);
+                cy.isAt(pagePath);
                 cy.isLoggedIn();
             }
         };
@@ -477,8 +579,8 @@ context('Profile', () => {
 
                     it(`${test.allowedAlways ? 'is' : 'is not'} allowed by default`, () => {
                         // Login as the user and open the profile page
-                        cy.loginUserViaApi(test.user, PATHS.manage.account.profile);
-                        cy.isAt(PATHS.manage.account.profile);
+                        cy.loginUserViaApi(test.user, pagePath);
+                        cy.isAt(pagePath);
                         makeAliases(isLocal, isLocal, isLocal, test.allowedAlways);
 
                         // Check the Update email button
@@ -493,8 +595,8 @@ context('Profile', () => {
                         cy.backendUpdateDynConfig({[InstanceConfigKey.authEmailUpdateEnabled]: true});
 
                         // Login as the user and open the profile page
-                        cy.loginUserViaApi(test.user, PATHS.manage.account.profile);
-                        cy.isAt(PATHS.manage.account.profile);
+                        cy.loginUserViaApi(test.user, pagePath);
+                        cy.isAt(pagePath);
                         makeAliases(isLocal, isLocal, isLocal, test.allowed);
 
                         // Check the Update email button

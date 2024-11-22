@@ -41,5 +41,6 @@ export const AnonymousUser: User = {
     id:            '00000000-0000-0000-0000-000000000000',
     name:          $localize`Anonymous`,
     systemAccount: true,
+    langId:        'en',
 };
 

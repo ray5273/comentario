@@ -6,7 +6,7 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { faAngleDown, faCopy, faPencil, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
-import { ApiGeneralService, Principal } from '../../../../../generated-api';
+import { ApiGeneralService, CurUserUpdateRequest, Principal } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { Utils } from '../../../../_utils/utils';
@@ -60,7 +60,7 @@ export class ProfileComponent implements OnInit {
         websiteUrl:  ['', [XtraValidators.url(false)]],
         newPassword: '',
         curPassword: [{value: '', disabled: true}],
-        langId:      [this.cfgSvc.staticConfig.defaultLangId, [Validators.required, Validators.pattern(/^[a-z][-a-z\d]*$/i)]],
+        langId:      [this.cfgSvc.staticConfig.defaultLangId, [Validators.required]],
     });
 
     readonly deleteConfirmationForm = this.fb.nonNullable.group({
@@ -144,11 +144,8 @@ export class ProfileComponent implements OnInit {
 
                 } else {
                     // Disable profile controls for a federated user
-                    this.userForm.controls.email.disable();
-                    this.userForm.controls.name.disable();
-                    this.userForm.controls.websiteUrl.disable();
-                    this.userForm.controls.curPassword.disable();
-                    this.userForm.controls.newPassword.disable();
+                    ['email', 'name', 'websiteUrl', 'curPassword', 'newPassword']
+                        .forEach(c => this.userForm.get(c)!.disable());
                 }
             }
         });
@@ -174,15 +171,12 @@ export class ProfileComponent implements OnInit {
     }
 
     submit() {
-        // If it's a local user
-        if (this.principal?.isLocal) {
-            // Mark all controls touched to display validation results
-            this.userForm.markAllAsTouched();
+        // Mark all controls touched to display validation results
+        this.userForm.markAllAsTouched();
 
-            // Submit the form if it's valid
-            if (!this.userForm.valid) {
-                return;
-            }
+        // Submit the form if it's valid
+        if (!this.userForm.valid) {
+            return;
         }
 
         // Update profile/avatar
@@ -251,25 +245,18 @@ export class ProfileComponent implements OnInit {
         this.avatarChanged = changed;
     }
 
+    /**
+     * Submit the user's avatar change, if any, to the backend.
+     */
     private saveAvatar(): Observable<void> {
         // Only save the avatar if it's changed
         return this.avatarChanged ? this.api.curUserSetAvatar(this.avatarFile ?? undefined) : EMPTY;
     }
 
+    /**
+     * Submit the user's profile to the backend.
+     */
     private saveProfile(): Observable<void> {
-        // Not applicable if the user isn't a locally authenticated one
-        if (!this.principal!.isLocal) {
-            return EMPTY;
-        }
-
-        // Update the user's profile
-        const vals = this.userForm.value;
-        return this.api.curUserUpdate({
-            name:        vals.name!,
-            websiteUrl:  vals.websiteUrl,
-            curPassword: vals.curPassword,
-            newPassword: vals.newPassword,
-            langId:      vals.langId,
-        });
+        return this.api.curUserUpdate(this.userForm.value as CurUserUpdateRequest);
     }
 }

@@ -36,6 +36,7 @@
                 </div>
             </div>
         }
+
         <!-- Website URL -->
         <div class="mb-3 row">
             <label for="websiteUrl" class="col-sm-3 col-form-label colon fw-bold" i18n>Website URL</label>
@@ -45,6 +46,25 @@
                        [class.is-invalid]="form.controls.websiteUrl.touched && form.controls.websiteUrl.invalid"
                        placeholder="https://example.com">
                 <div class="invalid-feedback" i18n>Please enter a valid URL.</div>
+            </div>
+        </div>
+
+
+        <!-- Preferred language -->
+        <div class="mb-3 row">
+            <label for="lang" class="col-sm-3 col-form-label colon fw-bold" i18n>Preferred language</label>
+            <div class="col-sm-9">
+                <select formControlName="langId" class="form-select" id="lang"
+                        [class.is-valid]="form.controls.langId.touched && form.controls.langId.valid"
+                        [class.is-invalid]="form.controls.langId.touched && form.controls.langId.invalid">
+                    @for (lang of languages; track lang.id) {
+                        <option [value]="lang.id" [class.text-black-50]="!lang.nameEnglish">
+                            <ng-container>{{ lang.nameNative }}</ng-container>
+                            @if (lang.nameEnglish; as n) {<ng-container> ({{ n }})</ng-container>}
+                        </option>
+                    }
+                </select>
+                <div class="invalid-feedback" i18n>Please select a value.</div>
             </div>
         </div>
 

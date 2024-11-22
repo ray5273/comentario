@@ -132,6 +132,12 @@ declare namespace Cypress {
         texts(selector?: string): Chainable<string[]>;
 
         /**
+         * Collect a select's <option>s values and texts return as an array of two-element
+         * arrays: `[[value1, text1], [value2, text2], ...]`. Must be chained off a `<select>` element.
+         */
+        optionValuesTexts(): Chainable<string[][]>;
+
+        /**
          * Collect visible texts of <dt> and <dd> elements of a definition list and return as an array of two-element
          * arrays: `[[dt, dd], [dt, dd], ...]`. Must be chained off a `<dl>` element.
          */

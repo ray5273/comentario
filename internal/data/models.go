@@ -331,7 +331,7 @@ func (u *User) ToDTO() *models.User {
 		ID:                  strfmt.UUID(u.ID.String()),
 		IsLocked:            u.IsLocked,
 		IsSuperuser:         u.IsSuperuser,
-		LangID:              u.LangID,
+		LangID:              swag.String(u.LangID),
 		LastFailedLoginTime: NullDateTime(u.LastFailedLoginTime),
 		LastLoginTime:       NullDateTime(u.LastLoginTime),
 		LockedTime:          NullDateTime(u.LockedTime),

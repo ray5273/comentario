@@ -1283,6 +1283,8 @@ definitions:
   user:
     description: User
     type: object
+    required:
+      - langId
     properties:
       id:
         type: string
@@ -1292,10 +1294,10 @@ definitions:
       email:
         type: string
         format: email
-        description: Unique user email
+        description: Unique user email. Immutable for a federated user (must be omitted in update requests)
       name:
         type: string
-        description: User's full name
+        description: User's full name. Immutable for a federated user (must be omitted in update requests)
       langId:
         type: string
         minLength: 1
@@ -1304,7 +1306,9 @@ definitions:
       password:
         type: string
         format: password
-        description: Password (write-only). If empty, the password remains unchanged
+        description: >
+          Password (write-only). If empty, the password remains unchanged. Immutable for a federated user (must be
+          omitted in update requests)
         maxLength: 63
       systemAccount:
         type: boolean
@@ -1391,7 +1395,7 @@ definitions:
       websiteUrl:
         type: string
         format: uri
-        description: Optional user's website URL
+        description: Optional user's website URL. Immutable for a federated user (must be omitted in update requests)
       colourIndex:
         type: integer
         format: uint8
@@ -2048,32 +2052,34 @@ paths:
           schema:
             type: object
             required:
-              - name
+              - langId
             properties:
               name:
                 type: string
                 minLength: 1
                 maxLength: 63
-                description: New full name of the user
-              curPassword:
-                type: string
-                minLength: 1
-                maxLength: 63
-                description: Current password of the user. Required if newPassword is given, otherwise ignored
-              newPassword:
-                type: string
-                format: password
-                maxLength: 63
-                description: New password to set for the user. Optional, if not provided, the password remains unchanged
+                description: New full name of the user. Required for a local user, otherwise must not be present
               websiteUrl:
                 type: string
                 format: uri
-                description: Optional website URL of the user
+                description: Website URL of the user. Optional for a local user, otherwise must not be present
               langId:
                 type: string
                 minLength: 1
                 maxLength: 255
                 description: User's preferred language ID (BCP 47 tag)
+              newPassword:
+                type: string
+                format: password
+                maxLength: 63
+                description: >
+                  New password to set for the user. Optional for a local user (if not provided, the password remains 
+                  unchanged), otherwise must not be present
+              curPassword:
+                type: string
+                minLength: 1
+                maxLength: 63
+                description: Current password of the user. Required if newPassword is given, otherwise ignored
       responses:
         204:
           description: User profile has been updated

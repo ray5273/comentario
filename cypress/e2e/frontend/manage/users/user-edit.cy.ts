@@ -17,6 +17,7 @@ context('User Edit page', () => {
         cy.get('@userEdit').find('#email')         .as('email');
         cy.get('@userEdit').find('#password input').as('password').should('have.value', '').and('have.attr', 'placeholder', '(unchanged)');
         cy.get('@userEdit').find('#websiteUrl')    .as('websiteUrl');
+        cy.get('@userEdit').find('#lang')          .as('lang');
         cy.get('@userEdit').find('#remarks')       .as('remarks');
         cy.get('@userEdit').find('#confirmed')     .as('confirmed');
         cy.get('@userEdit').find('#superuser')     .as('superuser');
@@ -55,6 +56,9 @@ context('User Edit page', () => {
         cy.get('@email')     .verifyEmailInputValidation();
         cy.get('@password')  .verifyPasswordInputValidation({required: false, strong: true});
         cy.get('@websiteUrl').verifyUrlInputValidation(false, false, 'Please enter a valid URL.');
+        cy.get('@lang')
+            .setValue(null).isInvalid('Please select a value.')
+            .select(0).isValid();
         cy.get('@remarks')   .verifyTextInputValidation(0, 4096, false, 'Please enter a valid value.');
 
         // Test cancelling: we return to user properties
@@ -65,12 +69,15 @@ context('User Edit page', () => {
 
     context('edit properties', () => {
 
+        const user = USERS.root;
+
         it('allows to edit the self-user', () => {
             cy.loginViaApi(USERS.root, pagePathRoot);
             makeAliases();
-            cy.get('@name')      .should('have.value', USERS.root.name);
-            cy.get('@email')     .should('have.value', USERS.root.email);
+            cy.get('@name')      .should('have.value', user.name);
+            cy.get('@email')     .should('have.value', user.email);
             cy.get('@websiteUrl').should('have.value', 'https://comentario.app/');
+            cy.get('@lang')      .should('have.value', 'en').find('option:selected').and('have.text', 'English (English)');
             cy.get('@remarks')   .should('have.value', '');
             cy.get('@confirmed') .should('be.checked').and('be.disabled');
             cy.get('@superuser') .should('be.checked').and('be.disabled');
@@ -79,19 +86,20 @@ context('User Edit page', () => {
             cy.get('@name')      .setValue('I am the root!');
             cy.get('@email')     .setValue('super@example.com');
             cy.get('@websiteUrl').clear();
+            cy.get('@lang')      .select('Nederlands (Dutch)');
             cy.get('@remarks')   .setValue('Twinkle twinkle little star');
 
             // Submit and get a success toast
             cy.get('@btnSubmit').click();
-            cy.isAt(PATHS.manage.users.id(USERS.root.id).props);
+            cy.isAt(PATHS.manage.users.id(user.id).props);
             cy.toastCheckAndClose('data-saved');
 
             // Verify user details
             cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                ['ID',                   USERS.root.id + 'YOU'],
+                ['ID',                   user.id + 'YOU'],
                 ['Name',                 'I am the root!'],
                 ['Email',                'super@example.com'],
-                ['Language',             'en'],
+                ['Language',             'nl'],
                 ['Remarks',              'Twinkle twinkle little star'],
                 ['Confirmed',            REGEXES.checkDatetime],
                 ['Superuser',            '✔'],
@@ -105,15 +113,18 @@ context('User Edit page', () => {
 
         context('allows to edit a local user', () => {
 
+            const user = USERS.king;
+
             beforeEach(() => {
                 // Open the user's edit page
                 cy.loginViaApi(USERS.root, pagePathKing);
                 makeAliases();
 
                 // Verify the initial values
-                cy.get('@name')      .should('have.value', USERS.king.name);
-                cy.get('@email')     .should('have.value', USERS.king.email);
+                cy.get('@name')      .should('have.value', user.name);
+                cy.get('@email')     .should('have.value', user.email);
                 cy.get('@websiteUrl').should('have.value', '');
+                cy.get('@lang')      .should('have.value', 'en').find('option:selected').and('have.text', 'English (English)');
                 cy.get('@remarks')   .should('have.value', 'Almighty king');
                 cy.get('@confirmed') .should('be.checked')    .and('be.enabled');
                 cy.get('@superuser') .should('not.be.checked').and('be.enabled');
@@ -127,9 +138,9 @@ context('User Edit page', () => {
 
                 // Verify user details
                 cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                    ['ID',                   USERS.king.id],
-                    ['Name',                 USERS.king.name],
-                    ['Email',                USERS.king.email],
+                    ['ID',                   user.id],
+                    ['Name',                 user.name],
+                    ['Email',                user.email],
                     ['Language',             'en'],
                     ['Remarks',              'Almighty king'],
                     ['Confirmed',            REGEXES.checkDatetime],
@@ -144,6 +155,7 @@ context('User Edit page', () => {
                 cy.get('@name')      .setValue('King Lear');
                 cy.get('@email')     .setValue('lear@example.com');
                 cy.get('@websiteUrl').setValue('https://en.wikipedia.org/wiki/King_Lear');
+                cy.get('@lang')      .select('русский (Russian)');
                 cy.get('@remarks')   .setValue('Elderly and wanting to retire');
                 cy.get('@confirmed') .click();
                 cy.get('@superuser') .click();
@@ -155,10 +167,10 @@ context('User Edit page', () => {
 
                 // Verify user details
                 cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                    ['ID',                   USERS.king.id],
+                    ['ID',                   user.id],
                     ['Name',                 'King Lear'],
                     ['Email',                'lear@example.com'],
-                    ['Language',             'en'],
+                    ['Language',             'ru'],
                     ['Remarks',              'Elderly and wanting to retire'],
                     ['Website URL',          'https://en.wikipedia.org/wiki/King_Lear'],
                     ['Superuser',            '✔'],
@@ -171,15 +183,18 @@ context('User Edit page', () => {
 
         context('allows to edit a federated user', () => {
 
+            const user = USERS.twitterUser;
+
             beforeEach(() => {
                 // Open the user's edit page
-                cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.facebookUser.id).edit);
+                cy.loginViaApi(USERS.root, PATHS.manage.users.id(user.id).edit);
                 makeAliases();
 
                 // Verify the initial values
-                cy.get('@name')      .should('have.value', USERS.facebookUser.name) .and('be.disabled');
-                cy.get('@email')     .should('have.value', USERS.facebookUser.email).and('be.disabled');
-                cy.get('@websiteUrl').should('have.value', '');
+                cy.get('@name')      .should('have.value', user.name) .and('be.disabled');
+                cy.get('@email')     .should('have.value', user.email).and('be.disabled');
+                cy.get('@websiteUrl').should('have.value', '')        .and('be.disabled');
+                cy.get('@lang')      .should('have.value', 'fr-CH').find('option:selected').and('have.text', 'fr-CH');
                 cy.get('@remarks')   .should('have.value', '');
                 cy.get('@confirmed') .should('be.checked')    .and('be.enabled');
                 cy.get('@superuser') .should('not.be.checked').and('be.enabled');
@@ -188,48 +203,51 @@ context('User Edit page', () => {
             it('keeping values', () => {
                 // Submit without changing anything and get a success toast
                 cy.get('@btnSubmit').click();
-                cy.isAt(PATHS.manage.users.id(USERS.facebookUser.id).props);
+                cy.isAt(PATHS.manage.users.id(user.id).props);
                 cy.toastCheckAndClose('data-saved');
 
                 // Verify user details
                 cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                    ['ID',                   USERS.facebookUser.id],
-                    ['Federated user',       'facebook/30f5efad'],
-                    ['Name',                 USERS.facebookUser.name],
-                    ['Email',                USERS.facebookUser.email],
-                    ['Language',             'en'],
+                    ['ID',                   user.id],
+                    ['Federated user',       'twitter/28053af1'],
+                    ['Name',                 user.name],
+                    ['Email',                user.email],
+                    ['Language',             'fr-CH'],
                     ['Confirmed',            REGEXES.checkDatetime],
                     ['Created',              REGEXES.datetime],
                     ['Last password change', REGEXES.datetime],
                     ['Last login',           '(never)'],
+                    ['Signup IP',            'c5ff:32a4:f32b:9533:2965:2be3:fc98:ca1f'],
+                    ['Signup country',       'IN — India'],
                 ]);
             });
 
             it('changing values', () => {
                 // Update the values
-                cy.get('@websiteUrl').setValue('https://facebook.com');
-                cy.get('@remarks')   .setValue('Internet troll');
-                cy.get('@confirmed') .click();
-                cy.get('@superuser') .click();
+                cy.get('@lang')     .select('русский (Russian)');
+                cy.get('@remarks')  .setValue('Internet troll');
+                cy.get('@confirmed').click();
+                cy.get('@superuser').click();
 
                 // Submit and get a success toast
                 cy.get('@btnSubmit').click();
-                cy.isAt(PATHS.manage.users.id(USERS.facebookUser.id).props);
+                cy.isAt(PATHS.manage.users.id(user.id).props);
                 cy.toastCheckAndClose('data-saved');
 
                 // Verify user details
                 cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                    ['ID',                   USERS.facebookUser.id],
-                    ['Federated user',       'facebook/30f5efad'],
-                    ['Name',                 USERS.facebookUser.name],
-                    ['Email',                USERS.facebookUser.email],
-                    ['Language',             'en'],
+                    ['ID',                   user.id],
+                    ['Federated user',       'twitter/28053af1'],
+                    ['Name',                 user.name],
+                    ['Email',                user.email],
+                    ['Language',             'ru'],
                     ['Remarks',              'Internet troll'],
-                    ['Website URL',          'https://facebook.com'],
                     ['Superuser',            '✔'],
                     ['Created',              REGEXES.datetime],
                     ['Last password change', REGEXES.datetime],
                     ['Last login',           '(never)'],
+                    ['Signup IP',            'c5ff:32a4:f32b:9533:2965:2be3:fc98:ca1f'],
+                    ['Signup country',       'IN — India'],
                 ]);
             });
         });
@@ -251,7 +269,9 @@ context('User Edit page', () => {
             const path = PATHS.manage.users.id(USERS.anonymous.id).edit;
             cy.loginViaApi(USERS.root, path);
             makeAliases();
+
             cy.get('@email').setValue('test@example.com');
+            cy.get('@lang') .select('English (English)'); // Anonymous doesn't have a language set
             cy.get('@btnSubmit').click();
             cy.isAt(path);
             cy.toastCheckAndClose('immutable-account');

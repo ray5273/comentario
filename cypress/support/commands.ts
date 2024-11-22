@@ -143,6 +143,14 @@ Cypress.Commands.addQuery(
     });
 
 Cypress.Commands.addQuery(
+    'optionValuesTexts',
+    function optionValuesTexts() {
+        return (element: JQueryWithSelector) => element.find('option')
+            .map((_, o: HTMLOptionElement) => [[o.value, o.innerText]])
+            .get();
+    });
+
+Cypress.Commands.addQuery(
     'dlTexts',
     function dlTexts() {
         return (element: JQueryWithSelector) => element.find('dt')
@@ -391,7 +399,7 @@ Cypress.Commands.add(
     (path: string, user?: Cypress.User) => {
         // Login or visit the page directly
         if (user) {
-            cy.loginViaApi(user, path);
+            cy.loginUserViaApi(user, path);
         } else {
             cy.visit(path);
         }

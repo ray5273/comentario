@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 )
 
 func CurUserEmailUpdateConfirm(params api_general.CurUserEmailUpdateConfirmParams, user *data.User) middleware.Responder {
@@ -124,24 +125,32 @@ func CurUserSetAvatarFromGravatar(_ api_general.CurUserSetAvatarFromGravatarPara
 }
 
 func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) middleware.Responder {
-	// Verify it's a local user
-	if r := Verifier.UserIsLocal(user); r != nil {
-		return r
-	}
-
-	// If the password is getting changed, verify the current password
-	if params.Body.NewPassword != "" {
-		if r := Verifier.UserCurrentPassword(user, params.Body.CurPassword); r != nil {
-			return r
+	// If it's a local user
+	if user.IsLocal() {
+		// If the password is getting changed, verify the current password
+		if params.Body.NewPassword != "" {
+			if r := Verifier.UserCurrentPassword(user, params.Body.CurPassword); r != nil {
+				return r
+			}
+			user.WithPassword(string(params.Body.NewPassword))
 		}
-		user.WithPassword(string(params.Body.NewPassword))
+
+		// Update properties relevant to a local user
+		user.
+			WithName(strings.TrimSpace(params.Body.Name)).
+			WithWebsiteURL(string(params.Body.WebsiteURL))
+
+		// Federated user: verify no immutable property is given
+	} else if params.Body.Name != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("name"))
+	} else if params.Body.WebsiteURL != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("websiteUrl"))
+	} else if params.Body.NewPassword != "" {
+		return respBadRequest(exmodels.ErrorImmutableProperty.WithDetails("newPassword"))
 	}
 
 	// Update the user
-	user.
-		WithLangID(params.Body.LangID).
-		WithName(data.TrimmedString(params.Body.Name)).
-		WithWebsiteURL(string(params.Body.WebsiteURL))
+	user.WithLangID(swag.StringValue(params.Body.LangID))
 	if err := svc.TheUserService.Update(user); err != nil {
 		return respServiceError(err)
 	}

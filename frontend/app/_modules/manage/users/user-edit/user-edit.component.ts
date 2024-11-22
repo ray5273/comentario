@@ -8,6 +8,7 @@ import { Paths } from '../../../../_utils/consts';
 import { AuthService } from '../../../../_services/auth.service';
 import { Utils } from '../../../../_utils/utils';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
+import { ConfigService } from '../../../../_services/config.service';
 
 @Component({
     selector: 'app-user-edit',
@@ -21,6 +22,9 @@ export class UserEditComponent implements OnInit {
     /** Currently authenticated principal. */
     principal?: Principal;
 
+    /** Available interface languages. */
+    readonly languages = this.cfgSvc.staticConfig.uiLanguages || [];
+
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
 
@@ -29,6 +33,7 @@ export class UserEditComponent implements OnInit {
         email:      ['', [Validators.required, Validators.email, Validators.minLength(6), Validators.maxLength(254)]],
         password:   '',
         websiteUrl: ['', [XtraValidators.url(false)]],
+        langId:     ['', [Validators.required]],
         remarks:    ['', [Validators.maxLength(4096)]],
         confirmed:  false,
         superuser:  false,
@@ -38,6 +43,7 @@ export class UserEditComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly api: ApiGeneralService,
+        private readonly cfgSvc: ConfigService,
         private readonly authSvc: AuthService,
         private readonly toastSvc: ToastService,
     ) {}
@@ -48,17 +54,24 @@ export class UserEditComponent implements OnInit {
         this.api.userGet(id)
             .pipe(this.loading.processing())
             .subscribe(r => {
-                this.user = r.user;
+                this.user = r.user!;
+
+                // Make sure the current user's language is also on the list, event if it's not directly supported (in
+                // which case a reasonable fallback will be used)
+                if (!this.languages.find(l => l.id === this.user!.langId)) {
+                    this.languages.splice(0, 0, {id: this.user.langId, nameNative: this.user.langId});
+                }
 
                 // Update the form
                 this.form.setValue({
-                    name:       this.user!.name ?? '',
-                    email:      this.user!.email ?? '',
+                    name:       this.user.name ?? '',
+                    email:      this.user.email ?? '',
                     password:   '',
-                    remarks:    this.user!.remarks ?? '',
-                    websiteUrl: this.user!.websiteUrl ?? '',
-                    confirmed:  !!this.user!.confirmed,
-                    superuser:  !!this.user!.isSuperuser,
+                    websiteUrl: this.user.websiteUrl ?? '',
+                    langId:     this.user.langId,
+                    remarks:    this.user.remarks ?? '',
+                    confirmed:  !!this.user.confirmed,
+                    superuser:  !!this.user.isSuperuser,
                 });
                 this.enableControls();
             });
@@ -84,8 +97,9 @@ export class UserEditComponent implements OnInit {
                 name:        vals.name,
                 email:       vals.email,
                 password:    vals.password,
-                remarks:     vals.remarks,
                 websiteUrl:  vals.websiteUrl,
+                langId:      vals.langId!,
+                remarks:     vals.remarks,
                 confirmed:   selfEdit || vals.confirmed,
                 isSuperuser: selfEdit || vals.superuser,
             };
@@ -102,10 +116,8 @@ export class UserEditComponent implements OnInit {
 
     private enableControls() {
         // If the user is a federated one, disable irrelevant controls
-        if (this.user!.federatedIdP || this.user!.federatedSso) {
-            this.form.controls.name    .disable();
-            this.form.controls.email   .disable();
-            this.form.controls.password.disable();
+        if (this.user?.federatedIdP || this.user?.federatedSso) {
+            ['name', 'email', 'password', 'websiteUrl'].forEach(c => this.form.get(c)!.disable());
         }
 
         // Disable checkboxes when the user edits themselves
