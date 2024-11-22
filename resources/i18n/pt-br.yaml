@@ -6,7 +6,7 @@
 - {id: actionCollapseChildren,      translation: 'Recolher'}
 - {id: actionCommentUnreg,          translation: 'Comentar anonimamente'}
 - {id: actionConfirmEmail,          translation: 'Confirme Seu Email'}
-# TODO - {id: actionConfirmEmailUpdate,    translation: 'Confirm Updating Your Email'}
+- {id: actionConfirmEmailUpdate,    translation: 'Confirmar atualização de e-mail'}
 - {id: actionContext,               translation: 'Contexto'}
 - {id: actionDelete,                translation: 'Deletar'}
 - {id: actionDownvote,              translation: 'Votar negativamente'}
@@ -56,11 +56,11 @@
 - {id: confirmEmailAct,             translation: 'Se você quiser concluir o registro, clique no botão abaixo.'}
 - {id: confirmEmailExplanation,     translation: 'Você recebeu este email pois você (ou outra pessoa) registrou este endereço de email em nosso serviço.'}
 - {id: confirmEmailRequest,         translation: 'Você registrou recentemente uma nova conta no Comentario com esse endereço de email.'}
-# TODO - {id: confirmEmailUpdateAct,       translation: 'To confirm updating your email, please click the button below.'}
-# TODO - {id: confirmEmailUpdateExpl,      translation: 'You''ve received this email because you (or someone else) requested an update to your email address in our service.'}
-# TODO - {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
+- {id: confirmEmailUpdateAct,       translation: 'Para confirmar a atualização do seu e-mail, clique no botão abaixo.'}
+- {id: confirmEmailUpdateExpl,      translation: 'Você recebeu este e-mail porque você (ou outra pessoa) solicitou uma atualização no seu endereço de e-mail em nosso serviço.'}
+- {id: confirmEmailUpdateRequest,   translation: 'Você solicitou recentemente a atualização do seu e-mail do Comentario para este endereço.'}
 - {id: confirmYourEmail,            translation: 'Confirme seu email'}
-# TODO - {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
+- {id: confirmYourEmailUpdate,      translation: 'Confirme a atualização do seu e-mail'}
 - {id: dlgTitleConfirm,             translation: 'Confirmar'}
 - {id: dlgTitleCreateAccount,       translation: 'Criar uma conta'}
 - {id: dlgTitleLogIn,               translation: 'Fazer login'}
@@ -89,7 +89,7 @@
 - {id: notificationModAll,          translation: 'Você recebeu este email porque o proprietário do domínio optou por notificar os moderadores sobre todos os novos comentários por email.'}
 - {id: notificationModPending,      translation: 'Você recebeu este email porque o proprietário do domínio optou por notificar os moderadores sobre comentários pendentes de moderação por email.'}
 - {id: notificationNewReply,        translation: 'Você recebeu este email porque optou por receber notificações por email sobre respostas a comentários.'}
-- {id: notWillingToSignup,          translation: 'Prefere não registrar a sua conta? Você comentar anonimamente.'}
+- {id: notWillingToSignup,          translation: 'Prefere não registrar a sua conta? Você pode comentar anonimamente.'}
 - {id: pageIsReadonly,              translation: 'Este tópico está fechado. Você não pode adicionar novos comentários.'}
 - {id: popupWasBlocked,             translation: 'A janela pop-up foi bloqueada pelo seu navegador. Permita pop-ups neste site e clique no botão Tentar novamente abaixo.'}
 - {id: poweredBy,                   translation: 'Criado por Comentario'}
