@@ -28,7 +28,7 @@ npm install --save ngx-comentario
 3. Insert the component into the required template(s) where you want comments to appear, with the correct Comentario backend URL:
 ```html
 ...
-<ngx-comentario-comments comentarioUrl="https://comentario.example.com"></ngx-comentario-comments>
+<ngx-comentario-comments scriptUrl="https://comentario.example.com/comentario.js"></ngx-comentario-comments>
 ...
 ```
 4. Consult the [library documentation](https://www.npmjs.com/package/ngx-comentario) to learn how to customise the rendered comments.
