@@ -1,7 +1,7 @@
 import { Directive, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { HttpClient, HttpContext } from '@angular/common/http';
 import { ConfigService } from '../_services/config.service';
-import { HTTP_ERROR_HANDLING } from '../_services/http-interceptor.service';
+import { HTTP_ERROR_HANDLING } from '../_services/http-error-handler.interceptor';
 
 @Directive({
     selector: '[appDocEmbed]',

@@ -2,7 +2,7 @@ import { APP_INITIALIZER, LOCALE_ID, NgModule, Provider } from '@angular/core';
 import { PlatformLocation } from '@angular/common';
 import { BrowserModule } from '@angular/platform-browser';
 import { BrowserAnimationsModule } from '@angular/platform-browser/animations';
-import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
+import { provideHttpClient, withInterceptors } from '@angular/common/http';
 import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
@@ -15,7 +15,7 @@ import { ToastComponent } from './toast/toast.component';
 import { PageNotFoundComponent } from './page-not-found/page-not-found.component';
 import { HomeComponent } from './home/home.component';
 import { DocEmbedDirective } from './_directives/doc-embed.directive';
-import { HttpInterceptorService } from './_services/http-interceptor.service';
+import { httpErrorHandlerInterceptor } from './_services/http-error-handler.interceptor';
 import { ApiModule, Configuration } from '../generated-api';
 import { environment } from '../environments/environment';
 import { ToolsModule } from './_modules/tools/tools.module';
@@ -24,6 +24,7 @@ import { LANGUAGE, provideLanguage } from '../environments/languages';
 import { Utils } from './_utils/utils';
 import { provideRouting } from './provide-routing';
 import { PluginService } from './_modules/plugin/_services/plugin.service';
+import { PluginModule } from './_modules/plugin/plugin.module';
 
 const provideApiConfig = (): Provider =>
     ({
@@ -50,15 +51,17 @@ const provideApiConfig = (): Provider =>
         BrowserModule,
         BrowserAnimationsModule,
         RouterModule,
-        HttpClientModule,
         FormsModule,
         ReactiveFormsModule,
         FontAwesomeModule,
         NgbToastModule,
         ApiModule,
         ToolsModule,
+        PluginModule,
     ],
     providers: [
+        // HTTP client
+        provideHttpClient(withInterceptors([httpErrorHandlerInterceptor])),
         // ngx-highlightjs
         provideHighlightOptions({
             coreLibraryLoader: () => import('highlight.js/lib/core'),
@@ -70,7 +73,6 @@ const provideApiConfig = (): Provider =>
         // API configuration
         provideApiConfig(),
         {provide: LANGUAGE, useFactory: provideLanguage, deps: [LOCALE_ID]},
-        {provide: HTTP_INTERCEPTORS, useExisting: HttpInterceptorService, multi: true},
         // Initialise the services
         {
             provide: APP_INITIALIZER,

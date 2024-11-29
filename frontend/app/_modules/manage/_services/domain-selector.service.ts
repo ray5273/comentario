@@ -13,7 +13,7 @@ import {
 } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
-import { HTTP_ERROR_HANDLING } from '../../../_services/http-interceptor.service';
+import { HTTP_ERROR_HANDLING } from '../../../_services/http-error-handler.interceptor';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { DynamicConfig } from '../../../_models/config';
 import { Utils } from '../../../_utils/utils';

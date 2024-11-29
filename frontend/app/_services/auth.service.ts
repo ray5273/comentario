@@ -3,7 +3,7 @@ import { HttpContext } from '@angular/common/http';
 import { finalize, merge, Observable, of, Subject, tap } from 'rxjs';
 import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
 import { ApiGeneralService, Configuration, Principal } from '../../generated-api';
-import { HTTP_ERROR_HANDLING } from './http-interceptor.service';
+import { HTTP_ERROR_HANDLING } from './http-error-handler.interceptor';
 
 @Injectable({
     providedIn: 'root',
