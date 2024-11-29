@@ -16,7 +16,10 @@ export class AuthService {
     /** Timestamp of the last time the principal was updated (fetched or reset). */
     principalUpdated = 0;
 
-    /** Primary observable for obtaining the principals. If the user isn't logged in, undefined is emitted. */
+    /**
+     * Primary observable for obtaining the principals. If the user isn't logged in, undefined is emitted. Always emits
+     * on a new subscription.
+     */
     readonly principal: Observable<Principal | undefined>;
 
     /** Observable that triggers a server re-fetch of the currently logged in principal */

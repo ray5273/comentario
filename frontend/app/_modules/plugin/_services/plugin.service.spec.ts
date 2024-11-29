@@ -3,6 +3,7 @@ import { MockProvider } from 'ng-mocks';
 import { PluginService } from './plugin.service';
 import { LANGUAGE } from '../../../../environments/languages';
 import { ConfigService } from '../../../_services/config.service';
+import { PluginMessageService } from './plugin-message.service';
 
 describe('PluginService', () => {
 
@@ -13,6 +14,7 @@ describe('PluginService', () => {
             providers:[
                 {provide: LANGUAGE, useValue: {}},
                 MockProvider(ConfigService, {pluginConfig: {plugins: []}}),
+                MockProvider(PluginMessageService),
             ],
         });
         service = TestBed.inject(PluginService);

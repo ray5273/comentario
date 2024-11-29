@@ -7,22 +7,8 @@ import { ConfigService } from '../../../_services/config.service';
 import { LANGUAGE } from '../../../../environments/languages';
 import { Language, PluginRouteData } from '../../../_models/models';
 import { InstancePluginConfig, PluginConfig, PluginUIPlugConfig } from '../../../../generated-api';
-
-/** An easy-to-consume data structure describing a UI plug. */
-export interface UIPlug {
-    /** ID of the plugin. */
-    pluginId: string;
-    /** Plugin's path. */
-    pluginPath: string;
-    /** Location of the plug. */
-    location: string;
-    /** Plug's label in the current language. */
-    label: string;
-    /** Plug's component tag. */
-    componentTag: string;
-    /** Plug's path. */
-    path: string;
-}
+import { UIPlug } from '../_models/plugs';
+import { PluginMessageService } from './plugin-message.service';
 
 @Injectable({
     providedIn: 'root',
@@ -34,7 +20,12 @@ export class PluginService {
         @Inject(LANGUAGE) private readonly lang: Language,
         private readonly router: Router,
         private readonly configSvc: ConfigService,
-    ) {}
+        msgSvc: PluginMessageService,
+    ) {
+        // Include a fake initialiser to prevent service removal. This service must be dependent upon in order to be
+        // instantiated
+        (() => msgSvc)();
+    }
 
     /**
      * Initialise the service

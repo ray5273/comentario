@@ -1,7 +1,8 @@
 import { AfterContentInit, Component, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-import { PluginService, UIPlug } from '../_services/plugin.service';
+import { PluginService } from '../_services/plugin.service';
 import { PluginRouteData } from '../../../_models/models';
+import { UIPlug } from '../_models/plugs';
 
 @Component({
     selector: 'app-plugin-plug',
