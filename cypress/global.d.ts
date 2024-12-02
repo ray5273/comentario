@@ -66,6 +66,11 @@ declare namespace Cypress {
     }
 
     interface TestSiteLoginOptions {
+        /**
+         * Whether to click the "Sign in" button in the profile bar. If false, the Login dialog must already be open.
+         * Defaults to true; ignored when logging in via API.
+         */
+        clickSignIn?: boolean;
         /** Whether to verify the result (only works if the embedded Comentario is visible upon login). Defaults to true. */
         verify?: boolean;
         /** Whether login must succeed. Ignored when verify is false, otherwise defaults to true. */
@@ -399,8 +404,8 @@ declare namespace Cypress {
 
         /**
          * Login into the embedded Comentario (test site) as provided user via the UI.
+         * NB: the required test site page must be open, and, if clickSignIn is false, the Login dialog, too.
          * @param creds Credentials to login with.
-         * NB: the required test site page must be open.
          * @param options Optional login options.
          */
         testSiteLogin(creds: CredentialsWithName, options?: TestSiteLoginOptions): Chainable<void>;
