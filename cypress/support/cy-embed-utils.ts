@@ -113,4 +113,13 @@ export class EmbedUtils {
             cy.get('@addCommentUnregForm').find('button[type=submit]').click();
         }
     }
+
+    /**
+     * Vote for a comment with the given ID.
+     * @param id Comment ID.
+     * @param negative Downvote the comment if true, otherwise upvote.
+     */
+    static commentVote(id: string, negative: boolean) {
+        return this.commentToolbarButton(id, negative ? 'Downvote' : 'Upvote').click();
+    }
 }

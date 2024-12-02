@@ -588,6 +588,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 		Where(goqu.Ex{"c.id": commentID}).
 		ScanStruct(&r)
 	if err != nil {
+		logger.Errorf("commentService.Vote: ScanStruct() failed: %v", err)
 		return 0, translateDBErrors(err)
 	} else if !b {
 		return 0, ErrNotFound
@@ -599,14 +600,14 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 		if direction == 0 {
 			return r.Score, nil
 		}
-	} else {
+
 		// Vote exists: don't bother if the direction already matches the vote
-		if direction < 0 && r.Negative.Bool || direction > 0 && !r.Negative.Bool {
-			return r.Score, nil
-		}
+	} else if direction < 0 && r.Negative.Bool || direction > 0 && !r.Negative.Bool {
+		return r.Score, nil
 	}
 
 	// A change is necessary
+	var op string
 	inc := 0
 	vote := &data.CommentVote{
 		CommentID:  *commentID,
@@ -614,28 +615,34 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 		IsNegative: direction < 0,
 		VotedTime:  time.Now().UTC(),
 	}
-	if !r.Negative.Valid {
-		// No vote exists, an insert is needed
+	switch {
+	// No vote exists, an insert is needed
+	case !r.Negative.Valid:
 		err = db.ExecOne(db.Insert("cm_comment_votes").Rows(vote))
 		inc = util.If(direction < 0, -1, 1)
+		op = "vote insert"
 
-	} else if direction == 0 {
-		// Vote exists and must be removed
+	// Vote exists and must be removed
+	case direction == 0:
 		err = db.ExecOne(db.Delete("cm_comment_votes").Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
 		inc = util.If(r.Negative.Bool, 1, -1)
+		op = "vote delete"
 
-	} else {
-		// Vote exists and must be updated
-		err = db.ExecOne(db.Update("cm_comment_votes").Set(&vote).Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
+	// Vote exists and must be updated
+	default:
+		err = db.ExecOne(db.Update("cm_comment_votes").Set(vote).Where(goqu.Ex{"comment_id": commentID, "user_id": userID}))
 		inc = util.If(r.Negative.Bool, 2, -2)
+		op = "vote update"
 	}
 	if err != nil {
+		logger.Errorf("commentService.Vote: ExecOne() failed for %s: %v", op, err)
 		return 0, translateDBErrors(err)
 	}
 
 	// Update the comment score
 	r.Score += inc
 	if err := db.ExecOne(db.Update("cm_comments").Set(r).Where(goqu.Ex{"id": commentID})); err != nil {
+		logger.Errorf("commentService.Vote: ExecOne() failed for comment update: %v", err)
 		return 0, translateDBErrors(err)
 	}
 

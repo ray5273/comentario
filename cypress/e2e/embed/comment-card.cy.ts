@@ -1,4 +1,5 @@
 import { DomainConfigKey, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment card', () => {
 
@@ -602,5 +603,61 @@ context('Comment card', () => {
                     cy.commentTree('score').should('yamlMatch', commentsNoVoting);
                 });
             }));
+
+        context('comment voting', () => {
+
+            beforeEach(cy.backendReset);
+
+            [
+                {name: 'superuser',   user: USERS.root},
+                {name: 'owner',       user: USERS.ace},
+                {name: 'moderator',   user: USERS.king},
+                {name: 'commenter',   user: USERS.commenterTwo},
+                {name: 'read-only',   user: USERS.commenterThree},
+                {name: 'non-domain',  user: USERS.commenterOne},
+            ]
+                .forEach(test =>
+                    it(`allows ${test.name} user to vote`, () => {
+                        cy.testSiteLoginViaApi(test.user, TEST_PATHS.comments);
+                        cy.commentTree('score').should('yamlMatch', '- score: 0');
+
+                        // Downvote the comment
+                        EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', true);
+                        cy.commentTree('score').should('yamlMatch', '- score: -1');
+
+                        // Downvote the comment again, the vote cancels itself out
+                        EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', true);
+                        cy.commentTree('score').should('yamlMatch', '- score: 0');
+
+                        // Upvote, then downvote the comment
+                        EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', false);
+                        EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', true);
+                        cy.commentTree('score').should('yamlMatch', '- score: -1');
+
+                        // Downvote the comment again, the vote cancels itself out
+                        EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', true);
+                        cy.commentTree('score').should('yamlMatch', '- score: 0');
+                    }));
+
+            it('allows anonymous user to vote after login', () => {
+                cy.testSiteVisit(TEST_PATHS.comments);
+                cy.commentTree('score').should('yamlMatch', '- score: 0');
+
+                // Downvote the comment and get a login dialog
+                EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', true);
+
+                // Log in and expect a downvoted comment
+                cy.testSiteLogin(USERS.commenterOne, {clickSignIn: false});
+                cy.commentTree('score').should('yamlMatch', '- score: -1');
+
+                // Upvote the comment
+                EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', false);
+                cy.commentTree('score').should('yamlMatch', '- score: 1');
+
+                // Upvote the comment again, the vote cancels itself out
+                EmbedUtils.commentVote('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', false);
+                cy.commentTree('score').should('yamlMatch', '- score: 0');
+            });
+        });
     });
 });

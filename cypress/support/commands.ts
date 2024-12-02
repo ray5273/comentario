@@ -647,8 +647,12 @@ Cypress.Commands.add(
             Cypress.on('uncaught:exception', () => false);
         }
 
-        // Click on "Sign in": a popup dialog appears
-        cy.contains('.comentario-root .comentario-profile-bar button', 'Sign in').click();
+        // Click on "Sign in", if required
+        if (options?.clickSignIn ?? true) {
+            cy.contains('.comentario-root .comentario-profile-bar button', 'Sign in').click();
+        }
+
+        // Expect the Login popup dialog
         cy.get('.comentario-root .comentario-dialog').should('be.visible');
 
         // Fill out the login form and submit
