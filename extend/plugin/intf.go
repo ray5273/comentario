@@ -37,12 +37,15 @@ type HostApp interface {
 	UserAttrStore() AttrStore
 }
 
+// AttrValues is a key-indexed value map
+type AttrValues map[string]string
+
 // AttrStore allows to store and retrieve attributes consisting of a string key and a string value
 type AttrStore interface {
 	// GetAll returns all attributes of an owner with the given ID
-	GetAll(ownerID *uuid.UUID) (map[string]string, error)
+	GetAll(ownerID *uuid.UUID) (AttrValues, error)
 	// Set given attribute values for the given owner by key, optionally cleaning up all values beforehand
-	Set(ownerID *uuid.UUID, attr map[string]string, clean bool) error
+	Set(ownerID *uuid.UUID, attr AttrValues, clean bool) error
 }
 
 // UIResource describes a UI resource required by the plugin

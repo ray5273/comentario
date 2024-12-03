@@ -54,6 +54,7 @@ const (
 	PageViewRetentionPeriod  = 45 * OneDay      // How long a page view stats record is retained
 	AvatarFetchTimeout       = 5 * time.Second  // Timeout for fetching external avatars
 	ConfigCacheTTL           = 30 * time.Second // TTL for cached configs
+	AttrCacheTTL             = 10 * time.Second // TTL for cached attributes
 )
 
 var (

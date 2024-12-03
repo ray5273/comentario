@@ -139,7 +139,7 @@ func UserGet(params api_general.UserGetParams, user *data.User) middleware.Respo
 	// Succeeded
 	return api_general.NewUserGetOK().
 		WithPayload(&api_general.UserGetOKBody{
-			Attributes:  attr,
+			Attributes:  exmodels.KeyValueMap(attr),
 			DomainUsers: data.SliceToDTOs(dus),
 			Domains:     data.SliceToDTOs(ds),
 			User:        u.ToDTO(),

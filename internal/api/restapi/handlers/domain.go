@@ -7,6 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -105,7 +106,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 	}
 
 	// If the user is a superuser, fetch domain attributes
-	var attr exmodels.KeyValueMap
+	var attr plugin.AttrValues
 	if user.IsSuperuser {
 		if attr, err = svc.TheDomainAttrService.GetAll(&d.ID); err != nil {
 			return respServiceError(err)
@@ -114,7 +115,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 
 	// Succeeded
 	return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
-		Attributes:      attr,
+		Attributes:      exmodels.KeyValueMap(attr),
 		Configuration:   data.DynConfigMapToDTOs(cfg),
 		Domain:          d.ToDTO(),
 		DomainUser:      du.ToDTO(),

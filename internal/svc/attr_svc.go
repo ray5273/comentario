@@ -1,11 +1,14 @@
 package svc
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/google/uuid"
+	"github.com/jellydator/ttlcache/v3"
+	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -25,32 +28,55 @@ const (
 
 // NewAttrStore returns a new AttrStore implementation
 func NewAttrStore(prefix, tableName, keyColName string, checkAnonymous bool) plugin.AttrStore {
-	return &attrStore{
+	as := &attrStore{
+		cache: ttlcache.New[uuid.UUID, plugin.AttrValues](
+			ttlcache.WithTTL[uuid.UUID, plugin.AttrValues](util.AttrCacheTTL)),
 		prefix:     prefix,
 		tableName:  tableName,
 		keyColName: keyColName,
 		checkAnon:  checkAnonymous,
 	}
+
+	// Debug logging
+	if logger.IsEnabledFor(logging.DEBUG) {
+		as.cache.OnEviction(func(_ context.Context, reason ttlcache.EvictionReason, i *ttlcache.Item[uuid.UUID, plugin.AttrValues]) {
+			logger.Debugf("attrStore: evicted %s, reason=%d", i.Key(), reason)
+		})
+	}
+
+	// Start the cache cleaner
+	go as.cache.Start()
+	return as
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 // attrStore is a generic attribute store implementation
 type attrStore struct {
-	prefix     string // Optional key prefix
-	tableName  string // Name of the table storing attributes
-	keyColName string // Name of the key column
-	checkAnon  bool   // Whether to check for "anonymous" (zero-UUID) owner
+	cache      *ttlcache.Cache[uuid.UUID, plugin.AttrValues] // Attribute caches per owner ID
+	prefix     string                                        // Optional key prefix
+	tableName  string                                        // Name of the table storing attributes
+	keyColName string                                        // Name of the key column
+	checkAnon  bool                                          // Whether to check for "anonymous" (zero-UUID) owner
 }
 
-func (as *attrStore) GetAll(ownerID *uuid.UUID) (map[string]string, error) {
+func (as *attrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
 	logger.Debugf("attrStore.GetAll(%s)", ownerID)
-	res := map[string]string{}
+	res := plugin.AttrValues{}
 
 	// Anonymous owner has no attributes
 	if as.checkAnon && *ownerID == util.ZeroUUID {
 		return res, nil
 	}
+
+	// Try to find a cached item
+	if ci := as.cache.Get(*ownerID); ci != nil {
+		return ci.Value(), nil
+	}
+
+	// Cache miss: create a new store
+	// NB: we cannot use ttlcache.WithLoader()/ttlcache.LoaderFunc because they don't support returning an error
+	logger.Debugf("attrStore.GetAll: cache miss for %s", ownerID)
 
 	// Prepare a filter condition
 	where := as.addPrefixCondition(goqu.Ex{as.keyColName: ownerID})
@@ -67,11 +93,12 @@ func (as *attrStore) GetAll(ownerID *uuid.UUID) (map[string]string, error) {
 		res[a.Key] = a.Value
 	}
 
-	// Succeeded
+	// Succeeded: cache the values
+	as.cache.Set(*ownerID, res, ttlcache.DefaultTTL)
 	return res, nil
 }
 
-func (as *attrStore) Set(ownerID *uuid.UUID, attr map[string]string, clean bool) error {
+func (as *attrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues, clean bool) error {
 	logger.Debugf("attrStore.Set(%s, %v, %v)", ownerID, attr, clean)
 
 	// Anonymous owner cannot have attributes
@@ -95,12 +122,21 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr map[string]string, clean bool)
 		}
 	}
 
+	// Fetch all existing values
+	cachedAttrs, err := as.GetAll(ownerID)
+	if err != nil {
+		return err
+	}
+
 	// Clean up, if necessary
-	if clean {
+	if clean && len(cachedAttrs) > 0 {
+		// Remove all records for this owner from the database
 		if _, err := db.Delete(as.tableName).Where(as.addPrefixCondition(goqu.Ex{})).Executor().Exec(); err != nil {
 			logger.Errorf("attrStore.Set: cleaning failed for ownerID=%s, prefix=%q: %v", ownerID, as.prefix, err)
 			return translateDBErrors(err)
 		}
+		// Clean the cached attrs, too
+		cachedAttrs = plugin.AttrValues{}
 	}
 
 	// Iterate the values
@@ -116,7 +152,7 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr map[string]string, clean bool)
 				logger.Errorf("attrStore.Set: Delete() failed for ownerID=%s, prefix=%q, key=%q: %v", ownerID, as.prefix, key, err)
 				return translateDBErrors(err)
 			}
-			return nil
+			continue
 		}
 
 		// Insert or update the record
@@ -133,9 +169,13 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr map[string]string, clean bool)
 			logger.Errorf("attrStore.Set: ExecOne() failed for ownerID=%s, prefix=%q, key=%q: %v", ownerID, as.prefix, key, err)
 			return translateDBErrors(err)
 		}
+
+		// Also set the cached value
+		cachedAttrs[prefixedKey] = value
 	}
 
-	// Succeeded
+	// Succeeded: cache the values
+	as.cache.Set(*ownerID, cachedAttrs, ttlcache.DefaultTTL)
 	return nil
 }
 

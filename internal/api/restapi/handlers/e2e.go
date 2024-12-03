@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/op/go-logging"
+	complugin "gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
@@ -196,7 +197,7 @@ func E2eDomainUpdateAttrs(params api_e2e.E2eDomainUpdateAttrsParams) middleware.
 	}
 
 	// Update the attributes
-	if err := svc.TheDomainAttrService.Set(domainID, *params.Body.Values, params.Body.Clean); err != nil {
+	if err := svc.TheDomainAttrService.Set(domainID, complugin.AttrValues(*params.Body.Values), params.Body.Clean); err != nil {
 		return respServiceError(err)
 	}
 
@@ -347,7 +348,7 @@ func E2eUserUpdateAttrs(params api_e2e.E2eUserUpdateAttrsParams) middleware.Resp
 	}
 
 	// Update the attributes
-	if err := svc.TheUserAttrService.Set(userID, *params.Body.Values, params.Body.Clean); err != nil {
+	if err := svc.TheUserAttrService.Set(userID, complugin.AttrValues(*params.Body.Values), params.Body.Clean); err != nil {
 		return respServiceError(err)
 	}
 
