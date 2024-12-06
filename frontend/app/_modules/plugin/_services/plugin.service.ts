@@ -1,12 +1,12 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT, Location } from '@angular/common';
 import { Route, Router } from '@angular/router';
-import { merge, Observable, Subject, switchMap, takeUntil, tap, throwError, timeout } from 'rxjs';
+import { EMPTY, interval, merge, Observable, Subject, switchMap, takeUntil, tap, throwError, timeout } from 'rxjs';
 import { PluginPlugComponent } from '../plugin-plug/plugin-plug.component';
 import { ConfigService } from '../../../_services/config.service';
 import { LANGUAGE } from '../../../../environments/languages';
 import { Language, PluginRouteData } from '../../../_models/models';
-import { InstancePluginConfig, PluginConfig, PluginUIPlugConfig } from '../../../../generated-api';
+import { InstanceConfig, InstancePluginConfig, PluginConfig, PluginUIPlugConfig } from '../../../../generated-api';
 import { UIPlug } from '../_models/plugs';
 import { PluginMessageService } from './plugin-message.service';
 
@@ -28,7 +28,7 @@ export class PluginService {
     }
 
     /**
-     * Initialise the service
+     * Initialise the service.
      */
     init(): Observable<unknown> {
         // Because this is invoked as a part of the app init process, we need to wait for the config to arrive
@@ -39,10 +39,7 @@ export class PluginService {
                 tap(cfg => this.updateRoutes(cfg.pluginConfig)),
                 // Embed the necessary plugin resources, waiting for all of them to complete loading or error
                 switchMap(cfg =>
-                    merge(
-                        cfg.pluginConfig.plugins?.flatMap(plugin => this.pluginResources(cfg.staticConfig.baseUrl, plugin)) ??
-                        // Complete immediately when no resource is needed
-                        [])
+                    merge(this.waitForResources(cfg), this.waitForCustomElements(cfg.pluginConfig))
                         // Signal the load completion to the outer observable
                         .pipe(tap({complete: () => loaded.next()}))),
                 // Force the outer observable to complete after the inner (merge()) has
@@ -156,7 +153,17 @@ export class PluginService {
     private updateRoutes(pluginCfg: InstancePluginConfig) {
         // Prepare plugin routes
         const routes = pluginCfg.plugins
-            ?.flatMap(plugin => plugin.uiPlugs?.map(plug => this.getPlugRoute(plugin, plug)) ?? []);
+            ?.flatMap(plugin => {
+                const paths: any = {};
+                return plugin.uiPlugs
+                    // Filter out plugs without a path (they're not standalone pages)
+                    ?.filter(plug => plug.path)
+                    // Filter out repeated paths
+                    .filter(plug => paths[plug.path] ? false : (paths[plug.path] = true))
+                    // Map to a route
+                    .map(plug => this.getPlugRoute(plugin, plug)) ??
+                    [];
+            });
 
         // If there's any route, replace the plugin routes with an up-to-date route list
         if (routes?.length) {
@@ -176,4 +183,38 @@ export class PluginService {
             data:      {plugin, plug} as PluginRouteData,
         };
     };
+
+    /**
+     * Wait until all the plugin resources are loaded or errored.
+     */
+    private waitForResources(cfg: InstanceConfig): Observable<unknown>[] {
+        return cfg.pluginConfig.plugins?.flatMap(plugin => this.pluginResources(cfg.staticConfig.baseUrl, plugin)) ??
+            // Complete immediately when no resource is needed
+            [EMPTY];
+    }
+
+    /**
+     * Wait until all the custom element tags are registered in the CustomElementRegistry.
+     */
+    private waitForCustomElements(pluginCfg: InstancePluginConfig): Observable<any> {
+        // Make a map of all known plugin component tags
+        const tags: Record<string, boolean> = {};
+        pluginCfg.plugins?.forEach(plugin =>
+            plugin.uiPlugs?.map(p => p.componentTag).forEach(t => t && (tags[t] = true)));
+
+        // Wait up to 10 seconds until all components are known
+        const loaded = new Subject<void>();
+        return interval(250)
+            .pipe(
+                tap(n => {
+                    Object.keys(tags).forEach(t => customElements.get(t) && delete tags[t]);
+                    const remaining = Object.keys(tags);
+                    if (!remaining.length) {
+                        loaded.next();
+                    } else if (n > 40) {
+                        throw Error(`Timed out waiting for custom elements tags: ${remaining.join(',')}`);
+                    }
+                }),
+                takeUntil(loaded));
+    }
 }

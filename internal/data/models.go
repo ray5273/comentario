@@ -12,6 +12,7 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/util"
 	"golang.org/x/crypto/bcrypt"
@@ -362,10 +363,11 @@ func (u *User) ToPluginUser() *plugin.User {
 	}
 }
 
-// ToPrincipal converts this user into a Principal model. du is an optional domain user model, which only applies to
-// commenter authentication; should be nil for UI authentication
-func (u *User) ToPrincipal(du *DomainUser) *models.Principal {
+// ToPrincipal converts this user into a Principal model. attr is the user's attribute map. du is an optional domain
+// user model, which only applies to commenter authentication; should be nil for UI authentication
+func (u *User) ToPrincipal(attr plugin.AttrValues, du *DomainUser) *models.Principal {
 	return &models.Principal{
+		Attributes:          exmodels.KeyValueMap(attr),
 		ColourIndex:         u.ColourIndex(),
 		Email:               strfmt.Email(u.Email),
 		HasAvatar:           u.HasAvatar,

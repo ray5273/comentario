@@ -96,8 +96,14 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 		return api_general.NewCurUserGetNoContent()
 	}
 
+	// Fetch the user's attributes
+	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Succeeded: owner's logged in
-	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(nil))
+	return api_general.NewCurUserGetOK().WithPayload(user.ToPrincipal(attr, nil))
 }
 
 func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User) middleware.Responder {

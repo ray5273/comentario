@@ -24,6 +24,12 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 		return r
 	}
 
+	// Fetch the user's attributes
+	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Find the domain user, creating one if necessary
 	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if err != nil {
@@ -33,7 +39,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	// Succeeded
 	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
 		SessionToken: us.EncodeIDs(),
-		Principal:    user.ToPrincipal(du),
+		Principal:    user.ToPrincipal(attr, du),
 	})
 }
 
@@ -69,6 +75,12 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 		return r
 	}
 
+	// Fetch the user's attributes
+	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Find the domain user, creating one if necessary
 	_, du, err := svc.TheDomainService.FindDomainUserByHost(host, &user.ID, true)
 	if err != nil {
@@ -78,7 +90,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 	// Succeeded
 	return api_embed.NewEmbedAuthLoginOK().WithPayload(&api_embed.EmbedAuthLoginOKBody{
 		SessionToken: us.EncodeIDs(),
-		Principal:    user.ToPrincipal(du),
+		Principal:    user.ToPrincipal(attr, du),
 	})
 }
 
@@ -144,8 +156,13 @@ func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.
 		if user, userSession, err := svc.TheAuthService.FetchUserBySessionHeader(s); err == nil {
 			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
 			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
-				// Succeeded: user is authenticated
-				return api_embed.NewEmbedAuthCurUserGetOK().WithPayload(user.ToPrincipal(domainUser))
+				// Fetch the user's attributes
+				if attr, err := svc.TheUserAttrService.GetAll(&user.ID); err != nil {
+					return respServiceError(err)
+				} else {
+					// Succeeded: user is authenticated
+					return api_embed.NewEmbedAuthCurUserGetOK().WithPayload(user.ToPrincipal(attr, domainUser))
+				}
 			}
 		}
 	}

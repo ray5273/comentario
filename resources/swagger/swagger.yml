@@ -1101,6 +1101,9 @@ definitions:
         format: uint8
         description: Colour hash, number based on the user's ID
         x-omitempty: false
+      attributes:
+        $ref: "#/definitions/keyValueMap"
+        description: The principal's attributes
 
   releaseMetadata:
     description: Release information

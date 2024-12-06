@@ -244,9 +244,14 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		return r
 	}
 
+	// Fetch the user's attributes
+	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Succeeded
-	return api_general.NewAuthSignupOK().
-		WithPayload(user.ToPrincipal(nil))
+	return api_general.NewAuthSignupOK().WithPayload(user.ToPrincipal(attr, nil))
 }
 
 // authCreateLoginToken creates and returns a new token with the "login" scope. If ownerID == nil, an anonymous token is
@@ -268,8 +273,14 @@ func authCreateLoginToken(ownerID *uuid.UUID) (*data.Token, error) {
 
 // authAddUserSessionToResponse returns a responder that sets a session cookie for the given session and user
 func authAddUserSessionToResponse(resp PrincipalResponder, user *data.User, us *data.UserSession) middleware.Responder {
+	// Fetch the user's attributes
+	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Set the principal as the responder's payload
-	resp.SetPayload(user.ToPrincipal(nil))
+	resp.SetPayload(user.ToPrincipal(attr, nil))
 
 	// Respond with the session cookie
 	return NewCookieResponder(resp).
