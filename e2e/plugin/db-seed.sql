@@ -279,12 +279,6 @@ values
     ('00e7320a-ecb4-44f4-84ca-ffc2f8c62729', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, '2023-02-27 18:39:30.894800'),
     ('ef81dbe5-22f6-4d90-958f-834e6f2cdc63', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', false, '2023-02-27 18:39:20.157638');
 
-insert into cm_user_attrs (user_id, key, value, ts_updated)
-values
-    ('2af9ecd2-a32a-4332-8717-396e9af28639', 'project', 'Arcade',  '2024-12-06 10:38:47.197358'),
-    ('2af9ecd2-a32a-4332-8717-396e9af28639', 'role',    'manager', '2024-12-06 10:38:47.197359'),
-    ('2af9ecd2-a32a-4332-8717-396e9af28639', 'manager', 'true',    '2024-12-06 10:38:47.197360');
-
 insert into cm_user_avatars (user_id, ts_updated, is_custom, avatar_s, avatar_m, avatar_l)
 values
     ('5787eece-7aa3-44d7-bbba-51866edc4867', '2023-07-15 19:18:31.052044', true,
