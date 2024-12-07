@@ -1,0 +1,21 @@
+<!-- Show a load error, if any -->
+@if (loadError) {
+    <div class="container p-4 alert alert-danger" role="alert">
+        <!-- Heading -->
+        <div class="alert-heading lead fw-bold" i18n>Plugin error</div>
+
+        <!-- Error details -->
+        <div i18n>Failed to load plugin <code>{{ pluginId }}</code>.</div>
+
+        <!-- Technical details -->
+        <div class="small">
+            <button (click)="showErrorDetails = !showErrorDetails" [class.active]="showErrorDetails"
+                    [attr.aria-expanded]="showErrorDetails" class="btn btn-link btn-sm" i18n>Technical details</button>
+            @if (showErrorDetails) {
+                <div @fadeInOut-fast>
+                    <code><pre>{{ loadError | json }}</pre></code>
+                </div>
+            }
+        </div>
+    </div>
+}

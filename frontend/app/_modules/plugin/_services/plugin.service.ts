@@ -1,7 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT, Location } from '@angular/common';
 import { Route, Router } from '@angular/router';
-import { EMPTY, interval, merge, Observable, Subject, switchMap, takeUntil, tap, throwError, timeout } from 'rxjs';
+import { first, forkJoin, materialize, Observable, switchMap, takeWhile, tap, throwError, timeout, timer } from 'rxjs';
+import { filter } from 'rxjs/operators';
 import { PluginPlugComponent } from '../plugin-plug/plugin-plug.component';
 import { ConfigService } from '../../../_services/config.service';
 import { LANGUAGE } from '../../../../environments/languages';
@@ -14,6 +15,9 @@ import { PluginMessageService } from './plugin-message.service';
     providedIn: 'root',
 })
 export class PluginService {
+
+    /** Error occurred during plugin resource load. If undefined, the resources have been loaded successfully. */
+    loadError: any;
 
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
@@ -32,18 +36,20 @@ export class PluginService {
      */
     init(): Observable<unknown> {
         // Because this is invoked as a part of the app init process, we need to wait for the config to arrive
-        const loaded = new Subject<void>();
         return this.configSvc.config$
             .pipe(
                 // Reload the routing config when ready
                 tap(cfg => this.updateRoutes(cfg.pluginConfig)),
-                // Embed the necessary plugin resources, waiting for all of them to complete loading or error
+                // Embed the necessary plugin resources, waiting for all of them to complete loading (or error), and
+                // waiting for custom elements to be all defined (or time out)
                 switchMap(cfg =>
-                    merge(this.waitForResources(cfg), this.waitForCustomElements(cfg.pluginConfig))
-                        // Signal the load completion to the outer observable
-                        .pipe(tap({complete: () => loaded.next()}))),
-                // Force the outer observable to complete after the inner (merge()) has
-                takeUntil(loaded));
+                    forkJoin([...this.waitForResources(cfg), this.waitForCustomElements(cfg.pluginConfig)])
+                        // Convert errors and completion into emissions
+                        .pipe(materialize())),
+                // Complete the outer observable on the inner's completion or error
+                first(),
+                // Check if there was a load error
+                tap(n => n.kind === 'E' && (this.loadError = n.error)));
     }
 
     /**
@@ -185,16 +191,18 @@ export class PluginService {
     };
 
     /**
-     * Wait until all the plugin resources are loaded or errored.
+     * Wait until all the plugin resources are loaded or errored. Complete the result observable once all resources of
+     * all plugins finished loading or there's any error.
      */
     private waitForResources(cfg: InstanceConfig): Observable<unknown>[] {
         return cfg.pluginConfig.plugins?.flatMap(plugin => this.pluginResources(cfg.staticConfig.baseUrl, plugin)) ??
             // Complete immediately when no resource is needed
-            [EMPTY];
+            [];
     }
 
     /**
-     * Wait until all the custom element tags are registered in the CustomElementRegistry.
+     * Wait until all the custom element tags are registered in the CustomElementRegistry. Complete the result
+     * observable once all custom element tags are registered, or error if timed out.
      */
     private waitForCustomElements(pluginCfg: InstancePluginConfig): Observable<any> {
         // Make a map of all known plugin component tags
@@ -202,19 +210,24 @@ export class PluginService {
         pluginCfg.plugins?.forEach(plugin =>
             plugin.uiPlugs?.map(p => p.componentTag).forEach(t => t && (tags[t] = true)));
 
-        // Wait up to 10 seconds until all components are known
-        const loaded = new Subject<void>();
-        return interval(250)
+        // Check for undefined custom elements, four times per second, until none left
+        let remaining = Object.keys(tags);
+        return timer(0, 250)
             .pipe(
-                tap(n => {
-                    Object.keys(tags).forEach(t => customElements.get(t) && delete tags[t]);
-                    const remaining = Object.keys(tags);
-                    if (!remaining.length) {
-                        loaded.next();
-                    } else if (n > 40) {
-                        throw Error(`Timed out waiting for custom elements tags: ${remaining.join(',')}`);
-                    }
-                }),
-                takeUntil(loaded));
+                // Remove the tags that are defined now
+                tap(() => remaining = remaining.filter(t => !customElements.get(t))),
+                // Stop as soon as the list of remaining tags is empty
+                takeWhile(() => remaining.length > 0),
+                // Convert errors and completion into emissions
+                materialize(),
+                // Let only errors and completion signals through
+                filter(n => n.kind !== 'N'),
+                // Grab the first one, then complete
+                first(),
+                // Wait up to 10 seconds until all components are known
+                timeout({
+                    first: 10_000,
+                    meta: {message: `Timed out waiting for custom elements tags: [${remaining.join(', ')}]`},
+                }));
     }
 }
