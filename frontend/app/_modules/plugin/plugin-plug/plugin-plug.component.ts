@@ -1,9 +1,11 @@
-import { AfterContentInit, Component, ElementRef, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { AfterContentInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
+import { EMPTY, Subject, switchMap } from 'rxjs';
 import { PluginService } from '../_services/plugin.service';
 import { PluginRouteData } from '../../../_models/models';
 import { UIPlug } from '../_models/plugs';
 import { Animations } from '../../../_utils/animations';
+import { PluginConfig } from '../../../../generated-api';
 
 @Component({
     selector: 'app-plugin-plug',
@@ -18,32 +20,74 @@ export class PluginPlugComponent implements AfterContentInit, OnChanges {
     @Input()
     plug?: UIPlug;
 
+    @ViewChild('elementHost', {static: true})
+    elementHost?: ElementRef<HTMLDivElement>;
+
     /** Whether technical error details are shown. */
     showErrorDetails = false;
 
-    /** Any error occurred during plugin load. */
-    readonly loadError = this.pluginService.loadError;
+    /** Plugin availability status. */
+    pluginAvailable?: boolean;
 
+    /** Plugin load error, if any. */
+    pluginError: any;
+
+    /** Plugin config in use. */
+    pluginConfig?: PluginConfig;
+
+    /** Actual UI plug tag in use. */
+    private plugTag?: string;
+
+    /** Created custom element. */
     private plugElement?: HTMLElement;
+
+    /** Observable that triggers (re)insertion of the element. */
+    private ping$ = new Subject<void>();
 
     constructor(
         private readonly route: ActivatedRoute,
-        private readonly element: ElementRef,
         private readonly pluginService: PluginService,
-    ) {}
+    ) {
+        this.ping$
+            // Trigger a status recheck on a ping
+            .pipe(
+                switchMap(() => {
+                    // Make sure there's a plugin ID and a component tag
+                    const data = this.route.snapshot.data as PluginRouteData | undefined;
+                    const id = this.plug?.pluginId ?? data?.plugin.id;
+                    this.plugTag = this.plug?.componentTag ?? data?.plug.componentTag;
+                    if (!id || !this.plugTag) {
+                        return EMPTY;
+                    }
 
-    /** Plugin ID in use. */
-    get pluginId(): string {
-        return this.plug?.pluginId ?? (this.route.snapshot.data as PluginRouteData)?.plugin.id ?? '<UNKNOWN>';
+                    // Request the plugin's status
+                    const ps = this.pluginService.pluginStatus(id);
+                    this.pluginConfig = ps?.config;
+                    return ps?.status ?? EMPTY;
+                }))
+            .subscribe({
+                next: b => {
+                    this.pluginAvailable = b;
+
+                    // Remove any existing plug
+                    this.removeElement();
+
+                    // Recreate the element, if the plugin is operational
+                    if (this.plugTag && this.pluginAvailable && this.elementHost) {
+                        this.plugElement = this.pluginService.insertElement(this.elementHost.nativeElement, this.plugTag);
+                    }
+                },
+                error: err => this.pluginError = err,
+            });
     }
 
     ngAfterContentInit(): void {
-        this.reinsertElement();
+        this.ping$.next();
     }
 
     ngOnChanges(changes: SimpleChanges): void {
         if (changes.plug) {
-            this.reinsertElement();
+            this.ping$.next();
         }
     }
 
@@ -52,30 +96,9 @@ export class PluginPlugComponent implements AfterContentInit, OnChanges {
      * @private
      */
     private removeElement(): void {
-        if (this.plugElement) {
-            (this.element.nativeElement as HTMLElement).removeChild(this.plugElement);
+        if (this.plugElement && this.elementHost) {
+            this.elementHost.nativeElement.removeChild(this.plugElement);
             this.plugElement = undefined;
-        }
-    }
-
-    /**
-     * Insert or reinsert the required plug element.
-     * @private
-     */
-    private reinsertElement(): void {
-        // Remove any existing plug
-        this.removeElement();
-
-        // Skip element creation if there was a plugin load error
-        if (!this.loadError) {
-            // Determine which plug to use: fall back to the RouteData if no plug explicitly provided
-            const plug = this.plug ?? (this.route.snapshot.data as PluginRouteData)?.plug;
-            if (!plug) {
-                throw Error('No plug provided and no RouteData is available');
-            }
-
-            // Add a new element for the plug
-            this.plugElement = this.pluginService.insertElement(this.element.nativeElement, plug.componentTag);
         }
     }
 }
