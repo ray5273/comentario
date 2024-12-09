@@ -1,8 +1,8 @@
 import { Inject, Injectable } from '@angular/core';
 import { DOCUMENT, Location } from '@angular/common';
 import { Route, Router } from '@angular/router';
-import { first, forkJoin, materialize, Observable, switchMap, takeWhile, tap, throwError, timeout, timer } from 'rxjs';
-import { filter } from 'rxjs/operators';
+import { BehaviorSubject, EMPTY, first, forkJoin, materialize, Observable, switchMap, takeWhile, tap, throwError, timeout, timer } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
 import { PluginPlugComponent } from '../plugin-plug/plugin-plug.component';
 import { ConfigService } from '../../../_services/config.service';
 import { LANGUAGE } from '../../../../environments/languages';
@@ -11,13 +11,30 @@ import { InstanceConfig, InstancePluginConfig, PluginConfig, PluginUIPlugConfig 
 import { UIPlug } from '../_models/plugs';
 import { PluginMessageService } from './plugin-message.service';
 
+/**
+ * Plugin status entry.
+ */
+export interface PluginStatus {
+    /**
+     * Plugin configuration as received from the backend.
+     */
+    config: PluginConfig;
+    /**
+     * Plugin availability status:
+     *   * `false` means not available yet;
+     *   * `true` means available;
+     *   * Error state means plugin resource load or initialisation failed.
+     */
+    status: Observable<boolean>;
+}
+
 @Injectable({
     providedIn: 'root',
 })
 export class PluginService {
 
-    /** Error occurred during plugin resource load. If undefined, the resources have been loaded successfully. */
-    loadError: any;
+    /** Map of plugin availability status by plugin ID. */
+    private readonly pluginStatuses: Record<string, PluginStatus> = {};
 
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
@@ -38,18 +55,22 @@ export class PluginService {
         // Because this is invoked as a part of the app init process, we need to wait for the config to arrive
         return this.configSvc.config$
             .pipe(
-                // Reload the routing config when ready
-                tap(cfg => this.updateRoutes(cfg.pluginConfig)),
-                // Embed the necessary plugin resources, waiting for all of them to complete loading (or error), and
-                // waiting for custom elements to be all defined (or time out)
-                switchMap(cfg =>
-                    forkJoin([...this.waitForResources(cfg), this.waitForCustomElements(cfg.pluginConfig)])
-                        // Convert errors and completion into emissions
-                        .pipe(materialize())),
-                // Complete the outer observable on the inner's completion or error
-                first(),
-                // Check if there was a load error
-                tap(n => n.kind === 'E' && (this.loadError = n.error)));
+                tap(cfg => {
+                    // Reload the routing config when ready
+                    this.updateRoutes(cfg.pluginConfig);
+                    // Create plugin status entries
+                    this.createStatusEntries(cfg);
+                }),
+                // Complete as soon as we have the config
+                first());
+    }
+
+    /**
+     * Return status for a plugin with the given ID, or undefined if this ID is unknown.
+     * @param id ID of the plugin to return status for.
+     */
+    pluginStatus(id: string): PluginStatus | undefined {
+        return this.pluginStatuses[id];
     }
 
     /**
@@ -97,6 +118,45 @@ export class PluginService {
         parent.appendChild(el);
         return el;
     }
+
+    /**
+     * Create plugin status entries based on the provided config.
+     */
+    private createStatusEntries(cfg: InstanceConfig) {
+        // Iterate the known plugins
+        cfg.pluginConfig.plugins?.forEach(plugin => {
+            // Create a caching subject for plugin's availability
+            const status = new BehaviorSubject<boolean>(false);
+
+            // Wait for all required resources to complete loading (or error)
+            forkJoin(this.pluginResources(cfg.staticConfig.baseUrl, plugin))
+                .pipe(
+                    // Catch completion and errors
+                    materialize(),
+                    // Convert completion to true, rethrow any error
+                    map(n => {
+                        switch (n.kind) {
+                            case 'C':
+                                return true;
+                            case 'E':
+                                throw Error(n.error);
+                        }
+                        return false;
+                    }),
+                    // Once ready, wait for the plugin to register its custom elements (if any)
+                    switchMap(b => b ? this.waitForCustomElements(plugin) : EMPTY),
+                )
+                // Subscribe to the observable to start loading resources, in the background, right away
+                .subscribe({
+                    error: err => status.error(err),
+                    complete: () => status.next(true),
+                });
+
+            // Create a status entry
+            this.pluginStatuses[plugin.id] = {config: plugin, status};
+        });
+    }
+
 
     /**
      * Embed all the necessary resource of the plugin and return an observable for waiting on each of them.
@@ -191,24 +251,13 @@ export class PluginService {
     };
 
     /**
-     * Wait until all the plugin resources are loaded or errored. Complete the result observable once all resources of
-     * all plugins finished loading or there's any error.
+     * Wait until all the custom element tags declared by a plugin are registered in the CustomElementRegistry. Complete
+     * the result observable once all custom element tags are registered, or error if timed out.
      */
-    private waitForResources(cfg: InstanceConfig): Observable<unknown>[] {
-        return cfg.pluginConfig.plugins?.flatMap(plugin => this.pluginResources(cfg.staticConfig.baseUrl, plugin)) ??
-            // Complete immediately when no resource is needed
-            [];
-    }
-
-    /**
-     * Wait until all the custom element tags are registered in the CustomElementRegistry. Complete the result
-     * observable once all custom element tags are registered, or error if timed out.
-     */
-    private waitForCustomElements(pluginCfg: InstancePluginConfig): Observable<any> {
+    private waitForCustomElements(plugin: PluginConfig): Observable<any> {
         // Make a map of all known plugin component tags
         const tags: Record<string, boolean> = {};
-        pluginCfg.plugins?.forEach(plugin =>
-            plugin.uiPlugs?.map(p => p.componentTag).forEach(t => t && (tags[t] = true)));
+        plugin.uiPlugs?.map(p => p.componentTag).forEach(t => t && (tags[t] = true));
 
         // Check for undefined custom elements, four times per second, until none left
         let remaining = Object.keys(tags);
@@ -227,7 +276,7 @@ export class PluginService {
                 // Wait up to 10 seconds until all components are known
                 timeout({
                     first: 10_000,
-                    meta: {message: `Timed out waiting for custom elements tags: [${remaining.join(', ')}]`},
+                    meta: {message: `Timed out waiting for custom elements tags for plugin '${plugin.id}': [${remaining.join(', ')}]`},
                 }));
     }
 }
