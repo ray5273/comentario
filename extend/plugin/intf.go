@@ -29,6 +29,8 @@ type Logger interface {
 type HostApp interface {
 	// AuthenticateBySessionCookie authenticates a principal given a session cookie value
 	AuthenticateBySessionCookie(value string) (*User, error)
+	// Config is the host configuration
+	Config() *HostConfig
 	// CreateLogger creates and returns a logger used for logging plugin messages
 	CreateLogger(module string) Logger
 	// DomainAttrStore returns an instance of the domain attributes store for the plugin

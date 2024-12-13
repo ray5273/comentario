@@ -5,7 +5,14 @@ package plugin
 
 import (
 	"github.com/google/uuid"
+	"net/url"
 )
+
+// HostConfig provides access to the host app configuration
+type HostConfig struct {
+	BaseURL       *url.URL // Base Comentario URL
+	DefaultLangID string   // Default interface language ID
+}
 
 // User represents an authenticated or an anonymous user
 type User struct {

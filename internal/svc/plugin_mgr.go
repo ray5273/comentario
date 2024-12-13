@@ -107,6 +107,13 @@ func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*complugin.
 	return u.ToPluginUser(), nil
 }
 
+func (c *pluginConnector) Config() *complugin.HostConfig {
+	return &complugin.HostConfig{
+		BaseURL:       config.ServerConfig.ParsedBaseURL(),
+		DefaultLangID: util.DefaultLanguage.String(),
+	}
+}
+
 func (c *pluginConnector) CreateLogger(module string) complugin.Logger {
 	return &pluginLogger{l: logging.MustGetLogger(c.pluginID + "." + module)}
 }
