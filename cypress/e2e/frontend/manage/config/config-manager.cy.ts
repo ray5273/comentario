@@ -133,6 +133,7 @@ context('Config Manager', () => {
                     ['Allow moderators to edit comments',                   '✔'],
                     ['Enable voting on comments',                           '✔'],
                     ['Show deleted comments',                               '✔'],
+                    ['Maximum comment text length',                         '1,024'],
                 ['Integrations'],
                     ['Use Gravatar for user avatars',                       ''],
                 ['Markdown'],
@@ -165,6 +166,7 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#domain_defaults_comments_editing_moderator') .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_enableVoting')      .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_showDeleted')       .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_comments_text_maxLength')    .should('have.value', 1024).setValue('876');
             cy.get('@configEdit').find('#domain_defaults_markdown_images_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_markdown_links_enabled')     .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_markdown_tables_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');
@@ -203,6 +205,7 @@ context('Config Manager', () => {
                     ['Allow moderators to edit comments',                   ''],
                     ['Enable voting on comments',                           ''],
                     ['Show deleted comments',                               '✔'],
+                    ['Maximum comment text length',                         '876'],
                 ['Integrations'],
                     ['Use Gravatar for user avatars',                       '✔'],
                 ['Markdown'],
@@ -234,6 +237,7 @@ context('Config Manager', () => {
                     ['Allow moderators to edit comments',                   '✔'],
                     ['Enable voting on comments',                           '✔'],
                     ['Show deleted comments',                               '✔'],
+                    ['Maximum comment text length',                         '4,096'],
                 ['Integrations'],
                     ['Use Gravatar for user avatars',                       '✔'],
                 ['Markdown'],
@@ -257,6 +261,7 @@ context('Config Manager', () => {
                 [InstanceConfigKey.domainDefaultsCommentEditingModerator]:  false,
                 [InstanceConfigKey.domainDefaultsEnableCommentVoting]:      false,
                 [InstanceConfigKey.domainDefaultsShowDeletedComments]:      false,
+                [InstanceConfigKey.domainDefaultsMaxCommentLength]:         516,
                 [InstanceConfigKey.domainDefaultsMarkdownImagesEnabled]:    true,
                 [InstanceConfigKey.domainDefaultsMarkdownLinksEnabled]:     false,
                 [InstanceConfigKey.domainDefaultsMarkdownTablesEnabled]:    false,
@@ -286,6 +291,7 @@ context('Config Manager', () => {
                     ['Allow moderators to edit comments',                   ''],
                     ['Enable voting on comments',                           ''],
                     ['Show deleted comments',                               ''],
+                    ['Maximum comment text length',                         '516'],
                 ['Integrations'],
                     ['Use Gravatar for user avatars',                       ''],
                 ['Markdown'],

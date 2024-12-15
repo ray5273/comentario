@@ -1,7 +1,7 @@
 import {
     ConfigKeyDomainDefaultsPrefix,
     DomainConfigKey,
-    DOMAINS,
+    DOMAINS, IntegerDomainConfigKeys,
     PATHS,
     REGEXES,
     USERS,
@@ -37,6 +37,7 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#comments_editing_moderator') .as('cfgCommentsEditingModerator');
         cy.get('@domainEdit').find('#comments_enableVoting')      .as('cfgCommentsEnableVoting');
         cy.get('@domainEdit').find('#comments_showDeleted')       .as('cfgCommentsShowDeleted');
+        cy.get('@domainEdit').find('#comments_text_maxLength')    .as('cfgCommentsTextMaxLength');
         // Config - Markdown
         cy.get('@domainEdit').find('#markdown_images_enabled').as('cfgMarkdownImagesEnabled');
         cy.get('@domainEdit').find('#markdown_links_enabled') .as('cfgMarkdownLinksEnabled');
@@ -194,33 +195,46 @@ context('Domain Edit page', () => {
             /** Auth tab params (whose key starts with 'signup'). */
             const paramsAuth = params.filter(k => k.startsWith('signup.'));
 
-            /** Object with every instance domain default set to false. */
-            const allFalseParams = params.reduce(
+            /** Object with every instance domain default set to false (for boolean params) or 1000 (for integer ones). */
+            const allDefaultParams = params.reduce(
                 (acc, k) => {
-                    acc[ConfigKeyDomainDefaultsPrefix + k] = false;
+                    acc[ConfigKeyDomainDefaultsPrefix + k] = IntegerDomainConfigKeys.has(k) ? 1000 : false;
                     return acc;
                 },
                 {} as any);
 
+            const checkParamValues = (list: DomainConfigKey[], curKey: string) => {
+                list.forEach(k =>
+                    cy.get('@domainEdit').find(`#${k.replaceAll('.', '_')}`).should(el => {
+                        // Integer param
+                        if (IntegerDomainConfigKeys.has(k)) {
+                            expect(el.val()).eq(k === curKey ? '15987' : '1000');
+                        // Boolean param
+                        } else {
+                            expect(el.is(':checked')).eq(k === curKey);
+                        }
+                    }));
+            }
+
             // Iterate every param
-            params.forEach(key =>
-                it(`when parameter ${key} is true`, () => {
-                    // Set the param in question globally to true, and every other to false
-                    cy.backendUpdateDynConfig({...allFalseParams, [ConfigKeyDomainDefaultsPrefix + key]: true});
+            params.forEach(key => {
+                const newVal = IntegerDomainConfigKeys.has(key) ? 15987 : true;
+                it(`when parameter ${key} is ${newVal}`, () => {
+                    // Set the param in question globally to the new value, and every other to the default
+                    cy.backendUpdateDynConfig({...allDefaultParams, [ConfigKeyDomainDefaultsPrefix + key]: newVal});
 
                     // Login and navigate to the Create domain page
                     cy.loginViaApi(USERS.ace, PATHS.manage.domains.create);
                     makeAliases(false);
 
                     // Check the General tab first (params whose key doesn't start with 'signup'
-                    paramsGeneral.forEach(k =>
-                        cy.get('@domainEdit').find(`#${k.replaceAll('.', '_')}`).should(k === key ? 'be.checked' : 'not.be.checked'));
+                    checkParamValues(paramsGeneral, key);
 
                     // Controls whose key starts with 'signup' reside on the Auth tab
                     cy.get('@tabAuth').click();
-                    paramsAuth.forEach(k =>
-                        cy.get('@domainEdit').find(`#${k.replaceAll('.', '_')}`).should(k === key ? 'be.checked' : 'not.be.checked'));
-                }));
+                    checkParamValues(paramsAuth, key);
+                });
+            });
         });
 
         context('for authenticated user', () => {
@@ -251,6 +265,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingModerator') .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsEnableVoting')     .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsShowDeleted')      .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsTextMaxLength')    .should('be.visible').and('be.enabled').and('have.value', '1024');
                 cy.get('@cfgMarkdownImagesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgMarkdownLinksEnabled')     .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgMarkdownTablesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
@@ -355,6 +370,7 @@ context('Domain Edit page', () => {
                         ['Allow moderators to edit comments',                   '✔'],
                         ['Enable voting on comments',                           '✔'],
                         ['Show deleted comments',                               '✔'],
+                        ['Maximum comment text length',                         '1,024'],
                     ['Markdown'],
                         ['Enable images in comments',                           '✔'],
                         ['Enable links in comments',                            '✔'],
@@ -402,6 +418,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingModerator') .clickLabel();
                 cy.get('@cfgCommentsEnableVoting')     .clickLabel();
                 cy.get('@cfgCommentsShowDeleted')      .clickLabel();
+                cy.get('@cfgCommentsTextMaxLength')    .setValue('8987');
                 cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
                 cy.get('@cfgMarkdownLinksEnabled')     .clickLabel();
                 cy.get('@cfgMarkdownTablesEnabled')    .clickLabel();
@@ -478,6 +495,7 @@ context('Domain Edit page', () => {
                         ['Allow moderators to edit comments',                   ''],
                         ['Enable voting on comments',                           ''],
                         ['Show deleted comments',                               ''],
+                        ['Maximum comment text length',                         '8,987'],
                     ['Markdown'],
                         ['Enable images in comments',                           ''],
                         ['Enable links in comments',                            ''],
@@ -565,6 +583,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingModerator') .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsEnableVoting')     .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsShowDeleted')      .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsTextMaxLength')    .should('be.visible').and('be.enabled').and('have.value', '4096');
                 cy.get('@cfgMarkdownImagesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgMarkdownLinksEnabled')     .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgMarkdownTablesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
@@ -639,6 +658,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingModerator') .clickLabel();
                 cy.get('@cfgCommentsEnableVoting')     .clickLabel();
                 cy.get('@cfgCommentsShowDeleted')      .clickLabel();
+                cy.get('@cfgCommentsTextMaxLength')    .setValue('123456');
                 cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
                 cy.get('@cfgMarkdownLinksEnabled')     .clickLabel();
                 cy.get('@cfgMarkdownTablesEnabled')    .clickLabel();
@@ -714,6 +734,7 @@ context('Domain Edit page', () => {
                         ['Allow moderators to edit comments',                   ''],
                         ['Enable voting on comments',                           ''],
                         ['Show deleted comments',                               ''],
+                        ['Maximum comment text length',                         '123,456'],
                     ['Markdown'],
                         ['Enable images in comments',                           ''],
                         ['Enable links in comments',                            ''],
@@ -756,6 +777,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingModerator') .should('not.be.checked');
                 cy.get('@cfgCommentsEnableVoting')     .should('not.be.checked');
                 cy.get('@cfgCommentsShowDeleted')      .should('not.be.checked');
+                cy.get('@cfgCommentsTextMaxLength')    .should('have.value', '123456');
                 cy.get('@cfgMarkdownImagesEnabled')    .should('not.be.checked');
                 cy.get('@cfgMarkdownLinksEnabled')     .should('not.be.checked');
                 cy.get('@cfgMarkdownTablesEnabled')    .should('not.be.checked');

@@ -61,6 +61,9 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 
 	result := &ImportResult{}
 
+	// Fetch domain config
+	maxLength := TheDomainConfigService.GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)
+
 	// Make sure there's at least one channel
 	if len(exp.Channels) == 0 {
 		return result.WithError(errors.New("no channels found in the RSS feed"))
@@ -168,8 +171,10 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 					AuthorName:    authorName,
 				}
 
-				// Update the comment's markdown and render it into HTML
-				TheCommentService.SetMarkdown(c, comment.Content, &domain.ID, nil)
+				// Update the comment's markdown and render it into HTML. Truncate comment text to avoid errors
+				if err := TheCommentService.SetMarkdown(c, util.TruncateStr(comment.Content, maxLength), &domain.ID, nil); err != nil {
+					return result.WithError(err)
+				}
 
 				// File it under the appropriate parent ID
 				if l, ok := commentParentIDMap[pzID]; ok {

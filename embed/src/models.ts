@@ -122,6 +122,8 @@ export interface PageInfo {
     readonly enableCommentVoting: boolean;
     /** Whether deleted comments should be shown */
     readonly showDeletedComments: boolean;
+    /** Maximum comment text length */
+    readonly maxCommentLength: number;
     /** Whether new users can register locally (with email and password) */
     readonly localSignupEnabled: boolean;
     /** Whether new users can register via a federated identity provider */

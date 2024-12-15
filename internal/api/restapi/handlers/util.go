@@ -172,6 +172,8 @@ func respNotFound(err *exmodels.Error) middleware.Responder {
 // any sensitive data (which is otherwise supposed to land in the logs) out of the response
 func respServiceError(err error) middleware.Responder {
 	switch {
+	case errors.Is(err, svc.ErrCommentTooLong):
+		return api_general.NewGenericUnprocessableEntity().WithPayload(exmodels.ErrorCommentTextTooLong)
 	case errors.Is(err, svc.ErrEmailSend):
 		return api_general.NewGenericBadGateway().WithPayload(exmodels.ErrorEmailSendFailure)
 	case errors.Is(err, svc.ErrResourceFetch):

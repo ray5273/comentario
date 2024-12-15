@@ -52,7 +52,7 @@ export class CommentEditor extends Wrap<HTMLFormElement>{
                 this.toolbar,
                 // Textarea
                 this.textarea = UIToolkit.textarea(null, true, true)
-                    .attr({name: 'comentario-comment-editor', maxlength: '4096'})
+                    .attr({name: 'comentario-comment-editor', maxlength: String(pageInfo.maxCommentLength)})
                     .value(initialText)
                     .on('input', () => this.updateControls()),
                 // Preview

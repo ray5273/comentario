@@ -23,6 +23,8 @@ type DomainConfigService interface {
 	GetAll(domainID *uuid.UUID) (map[data.DynConfigItemKey]*data.DynConfigItem, error)
 	// GetBool returns the bool value of a configuration item by its key, or the default value on error
 	GetBool(domainID *uuid.UUID, key data.DynConfigItemKey) bool
+	// GetInt returns the int value of a configuration item by its key, or the default value on error
+	GetInt(domainID *uuid.UUID, key data.DynConfigItemKey) int
 	// ResetCache empties the config cache
 	ResetCache()
 	// Update the values of the configuration items with the given keys and persist the changes. curUserID can be nil
@@ -126,6 +128,16 @@ func (svc *domainConfigService) GetBool(domainID *uuid.UUID, key data.DynConfigI
 
 	// Fall back to the instance default on error
 	return TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsPrefix + key)
+}
+
+func (svc *domainConfigService) GetInt(domainID *uuid.UUID, key data.DynConfigItemKey) int {
+	// First try to fetch the actual value
+	if i, err := svc.Get(domainID, key); err == nil {
+		return i.AsInt()
+	}
+
+	// Fall back to the instance default on error
+	return TheDynConfigService.GetInt(data.ConfigKeyDomainDefaultsPrefix + key)
 }
 
 func (svc *domainConfigService) ResetCache() {

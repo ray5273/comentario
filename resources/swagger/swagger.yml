@@ -742,6 +742,7 @@ definitions:
       - commentEditingModerator
       - enableCommentVoting
       - showDeletedComments
+      - maxCommentLength
       - localSignupEnabled
       - federatedSignupEnabled
       - ssoSignupEnabled
@@ -858,6 +859,11 @@ definitions:
       showDeletedComments:
         type: boolean
         description: Whether deleted comments should be shown
+        x-isnullable: false
+        x-omitempty: false
+      maxCommentLength:
+        type: integer
+        description: Maximum comment text length
         x-isnullable: false
         x-omitempty: false
       localSignupEnabled:
@@ -2515,7 +2521,7 @@ paths:
                 description: Comment text in the markdown format
                 type: string
                 minLength: 1
-                maxLength: 4096
+                maxLength: 1048576 # 1 MiB
                 x-isnullable: false
       responses:
         200:
@@ -2557,7 +2563,7 @@ paths:
                 description: Comment text in the markdown format
                 type: string
                 minLength: 1
-                maxLength: 4096
+                maxLength: 1048576 # 1 MiB
                 x-isnullable: false
       responses:
         200:
@@ -2657,7 +2663,7 @@ paths:
                 description: Comment text in the markdown format
                 type: string
                 minLength: 1
-                maxLength: 4096
+                maxLength: 1048576 # 1 MiB
                 x-isnullable: false
       responses:
         200:

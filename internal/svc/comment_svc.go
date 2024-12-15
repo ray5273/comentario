@@ -72,7 +72,7 @@ type CommentService interface {
 	Moderated(comment *data.Comment) error
 	// SetMarkdown updates the Markdown/HTML properties of the given comment in the specified domain. editedUserID
 	// should point to the user who edited the comment in case it's edited, otherwise nil
-	SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID)
+	SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error
 	// UpdateSticky updates the stickiness flag of a comment with the given ID in the database
 	UpdateSticky(commentID *uuid.UUID, sticky bool) error
 	// Vote sets a vote for the given comment and user and updates the comment, return the updated comment's score
@@ -544,12 +544,17 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 	return nil
 }
 
-func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) {
-	comment.Markdown = strings.TrimSpace(markdown)
+func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error {
+	// Validate comment length
+	md := strings.TrimSpace(markdown)
+	if len(md) > TheDomainConfigService.GetInt(domainID, data.DomainConfigKeyMaxCommentLength) {
+		return ErrCommentTooLong
+	}
 
 	// Render the comment's HTML using settings of the corresponding domain
+	comment.Markdown = md
 	comment.HTML = util.MarkdownToHTML(
-		comment.Markdown,
+		md,
 		TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownLinksEnabled),
 		TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownImagesEnabled),
 		TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownTablesEnabled))
@@ -559,6 +564,9 @@ func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, d
 		comment.UserEdited = uuid.NullUUID{UUID: *editedUserID, Valid: true}
 		comment.EditedTime = data.NowNullable()
 	}
+
+	// Succeeded
+	return nil
 }
 
 func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error {

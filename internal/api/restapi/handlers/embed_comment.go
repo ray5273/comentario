@@ -13,7 +13,6 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
-	"strings"
 	"time"
 )
 
@@ -144,6 +143,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		MarkdownImagesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
 		MarkdownLinksEnabled:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
 		MarkdownTablesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled),
+		MaxCommentLength:         int64(svc.TheDomainConfigService.GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)),
 		PageID:                   strfmt.UUID(page.ID.String()),
 		PrivacyPolicyURL:         config.ServerConfig.PrivacyPolicyURL,
 		ShowDeletedComments:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
@@ -269,14 +269,15 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 		ID:          uuid.New(),
 		ParentID:    parentID,
 		PageID:      page.ID,
-		Markdown:    strings.TrimSpace(params.Body.Markdown),
 		CreatedTime: time.Now().UTC(),
 		UserCreated: uuid.NullUUID{UUID: user.ID, Valid: true},
 	}
 	if params.Body.Unregistered {
 		comment.AuthorName = params.Body.AuthorName
 	}
-	svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil)
+	if err := svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil); err != nil {
+		return respServiceError(err)
+	}
 	comment.AuthorIP, comment.AuthorCountry = util.UserIPCountry(params.HTTPRequest, !config.ServerConfig.LogFullIPs)
 
 	// Determine comment state
@@ -333,7 +334,9 @@ func EmbedCommentPreview(params api_embed.EmbedCommentPreviewParams) middleware.
 
 	// Render the passed markdown
 	c := &data.Comment{}
-	svc.TheCommentService.SetMarkdown(c, params.Body.Markdown, domainID, nil)
+	if err := svc.TheCommentService.SetMarkdown(c, params.Body.Markdown, domainID, nil); err != nil {
+		return respServiceError(err)
+	}
 
 	// Succeeded
 	return api_embed.NewEmbedCommentPreviewOK().WithPayload(&api_embed.EmbedCommentPreviewOKBody{HTML: c.HTML})
@@ -396,7 +399,9 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Update the comment text/HTML
-	svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID)
+	if err := svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID); err != nil {
+		return respServiceError(err)
+	}
 	if err := svc.TheCommentService.Edited(comment); err != nil {
 		return respServiceError(err)
 	}

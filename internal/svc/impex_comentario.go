@@ -155,6 +155,9 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 
 	result := &ImportResult{}
 
+	// Fetch domain config
+	maxLength := TheDomainConfigService.GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)
+
 	// Create a map of commenterHex -> user ID
 	commenterIDMap := map[HexIDV1]uuid.UUID{
 		AnonymousCommenterHexIDV1: data.AnonymousUser.ID,
@@ -278,7 +281,10 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 
 		// Render Markdown into HTML (the latter doesn't get exported)
 		if !del {
-			TheCommentService.SetMarkdown(c, comment.Markdown, &domain.ID, nil)
+			// Truncate comment text to avoid errors
+			if err := TheCommentService.SetMarkdown(c, util.TruncateStr(comment.Markdown, maxLength), &domain.ID, nil); err != nil {
+				return result.WithError(err)
+			}
 		}
 
 		// File it under the appropriate parent ID

@@ -38,6 +38,7 @@ var (
 	ErrorUnknown = &Error{Message: "Internal server error"}
 
 	ErrorBadToken              = &Error{ID: "bad-token", Message: "Token is missing or invalid"}
+	ErrorCommentTextTooLong    = &Error{ID: "comment-text-too-long", Message: "Comment text is too long"}
 	ErrorDeletingLastSuperuser = &Error{ID: "deleting-last-superuser", Message: "Can't delete the last superuser in the system"}
 	ErrorDeletingLastOwner     = &Error{ID: "deleting-last-owner", Message: "Can't delete the last owner in domain(s)"}
 	ErrorDomainReadonly        = &Error{ID: "domain-readonly", Message: "This domain is read-only"}

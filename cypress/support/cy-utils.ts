@@ -176,6 +176,7 @@ export enum DomainConfigKey {
     commentEditingModerator  = 'comments.editing.moderator',
     enableCommentVoting      = 'comments.enableVoting',
     showDeletedComments      = 'comments.showDeleted',
+    maxCommentLength         = 'comments.text.maxLength',
     markdownImagesEnabled    = 'markdown.images.enabled',
     markdownLinksEnabled     = 'markdown.links.enabled',
     markdownTablesEnabled    = 'markdown.tables.enabled',
@@ -183,6 +184,9 @@ export enum DomainConfigKey {
     federatedSignupEnabled   = 'signup.enableFederated',
     ssoSignupEnabled         = 'signup.enableSso',
 }
+
+/** Config keys representing integer values (as opposed to boolean). */
+export const IntegerDomainConfigKeys = new Set<DomainConfigKey>([DomainConfigKey.maxCommentLength]);
 
 /** Instance dynamic config item keys. */
 export enum InstanceConfigKey {
@@ -200,6 +204,7 @@ export enum InstanceConfigKey {
     domainDefaultsCommentEditingModerator  = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.commentEditingModerator,
     domainDefaultsEnableCommentVoting      = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.enableCommentVoting,
     domainDefaultsShowDeletedComments      = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.showDeletedComments,
+    domainDefaultsMaxCommentLength         = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.maxCommentLength,
     domainDefaultsMarkdownImagesEnabled    = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.markdownImagesEnabled,
     domainDefaultsMarkdownLinksEnabled     = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.markdownLinksEnabled,
     domainDefaultsMarkdownTablesEnabled    = ConfigKeyDomainDefaultsPrefix + DomainConfigKey.markdownTablesEnabled,
