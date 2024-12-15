@@ -1,5 +1,6 @@
 <!-- App content -->
-<main role="main" class="d-flex flex-column h-100">
+<main [appSpinner]="moduleLoading" spinnerSize="lg" spinnerText="Loading module" role="main"
+      class="d-flex flex-column h-100" i18n-spinnerText>
     <!-- Navbar -->
     @if (!hasSidebar) {
         <app-navbar/>

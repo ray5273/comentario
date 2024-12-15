@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, HostBinding, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
 
 export type SpinnerSize = 'sm' | 'lg';
 
@@ -15,6 +15,11 @@ export class SpinnerDirective implements OnChanges {
 
     /** The size of the spinner animation, default is 'sm'. */
     @Input() spinnerSize: SpinnerSize = 'sm';
+
+    /** Text to display under the spinner, only when spinnerSize === 'lg'. */
+    @Input()
+    @HostBinding('attr.data-spinner-text')
+    spinnerText?: string;
 
     private _timer: any;
 

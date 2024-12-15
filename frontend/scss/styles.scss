@@ -315,6 +315,10 @@ dl.detail-table, dl.detail-table > div {
     0%   { opacity: 0; }
     100% { opacity: 1; }
 }
+@keyframes fade-blink-30 {
+    0%  { opacity: 1; }
+    50% { opacity: 0.3; }
+}
 
 //----------------------------------------------------------------------------------------------------------------------
 // Spinners
@@ -362,7 +366,7 @@ dl.detail-table, dl.detail-table > div {
 
     // Translucent backdrop
     &::after {
-        content: '';
+        // Position the backdrop above the entire element
         position: absolute;
         left: 0;
         top: 0;
@@ -370,6 +374,19 @@ dl.detail-table, dl.detail-table > div {
         height: 100%;
         background-color: rgba(255, 255, 255, 0.8);
         z-index: 999;
+
+        // Spinner text properties: center the text inside the element across both axes, adding vertical padding to push
+        // the text under the spinner animation
+        content: attr(data-spinner-text);
+        text-transform: uppercase;
+        display: flex;
+        padding-top: 10%;
+        align-items: center;
+        justify-content: center;
+        font-size: smaller;
+
+        // Blink animation
+        animation: 3s linear infinite fade-blink-30;
     }
 }
 

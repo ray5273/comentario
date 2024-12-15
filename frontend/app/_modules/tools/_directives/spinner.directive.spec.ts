@@ -4,11 +4,12 @@ import { By } from '@angular/platform-browser';
 import { SpinnerDirective, SpinnerSize } from './spinner.directive';
 
 @Component({
-    template: '<button [appSpinner]="value" [spinnerSize]="size">text</button>',
+    template: '<button [appSpinner]="value" [spinnerSize]="size" [spinnerText]="text">text</button>',
 })
 class TestComponent {
     value = false;
     size: SpinnerSize = 'sm';
+    text?: string;
 }
 
 describe('SpinnerDirective', () => {
@@ -100,4 +101,24 @@ describe('SpinnerDirective', () => {
         expect(button.classList).not.toContain('is-spinning-sm');
         expect(button.classList).not.toContain('is-spinning-lg');
     }));
+
+    it('places spinner text into data attribute', () => {
+        // No text attribute at all initially
+        expect(button.getAttribute('data-spinner-text')).toBeNull();
+
+        // Set the spinner text
+        fixture.componentInstance.text = 'Spinning';
+        fixture.detectChanges();
+        expect(button.getAttribute('data-spinner-text')).toBe('Spinning');
+
+        // Update spinner text
+        fixture.componentInstance.text = '';
+        fixture.detectChanges();
+        expect(button.getAttribute('data-spinner-text')).toBe('');
+
+        // Remove spinner text
+        fixture.componentInstance.text = undefined;
+        fixture.detectChanges();
+        expect(button.getAttribute('data-spinner-text')).toBeNull();
+    });
 });
