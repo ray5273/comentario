@@ -32,7 +32,12 @@
                                [class.is-valid]="formGroup.controls.numComments.touched && formGroup.controls.numComments.valid"
                                [class.is-invalid]="formGroup.controls.numComments.touched && formGroup.controls.numComments.invalid">
                         <!-- Invalid feedback -->
-                        <div class="invalid-feedback" i18n>Please enter a valid value.</div>
+                        <div class="invalid-feedback">
+                            @if (formGroup.controls.numComments.errors; as err) {
+                                @if (err.required)       { <div i18n>Please enter a value.</div> }
+                                @if (err.min || err.max) { <div i18n>Please enter a value in the range {{ 1 | number }}…{{ 999 | number }}.</div> }
+                            }
+                        </div>
                     </div>
                 }
                 <!-- Author is registered less than this number of days ago -->
@@ -47,7 +52,12 @@
                                [class.is-valid]="formGroup.controls.userAgeDays.touched && formGroup.controls.userAgeDays.valid"
                                [class.is-invalid]="formGroup.controls.userAgeDays.touched && formGroup.controls.userAgeDays.invalid">
                         <!-- Invalid feedback -->
-                        <div class="invalid-feedback" i18n>Please enter a valid value.</div>
+                        <div class="invalid-feedback">
+                            @if (formGroup.controls.userAgeDays.errors; as err) {
+                                @if (err.required)       { <div i18n>Please enter a value.</div> }
+                                @if (err.min || err.max) { <div i18n>Please enter a value in the range {{ 1 | number }}…{{ 999 | number }}.</div> }
+                            }
+                        </div>
                     </div>
                 }
                 <!-- Comment contains link -->

@@ -146,13 +146,13 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#mod-num-comments').should('not.exist');
         cy.get('@modNumCommentsOn').clickLabel();
         cy.get('@domainEdit').find('#mod-num-comments').should('be.visible').should('have.value', '3')
-            .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
+            .verifyNumericInputValidation(1, 999, true);
 
         // -- Age in days input
         cy.get('@domainEdit').find('#mod-user-age-days').should('not.exist');
         cy.get('@modUserAgeDaysOn').clickLabel();
         cy.get('@domainEdit').find('#mod-user-age-days').should('be.visible').should('have.value', '7')
-            .verifyNumericInputValidation(1, 999, true, 'Please enter a valid value.');
+            .verifyNumericInputValidation(1, 999, true);
 
         // Check tab validation display. Initially all valid
         checkInvalidTabs([false, false, false, false]);

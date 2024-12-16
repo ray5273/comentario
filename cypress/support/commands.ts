@@ -467,17 +467,21 @@ Cypress.Commands.add(
 Cypress.Commands.add(
     'verifyNumericInputValidation',
     {prevSubject: 'element'},
-    (element: JQueryWithSelector, min: number, max: number, required: boolean, errMessage: string) => {
+    (element: JQueryWithSelector, min: number, max: number, required: boolean, errMessageRequired?: string, errMessageRange?: string) => {
+        // Message defaults
+        errMessageRequired ??= 'Please enter a value.';
+        errMessageRange    ??= `Please enter a value in the range ${min.toLocaleString()}…${max.toLocaleString()}.`;
+
         // If the input is required, verify it gets invalid on no entry
         if (required) {
-            cy.wrap(element).clear().isInvalid(errMessage);
+            cy.wrap(element).clear().isInvalid(errMessageRequired);
         }
 
         // Check ranges
         cy.wrap(element)
-            .setValue(String(min-1)).isInvalid(errMessage)
+            .setValue(String(min-1)).isInvalid(errMessageRange)
             .setValue(String(min)).isValid()
-            .setValue(String(max+1)).isInvalid(errMessage)
+            .setValue(String(max+1)).isInvalid(errMessageRange)
             .setValue(String(max)).isValid();
     });
 

@@ -10,7 +10,7 @@
                         <p class="fw-bold">{{ group.key | dynConfigSectionName }}</p>
 
                         <!-- Section items -->
-                        <app-config-section-edit [formGroup]="$any(group.value)" [config]="config" [section]="group.key"
+                        <app-config-section-edit [formGroup]="group.value" [config]="config" [section]="group.key"
                                                  docsBasePath="configuration/backend/dynamic"/>
                     </div>
                 }

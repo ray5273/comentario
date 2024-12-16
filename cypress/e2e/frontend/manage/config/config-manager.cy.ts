@@ -111,6 +111,24 @@ context('Config Manager', () => {
 
         it('stays on the page after reload', () => cy.verifyStayOnReload(pagePathDynamic, USERS.root));
 
+        it('validates input', () => {
+            cy.backendReset();
+            cy.loginViaApi(USERS.root, PATHS.manage.config.dynamic.edit);
+            cy.get('app-config-edit').as('configEdit');
+
+            // Remove values from inputs and click Save to trigger validation
+            cy.get('@configEdit').find('#auth_login_local_maxAttempts')           .as('auth_login_local_maxAttempts').clear();
+            cy.get('@configEdit').find('#domain_defaults_comments_text_maxLength').as('domain_defaults_comments_text_maxLength').clear();
+            cy.get('@configEdit').find('button[type=submit]').click();
+
+            // Still on the edit page
+            cy.isAt(PATHS.manage.config.dynamic.edit);
+
+            // Check validations: only makes sense for inputs
+            cy.get('@auth_login_local_maxAttempts')           .verifyNumericInputValidation(0, 2_147_483_647, true);
+            cy.get('@domain_defaults_comments_text_maxLength').verifyNumericInputValidation(140, 1_048_576,   true);
+        });
+
         it('allows to edit config items', () => {
             cy.backendReset();
             cy.loginViaApi(USERS.root, pagePathDynamic);
@@ -166,7 +184,7 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#domain_defaults_comments_editing_moderator') .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_enableVoting')      .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_showDeleted')       .should('be.checked')    .clickLabel().should('not.be.checked');
-            cy.get('@configEdit').find('#domain_defaults_comments_text_maxLength')    .should('have.value', 1024).setValue('876');
+            cy.get('@configEdit').find('#domain_defaults_comments_text_maxLength')    .should('have.value', '1024').setValue('876');
             cy.get('@configEdit').find('#domain_defaults_markdown_images_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_markdown_links_enabled')     .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_markdown_tables_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');

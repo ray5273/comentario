@@ -1,4 +1,4 @@
-@if (generalFormGroup) {
+@if (generalFormGroup && configFormGroup) {
     <ng-container [formGroup]="generalFormGroup">
         <!-- Info -->
         <app-info-block>
@@ -66,7 +66,7 @@
         </div>
 
         <!-- Dynamic configuration items -->
-        @for (group of configFormGroup?.controls | keyvalue; track group.key) {
+        @for (group of configFormGroup.controls | keyvalue; track group.key) {
             <!-- Skip the 'auth' section as it's edited on the Authentication tab -->
             @if (group.key !== 'auth') {
                 <div class="mb-3 row">

@@ -51,6 +51,11 @@ export class ConfigEditComponent implements OnInit {
     }
 
     submit() {
+        // Make sure the form is valid
+        if (!this.form.valid) {
+            return;
+        }
+
         // Submit the config to the backend
         this.api.configDynamicUpdate(this.config!.items)
             .pipe(this.saving.processing())

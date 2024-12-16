@@ -311,9 +311,10 @@ declare namespace Cypress {
          * @param min Minimum allowed input value.
          * @param max Maximum allowed input value.
          * @param required Whether the input is required.
-         * @param errMessage Error message to expect on an invalid input.
+         * @param errMessageRequired Error message to expect on missing value.
+         * @param errMessageRange Error message to expect on a value outside valid range.
          */
-        verifyNumericInputValidation(min: number, max: number, required: boolean, errMessage: string): Chainable<JQueryWithSelector>;
+        verifyNumericInputValidation(min: number, max: number, required: boolean, errMessageRequired?: string, errMessageRange?: string): Chainable<JQueryWithSelector>;
 
         /**
          * Run common email input validations against the passed element.

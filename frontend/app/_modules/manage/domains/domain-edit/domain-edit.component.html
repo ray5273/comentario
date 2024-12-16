@@ -14,7 +14,7 @@
             <ul ngbNav #nav="ngbNav" class="nav-tabs ps-3 mb-3">
                 <!-- General properties -->
                 <li ngbNavItem formGroupName="general">
-                    <button ngbNavLink [class.is-invalid]="ctlGroupGeneral.invalid" class="fw-bold" i18n>General</button>
+                    <button ngbNavLink [class.is-invalid]="ctlGroupGeneral.invalid || ctlGroupConfig.invalid" class="fw-bold" i18n>General</button>
                     <ng-template ngbNavContent>
                         <app-domain-edit-general [generalFormGroup]="ctlGroupGeneral"
                                                  [configFormGroup]="ctlGroupConfig"

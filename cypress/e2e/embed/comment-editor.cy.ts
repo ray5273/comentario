@@ -232,7 +232,7 @@ context('Comment Editor', () => {
             // Submit a root comment
             EmbedUtils.addComment(undefined, 'Here goes', false);
 
-            // New comment is added, in the Pending state since anonymous comments are to be moderated
+            // New comment is added, NOT in the Pending state
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
@@ -253,7 +253,7 @@ context('Comment Editor', () => {
             // Add a reply
             EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply *here*!', false);
 
-            // New comment is added, also in the Pending state
+            // New comment is added, also not in the Pending state
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
@@ -276,6 +276,91 @@ context('Comment Editor', () => {
                   score: 0
                   sticky: false
                   pending: false
+                `);
+        });
+
+        it('limits comment length', () => {
+            // Visit the page as commenter
+            cy.testSiteLoginViaApi(USERS.commenterOne, TEST_PATHS.comments);
+
+            // Make predefined-length strings
+            const x4094  = 'x '.repeat(2047);
+            const x139   = 'ab '.repeat(46) + 'c';
+            const x99999 = '9 letters'.repeat(11_111);
+
+            const postComment = (text: string, extraChars: string, wantLength: number) => {
+                EmbedUtils.makeAliases();
+                cy.get('@addCommentHost').click();
+                cy.get('@mainArea').find('textarea').as('textarea').setValue(text).type(extraChars)
+                    .invoke('val').should('have.length', wantLength);
+                cy.get('@textarea').type('{ctrl+enter}');
+            };
+
+            // Input 4097 chars: the input is capped at 4096
+            postComment(x4094, 'abc', 4096);
+            cy.commentTree('html', 'author').should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: <p>This is a <b>root</b>, sticky comment</p>
+                - author: Commenter One
+                  html: <p>${x4094}ab</p>
+                `);
+
+            // Lower the limit of the comment length
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.maxCommentLength]: 140});
+            cy.reload();
+
+            // Input 141 chars: the input is capped at 140
+            postComment(x139, 'xyz', 140);
+            cy.commentTree('html', 'author').should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: <p>This is a <b>root</b>, sticky comment</p>
+                - author: Commenter One
+                  html: <p>${x4094}ab</p>
+                - author: Commenter One
+                  html: <p>${x139}x</p>
+                `);
+
+            // Now raise the limit
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.maxCommentLength]: 100_000});
+            cy.reload();
+
+            // Input 100K+1 chars: the input is capped at 100K
+            postComment(x99999, 'qwe', 100_000);
+            cy.commentTree('html', 'author').should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: <p>This is a <b>root</b>, sticky comment</p>
+                - author: Commenter One
+                  html: <p>${x4094}ab</p>
+                - author: Commenter One
+                  html: <p>${x139}x</p>
+                - author: Commenter One
+                  html: <p>${x99999}q</p>
+                `);
+
+            // Stress test: raise the limit to the maximum 1M, and submit a comment directly via API
+            const s1M = 'abcdefghi '.repeat(104_857) + '123456';
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.maxCommentLength]: 1_048_576});
+            cy.commentAddViaApi(DOMAINS.localhost.host, TEST_PATHS.comments, null, s1M);
+            // Don't need to reload because of the Live Update
+            cy.commentTree('html', 'author').should('yamlMatch',
+                // language=yaml
+                `
+                - author: Anonymous
+                  html: <p>This is a <b>root</b>, sticky comment</p>
+                - author: Commenter One
+                  html: <p>${x4094}ab</p>
+                - author: Commenter One
+                  html: <p>${x139}x</p>
+                - author: Commenter One
+                  html: <p>${x99999}q</p>
+                - author: Commenter One
+                  html: <p>${s1M}</p>
                 `);
         });
     });

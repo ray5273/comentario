@@ -1,5 +1,5 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { faRotateLeft } from '@fortawesome/free-solid-svg-icons';
 import { DynamicConfig } from '../../../../_models/config';
 import { TypedConfigItem } from '../../../../_models/typed-config-item';
@@ -60,8 +60,18 @@ export class ConfigSectionEditComponent implements OnChanges {
 
         // Create new controls
         this.items?.forEach(item => {
-            const ctl = this.fb.nonNullable.control(item.val);
+            // Add necessary value validators
+            const validators = [];
+            switch (item.datatype) {
+                case 'int':
+                    validators.push(Validators.required, Validators.min(item.min ?? 0), Validators.max(item.max ?? 2^32));
+                    break;
+            }
+
+            // Create a form control
+            const ctl = this.fb.nonNullable.control(item.val, validators);
             this.formGroup!.addControl(item.controlName, ctl, {emitEvent: false});
+
             // Subscribe to the control's value changes to update the underlying config
             ctl.valueChanges.subscribe(v => item.val = v);
         });

@@ -42,7 +42,16 @@
                                [type]="item.datatype === 'int' ? 'number' : 'text'"
                                [min]="item.min"
                                [max]="item.max"
+                               [class.is-valid]="formGroup!.get(item.controlName)!.touched && formGroup!.get(item.controlName)!.valid"
+                               [class.is-invalid]="formGroup!.get(item.controlName)!.touched && formGroup!.get(item.controlName)!.invalid"
                                class="form-control">
+                        <!-- Invalid feedback -->
+                        <div class="invalid-feedback">
+                            @if (formGroup!.get(item.controlName)!.errors; as err) {
+                                @if (err.required)       { <div i18n>Please enter a value.</div> }
+                                @if (err.min || err.max) { <div i18n>Please enter a value in the range {{ item.min | number }}…{{ item.max | number }}.</div> }
+                            }
+                        </div>
                     </div>
                 }
             }
