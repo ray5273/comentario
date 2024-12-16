@@ -1,5 +1,43 @@
 # Comentario changelog
 
+## v3.12.0 Faughanvale
+
+This release brings proper multilingual support for commenter users (for example, emails will now be sent in the user's language if it's supported), user email address update feature, maximum comment text length setting, and support for PostgreSQL 17 and ARM64 Docker images, as well as a multitude of bugfixes and improvements.
+
+### Changes
+
+* Add multilingual support for users, based on language during the registration (#139) - 85b16f5a, 86779f13, 973be645, e8831678
+* Add email update function (#134) - 46e72102, 900dac21, d095310b, e8a14a46, 4d8a78dd, 42d7c93a, 39463c28, 479e9000
+* Add support PostgreSQL 17 (#135) - 7527e9fa
+* Add a dynamic config parameter for max comment length (#142) - 27bcc28d, 4dcbdf04
+* Add support for `arm64` Docker images via `docker buildx` - 2a621a07
+* Serve fonts locally - 772c3dd9
+* Admin UI: numeric param validation in dynamic config - 4dcbdf04
+* Admin UI: show spinners on module load - 23aa6b4b
+* Admin UI: fix saving Profile for federated user - 973be645
+* Admin UI: Profile: user language picker, refactor password change fields - ea592fa9
+* Admin UI: fix reverting dynamic config item - 42565473
+* Backend: fix comment vote update (#141) - 25bb7c0b
+* Backend: OAuth: fix callback checks - 209a2f54
+* Backend: OAuth: fall back to NickName if no Name provided (#64) - 4d3b7fad
+* Backend: fix user signup IP not masked - 45dffbec
+* I18n: translate missing entries (French, Vietnamese), fix typos (French) - 33b10117
+* I18n: add Spanish translation by Briant Fabela - 4cb49e6f
+* I18n: update Chinese translations - 0d05a56b
+* I18n: pt-br update by @savioribeiro - b2809b59
+* Email templates: fix double exclamation - 74ef59f5
+* Docs: Angular: update `ngx-comentario` example - 0ff92b07
+* Docs: fixes - 257018ea
+* Docs: Comment editor: fix strikeout shortcut - 50698751
+* Docs: update embedded Comentario graphic, minor updates - 57a44c2d
+* Plugin subsystem improvements - e27b5b0d, e599549f, d95796f0, bf8574e9, 0dd6fa4b, 0cbbdaa2, a92b1372m, aa2575cc
+* Demo DB: add Spanish, French, Brazilian Portuguese pages - 354e4921
+* Demo DB: better data cleanup - bd00baed
+* CI: ci-tools v40, Hugo 0.139.0 - c5245c9d, b5b9330e, 27bf32ba
+* CI: fix static build dirs, fix package queries - 89aca27b
+* CI: fix ARM64 build (versioned as v8.0 now) - 278d91d0
+* CI: force dynamic linking and use correct gcc for ARM builds (#136) - 3fe7d84c, 09f73f6d
+
 ## v3.11.0 Enniskillen
 
 The most notable change in this release is the enhanced Dashboard and Domain Statistics page. You can now view pie charts of page views, broken down by country, device, browser, and operating system, along with the top five pages by views and comments. The embedded Comentario has also been improved: the comment editor now supports keyboard shortcuts, user avatars render better on high-DPI screens, and Comentario is now available in French (thanks to Eric Cambray).
