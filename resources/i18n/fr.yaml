@@ -6,7 +6,7 @@
 - {id: actionCollapseChildren,      translation: 'Réduire les éléments enfants'}
 - {id: actionCommentUnreg,          translation: 'Commenter sans s''enregistrer'}
 - {id: actionConfirmEmail,          translation: 'Confirmer votre e-mail'}
-# TODO - {id: actionConfirmEmailUpdate,    translation: 'Confirm Updating Your Email'}
+- {id: actionConfirmEmailUpdate,    translation: 'Confirmer la mise à jour votre e-mail'}
 - {id: actionContext,               translation: 'Contexte'}
 - {id: actionDelete,                translation: 'Supprimer'}
 - {id: actionDownvote,              translation: 'Vote négatif'}
@@ -37,41 +37,41 @@
 - {id: btnImage,                    translation: 'Image'}
 - {id: btnItalic,                   translation: 'Italique'}
 - {id: btnLink,                     translation: 'Lien'}
-- {id: btnLock,                     translation: 'Vérouiller'}
+- {id: btnLock,                     translation: 'Verrouiller'}
 - {id: btnLogout,                   translation: 'Déconnecter'}
 - {id: btnNumberedList,             translation: 'Liste numérotée'}
 - {id: btnQuote,                    translation: 'Citation'}
 - {id: btnSettings,                 translation: 'Paramètre'}
 - {id: btnStrikethrough,            translation: 'Barré'}
 - {id: btnTable,                    translation: 'Tableau'}
-- {id: btnUnlock,                   translation: 'Dévérouiller'}
-- {id: clickButtonBelow,            translation: 'Pour cela, cliquez sur le boutton en dessous.'}
+- {id: btnUnlock,                   translation: 'Déverrouiller'}
+- {id: clickButtonBelow,            translation: 'Pour cela, cliquez sur le bouton en dessous.'}
 - {id: commentIsApproved,           translation: 'Ce commentaire a été approuvé par un modérateur.'}
 - {id: commentIsPending,            translation: 'Ce commentaire attend la validation d''un modérateur.'}
-- {id: commentIsRejected,           translation: 'Ce commentaire a été rejété par un modérateur car c''est un spam ou innaproprié.'}
+- {id: commentIsRejected,           translation: 'Ce commentaire a été rejeté par un modérateur car c''est un spam ou inapproprié.'}
 - {id: commentNotFound,             translation: 'Le commentaire que vous cherchez n''existe pas; il a peut être été supprimé.'}
 - {id: commentScore,                translation: 'Score du commentaire'}
 - {id: commentStatusChanged,        translation: 'Statut du commentaire changé'}
 - {id: confirmCommentDeletion,      translation: 'Etes vous sûre de vouloir supprimer ce commentaire ?'}
-- {id: confirmEmailAct,             translation: 'Pour poursuivre l''inscription, merci de cliquer sur le boutton ci dessous.'}
+- {id: confirmEmailAct,             translation: 'Pour poursuivre l''inscription, merci de cliquer sur le bouton ci-dessous.'}
 - {id: confirmEmailExplanation,     translation: 'Vous avez reçu cet e-mail car vous (ou quelqu''un d''autre) a inscrit cet e-mail sur notre service.'}
 - {id: confirmEmailRequest,         translation: 'Vous avez récemment enregistré un nouveau compte Comentario avec cet e-mail.'}
-# TODO - {id: confirmEmailUpdateAct,       translation: 'To confirm updating your email, please click the button below.'}
-# TODO - {id: confirmEmailUpdateExpl,      translation: 'You''ve received this email because you (or someone else) requested an update to your email address in our service.'}
-# TODO - {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
+- {id: confirmEmailUpdateAct,       translation: 'Pour confirmer la mise à jour de votre e-mail, veuillez cliquer sur le bouton ci-dessous.'}
+- {id: confirmEmailUpdateExpl,      translation: 'Vous avez reçu cet e-mail parce que vous (ou quelqu''un d''autre) avez demandé une mise à jour de votre adresse e-mail dans notre service.'}
+- {id: confirmEmailUpdateRequest,   translation: 'Vous avez récemment demandé la mise à jour de votre e-mail Comentario à cette adresse.'}
 - {id: confirmYourEmail,            translation: 'Confirmer votre e-mail'}
-# TODO - {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
+- {id: confirmYourEmailUpdate,      translation: 'Confirmer la mise à jour de votre e-mail'}
 - {id: dlgTitleConfirm,             translation: 'Confirmer'}
 - {id: dlgTitleCreateAccount,       translation: 'Créer un compte'}
 - {id: dlgTitleLogIn,               translation: 'Se connecter'}
 - {id: dlgTitlePopupBlocked,        translation: 'Popup bloquée'}
-- {id: dlgTitleUserSettings,        translation: 'Paramètres utilsateur'}
+- {id: dlgTitleUserSettings,        translation: 'Paramètres de l''utilisateur'}
 - {id: domainAuthUnconfigured,      translation: 'Ce domaine n''a aucune méthode d''authentification disponible. Vous ne pouvez pas ajouter de nouveau commentaire.'}
-- {id: error,                       translation: 'Errerur'}
+- {id: error,                       translation: 'Erreur'}
 - {id: errorUnknown,                translation: 'Erreur inconnue'}
 - {id: errorUnknownHost,            translation: 'Ce domaine n''est pas enregistré dans Comentario'}
 - {id: fieldComStatusNotifications, translation: 'Notifications de statut des commentaires'}
-- {id: fieldModNotifications,       translation: 'Notifcation des modérateurs'}
+- {id: fieldModNotifications,       translation: 'Notification des modérateurs'}
 - {id: fieldPassword,               translation: 'Mot de passe'}
 - {id: fieldRealName,               translation: 'Vrai nom'}
 - {id: fieldReplyNotifications,     translation: 'Notification de réponse'}
@@ -90,18 +90,18 @@
 - {id: notificationModPending,      translation: 'Vous recevez cet e-mail car le propriétaire du domaine a choisir de notifier par email les modérateurs des commentaires en attente de modération.'}
 - {id: notificationNewReply,        translation: 'Vous recevez cet e-mail car vous vous êtes inscrit au notification dès qu''une réponse est postée.'}
 - {id: notWillingToSignup,          translation: 'Vous ne voulez pas vous inscrire ? Vous pouvez commenter sans vous enregistrer.'}
-- {id: pageIsReadonly,              translation: 'Ce sujet est vérouiller. Vous ne pouvez ajouter de nouveaux commentaires.'}
+- {id: pageIsReadonly,              translation: 'Ce sujet est verrouillé. Vous ne pouvez pas ajouter de nouveaux commentaires.'}
 - {id: popupWasBlocked,             translation: 'La fenêtre popup a été bloquée par votre navigateur. Cliquez sur le bouton Réessayer ci dessous.'}
 - {id: poweredBy,                   translation: 'Propulsé par Comentario'}
-- {id: previewFailed,               translation: 'L''apperçu a échoué'}
+- {id: previewFailed,               translation: 'L''aperçu a échoué'}
 - {id: pwdResetExplanation,         translation: 'Vous recevez cet email car vous (ou quelqu''un d''autre) a fait une demande de réinitialisation de mot de passe sur notre service.'}
-- {id: pwdResetRequest,             translation: 'Vous avez initié une procédure pour réinitialiser votre mot de passe pour votre compte Commentario.'}
+- {id: pwdResetRequest,             translation: 'Vous avez initié une procédure pour réinitialiser votre mot de passe pour votre compte Comentario.'}
 - {id: pwdStrengthExplained,        translation: 'Le mot de passe doit faire au moins 8 caractères et contenir des lettres en minuscule et majuscule, et au moins un chiffre ou symbole.'}
 - {id: resetYourPassword,           translation: 'Réinitialiser votre mot de passe'}
 - {id: sampleText,                  translation: 'texte'}
 - {id: signUpAgreeAnd,              translation: 'et'}
 - {id: signUpAgreePrivacyPolicy,    translation: 'Politique de confidentialité'}
-- {id: signUpAgreeTerms,            translation: 'Conditiond d''utitlisation'}
+- {id: signUpAgreeTerms,            translation: 'Conditions d''utilisation'}
 - {id: signUpAgreeTo,               translation: 'En vous inscrivant, vous accepté nos'}
 - {id: sortNewest,                  translation: 'Plus récent'}
 - {id: sortOldest,                  translation: 'Plus vieux'}
