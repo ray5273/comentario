@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
+	"strings"
 	"time"
 )
 
@@ -90,7 +91,8 @@ func (as *attrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
 
 	// Convert the slice into a map
 	for _, a := range attrs {
-		res[a.Key] = a.Value
+		// De-prefix the key
+		res[strings.TrimPrefix(a.Key, as.prefix)] = a.Value
 	}
 
 	// Succeeded: cache the values
