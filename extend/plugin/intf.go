@@ -85,9 +85,10 @@ type UIPlug struct {
 // Config describes plugin configuration
 // Warning: Unstable API
 type Config struct {
-	Path        string       // Path the plugin's handlers are invoked on
-	UIResources []UIResource // UI resources to be loaded for the plugin
-	UIPlugs     []UIPlug     // UI plugs
+	Path          string       // Path the plugin's handlers are invoked on
+	UIResources   []UIResource // UI resources to be loaded for the plugin
+	UIPlugs       []UIPlug     // UI plugs
+	XSRFSafePaths []string     // API endpoint path prefixes to exclude from XSRF protection (for methods other than GET/HEAD/OPTIONS), relative to plugin API root (may contain leading "/")
 }
 
 // YAMLDecoder allows for unmarshalling configuration into a user-defined structure, which provides `yaml` metadata

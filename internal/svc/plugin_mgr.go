@@ -282,6 +282,11 @@ func (pm *pluginManager) initPlugin(p complugin.ComentarioPlugin, secrets complu
 
 	// Correct the path by removing any leading and trailing slash
 	cfg.Path = strings.Trim(cfg.Path, "/")
+
+	// Extend the XSRF-safe path registry with items provided by the plugin, if any
+	for _, s := range cfg.XSRFSafePaths {
+		util.XSRFSafePaths.Add(fmt.Sprintf("%s%s/%s", util.APIPath, cfg.Path, strings.TrimPrefix(s, "/")))
+	}
 	return &cfg, nil
 }
 
