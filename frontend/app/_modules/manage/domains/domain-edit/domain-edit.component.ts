@@ -241,7 +241,7 @@ export class DomainEditComponent implements OnInit {
                 .pipe(this.saving.processing())
                 .subscribe(newDomain => {
                     // Add a success toast
-                    this.toastSvc.success('data-saved').keepOnRouteChange();
+                    this.toastSvc.success({messageId: 'data-saved', keepOnRouteChange: true});
                     // Reload the current domain
                     this.domainSelectorSvc.reload();
                     // Navigate to the edited/created domain

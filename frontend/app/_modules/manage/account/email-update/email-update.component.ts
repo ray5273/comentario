@@ -49,8 +49,8 @@ export class EmailUpdateComponent {
                         this.submitted = true;
 
                     } else {
-                        // The email has been changed right away: ddd a success toast
-                        this.toastSvc.success('data-saved').keepOnRouteChange();
+                        // The email has been changed right away: add a success toast
+                        this.toastSvc.success({messageId: 'data-saved', keepOnRouteChange: true});
                         // Reload the principal
                         this.authSvc.update();
                         // Go back to the login page

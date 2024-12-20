@@ -281,19 +281,23 @@ Cypress.Commands.add('loginFederatedViaApi', (id: string, targetUrl: string, vis
     cy.isLoggedIn();
 });
 
-Cypress.Commands.add('noToast', () => void cy.get('#toast-0').should('not.exist'));
+Cypress.Commands.add('noToast', () => void cy.get('app-toast ngb-toast').should('not.exist'));
 
 Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
     // Verify the toast's message ID
-    cy.get('#toast-0').should('be.visible').find('.message-id').should('have.text', id);
+    cy.get('app-toast ngb-toast.top-toast').as('topToast')
+        .should('have.length', 1)
+        .should('be.visible')
+        .find('.message-id').should('have.text', id);
 
     // Verify the toast's details text, if any
     if (details !== undefined) {
-        cy.get('#toast-0 .toast-details').should(d => details === '' ? expect(d).not.exist : expect(d).to.have.text(details));
+        cy.get('@topToast').find('.toast-details').should(details === '' ? 'not.exist' : 'have.text', details);
     }
 
     // Close the toast and verify it's gone
-    cy.get('#toast-0 button.btn-close').click().should('not.exist');
+    cy.get('@topToast').find('button.btn-close').click();
+    cy.get('@topToast').should('not.exist');
 });
 
 Cypress.Commands.add(

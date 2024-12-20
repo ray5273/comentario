@@ -1,5 +1,7 @@
 <!-- Toast ID (mostly for e2e-testing purposes) -->
-<div class="d-none message-id">{{ messageId || errorCode }}</div>
+@if ((messageId || errorCode); as id) {
+    <div class="d-none message-id">{{ id }}</div>
+}
 
 <!-- The message -->
 @switch (messageId) {
@@ -81,18 +83,22 @@
     @case ('wrong-cur-password')      { <ng-container i18n>Your current password is wrong.</ng-container> }
     @case ('xsrf-token-invalid')      { <ng-container i18n>Invalid or missing XSRF token. Please reload the page and try again.</ng-container> }
 
-    <!--------------------------------------------------------------------------------------------------------------
-    No luck with the ID: use the HTTP error code
-    -------------------------------------------------------------------------------------------------------------->
     @default {
-        @switch (errorCode) {
-            @case (400) { <ng-container i18n>Invalid input data. Please try again.</ng-container> }
-            @case (401) { <ng-container i18n>You have been signed out, please login again.</ng-container> }
-            @case (403) { <ng-container i18n>You're not authorised to perform this operation.</ng-container> }
-            @case (404) { <ng-container i18n>Requested element was not found. It was possibly deleted.</ng-container> }
-            @case (422) { <ng-container i18n>The value is invalid. Please correct and try again.</ng-container> }
-            @case (500) { <ng-container i18n>A server error is occurred. Please try again later.</ng-container> }
-            @default    { <ng-container i18n>There's something wrong in the cloud. Please try again.</ng-container> }
+        <!-- If no ID provided, but message text is -->
+        @if (!messageId && message) {
+            <ng-container>{{ message }}</ng-container>
+
+        <!-- No luck with the message: use the HTTP error code -->
+        } @else {
+            @switch (errorCode) {
+                @case (400) { <ng-container i18n>Invalid input data. Please try again.</ng-container> }
+                @case (401) { <ng-container i18n>You have been signed out, please login again.</ng-container> }
+                @case (403) { <ng-container i18n>You're not authorised to perform this operation.</ng-container> }
+                @case (404) { <ng-container i18n>Requested element was not found. It was possibly deleted.</ng-container> }
+                @case (422) { <ng-container i18n>The value is invalid. Please correct and try again.</ng-container> }
+                @case (500) { <ng-container i18n>A server error is occurred. Please try again later.</ng-container> }
+                @default    { <ng-container i18n>There's something wrong in the cloud. Please try again.</ng-container> }
+            }
         }
     }
 }

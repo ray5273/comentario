@@ -33,7 +33,7 @@ export class ForgotPasswordComponent {
                 .pipe(this.submitting.processing())
                 .subscribe(() => {
                     // Add a success toast
-                    this.toastSvc.success('pwd-reset-email-sent').keepOnRouteChange();
+                    this.toastSvc.success({messageId: 'pwd-reset-email-sent', keepOnRouteChange: true});
                     // Go home
                     return this.router.navigate(['/']);
                 });

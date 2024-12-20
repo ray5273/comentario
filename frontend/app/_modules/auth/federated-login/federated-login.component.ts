@@ -75,7 +75,7 @@ export class FederatedLoginComponent {
                 // to the Dashboard
                 next: () => this.router.navigateByUrl(this.authSvc.afterLoginRedirectUrl || Paths.manage.dashboard),
                 // Show a toast on a failed authentication
-                error: err => this.toastSvc.error('oauth-login-failed', undefined, undefined, err),
+                error: error => this.toastSvc.error({messageId: 'oauth-login-failed', error}),
             });
     }
 

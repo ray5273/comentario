@@ -1,8 +1,7 @@
-import { ChangeDetectorRef, Component } from '@angular/core';
+import { Component } from '@angular/core';
 import { Router } from '@angular/router';
-import { faChevronDown } from '@fortawesome/free-solid-svg-icons';
-import { ToastService } from '../_services/toast.service';
-import { Toast } from '../_models/toast';
+import { faCheck, faChevronDown, faCircleExclamation, faExclamation, faInfoCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { Severity, Toast, ToastService } from '../_services/toast.service';
 import { Paths } from '../_utils/consts';
 import { AuthService } from '../_services/auth.service';
 
@@ -13,30 +12,70 @@ import { AuthService } from '../_services/auth.service';
 })
 export class ToastComponent {
 
+    /** Whether toasts are to be automatically hidden after a timeout. */
     autohide = true;
 
+    /** Toast list. */
+    toasts: Toast[] = [];
+
+    /** ID of the toast that has technical details open. If undefined, no technical details is open at all. */
+    techDetailsOpenID?: string;
+
     readonly Paths = Paths;
+
+    /** Toast background class that corresponds to the toast's severity. */
+    readonly BgClassBySeverity: Record<Severity, string> = {
+        [Severity.INFO]:    'bg-info',
+        [Severity.SUCCESS]: 'bg-success',
+        [Severity.WARNING]: 'bg-warning',
+        [Severity.ERROR]:   'bg-danger',
+    };
+
+    /** Icon corresponding to the toast's severity. */
+    readonly IconBySeverity: Record<Severity, IconDefinition> = {
+        [Severity.INFO]:    faInfoCircle,
+        [Severity.SUCCESS]: faCheck,
+        [Severity.WARNING]: faExclamation,
+        [Severity.ERROR]:   faCircleExclamation,
+    };
+
+    /** Icon class to the toast's severity. */
+    readonly IconClassBySeverity: Record<Severity, string> = {
+        [Severity.INFO]:    'text-info',
+        [Severity.SUCCESS]: 'text-success',
+        [Severity.WARNING]: 'text-warning',
+        [Severity.ERROR]:   'text-danger',
+    };
 
     // Icons
     readonly faChevronDown = faChevronDown;
 
     constructor(
-        private readonly ref: ChangeDetectorRef,
         private readonly router: Router,
         private readonly toastSvc: ToastService,
         private readonly authSvc: AuthService,
-    ) {}
-
-    get toasts(): Toast[] {
-        return this.toastSvc.toasts;
+    ) {
+        this.toastSvc.toastsChanges.subscribe(ts => this.toasts = ts);
     }
 
-    remove(n: Toast): void {
-        this.toastSvc.remove(n);
-        // Explicitly poke the change detector on element removal (it doesn't get detected automatically)
-        this.ref.detectChanges();
+    /**
+     * Remove the toast from the list by its unique ID.
+     * @param uid Toast UID to remove.
+     */
+    remove(uid: string): void {
+        this.toastSvc.removeByUid(uid);
     }
 
+    /**
+     * Toggle the technical details on the toast with the given ID.
+     */
+    toggleDetails(id: string) {
+        this.techDetailsOpenID = this.techDetailsOpenID === id ? undefined : id;
+    }
+
+    /**
+     * Navigate to the login page, remembering the current URL as a return route.
+     */
     goLogin() {
         // Remember the current route to get back to it after login
         this.authSvc.afterLoginRedirectUrl = this.router.url;

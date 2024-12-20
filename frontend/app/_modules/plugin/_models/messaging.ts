@@ -52,6 +52,8 @@ export interface ComentarioPortEventPayload<T> {
 export enum PluginPortEventKind {
     /** Application navigation request. */
     NavigationRequest = 'navigationRequest',
+    /** Request to show a toast notification. */
+    ShowToastRequest = 'showToastRequest',
 }
 
 /**
@@ -59,11 +61,36 @@ export enum PluginPortEventKind {
  */
 export interface PluginPortEventBase {
     /** Event kind. */
-    kind: PluginPortEventKind;
+    readonly kind: PluginPortEventKind;
 }
 
 /** Payload for the NavigationRequest event. */
 export interface PluginPortEventNavigationRequest extends PluginPortEventBase {
     /** Route or commands to navigate to. */
-    route: string | any[];
+    readonly route: string | any[];
+}
+
+/** Payload for the ShowToastRequest event. */
+export interface PluginPortEventShowToastRequest extends PluginPortEventBase {
+
+    /** Notification severity. */
+    readonly severity: 'info' | 'success' | 'warning' | 'error';
+
+    /** Optional message ID known to Comentario, like 'this-fish-cannot-be-fried'. */
+    readonly messageId?: string;
+
+    /** Optional message text. Must be provided if `messageId` isn't specified. */
+    readonly message?: string;
+
+    /** Optional HTTP error code. */
+    readonly errorCode?: number;
+
+    /** Optional details. */
+    readonly details?: string;
+
+    /** Optional error object. */
+    readonly error?: any;
+
+    /** Whether to keep the toast upon the first upcoming route change. */
+    readonly keepOnRouteChange?: boolean;
 }

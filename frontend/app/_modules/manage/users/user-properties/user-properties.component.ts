@@ -140,13 +140,12 @@ export class UserPropertiesComponent {
             .pipe(this.banning.processing())
             .subscribe(r => {
                 // Add a success toast
-                this.toastSvc.success(
-                    ban ? 'user-is-banned' : 'user-is-unbanned',
-                    undefined,
-                    ban && vals.deleteComments ?
+                this.toastSvc.success({
+                    messageId: ban ? 'user-is-banned' : 'user-is-unbanned',
+                    details: ban && vals.deleteComments ?
                         $localize`${r.countDeletedComments} comments have been deleted` :
                         undefined,
-                );
+                });
                 // Reload the properties
                 this.reload();
             });
@@ -158,11 +157,11 @@ export class UserPropertiesComponent {
             .pipe(this.deleting.processing())
             .subscribe(r => {
                 // Add a success toast
-                this.toastSvc.success(
-                    'user-is-deleted',
-                    undefined,
-                    vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
-                ).keepOnRouteChange();
+                this.toastSvc.success({
+                    messageId:                'user-is-deleted',
+                    details:           vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
+                    keepOnRouteChange: true,
+                });
                 // Navigate to the user list
                 this.router.navigate([Paths.manage.users]);
             });

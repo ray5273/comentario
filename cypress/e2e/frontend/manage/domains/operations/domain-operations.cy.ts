@@ -50,7 +50,7 @@ context('Domain Operations page', () => {
                 cy.get('@domainOperations').contains('button', 'Export data').click();
 
                 // Read the file name from the toast details
-                cy.get('#toast-0 .toast-details').should('be.visible')
+                cy.get('.top-toast .toast-details').should('be.visible')
                     .invoke('text').should('match', /^\(localhost8000-.+\.json\.gz\)$/)
                     .then(details =>
                         // For now, check the file has been saved in the downloads directory

@@ -1,16 +1,16 @@
-@for (t of toasts; track t; let idx = $index) {
-    <ngb-toast [class]="t.className"
-               [id]="'toast-' + idx" [autohide]="autohide"
-               (mouseenter)="autohide = false" (mouseleave)="autohide = true" (hidden)="remove(t)">
+@for (t of toasts; track t.id; let idx = $index) {
+    <ngb-toast [ngClass]="BgClassBySeverity[t.severity]" [class.top-toast]="idx === 0" [id]="'toast-' + t.id"
+               [autohide]="autohide"
+               (mouseenter)="autohide = false" (mouseleave)="autohide = true" (hidden)="remove(t.id)">
 
-        <!-- Optional heading -->
+        <!-- Toast heading -->
         <ng-template ngbToastHeader>
             <strong class="me-auto">
-                @switch (t.alertType) {
+                @switch (t.severity){
                     @case ('info')    { <ng-container i18n>Info</ng-container> }
                     @case ('success') { <ng-container i18n>Success</ng-container> }
                     @case ('warning') { <ng-container i18n>Warning</ng-container> }
-                    @case ('danger')  { <ng-container i18n>Error</ng-container> }
+                    @case ('error')   { <ng-container i18n>Error</ng-container> }
                 }
             </strong>
         </ng-template>
@@ -18,12 +18,12 @@
         <!-- Toast body -->
         <div class="d-flex">
             <!-- Toast icon -->
-            <fa-icon [icon]="t.icon" size="3x" class="mx-1"/>
+            <fa-icon [icon]="IconBySeverity[t.severity]" [ngClass]="IconClassBySeverity[t.severity]" size="3x" class="mx-1"/>
 
             <!-- Toast text -->
             <div class="ms-3">
                 <!-- The main message -->
-                <app-server-message [messageId]="t.id" [errorCode]="t.errorCode"/>
+                <app-server-message [messageId]="t.messageId" [message]="t.message" [errorCode]="t.errorCode"/>
                 <!-- Additional details, if any -->
                 @if (t.details) {
                     <div class="toast-details small mt-2">({{ t.details }})</div>
@@ -32,7 +32,7 @@
         </div>
 
         <!-- "401 Unauthorized: show a login button (unless it's a login error) -->
-        @if (t.errorCode === 401 && t.id !== 'invalid-credentials') {
+        @if (t.errorCode === 401 && t.messageId !== 'invalid-credentials') {
             <div class="mt-3">
                 <button type="button" (click)="goLogin()" class="btn btn-primary w-100" i18n>Log in</button>
             </div>
@@ -42,14 +42,18 @@
         @if (t.error) {
             <div class="toast-tech-details small mt-2">
                 <div class="text-end">
-                    <button [class.collapsed]="!t.detailsShown" [attr.aria-expanded]="t.detailsShown" (click)="t.toggleDetails()"
+                    <button [class.collapsed]="t.id !== techDetailsOpenID"
+                            [attr.aria-expanded]="t.id === techDetailsOpenID"
+                            (click)="toggleDetails(t.id)"
                             type="button" class="btn btn-sm btn-link collapse-toggler">
                         <ng-container i18n>Technical details</ng-container>
                         <fa-icon [icon]="faChevronDown" class="ms-1"/>
                     </button>
                 </div>
-                @if (t.detailsShown) {
-                    <div class="mt-2 fade-in"><pre>{{ t.error | json }}</pre></div>
+                @if (t.id === techDetailsOpenID) {
+                    <div class="mt-2 fade-in">
+                        <pre><code [highlight]="t.error | json" language="json"></code></pre>
+                    </div>
                 }
             </div>
         }

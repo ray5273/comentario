@@ -107,7 +107,7 @@ export class UserEditComponent implements OnInit {
                 .pipe(this.saving.processing())
                 .subscribe(r => {
                     // Add a success toast
-                    this.toastSvc.success('data-saved').keepOnRouteChange();
+                    this.toastSvc.success({messageId: 'data-saved', keepOnRouteChange: true});
                     // Navigate to the user properties
                     return this.router.navigate([Paths.manage.users, r.user!.id]);
                 });

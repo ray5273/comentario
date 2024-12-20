@@ -24,7 +24,7 @@ export const httpErrorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
 
                 // Client-side error
                 if (error.error instanceof ErrorEvent) {
-                    toastSvc.error(errorId, -1, details, error.error);
+                    toastSvc.error({messageId: errorId, errorCode: -1, details, error: error.error});
 
                 // 401 Unauthorized from the backend, but not a login-related error
                 } else if (error.status === 401 && errorId !== 'invalid-credentials') {
@@ -32,11 +32,11 @@ export const httpErrorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
                     authSvc.update(null);
 
                     // Add an info toast that the user has to relogin
-                    toastSvc.info(errorId, 401, details);
+                    toastSvc.info({messageId: errorId, errorCode: 401, details});
 
                 // Any other server-side error
                 } else {
-                    toastSvc.error(errorId, error.status, details, error);
+                    toastSvc.error({messageId: errorId, errorCode: error.status, details, error});
                 }
             }
 

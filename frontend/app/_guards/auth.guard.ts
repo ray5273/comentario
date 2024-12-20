@@ -32,7 +32,7 @@ export class AuthGuard {
     hasTokenInNavigation(): true | UrlTree {
         if (!Utils.isHexToken(this.router.getCurrentNavigation()?.extras?.state?.token)) {
             // Add a toast
-            this.toastSvc.error('bad-token').keepOnRouteChange();
+            this.toastSvc.error({messageId: 'bad-token', keepOnRouteChange: true});
             // Redirect to home
             return this.router.parseUrl(Paths.home);
         }

@@ -63,7 +63,7 @@ export class ConfigEditComponent implements OnInit {
                 // Reload the config
                 this.configSvc.dynamicReload();
                 // Add a success toast
-                this.toastSvc.success('data-saved').keepOnRouteChange();
+                this.toastSvc.success({messageId: 'data-saved', keepOnRouteChange: true});
                 // Go back to the list
                 this.router.navigate([Paths.manage.config.dynamic]);
             });

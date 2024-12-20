@@ -159,12 +159,13 @@ export class ProfileComponent implements OnInit {
             .subscribe(r => {
                 // Reset the principal and update the authentication status
                 this.authSvc.update(null);
+
                 // Add a toast
-                this.toastSvc.success(
-                    'account-deleted',
-                    undefined,
-                    vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
-                ).keepOnRouteChange();
+                this.toastSvc.success({
+                    messageId:                'account-deleted',
+                    details:           vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
+                    keepOnRouteChange: true});
+
                 // Navigate to the home page
                 this.router.navigate(['/']);
             });

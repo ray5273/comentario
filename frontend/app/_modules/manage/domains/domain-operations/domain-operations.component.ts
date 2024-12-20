@@ -94,7 +94,7 @@ export class DomainOperationsComponent implements OnInit {
                 URL.revokeObjectURL(a.href);
 
                 // Add a toast
-                this.toastSvc.success('file-downloaded', undefined, filename);
+                this.toastSvc.success({messageId: 'file-downloaded', details: filename});
             });
     }
 
@@ -106,7 +106,7 @@ export class DomainOperationsComponent implements OnInit {
                 // Deselect the domain
                 this.domainSelectorSvc.setDomainId(undefined);
                 // Add a toast
-                this.toastSvc.success('domain-deleted').keepOnRouteChange();
+                this.toastSvc.success({messageId: 'domain-deleted', keepOnRouteChange: true});
                 // Navigate to the domain list page
                 this.router.navigate([Paths.manage.domains]);
             });
@@ -117,7 +117,7 @@ export class DomainOperationsComponent implements OnInit {
         this.api.domainPurge(this.domain!.id!, this.purgeForm.value)
             .pipe(this.purging.processing())
             // Add a toast
-            .subscribe(r => this.toastSvc.success('domain-cleared', undefined, $localize`Removed ${r.commentCount} comment(s)`));
+            .subscribe(r => this.toastSvc.success({messageId: 'domain-cleared', details: $localize`Removed ${r.commentCount} comment(s)`}));
     }
 
     clearDomain() {

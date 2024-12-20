@@ -44,7 +44,7 @@ export class ResetPasswordComponent implements OnDestroy {
                 .pipe(this.submitting.processing())
                 .subscribe(() => {
                     // Add a success toast
-                    this.toastSvc.success('password-changed').keepOnRouteChange();
+                    this.toastSvc.success({messageId: 'password-changed', keepOnRouteChange: true});
                     // Go back to the login page
                     return this.router.navigate([Paths.auth.login]);
                 });

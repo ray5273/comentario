@@ -7,7 +7,7 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
-import { provideHighlightOptions } from 'ngx-highlightjs';
+import { Highlight, provideHighlightOptions } from 'ngx-highlightjs';
 import { AppComponent } from './app/app.component';
 import { NavbarComponent } from './navbar/navbar.component';
 import { FooterComponent } from './footer/footer.component';
@@ -58,6 +58,7 @@ const provideApiConfig = (): Provider =>
         ApiModule,
         ToolsModule,
         PluginModule,
+        Highlight,
     ],
     providers: [
         // HTTP client
@@ -66,7 +67,8 @@ const provideApiConfig = (): Provider =>
         provideHighlightOptions({
             coreLibraryLoader: () => import('highlight.js/lib/core'),
             languages: {
-                html: () => import('highlight.js/lib/languages/xml'),
+                html:     () => import('highlight.js/lib/languages/xml'),
+                json:     () => import('highlight.js/lib/languages/json'),
                 markdown: () => import('highlight.js/lib/languages/markdown'),
             },
         }),

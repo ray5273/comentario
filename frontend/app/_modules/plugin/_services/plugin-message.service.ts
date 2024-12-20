@@ -3,8 +3,9 @@ import { Router } from '@angular/router';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { AuthService } from '../../../_services/auth.service';
-import { ComentarioPortEventPayload, PluginEventKind, PluginEventPayload, PluginPortEventBase, PluginPortEventKind, PluginPortEventNavigationRequest, PluginSubscriptionKind } from '../_models/messaging';
+import { ComentarioPortEventPayload, PluginEventKind, PluginEventPayload, PluginPortEventBase, PluginPortEventKind, PluginPortEventNavigationRequest, PluginPortEventShowToastRequest, PluginSubscriptionKind } from '../_models/messaging';
 import { Principal } from '../../../../generated-api';
+import { ToastInitProps, ToastService } from '../../../_services/toast.service';
 
 type MessageSender<T> = (msg: ComentarioPortEventPayload<T>) => void;
 type PluginPortEventHandler<T extends PluginPortEventBase> = (data: T) => void;
@@ -34,14 +35,20 @@ export class PluginMessageService {
         }
     };
 
+    /** Handle ShowToastRequest port message. */
+    private readonly handlePE_ShowToastRequest: PluginPortEventHandler<PluginPortEventShowToastRequest> = data =>
+        this.toastSvc.add(data as ToastInitProps);
+
     /** Map of port event handlers by type. */
     private readonly PortEventHandlers: Record<PluginPortEventKind, PluginPortEventHandler<any>> = {
         [PluginPortEventKind.NavigationRequest]: this.handlePE_NavigationRequest,
+        [PluginPortEventKind.ShowToastRequest]:  this.handlePE_ShowToastRequest,
     };
 
     constructor(
         private readonly router: Router,
         private readonly authSvc: AuthService,
+        private readonly toastSvc: ToastService,
     ) {
         // Subscribe to window message events carrying a port
         fromEvent<MessageEvent>(window, 'message', {capture: false})
