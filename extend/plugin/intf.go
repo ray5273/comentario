@@ -50,8 +50,8 @@ type AttrStore interface {
 	FindByAttrValue(key, value string) ([]uuid.UUID, error)
 	// GetAll returns all attributes of an owner with the given ID
 	GetAll(ownerID *uuid.UUID) (AttrValues, error)
-	// Set given attribute values for the given owner by key, optionally cleaning up all values beforehand
-	Set(ownerID *uuid.UUID, attr AttrValues, clean bool) error
+	// Set given attribute values for the given owner by key
+	Set(ownerID *uuid.UUID, attr AttrValues) error
 }
 
 // UserStore allows to retrieve Comentario users

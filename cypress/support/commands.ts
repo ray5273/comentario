@@ -766,8 +766,8 @@ Cypress.Commands.add('backendGetSentEmails', () => {
 Cypress.Commands.add('backendPatchDomain', (id: string, values: any) =>
     void cy.request('PATCH', `/api/e2e/domains/${id}`, values).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDomainAttrs', (id: string, values: Record<string, string | number | boolean>, clean: boolean) =>
-    void cy.request('PUT', `/api/e2e/domains/${id}/attrs`, {values, clean}).its('status').should('eq', 204));
+Cypress.Commands.add('backendUpdateDomainAttrs', (id: string, values: Record<string, string | number | boolean>) =>
+    void cy.request('PUT', `/api/e2e/domains/${id}/attrs`, {values}).its('status').should('eq', 204));
 
 Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: Record<string, string | number | boolean>) =>
     void cy.request(
@@ -779,5 +779,5 @@ Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: Record<st
 Cypress.Commands.add('backendUpdateDomainIdps', (id: string, idps: string[]) =>
     void cy.request('PUT', `/api/e2e/domains/${id}/idps`, idps).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateUserAttrs', (id: string, values: Record<string, string | number | boolean>, clean: boolean) =>
-    void cy.request('PUT', `/api/e2e/users/${id}/attrs`, {values, clean}).its('status').should('eq', 204));
+Cypress.Commands.add('backendUpdateUserAttrs', (id: string, values: Record<string, string | number | boolean>) =>
+    void cy.request('PUT', `/api/e2e/users/${id}/attrs`, {values}).its('status').should('eq', 204));

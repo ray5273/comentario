@@ -197,7 +197,7 @@ func E2eDomainUpdateAttrs(params api_e2e.E2eDomainUpdateAttrsParams) middleware.
 	}
 
 	// Update the attributes
-	if err := svc.TheDomainAttrService.Set(domainID, complugin.AttrValues(*params.Body.Values), params.Body.Clean); err != nil {
+	if err := svc.TheDomainAttrService.Set(domainID, complugin.AttrValues(*params.Body.Values)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -348,7 +348,7 @@ func E2eUserUpdateAttrs(params api_e2e.E2eUserUpdateAttrsParams) middleware.Resp
 	}
 
 	// Update the attributes
-	if err := svc.TheUserAttrService.Set(userID, complugin.AttrValues(*params.Body.Values), params.Body.Clean); err != nil {
+	if err := svc.TheUserAttrService.Set(userID, complugin.AttrValues(*params.Body.Values)); err != nil {
 		return respServiceError(err)
 	}
 

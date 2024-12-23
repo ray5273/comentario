@@ -110,8 +110,8 @@ func (as *attrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
 	return res, nil
 }
 
-func (as *attrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues, clean bool) error {
-	logger.Debugf("attrStore.Set(%s, %v, %v)", ownerID, attr, clean)
+func (as *attrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
+	logger.Debugf("attrStore.Set(%s, %v)", ownerID, attr)
 
 	// Anonymous owner cannot have attributes
 	if as.checkAnon && *ownerID == util.ZeroUUID {
@@ -140,30 +140,24 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues, clean bool)
 		return err
 	}
 
-	// Clean up, if necessary
-	if clean && len(cachedAttrs) > 0 {
-		// Remove all records for this owner from the database
-		if _, err := db.Delete(as.tableName).Where(as.addPrefixCondition(goqu.Ex{})).Executor().Exec(); err != nil {
-			logger.Errorf("attrStore.Set: cleaning failed for ownerID=%s, prefix=%q: %v", ownerID, as.prefix, err)
-			return translateDBErrors(err)
-		}
-		// Clean the cached attrs, too
-		cachedAttrs = plugin.AttrValues{}
-	}
-
 	// Iterate the values
 	for key, value := range attr {
 		// Prepend the key with the prefix, if any
 		prefixedKey := as.prefix + key
 
-		// Value removal. Only necessary if the values weren't cleaned beforehand
-		if value == "" && !clean {
+		// Value removal
+		if value == "" {
 			// We don't want to use ExecOne() here since the value may well not exist anymore, which we don't care
 			// about, so simply nothing will be deleted
 			if _, err := db.Delete(as.tableName).Where((goqu.Ex{as.keyColName: ownerID, "key": prefixedKey})).Executor().Exec(); err != nil {
 				logger.Errorf("attrStore.Set: Delete() failed for ownerID=%s, prefix=%q, key=%q: %v", ownerID, as.prefix, key, err)
 				return translateDBErrors(err)
 			}
+
+			// Delete the value from the cache
+			delete(cachedAttrs, prefixedKey)
+
+			// Proceed to the next entry
 			continue
 		}
 

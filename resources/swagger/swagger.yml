@@ -3968,9 +3968,6 @@ paths:
               values:
                 $ref: "#/definitions/keyValueMap"
                 description: Attributes to set for the domain
-              clean:
-                type: boolean
-                description: Whether to clean up all attributes prior to updating
       responses:
         204:
           description: Domain's attributes have been updated
@@ -4106,9 +4103,6 @@ paths:
               values:
                 $ref: "#/definitions/keyValueMap"
                 description: Attributes to set for the user
-              clean:
-                type: boolean
-                description: Whether to clean up all attributes prior to updating
       responses:
         204:
           description: User's attributes have been updated

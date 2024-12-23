@@ -252,7 +252,7 @@ context('User Properties page', () => {
                 .each(s => expect(s).contains('Expired'));
 
             // Check attributes
-            cy.backendUpdateUserAttrs(USERS.king.id, {hoho: 'xyz'}, false);
+            cy.backendUpdateUserAttrs(USERS.king.id, {hoho: 'xyz'});
             cy.reload();
             cy.get('@userProps').find('app-attribute-table').as('attrs')
                 .contains('button', 'Attributes').as('attrBtn');
@@ -268,7 +268,7 @@ context('User Properties page', () => {
                 .should('matrixMatch', [['hoho', 'xyz']]);
 
             // Replace attributes and reload
-            cy.backendUpdateUserAttrs(USERS.king.id, {subscriptionId: '1234567890', active: 'true'}, true);
+            cy.backendUpdateUserAttrs(USERS.king.id, {hoho: '', subscriptionId: '1234567890', active: 'true'});
             cy.reload();
             cy.get('@attrBtn').click();
             cy.get('@attrs').find('#attributes-container-1').should('be.visible')
@@ -280,7 +280,7 @@ context('User Properties page', () => {
                 ]);
 
             // Clean all and reload: no attributes section anymore
-            cy.backendUpdateUserAttrs(USERS.king.id, {}, true);
+            cy.backendUpdateUserAttrs(USERS.king.id, {subscriptionId: '', active: ''});
             cy.reload();
             checkNoAttributes();
         });

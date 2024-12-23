@@ -473,9 +473,8 @@ declare namespace Cypress {
          * Update attributes for the specified domain.
          * @param id ID of the domain.
          * @param values New attributes values.
-         * @param clean Whether to clean up all attributes prior to updating
          */
-        backendUpdateDomainAttrs(id: string, values: Record<string, string>, clean: boolean): Chainable<void>;
+        backendUpdateDomainAttrs(id: string, values: Record<string, string>): Chainable<void>;
 
         /**
          * Update the value of the given config item for the specified domain.
@@ -495,9 +494,8 @@ declare namespace Cypress {
          * Update attributes for the specified user.
          * @param id ID of the user.
          * @param values New attributes values.
-         * @param clean Whether to clean up all attributes prior to updating
          */
-        backendUpdateUserAttrs(id: string, values: Record<string, string>, clean: boolean): Chainable<void>;
+        backendUpdateUserAttrs(id: string, values: Record<string, string>): Chainable<void>;
     }
 
     // noinspection JSUnusedGlobalSymbols

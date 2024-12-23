@@ -360,7 +360,7 @@ context('Domain Properties page', () => {
         checkEditButtons(DOMAINS.localhost.id, true);
 
         // Check attributes
-        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {hoho: 'xyz'}, false);
+        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {hoho: 'xyz'});
         cy.visit(localhostPagePath);
         cy.get('@domainProps').find('app-attribute-table').as('attrs')
             .contains('button', 'Attributes').as('attrBtn');
@@ -376,7 +376,7 @@ context('Domain Properties page', () => {
             .should('matrixMatch', [['hoho', 'xyz']]);
 
         // Replace attributes and reload
-        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {subscriptionId: '1234567890', active: 'true'}, true);
+        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {hoho: '', subscriptionId: '1234567890', active: 'true'});
         cy.reload();
         cy.get('@attrBtn').click();
         cy.get('@attrs').find('#attributes-container-1').should('be.visible')
@@ -388,7 +388,7 @@ context('Domain Properties page', () => {
             ]);
 
         // Clean all and reload: no attributes section anymore
-        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {}, true);
+        cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {subscriptionId: '', active: ''});
         cy.reload();
         checkNoAttributes();
     });
