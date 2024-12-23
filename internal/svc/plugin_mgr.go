@@ -2,6 +2,7 @@ package svc
 
 import (
 	"fmt"
+	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	complugin "gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/models"
@@ -124,6 +125,23 @@ func (c *pluginConnector) DomainAttrStore() complugin.AttrStore {
 
 func (c *pluginConnector) UserAttrStore() complugin.AttrStore {
 	return c.userAttrStore
+}
+
+func (c *pluginConnector) UserStore() complugin.UserStore {
+	return &userStore{}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// userStore is an implementation of plugin.UserStore
+type userStore struct{}
+
+func (us *userStore) FindUserByID(id *uuid.UUID) (*complugin.User, error) {
+	if u, err := TheUserService.FindUserByID(id); err != nil {
+		return nil, err
+	} else {
+		return u.ToPluginUser(), nil
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

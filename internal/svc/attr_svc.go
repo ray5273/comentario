@@ -61,6 +61,16 @@ type attrStore struct {
 	checkAnon  bool                                          // Whether to check for "anonymous" (zero-UUID) owner
 }
 
+func (as *attrStore) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
+	logger.Debugf("attrStore.FindByAttrValue(%q, %q)", key, value)
+	var res []uuid.UUID
+	if err := db.From(as.tableName).Select(as.keyColName).Where(goqu.Ex{"key": as.prefix + key, "value": value}).ScanVals(&res); err != nil {
+		logger.Errorf("attrStore.FindByAttrValue: ScanVals() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+	return res, nil
+}
+
 func (as *attrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
 	logger.Debugf("attrStore.GetAll(%s)", ownerID)
 	res := plugin.AttrValues{}

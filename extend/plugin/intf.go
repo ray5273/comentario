@@ -37,6 +37,8 @@ type HostApp interface {
 	DomainAttrStore() AttrStore
 	// UserAttrStore returns an instance of the user attributes store for the plugin
 	UserAttrStore() AttrStore
+	// UserStore returns an instance of the user store
+	UserStore() UserStore
 }
 
 // AttrValues is a key-indexed value map
@@ -44,10 +46,18 @@ type AttrValues map[string]string
 
 // AttrStore allows to store and retrieve attributes consisting of a string key and a string value
 type AttrStore interface {
+	// FindByAttrValue finds and returns owner IDs that have the given attribute key-value pair
+	FindByAttrValue(key, value string) ([]uuid.UUID, error)
 	// GetAll returns all attributes of an owner with the given ID
 	GetAll(ownerID *uuid.UUID) (AttrValues, error)
 	// Set given attribute values for the given owner by key, optionally cleaning up all values beforehand
 	Set(ownerID *uuid.UUID, attr AttrValues, clean bool) error
+}
+
+// UserStore allows to retrieve Comentario users
+type UserStore interface {
+	// FindUserByID finds and returns a user by the given user ID
+	FindUserByID(id *uuid.UUID) (*User, error)
 }
 
 // UIResource describes a UI resource required by the plugin
