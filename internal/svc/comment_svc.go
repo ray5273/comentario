@@ -545,9 +545,13 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 }
 
 func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error {
+	logger.Debugf("commentService.SetMarkdown(%v, %q, %s, %s)", comment, markdown, domainID, editedUserID)
+
 	// Validate comment length
+	maxLen := TheDomainConfigService.GetInt(domainID, data.DomainConfigKeyMaxCommentLength)
 	md := strings.TrimSpace(markdown)
-	if len(md) > TheDomainConfigService.GetInt(domainID, data.DomainConfigKeyMaxCommentLength) {
+	if l := len(md); l > maxLen {
+		logger.Errorf("commentService.SetMarkdown: comment text length (%d bytes) > allowed (%d bytes)", l, maxLen)
 		return ErrCommentTooLong
 	}
 

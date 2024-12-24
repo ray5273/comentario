@@ -936,19 +936,42 @@ func TestTruncateStr(t *testing.T) {
 		maxLen int
 		want   string
 	}{
-		{"empty, zero len", "", 0, ""},
-		{"empty, 1 len", "", 1, ""},
-		{"1 char, 1 len", "a", 1, "a"},
-		{"2 chars, 1 len", "ab", 1, "…"},
-		{"4 chars, 5 len", "abcd", 5, "abcd"},
-		{"equal len", "Crust", 5, "Crust"},
-		{"6 chars, 5 len", "Crisis", 5, "Cris…"},
-		{"stress test", strings.Repeat("ab", 1000), 2, "a…"},
+		{"empty, zero len        ", "", 0, ""},
+		{"non-empty, zero len    ", "abcdef", 0, ""},
+		{"empty, 1 len           ", "", 1, ""},
+		{"1 char, 1 len          ", "a", 1, "a"},
+		{"2 chars, 1 len         ", "ab", 1, "a"},
+		{"3 chars, 1 len         ", "abc", 1, "a"},
+		{"1 char, 2 len          ", "a", 2, "a"},
+		{"2 chars, 2 len         ", "ab", 2, "ab"},
+		{"3 chars, 2 len         ", "abc", 2, "ab"},
+		{"1 char, 3 len          ", "a", 3, "a"},
+		{"2 chars, 3 len         ", "ab", 3, "ab"},
+		{"3 chars, 3 len         ", "abc", 3, "abc"},
+		{"4 chars, 3 len         ", "abcd", 3, "…"},
+		{"4 chars, 5 len         ", "abcd", 5, "abcd"},
+		{"Unicode 3 chars, 5 len ", "😿😀🏵️", 5, "…"},
+		{"Unicode 3 chars, 6 len ", "😿😀🏵️", 6, "…"},
+		{"Unicode 3 chars, 7 len ", "😿😀🏵️", 7, "😿…"},
+		{"Unicode 3 chars, 8 len ", "😿😀🏵️", 8, "😿…"},
+		{"Unicode 3 chars, 9 len ", "😿😀🏵️", 9, "😿…"},
+		{"Unicode 3 chars, 10 len", "😿😀🏵️", 10, "😿…"},
+		{"Unicode 3 chars, 11 len", "😿😀🏵️", 11, "😿😀…"},
+		{"Unicode 3 chars, 12 len", "😿😀🏵️", 12, "😿😀…"},
+		{"Unicode 3 chars, 13 len", "😿😀🏵️", 13, "😿😀…"},
+		{"Unicode 3 chars, 14 len", "😿😀🏵️", 14, "😿😀…"},
+		{"Unicode 3 chars, 15 len", "😿😀🏵️", 15, "😿😀🏵️"},
+		{"Unicode 5 chars, 5 len ", "АБВГД", 5, "А…"},
+		{"equal len              ", "Crust", 5, "Crust"},
+		{"6 chars, 5 len         ", "Crisis", 5, "Cr…"},
+		{"stress test            ", strings.Repeat("ab", 1000), 4, "a…"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := TruncateStr(tt.s, tt.maxLen); got != tt.want {
 				t.Errorf("TruncateStr() = %v, want %v", got, tt.want)
+			} else if len(got) > tt.maxLen {
+				t.Errorf("TruncateStr() result length = %v, want <= %v", len(got), tt.maxLen)
 			}
 		})
 	}

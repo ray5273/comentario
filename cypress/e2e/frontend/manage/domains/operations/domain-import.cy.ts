@@ -241,6 +241,7 @@ context('Domain Import page', () => {
 
                 [
                     {file: 'wordpress-ok-empty.zip',  count: 0},
+                    {file: 'wordpress-ok-long.zip',   count: 1, remark: 'Imported from WordPress'},
                     {file: 'wordpress-ok-single.zip', count: 1, remark: 'Imported from WordPress'},
                 ]
                     .forEach(({file, count, remark}) =>
@@ -267,7 +268,7 @@ context('Domain Import page', () => {
                             cy.get('app-comment-list').verifyListFooter(count, false);
                             if (count) {
                                 cy.get('app-comment-list #comment-list').texts('app-user-link .user-name').should('arrayMatch', ['Luke Skywalker']);
-                                cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', ['Yay, imported']);
+                                cy.get('app-comment-list #comment-list').texts('.comment-text')           .should('arrayMatch', [/Yay, imported/]);
 
                                 // If it's a superuser, verify the imported user's properties
                                 if (user.isSuper) {

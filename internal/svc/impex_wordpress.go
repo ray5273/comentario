@@ -63,6 +63,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 
 	// Fetch domain config
 	maxLength := TheDomainConfigService.GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)
+	logger.Debugf("Max. comment text length is %d", maxLength)
 
 	// Make sure there's at least one channel
 	if len(exp.Channels) == 0 {

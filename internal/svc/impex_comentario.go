@@ -157,6 +157,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 
 	// Fetch domain config
 	maxLength := TheDomainConfigService.GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)
+	logger.Debugf("Max. comment text length is %d", maxLength)
 
 	// Create a map of commenterHex -> user ID
 	commenterIDMap := map[HexIDV1]uuid.UUID{

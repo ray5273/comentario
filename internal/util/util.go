@@ -28,6 +28,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode/utf8"
 )
 
 // logger represents a package-wide logger instance
@@ -554,12 +555,27 @@ func ToStringSlice[T ~string](in []T) []string {
 	return res
 }
 
-// TruncateStr truncates a string to the given byte length, adding an ellipsis if truncated
+// TruncateStr truncates a string to the given byte length, adding an ellipsis if truncated and possible
 func TruncateStr(s string, maxLen int) string {
 	if len(s) <= maxLen {
 		return s
 	}
-	return s[:maxLen-1] + "…"
+
+	// If the allowed length is more than 3, we can add a "…" (it's a 3-byte Unicode char, just like "..." would be,
+	// only looks better)
+	var suffix string
+	if maxLen >= 3 {
+		maxLen -= 3
+		suffix = "…"
+	}
+
+	// Find the appropriate byte length that doesn't damage the last Unicode (possibly multibyte) char
+	for maxLen > 0 && !utf8.RuneStart(s[maxLen]) {
+		maxLen--
+	}
+
+	// Just truncate the string otherwise
+	return s[:maxLen] + suffix
 }
 
 // UserAgent return the value of the User-Agent request header
