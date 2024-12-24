@@ -113,6 +113,8 @@ type ComentarioPlugin interface {
 	ID() string
 	// Init initialises the plugin, supplying it with a host reference and an optional secrets config decoder
 	Init(host HostApp, secretsDecoder YAMLDecoder) error
+	// Shutdown the plugin by e.g. freeing up resources, closing files etc. Called when the server is about to shut down
+	Shutdown()
 	// Config should return the plugin's configuration
 	Config() Config
 	// APIHandler returns a handler that processes API calls relevant to the plugin. Each HTTP request passed to the

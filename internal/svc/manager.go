@@ -113,6 +113,7 @@ func (m *manager) Shutdown() {
 
 	// Shut down the services
 	TheWebSocketsService.Shutdown()
+	ThePluginManager.Shutdown()
 
 	// Teardown the database
 	_ = db.Shutdown()

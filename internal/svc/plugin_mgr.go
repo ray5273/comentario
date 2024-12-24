@@ -21,12 +21,14 @@ type PluginManager interface {
 	Active() bool
 	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled or errored
 	HandleEvent(event any) error
-	// Init initialises the manager
+	// Init the manager
 	Init() error
 	// PluginConfig returns configuration of all registered plugins as DTOs
 	PluginConfig() []*models.PluginConfig
 	// ServeHandler returns an HTTP handler for processing requests
 	ServeHandler(next http.Handler) http.Handler
+	// Shutdown the manager
+	Shutdown()
 }
 
 // ThePluginManager is a global plugin manager instance
@@ -275,6 +277,13 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 		// Not handled, pass on to the next handler
 		next.ServeHTTP(w, r)
 	})
+}
+
+func (pm *pluginManager) Shutdown() {
+	// Shutdown all known plugins
+	for _, pe := range pm.plugs {
+		pe.p.Shutdown()
+	}
 }
 
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found
