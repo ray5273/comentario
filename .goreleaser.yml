@@ -117,6 +117,7 @@ nfpms:
         dst: /usr/lib/comentario/frontend
       - src: resources/etc
         dst: /etc
+        type: config|noreplace
       - src: resources/systemd
         dst: /usr/lib/systemd
     scripts:
