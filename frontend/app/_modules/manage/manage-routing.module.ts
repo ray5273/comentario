@@ -28,6 +28,7 @@ import { StaticConfigComponent } from './config/static-config/static-config.comp
 import { DynamicConfigComponent } from './config/dynamic-config/dynamic-config.component';
 import { ConfigEditComponent } from './config/config-edit/config-edit.component';
 import { EmailUpdateComponent } from './account/email-update/email-update.component';
+import { DomainPageEditComponent } from './domains/domain-pages/domain-page-edit/domain-page-edit.component';
 
 const children: Routes = [
     // Default route
@@ -52,6 +53,7 @@ const children: Routes = [
             // Pages
             {path: 'pages',               component: DomainPageManagerComponent,    canActivate: [ManageGuard.isDomainSelected]},
             {path: 'pages/:id',           component: DomainPagePropertiesComponent, canActivate: [ManageGuard.isDomainSelected]},
+            {path: 'pages/:id/edit',      component: DomainPageEditComponent,       canActivate: [ManageGuard.canModerateDomain]},
 
             // Comments
             {path: 'comments',            component: CommentManagerComponent,       canActivate: [ManageGuard.isDomainSelected]},

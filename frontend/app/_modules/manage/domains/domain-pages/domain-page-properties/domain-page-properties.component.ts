@@ -2,7 +2,7 @@ import { Component, Input, OnInit } from '@angular/core';
 import { tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { faRotate } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, DomainPage } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { Paths } from '../../../../../_utils/consts';
@@ -23,11 +23,11 @@ export class DomainPagePropertiesComponent implements OnInit {
     domainMeta?: DomainMeta;
 
     readonly Paths = Paths;
-    readonly loading          = new ProcessingStatus();
-    readonly updatingReadonly = new ProcessingStatus();
-    readonly updatingTitle    = new ProcessingStatus();
+    readonly loading       = new ProcessingStatus();
+    readonly updatingTitle = new ProcessingStatus();
 
     // Icons
+    readonly faEdit   = faEdit;
     readonly faRotate = faRotate;
 
     /** Current page ID. */
@@ -78,17 +78,6 @@ export class DomainPagePropertiesComponent implements OnInit {
 
                 // Make sure the correct domain is selected
                 this.domainSelectorSvc.setDomainId(this.page?.domainId);
-            });
-    }
-
-    toggleReadonly() {
-        this.api.domainPageUpdate(this.page!.id!, {isReadonly: !this.page!.isReadonly})
-            .pipe(this.updatingReadonly.processing())
-            .subscribe(() => {
-                // Add a success toast
-                tap(() => this.toastSvc.success('data-updated'));
-                // Reload the properties
-                this.reload();
             });
     }
 }

@@ -1,0 +1,53 @@
+<!-- Heading -->
+<h1 class="mb-0" i18n="heading">Edit domain page</h1>
+
+@if (page) {
+    <!-- Path spec -->
+    <div class="mb-3" id="domain-page-path">{{ page.path }}</div>
+
+    <!-- Domain page edit form -->
+    <form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
+        <fieldset [disabled]="loading.active || saving.active">
+            <!-- Path -->
+            <div class="mb-3 row">
+                <label for="path" class="col-sm-3 col-form-label colon fw-bold" i18n>Path</label>
+                <div class="col-sm-9">
+                    <input formControlName="path" type="text" class="form-control" id="path" maxlength="2075"
+                           placeholder="/path/to/page"
+                           [class.is-valid]="form.controls.path.touched && form.controls.path.valid"
+                           [class.is-invalid]="form.controls.path.touched && form.controls.path.invalid">
+                    <!-- Invalid feedback -->
+                    <div class="invalid-feedback">
+                        @if (form.controls.path.errors; as err) {
+                            @if (err.required)  { <div i18n>Please enter a value.</div> }
+                            @if (err.pattern)   { <div i18n>Page path must begin with a <code>/</code>.</div> }
+                            @if (err.maxLength) { <div i18n>Value is too long.</div> }
+                        }
+                    </div>
+                    <!-- Info -->
+                    @if (domainMeta?.canManageDomain) {
+                        <div class="form-text" i18n>Changing this value will move all comments on the page to the new path.</div>
+                    }
+                </div>
+            </div>
+
+            <!-- Switches -->
+            <div class="mb-3 row">
+                <div class="offset-sm-3 col-sm-9">
+                    <!-- Read only -->
+                    <div class="form-check form-switch">
+                        <input formControlName="readOnly" class="form-check-input" type="checkbox" id="readOnly">
+                        <label class="form-check-label" for="readOnly" i18n>Read only</label>
+                    </div>
+                    <div class="form-text" i18n>When a page is read-only, users cannot add comments to it.</div>
+                </div>
+            </div>
+
+            <!-- Buttons -->
+            <div class="form-footer">
+                <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
+                <button [appSpinner]="saving.active" type="submit" class="btn btn-primary" i18n="action">Save</button>
+            </div>
+        </fieldset>
+    </form>
+}

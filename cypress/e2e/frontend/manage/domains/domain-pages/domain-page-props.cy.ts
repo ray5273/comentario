@@ -3,20 +3,15 @@ import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../suppo
 context('Domain Page Properties page', () => {
 
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + '/0ebb8a1b-12f6-421e-b1bb-75867ac480c7';
-    const readonlyInfo = 'When a page is read-only, users cannot add comments to it.';
 
-    const makeAliases = (hasReadOnly: boolean, hasUpdateTitle: boolean) => {
+    const makeAliases = (hasUpdateTitle: boolean, hasEdit: boolean) => {
         cy.get('app-domain-page-properties').as('pageProps');
 
         // Header
         cy.get('@pageProps').find('h1').should('have.text', 'Domain page properties').and('be.visible');
 
         // Page details
-        cy.get('@pageProps').find('#page-detail-table').as('pageDetails');
-        if (hasReadOnly) {
-            cy.get('@pageProps').find('#page-readonly-switch').as('pageReadonly')
-                .should('be.visible').and('be.enabled').and('not.be.checked');
-        }
+        cy.get('@pageProps').find('#domain-page-detail-table').as('pageDetails');
 
         // Buttons
         if (hasUpdateTitle) {
@@ -24,28 +19,14 @@ context('Domain Page Properties page', () => {
         } else {
             cy.get('@pageProps').contains('button', 'Update title').should('not.exist');
         }
+        if (hasEdit) {
+            cy.get('@pageProps').contains('a', 'Edit').as('btnEdit').should('be.visible');
+        } else {
+            cy.get('@pageProps').contains('a', 'Edit').should('not.exist');
+        }
 
         // Comments
         cy.get('@pageProps').find('app-comment-list').as('commentList').should('be.visible');
-    };
-
-    const checkReadOnly = () => {
-        cy.get('@pageReadonly').clickLabel().should('be.checked');
-
-        // Navigate to the test page and verify the comment thread is locked
-        cy.testSiteVisit(TEST_PATHS.home);
-        cy.get('comentario-comments .comentario-page-moderation-notice').should('have.text', 'This thread is locked. You cannot add new comments.');
-        cy.get('comentario-comments .comentario-add-comment-host')      .should('not.exist');
-
-        // Navigate back to the page properties and uncheck Read-only
-        cy.visit(localhostPagePath);
-        cy.get('app-domain-page-properties #page-readonly-switch').should('be.checked')
-            .clickLabel().should('not.be.checked');
-
-        // Go to the test page again and verify it isn't readonly anymore
-        cy.testSiteVisit(TEST_PATHS.home);
-        cy.get('comentario-comments .comentario-page-moderation-notice').should('not.exist');
-        cy.get('comentario-comments .comentario-add-comment-host')      .should('exist');
     };
 
     //------------------------------------------------------------------------------------------------------------------
@@ -71,41 +52,24 @@ context('Domain Page Properties page', () => {
         cy.verifyStayOnReload(localhostPagePath, USERS.commenterTwo));
 
     [
-        {name: 'read-only', user: USERS.commenterThree, numComments: 0},
-        {name: 'commenter', user: USERS.commenterTwo,   numComments: 1},
+        {name: 'read-only', user: USERS.commenterThree, numComments:  0, editable: false},
+        {name: 'commenter', user: USERS.commenterTwo,   numComments:  1, editable: false},
+        {name: 'moderator', user: USERS.king,           numComments: 16, editable: true},
     ]
         .forEach(test =>
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
-                makeAliases(false, false);
+                makeAliases(test.editable, test.editable);
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',    DOMAINS.localhost.host],
                     ['Path',      '/'],
                     ['Title',     'Home'],
-                    ['Read-only', readonlyInfo],
+                    ['Read-only', ''],
                 ]);
 
                 // Check number of comments in the Comments section
                 cy.get('@commentList').verifyListFooter(test.numComments, false);
             }));
-
-
-    it('shows properties for moderator user', () => {
-        cy.loginViaApi(USERS.king, localhostPagePath);
-        makeAliases(true, false);
-        cy.get('@pageDetails').dlTexts().should('matrixMatch', [
-            ['Domain',    DOMAINS.localhost.host],
-            ['Path',      '/'],
-            ['Title',     'Home'],
-            ['Read-only', 'Read-only\n' + readonlyInfo],
-        ]);
-
-        // Check number of comments in the Comments section
-        cy.get('@commentList').verifyListFooter(16, false);
-
-        // Test the read-only switch
-        checkReadOnly();
-    });
 
     [
         {name: 'owner',     user: USERS.ace},
@@ -119,7 +83,7 @@ context('Domain Page Properties page', () => {
                     ['Domain',             DOMAINS.localhost.host],
                     ['Path',               '/'],
                     ['Title',              'Home'],
-                    ['Read-only',          'Read-only\n' + readonlyInfo],
+                    ['Read-only',          ''],
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '17'],
                     ['Number of views',    '10'],
@@ -139,12 +103,5 @@ context('Domain Page Properties page', () => {
                 // Go back to verify the pageview has been registered
                 cy.visit(localhostPagePath);
                 cy.get('@pageDetails').ddItem('Number of views').should('have.text', '11');
-
-                // Test the read-only switch
-                checkReadOnly();
-
-                // As this results in 2 more pageviews, the counter is increased again
-                cy.visit(localhostPagePath);
-                cy.get('@pageDetails').ddItem('Number of views').should('have.text', '13');
             }));
 });

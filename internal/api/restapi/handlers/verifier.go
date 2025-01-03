@@ -24,6 +24,8 @@ type VerifierService interface {
 	DomainConfigItems(items []*models.DynamicConfigItem) middleware.Responder
 	// DomainHostCanBeAdded verifies the given host is valid and not existing yet
 	DomainHostCanBeAdded(host string) middleware.Responder
+	// DomainPageCanUpdatePathTo verifies the given domain page is allowed to change its path to the provided new value
+	DomainPageCanUpdatePathTo(page *data.DomainPage, newPath string) middleware.Responder
 	// DomainSSOConfig verifies the given domain is properly configured for SSO authentication
 	DomainSSOConfig(domain *data.Domain) middleware.Responder
 	// FederatedIdProvider verifies the federated identity provider specified by its ID is properly configured for
@@ -78,6 +80,25 @@ func (v *verifier) DomainConfigItems(items []*models.DynamicConfigItem) middlewa
 		if err := svc.TheDomainConfigService.ValidateKeyValue(swag.StringValue(item.Key), swag.StringValue(item.Value)); err != nil {
 			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(err.Error()))
 		}
+	}
+
+	// Succeeded
+	return nil
+}
+
+func (v *verifier) DomainPageCanUpdatePathTo(page *data.DomainPage, newPath string) middleware.Responder {
+	// If the path isn't changing, it's always okay
+	if page.Path == newPath {
+		return nil
+	}
+
+	// Try to find an existing page with that path
+	if _, err := svc.ThePageService.FindByDomainPath(&page.DomainID, newPath); err == nil {
+		// Path is already used by another page
+		return respBadRequest(exmodels.ErrorPagePathAlreadyExists)
+	} else if !errors.Is(err, svc.ErrNotFound) {
+		// Any database error other than "not found"
+		return respServiceError(err)
 	}
 
 	// Succeeded

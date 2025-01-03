@@ -376,36 +376,46 @@ definitions:
   domainPage:
     description: Page on a specific domain
     type: object
-    readOnly: true
+    required:
+      - path
+      - isReadonly
     properties:
       id:
         type: string
         format: uuid
+        readOnly: true
         description: Unique record ID
       domainId:
         type: string
         format: uuid
+        readOnly: true
         description: ID of the domain
       path:
         $ref: "#/definitions/path"
-        description: Page path
+        description: Page path. Can only be updated by a domain owner or superuser
       title:
         type: string
+        readOnly: true
         description: Optional page title
       isReadonly:
         type: boolean
-        description: Whether the page is readonly (no new comments are allowed)
+        description: >
+          Whether the page is readonly (no new comments are allowed). Can be updated by a domain moderator, owner or
+          superuser
         x-omitempty: false
       createdTime:
         type: string
         format: date-time
+        readOnly: true
         description: When the record was created
       countComments:
         type: integer
+        readOnly: true
         description: Total number of comments. -1 means the value is not provided
         x-omitempty: false
       countViews:
         type: integer
+        readOnly: true
         description: Total number of views. -1 means the value is not provided
         x-omitempty: false
 
@@ -3247,13 +3257,7 @@ paths:
           name: body
           required: true
           schema:
-            type: object
-            required:
-              - isReadonly
-            properties:
-              isReadonly:
-                type: boolean
-                description: Whether the page must be readonly
+            $ref: "#/definitions/domainPage"
       responses:
         204:
           description: Domain page properties have been updated

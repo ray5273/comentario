@@ -13,6 +13,7 @@ export class ManageGuard {
 
     static readonly selectDomain:       CanActivateFn = (route) => inject(ManageGuard).selectDomain(route);
     static readonly isDomainSelected:   CanActivateFn = () => inject(ManageGuard).isDomainSelected();
+    static readonly canModerateDomain:  CanActivateFn = () => inject(ManageGuard).canModerateDomain();
     static readonly canManageDomain:    CanActivateFn = () => inject(ManageGuard).canManageDomain();
     static readonly canManageDomainSso: CanActivateFn = () => inject(ManageGuard).canManageDomainSso();
     static readonly isSuper:            CanActivateFn = () => inject(ManageGuard).isSuper();
@@ -38,6 +39,17 @@ export class ManageGuard {
         return this.domainSelectorSvc.domainMeta(false).pipe(
             first(),
             map(meta => meta.domain ? true : this.router.parseUrl(Paths.manage.domains)));
+    }
+
+    /**
+     * Check if there's a selected domain and the current user is allowed to moderate it, and return either true, or the
+     * domain manager route.
+     */
+    canModerateDomain(): Observable<boolean | UrlTree> {
+        return this.domainSelectorSvc.domainMeta(false)
+            .pipe(
+                first(),
+                map(meta => meta.canModerateDomain || this.router.parseUrl(Paths.manage.domains)));
     }
 
     /**

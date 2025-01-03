@@ -67,6 +67,7 @@ import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.
 import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.component';
 import { StatsComponent } from './stats/stats/stats.component';
 import { EmailUpdateComponent } from './account/email-update/email-update.component';
+import { DomainPageEditComponent } from './domains/domain-pages/domain-page-edit/domain-page-edit.component';
 
 @NgModule({
     declarations: [
@@ -96,6 +97,7 @@ import { EmailUpdateComponent } from './account/email-update/email-update.compon
         DomainInstallComponent,
         DomainManagerComponent,
         DomainOperationsComponent,
+        DomainPageEditComponent,
         DomainPageManagerComponent,
         DomainPagePropertiesComponent,
         DomainPropertiesComponent,

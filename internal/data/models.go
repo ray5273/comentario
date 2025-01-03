@@ -984,14 +984,14 @@ func (n *NullDomainUser) ToDomainUser() *DomainUser {
 
 // DomainPage represents a page on a specific domain
 type DomainPage struct {
-	ID            uuid.UUID `db:"id"`             // Unique record ID
-	DomainID      uuid.UUID `db:"domain_id"`      // ID of the domain
-	Path          string    `db:"path"`           // Page path
-	Title         string    `db:"title"`          // Page title
-	IsReadonly    bool      `db:"is_readonly"`    // Whether the page is readonly (no new comments are allowed)
-	CreatedTime   time.Time `db:"ts_created"`     // When the record was created
-	CountComments int64     `db:"count_comments"` // Total number of comments
-	CountViews    int64     `db:"count_views"`    // Total number of views
+	ID            uuid.UUID `db:"id"             goqu:"skipupdate"` // Unique record ID
+	DomainID      uuid.UUID `db:"domain_id"      goqu:"skipupdate"` // ID of the domain
+	Path          string    `db:"path"`                             // Page path
+	Title         string    `db:"title"`                            // Page title
+	IsReadonly    bool      `db:"is_readonly"`                      // Whether the page is readonly (no new comments are allowed)
+	CreatedTime   time.Time `db:"ts_created"     goqu:"skipupdate"` // When the record was created
+	CountComments int64     `db:"count_comments" goqu:"skipupdate"` // Total number of comments
+	CountViews    int64     `db:"count_views"    goqu:"skipupdate"` // Total number of views
 }
 
 // CloneWithClearance returns a clone of the page with a limited set of properties, depending on the specified
@@ -1031,7 +1031,7 @@ func (p *DomainPage) ToDTO() *models.DomainPage {
 		CreatedTime:   strfmt.DateTime(p.CreatedTime),
 		DomainID:      strfmt.UUID(p.DomainID.String()),
 		ID:            strfmt.UUID(p.ID.String()),
-		IsReadonly:    p.IsReadonly,
+		IsReadonly:    swag.Bool(p.IsReadonly),
 		Path:          models.Path(p.Path),
 		Title:         p.Title,
 	}
@@ -1040,6 +1040,12 @@ func (p *DomainPage) ToDTO() *models.DomainPage {
 // WithIsReadonly sets the IsReadonly value
 func (p *DomainPage) WithIsReadonly(b bool) *DomainPage {
 	p.IsReadonly = b
+	return p
+}
+
+// WithPath sets the Path value
+func (p *DomainPage) WithPath(s string) *DomainPage {
+	p.Path = s
 	return p
 }
 

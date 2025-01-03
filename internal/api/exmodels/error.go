@@ -66,6 +66,7 @@ var (
 	ErrorNotAllowed            = &Error{ID: "not-allowed", Message: "This action is forbidden"}
 	ErrorNotDomainOwner        = &Error{ID: "not-domain-owner", Message: "User is not a domain owner"}
 	ErrorNotModerator          = &Error{ID: "not-moderator", Message: "User is not a moderator"}
+	ErrorPagePathAlreadyExists = &Error{ID: "page-path-already-exists", Message: "This page path is already used by another page"}
 	ErrorPageReadonly          = &Error{ID: "page-readonly", Message: "This page is read-only"}
 	ErrorResourceFetchFailed   = &Error{ID: "resource-fetch-failed", Message: "Failed to fetch external resource"}
 	ErrorSelfOperation         = &Error{ID: "self-operation", Message: "You cannot do this to yourself"}

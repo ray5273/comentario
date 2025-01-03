@@ -3,23 +3,29 @@
     <h1 i18n="heading">Domain page properties</h1>
 </header>
 
+<!-- Properties -->
 <div [appSpinner]="loading.active" spinnerSize="lg">
     @if (domainMeta?.domain && page) {
         <div class="row">
-            <!-- Buttons: only for owner+ -->
-            @if (domainMeta!.canManageDomain) {
+            <!-- Buttons: only for moderator+ -->
+            @if (domainMeta!.canModerateDomain) {
                 <div class="col-sm-auto order-sm-last pb-3">
                     <!-- Update title button -->
-                    <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-secondary w-100">
+                    <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-outline-secondary w-100">
                         <fa-icon [icon]="faRotate" class="me-1"/>
                         <ng-container i18n>Update title</ng-container>
                     </button>
+                    <!-- Edit button -->
+                    <a routerLink="edit" class="btn btn-secondary w-100 mt-2">
+                        <fa-icon [icon]="faEdit" class="me-1"/>
+                        <ng-container i18n>Edit</ng-container>
+                    </a>
                 </div>
             }
 
             <!-- Detail table -->
             <div class="col-sm">
-                <dl id="page-detail-table" class="detail-table">
+                <dl id="domain-page-detail-table" class="detail-table">
                     <!-- Domain -->
                     <div>
                         <dt i18n>Domain</dt>
@@ -43,22 +49,7 @@
                     <!-- Read-only -->
                     <div>
                         <dt i18n>Read-only</dt>
-                        <dd>
-                            <!-- Switch: moderator+ -->
-                            @if (domainMeta!.canModerateDomain) {
-                                <div [appSpinner]="updatingReadonly.active" class="d-flex ps-1">
-                                    <div class="form-check form-switch">
-                                        <input [ngModel]="page.isReadonly" (ngModelChange)="toggleReadonly()"
-                                               class="form-check-input" type="checkbox" role="switch" id="page-readonly-switch">
-                                        <label class="form-check-label" for="page-readonly-switch" i18n>Read-only</label>
-                                    </div>
-                                </div>
-                            } @else {
-                                <app-checkmark [value]="page.isReadonly"/>
-                            }
-                            <!-- Checkmark: regular users -->
-                            <div class="form-text" i18n>When a page is read-only, users cannot add comments to it.</div>
-                        </dd>
+                        <dd><app-checkmark [value]="page.isReadonly"/></dd>
                     </div>
                     <!-- Created -->
                     @if (page.createdTime | datetime; as v) {

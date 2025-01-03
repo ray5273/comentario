@@ -64,12 +64,23 @@ func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User
 		return r
 	}
 
-	// Update the page properties, if necessary
-	ro := swag.BoolValue(params.Body.IsReadonly)
-	if page.IsReadonly != ro {
-		if err := svc.ThePageService.UpdateReadonly(page.WithIsReadonly(ro)); err != nil {
-			return respServiceError(err)
+	// If the path is changing
+	path := string(params.Body.Path)
+	if page.Path != path {
+		// Verify the user can manage the domain
+		if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
+			return r
 		}
+		// Verify the path is not used by another page yet
+		if r := Verifier.DomainPageCanUpdatePathTo(page, path); r != nil {
+			return r
+		}
+	}
+
+	// Update the page
+	ro := swag.BoolValue(params.Body.IsReadonly)
+	if err := svc.ThePageService.Update(page.WithIsReadonly(ro).WithPath(path)); err != nil {
+		return respServiceError(err)
 	}
 
 	// Succeeded
@@ -84,7 +95,7 @@ func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user 
 	}
 
 	// Make sure the user is allowed to update page
-	if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
+	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
 		return r
 	}
 

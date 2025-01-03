@@ -41,8 +41,8 @@ type PageService interface {
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error)
-	// UpdateReadonly updates the page's readonly status by its ID
-	UpdateReadonly(page *data.DomainPage) error
+	// Update updates the page's by its ID
+	Update(page *data.DomainPage) error
 	// UpsertByDomainPath queries a page, inserting a new page database record if necessary, optionally registering a
 	// new pageview (if req is not nil), returning whether the page was added. title is an optional page title, if not
 	// provided, it will be fetched from the URL in the background
@@ -263,12 +263,12 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	return ps, nil
 }
 
-func (svc *pageService) UpdateReadonly(page *data.DomainPage) error {
-	logger.Debugf("pageService.UpdateReadonly(%#v)", page)
+func (svc *pageService) Update(page *data.DomainPage) error {
+	logger.Debugf("pageService.Update(%#v)", page)
 
 	// Update the page record
-	if err := db.ExecOne(db.Update("cm_domain_pages").Set(goqu.Record{"is_readonly": page.IsReadonly}).Where(goqu.Ex{"id": &page.ID})); err != nil {
-		logger.Errorf("pageService.UpdateReadonly: ExecOne() failed: %v", err)
+	if err := db.ExecOne(db.Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID})); err != nil {
+		logger.Errorf("pageService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
 
