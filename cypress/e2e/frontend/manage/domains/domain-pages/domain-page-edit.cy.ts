@@ -65,14 +65,32 @@ context('Domain Page Edit page', () => {
         cy.noToast();
     });
 
+    it('validates input', () => {
+        cy.loginViaApi(USERS.ace, pagePathWritable);
+        makeAliases(pathComments, true, false);
+
+        // Remove the path, then try to submit to get error feedback
+        cy.get('@path').isValid().clear();
+        cy.get('@btnSubmit').click();
+        cy.isAt(pagePathWritable);
+
+        // Path
+        cy.get('@path').isInvalid('Please enter a value.')
+            .type('x').isInvalid('Page path must begin with a /.')
+            .setValue('/').isValid()
+            .setValue('/'.repeat(2076)).isInvalid('Value is too long.')
+            .type('{backspace}').isValid()
+            .setValue('/path').isValid();
+    });
+
     context('allows to edit page', () => {
 
         [
             {name: 'superuser', user: USERS.root},
             {name: 'owner',     user: USERS.ace},
         ]
-            .forEach(test =>
-                it(`by ${test.name}`, () => {
+            .forEach(test => {
+                it(`by ${test.name}, changing path`, () => {
                     // Login
                     cy.loginViaApi(test.user, pagePathWritable);
                     const newPath = '/new-path';
@@ -132,7 +150,22 @@ context('Domain Page Edit page', () => {
 
                     // Go to the test page again and verify it isn't readonly anymore
                     checkNotReadonly(TEST_PATHS.comments);
-                }));
+                });
+
+                it(`by ${test.name}, refusing to reuse existing path`, () => {
+                    // Login
+                    cy.loginViaApi(test.user, pagePathWritable);
+                    makeAliases(pathComments, true, false);
+
+                    // Edit the page and submit
+                    cy.get('@path').setValue('/dark-mode/');
+                    cy.get('@btnSubmit').click();
+
+                    // We get an error toast and stay on the same page
+                    cy.toastCheckAndClose('page-path-already-exists');
+                    cy.isAt(pagePathWritable);
+                });
+            });
 
         it('by moderator', () => {
             // Login
