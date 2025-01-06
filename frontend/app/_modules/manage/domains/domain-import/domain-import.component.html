@@ -5,7 +5,10 @@
 @if (!result) {
     <div>
         <!-- Info -->
-        <p i18n>Use this option to import data previously exported from Comentario, Commento, or Disqus.</p>
+        <p>
+            <ng-container i18n>Use this operation to import data previously exported from another system.</ng-container>
+            <app-info-icon docLink="/installation/migration/" class="ms-2"/>
+        </p>
         <div class="alert alert-warning" role="alert">
             <h5 class="alert-heading text-start">
                 <fa-icon [icon]="faExclamationTriangle" class="text-warning me-1"/>

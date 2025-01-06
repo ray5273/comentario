@@ -54,4 +54,4 @@ The two files must reside in the same directory. Then, start the database and th
 docker compose up
 ```
 
-Comentario will be reachable at [localhost:8080](http://localhost:8080). Just navigate to [Sign up](http://localhost:8080/en/auth/signup) and register with any email and password: you'll become a *superuser* and will be able to configure the server and add domains in the UI.
+Comentario will be reachable at [localhost:8080](http://localhost:8080). Just navigate to [Sign up](http://localhost:8080/en/auth/signup) and register with any email and password: you'll become a [superuser](/kb/permissions/superuser) and will be able to configure the server and add domains in the UI.

@@ -85,7 +85,7 @@ And if you start it with the `-v` command-line switch, you should have seen the 
 
 ### 4. Appoint a superuser
 
-Comentario introduces the concept of *superuser*: it's essentially an instance admin. Only superusers can manage (edit, ban, delete) other users and change configuration parameters. You'll definitely need at least one for your installation.
+Comentario introduces the concept of [superuser](/kb/permissions/superuser): it's essentially an instance admin. Only superusers can manage (edit, ban, delete) other users and change configuration parameters. You'll definitely need at least one for your installation.
 
 There are the following four ways to become a superuser:
 
