@@ -316,7 +316,7 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path, title stri
 	}
 
 	// Also register visit details in the background, if required
-	if req != nil {
+	if !config.ServerConfig.DisablePageViewStats && req != nil {
 		go svc.insertPageView(&pResult.ID, req)
 	}
 

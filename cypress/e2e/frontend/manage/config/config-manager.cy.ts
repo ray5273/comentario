@@ -73,6 +73,7 @@ context('Config Manager', () => {
                 ['Configured federated identity providers', ['Facebook', 'GitHub', 'GitLab', 'Google', 'LinkedIn', 'Twitter']],
                 ['Max. number of items per page',           '25'],
                 ['Live update enabled',                     '✔'],
+                ['Page view statistics enabled',            '✔'],
                 ['Available UI languages',                  Object.entries(UI_LANGUAGES).map(([k, v]) => k+v)],
                 ['Enabled extensions',                      ['Akismet', 'APILayer SpamChecker', 'Perspective']],
             ]);

@@ -5,11 +5,13 @@
         <app-metric-card [value]="totalViews" label="Views" i18n-label="metric-label|"/>
 
         <!-- Chart -->
-        @if (chartDataViews; as d) {
-            <div class="chart-container">
+        <div class="chart-container">
+            @if (chartDataViews; as d) {
                 <canvas baseChart type="line" [options]="chartOptionsViews" [data]="d"></canvas>
-            </div>
-        }
+            } @else {
+                <app-no-data [fullHeight]="true"/>
+            }
+        </div>
     </div>
 
     <!-- Comments -->
@@ -18,10 +20,12 @@
         <app-metric-card [value]="totalComments" label="Comments" i18n-label="metric-label|"/>
 
         <!-- Chart -->
-        @if (chartDataComments; as d) {
-            <div class="chart-container">
+        <div class="chart-container">
+            @if (chartDataComments; as d) {
                 <canvas baseChart type="line" [options]="chartOptionsComments" [data]="d"></canvas>
-            </div>
-        }
+            } @else {
+                <app-no-data [fullHeight]="true"/>
+            }
+        </div>
     </div>
 </div>

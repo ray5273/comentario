@@ -30,7 +30,7 @@ export class DailyStatsChartComponent {
     /** Daily numbers of views. */
     @Input({required: true})
     set countsViews(c: number[] | undefined) {
-        if (c) {
+        if (c?.length) {
             this.chartDataViews    = this.getChartConfig(c, $localize`Views`, '#339b11') ;
             this.chartOptionsViews = this.getChartOptions(this.chartDataViews.labels as string[]);
         } else {
@@ -42,7 +42,7 @@ export class DailyStatsChartComponent {
     /** Daily numbers of comments. */
     @Input({required: true})
     set countsComments(c: number[] | undefined) {
-        if (c) {
+        if (c?.length) {
             this.chartDataComments    = this.getChartConfig(c, $localize`Comments`, '#376daf');
             this.chartOptionsComments = this.getChartOptions(this.chartDataComments.labels as string[]);
         } else {

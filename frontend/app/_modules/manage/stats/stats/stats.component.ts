@@ -95,7 +95,7 @@ export class StatsComponent {
                     this.api.dashboardDailyStats(metric, this._numberOfDays, domainId)
                         .pipe(
                             tap(counts => {
-                                this.totalCounts![metric] = counts!.reduce((acc, n) => acc + n, 0);
+                                this.totalCounts![metric] = counts.reduce((acc, n) => acc + n, 0);
                                 this.dailyStats! [metric] = counts;
                             }))),
 

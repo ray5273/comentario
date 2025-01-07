@@ -650,6 +650,7 @@ definitions:
       - defaultLangId
       - resultPageSize
       - liveUpdateEnabled
+      - pageViewStatsEnabled
     properties:
       baseUrl:
         type: string
@@ -715,6 +716,11 @@ definitions:
         x-omitempty: false
         x-isnullable: false
         description: Whether the Live update is enabled globally
+      pageViewStatsEnabled:
+        type: boolean
+        x-omitempty: false
+        x-isnullable: false
+        description: Whether page view statistics gathering and reporting is enabled
 
   keyValueMap:
     description: Map of key-value strings

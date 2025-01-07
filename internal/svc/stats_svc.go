@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"time"
@@ -139,6 +140,11 @@ func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, doma
 func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
 	logger.Debugf("statsService.GetDailyViewCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)
 
+	// Return a nil slice unless stats gathering is enabled
+	if config.ServerConfig.DisablePageViewStats {
+		return nil, nil
+	}
+
 	// Calculate the start date
 	numDays, start := getStatsStartDate(numDays)
 
@@ -170,6 +176,11 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 
 func (svc *statsService) GetTopPages(isSuperuser bool, prop string, userID, domainID *uuid.UUID, numDays, num int) ([]*exmodels.PageStatsItem, error) {
 	logger.Debugf("statsService.GetTopPages(%v, %q, %s, %s, %d, %d)", isSuperuser, prop, userID, domainID, numDays, num)
+
+	// Return a nil slice unless stats gathering is enabled
+	if config.ServerConfig.DisablePageViewStats {
+		return nil, nil
+	}
 
 	// Calculate the start date
 	numDays, start := getStatsStartDate(numDays)
@@ -260,6 +271,11 @@ func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
 }
 func (svc *statsService) GetViewStats(isSuperuser bool, dimension string, userID, domainID *uuid.UUID, numDays int) (exmodels.StatsDimensionCounts, error) {
 	logger.Debugf("statsService.GetViewStats(%v, %q, %s, %s, %d)", isSuperuser, dimension, userID, domainID, numDays)
+
+	// Return a nil slice unless stats gathering is enabled
+	if config.ServerConfig.DisablePageViewStats {
+		return nil, nil
+	}
 
 	// Calculate the start date
 	_, start := getStatsStartDate(numDays)

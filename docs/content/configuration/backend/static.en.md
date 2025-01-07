@@ -75,6 +75,7 @@ Below is a list of available command-line options, with their environment equiva
 | `--home-content-url=VALUE`   | URL of a HTML page to display on homepage                             | `$HOME_CONTENT_URL`   |                                                               |
 | `--gitlab-url=VALUE`         | Custom GitLab URL for authentication                                  | `$GITLAB_URL`         |                                                               |
 | `--no-live-update`           | Disable [live updates](/kb/live-update) via WebSockets                | `$NO_LIVE_UPDATE`     |                                                               |
+| `--no-page-view-stats`       | Disable page view statistics gathering and reporting.                 | `$NO_PAGE_VIEW_STATS` |                                                               |
 | `--ws-max-clients=VALUE`     | Maximum number of WebSocket clients                                   | `$WS_MAX_CLIENTS`     | `10000`                                                       |
 | `--e2e`                      | Start server in end-to-end testing mode                               |                       |                                                               |
 {.table .table-striped}
