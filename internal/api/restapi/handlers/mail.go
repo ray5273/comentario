@@ -48,17 +48,17 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 	// Moderator notifications
 	case svc.MailNotificationKindModerator:
 		changed = domainUser.NotifyModerator
-		domainUser.NotifyModerator = false
+		domainUser.WithNotifyModerator(false)
 
 	// Reply notifications
 	case svc.MailNotificationKindReply:
 		changed = domainUser.NotifyReplies
-		domainUser.NotifyReplies = false
+		domainUser.WithNotifyReplies(false)
 
 	// Comment status notifications
 	case svc.MailNotificationKindCommentStatus:
 		changed = domainUser.NotifyCommentStatus
-		domainUser.NotifyCommentStatus = false
+		domainUser.WithNotifyCommentStatus(false)
 	}
 
 	// Persist the changes, if any

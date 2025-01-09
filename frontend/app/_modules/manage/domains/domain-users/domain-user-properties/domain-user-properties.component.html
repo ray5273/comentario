@@ -6,8 +6,8 @@
         <div class="row">
             <!-- Buttons -->
             <div class="col-sm-auto order-sm-last pb-3">
-                <!-- Edit: disable for the current user -->
-                <a [class.disabled]="domainUser.userId === principal?.id" routerLink="edit" class="btn btn-secondary w-100">
+                <!-- Edit -->
+                <a routerLink="edit" class="btn btn-secondary w-100">
                     <fa-icon [icon]="faEdit" class="me-1"/>
                     <ng-container i18n>Edit</ng-container>
                 </a>

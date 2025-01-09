@@ -6,7 +6,7 @@ context('Domain User Properties', () => {
     const pagePathKing = `${usersPath}/${USERS.king.id}`;
     const pagePathAce  = `${usersPath}/${USERS.ace.id}`;
 
-    const makeAliases = (canEdit: boolean) => {
+    const makeAliases = () => {
         cy.get('app-domain-user-properties').as('userProps');
 
         // Header
@@ -16,8 +16,7 @@ context('Domain User Properties', () => {
         cy.get('@userProps').find('#domain-user-detail-table').as('userDetails');
 
         // Buttons
-        cy.get('@userProps').contains('a', 'Edit').as('btnEdit')
-            .should('be.visible').and(canEdit ? 'not.have.class' : 'have.class', 'disabled');
+        cy.get('@userProps').contains('a', 'Edit').as('btnEdit').should('be.visible').and('not.have.class', 'disabled');
 
         // Related user details
         cy.get('@userProps').contains('h2', 'Related user properties').should('be.visible');
@@ -59,7 +58,7 @@ context('Domain User Properties', () => {
             .forEach(({name, user}) =>
                 it(`for ${name}`, () => {
                     cy.loginViaApi(user, pagePathKing);
-                    makeAliases(true);
+                    makeAliases();
 
                     // Check user details
                     cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -105,7 +104,7 @@ context('Domain User Properties', () => {
 
         it('for the user self', () => {
             cy.loginViaApi(USERS.ace, pagePathAce);
-            makeAliases(false); // Edit button is disabled
+            makeAliases();
 
             // Check user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -126,6 +125,10 @@ context('Domain User Properties', () => {
                 ['Created',    REGEXES.datetime],
                 ['Last login', REGEXES.datetime],
             ]);
+
+            // Click on Edit and land on the Edit user page
+            cy.get('@btnEdit').click();
+            cy.isAt(`${pagePathAce}/edit`);
         });
     });
 });

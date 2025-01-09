@@ -4,7 +4,7 @@ import { Router } from '@angular/router';
 import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, DomainUser } from '../../../../../../generated-api';
+import { ApiGeneralService, DomainUser, Principal } from '../../../../../../generated-api';
 import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
@@ -25,6 +25,11 @@ export class DomainUserEditComponent implements OnInit {
     /** User's email. */
     email?: string;
 
+    /** Currently authenticated principal. */
+    principal?: Principal;
+
+    private origRole?: UserRole;
+
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
@@ -34,7 +39,7 @@ export class DomainUserEditComponent implements OnInit {
         notifyCommentStatus: false,
     });
 
-    private readonly id$ = new ReplaySubject<string>();
+    private readonly id$ = new ReplaySubject<string>(1);
 
     constructor(
         private readonly fb: FormBuilder,
@@ -59,17 +64,26 @@ export class DomainUserEditComponent implements OnInit {
                 // Blend with user ID
                 combineLatestWith(this.id$),
                 // Fetch the domain user
-                switchMap(([meta, id]) => this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing())))
+                switchMap(([meta, id]) => {
+                    this.principal = meta.principal;
+                    return this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing());
+                }))
             .subscribe(r => {
                 this.domainUser = r.domainUser;
                 this.email      = r.user!.email;
                 const du = this.domainUser!;
+                this.origRole = du.isOwner ? 'owner' : du.isModerator ? 'moderator' : du.isCommenter ? 'commenter' : 'readonly';
                 this.form.setValue({
-                    role:                du.isOwner ? 'owner' : du.isModerator ? 'moderator' : du.isCommenter ? 'commenter' : 'readonly',
+                    role:                this.origRole,
                     notifyReplies:       !!du.notifyReplies,
                     notifyModerator:     !!du.notifyModerator,
                     notifyCommentStatus: !!du.notifyCommentStatus,
                 });
+
+                // Only superuser can change their own role
+                if (this.domainUser?.userId === this.principal?.id && !this.principal?.isSuperuser) {
+                    this.form.controls.role.disable();
+                }
             });
     }
 
@@ -79,7 +93,7 @@ export class DomainUserEditComponent implements OnInit {
 
         // Submit the form if it's valid
         if (this.form.valid) {
-            const val = this.form.value;
+            const val = {role: this.origRole, ...this.form.value};
             this.api.domainUserUpdate(
                     this.domainUser!.userId!,
                     {

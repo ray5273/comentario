@@ -31,7 +31,7 @@ export class DomainPageEditComponent implements OnInit {
     });
 
     /** Page ID, set via input binding. */
-    private readonly id$ = new ReplaySubject<string>();
+    private readonly id$ = new ReplaySubject<string>(1);
 
     constructor(
         private readonly fb: FormBuilder,

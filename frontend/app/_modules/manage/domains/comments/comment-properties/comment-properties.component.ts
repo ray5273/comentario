@@ -68,7 +68,7 @@ export class CommentPropertiesComponent implements OnInit {
     readonly faXmark    = faXmark;
 
     private readonly reload$ = new BehaviorSubject<void>(undefined);
-    private readonly id$     = new ReplaySubject<string>();
+    private readonly id$     = new ReplaySubject<string>(1);
 
     constructor(
         private readonly route: ActivatedRoute,

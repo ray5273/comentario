@@ -30,7 +30,7 @@ export class DomainUserPropertiesComponent implements OnInit {
     // Icons
     readonly faEdit = faEdit;
 
-    private readonly id$ = new ReplaySubject<string>();
+    private readonly id$ = new ReplaySubject<string>(1);
 
     constructor(
         private readonly api: ApiGeneralService,

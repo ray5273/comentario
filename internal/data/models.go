@@ -952,6 +952,14 @@ func (du *DomainUser) WithNotifyReplies(b bool) *DomainUser {
 	return du
 }
 
+// WithRoles sets the role flags
+func (du *DomainUser) WithRoles(isOwner, isModerator, isCommenter bool) *DomainUser {
+	du.IsOwner = isOwner
+	du.IsModerator = du.IsOwner || isModerator     // Owner is always a moderator
+	du.IsCommenter = du.IsModerator || isCommenter // Moderator is always a commenter
+	return du
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // NullDomainUser is the same as DomainUser, but "optional", ie. having all fields nullable, and with the "du_" column

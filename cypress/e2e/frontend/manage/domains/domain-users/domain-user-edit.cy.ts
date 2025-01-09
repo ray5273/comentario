@@ -7,7 +7,7 @@ context('Domain User Edit page', () => {
     const propsPagePathKing = `${usersPath}/${USERS.king.id}`;
     const pagePathKing      = `${propsPagePathKing}/edit`;
 
-    const makeAliases = (user: Cypress.User) => {
+    const makeAliases = (user: Cypress.User, roleEditable: boolean) => {
         cy.get('app-domain-user-edit').as('userEdit');
 
         // Header
@@ -15,10 +15,10 @@ context('Domain User Edit page', () => {
         cy.get('@userEdit').find('#domain-user-email').should('have.text', user.email).and('be.visible');
 
         // Form controls
-        cy.get('@userEdit').find('#role-owner')           .as('roleOwner')    .next().should('have.text', 'Owner');
-        cy.get('@userEdit').find('#role-moderator')       .as('roleModerator').next().should('have.text', 'Moderator');
-        cy.get('@userEdit').find('#role-commenter')       .as('roleCommenter').next().should('have.text', 'Commenter');
-        cy.get('@userEdit').find('#role-readonly')        .as('roleReadonly') .next().should('have.text', 'Read-only');
+        cy.get('@userEdit').find('#role-owner')           .as('roleOwner')           .should(roleEditable ? 'be.enabled' : 'be.disabled').next().should('have.text', 'Owner');
+        cy.get('@userEdit').find('#role-moderator')       .as('roleModerator')       .should(roleEditable ? 'be.enabled' : 'be.disabled').next().should('have.text', 'Moderator');
+        cy.get('@userEdit').find('#role-commenter')       .as('roleCommenter')       .should(roleEditable ? 'be.enabled' : 'be.disabled').next().should('have.text', 'Commenter');
+        cy.get('@userEdit').find('#role-readonly')        .as('roleReadonly')        .should(roleEditable ? 'be.enabled' : 'be.disabled').next().should('have.text', 'Read-only');
         cy.get('@userEdit').find('#notify-replies')       .as('notifyReplies')       .should('be.enabled');
         cy.get('@userEdit').find('#notify-moderator')     .as('notifyModerator')     .should('be.enabled');
         cy.get('@userEdit').find('#notify-comment-status').as('notifyCommentStatus') .should('be.enabled');
@@ -51,15 +51,15 @@ context('Domain User Edit page', () => {
         cy.verifyStayOnReload(pagePathKing, USERS.ace);
 
         // Test cancelling: we return to user properties
-        makeAliases(USERS.king);
+        makeAliases(USERS.king, true);
         cy.get('@btnCancel').click();
         cy.isAt(propsPagePathKing);
         cy.noToast();
     });
 
     [
-        {name: 'superuser', user: USERS.root},
-        {name: 'owner',     user: USERS.ace},
+        {name: 'superuser', user: USERS.root, selfRoleEditable: true,  selfRoleCtl: '@roleCommenter'},
+        {name: 'owner',     user: USERS.ace,  selfRoleEditable: false, selfRoleCtl: '@roleOwner'},
     ]
         .forEach(test => context(`allows ${test.name} to edit`, () => {
 
@@ -71,7 +71,7 @@ context('Domain User Edit page', () => {
                 .forEach(subj => it(`${subj.name} user`, () => {
                     // Login
                     cy.loginViaApi(test.user, `${usersPath}/${subj.user.id}/edit`);
-                    makeAliases(subj.user);
+                    makeAliases(subj.user, true);
 
                     // Check the input values are correct
                     cy.get(subj.from)             .should('be.checked');
@@ -135,5 +135,42 @@ context('Domain User Edit page', () => {
                     cy.get('@settingsDialog').find('#comentario-cb-notify-moderator')     .should(subj.isModerator ? 'not.be.checked' : 'not.exist');
                     cy.get('@settingsDialog').find('#comentario-cb-notify-comment-status').should('be.checked');
                 }));
+
+                it('self-user', () => {
+                    // If it's root, first leave a comment to create a domain user for it
+                    if (test.user.isSuper) {
+                        cy.testSiteLoginViaApi(test.user, TEST_PATHS.comments);
+                        EmbedUtils.addComment(undefined, 'I am root', false);
+                    }
+
+                    // Now login and navigate to the domain user
+                    cy.loginViaApi(test.user, `${usersPath}/${test.user.id}/edit`);
+                    makeAliases(test.user, test.selfRoleEditable);
+
+                    // Check the input values are correct, then change them
+                    cy.get(test.selfRoleCtl)      .should('be.checked');
+                    cy.get('@notifyReplies')      .should('be.checked');
+                    cy.get('@notifyModerator')    .should('be.checked').click();
+                    cy.get('@notifyCommentStatus').should('be.checked').click();
+
+                    // Change the role, if it's allowed
+                    if (test.selfRoleEditable) {
+                        cy.get('@roleOwner').click();
+                    }
+
+                    // Submit the changes
+                    cy.get('@btnSubmit').click();
+
+                    // We're back to user props
+                    cy.isAt(`${usersPath}/${test.user.id}`);
+                    cy.toastCheckAndClose('data-saved');
+                    cy.get('app-domain-user-properties #domain-user-detail-table').dlTexts().should('matrixMatch', [
+                        ['Role',                         'Owner'],
+                        ['Reply notifications',          '✔'],
+                        ['Moderator notifications',      ''],
+                        ['Comment status notifications', ''],
+                        ['Created',                      REGEXES.datetime],
+                    ]);
+                });
         }));
 });

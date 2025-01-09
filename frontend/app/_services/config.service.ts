@@ -37,7 +37,7 @@ export class ConfigService {
      * Observable for instance configuration obtained from the server. Supposed to only be used during app
      * initialisation, because once it's complete one can start using the cached configs (staticConfig etc.)
      */
-    readonly config$ = new ReplaySubject<InstanceConfig>();
+    readonly config$ = new ReplaySubject<InstanceConfig>(1);
 
     private readonly _dynamicReload$ = new BehaviorSubject<void>(undefined);
 

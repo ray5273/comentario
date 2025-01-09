@@ -198,10 +198,10 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 
 		// Domain user exists. Update it, if the settings change
 	} else if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
-		du.NotifyReplies = params.Body.NotifyReplies
-		du.NotifyModerator = params.Body.NotifyModerator
-		du.NotifyCommentStatus = params.Body.NotifyCommentStatus
-		err = svc.TheDomainService.UserModify(du)
+		err = svc.TheDomainService.UserModify(du.
+			WithNotifyReplies(params.Body.NotifyReplies).
+			WithNotifyModerator(params.Body.NotifyModerator).
+			WithNotifyCommentStatus(params.Body.NotifyCommentStatus))
 	}
 
 	// Error check

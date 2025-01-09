@@ -63,18 +63,22 @@ func DomainUserUpdate(params api_general.DomainUserUpdateParams, user *data.User
 		return r
 	}
 
-	// Make sure the user isn't editing themselves
-	if du.UserID == user.ID {
-		return respBadRequest(exmodels.ErrorSelfOperation)
+	// If the role's changing
+	isOwner := params.Body.IsOwner
+	isModerator := isOwner || params.Body.IsModerator
+	isCommenter := isModerator || params.Body.IsCommenter
+	if du.IsOwner != isOwner || du.IsModerator != isModerator || du.IsCommenter != isCommenter {
+		// Only a superuser is allowed to change their own role
+		if !user.IsSuperuser && du.UserID == user.ID {
+			return respBadRequest(exmodels.ErrorSelfOperation)
+		}
 	}
 
 	// Update the domain user
-	du.IsOwner = params.Body.IsOwner
-	du.IsModerator = du.IsOwner || params.Body.IsModerator
-	du.IsCommenter = du.IsModerator || params.Body.IsCommenter
-	du.NotifyReplies = params.Body.NotifyReplies
-	du.NotifyModerator = params.Body.NotifyModerator
-	du.NotifyCommentStatus = params.Body.NotifyCommentStatus
+	du.WithRoles(isOwner, isModerator, isCommenter).
+		WithNotifyReplies(params.Body.NotifyReplies).
+		WithNotifyModerator(params.Body.NotifyModerator).
+		WithNotifyCommentStatus(params.Body.NotifyCommentStatus)
 	if err := svc.TheDomainService.UserModify(du); err != nil {
 		return respServiceError(err)
 	}
