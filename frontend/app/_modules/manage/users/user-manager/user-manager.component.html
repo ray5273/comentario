@@ -53,9 +53,7 @@
                                 </span>
                             }
                             <!-- Superuser badge -->
-                            @if (u.isSuperuser) {
-                                <span class="badge rounded-pill bg-success border border-dark ms-2" i18n>Super</span>
-                            }
+                            @if (u.isSuperuser) { <app-superuser-badge class="ms-2"/> }
                             <!-- Banned badge -->
                             @if (u.banned) {
                                 <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">

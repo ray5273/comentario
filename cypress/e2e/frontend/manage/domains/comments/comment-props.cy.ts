@@ -136,7 +136,7 @@ context('Comment Properties page', () => {
                 ['Author IP',                 '239.106.211.148'],
                 ['Author country',            'GB — United Kingdom'],
                 ['Moderated',                 REGEXES.datetime],
-                ['Moderated by',              'R\nRoot (root@comentario.app)' + 'YOU'],
+                ['Moderated by',              'R\nRoot (root@comentario.app)' + 'You'],
             ]);
 
             // Re-approve the comment
@@ -174,9 +174,9 @@ context('Comment Properties page', () => {
                 ['Author IP',      '239.106.211.148'],
                 ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
-                ['Moderated by',   'R\nRoot (root@comentario.app)' + 'YOU'],
+                ['Moderated by',   'R\nRoot (root@comentario.app)' + 'You'],
                 ['Deleted',        REGEXES.datetime],
-                ['Deleted by',     'R\nRoot (root@comentario.app)' + 'YOU'],
+                ['Deleted by',     'R\nRoot (root@comentario.app)' + 'You'],
             ]);
         });
 
@@ -223,7 +223,7 @@ context('Comment Properties page', () => {
                 ['Created by',                'C\nCommenter Two (two@blog.com)'],
                 ['Author country',            'GB — United Kingdom'],
                 ['Moderated',                 REGEXES.datetime],
-                ['Moderated by',              'Captain Ace' + 'YOU'],
+                ['Moderated by',              'Captain Ace' + 'You'],
             ]);
 
             // Delete the comment - all buttons and the text disappear
@@ -246,9 +246,9 @@ context('Comment Properties page', () => {
                 ['Created by',     'C\nCommenter Two (two@blog.com)'],
                 ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
-                ['Moderated by',   'Captain Ace' + 'YOU'],
+                ['Moderated by',   'Captain Ace' + 'You'],
                 ['Deleted',        REGEXES.datetime],
-                ['Deleted by',     'Captain Ace' + 'YOU'],
+                ['Deleted by',     'Captain Ace' + 'You'],
             ]);
         });
 
@@ -294,7 +294,7 @@ context('Comment Properties page', () => {
                 ['Created by',                'C\nCommenter Two'],
                 ['Author country',            'GB — United Kingdom'],
                 ['Moderated',                 REGEXES.datetime],
-                ['Moderated by',              'E\nEngineer King' + 'YOU'],
+                ['Moderated by',              'E\nEngineer King' + 'You'],
             ]);
 
             // Delete the comment - all buttons and the text disappear
@@ -317,9 +317,9 @@ context('Comment Properties page', () => {
                 ['Created by',     'C\nCommenter Two'],
                 ['Author country', 'GB — United Kingdom'],
                 ['Moderated',      REGEXES.datetime],
-                ['Moderated by',   'E\nEngineer King' + 'YOU'],
+                ['Moderated by',   'E\nEngineer King' + 'You'],
                 ['Deleted',        REGEXES.datetime],
-                ['Deleted by',     'E\nEngineer King' + 'YOU'],
+                ['Deleted by',     'E\nEngineer King' + 'You'],
             ]);
         });
 
@@ -336,9 +336,9 @@ context('Comment Properties page', () => {
                 ['Score',          '4'],
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
-                ['Created by',     'C\nCommenter Two' + 'YOU'],
+                ['Created by',     'C\nCommenter Two' + 'You'],
                 ['Moderated',      REGEXES.datetime],
-                ['Moderated by',   'C\nCommenter Two' + 'YOU'],
+                ['Moderated by',   'C\nCommenter Two' + 'You'],
             ]);
 
             // Check text
@@ -359,11 +359,11 @@ context('Comment Properties page', () => {
                 ['Score',          '4'],
                 ['Sticky',         ''],
                 ['Created',        REGEXES.datetime],
-                ['Created by',     'C\nCommenter Two' + 'YOU'],
+                ['Created by',     'C\nCommenter Two' + 'You'],
                 ['Moderated',      REGEXES.datetime],
-                ['Moderated by',   'C\nCommenter Two' + 'YOU'],
+                ['Moderated by',   'C\nCommenter Two' + 'You'],
                 ['Deleted',        REGEXES.datetime],
-                ['Deleted by',     'C\nCommenter Two' + 'YOU'],
+                ['Deleted by',     'C\nCommenter Two' + 'You'],
             ]);
         });
 

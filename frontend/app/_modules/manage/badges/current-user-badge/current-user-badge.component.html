@@ -1,3 +1,6 @@
 @if (userId && userId === (principal | async)?.id) {
-    <span [ngClass]="badgeClasses" class="badge rounded-pill bg-light border border-success text-success text-uppercase" i18n>You</span>
+    <span [ngClass]="badgeClasses" class="badge rounded-pill bg-current-user border border-current-user">
+        <fa-icon [icon]="faUserCheck" class="me-1"/>
+        <ng-container i18n>You</ng-container>
+    </span>
 }

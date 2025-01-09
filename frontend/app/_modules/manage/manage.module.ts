@@ -68,6 +68,7 @@ import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.
 import { StatsComponent } from './stats/stats/stats.component';
 import { EmailUpdateComponent } from './account/email-update/email-update.component';
 import { DomainPageEditComponent } from './domains/domain-pages/domain-page-edit/domain-page-edit.component';
+import { SuperuserBadgeComponent } from './badges/superuser-badge/superuser-badge.component';
 
 @NgModule({
     declarations: [
@@ -120,6 +121,7 @@ import { DomainPageEditComponent } from './domains/domain-pages/domain-page-edit
         SortSelectorComponent,
         StaticConfigComponent,
         StatsComponent,
+        SuperuserBadgeComponent,
         TopPagesStatsComponent,
         UpdatesBadgeComponent,
         UserDetailsComponent,

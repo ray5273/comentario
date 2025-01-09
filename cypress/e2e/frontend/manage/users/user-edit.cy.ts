@@ -96,7 +96,7 @@ context('User Edit page', () => {
 
             // Verify user details
             cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                ['ID',                   user.id + 'YOU'],
+                ['ID',                   user.id + 'You'],
                 ['Name',                 'I am the root!'],
                 ['Email',                'super@example.com'],
                 ['Language',             'nl'],

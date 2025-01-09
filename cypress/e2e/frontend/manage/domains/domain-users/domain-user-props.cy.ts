@@ -118,7 +118,7 @@ context('Domain User Properties', () => {
 
             // Check related user details
             cy.get('@relatedUserDetails').dlTexts().should('matrixMatch', [
-                ['ID',         USERS.ace.id + 'YOU'],
+                ['ID',         USERS.ace.id + 'You'],
                 ['Name',       USERS.ace.name],
                 ['Email',      USERS.ace.email],
                 ['Language',   'en'],

@@ -84,7 +84,7 @@ context('User Properties page', () => {
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                ['ID',                   USERS.root.id + 'YOU'],
+                ['ID',                   USERS.root.id + 'You'],
                 ['Name',                 USERS.root.name],
                 ['Email',                USERS.root.email],
                 ['Language',             'en'],

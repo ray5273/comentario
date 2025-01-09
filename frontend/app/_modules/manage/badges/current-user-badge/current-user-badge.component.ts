@@ -1,8 +1,9 @@
 import { Component, Input } from '@angular/core';
+import { faUserCheck } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../../../_services/auth.service';
 
 /**
- * Component that renders a "YOU" badge for the current user, i.e. when the specified user ID matches the currently
+ * Component that renders a "You" badge for the current user, i.e. when the specified user ID matches the currently
  * logged-in principal.
  */
 @Component({
@@ -21,6 +22,9 @@ export class CurrentUserBadgeComponent {
 
     /** Observable of the currently authenticated principal. */
     readonly principal = this.authSvc.principal;
+
+    // Icons
+    readonly faUserCheck = faUserCheck;
 
     constructor(
         private readonly authSvc: AuthService,
