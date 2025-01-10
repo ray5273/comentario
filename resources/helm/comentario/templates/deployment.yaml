@@ -36,11 +36,10 @@ spec:
           volumeMounts:
             - name: secrets-volume
               mountPath: /comentario-secrets
-          args: [
-            {{- with .Values.comentario.verbosity -}}
-            {{- if eq . "info" }}"-v"{{ else if eq . "debug" }}"-vv"{{ end -}}
-            {{- end -}}
-          ]
+          {{- with .Values.comentario.args }}
+          args:
+            {{- toYaml . | nindent 12 }}
+          {{- end }}
           env:
             - name: HOST
               value: '0.0.0.0'

@@ -258,6 +258,9 @@ helm-chart:
   image: $DEPLOYER_IMAGE
   dependencies: []
   script:
+    # Lint the chart
+    - helm lint --strict resources/helm/comentario
+
     # Extract version from the chart
     - CHART_VERSION="$(helm show chart resources/helm/comentario | grep -E '^version:' | cut -d ' ' -f 2)"
 
