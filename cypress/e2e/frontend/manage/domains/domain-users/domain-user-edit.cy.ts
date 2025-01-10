@@ -58,20 +58,28 @@ context('Domain User Edit page', () => {
     });
 
     [
-        {name: 'superuser', user: USERS.root, selfRoleEditable: true,  selfRoleCtl: '@roleCommenter'},
-        {name: 'owner',     user: USERS.ace,  selfRoleEditable: false, selfRoleCtl: '@roleOwner'},
+        {name: 'superuser', user: USERS.root, selfRoleCtl: '@roleCommenter'},
+        {name: 'owner',     user: USERS.ace,  selfRoleCtl: '@roleOwner'},
     ]
         .forEach(test => context(`allows ${test.name} to edit`, () => {
 
             [
-                {name: 'moderator', user: USERS.king,           from: '@roleModerator', to: '@roleOwner',     expect: 'Owner',     isModerator: true},
-                {name: 'commenter', user: USERS.commenterTwo,   from: '@roleCommenter', to: '@roleModerator', expect: 'Moderator', isModerator: true},
-                {name: 'read-only', user: USERS.commenterThree, from: '@roleReadonly',  to: '@roleCommenter', expect: 'Commenter', isModerator: false},
+                {name: 'moderator', user: USERS.king,           from: '@roleModerator', to: '@roleOwner',     expect: 'Owner',     isModerator: true,  selfUser: false},
+                {name: 'commenter', user: USERS.commenterTwo,   from: '@roleCommenter', to: '@roleModerator', expect: 'Moderator', isModerator: true,  selfUser: false},
+                {name: 'read-only', user: USERS.commenterThree, from: '@roleReadonly',  to: '@roleCommenter', expect: 'Commenter', isModerator: false, selfUser: false},
+                {name: 'self-user', user: test.user,            from: test.selfRoleCtl, to: '@roleOwner',     expect: 'Owner',     isModerator: true,  selfUser: true},
             ]
                 .forEach(subj => it(`${subj.name} user`, () => {
+                    // If it's root self-user test, first leave a comment to create a domain user for it
+                    if (subj.selfUser && subj.user.isSuper) {
+                        cy.testSiteLoginViaApi(test.user);
+                        cy.commentAddViaApi(DOMAINS.localhost.host, TEST_PATHS.comments, null, 'I am root');
+                    }
+
                     // Login
+                    const roleEditable = !subj.selfUser || subj.user.isSuper;
                     cy.loginViaApi(test.user, `${usersPath}/${subj.user.id}/edit`);
-                    makeAliases(subj.user, true);
+                    makeAliases(subj.user, roleEditable);
 
                     // Check the input values are correct
                     cy.get(subj.from)             .should('be.checked');
@@ -79,8 +87,10 @@ context('Domain User Edit page', () => {
                     cy.get('@notifyModerator')    .should('be.checked');
                     cy.get('@notifyCommentStatus').should('be.checked');
 
-                    // Select a new role and toggle notifications
-                    cy.get(subj.to).clickLabel();
+                    // Select a new role (if allowed) and toggle notifications
+                    if (roleEditable) {
+                        cy.get(subj.to).clickLabel();
+                    }
                     cy.get('@notifyReplies')      .click().should('not.be.checked');
                     cy.get('@notifyModerator')    .click().should('not.be.checked');
                     cy.get('@notifyCommentStatus').click().should('not.be.checked');
@@ -135,42 +145,5 @@ context('Domain User Edit page', () => {
                     cy.get('@settingsDialog').find('#comentario-cb-notify-moderator')     .should(subj.isModerator ? 'not.be.checked' : 'not.exist');
                     cy.get('@settingsDialog').find('#comentario-cb-notify-comment-status').should('be.checked');
                 }));
-
-                it('self-user', () => {
-                    // If it's root, first leave a comment to create a domain user for it
-                    if (test.user.isSuper) {
-                        cy.testSiteLoginViaApi(test.user, TEST_PATHS.comments);
-                        EmbedUtils.addComment(undefined, 'I am root', false);
-                    }
-
-                    // Now login and navigate to the domain user
-                    cy.loginViaApi(test.user, `${usersPath}/${test.user.id}/edit`);
-                    makeAliases(test.user, test.selfRoleEditable);
-
-                    // Check the input values are correct, then change them
-                    cy.get(test.selfRoleCtl)      .should('be.checked');
-                    cy.get('@notifyReplies')      .should('be.checked');
-                    cy.get('@notifyModerator')    .should('be.checked').click();
-                    cy.get('@notifyCommentStatus').should('be.checked').click();
-
-                    // Change the role, if it's allowed
-                    if (test.selfRoleEditable) {
-                        cy.get('@roleOwner').click();
-                    }
-
-                    // Submit the changes
-                    cy.get('@btnSubmit').click();
-
-                    // We're back to user props
-                    cy.isAt(`${usersPath}/${test.user.id}`);
-                    cy.toastCheckAndClose('data-saved');
-                    cy.get('app-domain-user-properties #domain-user-detail-table').dlTexts().should('matrixMatch', [
-                        ['Role',                         'Owner'],
-                        ['Reply notifications',          '✔'],
-                        ['Moderator notifications',      ''],
-                        ['Comment status notifications', ''],
-                        ['Created',                      REGEXES.datetime],
-                    ]);
-                });
         }));
 });
