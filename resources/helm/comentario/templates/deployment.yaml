@@ -37,8 +37,8 @@ spec:
             - name: secrets-volume
               mountPath: /comentario-secrets
           args: [
-            {{- if eq .Values.comentario.verbosity      1 -}} "-v"
-            {{- else if eq .Values.comentario.verbosity 2 -}} "-vv"
+            {{- if eq .Values.comentario.verbosity      "1" -}} "-v"
+            {{- else if eq .Values.comentario.verbosity "2" -}} "-vv"
             {{- end -}}
             ]
           env:
