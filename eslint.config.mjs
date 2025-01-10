@@ -49,11 +49,6 @@ export default tseslint.config(
             ...angular.configs.templateRecommended,
             ...angular.configs.templateAccessibility,
         ],
-        rules: {
-            // This rule erroneously reports forms as needing a tabindex. Disable until
-            // https://github.com/angular-eslint/angular-eslint/issues/1429 is resolved
-            '@angular-eslint/template/interactive-supports-focus': 'off',
-        },
     },
 
     // Embed typescript
@@ -91,6 +86,7 @@ export default tseslint.config(
             'mocha/no-exclusive-tests': 'error',
             'mocha/no-skipped-tests': 'error',
             'no-empty-pattern': 'off',
+            semi: ['error', 'always'],
         },
     },
 );

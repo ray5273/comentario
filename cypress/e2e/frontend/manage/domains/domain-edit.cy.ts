@@ -214,7 +214,7 @@ context('Domain Edit page', () => {
                             expect(el.is(':checked')).eq(k === curKey);
                         }
                     }));
-            }
+            };
 
             // Iterate every param
             params.forEach(key => {

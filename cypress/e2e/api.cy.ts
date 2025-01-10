@@ -65,7 +65,7 @@ context('API', () => {
                 expect(Object.keys(r.body)).to.have.length(numAssets + 1); // An extra item for _lang
                 expect(r.body._lang).to.equal(lang);
             });
-        }
+        };
 
         context('known languages', () => {
 

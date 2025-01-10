@@ -66,7 +66,7 @@ context('Comment Properties page', () => {
             cy.get('@commentTabMarkdown').click().should('have.class', 'active');
             cy.get('@commentProps').find('pre code').should('be.visible').and('have.text', commentText);
         }
-    }
+    };
 
     //------------------------------------------------------------------------------------------------------------------
 
