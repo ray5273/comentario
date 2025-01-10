@@ -36,7 +36,14 @@ spec:
           volumeMounts:
             - name: secrets-volume
               mountPath: /comentario-secrets
+          args: [
+            {{- if eq .Values.comentario.verbosity      1 -}} "-v"
+            {{- else if eq .Values.comentario.verbosity 2 -}} "-vv"
+            {{- end -}}
+            ]
           env:
+            - name: HOST
+              value: '0.0.0.0'
             - name: PORT
               value: '80'
             - name: BASE_URL
