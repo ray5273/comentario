@@ -35,14 +35,19 @@ export class PluginMessageService {
         }
     };
 
+    /** Handle ReloadPrincipalRequest port message. */
+    private readonly handlePE_ReloadPrincipalRequest: PluginPortEventHandler<PluginPortEventBase> = () =>
+        this.authSvc.update();
+
     /** Handle ShowToastRequest port message. */
     private readonly handlePE_ShowToastRequest: PluginPortEventHandler<PluginPortEventShowToastRequest> = data =>
         this.toastSvc.add(data as ToastInitProps);
 
     /** Map of port event handlers by type. */
     private readonly PortEventHandlers: Record<PluginPortEventKind, PluginPortEventHandler<any>> = {
-        [PluginPortEventKind.NavigationRequest]: this.handlePE_NavigationRequest,
-        [PluginPortEventKind.ShowToastRequest]:  this.handlePE_ShowToastRequest,
+        [PluginPortEventKind.NavigationRequest]:      this.handlePE_NavigationRequest,
+        [PluginPortEventKind.ReloadPrincipalRequest]: this.handlePE_ReloadPrincipalRequest,
+        [PluginPortEventKind.ShowToastRequest]:       this.handlePE_ShowToastRequest,
     };
 
     constructor(

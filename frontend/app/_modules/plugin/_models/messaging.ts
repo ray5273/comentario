@@ -52,6 +52,8 @@ export interface ComentarioPortEventPayload<T> {
 export enum PluginPortEventKind {
     /** Application navigation request. */
     NavigationRequest = 'navigationRequest',
+    /** Request to reload the current principal. */
+    ReloadPrincipalRequest = 'reloadPrincipalRequest',
     /** Request to show a toast notification. */
     ShowToastRequest = 'showToastRequest',
 }
