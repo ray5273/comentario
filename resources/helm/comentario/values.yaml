@@ -59,11 +59,8 @@ comentario:
   liveUpdate:
     enabled: true
     maxClients: 10000
-  # Logging verbosity:
-  # 0 = warning (default)
-  # 1 = info
-  # 2 = debug
-  verbosity: 1
+  # Logging verbosity, one of [warning, info, debug]. Defaults to 'warning'
+  verbosity: info
 
 resources:
    limits:
