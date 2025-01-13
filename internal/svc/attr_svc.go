@@ -74,45 +74,42 @@ func (as *attrStore) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
 
 func (as *attrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
 	logger.Debugf("attrStore.GetAll(%s)", ownerID)
-	res := plugin.AttrValues{}
 
 	// Anonymous owner has no attributes
 	if as.checkAnon && *ownerID == util.ZeroUUID {
-		return res, nil
+		return plugin.AttrValues{}, nil
 	}
 
 	// Try to find a cached item
 	if ci := as.cache.Get(*ownerID); ci != nil {
 		// Cache hit: return a *copy* of the original map
-		maps.Copy(res, ci.Value())
-
-	} else {
-		// Cache miss: create a new store
-		// NB: we cannot use ttlcache.WithLoader()/ttlcache.LoaderFunc because they don't support returning an error
-		logger.Debugf("attrStore.GetAll: cache miss for %s", ownerID)
-
-		// Prepare a filter condition
-		where := as.addPrefixCondition(goqu.Ex{as.keyColName: ownerID})
-
-		// Query the database
-		var attrs []data.Attribute
-		if err := db.From(as.tableName).Where(where).ScanStructs(&attrs); err != nil {
-			logger.Errorf("attrStore.GetAll: ScanStructs() failed: %v", err)
-			return nil, translateDBErrors(err)
-		}
-
-		// Convert the slice into a map
-		for _, a := range attrs {
-			// De-prefix the key
-			res[strings.TrimPrefix(a.Key, as.prefix)] = a.Value
-		}
-
-		// Succeeded: cache a *copy* of the values
-		cp := plugin.AttrValues{}
-		maps.Copy(cp, res)
-		as.cache.Set(*ownerID, cp, ttlcache.DefaultTTL)
+		return maps.Clone(ci.Value()), nil
 	}
-	return res, nil
+
+	// Cache miss: create a new store
+	// NB: we cannot use ttlcache.WithLoader()/ttlcache.LoaderFunc because they don't support returning an error
+	logger.Debugf("attrStore.GetAll: cache miss for %s", ownerID)
+
+	// Prepare a filter condition
+	where := as.addPrefixCondition(goqu.Ex{as.keyColName: ownerID})
+
+	// Query the database
+	var attrs []data.Attribute
+	if err := db.From(as.tableName).Where(where).ScanStructs(&attrs); err != nil {
+		logger.Errorf("attrStore.GetAll: ScanStructs() failed: %v", err)
+		return nil, translateDBErrors(err)
+	}
+
+	// Convert the slice into a map
+	m := plugin.AttrValues{}
+	for _, a := range attrs {
+		// De-prefix the key
+		m[strings.TrimPrefix(a.Key, as.prefix)] = a.Value
+	}
+
+	// Succeeded: cache the values, then return a copy of the map
+	as.cache.Set(*ownerID, m, ttlcache.DefaultTTL)
+	return maps.Clone(m), nil
 }
 
 func (as *attrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
