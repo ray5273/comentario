@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
-	complugin "gitlab.com/comentario/comentario/extend/plugin"
+	cplugin "gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -40,7 +40,7 @@ var ThePluginManager PluginManager = &pluginManager{
 
 // PluginConnector is a HostApp implementation aimed at a specific plugin instance
 type PluginConnector interface {
-	complugin.HostApp
+	cplugin.HostApp
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -86,9 +86,9 @@ func (p *pluginLogger) Debugf(format string, args ...any) {
 
 // pluginConnector implements PluginConnector
 type pluginConnector struct {
-	pluginID        string              // ID of the plugin the connector is created for
-	userAttrStore   complugin.AttrStore // User attribute store
-	domainAttrStore complugin.AttrStore // Domain attribute store
+	pluginID        string            // ID of the plugin the connector is created for
+	userAttrStore   cplugin.AttrStore // User attribute store
+	domainAttrStore cplugin.AttrStore // Domain attribute store
 }
 
 // newPluginConnector returns a new PluginConnector instance
@@ -96,12 +96,12 @@ func newPluginConnector(pluginID string) PluginConnector {
 	prefix := pluginID + "/"
 	return &pluginConnector{
 		pluginID:        pluginID,
-		domainAttrStore: NewAttrStore(prefix, "cm_domain_attrs", "domain_id", false),
-		userAttrStore:   NewAttrStore(prefix, "cm_user_attrs", "user_id", true),
+		domainAttrStore: &pluginAttrStore{p: prefix, s: TheDomainAttrService},
+		userAttrStore:   &pluginAttrStore{p: prefix, s: TheUserAttrService},
 	}
 }
 
-func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*complugin.User, error) {
+func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*cplugin.User, error) {
 	// Hand over to the cookie auth handler
 	u, err := TheAuthService.AuthenticateUserByCookieHeader(value)
 	if err != nil {
@@ -110,27 +110,70 @@ func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*complugin.
 	return u.ToPluginUser(), nil
 }
 
-func (c *pluginConnector) Config() *complugin.HostConfig {
-	return &complugin.HostConfig{
+func (c *pluginConnector) Config() *cplugin.HostConfig {
+	return &cplugin.HostConfig{
 		BaseURL:       config.ServerConfig.ParsedBaseURL(),
 		DefaultLangID: util.DefaultLanguage.String(),
 	}
 }
 
-func (c *pluginConnector) CreateLogger(module string) complugin.Logger {
+func (c *pluginConnector) CreateLogger(module string) cplugin.Logger {
 	return &pluginLogger{l: logging.MustGetLogger(c.pluginID + "." + module)}
 }
 
-func (c *pluginConnector) DomainAttrStore() complugin.AttrStore {
+func (c *pluginConnector) DomainAttrStore() cplugin.AttrStore {
 	return c.domainAttrStore
 }
 
-func (c *pluginConnector) UserAttrStore() complugin.AttrStore {
+func (c *pluginConnector) UserAttrStore() cplugin.AttrStore {
 	return c.userAttrStore
 }
 
-func (c *pluginConnector) UserStore() complugin.UserStore {
+func (c *pluginConnector) UserStore() cplugin.UserStore {
 	return &userStore{}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// pluginAttrStore is an AttrStore implementation scoped to a specific plugin
+type pluginAttrStore struct {
+	p string            // Prefix derived from the plugin ID
+	s cplugin.AttrStore // Reference to the underlying store
+}
+
+func (as *pluginAttrStore) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
+	// Delegate to the underlying store, prefixing the key
+	return as.s.FindByAttrValue(as.p+key, value)
+}
+
+func (as *pluginAttrStore) GetAll(ownerID *uuid.UUID) (cplugin.AttrValues, error) {
+	// Delegate fetching to the underlying store
+	av, err := as.s.GetAll(ownerID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Filter by prefix
+	r := cplugin.AttrValues{}
+	pLen := len(as.p)
+	for k, v := range av {
+		if strings.HasPrefix(k, as.p) {
+			// De-prefix the key
+			r[k[pLen:]] = v
+		}
+	}
+	return r, nil
+}
+
+func (as *pluginAttrStore) Set(ownerID *uuid.UUID, attr cplugin.AttrValues) error {
+	// Prefix the keys
+	av := cplugin.AttrValues{}
+	for k, v := range attr {
+		av[as.p+k] = v
+	}
+
+	// Delegate to the underlying store
+	return as.s.Set(ownerID, av)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -138,7 +181,7 @@ func (c *pluginConnector) UserStore() complugin.UserStore {
 // userStore is an implementation of plugin.UserStore
 type userStore struct{}
 
-func (us *userStore) FindUserByID(id *uuid.UUID) (*complugin.User, error) {
+func (us *userStore) FindUserByID(id *uuid.UUID) (*cplugin.User, error) {
 	if u, err := TheUserService.FindUserByID(id); err != nil {
 		return nil, err
 	} else {
@@ -150,9 +193,9 @@ func (us *userStore) FindUserByID(id *uuid.UUID) (*complugin.User, error) {
 
 // pluginEntry groups a loaded plugin's info
 type pluginEntry struct {
-	id string                     // Unique plugin ID
-	p  complugin.ComentarioPlugin // Plugin implementation
-	c  *complugin.Config          // Configuration obtained from the plugin
+	id string                   // Unique plugin ID
+	p  cplugin.ComentarioPlugin // Plugin implementation
+	c  *cplugin.Config          // Configuration obtained from the plugin
 }
 
 // ToDTO converts this model into a DTO model
@@ -298,7 +341,7 @@ func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
 }
 
 // initPlugin initialises the given plugin and fetches its config
-func (pm *pluginManager) initPlugin(p complugin.ComentarioPlugin, secrets complugin.YAMLDecoder) (*complugin.Config, error) {
+func (pm *pluginManager) initPlugin(p cplugin.ComentarioPlugin, secrets cplugin.YAMLDecoder) (*cplugin.Config, error) {
 	// Initialise the plugin
 	if err := p.Init(newPluginConnector(p.ID()), secrets); err != nil {
 		return nil, err
@@ -332,7 +375,7 @@ func (pm *pluginManager) loadPlugin(filename string) (*pluginEntry, error) {
 	}
 
 	// Fetch the service interface (hPtr is a pointer, because Lookup always returns a pointer to symbol)
-	hPtr, ok := h.(*complugin.ComentarioPlugin)
+	hPtr, ok := h.(*cplugin.ComentarioPlugin)
 	if !ok {
 		return nil, fmt.Errorf("symbol PluginImpl from plugin %q doesn't implement ComentarioPlugin", filename)
 	}
