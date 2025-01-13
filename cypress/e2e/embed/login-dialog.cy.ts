@@ -92,7 +92,6 @@ context('Login dialog', () => {
             {id: 'github',        label: 'GitHub'},
             {id: 'gitlab',        label: 'GitLab'},
             {id: 'google',        label: 'Google'},
-            {id: 'oidc:linkedin', label: 'LinkedIn'},
             {id: 'twitter',       label: 'Twitter'},
         ];
 
