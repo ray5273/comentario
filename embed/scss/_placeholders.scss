@@ -1,4 +1,4 @@
-@import "colours";
+@use "colours";
 
 .comentario-ph-button {
     display: inline-block;
@@ -25,8 +25,8 @@
     height: 120px;
     margin-top: 16px;
     padding-left: 12px;
-    border-top: 1px solid $gray-1;
-    border-left: 2px solid $gray-4;
+    border-top: 1px solid colours.$gray-1;
+    border-left: 2px solid colours.$gray-4;
 
     .comentario-ph-card-header {
         height: 32px;

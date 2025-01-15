@@ -1,3 +1,5 @@
+@use "sass:color";
+
 // Fonts
 $font-family-sans-serif: Roboto, "Helvetica Neue", "Noto Sans", "Liberation Sans", Arial, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
 $font-size-base:         0.9375rem; // Use 15px font by default (instead of 1rem = 16px)
@@ -5,7 +7,7 @@ $headings-font-family:   Volkhov, serif;
 
 // Theme palette
 $primary:   #4950d8;
-$secondary: adjust-color($primary, $saturation: -25%, $lightness: +16%);
+$secondary: color.adjust($primary, $saturation: -25%, $lightness: +16%);
 $success:   #198754;
 $info:      #6610f2;
 $warning:   #e8b006;
@@ -16,9 +18,9 @@ $dark:      #212529;
 $cta:       #ec8100;
 
 // Custom vars
-$navbar-bg-color: adjust-color($primary, $saturation: - 33%, $lightness: +36%);
+$navbar-bg-color: color.adjust($primary, $saturation: - 33%, $lightness: +36%);
 $sidebar-bg-color: $navbar-bg-color;
-$footer-bg-color: adjust-color($primary, $saturation: -33%, $lightness: +25%);
+$footer-bg-color: color.adjust($primary, $saturation: -33%, $lightness: +25%);
 
 // Extend the (default) theme color with the cta color
 $theme-colors: (

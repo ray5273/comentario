@@ -1,4 +1,5 @@
-@import "colours";
+@use "sass:color";
+@use "colours";
 
 textarea,
 input[type=text],
@@ -12,7 +13,7 @@ input[type=password] {
 
     // Draw a red border around invalid controls that have been touched (blurred; gets added programmatically)
     &.comentario-touched:invalid {
-        border: 1px solid $red-7;
+        border: 1px solid colours.$red-7;
     }
 
     &::placeholder {
@@ -45,9 +46,9 @@ textarea {
 
     &:focus {
         outline: none;
-        border-color: $blue-2;
+        border-color: colours.$blue-2;
         outline: 0;
-        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075), 0 0 0 0.25rem adjust-color($blue-6, $alpha: -0.75);
+        box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.075), 0 0 0 0.25rem color.adjust(colours.$blue-6, $alpha: -0.75);
     }
 }
 
@@ -80,8 +81,8 @@ textarea {
         appearance: none;
 
         &:checked {
-            background-color: $primary;
-            border-color: $primary;
+            background-color: colours.$primary;
+            border-color: colours.$primary;
         }
         &:disabled {
             pointer-events: none;
@@ -176,8 +177,8 @@ textarea {
         width: 13px;
         height: 13px;
         margin-top: 2px;
-        background: $gray-0;
-        border: 1px solid $gray-3;
+        background: colours.$gray-0;
+        border: 1px solid colours.$gray-3;
         border-radius: 3px;
         position: absolute;
         left: 0;
@@ -187,15 +188,15 @@ textarea {
 
     input[type="radio"]:disabled + label:before,
     input[type="checkbox"]:disabled + label:before {
-        background: $gray-0;
-        border: 1px solid $gray-4;
+        background: colours.$gray-0;
+        border: 1px solid colours.$gray-4;
         opacity: 0.4;
     }
 
     input[type="radio"]:checked + label:before,
     input[type="checkbox"]:checked + label:before {
-        background: $blue-6;
-        border: 1px solid $blue-6;
+        background: colours.$blue-6;
+        border: 1px solid colours.$blue-6;
     }
 
     input[type="radio"] + label:after,
@@ -222,7 +223,7 @@ textarea {
 
     input[type="radio"]:checked + label:after,
     input[type="checkbox"]:checked + label:after {
-        border: solid $gray-0;
+        border: solid colours.$gray-0;
         border-width: 0 2px 2px 0;
     }
 

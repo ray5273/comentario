@@ -1,4 +1,4 @@
-@import "colours";
+@use "colours";
 
 .comentario-badge {
     display: inline-block;
@@ -8,13 +8,13 @@
     border-radius: 100px;
     line-height: 17px;
     text-transform: uppercase;
-    color: $white;
+    color: colours.$white;
 }
 
 .comentario-badge-moderator {
-    background: $green-5;
+    background: colours.$green-5;
 }
 
 .comentario-badge-pending {
-    background: $yellow-6;
+    background: colours.$yellow-6;
 }

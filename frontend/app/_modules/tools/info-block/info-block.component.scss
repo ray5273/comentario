@@ -1,8 +1,9 @@
-@import '../../../../scss/vars';
+@use "sass:color";
+@import '/scss/vars';
 
 .info-block {
     display: flex;
-    background-color: adjust-color($primary, $alpha: -0.9);
+    background-color: color.adjust($primary, $alpha: -0.9);
     color: $text-muted;
     border-radius: $border-radius-sm;
     margin-top: 0.5rem;

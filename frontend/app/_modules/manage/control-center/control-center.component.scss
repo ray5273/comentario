@@ -1,3 +1,4 @@
+@use "sass:color";
 @import '/scss/vars';
 
 $sidebar-size-normal: 222px; // Logo 192px + 2 * 15px (padding)
@@ -147,7 +148,7 @@ h2 {
 
     &:hover, &:focus {
         text-decoration: none;
-        background-color: adjust-color($primary, $alpha: -0.75);
+        background-color: color.adjust($primary, $alpha: -0.75);
     }
     &.active {
         background-color: $primary;

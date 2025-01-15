@@ -1,5 +1,5 @@
-@import "colours";
-@import "mixins";
+@use "colours";
+@use "mixins";
 
 .comentario-card {
     display: flex;
@@ -107,7 +107,7 @@
     }
 
     .comentario-card-body {
-        @include comment-text();
+        @include mixins.comment-text();
     }
 
     .comentario-moderation-notice {
