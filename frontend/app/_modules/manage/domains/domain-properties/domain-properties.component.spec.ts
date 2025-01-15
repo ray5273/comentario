@@ -8,7 +8,6 @@ import { ConfigService } from '../../../../_services/config.service';
 import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { InstanceStaticConfig } from '../../../../../generated-api';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
-import { ToolsModule } from '../../../tools/tools.module';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
@@ -20,16 +19,20 @@ describe('DomainPropertiesComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                DomainPropertiesComponent,
-                MockComponents(DomainBadgeComponent, NoDataComponent, InfoIconComponent, AttributeTableComponent),
-            ],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, ToolsModule],
-            providers: [
-                MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig, extensions: of(undefined)}),
-                mockDomainSelector(),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    FontAwesomeTestingModule,
+                    DomainPropertiesComponent,
+                    MockComponents(DomainBadgeComponent, NoDataComponent, InfoIconComponent, AttributeTableComponent),
+                ],
+                providers: [
+                    MockProvider(ConfigService, {
+                        staticConfig: {baseUrl: '/'} as InstanceStaticConfig,
+                        extensions: of(undefined),
+                    }),
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(DomainPropertiesComponent);

@@ -3,7 +3,6 @@ import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DashboardComponent } from './dashboard.component';
 import { ApiGeneralService } from '../../../../generated-api';
-import { ToolsModule } from '../../tools/tools.module';
 import { MetricCardComponent } from './metric-card/metric-card.component';
 import { mockAuthService } from '../../../_utils/_mocks.spec';
 import { StatsComponent } from '../stats/stats/stats.component';
@@ -15,21 +14,18 @@ describe('DashboardComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                DashboardComponent,
-                MockComponents(MetricCardComponent, StatsComponent),
-            ],
-            imports: [ToolsModule],
-            providers: [
-                MockProvider(
-                    ApiGeneralService,
-                    {
-                        dashboardTotals: () => of({}) as any,
+                imports: [
+                    DashboardComponent,
+                    MockComponents(MetricCardComponent, StatsComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService, {
+                        dashboardTotals:     () => of({}) as any,
                         dashboardDailyStats: () => of([]) as any,
                     }),
-                mockAuthService(),
-            ],
-        })
+                    mockAuthService(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(DashboardComponent);

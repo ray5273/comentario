@@ -8,8 +8,8 @@ describe('NoDataComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [NoDataComponent],
-        })
+                imports: [NoDataComponent],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(NoDataComponent);
         component = fixture.componentInstance;

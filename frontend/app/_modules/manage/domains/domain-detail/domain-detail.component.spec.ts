@@ -10,12 +10,11 @@ describe('DomainDetailComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainDetailComponent],
-            imports: [RouterModule.forRoot([])],
-            providers: [
-                mockDomainSelector(),
-            ],
-        })
+                imports: [RouterModule.forRoot([]), DomainDetailComponent],
+                providers: [
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainDetailComponent);
         component = fixture.componentInstance;

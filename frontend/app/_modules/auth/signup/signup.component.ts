@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { first } from 'rxjs';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faBan, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { Paths } from '../../../_utils/consts';
@@ -10,11 +11,22 @@ import { Animations } from '../../../_utils/animations';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
 import { InstanceConfigItemKey } from '../../../_models/config';
+import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
+import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
+import { FederatedLoginComponent } from '../federated-login/federated-login.component';
 
 @Component({
     selector: 'app-signup',
     templateUrl: './signup.component.html',
     animations: [Animations.fadeInOut('slow')],
+    imports: [
+        FaIconComponent,
+        RouterLink,
+        ReactiveFormsModule,
+        PasswordInputComponent,
+        SpinnerDirective,
+        FederatedLoginComponent,
+    ],
 })
 export class SignupComponent {
 

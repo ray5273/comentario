@@ -8,7 +8,7 @@ describe('ConfigSectionEditComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [ConfigSectionEditComponent],
+                imports: [ConfigSectionEditComponent],
             })
             .compileComponents();
 

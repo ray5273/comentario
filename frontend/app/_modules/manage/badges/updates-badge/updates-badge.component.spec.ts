@@ -9,8 +9,7 @@ describe('UpdatesBadgeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [UpdatesBadgeComponent],
-                imports: [FontAwesomeTestingModule],
+                imports: [FontAwesomeTestingModule, UpdatesBadgeComponent],
             })
             .compileComponents();
 

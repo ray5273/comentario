@@ -15,17 +15,18 @@ describe('ResetPasswordComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                ResetPasswordComponent,
-                MockComponent(PasswordInputComponent),
-                MockDirective(SpinnerDirective),
-            ],
-            imports: [RouterModule.forRoot([]), ReactiveFormsModule],
-            providers: [
-                {provide: Configuration, useValue: new Configuration()},
-                ...MockProviders(ToastService, ApiGeneralService),
-            ]
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    ReactiveFormsModule,
+                    ResetPasswordComponent,
+                    MockComponent(PasswordInputComponent),
+                    MockDirective(SpinnerDirective),
+                ],
+                providers: [
+                    {provide: Configuration, useValue: new Configuration()},
+                    ...MockProviders(ToastService, ApiGeneralService),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(ResetPasswordComponent);

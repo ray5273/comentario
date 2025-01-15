@@ -16,15 +16,14 @@ describe('FooterComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [FooterComponent],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
-            providers: [
-                MockProvider(DocsService),
-                MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
-                MockProvider(PluginService),
-                mockAuthService(),
-            ],
-        })
+                imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, FooterComponent],
+                providers: [
+                    MockProvider(DocsService),
+                    MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
+                    MockProvider(PluginService),
+                    mockAuthService(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(FooterComponent);

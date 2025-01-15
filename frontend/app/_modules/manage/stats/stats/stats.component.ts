@@ -1,7 +1,13 @@
 import { Component, Input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { concatMap, debounceTime, EMPTY, forkJoin, mergeMap, Observable, of, Subject, switchMap, tap, toArray } from 'rxjs';
 import { ApiGeneralService, PageStatsItem, StatsDimensionItem } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { DailyStatsChartComponent } from '../daily-stats-chart/daily-stats-chart.component';
+import { NoDataComponent } from '../../../tools/no-data/no-data.component';
+import { PieStatsChartComponent } from '../pie-stats-chart/pie-stats-chart.component';
+import { TopPagesStatsComponent } from '../top-pages-stats/top-pages-stats.component';
 
 type DailyMetric = 'views' | 'comments';
 type PageViewDimension = 'country' | 'device' | 'browser' | 'os';
@@ -9,6 +15,14 @@ type PageViewDimension = 'country' | 'device' | 'browser' | 'os';
 @Component({
     selector: 'app-stats',
     templateUrl: './stats.component.html',
+    imports: [
+        DecimalPipe,
+        SpinnerDirective,
+        DailyStatsChartComponent,
+        NoDataComponent,
+        PieStatsChartComponent,
+        TopPagesStatsComponent,
+    ],
 })
 export class StatsComponent {
 

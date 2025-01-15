@@ -12,11 +12,9 @@ describe('CommentManagerComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CommentManagerComponent, MockComponents(DomainBadgeComponent, CommentListComponent)],
-            providers: [
-                MockProvider(CommentService),
-            ],
-        })
+                imports: [CommentManagerComponent, MockComponents(DomainBadgeComponent, CommentListComponent)],
+                providers: [MockProvider(CommentService)],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(CommentManagerComponent);
         component = fixture.componentInstance;

@@ -1,4 +1,6 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { NoDataComponent } from '../no-data/no-data.component';
+import { SpinnerDirective } from '../_directives/spinner.directive';
 
 /**
  * Component meant to be placed at the bottom of a list. Displays:
@@ -11,6 +13,10 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
     selector: 'app-list-footer',
     templateUrl: './list-footer.component.html',
     styleUrls: ['./list-footer.component.scss'],
+    imports: [
+        NoDataComponent,
+        SpinnerDirective,
+    ],
 })
 export class ListFooterComponent {
 

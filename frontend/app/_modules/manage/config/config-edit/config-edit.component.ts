@@ -1,6 +1,7 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
-import { Router } from '@angular/router';
+import { KeyValuePipe } from '@angular/common';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { first } from 'rxjs';
 import { ApiGeneralService } from '../../../../../generated-api';
@@ -9,11 +10,22 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
 import { DynamicConfig } from '../../../../_models/config';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { DynConfigSectionNamePipe } from '../../_pipes/dyn-config-section-name.pipe';
+import { ConfigSectionEditComponent } from '../config-section-edit/config-section-edit.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-config-edit',
     templateUrl: './config-edit.component.html',
+    imports: [
+        SpinnerDirective,
+        ReactiveFormsModule,
+        KeyValuePipe,
+        DynConfigSectionNamePipe,
+        ConfigSectionEditComponent,
+        RouterLink,
+    ],
 })
 export class ConfigEditComponent implements OnInit {
 

@@ -5,7 +5,6 @@ import { MockProviders } from 'ng-mocks';
 import { ForgotPasswordComponent } from './forgot-password.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
-import { ToolsModule } from '../../tools/tools.module';
 
 describe('ForgotPasswordComponent', () => {
 
@@ -14,10 +13,9 @@ describe('ForgotPasswordComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ForgotPasswordComponent],
-            imports: [RouterModule.forRoot([]), ReactiveFormsModule, ToolsModule],
-            providers: MockProviders(ToastService, ApiGeneralService),
-        })
+                imports: [RouterModule.forRoot([]), ReactiveFormsModule, ForgotPasswordComponent],
+                providers: MockProviders(ToastService, ApiGeneralService),
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(ForgotPasswordComponent);

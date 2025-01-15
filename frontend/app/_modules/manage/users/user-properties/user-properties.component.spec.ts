@@ -3,7 +3,6 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { UserPropertiesComponent } from './user-properties.component';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { ToolsModule } from '../../../tools/tools.module';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
 import { mockAuthService } from '../../../../_utils/_mocks.spec';
@@ -17,15 +16,18 @@ describe('UserPropertiesComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [UserPropertiesComponent, MockComponents(NoDataComponent, AttributeTableComponent)],
-            imports: [ReactiveFormsModule, ToolsModule],
-            providers: [
-                MockProvider(ApiGeneralService),
-                MockProvider(ToastService),
-                MockProvider(ConfigService),
-                mockAuthService(),
-            ],
-        })
+                imports: [
+                    ReactiveFormsModule,
+                    UserPropertiesComponent,
+                    MockComponents(NoDataComponent, AttributeTableComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService),
+                    MockProvider(ToastService),
+                    MockProvider(ConfigService),
+                    mockAuthService(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(UserPropertiesComponent);
         component = fixture.componentInstance;

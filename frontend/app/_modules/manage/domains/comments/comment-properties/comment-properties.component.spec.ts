@@ -6,7 +6,6 @@ import { Highlight, HighlightLoader } from 'ngx-highlightjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { CommentPropertiesComponent } from './comment-properties.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
-import { ToolsModule } from '../../../../tools/tools.module';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 import { UserLinkComponent } from '../../../user-link/user-link.component';
@@ -18,14 +17,20 @@ describe('CommentPropertiesComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CommentPropertiesComponent, MockComponents(NoDataComponent, UserLinkComponent)],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NgbModalModule, Highlight, ToolsModule],
-            providers: [
-                MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
-                MockProvider(ApiGeneralService),
-                mockDomainSelector(),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    FontAwesomeTestingModule,
+                    NgbModalModule,
+                    Highlight,
+                    CommentPropertiesComponent,
+                    MockComponents(NoDataComponent, UserLinkComponent),
+                ],
+                providers: [
+                    MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
+                    MockProvider(ApiGeneralService),
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(CommentPropertiesComponent);
         component = fixture.componentInstance;

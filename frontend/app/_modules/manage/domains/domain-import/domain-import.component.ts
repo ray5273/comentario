@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { DecimalPipe, NgOptimizedImage } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faCheck, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, ImportResult } from '../../../../../generated-api';
@@ -8,6 +11,8 @@ import { Animations } from '../../../../_utils/animations';
 import { Paths } from '../../../../_utils/consts';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
+import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 
 @UntilDestroy()
 @Component({
@@ -15,6 +20,15 @@ import { XtraValidators } from '../../../../_utils/xtra-validators';
     templateUrl: './domain-import.component.html',
     styleUrls: ['./domain-import.component.scss'],
     animations: [Animations.fadeInOut('slow')],
+    imports: [
+        InfoIconComponent,
+        FaIconComponent,
+        ReactiveFormsModule,
+        DecimalPipe,
+        RouterLink,
+        SpinnerDirective,
+        NgOptimizedImage,
+    ],
 })
 export class DomainImportComponent implements OnInit {
 

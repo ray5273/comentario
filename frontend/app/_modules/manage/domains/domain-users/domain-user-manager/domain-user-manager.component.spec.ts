@@ -8,7 +8,6 @@ import { ApiGeneralService } from '../../../../../../generated-api';
 import { ConfigService } from '../../../../../_services/config.service';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
-import { ToolsModule } from '../../../../tools/tools.module';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
@@ -19,16 +18,22 @@ describe('DomainUserManagerComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                DomainUserManagerComponent,
-                MockComponents(DomainBadgeComponent, ListFooterComponent, SortSelectorComponent, SortPropertyComponent)],
-            imports: [ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
-            providers: [
-                MockProvider(ApiGeneralService),
-                MockProvider(ConfigService),
-                mockDomainSelector(),
-            ],
-        })
+                imports: [
+                    ReactiveFormsModule,
+                    FontAwesomeTestingModule,
+                    DomainUserManagerComponent,
+                    MockComponents(
+                        DomainBadgeComponent,
+                        ListFooterComponent,
+                        SortSelectorComponent,
+                        SortPropertyComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService),
+                    MockProvider(ConfigService),
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainUserManagerComponent);
         component = fixture.componentInstance;

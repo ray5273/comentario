@@ -3,15 +3,15 @@ import { RouterModule } from '@angular/router';
 import { ServerMessageComponent } from './server-message.component';
 
 describe('ServerMessageComponent', () => {
+
     let component: ServerMessageComponent;
     let fixture: ComponentFixture<ServerMessageComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ServerMessageComponent],
-            imports: [RouterModule.forRoot([])],
-        })
-        .compileComponents();
+                imports: [RouterModule.forRoot([]), ServerMessageComponent],
+            })
+            .compileComponents();
     });
 
     beforeEach(() => {

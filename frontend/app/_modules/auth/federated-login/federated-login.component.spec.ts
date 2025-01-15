@@ -2,7 +2,6 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { MockProvider } from 'ng-mocks';
 import { FederatedLoginComponent } from './federated-login.component';
-import { ToolsModule } from '../../tools/tools.module';
 import { ApiGeneralService, Configuration } from '../../../../generated-api';
 import { ConfigService } from '../../../_services/config.service';
 import { ToastService } from '../../../_services/toast.service';
@@ -15,16 +14,15 @@ describe('FederatedLoginComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [FederatedLoginComponent],
-            imports: [RouterModule.forRoot([]), ToolsModule],
-            providers: [
-                {provide: Configuration, useValue: new Configuration()},
-                MockProvider(ApiGeneralService),
-                MockProvider(ConfigService, {staticConfig: {federatedIdps: []} as any}),
-                MockProvider(ToastService),
-                mockAuthService(),
-            ],
-        })
+                imports: [RouterModule.forRoot([]), FederatedLoginComponent],
+                providers: [
+                    {provide: Configuration, useValue: new Configuration()},
+                    MockProvider(ApiGeneralService),
+                    MockProvider(ConfigService, {staticConfig: {federatedIdps: []} as any}),
+                    MockProvider(ToastService),
+                    mockAuthService(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(FederatedLoginComponent);
         component = fixture.componentInstance;

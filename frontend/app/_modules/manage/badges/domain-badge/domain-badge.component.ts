@@ -1,4 +1,5 @@
 import { Component, HostBinding } from '@angular/core';
+import { AsyncPipe } from '@angular/common';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
 
 /**
@@ -7,6 +8,9 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 @Component({
     selector: 'app-domain-badge',
     templateUrl: './domain-badge.component.html',
+    imports: [
+        AsyncPipe,
+    ],
 })
 export class DomainBadgeComponent {
 

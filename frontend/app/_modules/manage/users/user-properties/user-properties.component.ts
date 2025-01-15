@@ -1,8 +1,9 @@
 import { Component, Input } from '@angular/core';
-import { Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { BehaviorSubject, combineLatestWith, mergeWith, of, Subject, switchMap, tap, throwError } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faBan, faCalendarXmark, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Domain, DomainUser, User, UserSession } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
@@ -12,12 +13,35 @@ import { AuthService } from '../../../../_services/auth.service';
 import { Animations } from '../../../../_utils/animations';
 import { Utils } from '../../../../_utils/utils';
 import { ConfigService } from '../../../../_services/config.service';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
+import { UserDetailsComponent } from '../user-details/user-details.component';
+import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
+import { DomainUserBadgeComponent } from '../../badges/domain-user-badge/domain-user-badge.component';
+import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
+import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
+import { DatetimePipe } from '../../_pipes/datetime.pipe';
+import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-user-properties',
     templateUrl: './user-properties.component.html',
     animations: [Animations.fadeIn('slow')],
+    imports: [
+        SpinnerDirective,
+        FaIconComponent,
+        ConfirmDirective,
+        UserDetailsComponent,
+        AttributeTableComponent,
+        RouterLink,
+        DomainUserBadgeComponent,
+        ListFooterComponent,
+        InfoBlockComponent,
+        DatetimePipe,
+        NoDataComponent,
+        ReactiveFormsModule,
+    ],
 })
 export class UserPropertiesComponent {
 

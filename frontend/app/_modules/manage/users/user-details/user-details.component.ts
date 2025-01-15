@@ -1,8 +1,18 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { ApiGeneralService, User } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
+import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.component';
+import { CopyTextDirective } from '../../../tools/_directives/copy-text.directive';
+import { CurrentUserBadgeComponent } from '../../badges/current-user-badge/current-user-badge.component';
+import { IdentityProviderIconComponent } from '../../../tools/identity-provider-icon/identity-provider-icon.component';
+import { CheckmarkComponent } from '../../../tools/checkmark/checkmark.component';
+import { DatetimePipe } from '../../_pipes/datetime.pipe';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { CountryNamePipe } from '../../_pipes/country-name.pipe';
 
 /**
  * Renders a table with user properties.
@@ -10,6 +20,18 @@ import { ToastService } from '../../../../_services/toast.service';
 @Component({
     selector: 'app-user-details',
     templateUrl: './user-details.component.html',
+    imports: [
+        UserAvatarComponent,
+        RouterLink,
+        CopyTextDirective,
+        CurrentUserBadgeComponent,
+        IdentityProviderIconComponent,
+        CheckmarkComponent,
+        DatetimePipe,
+        DecimalPipe,
+        SpinnerDirective,
+        CountryNamePipe,
+    ],
 })
 export class UserDetailsComponent {
 

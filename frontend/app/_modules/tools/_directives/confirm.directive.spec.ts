@@ -15,6 +15,7 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
         <ng-template #t>I am text</ng-template>
         <button appConfirm="" (confirmed)="confirmed()">3</button>
     `,
+    imports: [ConfirmDirective],
 })
 class TestComponent {
     readonly faKey = faKey;
@@ -41,9 +42,9 @@ describe('ConfirmDirective', () => {
     beforeEach(() => {
         opened = false;
         fixture = TestBed.configureTestingModule({
-            declarations: [ConfirmDirective, TestComponent],
-            providers: [MockProvider(NgbModal, {open: getModalRef})],
-        })
+                imports: [ConfirmDirective, TestComponent],
+                providers: [MockProvider(NgbModal, {open: getModalRef})],
+            })
             .createComponent(TestComponent);
         fixture.detectChanges();
 

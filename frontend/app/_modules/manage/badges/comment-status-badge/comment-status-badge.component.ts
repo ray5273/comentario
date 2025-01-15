@@ -17,21 +17,21 @@ export class CommentStatusBadgeComponent {
     @Input()
     subtle = false;
 
-    static readonly TEXT_MAP: { [key in CommentStatus]: string } = {
+    static readonly TEXT_MAP: Record<CommentStatus, string> = {
         unknown:  '',
         deleted:  $localize`Deleted`,
         pending:  $localize`Pending`,
         approved: $localize`Approved`,
         rejected: $localize`Rejected`,
     };
-    static readonly CLASS_MAP_NORMAL: { [key in CommentStatus]: string } = {
+    static readonly CLASS_MAP_NORMAL: Record<CommentStatus, string> = {
         unknown:  '',
         deleted:  'badge bg-danger text-light',
         pending:  'badge bg-secondary text-light',
         approved: 'badge bg-success text-light',
         rejected: 'badge bg-warning text-light',
     };
-    static readonly CLASS_MAP_SUBTLE: { [key in CommentStatus]: string } = {
+    static readonly CLASS_MAP_SUBTLE: Record<CommentStatus, string> = {
         unknown:  '',
         deleted:  'badge bg-danger-subtle text-muted',
         pending:  'badge bg-secondary-subtle text-muted',

@@ -1,10 +1,14 @@
 import { Component, Input } from '@angular/core';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faIdCard, faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faFacebook, faGithub, faGitlab, faGoogle, faOpenid, faTwitter } from '@fortawesome/free-brands-svg-icons';
 
 @Component({
     selector: 'app-idp-icon',
     templateUrl: './identity-provider-icon.component.html',
+    imports: [
+        FaIconComponent,
+    ],
 })
 export class IdentityProviderIconComponent {
 

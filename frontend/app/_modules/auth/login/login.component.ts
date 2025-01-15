@@ -1,14 +1,24 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../_services/auth.service';
 import { Paths } from '../../../_utils/consts';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ToastService } from '../../../_services/toast.service';
+import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
+import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
+import { FederatedLoginComponent } from '../federated-login/federated-login.component';
 
 @Component({
     selector: 'app-login',
     templateUrl: './login.component.html',
+    imports: [
+        ReactiveFormsModule,
+        PasswordInputComponent,
+        SpinnerDirective,
+        RouterLink,
+        FederatedLoginComponent,
+    ],
 })
 export class LoginComponent implements OnInit {
 

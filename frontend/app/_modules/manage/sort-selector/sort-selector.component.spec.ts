@@ -8,8 +8,8 @@ describe('SortSelectorComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [SortSelectorComponent],
-        })
+                imports: [SortSelectorComponent],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(SortSelectorComponent);
         component = fixture.componentInstance;

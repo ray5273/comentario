@@ -10,11 +10,11 @@ describe('UserAvatarComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [UserAvatarComponent, HashColourPipe],
-            providers: [
-                {provide: Configuration, useValue: {}},
-            ],
-        })
+                imports: [UserAvatarComponent, HashColourPipe],
+                providers: [
+                    {provide: Configuration, useValue: {}},
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(UserAvatarComponent);
         component = fixture.componentInstance;

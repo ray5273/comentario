@@ -1,5 +1,8 @@
 import { Component, OnInit } from '@angular/core';
-import { NavigationStart, Router } from '@angular/router';
+import { AsyncPipe, NgOptimizedImage } from '@angular/common';
+import { NavigationStart, Router, RouterLink, RouterLinkActive, RouterOutlet } from '@angular/router';
+import { filter } from 'rxjs/operators';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import {
     faArrowDownUpAcrossLine,
     faAt,
@@ -15,19 +18,32 @@ import {
     faUsersRectangle,
     faWrench,
 } from '@fortawesome/free-solid-svg-icons';
-import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { Paths } from '../../../_utils/consts';
 import { AuthService } from '../../../_services/auth.service';
 import { DomainMeta, DomainSelectorService } from '../_services/domain-selector.service';
 import { CommentService } from '../_services/comment.service';
 import { ConfigService } from '../../../_services/config.service';
+import { UpdatesBadgeComponent } from '../badges/updates-badge/updates-badge.component';
+import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
+import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-control-center',
     templateUrl: './control-center.component.html',
     styleUrls: ['./control-center.component.scss'],
+    imports: [
+        FaIconComponent,
+        RouterLink,
+        RouterLinkActive,
+        AsyncPipe,
+        UpdatesBadgeComponent,
+        UserAvatarComponent,
+        ConfirmDirective,
+        RouterOutlet,
+        NgOptimizedImage,
+    ],
 })
 export class ControlCenterComponent implements OnInit {
 

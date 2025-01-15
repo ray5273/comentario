@@ -1,18 +1,38 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEdit, faRotate } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, DomainPage } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { Paths } from '../../../../../_utils/consts';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ToastService } from '../../../../../_services/toast.service';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { ExternalLinkDirective } from '../../../../tools/_directives/external-link.directive';
+import { CheckmarkComponent } from '../../../../tools/checkmark/checkmark.component';
+import { DatetimePipe } from '../../../_pipes/datetime.pipe';
+import { CommentListComponent } from '../../comments/comment-list/comment-list.component';
+import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-page-properties',
     templateUrl: './domain-page-properties.component.html',
+    imports: [
+        SpinnerDirective,
+        FaIconComponent,
+        RouterLink,
+        ExternalLinkDirective,
+        CheckmarkComponent,
+        DatetimePipe,
+        DecimalPipe,
+        CommentListComponent,
+        NoDataComponent,
+    ],
 })
 export class DomainPagePropertiesComponent implements OnInit {
 

@@ -9,7 +9,6 @@ import { SortSelectorComponent } from '../../../sort-selector/sort-selector.comp
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { ConfigService } from '../../../../../_services/config.service';
-import { ToolsModule } from '../../../../tools/tools.module';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainPageManagerComponent', () => {
@@ -19,14 +18,18 @@ describe('DomainPageManagerComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainPageManagerComponent, MockComponents(DomainBadgeComponent, SortSelectorComponent, SortPropertyComponent)],
-            imports: [RouterModule.forRoot([]), ReactiveFormsModule, ToolsModule],
-            providers: [
-                MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
-                mockDomainSelector(),
-                MockProvider(ConfigService),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    ReactiveFormsModule,
+                    DomainPageManagerComponent,
+                    MockComponents(DomainBadgeComponent, SortSelectorComponent, SortPropertyComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
+                    mockDomainSelector(),
+                    MockProvider(ConfigService),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainPageManagerComponent);
         component = fixture.componentInstance;

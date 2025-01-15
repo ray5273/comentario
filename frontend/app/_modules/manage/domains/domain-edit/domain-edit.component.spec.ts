@@ -7,7 +7,6 @@ import { MockComponents, MockPipes, MockProvider } from 'ng-mocks';
 import { DomainEditComponent } from './domain-edit.component';
 import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
-import { ToolsModule } from '../../../tools/tools.module';
 import { ToastService } from '../../../../_services/toast.service';
 import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from '../../_pipes/comment-sort.pipe';
@@ -29,23 +28,28 @@ describe('DomainEditComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                DomainEditComponent,
-                MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe),
-                MockComponents(InfoIconComponent,
-                    DomainEditGeneralComponent,
-                    DomainEditAuthComponent,
-                    DomainEditModerationComponent,
-                    DomainEditExtensionsComponent),
-            ],
-            imports: [RouterModule.forRoot([]), FormsModule, ReactiveFormsModule, NgbNavModule, ToolsModule],
-            providers: [
-                MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
-                MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
-                MockProvider(ToastService),
-                mockDomainSelector(),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    FormsModule,
+                    ReactiveFormsModule,
+                    NgbNavModule,
+                    DomainEditComponent,
+                    MockPipes(ModeratorNotifyPolicyPipe, CommentSortPipe),
+                    MockComponents(
+                        InfoIconComponent,
+                        DomainEditGeneralComponent,
+                        DomainEditAuthComponent,
+                        DomainEditModerationComponent,
+                        DomainEditExtensionsComponent,
+                    ),
+                ],
+                providers: [
+                    MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
+                    MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
+                    MockProvider(ToastService),
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(DomainEditComponent);

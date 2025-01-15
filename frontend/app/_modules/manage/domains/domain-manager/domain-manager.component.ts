@@ -1,7 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { DecimalPipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, first, merge, mergeWith, of, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faCheck, faPlus } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainUser } from '../../../../../generated-api';
@@ -12,12 +15,30 @@ import { ConfigService } from '../../../../_services/config.service';
 import { Sort } from '../../_models/sort';
 import { Animations } from '../../../../_utils/animations';
 import { InstanceConfigItemKey } from '../../../../_models/config';
+import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
+import { DomainUserBadgeComponent } from '../../badges/domain-user-badge/domain-user-badge.component';
+import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
+import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-manager',
     templateUrl: './domain-manager.component.html',
     animations: [Animations.fadeIn('slow')],
+    imports: [
+        InfoBlockComponent,
+        SpinnerDirective,
+        RouterLink,
+        FaIconComponent,
+        SortSelectorComponent,
+        DomainUserBadgeComponent,
+        DecimalPipe,
+        ListFooterComponent,
+        SortPropertyComponent,
+        ReactiveFormsModule,
+    ],
 })
 export class DomainManagerComponent implements OnInit {
 

@@ -8,7 +8,7 @@ describe('TopPagesStatsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [TopPagesStatsComponent],
+                imports: [TopPagesStatsComponent],
             })
             .compileComponents();
 

@@ -1,5 +1,6 @@
 import { Component, EventEmitter, forwardRef, HostBinding, Injector, Input, OnInit, Output } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ValidationErrors } from '@angular/forms';
+import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ValidationErrors } from '@angular/forms';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEye } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
@@ -16,6 +17,10 @@ import { faEye } from '@fortawesome/free-solid-svg-icons';
             useExisting: PasswordInputComponent,
             multi: true,
         },
+    ],
+    imports: [
+        FormsModule,
+        FaIconComponent,
     ],
 })
 export class PasswordInputComponent implements OnInit, ControlValueAccessor {

@@ -1,11 +1,19 @@
 import { Component, HostBinding, Input } from '@angular/core';
+import { NgClass } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { DocsService } from '../../../_services/docs.service';
 
 @Component({
     selector: 'app-info-icon',
     templateUrl: './info-icon.component.html',
     styleUrls: ['./info-icon.component.scss'],
+    imports: [
+        FaIconComponent,
+        NgClass,
+        NgbTooltip,
+    ],
 })
 export class InfoIconComponent {
 

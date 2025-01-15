@@ -1,15 +1,31 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faChevronDown, faCopy, faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
+import { NgbCollapseModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
+import { Highlight } from 'ngx-highlightjs';
 import { Utils } from '../../../../../_utils/utils';
 import { ConfigService } from '../../../../../_services/config.service';
 import { XtraValidators } from '../../../../../_utils/xtra-validators';
+import { CopyTextDirective } from '../../../../tools/_directives/copy-text.directive';
+import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
+import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 
 @UntilDestroy()
 @Component({
-  selector: 'app-domain-install',
-  templateUrl: './domain-install.component.html'
+    selector: 'app-domain-install',
+    templateUrl: './domain-install.component.html',
+    imports: [
+        Highlight,
+        CopyTextDirective,
+        FaIconComponent,
+        NgbCollapseModule,
+        NgbTooltipModule,
+        InfoBlockComponent,
+        InfoIconComponent,
+        ReactiveFormsModule,
+    ],
 })
 export class DomainInstallComponent implements OnInit {
 

@@ -10,12 +10,11 @@ describe('CurrentUserBadgeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CurrentUserBadgeComponent],
-            imports: [FontAwesomeTestingModule],
-            providers: [
-                mockAuthService(),
-            ],
-        })
+                imports: [FontAwesomeTestingModule, CurrentUserBadgeComponent],
+                providers: [
+                    mockAuthService(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(CurrentUserBadgeComponent);
         component = fixture.componentInstance;

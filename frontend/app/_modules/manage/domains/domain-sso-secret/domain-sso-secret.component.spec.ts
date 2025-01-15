@@ -5,7 +5,6 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainSsoSecretComponent } from './domain-sso-secret.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
-import { ToolsModule } from '../../../tools/tools.module';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainSsoSecretComponent', () => {
@@ -15,13 +14,17 @@ describe('DomainSsoSecretComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainSsoSecretComponent, MockComponents(DomainBadgeComponent)],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, ToolsModule],
-            providers: [
-                MockProvider(ApiGeneralService),
-                mockDomainSelector(),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    FontAwesomeTestingModule,
+                    DomainSsoSecretComponent,
+                    MockComponents(DomainBadgeComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService),
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainSsoSecretComponent);
         component = fixture.componentInstance;

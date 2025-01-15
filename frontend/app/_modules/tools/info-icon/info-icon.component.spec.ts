@@ -12,13 +12,12 @@ describe('InfoIconComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [InfoIconComponent],
-            imports: [NgbTooltipModule, FontAwesomeTestingModule],
-            providers: [
-                MockProvider(DocsService),
-            ],
-        })
-        .compileComponents();
+                imports: [NgbTooltipModule, FontAwesomeTestingModule, InfoIconComponent],
+                providers: [
+                    MockProvider(DocsService),
+                ],
+            })
+            .compileComponents();
     });
 
     beforeEach(() => {

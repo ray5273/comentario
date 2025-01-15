@@ -17,15 +17,20 @@ describe('ControlCenterComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ControlCenterComponent, MockDirective(ConfirmDirective), MockComponents(UserAvatarComponent)],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
-            providers: [
-                mockAuthService(),
-                mockDomainSelector(),
-                MockProvider(ConfigService),
-                MockProvider(CommentService, {countPending: of(0)}),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    FontAwesomeTestingModule,
+                    ControlCenterComponent,
+                    MockDirective(ConfirmDirective),
+                    MockComponents(UserAvatarComponent),
+                ],
+                providers: [
+                    mockAuthService(),
+                    mockDomainSelector(),
+                    MockProvider(ConfigService),
+                    MockProvider(CommentService, {countPending: of(0)}),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(ControlCenterComponent);

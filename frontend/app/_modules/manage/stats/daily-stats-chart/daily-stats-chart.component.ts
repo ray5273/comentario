@@ -1,11 +1,19 @@
 import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
+import { MetricCardComponent } from '../../dashboard/metric-card/metric-card.component';
+import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 
 @Component({
     selector: 'app-daily-stats-chart',
     templateUrl: './daily-stats-chart.component.html',
     styleUrls: ['./daily-stats-chart.component.scss'],
+    imports: [
+        MetricCardComponent,
+        BaseChartDirective,
+        NoDataComponent,
+    ],
 })
 export class DailyStatsChartComponent {
 

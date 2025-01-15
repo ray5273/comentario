@@ -7,7 +7,6 @@ import { MockProvider } from 'ng-mocks';
 import { DomainInstallComponent } from './domain-install.component';
 import { ConfigService } from '../../../../../_services/config.service';
 import { InstanceStaticConfig } from '../../../../../../generated-api';
-import { ToolsModule } from '../../../../tools/tools.module';
 
 describe('DomainInstallComponent', () => {
 
@@ -16,13 +15,18 @@ describe('DomainInstallComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainInstallComponent],
-            imports: [ReactiveFormsModule, NgbCollapseModule, FontAwesomeTestingModule, Highlight, ToolsModule],
-            providers: [
-                MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
-                MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig}),
-            ],
-        })
+                imports: [
+                    ReactiveFormsModule,
+                    NgbCollapseModule,
+                    FontAwesomeTestingModule,
+                    Highlight,
+                    DomainInstallComponent,
+                ],
+                providers: [
+                    MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
+                    MockProvider(ConfigService, {staticConfig: {baseUrl: '/'} as InstanceStaticConfig}),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainInstallComponent);
         component = fixture.componentInstance;

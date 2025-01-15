@@ -8,7 +8,6 @@ import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-pr
 import { IdentityProviderIconComponent } from '../../../tools/identity-provider-icon/identity-provider-icon.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ConfigService } from '../../../../_services/config.service';
-import { ToolsModule } from '../../../tools/tools.module';
 
 describe('UserManagerComponent', () => {
 
@@ -17,16 +16,17 @@ describe('UserManagerComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                UserManagerComponent,
-                MockComponents(SortSelectorComponent, SortPropertyComponent, IdentityProviderIconComponent),
-            ],
-            imports: [ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
-            providers: [
-                MockProvider(ApiGeneralService),
-                MockProvider(ConfigService),
-            ],
-        })
+                imports: [
+                    ReactiveFormsModule,
+                    FontAwesomeTestingModule,
+                    UserManagerComponent,
+                    MockComponents(SortSelectorComponent, SortPropertyComponent, IdentityProviderIconComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService),
+                    MockProvider(ConfigService),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(UserManagerComponent);
         component = fixture.componentInstance;

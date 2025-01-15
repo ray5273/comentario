@@ -9,9 +9,9 @@ import { ConfigService } from '../_services/config.service';
 
 @Component({
     template: '<div appDocEmbed="https://page.url/test"><p>Content <span>Subcontent</span></p></div>',
+    imports: [DocEmbedDirective],
 })
-class TestComponent {
-}
+class TestComponent {}
 
 describe('DocEmbedDirective', () => {
 
@@ -23,13 +23,13 @@ describe('DocEmbedDirective', () => {
 
     beforeEach(() => {
         fixture = TestBed.configureTestingModule({
-            declarations: [DocEmbedDirective, TestComponent],
-            providers: [
-                provideHttpClient(),
-                provideHttpClientTesting(),
-                MockProvider(ConfigService),
-            ],
-        })
+                imports: [DocEmbedDirective, TestComponent],
+                providers: [
+                    provideHttpClient(),
+                    provideHttpClientTesting(),
+                    MockProvider(ConfigService),
+                ],
+            })
         .createComponent(TestComponent);
 
         httpTestingController = TestBed.inject(HttpTestingController);

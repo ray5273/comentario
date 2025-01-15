@@ -1,13 +1,19 @@
 import { Component, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { Commenter, Configuration, Principal, User } from '../../../../generated-api';
 import { AnonymousUser } from '../../../_utils/consts';
+import { HashColourPipe } from '../_pipes/hash-colour.pipe';
 
 @Component({
     selector: 'app-user-avatar',
     templateUrl: './user-avatar.component.html',
     styleUrls: ['./user-avatar.component.scss'],
+    imports: [
+        HashColourPipe,
+        FaIconComponent,
+    ],
 })
 export class UserAvatarComponent implements OnChanges, OnDestroy {
 

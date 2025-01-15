@@ -1,17 +1,25 @@
 import { Component } from '@angular/core';
-import { Router } from '@angular/router';
-import { FormBuilder, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 import { AuthService } from '../../../../_services/auth.service';
 import { Animations } from '../../../../_utils/animations';
+import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 
 @Component({
     selector: 'app-email-update',
     templateUrl: './email-update.component.html',
     animations: [Animations.fadeInOut('slow')],
+    imports: [
+        ReactiveFormsModule,
+        PasswordInputComponent,
+        RouterLink,
+        SpinnerDirective,
+    ],
 })
 export class EmailUpdateComponent {
 

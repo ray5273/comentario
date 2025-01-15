@@ -9,11 +9,11 @@ describe('DomainBadgeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainBadgeComponent],
-            providers: [
-                mockDomainSelector(),
-            ],
-        })
+                imports: [DomainBadgeComponent],
+                providers: [
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainBadgeComponent);
         component = fixture.componentInstance;

@@ -1,11 +1,15 @@
 import { Component, Input } from '@angular/core';
 import { faLightbulb } from '@fortawesome/free-solid-svg-icons';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
 
 @Component({
-  selector: 'app-info-block',
-  templateUrl: './info-block.component.html',
-  styleUrls: ['./info-block.component.scss']
+    selector: 'app-info-block',
+    templateUrl: './info-block.component.html',
+    imports: [
+        FaIconComponent,
+    ],
+    styleUrls: ['./info-block.component.scss'],
 })
 export class InfoBlockComponent {
 

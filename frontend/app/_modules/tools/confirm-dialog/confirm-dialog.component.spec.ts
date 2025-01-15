@@ -1,7 +1,7 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { ConfirmDialogComponent } from './confirm-dialog.component';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
+import { ConfirmDialogComponent } from './confirm-dialog.component';
 
 describe('ConfirmDialogComponent', () => {
 
@@ -10,10 +10,9 @@ describe('ConfirmDialogComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ConfirmDialogComponent],
-            imports: [FontAwesomeTestingModule],
-            providers: [NgbActiveModal],
-        })
+                imports: [FontAwesomeTestingModule, ConfirmDialogComponent],
+                providers: [NgbActiveModal],
+            })
             .compileComponents();
     });
 

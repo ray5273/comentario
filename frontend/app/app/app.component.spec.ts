@@ -7,13 +7,15 @@ import { NavbarComponent } from '../navbar/navbar.component';
 import { FooterComponent } from '../footer/footer.component';
 
 describe('AppComponent', () => {
+
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [AppComponent, MockComponents(NavbarComponent, ToastComponent, FooterComponent)],
-            imports: [
-                RouterModule.forRoot([]),
-            ],
-        }).compileComponents();
+                imports: [
+                    RouterModule.forRoot([]),
+                    AppComponent, MockComponents(NavbarComponent, ToastComponent, FooterComponent),
+                ],
+            })
+            .compileComponents();
     });
 
     it('creates the app', () => {

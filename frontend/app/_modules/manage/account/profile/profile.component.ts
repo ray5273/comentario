@@ -1,9 +1,11 @@
 import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { concat, EMPTY, first, Observable } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faAngleDown, faCopy, faPencil, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, CurUserUpdateRequest, Principal } from '../../../../../generated-api';
@@ -14,11 +16,29 @@ import { PluginService } from '../../../plugin/_services/plugin.service';
 import { Paths } from '../../../../_utils/consts';
 import { ConfigService } from '../../../../_services/config.service';
 import { InstanceConfigItemKey } from '../../../../_models/config';
+import { CopyTextDirective } from '../../../tools/_directives/copy-text.directive';
+import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
+import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { PluginPlugComponent } from '../../../plugin/plugin-plug/plugin-plug.component';
+import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-profile',
-    templateUrl: './profile.component.html'
+    imports: [
+        ReactiveFormsModule,
+        CopyTextDirective,
+        FaIconComponent,
+        RouterLink,
+        PasswordInputComponent,
+        UserAvatarComponent,
+        SpinnerDirective,
+        PluginPlugComponent,
+        NgbCollapse,
+        ConfirmDirective,
+    ],
+    templateUrl: './profile.component.html',
 })
 export class ProfileComponent implements OnInit {
 

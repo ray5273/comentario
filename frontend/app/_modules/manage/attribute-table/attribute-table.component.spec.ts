@@ -10,8 +10,7 @@ describe('AttributeTableComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [AttributeTableComponent],
-                imports: [NgbCollapseModule, FontAwesomeTestingModule],
+                imports: [NgbCollapseModule, FontAwesomeTestingModule, AttributeTableComponent],
             })
             .compileComponents();
 

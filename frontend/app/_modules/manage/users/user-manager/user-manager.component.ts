@@ -1,20 +1,45 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faBan, faLock, faUserLock } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, User } from '../../../../../generated-api';
 import { Sort } from '../../_models/sort';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ConfigService } from '../../../../_services/config.service';
 import { Animations } from '../../../../_utils/animations';
+import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
+import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
+import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.component';
+import { SuperuserBadgeComponent } from '../../badges/superuser-badge/superuser-badge.component';
+import { CurrentUserBadgeComponent } from '../../badges/current-user-badge/current-user-badge.component';
+import { IdentityProviderIconComponent } from '../../../tools/identity-provider-icon/identity-provider-icon.component';
+import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-user-manager',
     templateUrl: './user-manager.component.html',
     animations: [Animations.fadeIn('slow')],
+    imports: [
+        InfoBlockComponent,
+        SpinnerDirective,
+        SortSelectorComponent,
+        SortPropertyComponent,
+        ReactiveFormsModule,
+        RouterLink,
+        UserAvatarComponent,
+        FaIconComponent,
+        SuperuserBadgeComponent,
+        CurrentUserBadgeComponent,
+        IdentityProviderIconComponent,
+        ListFooterComponent,
+    ],
 })
 export class UserManagerComponent implements OnInit {
 

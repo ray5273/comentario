@@ -1,14 +1,21 @@
 import { Component, OnDestroy } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ApiGeneralService, Configuration } from '../../../../generated-api';
 import { Paths } from '../../../_utils/consts';
 import { ToastService } from '../../../_services/toast.service';
+import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
+import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 
 @Component({
     selector: 'app-reset-password',
     templateUrl: './reset-password.component.html',
+    imports: [
+        ReactiveFormsModule,
+        PasswordInputComponent,
+        SpinnerDirective,
+    ],
 })
 export class ResetPasswordComponent implements OnDestroy {
 

@@ -8,8 +8,8 @@ describe('CommentStatusBadgeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [CommentStatusBadgeComponent],
-        })
+                imports: [CommentStatusBadgeComponent],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(CommentStatusBadgeComponent);
         component = fixture.componentInstance;

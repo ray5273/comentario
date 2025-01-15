@@ -5,6 +5,7 @@ import { ExternalLinkDirective } from './external-link.directive';
 
 @Component({
     template: '<a appExternalLink="https://whatever.com/">test</a>',
+    imports: [ExternalLinkDirective],
 })
 class TestComponent {}
 
@@ -15,7 +16,7 @@ describe('ExternalLinkDirective', () => {
 
     beforeEach(() => {
         fixture = TestBed.configureTestingModule({
-                declarations: [ExternalLinkDirective, TestComponent],
+                imports: [ExternalLinkDirective, TestComponent],
             })
             .createComponent(TestComponent);
         fixture.detectChanges();

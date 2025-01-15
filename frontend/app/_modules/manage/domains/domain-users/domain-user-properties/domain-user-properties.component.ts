@@ -1,17 +1,37 @@
 import { Component, Input, OnInit } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, DomainUser, Principal, User } from '../../../../../../generated-api';
 import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
+import { CheckmarkComponent } from '../../../../tools/checkmark/checkmark.component';
+import { DatetimePipe } from '../../../_pipes/datetime.pipe';
+import { UserDetailsComponent } from '../../../users/user-details/user-details.component';
+import { CommentListComponent } from '../../comments/comment-list/comment-list.component';
+import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-user-properties',
     templateUrl: './domain-user-properties.component.html',
+    imports: [
+        SpinnerDirective,
+        FaIconComponent,
+        DomainUserBadgeComponent,
+        CheckmarkComponent,
+        DatetimePipe,
+        UserDetailsComponent,
+        CommentListComponent,
+        NoDataComponent,
+        RouterLink,
+    ],
 })
 export class DomainUserPropertiesComponent implements OnInit {
 

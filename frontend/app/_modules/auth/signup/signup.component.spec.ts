@@ -17,13 +17,20 @@ describe('SignupComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [SignupComponent, MockComponents(PasswordInputComponent, FederatedLoginComponent)],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
-            providers: [
-                MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig, dynamicConfig: of(new DynamicConfig())}),
-                MockProvider(ApiGeneralService),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    FontAwesomeTestingModule,
+                    SignupComponent,
+                    MockComponents(PasswordInputComponent, FederatedLoginComponent),
+                ],
+                providers: [
+                    MockProvider(ConfigService, {
+                        staticConfig: {} as InstanceStaticConfig,
+                        dynamicConfig: of(new DynamicConfig()),
+                    }),
+                    MockProvider(ApiGeneralService),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(SignupComponent);

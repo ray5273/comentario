@@ -1,13 +1,18 @@
 import { Component } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router } from '@angular/router';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ToastService } from '../../../_services/toast.service';
 import { ApiGeneralService } from '../../../../generated-api';
+import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 
 @Component({
     selector: 'app-forgot-password',
     templateUrl: './forgot-password.component.html',
+    imports: [
+        ReactiveFormsModule,
+        SpinnerDirective,
+    ],
 })
 export class ForgotPasswordComponent {
 

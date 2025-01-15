@@ -10,8 +10,8 @@ describe('ListFooterComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ListFooterComponent, MockComponents(NoDataComponent)],
-        })
+                imports: [ListFooterComponent, MockComponents(NoDataComponent)],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(ListFooterComponent);
         component = fixture.componentInstance;

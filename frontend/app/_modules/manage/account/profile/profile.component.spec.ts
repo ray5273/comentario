@@ -15,14 +15,17 @@ describe('ProfileComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ProfileComponent],
-            providers: [
-                MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig, dynamicConfig: of(new DynamicConfig())}),
-                MockProvider(ApiGeneralService),
-                MockProvider(PluginService),
-                mockAuthService(),
-            ],
-        })
+                imports: [ProfileComponent],
+                providers: [
+                    MockProvider(ConfigService, {
+                        staticConfig: {} as InstanceStaticConfig,
+                        dynamicConfig: of(new DynamicConfig()),
+                    }),
+                    MockProvider(ApiGeneralService),
+                    MockProvider(PluginService),
+                    mockAuthService(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(ProfileComponent);

@@ -9,8 +9,7 @@ describe('SuperuserBadgeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [SuperuserBadgeComponent],
-                imports: [FontAwesomeTestingModule],
+                imports: [FontAwesomeTestingModule, SuperuserBadgeComponent],
             })
             .compileComponents();
 

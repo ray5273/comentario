@@ -1,10 +1,16 @@
 import { Component, Input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { ChartData, ChartOptions } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 
 @Component({
     selector: 'app-metric-card',
     templateUrl: './metric-card.component.html',
     styleUrls: ['./metric-card.component.scss'],
+    imports: [
+        BaseChartDirective,
+        DecimalPipe,
+    ],
 })
 export class MetricCardComponent {
 

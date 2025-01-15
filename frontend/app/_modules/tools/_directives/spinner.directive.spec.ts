@@ -5,6 +5,7 @@ import { SpinnerDirective, SpinnerSize } from './spinner.directive';
 
 @Component({
     template: '<button [appSpinner]="value" [spinnerSize]="size" [spinnerText]="text">text</button>',
+    imports: [SpinnerDirective],
 })
 class TestComponent {
     value = false;
@@ -20,8 +21,8 @@ describe('SpinnerDirective', () => {
 
     beforeEach(() => {
         fixture = TestBed.configureTestingModule({
-            declarations: [SpinnerDirective, TestComponent],
-        })
+                imports: [SpinnerDirective, TestComponent],
+            })
             .createComponent(TestComponent);
         fixture.detectChanges();
 

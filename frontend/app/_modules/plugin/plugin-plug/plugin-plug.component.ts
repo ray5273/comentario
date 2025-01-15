@@ -1,4 +1,5 @@
 import { AfterContentInit, Component, ElementRef, Input, OnChanges, SimpleChanges, ViewChild } from '@angular/core';
+import { JsonPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { EMPTY, Subject, switchMap } from 'rxjs';
 import { PluginService } from '../_services/plugin.service';
@@ -6,11 +7,16 @@ import { PluginRouteData } from '../../../_models/models';
 import { UIPlug } from '../_models/plugs';
 import { Animations } from '../../../_utils/animations';
 import { PluginConfig } from '../../../../generated-api';
+import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 
 @Component({
     selector: 'app-plugin-plug',
     templateUrl: './plugin-plug.component.html',
     animations: [Animations.fadeInOut('fast')],
+    imports: [
+        SpinnerDirective,
+        JsonPipe,
+    ],
 })
 export class PluginPlugComponent implements AfterContentInit, OnChanges {
 

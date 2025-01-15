@@ -5,11 +5,15 @@ import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
 import { ToastService } from '../_services/toast.service';
 import { ConfigService } from '../_services/config.service';
+import { DocEmbedDirective } from '../_directives/doc-embed.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-home',
     templateUrl: './home.component.html',
+    imports: [
+        DocEmbedDirective,
+    ],
 })
 export class HomeComponent implements OnInit {
 

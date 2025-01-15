@@ -4,7 +4,6 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainImportComponent } from './domain-import.component';
-import { ToolsModule } from '../../../tools/tools.module';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
@@ -16,13 +15,18 @@ describe('DomainImportComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainImportComponent, MockComponents(InfoIconComponent)],
-            imports: [RouterModule.forRoot([]), ReactiveFormsModule, FontAwesomeTestingModule, ToolsModule],
-            providers: [
-                MockProvider(ApiGeneralService),
-                mockDomainSelector(),
-            ],
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    ReactiveFormsModule,
+                    FontAwesomeTestingModule,
+                    DomainImportComponent,
+                    MockComponents(InfoIconComponent),
+                ],
+                providers: [
+                    MockProvider(ApiGeneralService),
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(DomainImportComponent);

@@ -1,8 +1,6 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgChartsModule } from 'ng2-charts';
 import { MockComponents } from 'ng-mocks';
 import { DailyStatsChartComponent } from './daily-stats-chart.component';
-import { ToolsModule } from '../../../tools/tools.module';
 import { MetricCardComponent } from '../../dashboard/metric-card/metric-card.component';
 
 describe('DailyStatsChartComponent', () => {
@@ -12,9 +10,8 @@ describe('DailyStatsChartComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DailyStatsChartComponent, MockComponents(MetricCardComponent)],
-            imports: [NgChartsModule, ToolsModule],
-        })
+                imports: [DailyStatsChartComponent, MockComponents(MetricCardComponent)],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(DailyStatsChartComponent);

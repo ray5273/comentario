@@ -1,7 +1,5 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { NgChartsModule } from 'ng2-charts';
 import { PieStatsChartComponent } from './pie-stats-chart.component';
-import { ToolsModule } from '../../../tools/tools.module';
 
 describe('PieStatsChartComponent', () => {
 
@@ -10,9 +8,8 @@ describe('PieStatsChartComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [PieStatsChartComponent],
-            imports: [ToolsModule, NgChartsModule],
-        })
+                imports: [PieStatsChartComponent],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(PieStatsChartComponent);

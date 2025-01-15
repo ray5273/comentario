@@ -1,8 +1,10 @@
 import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faCheck, faQuestion, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService, Comment, Commenter } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
@@ -13,12 +15,37 @@ import { Utils } from '../../../../../_utils/utils';
 import { Paths } from '../../../../../_utils/consts';
 import { CommentService } from '../../../_services/comment.service';
 import { Animations } from '../../../../../_utils/animations';
+import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
+import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
+import { UserLinkComponent } from '../../../user-link/user-link.component';
+import { CommentStatusBadgeComponent } from '../../../badges/comment-status-badge/comment-status-badge.component';
+import { ExternalLinkDirective } from '../../../../tools/_directives/external-link.directive';
+import { DatetimePipe } from '../../../_pipes/datetime.pipe';
+import { ConfirmDirective } from '../../../../tools/_directives/confirm.directive';
+import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-comment-list',
     templateUrl: './comment-list.component.html',
     animations: [Animations.fadeIn('slow')],
+    imports: [
+        InfoBlockComponent,
+        SpinnerDirective,
+        ReactiveFormsModule,
+        SortSelectorComponent,
+        SortPropertyComponent,
+        FaIconComponent,
+        RouterLink,
+        UserLinkComponent,
+        CommentStatusBadgeComponent,
+        ExternalLinkDirective,
+        DatetimePipe,
+        ConfirmDirective,
+        ListFooterComponent,
+    ],
 })
 export class CommentListComponent implements OnInit, OnChanges {
 

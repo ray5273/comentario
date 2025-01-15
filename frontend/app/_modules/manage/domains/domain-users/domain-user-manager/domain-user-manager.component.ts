@@ -1,8 +1,10 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder } from '@angular/forms';
+import { RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faBan, faUserLock } from '@fortawesome/free-solid-svg-icons';
 import { Sort } from '../../../_models/sort';
 import { ApiGeneralService, DomainUser, User } from '../../../../../../generated-api';
@@ -10,12 +12,39 @@ import { DomainMeta, DomainSelectorService } from '../../../_services/domain-sel
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ConfigService } from '../../../../../_services/config.service';
 import { Animations } from '../../../../../_utils/animations';
+import { DomainBadgeComponent } from '../../../badges/domain-badge/domain-badge.component';
+import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
+import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
+import { UserAvatarComponent } from '../../../../tools/user-avatar/user-avatar.component';
+import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
+import { SuperuserBadgeComponent } from '../../../badges/superuser-badge/superuser-badge.component';
+import { CurrentUserBadgeComponent } from '../../../badges/current-user-badge/current-user-badge.component';
+import { IdentityProviderIconComponent } from '../../../../tools/identity-provider-icon/identity-provider-icon.component';
+import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-user-manager',
     templateUrl: './domain-user-manager.component.html',
-    animations: [Animations.fadeIn('slow')]
+    imports: [
+        DomainBadgeComponent,
+        InfoBlockComponent,
+        SpinnerDirective,
+        SortSelectorComponent,
+        SortPropertyComponent,
+        ReactiveFormsModule,
+        RouterLink,
+        UserAvatarComponent,
+        DomainUserBadgeComponent,
+        SuperuserBadgeComponent,
+        FaIconComponent,
+        CurrentUserBadgeComponent,
+        IdentityProviderIconComponent,
+        ListFooterComponent,
+    ],
+    animations: [Animations.fadeIn('slow')],
 })
 export class DomainUserManagerComponent implements OnInit {
 

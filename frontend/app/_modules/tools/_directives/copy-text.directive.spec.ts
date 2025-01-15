@@ -5,9 +5,11 @@ import { NgbTooltip, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { CopyTextDirective } from './copy-text.directive';
 
 @Component({
-    template:
-        '<button id="btn1" type="button" appCopyText="example1"></button>'+
-        '<button id="btn2" type="button" appCopyText="example2" ngbTooltip=""></button>',
+    template: `
+        <button id="btn1" type="button" appCopyText="example1">x</button>
+        <button id="btn2" type="button" appCopyText="example2" ngbTooltip="">y</button>
+    `,
+    imports: [NgbTooltipModule, CopyTextDirective],
 })
 class TestComponent {
     value = false;
@@ -22,9 +24,8 @@ describe('CopyTextDirective', () => {
 
     beforeEach(() => {
         fixture = TestBed.configureTestingModule({
-            declarations: [CopyTextDirective, TestComponent],
-            imports: [NgbTooltipModule],
-        })
+                imports: [NgbTooltipModule, CopyTextDirective, TestComponent],
+            })
             .createComponent(TestComponent);
         fixture.detectChanges();
 

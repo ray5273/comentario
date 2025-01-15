@@ -9,10 +9,9 @@ describe('IdentityProviderIconComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [IdentityProviderIconComponent],
-            imports: [FontAwesomeTestingModule],
-        })
-        .compileComponents();
+                imports: [FontAwesomeTestingModule, IdentityProviderIconComponent],
+            })
+            .compileComponents();
 
         fixture = TestBed.createComponent(IdentityProviderIconComponent);
         component = fixture.componentInstance;

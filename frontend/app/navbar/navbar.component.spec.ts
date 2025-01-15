@@ -13,15 +13,14 @@ describe('NavbarComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [NavbarComponent],
-            imports: [RouterModule.forRoot([]), FontAwesomeTestingModule],
-            providers: [
-                mockAuthService(),
-                MockProvider(DocsService),
-                MockProvider(PluginService),
-            ],
-        })
-        .compileComponents();
+                imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NavbarComponent],
+                providers: [
+                    mockAuthService(),
+                    MockProvider(DocsService),
+                    MockProvider(PluginService),
+                ],
+            })
+            .compileComponents();
     });
 
     beforeEach(() => {

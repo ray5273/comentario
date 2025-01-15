@@ -1,21 +1,47 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BehaviorSubject, combineLatestWith, EMPTY, from, ReplaySubject, switchMap } from 'rxjs';
 import { catchError, filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { NgbModal, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faCheck, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
+import { Highlight } from 'ngx-highlightjs';
 import { ApiGeneralService, Comment, Commenter, DomainPage, Principal, User } from '../../../../../../generated-api';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { AnonymousUser, Paths } from '../../../../../_utils/consts';
 import { ConfirmDialogComponent } from '../../../../tools/confirm-dialog/confirm-dialog.component';
 import { CommentService } from '../../../_services/comment.service';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { ExternalLinkDirective } from '../../../../tools/_directives/external-link.directive';
+import { CommentStatusBadgeComponent } from '../../../badges/comment-status-badge/comment-status-badge.component';
+import { CheckmarkComponent } from '../../../../tools/checkmark/checkmark.component';
+import { DatetimePipe } from '../../../_pipes/datetime.pipe';
+import { UserLinkComponent } from '../../../user-link/user-link.component';
+import { CountryNamePipe } from '../../../_pipes/country-name.pipe';
+import { CopyTextDirective } from '../../../../tools/_directives/copy-text.directive';
+import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-comment-properties',
     templateUrl: './comment-properties.component.html',
+    imports: [
+        SpinnerDirective,
+        FaIconComponent,
+        ExternalLinkDirective,
+        RouterLink,
+        CommentStatusBadgeComponent,
+        CheckmarkComponent,
+        DatetimePipe,
+        UserLinkComponent,
+        CountryNamePipe,
+        CopyTextDirective,
+        NgbNavModule,
+        Highlight,
+        NoDataComponent,
+    ],
 })
 export class CommentPropertiesComponent implements OnInit {
 

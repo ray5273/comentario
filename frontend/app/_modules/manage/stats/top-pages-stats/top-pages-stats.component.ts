@@ -1,10 +1,17 @@
 import { Component, Input } from '@angular/core';
+import { DecimalPipe, NgTemplateOutlet } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { PageStatsItem } from '../../../../../generated-api';
 import { Paths } from '../../../../_utils/consts';
 
 @Component({
     selector: 'app-top-pages-stats',
     templateUrl: './top-pages-stats.component.html',
+    imports: [
+        NgTemplateOutlet,
+        RouterLink,
+        DecimalPipe,
+    ],
 })
 export class TopPagesStatsComponent {
 

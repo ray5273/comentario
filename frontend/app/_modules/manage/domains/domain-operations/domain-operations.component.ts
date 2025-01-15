@@ -1,8 +1,9 @@
 import { Component, Inject, OnInit } from '@angular/core';
 import { DOCUMENT } from '@angular/common';
-import { Router } from '@angular/router';
-import { FormBuilder } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import {
     faAngleDown,
     faCalendarXmark,
@@ -13,16 +14,29 @@ import {
     faSnowflake,
     faTrashAlt,
 } from '@fortawesome/free-solid-svg-icons';
+import { NgbCollapseModule } from '@ng-bootstrap/ng-bootstrap';
 import { Paths } from '../../../../_utils/consts';
 import { ApiGeneralService, Domain } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-operations',
     templateUrl: './domain-operations.component.html',
+    imports: [
+        DomainBadgeComponent,
+        RouterLink,
+        FaIconComponent,
+        SpinnerDirective,
+        ConfirmDirective,
+        NgbCollapseModule,
+        ReactiveFormsModule,
+    ],
 })
 export class DomainOperationsComponent implements OnInit {
 

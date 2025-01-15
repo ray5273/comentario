@@ -10,8 +10,7 @@ describe('DomainEditModerationComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [DomainEditModerationComponent],
-                imports: [FontAwesomeTestingModule, ReactiveFormsModule],
+                imports: [FontAwesomeTestingModule, ReactiveFormsModule, DomainEditModerationComponent],
             })
             .compileComponents();
 

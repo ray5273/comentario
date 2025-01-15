@@ -1,5 +1,6 @@
 import { Component } from '@angular/core';
 import { Router } from '@angular/router';
+import { NgClass } from '@angular/common';
 import { finalize, first, of, switchMap, throwError, timer } from 'rxjs';
 import { map, take } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -8,11 +9,18 @@ import { ApiGeneralService, Configuration, FederatedIdentityProvider } from '../
 import { ToastService } from '../../../_services/toast.service';
 import { AuthService } from '../../../_services/auth.service';
 import { Paths } from '../../../_utils/consts';
+import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
+import { IdentityProviderIconComponent } from '../../tools/identity-provider-icon/identity-provider-icon.component';
 
 @UntilDestroy()
 @Component({
     selector: 'app-federated-login',
     templateUrl: './federated-login.component.html',
+    imports: [
+        SpinnerDirective,
+        IdentityProviderIconComponent,
+        NgClass,
+    ],
 })
 export class FederatedLoginComponent {
 

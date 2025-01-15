@@ -9,13 +9,12 @@ describe('PasswordInputComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [PasswordInputComponent],
-            imports: [FormsModule, FontAwesomeTestingModule],
-            providers: [
-                {provide: NgControl, useValue: {touched: false, valid: false, invalid: false}},
-            ],
-        })
-        .compileComponents();
+                imports: [FormsModule, FontAwesomeTestingModule, PasswordInputComponent],
+                providers: [
+                    {provide: NgControl, useValue: {touched: false, valid: false, invalid: false}},
+                ],
+            })
+            .compileComponents();
     });
 
     beforeEach(() => {

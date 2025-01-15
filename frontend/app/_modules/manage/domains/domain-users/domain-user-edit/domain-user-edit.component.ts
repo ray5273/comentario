@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -9,6 +9,10 @@ import { DomainSelectorService } from '../../../_services/domain-selector.servic
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
 import { ToastService } from '../../../../../_services/toast.service';
+import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
+import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
 
 type UserRole = 'owner' | 'moderator' | 'commenter' | 'readonly';
 
@@ -16,6 +20,14 @@ type UserRole = 'owner' | 'moderator' | 'commenter' | 'readonly';
 @Component({
     selector: 'app-domain-user-edit',
     templateUrl: './domain-user-edit.component.html',
+    imports: [
+        InfoBlockComponent,
+        ReactiveFormsModule,
+        SpinnerDirective,
+        InfoIconComponent,
+        DomainUserBadgeComponent,
+        RouterLink,
+    ],
 })
 export class DomainUserEditComponent implements OnInit {
 

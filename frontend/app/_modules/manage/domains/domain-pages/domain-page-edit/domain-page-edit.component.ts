@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
 import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
@@ -9,11 +9,17 @@ import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ToastService } from '../../../../../_services/toast.service';
 import { Paths } from '../../../../../_utils/consts';
+import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-domain-page-edit',
     templateUrl: './domain-page-edit.component.html',
+    imports: [
+        ReactiveFormsModule,
+        SpinnerDirective,
+        RouterLink,
+    ],
 })
 export class DomainPageEditComponent implements OnInit {
 

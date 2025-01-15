@@ -1,14 +1,27 @@
 import { Component } from '@angular/core';
+import { JsonPipe, NgClass } from '@angular/common';
 import { Router } from '@angular/router';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faCheck, faChevronDown, faCircleExclamation, faExclamation, faInfoCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
+import { Highlight } from 'ngx-highlightjs';
 import { Severity, Toast, ToastService } from '../_services/toast.service';
 import { Paths } from '../_utils/consts';
 import { AuthService } from '../_services/auth.service';
+import { ServerMessageComponent } from '../_modules/tools/server-message/server-message.component';
 
 @Component({
     selector: 'app-toast',
     templateUrl: './toast.component.html',
     styleUrls: ['./toast.component.scss'],
+    imports: [
+        NgbToastModule,
+        NgClass,
+        FaIconComponent,
+        ServerMessageComponent,
+        Highlight,
+        JsonPipe,
+    ],
 })
 export class ToastComponent {
 

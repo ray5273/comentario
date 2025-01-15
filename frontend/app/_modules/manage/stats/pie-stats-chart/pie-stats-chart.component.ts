@@ -1,5 +1,7 @@
 import { Component, Input } from '@angular/core';
+import { DecimalPipe } from '@angular/common';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
+import { BaseChartDirective } from 'ng2-charts';
 import { StatsDimensionItem } from '../../../../../generated-api';
 import { HashColourPipe } from '../../../tools/_pipes/hash-colour.pipe';
 
@@ -7,6 +9,10 @@ import { HashColourPipe } from '../../../tools/_pipes/hash-colour.pipe';
     selector: 'app-pie-stats-chart',
     templateUrl: './pie-stats-chart.component.html',
     styleUrls: ['./pie-stats-chart.component.scss'],
+    imports: [
+        BaseChartDirective,
+        DecimalPipe,
+    ],
 })
 export class PieStatsChartComponent {
 

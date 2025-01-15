@@ -1,12 +1,31 @@
 import { Component, Input } from '@angular/core';
+import { FormGroup, ReactiveFormsModule } from '@angular/forms';
+import { KeyValuePipe } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
-import { FormGroup } from '@angular/forms';
+import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
 import { CommentSort } from '../../../../../../generated-api';
 import { DynamicConfig } from '../../../../../_models/config';
+import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
+import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
+import { CommentSortPipe } from '../../../_pipes/comment-sort.pipe';
+import { DynConfigSectionNamePipe } from '../../../_pipes/dyn-config-section-name.pipe';
+import { ConfigSectionEditComponent } from '../../../config/config-section-edit/config-section-edit.component';
 
 @Component({
     selector: 'app-domain-edit-general',
     templateUrl: './domain-edit-general.component.html',
+    imports: [
+        ReactiveFormsModule,
+        InfoBlockComponent,
+        InfoIconComponent,
+        FaIconComponent,
+        CommentSortPipe,
+        KeyValuePipe,
+        DynConfigSectionNamePipe,
+        ConfigSectionEditComponent,
+        NgbDropdownModule,
+    ],
 })
 export class DomainEditGeneralComponent {
 

@@ -13,8 +13,12 @@ describe('DomainEditAuthComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [DomainEditAuthComponent, MockComponents(InfoBlockComponent, InfoIconComponent)],
-                imports: [FontAwesomeTestingModule, ReactiveFormsModule],
+                imports: [
+                    FontAwesomeTestingModule,
+                    ReactiveFormsModule,
+                    DomainEditAuthComponent,
+                    MockComponents(InfoBlockComponent, InfoIconComponent),
+                ],
             })
             .compileComponents();
 

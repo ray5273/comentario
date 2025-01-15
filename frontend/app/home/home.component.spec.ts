@@ -13,13 +13,12 @@ describe('HomeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [HomeComponent, MockDirectives(DocEmbedDirective)],
-            imports: [RouterModule.forRoot([])],
-            providers: [
-                mockAuthService(),
-                MockProvider(ConfigService, {staticConfig: {homeContentUrl: ''} as any}),
-            ],
-        })
+                imports: [RouterModule.forRoot([]), HomeComponent, MockDirectives(DocEmbedDirective)],
+                providers: [
+                    mockAuthService(),
+                    MockProvider(ConfigService, {staticConfig: {homeContentUrl: ''} as any}),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(HomeComponent);

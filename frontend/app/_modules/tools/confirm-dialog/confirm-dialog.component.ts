@@ -1,11 +1,17 @@
 import { Component, Input, TemplateRef, ViewChild } from '@angular/core';
+import { NgTemplateOutlet } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 
 @Component({
     selector: 'app-confirm-dialog',
     templateUrl: './confirm-dialog.component.html',
+    imports: [
+        FaIconComponent,
+        NgTemplateOutlet,
+    ],
 })
 export class ConfirmDialogComponent {
 

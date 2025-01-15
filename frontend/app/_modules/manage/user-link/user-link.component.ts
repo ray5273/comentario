@@ -1,5 +1,8 @@
 import { Component, Input } from '@angular/core';
+import { RouterLink } from '@angular/router';
 import { Commenter, Principal, User } from '../../../../generated-api';
+import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
+import { CurrentUserBadgeComponent } from '../badges/current-user-badge/current-user-badge.component';
 
 /**
  * Renders user name, accompanied with their avatar, optionally as a link.
@@ -7,6 +10,11 @@ import { Commenter, Principal, User } from '../../../../generated-api';
 @Component({
     selector: 'app-user-link',
     templateUrl: './user-link.component.html',
+    imports: [
+        RouterLink,
+        UserAvatarComponent,
+        CurrentUserBadgeComponent,
+    ],
 })
 export class UserLinkComponent {
 

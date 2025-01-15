@@ -1,6 +1,6 @@
 import { Component, Input, OnInit } from '@angular/core';
-import { FormBuilder, Validators } from '@angular/forms';
-import { Router } from '@angular/router';
+import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import { Router, RouterLink } from '@angular/router';
 import { ApiGeneralService, Principal, User } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
@@ -9,10 +9,20 @@ import { AuthService } from '../../../../_services/auth.service';
 import { Utils } from '../../../../_utils/utils';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { ConfigService } from '../../../../_services/config.service';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
+import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 
 @Component({
     selector: 'app-user-edit',
     templateUrl: './user-edit.component.html',
+    imports: [
+        ReactiveFormsModule,
+        SpinnerDirective,
+        PasswordInputComponent,
+        InfoIconComponent,
+        RouterLink,
+    ],
 })
 export class UserEditComponent implements OnInit {
 

@@ -1,4 +1,6 @@
 import { Component, Input } from '@angular/core';
+import { AsyncPipe, NgClass } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faUserCheck } from '@fortawesome/free-solid-svg-icons';
 import { AuthService } from '../../../../_services/auth.service';
 
@@ -9,6 +11,11 @@ import { AuthService } from '../../../../_services/auth.service';
 @Component({
     selector: 'app-current-user-badge',
     templateUrl: './current-user-badge.component.html',
+    imports: [
+        AsyncPipe,
+        NgClass,
+        FaIconComponent,
+    ],
 })
 export class CurrentUserBadgeComponent {
 

@@ -217,7 +217,7 @@ export interface UserSettings {
 
 export const ANONYMOUS_ID: UUID = '00000000-0000-0000-0000-000000000000';
 
-export const CommentSortComparators: { [k in CommentSort]: ComparatorFunc<Comment> } = {
+export const CommentSortComparators: Record<CommentSort, ComparatorFunc<Comment>> = {
     sa: (a, b) => a.score - b.score,
     sd: (a, b) => b.score - a.score,
     td: (a, b) => b.createdTime.localeCompare(a.createdTime),

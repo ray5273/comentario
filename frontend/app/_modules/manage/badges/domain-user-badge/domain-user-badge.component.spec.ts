@@ -1,5 +1,5 @@
-import {ComponentFixture, TestBed} from '@angular/core/testing';
-import {DomainUserBadgeComponent} from './domain-user-badge.component';
+import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { DomainUserBadgeComponent } from './domain-user-badge.component';
 
 describe('DomainUserBadgeComponent', () => {
 
@@ -8,8 +8,8 @@ describe('DomainUserBadgeComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [DomainUserBadgeComponent]
-        })
+                imports: [DomainUserBadgeComponent],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(DomainUserBadgeComponent);
         component = fixture.componentInstance;

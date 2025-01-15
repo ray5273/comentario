@@ -5,7 +5,6 @@ import { MockProvider } from 'ng-mocks';
 import { EmailUpdateComponent } from './email-update.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { mockAuthService } from '../../../../_utils/_mocks.spec';
-import { ToolsModule } from '../../../tools/tools.module';
 
 describe('EmailUpdateComponent', () => {
 
@@ -14,12 +13,15 @@ describe('EmailUpdateComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [EmailUpdateComponent],
+                imports: [
+                    ReactiveFormsModule,
+                    RouterModule.forRoot([]),
+                    EmailUpdateComponent,
+                ],
                 providers: [
                     MockProvider(ApiGeneralService),
                     mockAuthService(),
                 ],
-                imports: [ReactiveFormsModule, RouterModule.forRoot([]), ToolsModule],
             })
             .compileComponents();
 

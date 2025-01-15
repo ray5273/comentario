@@ -4,11 +4,9 @@ import { RouterModule } from '@angular/router';
 import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { FontAwesomeModule } from '@fortawesome/angular-fontawesome';
 import { NgbCollapseModule, NgbDropdownModule, NgbNavModule, NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { NgChartsModule } from 'ng2-charts';
 import { Highlight } from 'ngx-highlightjs';
 import { ManageRoutingModule } from './manage-routing.module';
 import { ControlCenterComponent } from './control-center/control-center.component';
-import { ToolsModule } from '../tools/tools.module';
 import { DashboardComponent } from './dashboard/dashboard.component';
 import { DomainManagerComponent } from './domains/domain-manager/domain-manager.component';
 import { DomainEditComponent } from './domains/domain-edit/domain-edit.component';
@@ -61,7 +59,6 @@ import { DomainEditModerationComponent } from './domains/domain-edit/domain-edit
 import { DomainEditExtensionsComponent } from './domains/domain-edit/domain-edit-extensions/domain-edit-extensions.component';
 import { UpdatesBadgeComponent } from './badges/updates-badge/updates-badge.component';
 import { CountryNamePipe } from './_pipes/country-name.pipe';
-import { PluginModule } from '../plugin/plugin.module';
 import { AttributeTableComponent } from './attribute-table/attribute-table.component';
 import { PieStatsChartComponent } from './stats/pie-stats-chart/pie-stats-chart.component';
 import { TopPagesStatsComponent } from './stats/top-pages-stats/top-pages-stats.component';
@@ -71,13 +68,14 @@ import { DomainPageEditComponent } from './domains/domain-pages/domain-page-edit
 import { SuperuserBadgeComponent } from './badges/superuser-badge/superuser-badge.component';
 
 @NgModule({
-    declarations: [
+    imports: [
         AttributeTableComponent,
         CommentListComponent,
         CommentManagerComponent,
         CommentPropertiesComponent,
         CommentSortPipe,
         CommentStatusBadgeComponent,
+        CommonModule,
         ConfigEditComponent,
         ConfigManagerComponent,
         ConfigSectionEditComponent,
@@ -113,10 +111,21 @@ import { SuperuserBadgeComponent } from './badges/superuser-badge/superuser-badg
         DynConfigItemValueComponent,
         DynConfigSectionNamePipe,
         EmailUpdateComponent,
+        FontAwesomeModule,
+        FormsModule,
+        Highlight,
+        ManageRoutingModule,
         MetricCardComponent,
         ModeratorNotifyPolicyPipe,
+        NgbCollapseModule,
+        NgbDropdownModule,
+        NgbNavModule,
+        NgbTooltip,
+        NgOptimizedImage,
         PieStatsChartComponent,
         ProfileComponent,
+        ReactiveFormsModule,
+        RouterModule,
         SortPropertyComponent,
         SortSelectorComponent,
         StaticConfigComponent,
@@ -130,30 +139,10 @@ import { SuperuserBadgeComponent } from './badges/superuser-badge/superuser-badg
         UserManagerComponent,
         UserPropertiesComponent,
     ],
-    imports: [
-        CommonModule,
-        NgOptimizedImage,
-        RouterModule,
-        FormsModule,
-        ReactiveFormsModule,
-        FontAwesomeModule,
-        NgbCollapseModule,
-        NgbDropdownModule,
-        NgbNavModule,
-        NgbTooltip,
-        NgChartsModule,
-        Highlight,
-        ToolsModule,
-        PluginModule,
-        ManageRoutingModule,
-    ],
     providers: [
         CommentService,
         DomainSelectorService,
         ManageGuard,
-    ],
-    exports: [
-        CurrentUserBadgeComponent,
     ],
 })
 export class ManageModule {}

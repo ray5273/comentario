@@ -1,12 +1,27 @@
 import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
-import { FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { DecimalPipe, LowerCasePipe, NgTemplateOutlet } from '@angular/common';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faRotateLeft } from '@fortawesome/free-solid-svg-icons';
+import { NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { DynamicConfig } from '../../../../_models/config';
 import { TypedConfigItem } from '../../../../_models/typed-config-item';
+import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
+import { DynConfigItemNamePipe } from '../../_pipes/dyn-config-item-name.pipe';
 
 @Component({
     selector: 'app-config-section-edit',
     templateUrl: './config-section-edit.component.html',
+    imports: [
+        ReactiveFormsModule,
+        InfoIconComponent,
+        LowerCasePipe,
+        FaIconComponent,
+        DynConfigItemNamePipe,
+        NgTemplateOutlet,
+        DecimalPipe,
+        NgbTooltipModule,
+    ],
 })
 export class ConfigSectionEditComponent implements OnChanges {
 

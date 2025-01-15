@@ -8,7 +8,7 @@ describe('DynConfigItemValueComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [DynConfigItemValueComponent],
+                imports: [DynConfigItemValueComponent],
             })
             .compileComponents();
 

@@ -12,14 +12,11 @@ describe('DomainStatsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [
-                DomainStatsComponent,
-                MockComponents(DomainBadgeComponent, StatsComponent),
-            ],
-            providers: [
-                mockDomainSelector(),
-            ],
-        })
+                imports: [DomainStatsComponent, MockComponents(DomainBadgeComponent, StatsComponent)],
+                providers: [
+                    mockDomainSelector(),
+                ],
+            })
             .compileComponents();
 
         fixture = TestBed.createComponent(DomainStatsComponent);

@@ -5,7 +5,6 @@ import { UserDetailsComponent } from './user-details.component';
 import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.component';
 import { ToastService } from '../../../../_services/toast.service';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { ToolsModule } from '../../../tools/tools.module';
 
 describe('UserDetailsComponent', () => {
 
@@ -14,10 +13,13 @@ describe('UserDetailsComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [UserDetailsComponent, MockComponents(UserAvatarComponent)],
-            imports: [RouterModule.forRoot([]), ToolsModule],
-            providers: MockProviders(ToastService, ApiGeneralService),
-        })
+                imports: [
+                    RouterModule.forRoot([]),
+                    UserDetailsComponent,
+                    MockComponents(UserAvatarComponent),
+                ],
+                providers: MockProviders(ToastService, ApiGeneralService),
+            })
             .compileComponents();
         fixture = TestBed.createComponent(UserDetailsComponent);
         component = fixture.componentInstance;

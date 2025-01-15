@@ -9,9 +9,8 @@ describe('InfoBlockComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [InfoBlockComponent],
-            imports: [FontAwesomeTestingModule],
-        })
+                imports: [FontAwesomeTestingModule, InfoBlockComponent],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(InfoBlockComponent);
         component = fixture.componentInstance;

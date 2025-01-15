@@ -3,7 +3,6 @@ import { ActivatedRoute, RouterModule } from '@angular/router';
 import { MockProvider } from 'ng-mocks';
 import { PluginPlugComponent } from './plugin-plug.component';
 import { PluginService } from '../_services/plugin.service';
-import { ToolsModule } from '../../tools/tools.module';
 
 describe('PluginPlugComponent', () => {
 
@@ -12,8 +11,7 @@ describe('PluginPlugComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                declarations: [PluginPlugComponent],
-                imports: [RouterModule.forRoot([]), ToolsModule],
+                imports: [RouterModule.forRoot([]), PluginPlugComponent],
                 providers: [
                     MockProvider(ActivatedRoute, {snapshot: {data: {plug: {componentTag: 'p'}}}} as any),
                     MockProvider(PluginService),

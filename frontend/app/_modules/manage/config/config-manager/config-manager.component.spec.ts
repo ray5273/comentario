@@ -10,9 +10,8 @@ describe('ConfigManagerComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-            declarations: [ConfigManagerComponent],
-            imports: [RouterModule.forRoot([]), NgbNavModule],
-        })
+                imports: [RouterModule.forRoot([]), NgbNavModule, ConfigManagerComponent],
+            })
             .compileComponents();
         fixture = TestBed.createComponent(ConfigManagerComponent);
         component = fixture.componentInstance;

@@ -1,10 +1,12 @@
 import { Component, OnInit } from '@angular/core';
-import { AbstractControl, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router } from '@angular/router';
+import { AbstractControl, FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ActivatedRoute, Router, RouterLink } from '@angular/router';
 import { first, Observable, of, switchMap } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import {
     ApiGeneralService,
     CommentSort,
@@ -20,6 +22,11 @@ import { Utils } from '../../../../_utils/utils';
 import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { DynamicConfig } from '../../../../_models/config';
+import { DomainEditExtensionsComponent } from './domain-edit-extensions/domain-edit-extensions.component';
+import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { DomainEditGeneralComponent } from './domain-edit-general/domain-edit-general.component';
+import { DomainEditAuthComponent } from './domain-edit-auth/domain-edit-auth.component';
+import { DomainEditModerationComponent } from './domain-edit-moderation/domain-edit-moderation.component';
 
 interface ExtensionValue {
     enabled: boolean;
@@ -30,6 +37,17 @@ interface ExtensionValue {
 @Component({
     selector: 'app-domain-edit',
     templateUrl: './domain-edit.component.html',
+    imports: [
+        ReactiveFormsModule,
+        DomainEditExtensionsComponent,
+        NgbNavModule,
+        SpinnerDirective,
+        DomainEditGeneralComponent,
+        FaIconComponent,
+        DomainEditAuthComponent,
+        DomainEditModerationComponent,
+        RouterLink,
+    ],
 })
 export class DomainEditComponent implements OnInit {
 
