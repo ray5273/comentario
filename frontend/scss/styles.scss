@@ -4,7 +4,7 @@
 @use "fonts";
 
 // Common vars
-@use "vars";
+@import "vars";
 
 // Import Bootstrap
 @import "bootstrap/scss/bootstrap";
@@ -237,7 +237,7 @@ dl.detail-table, dl.detail-table > div {
 }
 
 // Social buttons
-@each $color, $value in vars.$social-colors {
+@each $color, $value in $social-colors {
     .btn-#{$color} {
         @include button-variant($value, $value, #ffffff);
     }
