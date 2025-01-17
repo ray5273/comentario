@@ -4,6 +4,7 @@ import { NgbToastModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockProviders } from 'ng-mocks';
 import { ToastComponent } from './toast.component';
 import { AuthService } from '../_services/auth.service';
+import { MockHighlightDirective, mockHighlightLoaderStub } from '../_utils/_mocks.spec';
 
 describe('ToastComponent', () => {
 
@@ -12,8 +13,16 @@ describe('ToastComponent', () => {
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                imports: [RouterModule.forRoot([]), NgbToastModule, ToastComponent],
-                providers: [MockProviders(AuthService)],
+                imports: [
+                    RouterModule.forRoot([]),
+                    NgbToastModule,
+                    ToastComponent,
+                    MockHighlightDirective,
+                ],
+                providers: [
+                    MockProviders(AuthService),
+                    mockHighlightLoaderStub(),
+                ],
             })
             .compileComponents();
 

@@ -71,8 +71,8 @@ context('Forgot password', () => {
         // Validate its elements
         cy.get('h1').should('have.text', 'Reset password');
         cy.get('#reset-password-form').as('rpForm')    .contains('label', 'New password');
-        cy.get('#newPassword input')  .as('rpPassword').should('be.visible').should('be.enabled').should('have.value', '');
-        cy.get('button[type=submit]') .as('rpSubmit')  .should('be.visible').should('be.enabled').should('have.text',  'Change password');
+        cy.get('#newPassword input')  .as('rpPassword').should('be.visible').and('be.enabled').and('have.value', '');
+        cy.get('button[type=submit]') .as('rpSubmit')  .should('be.visible').and('be.enabled').and('have.text',  'Change password');
 
         // Click on the submit button and get error feedback for each field
         cy.get('@rpSubmit').click();

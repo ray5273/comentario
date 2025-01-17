@@ -14,6 +14,7 @@ import { InstanceConfigItemKey } from '../../../_models/config';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 import { FederatedLoginComponent } from '../federated-login/federated-login.component';
+import { ValidatableDirective } from '../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-signup',
@@ -26,6 +27,7 @@ import { FederatedLoginComponent } from '../federated-login/federated-login.comp
         PasswordInputComponent,
         SpinnerDirective,
         FederatedLoginComponent,
+        ValidatableDirective,
     ],
 })
 export class SignupComponent {

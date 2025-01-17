@@ -1,4 +1,4 @@
-import { Component, HostBinding, Input } from '@angular/core';
+import { Component, Input } from '@angular/core';
 import { NgClass } from '@angular/common';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faInfoCircle } from '@fortawesome/free-solid-svg-icons';
@@ -9,6 +9,10 @@ import { DocsService } from '../../../_services/docs.service';
     selector: 'app-info-icon',
     templateUrl: './info-icon.component.html',
     styleUrls: ['./info-icon.component.scss'],
+    host: {
+        '[class.float-start]': 'position === "left"',
+        '[class.float-end]':   'position === "right"',
+    },
     imports: [
         FaIconComponent,
         NgClass,
@@ -39,16 +43,6 @@ export class InfoIconComponent {
     constructor(
         private readonly docSvc: DocsService,
     ) {}
-
-    @HostBinding('class.float-start')
-    get left(): boolean {
-        return this.position === 'left';
-    }
-
-    @HostBinding('class.float-end')
-    get right(): boolean {
-        return this.position === 'right';
-    }
 
     get docUrl(): string | undefined {
         return this.docLink && this.docSvc.getPageUrl(this.docLink);

@@ -8,9 +8,8 @@
         <div class="mb-3 row">
             <label for="name" class="col-sm-3 col-form-label colon fw-bold" i18n>Name</label>
             <div class="col-sm-9">
-                <input formControlName="name" type="text" class="form-control" id="name"
-                       [class.is-valid]="form.controls.name.touched && form.controls.name.valid"
-                       [class.is-invalid]="form.controls.name.touched && form.controls.name.invalid">
+                <input appValidatable formControlName="name" type="text" class="form-control" id="name"
+                       placeholder="John Doe" i18n-placeholder>
                 <div class="invalid-feedback" i18n>Please enter a valid name.</div>
             </div>
         </div>
@@ -19,9 +18,7 @@
         <div class="mb-3 row">
             <label for="email" class="col-sm-3 col-form-label colon fw-bold" i18n>Email</label>
             <div class="col-sm-9">
-                <input formControlName="email" type="email" class="form-control" id="email"
-                       [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
-                       [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
+                <input appValidatable formControlName="email" type="email" class="form-control" id="email"
                        placeholder="user@example.com">
                 <div class="invalid-feedback" i18n>Please enter a valid email.</div>
             </div>
@@ -41,9 +38,7 @@
         <div class="mb-3 row">
             <label for="websiteUrl" class="col-sm-3 col-form-label colon fw-bold" i18n>Website URL</label>
             <div class="col-sm-9">
-                <input formControlName="websiteUrl" type="url" class="form-control" id="websiteUrl"
-                       [class.is-valid]="form.controls.websiteUrl.touched && form.controls.websiteUrl.valid"
-                       [class.is-invalid]="form.controls.websiteUrl.touched && form.controls.websiteUrl.invalid"
+                <input appValidatable formControlName="websiteUrl" type="url" class="form-control" id="websiteUrl"
                        placeholder="https://example.com">
                 <div class="invalid-feedback" i18n>Please enter a valid URL.</div>
             </div>
@@ -54,9 +49,7 @@
         <div class="mb-3 row">
             <label for="lang" class="col-sm-3 col-form-label colon fw-bold" i18n>Preferred language</label>
             <div class="col-sm-9">
-                <select formControlName="langId" class="form-select" id="lang"
-                        [class.is-valid]="form.controls.langId.touched && form.controls.langId.valid"
-                        [class.is-invalid]="form.controls.langId.touched && form.controls.langId.invalid">
+                <select appValidatable formControlName="langId" class="form-select" id="lang">
                     @for (lang of languages; track lang.id) {
                         <option [value]="lang.id" [class.text-black-50]="!lang.nameEnglish">
                             <ng-container>{{ lang.nameNative }}</ng-container>
@@ -72,9 +65,7 @@
         <div class="mb-3 row">
             <label for="remarks" class="col-sm-3 col-form-label colon fw-bold" i18n>Remarks</label>
             <div class="col-sm-9">
-                <textarea formControlName="remarks" class="form-control" id="remarks" rows="4"
-                          [class.is-valid]="form.controls.remarks.touched && form.controls.remarks.valid"
-                          [class.is-invalid]="form.controls.remarks.touched && form.controls.remarks.invalid"></textarea>
+                <textarea appValidatable formControlName="remarks" class="form-control" id="remarks" rows="4"></textarea>
                 <div class="invalid-feedback" i18n>Please enter a valid value.</div>
             </div>
         </div>

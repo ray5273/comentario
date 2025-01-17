@@ -69,14 +69,14 @@
             <div class="mb-3 row">
                 <label for="import-file-select" class="col-sm-2 col-form-label colon" i18n>Data file</label>
                 <div class="col-sm-10">
-                    <input (change)="onFileSelected($event)"
-                           [class.is-valid]="form.controls.file.touched && form.controls.file.valid"
-                           [class.is-invalid]="form.controls.file.touched && form.controls.file.invalid"
-                           id="import-file-select" type="file" class="form-control">
+                    @let c = form.controls.file;
+                    <input [class.is-valid]="c.touched && c.valid" [class.is-invalid]="c.touched && c.invalid"
+                           (change)="onFileSelected($event)"
+                           type="file" class="form-control" id="import-file-select">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">
-                        @if (form.controls.file.errors?.required) { <div i18n>Please select a file.</div> }
-                        @if (form.controls.file.errors?.maxSize)  { <div i18n>File size must not exceed 10 MB.</div> }
+                        @if (c.errors?.required) { <div i18n>Please select a file.</div> }
+                        @if (c.errors?.maxSize)  { <div i18n>File size must not exceed 10 MB.</div> }
                     </div>
                     <!-- Info -->
                     <div class="form-text" i18n>Comentario supports importing from .zip and .gz archives, as well as uncompressed files.</div>
@@ -124,7 +124,7 @@
 
         <!-- Result counts -->
         <h2 i18n>Import results</h2>
-        <dl class="detail-table" id="import-results-table">
+        <dl class="detail-table" id="importResultsTable">
             <div>
                 <dt i18n>Total users</dt>
                 <dd>{{ result.usersTotal || 0 | number }}</dd>
@@ -167,10 +167,10 @@
         <p i18n>Please note that some processes (like user avatar fetching) may still continue to work in the background.</p>
 
         <!-- Buttons -->
-        <div class="my-3">
-            <a [routerLink]="[Paths.manage.domains, domain!.id, 'comments']" class="btn btn-outline-primary" i18n>Comments</a>
-            <a [routerLink]="[Paths.manage.domains, domain!.id, 'pages']" class="btn btn-outline-primary ms-2" i18n>Pages</a>
-            <a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-outline-primary ms-2" i18n>Domain properties</a>
+        <div class="mt-3 d-grid d-sm-block gap-2">
+            <a [routerLink]="[Paths.manage.domains, domain!.id, 'comments']" class="btn btn-primary" i18n>Comments</a>
+            <a [routerLink]="[Paths.manage.domains, domain!.id, 'pages']" class="btn btn-secondary ms-sm-2" i18n>Pages</a>
+            <a [routerLink]="[Paths.manage.domains, domain!.id]" class="btn btn-secondary ms-sm-2" i18n>Domain properties</a>
         </div>
     </div>
 }

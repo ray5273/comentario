@@ -105,7 +105,7 @@ context('Domain Page Edit page', () => {
                     cy.isAt(propsPagePathWritable);
                     cy.toastCheckAndClose('data-saved');
                     cy.get('app-domain-page-properties').as('pageProps')
-                        .find('#domain-page-detail-table').as('pageDetails')
+                        .find('#domainPageDetailTable').as('pageDetails')
                         .dlTexts().should('matrixMatch', [
                             ['Domain',             DOMAINS.localhost.host],
                             ['Path',               newPath],
@@ -137,7 +137,7 @@ context('Domain Page Edit page', () => {
                     cy.isAt(propsPagePathWritable);
                     cy.toastCheckAndClose('data-saved');
                     cy.get('app-domain-page-properties').as('pageProps')
-                        .find('#domain-page-detail-table').as('pageDetails')
+                        .find('#domainPageDetailTable').as('pageDetails')
                         .dlTexts().should('matrixMatch', [
                             ['Domain',             DOMAINS.localhost.host],
                             ['Path',               pathComments],
@@ -180,7 +180,7 @@ context('Domain Page Edit page', () => {
             cy.isAt(propsPagePathWritable);
             cy.toastCheckAndClose('data-saved');
             cy.get('app-domain-page-properties').as('pageProps')
-                .find('#domain-page-detail-table').as('pageDetails')
+                .find('#domainPageDetailTable').as('pageDetails')
                 .dlTexts().should('matrixMatch', [
                     ['Domain',    DOMAINS.localhost.host],
                     ['Path',      pathComments],
@@ -202,7 +202,7 @@ context('Domain Page Edit page', () => {
             cy.isAt(propsPagePathWritable);
             cy.toastCheckAndClose('data-saved');
             cy.get('app-domain-page-properties').as('pageProps')
-                .find('#domain-page-detail-table').as('pageDetails')
+                .find('#domainPageDetailTable').as('pageDetails')
                 .dlTexts().should('matrixMatch', [
                 ['Domain',    DOMAINS.localhost.host],
                 ['Path',      pathComments],

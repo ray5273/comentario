@@ -10,6 +10,7 @@ import { DomainMeta, DomainSelectorService } from '../../../_services/domain-sel
 import { ToastService } from '../../../../../_services/toast.service';
 import { Paths } from '../../../../../_utils/consts';
 import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
+import { ValidatableDirective } from '../../../../tools/_directives/validatable.directive';
 
 @UntilDestroy()
 @Component({
@@ -19,6 +20,7 @@ import { SpinnerDirective } from '../../../../tools/_directives/spinner.directiv
         ReactiveFormsModule,
         SpinnerDirective,
         RouterLink,
+        ValidatableDirective,
     ],
 })
 export class DomainPageEditComponent implements OnInit {

@@ -13,6 +13,7 @@ import { CheckmarkComponent } from '../../../tools/checkmark/checkmark.component
 import { DatetimePipe } from '../../_pipes/datetime.pipe';
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { CountryNamePipe } from '../../_pipes/country-name.pipe';
+import { ExternalLinkDirective } from '../../../tools/_directives/external-link.directive';
 
 /**
  * Renders a table with user properties.
@@ -31,6 +32,7 @@ import { CountryNamePipe } from '../../_pipes/country-name.pipe';
         DecimalPipe,
         SpinnerDirective,
         CountryNamePipe,
+        ExternalLinkDirective,
     ],
 })
 export class UserDetailsComponent {

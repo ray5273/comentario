@@ -47,7 +47,7 @@ context('Domain Import page', () => {
         }
 
         // Result table
-        cy.get('@importComplete').find('#import-results-table').dlTexts().should('matrixMatch', expected);
+        cy.get('@importComplete').find('#importResultsTable').dlTexts().should('matrixMatch', expected);
 
         // Buttons
         cy.get('@importComplete').contains('a', 'Comments')         .as('btnComments')        .should('be.visible');

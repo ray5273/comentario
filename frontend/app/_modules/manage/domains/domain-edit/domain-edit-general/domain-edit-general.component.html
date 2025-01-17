@@ -21,9 +21,7 @@
                         </div>
                     </div>
                     <!-- Host -->
-                    <input formControlName="host" type="text" class="form-control" id="host"
-                           [class.is-valid]="isNew && generalFormGroup.controls.host.touched && generalFormGroup.controls.host.valid"
-                           [class.is-invalid]="isNew && generalFormGroup.controls.host.touched && generalFormGroup.controls.host.invalid"
+                    <input appValidatable formControlName="host" type="text" class="form-control" id="host"
                            placeholder="example.com">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback" i18n>Please enter a valid domain host.</div>
@@ -44,9 +42,7 @@
                 <i class="fw-normal" i18n>(optional)</i>
             </label>
             <div class="col-sm-9">
-                <input formControlName="name" type="text" class="form-control" id="name"
-                       [class.is-valid]="generalFormGroup.controls.name.touched && generalFormGroup.controls.name.valid"
-                       [class.is-invalid]="generalFormGroup.controls.name.touched && generalFormGroup.controls.name.invalid"
+                <input appValidatable formControlName="name" type="text" class="form-control" id="name"
                        placeholder="My blog" i18n-placeholder>
                 <div class="invalid-feedback" i18n>Value is too long.</div>
             </div>

@@ -7,6 +7,7 @@ import { InfoBlockComponent } from '../../../../tools/info-block/info-block.comp
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 import { ConfigSectionEditComponent } from '../../../config/config-section-edit/config-section-edit.component';
 import { IdentityProviderIconComponent } from '../../../../tools/identity-provider-icon/identity-provider-icon.component';
+import { ValidatableDirective } from '../../../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-domain-edit-auth',
@@ -17,6 +18,7 @@ import { IdentityProviderIconComponent } from '../../../../tools/identity-provid
         ConfigSectionEditComponent,
         ReactiveFormsModule,
         IdentityProviderIconComponent,
+        ValidatableDirective,
     ],
 })
 export class DomainEditAuthComponent {

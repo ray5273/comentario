@@ -90,7 +90,7 @@ dl.detail-table, dl.detail-table > div {
     margin: 0; // Override the standard 1rem bottom margin
 
     dt {
-        flex: 0 0 50%;
+        flex: 0 0 33%;
         margin-bottom: 0.5rem;
         margin-right: 15px;
         &:after {
@@ -118,6 +118,12 @@ dl.detail-table, dl.detail-table > div {
                 white-space: normal;
             }
         }
+    }
+}
+// Detail table with the first column width at 30%
+dl.detail-table.dt-50 {
+    dt {
+        flex: 0 0 50%;
     }
 }
 

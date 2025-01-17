@@ -22,15 +22,15 @@
         <div class="row">
             <!-- Buttons: only for superuser/owner -->
             @if (domainMeta!.canManageDomain) {
-                <div class="col-sm-auto order-sm-last pb-3">
+                <div class="col-md-4 order-md-last pb-3">
                     <!-- Edit settings button -->
-                    <a [routerLink]="[Paths.manage.domains, domain.id, 'edit']" class="btn btn-secondary w-100">
+                    <a [routerLink]="[Paths.manage.domains, domain.id, 'edit']" class="btn btn-secondary w-100 mb-2">
                         <fa-icon [icon]="faEdit" class="me-1"/>
                         <ng-container i18n>Edit settings</ng-container>
                     </a>
                     <!-- SSO secret button -->
                     <a [routerLink]="[Paths.manage.domains, domain.id, 'sso']" [class.disabled]="!domain.authSso"
-                       class="btn btn-outline-secondary w-100 mt-2">
+                       class="btn btn-outline-secondary w-100 mb-2">
                         <fa-icon [icon]="faTicket" class="me-1"/>
                         <ng-container i18n>SSO secret</ng-container>
                     </a>
@@ -38,8 +38,8 @@
             }
 
             <!-- Detail table -->
-            <div class="col-sm">
-                <dl id="domain-detail-table" class="detail-table">
+            <div class="col col-md-8">
+                <dl class="detail-table dt-50" id="domainDetailTable">
                     <!-- Host -->
                     <div>
                         <dt i18n>Host</dt>

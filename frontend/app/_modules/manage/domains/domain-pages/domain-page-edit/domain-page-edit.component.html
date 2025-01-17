@@ -12,10 +12,8 @@
             <div class="mb-3 row">
                 <label for="path" class="col-sm-3 col-form-label colon fw-bold" i18n>Path</label>
                 <div class="col-sm-9">
-                    <input formControlName="path" type="text" class="form-control" id="path" maxlength="2075"
-                           placeholder="/path/to/page"
-                           [class.is-valid]="form.controls.path.touched && form.controls.path.valid"
-                           [class.is-invalid]="form.controls.path.touched && form.controls.path.invalid">
+                    <input appValidatable formControlName="path" type="text" class="form-control" id="path"
+                           maxlength="2075" placeholder="/path/to/page">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">
                         @if (form.controls.path.errors; as err) {

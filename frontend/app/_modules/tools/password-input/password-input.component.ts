@@ -1,11 +1,14 @@
-import { Component, EventEmitter, forwardRef, HostBinding, Injector, Input, OnInit, Output } from '@angular/core';
-import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ValidationErrors } from '@angular/forms';
+import { Component, EventEmitter, forwardRef, Injector, Input, OnInit, Output } from '@angular/core';
+import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEye } from '@fortawesome/free-solid-svg-icons';
 
 @Component({
     selector: 'app-password-input',
     templateUrl: './password-input.component.html',
+    host: {
+        class: 'input-group has-validation',
+    },
     providers: [
         {
             provide: NG_VALUE_ACCESSOR,
@@ -21,6 +24,7 @@ import { faEye } from '@fortawesome/free-solid-svg-icons';
     imports: [
         FormsModule,
         FaIconComponent,
+        ReactiveFormsModule,
     ],
 })
 export class PasswordInputComponent implements OnInit, ControlValueAccessor {
@@ -49,9 +53,6 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     @Output()
     readonly valueChange = new EventEmitter<string>();
 
-    @HostBinding('class')
-    private readonly _hostClasses = 'input-group has-validation';
-
     readonly minLength = 8;
 
     readonly maxLength = 63;
@@ -68,6 +69,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     /** Errors discovered during validation, if any. */
     errors: ValidationErrors = {};
 
+    /** The associated control. */
     ngControl?: NgControl;
 
     private _value?: string;

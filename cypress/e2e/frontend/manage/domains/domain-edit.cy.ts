@@ -353,7 +353,7 @@ context('Domain Edit page', () => {
 
                 // Verify properties
                 cy.contains('app-domain-properties header app-domain-badge', 'google.com');
-                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                cy.get('#domainDetailTable').dlTexts().should('matrixMatch', [
                     ['Host',                                                    'google.com'],
                     ['Read-only',                                               ''],
                     ['Default comment sort',                                    'Newest first'],
@@ -475,7 +475,7 @@ context('Domain Edit page', () => {
 
                 // Verify properties
                 cy.contains('app-domain-properties header app-domain-badge', 'facebook.com:4551');
-                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                cy.get('#domainDetailTable').dlTexts().should('matrixMatch', [
                     ['Host',                                                    'facebook.com:4551'],
                     ['Name',                                                    'Face Book'],
                     ['Read-only',                                               ''],
@@ -712,7 +712,7 @@ context('Domain Edit page', () => {
                 cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
 
                 // Verify properties
-                cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+                cy.get('#domainDetailTable').dlTexts().should('matrixMatch', [
                     ['Host',                                                    DOMAINS.localhost.host],
                     ['Name',                                                    'Big Time'],
                     ['Read-only',                                               ''],

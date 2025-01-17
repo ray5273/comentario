@@ -5,6 +5,7 @@ import { DomainModNotifyPolicy } from '../../../../../../generated-api';
 import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 import { ModeratorNotifyPolicyPipe } from '../../../_pipes/moderator-notify-policy.pipe';
+import { ValidatableDirective } from '../../../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-domain-edit-moderation',
@@ -15,6 +16,7 @@ import { ModeratorNotifyPolicyPipe } from '../../../_pipes/moderator-notify-poli
         InfoIconComponent,
         DecimalPipe,
         ModeratorNotifyPolicyPipe,
+        ValidatableDirective,
     ],
 })
 export class DomainEditModerationComponent {

@@ -2,12 +2,11 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
-import { Highlight, HighlightLoader } from 'ngx-highlightjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { CommentPropertiesComponent } from './comment-properties.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
-import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { mockDomainSelector, MockHighlightDirective, mockHighlightLoaderStub } from '../../../../../_utils/_mocks.spec';
 import { UserLinkComponent } from '../../../user-link/user-link.component';
 
 describe('CommentPropertiesComponent', () => {
@@ -21,14 +20,14 @@ describe('CommentPropertiesComponent', () => {
                     RouterModule.forRoot([]),
                     FontAwesomeTestingModule,
                     NgbModalModule,
-                    Highlight,
                     CommentPropertiesComponent,
                     MockComponents(NoDataComponent, UserLinkComponent),
+                    MockHighlightDirective,
                 ],
                 providers: [
-                    MockProvider(HighlightLoader, {ready: Promise.resolve({} as any)}),
                     MockProvider(ApiGeneralService),
                     mockDomainSelector(),
+                    mockHighlightLoaderStub(),
                 ],
             })
             .compileComponents();

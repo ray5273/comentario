@@ -40,9 +40,7 @@
                 <!-- Name -->
                 <div class="col-md-6">
                     <label for="name" class="form-label colon" i18n>Name</label>
-                    <input formControlName="name" type="text" class="form-control" id="name"
-                           [class.is-valid]="userForm.controls.name.touched && userForm.controls.name.valid"
-                           [class.is-invalid]="userForm.controls.name.touched && userForm.controls.name.invalid"
+                    <input appValidatable formControlName="name" type="text" class="form-control" id="name"
                            autocomplete="name" placeholder="John Doe" i18n-placeholder>
                     <div class="invalid-feedback" i18n>Please enter a valid name.</div>
                 </div>
@@ -50,9 +48,7 @@
                 <!-- Website URL -->
                 <div class="col-md-6">
                     <label for="websiteUrl" class="form-label colon" i18n>Website URL</label>
-                    <input formControlName="websiteUrl" type="url" class="form-control" id="websiteUrl"
-                           [class.is-valid]="userForm.controls.websiteUrl.touched && userForm.controls.websiteUrl.valid"
-                           [class.is-invalid]="userForm.controls.websiteUrl.touched && userForm.controls.websiteUrl.invalid"
+                    <input appValidatable formControlName="websiteUrl" type="url" class="form-control" id="websiteUrl"
                            autocomplete="url" placeholder="http://example.com">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback" i18n>Please enter a valid URL.</div>
@@ -61,9 +57,7 @@
                 <!-- Preferred language -->
                 <div class="col-md-6">
                     <label for="lang" class="form-label colon" i18n>Preferred language</label>
-                    <select formControlName="langId" class="form-select" id="lang"
-                            [class.is-valid]="userForm.controls.langId.touched && userForm.controls.langId.valid"
-                            [class.is-invalid]="userForm.controls.langId.touched && userForm.controls.langId.invalid">
+                    <select appValidatable formControlName="langId" class="form-select" id="lang">
                         @for (lang of languages; track lang.id) {
                             <option [value]="lang.id" [class.text-black-50]="!lang.nameEnglish">
                                 <ng-container>{{ lang.nameNative }}</ng-container>
@@ -139,7 +133,7 @@
     @for (plug of plugs; track plug) {
         <section [id]="plug.pluginId + '-' + plug.location">
             <!-- Heading -->
-            <h2>{{ plug.label }}</h2>
+            <div class="lead fw-bold">{{ plug.label }}</div>
 
             <!-- Component -->
             <app-plugin-plug [plug]="plug"/>

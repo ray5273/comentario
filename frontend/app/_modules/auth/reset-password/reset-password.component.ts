@@ -1,5 +1,5 @@
 import { Component, OnDestroy } from '@angular/core';
-import { ActivatedRoute, Router } from '@angular/router';
+import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ApiGeneralService, Configuration } from '../../../../generated-api';
@@ -26,7 +26,6 @@ export class ResetPasswordComponent implements OnDestroy {
 
     constructor(
         private readonly router: Router,
-        private readonly route: ActivatedRoute,
         private readonly fb: FormBuilder,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,

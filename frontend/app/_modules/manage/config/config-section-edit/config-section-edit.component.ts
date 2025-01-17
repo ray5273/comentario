@@ -8,6 +8,7 @@ import { DynamicConfig } from '../../../../_models/config';
 import { TypedConfigItem } from '../../../../_models/typed-config-item';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 import { DynConfigItemNamePipe } from '../../_pipes/dyn-config-item-name.pipe';
+import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-config-section-edit',
@@ -21,6 +22,7 @@ import { DynConfigItemNamePipe } from '../../_pipes/dyn-config-item-name.pipe';
         NgTemplateOutlet,
         DecimalPipe,
         NgbTooltipModule,
+        ValidatableDirective,
     ],
 })
 export class ConfigSectionEditComponent implements OnChanges {

@@ -5,17 +5,17 @@
     @if (domainUser && user) {
         <div class="row">
             <!-- Buttons -->
-            <div class="col-sm-auto order-sm-last pb-3">
+            <div class="col-md-4 order-md-last pb-3">
                 <!-- Edit -->
-                <a routerLink="edit" class="btn btn-secondary w-100">
+                <a routerLink="edit" class="btn btn-secondary w-100 mb-2">
                     <fa-icon [icon]="faEdit" class="me-1"/>
                     <ng-container i18n>Edit</ng-container>
                 </a>
             </div>
 
             <!-- Detail table -->
-            <div class="col-sm">
-                <dl id="domain-user-detail-table" class="detail-table">
+            <div class="col col-md-8">
+                <dl class="detail-table" id="domainUserDetailTable">
                     <!-- Role -->
                     <div>
                         <dt i18n>Role</dt>

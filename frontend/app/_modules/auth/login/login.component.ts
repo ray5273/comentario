@@ -8,6 +8,7 @@ import { ToastService } from '../../../_services/toast.service';
 import { PasswordInputComponent } from '../../tools/password-input/password-input.component';
 import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 import { FederatedLoginComponent } from '../federated-login/federated-login.component';
+import { ValidatableDirective } from '../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-login',
@@ -18,6 +19,7 @@ import { FederatedLoginComponent } from '../federated-login/federated-login.comp
         SpinnerDirective,
         RouterLink,
         FederatedLoginComponent,
+        ValidatableDirective,
     ],
 })
 export class LoginComponent implements OnInit {

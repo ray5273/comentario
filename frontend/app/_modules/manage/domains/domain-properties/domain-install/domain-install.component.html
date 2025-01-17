@@ -73,8 +73,7 @@
                     <label for="opt-lang" class="col-form-label colon" i18n>Language</label>
                 </div>
                 <div class="col-sm-9">
-                    <select formControlName="lang" class="form-select" id="opt-lang"
-                            [class.is-invalid]="form.controls.lang.invalid">
+                    <select appValidatable formControlName="lang" class="form-select" id="opt-lang">
                         <option value="" i18n>(default)</option>
                         @for (lang of languages; track lang.id) {
                             <option [value]="lang.id">{{ lang.nameNative }} ({{ lang.nameEnglish }})</option>
@@ -89,9 +88,8 @@
                     <label for="opt-css-override" class="col-form-label colon" i18n>CSS override URL</label>
                 </div>
                 <div class="col-sm-9">
-                    <input formControlName="cssOverride" type="url" class="form-control" id="opt-css-override"
-                           [class.is-invalid]="form.controls.cssOverride.invalid"
-                           placeholder="https://example.com/my-stylesheet.css">
+                    <input appValidatable formControlName="cssOverride" type="url" class="form-control"
+                           id="opt-css-override" placeholder="https://example.com/my-stylesheet.css">
                 </div>
             </div>
             <!-- Maximum visual nesting level -->
@@ -101,9 +99,8 @@
                     <label for="opt-max-level" class="col-form-label colon" i18n>Max. visual nesting level</label>
                 </div>
                 <div class="col-sm-9">
-                    <input formControlName="maxLevel" type="number" class="form-control" id="opt-max-level"
-                           [class.is-invalid]="form.controls.maxLevel.invalid"
-                           min="1" max="99" maxlength="2">
+                    <input appValidatable formControlName="maxLevel" type="number" class="form-control"
+                           id="opt-max-level" min="1" max="99" maxlength="2">
                 </div>
             </div>
             <!-- Page ID -->
@@ -113,8 +110,7 @@
                     <label for="opt-page-id" class="col-form-label colon" i18n>Page ID</label>
                 </div>
                 <div class="col-sm-9">
-                    <input formControlName="pageId" type="text" class="form-control" id="opt-page-id"
-                           [class.is-invalid]="form.controls.pageId.invalid"
+                    <input appValidatable formControlName="pageId" type="text" class="form-control" id="opt-page-id"
                            maxlength="2076" placeholder="/another/path/to/page" aria-describedby="opt-page-id-help">
                     <div id="opt-page-id-help" class="form-text">
                         <fa-icon [icon]="faExclamationTriangle" class="me-1"/>
@@ -129,8 +125,7 @@
                     <label for="opt-theme" class="col-form-label colon" i18n>Colour theme</label>
                 </div>
                 <div class="col-sm-9">
-                    <select formControlName="theme" class="form-select" id="opt-theme"
-                            [class.is-invalid]="form.controls.theme.invalid">
+                    <select appValidatable formControlName="theme" class="form-select" id="opt-theme">
                         <option value="" i18n>(default)</option>
                         <option value="light" i18n>Light</option>
                         <option value="dark"  i18n>Dark</option>

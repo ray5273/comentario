@@ -1,4 +1,4 @@
-import { Component, HostBinding } from '@angular/core';
+import { Component } from '@angular/core';
 import { AsyncPipe } from '@angular/common';
 import { DomainSelectorService } from '../../_services/domain-selector.service';
 
@@ -8,15 +8,12 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 @Component({
     selector: 'app-domain-badge',
     templateUrl: './domain-badge.component.html',
+    host: {class: 'overflow-hidden'},
     imports: [
         AsyncPipe,
     ],
 })
 export class DomainBadgeComponent {
-
-    @HostBinding('class')
-    private readonly class = 'overflow-hidden';
-
     constructor(
         readonly domainSelectorSvc: DomainSelectorService,
     ) {}

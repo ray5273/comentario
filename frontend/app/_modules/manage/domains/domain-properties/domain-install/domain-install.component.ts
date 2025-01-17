@@ -11,6 +11,7 @@ import { XtraValidators } from '../../../../../_utils/xtra-validators';
 import { CopyTextDirective } from '../../../../tools/_directives/copy-text.directive';
 import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
+import { ValidatableDirective } from '../../../../tools/_directives/validatable.directive';
 
 @UntilDestroy()
 @Component({
@@ -25,6 +26,7 @@ import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.compone
         InfoBlockComponent,
         InfoIconComponent,
         ReactiveFormsModule,
+        ValidatableDirective,
     ],
 })
 export class DomainInstallComponent implements OnInit {

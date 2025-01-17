@@ -14,7 +14,7 @@ context('Comment Properties page', () => {
         cy.get('@commentProps').find('h1').should('have.text', 'Comment properties').and('be.visible');
 
         // Details
-        cy.get('@commentProps').find('#comment-detail-table').as('commentDetails');
+        cy.get('@commentProps').find('#commentDetailTable').as('commentDetails');
 
         // Text tabs
         cy.get('@commentProps').find('#comment-text-tabs').as('commentTabs');

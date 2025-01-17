@@ -46,7 +46,7 @@ context('Domain Properties page', () => {
 
     const checkAllProperties = () => {
         cy.contains('h2', 'Properties').should('be.visible');
-        cy.get('@domainProps').find('#domain-detail-table').dlTexts().should('matrixMatch', [
+        cy.get('@domainProps').find('#domainDetailTable').dlTexts().should('matrixMatch', [
             ['Host',                                                    DOMAINS.localhost.host],
             ['Name',                                                    DOMAINS.localhost.name],
             ['Read-only',                                               ''],
@@ -114,7 +114,7 @@ context('Domain Properties page', () => {
     it('shows properties for readonly user', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.spirit.id).props);
         makeAliases(DOMAINS.spirit.host, false, false, false);
-        cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+        cy.get('#domainDetailTable').dlTexts().should('matrixMatch', [
             ['Host',                                                    DOMAINS.spirit.host],
             ['Read-only',                                               ''],
             ['Default comment sort',                                    'Oldest first'],
@@ -142,7 +142,7 @@ context('Domain Properties page', () => {
     it('shows properties for commenter user', () => {
         cy.loginViaApi(USERS.king, PATHS.manage.domains.id(DOMAINS.market.id).props);
         makeAliases(DOMAINS.market.host, false, false, false);
-        cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+        cy.get('#domainDetailTable').dlTexts().should('matrixMatch', [
             ['Host',                                                    DOMAINS.market.host],
             ['Read-only',                                               '✔'],
             ['Default comment sort',                                    'Most upvoted first'],
@@ -170,7 +170,7 @@ context('Domain Properties page', () => {
     it('shows properties for moderator user', () => {
         cy.loginViaApi(USERS.king, localhostPagePath);
         makeAliases(DOMAINS.localhost.host, false, false, false);
-        cy.get('#domain-detail-table').dlTexts().should('matrixMatch', [
+        cy.get('#domainDetailTable').dlTexts().should('matrixMatch', [
             ['Host',                                                    DOMAINS.localhost.host],
             ['Read-only',                                               ''],
             ['Default comment sort',                                    'Oldest first'],

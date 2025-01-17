@@ -11,6 +11,7 @@ import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.compone
 import { CommentSortPipe } from '../../../_pipes/comment-sort.pipe';
 import { DynConfigSectionNamePipe } from '../../../_pipes/dyn-config-section-name.pipe';
 import { ConfigSectionEditComponent } from '../../../config/config-section-edit/config-section-edit.component';
+import { ValidatableDirective } from '../../../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-domain-edit-general',
@@ -25,6 +26,7 @@ import { ConfigSectionEditComponent } from '../../../config/config-section-edit/
         DynConfigSectionNamePipe,
         ConfigSectionEditComponent,
         NgbDropdownModule,
+        ValidatableDirective,
     ],
 })
 export class DomainEditGeneralComponent {

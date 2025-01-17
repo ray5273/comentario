@@ -5,7 +5,7 @@ import { concat, EMPTY, first, Observable } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faAngleDown, faCopy, faPencil, faSkullCrossbones, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { NgbCollapseModule, NgbTooltipModule } from '@ng-bootstrap/ng-bootstrap';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { AuthService } from '../../../../_services/auth.service';
 import { ApiGeneralService, CurUserUpdateRequest, Principal } from '../../../../../generated-api';
@@ -22,21 +22,24 @@ import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.comp
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { PluginPlugComponent } from '../../../plugin/plugin-plug/plugin-plug.component';
 import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
+import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-profile',
     imports: [
-        ReactiveFormsModule,
+        ConfirmDirective,
         CopyTextDirective,
         FaIconComponent,
-        RouterLink,
+        NgbCollapseModule,
+        NgbTooltipModule,
         PasswordInputComponent,
-        UserAvatarComponent,
-        SpinnerDirective,
         PluginPlugComponent,
-        NgbCollapse,
-        ConfirmDirective,
+        ReactiveFormsModule,
+        RouterLink,
+        SpinnerDirective,
+        UserAvatarComponent,
+        ValidatableDirective,
     ],
     templateUrl: './profile.component.html',
 })

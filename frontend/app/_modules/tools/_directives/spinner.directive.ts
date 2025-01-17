@@ -1,24 +1,30 @@
-import { Directive, ElementRef, HostBinding, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
+import { Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
 
 export type SpinnerSize = 'sm' | 'lg';
 
 @Directive({
     selector: '[appSpinner]',
+    host: {
+        '[attr.data-spinner-text]': 'spinnerText',
+        '[attr.disabled]': 'appSpinner || disable ? "true" : undefined',
+    },
 })
 export class SpinnerDirective implements OnChanges {
 
     /** Whether the spinning animation is shown on the component. */
-    @Input() appSpinner = false;
+    @Input()
+    appSpinner = false;
 
     /** Whether to forcefully disable the component. This property must be used instead of the standard 'disabled' property. */
-    @Input() disable = false;
+    @Input()
+    disable = false;
 
     /** The size of the spinner animation, default is 'sm'. */
-    @Input() spinnerSize: SpinnerSize = 'sm';
+    @Input()
+    spinnerSize: SpinnerSize = 'sm';
 
     /** Text to display under the spinner, only when spinnerSize === 'lg'. */
     @Input()
-    @HostBinding('attr.data-spinner-text')
     spinnerText?: string;
 
     private _timer: any;
@@ -29,16 +35,6 @@ export class SpinnerDirective implements OnChanges {
     ) {}
 
     ngOnChanges(changes: SimpleChanges): void {
-        // Update element enabled/disabled state
-        if (changes.appSpinner || changes.disable) {
-            const ne = this.element.nativeElement;
-            if (this.appSpinner || this.disable) {
-                this.renderer.setAttribute(ne, 'disabled', 'true');
-            } else {
-                this.renderer.removeAttribute(ne, 'disabled');
-            }
-        }
-
         // Update the spinning state
         if (changes.appSpinner) {
             // Enable spinner after a short while to reduce flickering

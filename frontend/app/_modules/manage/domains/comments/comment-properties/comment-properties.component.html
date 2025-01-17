@@ -8,7 +8,7 @@
         <div class="row">
             <!-- Buttons: non-deleted, moderators or own comments only -->
             @if (!comment.isDeleted && (domainMeta!.canModerateDomain || comment.userCreated === domainMeta?.principal?.id)) {
-                <div class="col-sm-auto order-sm-last pb-3">
+                <div class="col-md-4 order-md-last pb-3">
                     <!-- Approve -->
                     @if (domainMeta!.canModerateDomain) {
                         <button [appSpinner]="updating.active" [class.active]="!comment.isPending && comment.isApproved"
@@ -36,9 +36,9 @@
                 </div>
             }
 
-            <div class="col-sm">
+            <div class="col col-md-8">
                 <!-- Detail table -->
-                <dl id="comment-detail-table" class="detail-table">
+                <dl class="detail-table" id="commentDetailTable">
                     <!-- Permalink -->
                     <div>
                         <dt i18n>Permalink</dt>

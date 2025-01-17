@@ -12,6 +12,7 @@ import { ConfigService } from '../../../../_services/config.service';
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
+import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-user-edit',
@@ -22,6 +23,7 @@ import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component'
         PasswordInputComponent,
         InfoIconComponent,
         RouterLink,
+        ValidatableDirective,
     ],
 })
 export class UserEditComponent implements OnInit {

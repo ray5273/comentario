@@ -9,6 +9,7 @@ import { AuthService } from '../../../../_services/auth.service';
 import { Animations } from '../../../../_utils/animations';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-email-update',
@@ -19,6 +20,7 @@ import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
         PasswordInputComponent,
         RouterLink,
         SpinnerDirective,
+        ValidatableDirective,
     ],
 })
 export class EmailUpdateComponent {

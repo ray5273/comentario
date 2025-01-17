@@ -11,7 +11,7 @@ context('Domain Page Properties page', () => {
         cy.get('@pageProps').find('h1').should('have.text', 'Domain page properties').and('be.visible');
 
         // Page details
-        cy.get('@pageProps').find('#domain-page-detail-table').as('pageDetails');
+        cy.get('@pageProps').find('#domainPageDetailTable').as('pageDetails');
 
         // Buttons
         if (hasUpdateTitle) {

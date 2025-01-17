@@ -102,7 +102,7 @@ context('Domain User Edit page', () => {
                     cy.isAt(`${usersPath}/${subj.user.id}`);
                     cy.toastCheckAndClose('data-saved');
                     cy.get('app-domain-user-properties').as('userProps')
-                        .find('#domain-user-detail-table').as('userDetails')
+                        .find('#domainUserDetailTable').as('userDetails')
                         .dlTexts().should('matrixMatch', [
                             ['Role',                         subj.expect],
                             ['Reply notifications',          ''],
@@ -121,9 +121,7 @@ context('Domain User Edit page', () => {
                     // Verify the updated properties
                     cy.isAt(`${usersPath}/${subj.user.id}`);
                     cy.toastCheckAndClose('data-saved');
-                    cy.get('app-domain-user-properties').as('userProps')
-                        .find('#domain-user-detail-table').as('userDetails')
-                        .dlTexts().should('matrixMatch', [
+                    cy.get('@userDetails').dlTexts().should('matrixMatch', [
                         ['Role',                         subj.expect],
                         ['Reply notifications',          '✔'],
                         ['Moderator notifications',      ''],

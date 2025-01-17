@@ -28,9 +28,8 @@
                 <!-- Number of approved comments -->
                 @if (formGroup.controls.numComments.enabled) {
                     <div class="mb-3">
-                        <input formControlName="numComments" type="number" class="form-control" id="mod-num-comments"
-                               [class.is-valid]="formGroup.controls.numComments.touched && formGroup.controls.numComments.valid"
-                               [class.is-invalid]="formGroup.controls.numComments.touched && formGroup.controls.numComments.invalid">
+                        <input appValidatable formControlName="numComments" type="number" class="form-control"
+                               id="mod-num-comments">
                         <!-- Invalid feedback -->
                         <div class="invalid-feedback">
                             @if (formGroup.controls.numComments.errors; as err) {
@@ -48,9 +47,8 @@
                 <!-- Number of days for minimum user age -->
                 @if (formGroup.controls.userAgeDays.enabled) {
                     <div class="mb-3">
-                        <input formControlName="userAgeDays" type="number" class="form-control" id="mod-user-age-days"
-                               [class.is-valid]="formGroup.controls.userAgeDays.touched && formGroup.controls.userAgeDays.valid"
-                               [class.is-invalid]="formGroup.controls.userAgeDays.touched && formGroup.controls.userAgeDays.invalid">
+                        <input appValidatable formControlName="userAgeDays" type="number" class="form-control"
+                               id="mod-user-age-days">
                         <!-- Invalid feedback -->
                         <div class="invalid-feedback">
                             @if (formGroup.controls.userAgeDays.errors; as err) {

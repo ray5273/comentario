@@ -59,7 +59,7 @@ context('Config Manager', () => {
             cy.loginViaApi(USERS.root, pagePathStatic);
 
             // Check the items
-            cy.get('app-static-config #static-config-items').as('cfgItems').dlTexts().should('matrixMatch', [
+            cy.get('app-static-config #staticConfigItems').as('cfgItems').dlTexts().should('matrixMatch', [
                 ['Base Comentario URL',                     Cypress.config().baseUrl + '/'],
                 ['Base documentation URL',                  'https://edge.docs.comentario.app'],
                 ['Terms of Service URL',                    'https://edge.docs.comentario.app/en/legal/tos/'],
@@ -90,7 +90,7 @@ context('Config Manager', () => {
         it('shows available upgrade', () => {
             cy.backendUpdateLatestRelease('v2.89 BooBuster', 'v2.89', 'https://yktoo.com/en/software/comentario');
             cy.loginViaApi(USERS.root, pagePathStatic);
-            cy.get('app-static-config #static-config-items').ddItem('Comentario version').find('a')
+            cy.get('app-static-config #staticConfigItems').ddItem('Comentario version').find('a')
                 .should(
                     'be.anchor',
                     'https://yktoo.com/en/software/comentario',
@@ -135,7 +135,7 @@ context('Config Manager', () => {
             cy.loginViaApi(USERS.root, pagePathDynamic);
 
             // Check the items
-            cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch', [
+            cy.get('app-dynamic-config #dynamicConfigItems').dlTexts().should('matrixMatch', [
                 ['Authentication'],
                     ['Allow users to update their emails',                  ''],
                     ['Max. failed login attempts',                          '5'],
@@ -207,7 +207,7 @@ context('Config Manager', () => {
             cy.toastCheckAndClose('data-saved');
 
             // Verify the updated config
-            cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch', [
+            cy.get('app-dynamic-config #dynamicConfigItems').dlTexts().should('matrixMatch', [
                 ['Authentication'],
                     ['Allow users to update their emails',                  '✔'],
                     ['Max. failed login attempts',                          '42'],
@@ -239,7 +239,7 @@ context('Config Manager', () => {
             cy.contains('app-dynamic-config button', 'Reset to defaults').click();
             cy.confirmationDialog('Are you sure you want to reset the configuration to defaults?').dlgButtonClick('Reset configuration');
             cy.toastCheckAndClose('data-updated');
-            cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
+            cy.get('app-dynamic-config #dynamicConfigItems').dlTexts().should('matrixMatch',  [
                 ['Authentication'],
                     ['Allow users to update their emails',                  ''],
                     ['Max. failed login attempts',                          '10'],
@@ -293,7 +293,7 @@ context('Config Manager', () => {
 
             // Reload the page and recheck
             cy.reload();
-            cy.get('app-dynamic-config #dynamic-config-items').dlTexts().should('matrixMatch',  [
+            cy.get('app-dynamic-config #dynamicConfigItems').dlTexts().should('matrixMatch',  [
                 ['Authentication'],
                     ['Allow users to update their emails',                  '✔'],
                     ['Max. failed login attempts',                          '3'],

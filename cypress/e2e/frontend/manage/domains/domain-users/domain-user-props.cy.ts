@@ -13,7 +13,7 @@ context('Domain User Properties', () => {
         cy.get('@userProps').find('h1').should('have.text', 'Domain user properties').and('be.visible');
 
         // User details
-        cy.get('@userProps').find('#domain-user-detail-table').as('userDetails');
+        cy.get('@userProps').find('#domainUserDetailTable').as('userDetails');
 
         // Buttons
         cy.get('@userProps').contains('a', 'Edit').as('btnEdit').should('be.visible').and('not.have.class', 'disabled');

@@ -7,7 +7,7 @@
 
 <!-- User details -->
 @if (user) {
-    <dl class="detail-table">
+    <dl class="detail-table" id="userDetailTable">
         <!-- ID -->
         <div>
             <dt i18n>ID</dt>
@@ -78,7 +78,7 @@
         @if (user.websiteUrl; as v) {
             <div>
                 <dt i18n>Website URL</dt>
-                <dd><a [href]="v" target="_blank" rel="nofollow noopener noreferrer">{{ v }}</a></dd>
+                <dd><a [appExternalLink]="v">{{ v }}</a></dd>
             </div>
         }
         <!-- System account -->

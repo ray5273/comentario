@@ -5,6 +5,7 @@ import { ProcessingStatus } from '../../../_utils/processing-status';
 import { ToastService } from '../../../_services/toast.service';
 import { ApiGeneralService } from '../../../../generated-api';
 import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
+import { ValidatableDirective } from '../../tools/_directives/validatable.directive';
 
 @Component({
     selector: 'app-forgot-password',
@@ -12,6 +13,7 @@ import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
     imports: [
         ReactiveFormsModule,
         SpinnerDirective,
+        ValidatableDirective,
     ],
 })
 export class ForgotPasswordComponent {

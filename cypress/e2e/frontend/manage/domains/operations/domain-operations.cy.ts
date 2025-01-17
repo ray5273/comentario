@@ -74,7 +74,7 @@ context('Domain Operations page', () => {
 
                 // Go to domain properties and verify it's readonly
                 cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
-                cy.get('#domain-detail-table').ddItem('Read-only').should('have.text', '✔');
+                cy.get('#domainDetailTable').ddItem('Read-only').should('have.text', '✔');
 
                 // Go back to ops and unfreeze
                 cy.visit(pagePath);
@@ -85,7 +85,7 @@ context('Domain Operations page', () => {
 
                 // Go to domain properties and verify it's not readonly
                 cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
-                cy.get('#domain-detail-table').ddItem('Read-only').should('have.text', '');
+                cy.get('#domainDetailTable').ddItem('Read-only').should('have.text', '');
             });
 
             context('Danger zone', () => {
@@ -168,8 +168,8 @@ context('Domain Operations page', () => {
 
                     // Verify comment/view counters in domain props
                     cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
-                    cy.get('#domain-detail-table').ddItem('Number of comments').should('have.text', '0');
-                    cy.get('#domain-detail-table').ddItem('Number of views')   .should('have.text', '0');
+                    cy.get('#domainDetailTable').ddItem('Number of comments').should('have.text', '0');
+                    cy.get('#domainDetailTable').ddItem('Number of views')   .should('have.text', '0');
 
                     // Verify the numbers in stats
                     cy.visit(PATHS.manage.domains.id(DOMAINS.localhost.id).stats);

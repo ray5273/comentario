@@ -37,14 +37,9 @@
                         <label [for]="item.controlName" class="form-label colon">{{ item.key | dynConfigItemName }}</label>
                         @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
                         @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
-                        <input [formControlName]="item.controlName"
-                               [id]="item.controlName"
-                               [type]="item.datatype === 'int' ? 'number' : 'text'"
-                               [min]="item.min"
-                               [max]="item.max"
-                               [class.is-valid]="formGroup!.get(item.controlName)!.touched && formGroup!.get(item.controlName)!.valid"
-                               [class.is-invalid]="formGroup!.get(item.controlName)!.touched && formGroup!.get(item.controlName)!.invalid"
-                               class="form-control">
+                        <input appValidatable [formControlName]="item.controlName"
+                               [id]="item.controlName" [type]="item.datatype === 'int' ? 'number' : 'text'"
+                               [min]="item.min" [max]="item.max" class="form-control">
                         <!-- Invalid feedback -->
                         <div class="invalid-feedback">
                             @if (formGroup!.get(item.controlName)!.errors; as err) {

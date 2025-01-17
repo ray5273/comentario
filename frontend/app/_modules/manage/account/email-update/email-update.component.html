@@ -9,9 +9,7 @@
             <div class="mb-3 row">
                 <label for="email" class="col-sm-3 col-form-label colon fw-bold" i18n>Your new email</label>
                 <div class="col-sm-9">
-                    <input formControlName="email" type="email" class="form-control" id="email" size="45"
-                           [class.is-valid]="form.controls.email.touched && form.controls.email.valid"
-                           [class.is-invalid]="form.controls.email.touched && form.controls.email.invalid"
+                    <input appValidatable formControlName="email" type="email" class="form-control" id="email" size="45"
                            autocomplete="email" placeholder="user@example.com">
                     <div class="invalid-feedback" i18n>Please enter a valid email.</div>
                 </div>
