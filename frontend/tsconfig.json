@@ -2,6 +2,7 @@
     "extends": "../tsconfig.json",
     "compilerOptions": {
         "baseUrl": "../",
+        "esModuleInterop": true,
         "outDir": "./out-tsc",
         "experimentalDecorators": true,
         "target": "ES2022",
