@@ -76,7 +76,7 @@
                             }
                             <!-- Comment/view counts (up to sm) -->
                             @if (p.countComments! >= 0 && p.countViews! >= 0) {
-                                <div class="d-sm-none small text-muted">
+                                <div class="d-sm-none small text-dimmed">
                                     <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
                                     <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
                                 </div>
@@ -92,14 +92,14 @@
                         </div>
                         <!-- Comment count (sm+) -->
                         @if (p.countComments! >= 0) {
-                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-comments">
+                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-page-cnt-comments">
                                 <div class="lead">{{ p.countComments | number }}</div>
                                 <div class="small" i18n>comments</div>
                             </div>
                         }
                         <!-- View count (sm+) -->
                         @if (p.countViews! >= 0) {
-                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-muted domain-page-cnt-views">
+                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-page-cnt-views">
                                 <div class="lead">{{ p.countViews | number }}</div>
                                 <div class="small" i18n>views</div>
                             </div>

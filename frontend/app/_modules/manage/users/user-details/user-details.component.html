@@ -62,7 +62,7 @@
                 <dd>
                     <app-checkmark/>
                     @if (user.bannedTime; as v) {
-                        <span class="text-muted"> ({{ v | datetime }})</span>
+                        <span class="text-dimmed"> ({{ v | datetime }})</span>
                     }
                 </dd>
             </div>
@@ -95,7 +95,7 @@
                 <dd>
                     <app-checkmark/>
                     @if (user.confirmedTime; as v) {
-                        <span class="text-muted"> ({{ v | datetime }})</span>
+                        <span class="text-dimmed"> ({{ v | datetime }})</span>
                     }
                 </dd>
             </div>
@@ -154,7 +154,7 @@
                     <dd>
                         <app-checkmark/>
                         @if (user.lockedTime; as v) {
-                            <span class="text-muted"> ({{ v | datetime }})</span>
+                            <span class="text-dimmed"> ({{ v | datetime }})</span>
                         }
                         @if (canUnlock) {
                             <button [appSpinner]="unlocking.active" (click)="unlock()" type="button"

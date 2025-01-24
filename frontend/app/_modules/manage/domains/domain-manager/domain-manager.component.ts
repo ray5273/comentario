@@ -134,7 +134,25 @@ export class DomainManagerComponent implements OnInit {
                             this.sort.descending)
                         .pipe(this.domainsLoading.processing())))
             .subscribe(r => {
-                this.domains = [...this.domains || [], ...r.domains || []];
+                this.domains ??= [];
+
+                // Add all loaded domains
+                if (r.domains) {
+                    this.domains.push(...r.domains);
+                }
+
+                // If there's a selected domain, add it to the list
+                const curDomain = this.domainMeta?.domain;
+                if (curDomain) {
+                    // If not in the search mode, or the current domain is on the list, insert it as the first item
+                    if (!this.filterActive || this.domains.some(d => d.id === curDomain.id)) {
+                        this.domains.splice(0, 0, curDomain);
+                    }
+
+                    // Make sure it isn't duplicated on the list
+                    this.domains = this.domains.filter((d, i) => i === 0 || d.id !== curDomain.id);
+                }
+
                 this.canLoadMore = this.configSvc.canLoadMore(r.domains);
 
                 // Make a map of domain ID => domain users

@@ -51,7 +51,7 @@
             <!-- Domain items: if there's a domain -->
             <!--------------------------------------------------------------------------------------------------------->
             @if (domainMeta?.domain; as d) {
-                <ul class="nav">
+                <ul class="nav fade-in">
                     <!-- Domain properties -->
                     <li class="nav-item">
                         <a [routerLink]="[Paths.manage.domains, d.id]" routerLinkActive="active" [routerLinkActiveOptions]="{exact: true}" class="cc-link">

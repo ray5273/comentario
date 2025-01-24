@@ -100,7 +100,7 @@
                         </div>
                         <div class="col-12 col-sm-auto pe-0 text-end">
                             <!-- Comment score -->
-                            <span [class.text-muted]="!c.score"
+                            <span [class.text-dimmed]="!c.score"
                                   [class.text-danger]="c.score! < 0"
                                   [class.text-success]="c.score! > 0"
                                   title="Score" class="fw-bold small comment-score" i18n-title>{{ c.score }}</span>

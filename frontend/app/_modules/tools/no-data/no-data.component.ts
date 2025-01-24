@@ -5,7 +5,7 @@ import { Component, Input } from '@angular/core';
  */
 @Component({
     selector: 'app-no-data',
-    template: '<div [class.h-100]="fullHeight" class="p-3 text-muted d-flex justify-content-center align-items-center" i18n>No data available.</div>',
+    template: '<div [class.h-100]="fullHeight" class="p-3 text-dimmed d-flex justify-content-center align-items-center" i18n>No data available.</div>',
 })
 export class NoDataComponent {
 

@@ -66,6 +66,11 @@ context('Domain Manager', () => {
         // Select the domain
         cy.get('@domainList').find('a').eq(0).click();
         cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).props);
+
+        // Go back to the domain list: the domain is selected and at the top
+        cy.sidebarClick('Domains', PATHS.manage.domains);
+        cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.localhost.host]);
+        cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true]);
     });
 
     it('shows domain list for user with multiple domain', () => {
@@ -86,8 +91,38 @@ context('Domain Manager', () => {
         cy.get('@domainList').texts('app-domain-user-badge').should('arrayMatch', ['Owner', 'Moderator', 'Commenter', 'Read-only']);
 
         // Select the domain
-        cy.get('@domainList').find('a').eq(0).click();
-        cy.isAt(PATHS.manage.domains.id(DOMAINS.factor.id).props);
+        cy.get('@domainList').find('a').eq(2).click();
+        cy.isAt(PATHS.manage.domains.id(DOMAINS.market.id).props);
+
+        // Go back to the domain list: the domain is selected and at the top
+        cy.sidebarClick('Domains', PATHS.manage.domains);
+        cy.get('@domainList').texts('.domain-host').should('arrayMatch', [
+            DOMAINS.market.host,
+            DOMAINS.factor.host,
+            DOMAINS.localhost.host,
+            DOMAINS.spirit.host,
+        ]);
+        cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false, false, false]);
+
+        // Change sorting to by Host, desc. The selected domain always stays on top
+        cy.get('@domainManager').changeListSort('Host', 'desc');
+        cy.get('@domainList').texts('.domain-host').should('arrayMatch', [
+            DOMAINS.market.host,
+            DOMAINS.spirit.host,
+            DOMAINS.localhost.host,
+            DOMAINS.factor.host,
+        ]);
+        cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false, false, false]);
+
+        // Change sorting to by Created, asc. The selected domain always stays on top
+        cy.get('@domainManager').changeListSort('Created', 'asc');
+        cy.get('@domainList').texts('.domain-host').should('arrayMatch', [
+            DOMAINS.market.host,
+            DOMAINS.localhost.host,
+            DOMAINS.spirit.host,
+            DOMAINS.factor.host,
+        ]);
+        cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false, false, false]);
     });
 
     context('for superuser', () => {
@@ -283,9 +318,31 @@ context('Domain Manager', () => {
             cy.go('back');
             cy.isAt(PATHS.manage.domains);
             cy.get('@filterString').should('have.value', '');
+
+            // The selected domain is on the top, followed by the rest
+            cy.get('@domainManager').verifyListFooter(25, true);
+            cy.get('@domainList').texts('.domain-host')
+                .should('arrayMatch', [DOMAINS.colour.host, ...hostsSorted.slice(0, 25).filter(h => h !== DOMAINS.colour.host)]);
+            cy.get('@domainList').find('a').hasClass('active')
+                .should('arrayMatch', [true, ...Array(24).fill(false)]);
+
+            // Filter on "site": only localhost is shown, and it isn't selected
             filterOn('sItE');
             cy.get('@domainManager').verifyListFooter(1, false);
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.localhost.host]);
+            cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [false]);
+
+            // Filter on "lo": both items are visible "colour" is selected and on top
+            filterOn('lo');
+            cy.get('@domainManager').verifyListFooter(2, false);
+            cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.colour.host, DOMAINS.localhost.host]);
+            cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false]);
+
+            // Change sorting, the selected is still on top
+            cy.get('@domainManager').changeListSort('Host', 'desc');
+            cy.get('@domainManager').verifyListFooter(2, false);
+            cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.colour.host, DOMAINS.localhost.host]);
+            cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false]);
         });
     });
 });

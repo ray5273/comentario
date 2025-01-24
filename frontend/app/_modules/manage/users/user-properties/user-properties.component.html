@@ -103,7 +103,7 @@
             @if (userSessions) {
                 <div class="list-group">
                     @for (us of userSessions; track us.id) {
-                        <div @fadeIn-slow [class.text-muted]="isSessionExpired(us)" class="list-group-item">
+                        <div @fadeIn-slow [class.text-dimmed]="isSessionExpired(us)" class="list-group-item">
                             <!-- 1st line -->
                             <div>
                                 <!-- Creation time -->
