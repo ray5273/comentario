@@ -70,9 +70,8 @@
                 <label for="import-file-select" class="col-sm-2 col-form-label colon" i18n>Data file</label>
                 <div class="col-sm-10">
                     @let c = form.controls.file;
-                    <input [class.is-valid]="c.touched && c.valid" [class.is-invalid]="c.touched && c.invalid"
-                           (change)="onFileSelected($event)"
-                           type="file" class="form-control" id="import-file-select">
+                    <input [appValidatable]="c" (change)="onFileSelected($event)" type="file" class="form-control"
+                           id="import-file-select">
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">
                         @if (c.errors?.required) { <div i18n>Please select a file.</div> }

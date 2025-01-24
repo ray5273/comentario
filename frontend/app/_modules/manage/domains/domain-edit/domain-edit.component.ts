@@ -27,6 +27,7 @@ import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { DomainEditGeneralComponent } from './domain-edit-general/domain-edit-general.component';
 import { DomainEditAuthComponent } from './domain-edit-auth/domain-edit-auth.component';
 import { DomainEditModerationComponent } from './domain-edit-moderation/domain-edit-moderation.component';
+import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
 
 interface ExtensionValue {
     enabled: boolean;
@@ -47,6 +48,7 @@ interface ExtensionValue {
         DomainEditAuthComponent,
         DomainEditModerationComponent,
         RouterLink,
+        ValidatableDirective,
     ],
 })
 export class DomainEditComponent implements OnInit {

@@ -13,6 +13,7 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
+import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
 
 @UntilDestroy()
 @Component({
@@ -28,6 +29,7 @@ import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
         RouterLink,
         SpinnerDirective,
         NgOptimizedImage,
+        ValidatableDirective,
     ],
 })
 export class DomainImportComponent implements OnInit {

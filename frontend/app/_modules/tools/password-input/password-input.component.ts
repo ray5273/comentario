@@ -2,6 +2,7 @@ import { Component, EventEmitter, forwardRef, Injector, Input, OnInit, Output } 
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEye } from '@fortawesome/free-solid-svg-icons';
+import { ValidatableDirective } from '../_directives/validatable.directive';
 
 @Component({
     selector: 'app-password-input',
@@ -25,6 +26,7 @@ import { faEye } from '@fortawesome/free-solid-svg-icons';
         FormsModule,
         FaIconComponent,
         ReactiveFormsModule,
+        ValidatableDirective,
     ],
 })
 export class PasswordInputComponent implements OnInit, ControlValueAccessor {

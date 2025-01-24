@@ -25,7 +25,7 @@
 
                 <!-- Authentication -->
                 <li ngbNavItem formGroupName="auth">
-                    <button ngbNavLink [class.is-invalid]="ctlGroupAuth.invalid">
+                    <button ngbNavLink [appValidatable]="ctlGroupAuth" [validateUntouched]="true">
                         <!-- Tab title -->
                         <span class="fw-bold me-1" i18n>Authentication</span>
                         <!-- Badge with a number -->
@@ -53,7 +53,7 @@
 
                 <!-- Moderation -->
                 <li ngbNavItem formGroupName="mod">
-                    <button ngbNavLink [class.is-invalid]="ctlGroupMod.invalid" class="fw-bold" i18n>Moderation</button>
+                    <button ngbNavLink [appValidatable]="ctlGroupMod" [validateUntouched]="true" class="fw-bold" i18n>Moderation</button>
                     <ng-template ngbNavContent>
                         <app-domain-edit-moderation [formGroup]="ctlGroupMod"/>
                     </ng-template>
@@ -61,7 +61,7 @@
 
                 <!-- Extensions -->
                 <li ngbNavItem formGroupName="extensions">
-                    <button ngbNavLink [class.is-invalid]="ctlGroupExtensions.invalid">
+                    <button ngbNavLink [appValidatable]="ctlGroupExtensions" [validateUntouched]="true">
                         <!-- Tab title -->
                         <span class="fw-bold me-1" i18n>Extensions</span>
                         <!-- Badge with a number -->
