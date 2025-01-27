@@ -12,7 +12,6 @@ import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ConfigService } from '../../../../_services/config.service';
 import { Animations } from '../../../../_utils/animations';
 import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
-import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
 import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.component';
@@ -20,6 +19,7 @@ import { SuperuserBadgeComponent } from '../../badges/superuser-badge/superuser-
 import { CurrentUserBadgeComponent } from '../../badges/current-user-badge/current-user-badge.component';
 import { IdentityProviderIconComponent } from '../../../tools/identity-provider-icon/identity-provider-icon.component';
 import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
+import { LoaderDirective } from '../../../tools/_directives/loader.directive';
 
 @UntilDestroy()
 @Component({
@@ -28,7 +28,6 @@ import { ListFooterComponent } from '../../../tools/list-footer/list-footer.comp
     animations: [Animations.fadeIn('slow')],
     imports: [
         InfoBlockComponent,
-        SpinnerDirective,
         SortSelectorComponent,
         SortPropertyComponent,
         ReactiveFormsModule,
@@ -39,6 +38,7 @@ import { ListFooterComponent } from '../../../tools/list-footer/list-footer.comp
         CurrentUserBadgeComponent,
         IdentityProviderIconComponent,
         ListFooterComponent,
+        LoaderDirective,
     ],
 })
 export class UserManagerComponent implements OnInit {

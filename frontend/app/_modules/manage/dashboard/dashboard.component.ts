@@ -4,20 +4,20 @@ import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Principal, StatsTotals } from '../../../../generated-api';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { AuthService } from '../../../_services/auth.service';
-import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
 import { MetricCardComponent } from './metric-card/metric-card.component';
 import { StatsComponent } from '../stats/stats/stats.component';
 import { NoDataComponent } from '../../tools/no-data/no-data.component';
+import { LoaderDirective } from '../../tools/_directives/loader.directive';
 
 @UntilDestroy()
 @Component({
     selector: 'app-dashboard',
     templateUrl: './dashboard.component.html',
     imports: [
-        SpinnerDirective,
         MetricCardComponent,
         StatsComponent,
         NoDataComponent,
+        LoaderDirective,
     ],
 })
 export class DashboardComponent implements OnInit {

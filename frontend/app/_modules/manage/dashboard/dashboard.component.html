@@ -1,7 +1,7 @@
 <!-- Heading -->
 <h1 i18n="heading">Dashboard</h1>
 
-<div [appSpinner]="loading.active" spinnerSize="lg">
+<ng-template [appLoader]="loading.active" loaderKind="cards">
     @if (totals) {
         <!-- Counters -->
         <div class="row row-cols-1 row-cols-sm-2 row-cols-md-4 g-2" id="dashboard-totals">
@@ -74,4 +74,4 @@
     @if (!totals) {
         <app-no-data/>
     }
-</div>
+</ng-template>

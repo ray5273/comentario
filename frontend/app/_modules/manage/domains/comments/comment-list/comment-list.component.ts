@@ -16,7 +16,6 @@ import { Paths } from '../../../../../_utils/consts';
 import { CommentService } from '../../../_services/comment.service';
 import { Animations } from '../../../../../_utils/animations';
 import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
-import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { UserLinkComponent } from '../../../user-link/user-link.component';
@@ -25,6 +24,7 @@ import { ExternalLinkDirective } from '../../../../tools/_directives/external-li
 import { DatetimePipe } from '../../../_pipes/datetime.pipe';
 import { ConfirmDirective } from '../../../../tools/_directives/confirm.directive';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
+import { LoaderDirective } from '../../../../tools/_directives/loader.directive';
 
 @UntilDestroy()
 @Component({
@@ -33,7 +33,6 @@ import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.c
     animations: [Animations.fadeIn('slow')],
     imports: [
         InfoBlockComponent,
-        SpinnerDirective,
         ReactiveFormsModule,
         SortSelectorComponent,
         SortPropertyComponent,
@@ -45,6 +44,7 @@ import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.c
         DatetimePipe,
         ConfirmDirective,
         ListFooterComponent,
+        LoaderDirective,
     ],
 })
 export class CommentListComponent implements OnInit, OnChanges {

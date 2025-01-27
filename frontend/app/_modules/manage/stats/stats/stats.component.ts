@@ -8,6 +8,7 @@ import { DailyStatsChartComponent } from '../daily-stats-chart/daily-stats-chart
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { PieStatsChartComponent } from '../pie-stats-chart/pie-stats-chart.component';
 import { TopPagesStatsComponent } from '../top-pages-stats/top-pages-stats.component';
+import { LoaderDirective } from '../../../tools/_directives/loader.directive';
 
 type DailyMetric = 'views' | 'comments';
 type PageViewDimension = 'country' | 'device' | 'browser' | 'os';
@@ -22,6 +23,7 @@ type PageViewDimension = 'country' | 'device' | 'browser' | 'os';
         NoDataComponent,
         PieStatsChartComponent,
         TopPagesStatsComponent,
+        LoaderDirective,
     ],
 })
 export class StatsComponent {

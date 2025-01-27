@@ -4,7 +4,7 @@
 <!-- Info block -->
 <app-info-block i18n>Below is a list of users registered in the system.</app-info-block>
 
-<div [appSpinner]="!users && usersLoading.active" spinnerSize="lg">
+<div *appLoader="!users && usersLoading.active">
     <!-- Toolbar -->
     <div class="mb-3">
         <div class="row g-2 flex-grow-1">

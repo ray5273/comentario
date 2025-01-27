@@ -28,7 +28,7 @@
     <h2 i18n="heading">Page view statistics</h2>
 
     <!-- Page view pie charts, if there are any views -->
-    <div [appSpinner]="loadingPageViews.active" spinnerSize="lg">
+    <ng-template [appLoader]="loadingPageViews.active" loaderKind="pies">
         @if (pageViewsStats) {
             <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2" id="stats-page-view-charts">
                 <div class="col">
@@ -67,7 +67,7 @@
         } @else {
             <app-no-data/>
         }
-    </div>
+    </ng-template>
 </div>
 
 <!-- Top performing pages -->
@@ -76,7 +76,7 @@
     <h2 i18n="heading">Top performing pages</h2>
 
     <!-- Top pages tables, if there are any views or comments -->
-    <div [appSpinner]="loadingTopPages.active" spinnerSize="lg">
+    <div *appLoader="loadingTopPages.active">
         @if (topPagesByViews || topPagesByComments) {
             <app-top-pages-stats [pagesByViews]="topPagesByViews"
                                  [pagesByComments]="topPagesByComments"

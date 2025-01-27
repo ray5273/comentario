@@ -1,19 +1,18 @@
-import { Directive, ElementRef, Input, OnChanges, Renderer2, SimpleChanges } from '@angular/core';
+import { Directive, Input } from '@angular/core';
+import { BehaviorSubject, of, switchMap, timer } from 'rxjs';
 
 export type SpinnerSize = 'sm' | 'lg';
 
 @Directive({
     selector: '[appSpinner]',
     host: {
+        '[class.is-spinning-lg]':   'spinnerSize === "lg" && show',
+        '[class.is-spinning-sm]':   'spinnerSize === "sm" && show',
         '[attr.data-spinner-text]': 'spinnerText',
-        '[attr.disabled]': 'appSpinner || disable ? "true" : undefined',
+        '[attr.disabled]':          'show || disable ? "true" : undefined',
     },
 })
-export class SpinnerDirective implements OnChanges {
-
-    /** Whether the spinning animation is shown on the component. */
-    @Input()
-    appSpinner = false;
+export class SpinnerDirective {
 
     /** Whether to forcefully disable the component. This property must be used instead of the standard 'disabled' property. */
     @Input()
@@ -27,48 +26,22 @@ export class SpinnerDirective implements OnChanges {
     @Input()
     spinnerText?: string;
 
-    private _timer: any;
-
-    constructor(
-        private readonly element: ElementRef,
-        private readonly renderer: Renderer2,
-    ) {}
-
-    ngOnChanges(changes: SimpleChanges): void {
-        // Update the spinning state
-        if (changes.appSpinner) {
-            // Enable spinner after a short while to reduce flickering
-            if (this.appSpinner) {
-                this.cancelTimer();
-                this._timer = setTimeout(() => this.setSpinning(true), 200);
-
-            // Disable the spinner immediately
-            } else {
-                this.setSpinning(false);
-            }
-        }
-    }
-
     /**
-     * Remove the delay timer, if any.
+     * Whether to show the spinner on the host element. The spinner is shown after a short delay, and removed
+     * immediately.
      */
-    private cancelTimer() {
-        if (this._timer) {
-            clearTimeout(this._timer);
-            this._timer = null;
-        }
+    show = false;
+
+    private spinner$ = new BehaviorSubject<boolean>(false);
+
+    constructor() {
+        // Emit a delayed 0 when the spinner is to be shown, or immediate 1 when it's to be hidden
+        this.spinner$.pipe(switchMap(b => b ? timer(200) : of(1))).subscribe(b => this.show = b === 0);
     }
 
-    private setSpinning(value: boolean) {
-        // Remove the delay timer, if any
-        this.cancelTimer();
-
-        // Add or remove one of the is-spinning-* classes
-        const ne = this.element.nativeElement;
-        if (value) {
-            this.renderer.addClass(ne, `is-spinning-${this.spinnerSize}`);
-        } else {
-            this.renderer.removeClass(ne, `is-spinning-${this.spinnerSize}`);
-        }
+    /** Whether the spinning animation is shown on the component. */
+    @Input({required: true})
+    set appSpinner(b: boolean) {
+        this.spinner$.next(b);
     }
 }

@@ -17,7 +17,7 @@
     </app-info-block>
 }
 
-<div [appSpinner]="(!domains && domainsLoading.active) || domainLoading.active" spinnerSize="lg">
+<div *appLoader="(!domains && domainsLoading.active) || domainLoading.active">
     <!-- Toolbar. Hide when no domains are available and none can be added -->
     @if (canAdd || domains?.length || filterActive) {
         <div class="mb-3">

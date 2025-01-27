@@ -15,10 +15,10 @@ import { ConfigService } from '../../../../../_services/config.service';
 import { Animations } from '../../../../../_utils/animations';
 import { DomainBadgeComponent } from '../../../badges/domain-badge/domain-badge.component';
 import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
-import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
+import { LoaderDirective } from '../../../../tools/_directives/loader.directive';
 
 @UntilDestroy()
 @Component({
@@ -28,7 +28,6 @@ import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.c
     imports: [
         DomainBadgeComponent,
         InfoBlockComponent,
-        SpinnerDirective,
         SortSelectorComponent,
         SortPropertyComponent,
         ReactiveFormsModule,
@@ -36,6 +35,7 @@ import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.c
         DecimalPipe,
         FaIconComponent,
         ListFooterComponent,
+        LoaderDirective,
     ],
 })
 export class DomainPageManagerComponent implements OnInit {

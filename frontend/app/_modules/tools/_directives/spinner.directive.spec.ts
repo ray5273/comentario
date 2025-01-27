@@ -4,13 +4,14 @@ import { By } from '@angular/platform-browser';
 import { SpinnerDirective, SpinnerSize } from './spinner.directive';
 
 @Component({
-    template: '<button [appSpinner]="value" [spinnerSize]="size" [spinnerText]="text">text</button>',
+    template: '<button [appSpinner]="spinner" [spinnerSize]="size" [spinnerText]="text" [disable]="disable">text</button>',
     imports: [SpinnerDirective],
 })
 class TestComponent {
-    value = false;
+    spinner = false;
     size: SpinnerSize = 'sm';
     text?: string;
+    disable = false;
 }
 
 describe('SpinnerDirective', () => {
@@ -18,6 +19,14 @@ describe('SpinnerDirective', () => {
     let fixture: ComponentFixture<TestComponent>;
     let de: DebugElement[];
     let button: HTMLButtonElement;
+
+    // Wait out a timer delay in ms
+    const delay = () => tick(200);
+
+    const expectClasses = (classes: string[]) => {
+        fixture.detectChanges();
+        expect(Array.from(button.classList)).toEqual(classes);
+    };
 
     beforeEach(() => {
         fixture = TestBed.configureTestingModule({
@@ -40,67 +49,65 @@ describe('SpinnerDirective', () => {
 
     it('is initially enabled and not spinning', () => {
         expect(button.disabled).toBeFalse();
-        expect(button.classList).not.toContain('is-spinning-sm');
-        expect(button.classList).not.toContain('is-spinning-lg');
+        expectClasses([]);
     });
 
-    it('updates disabled immediately, but not spinning', () => {
-        // Enable spinning
-        fixture.componentInstance.value = true;
+    it('updates disabled', fakeAsync(() => {
+        // Enable spinning: initially not disabled
+        fixture.componentInstance.spinner = true;
+        fixture.detectChanges();
+        expect(button.disabled).toBeFalse();
+
+        // It gets disabled after a delay
+        delay();
         fixture.detectChanges();
         expect(button.disabled).toBeTrue();
 
         // Disable spinning
-        fixture.componentInstance.value = false;
+        fixture.componentInstance.spinner = false;
         fixture.detectChanges();
         expect(button.disabled).toBeFalse();
-    });
+
+        // Now set the disabled state explicitly
+        fixture.componentInstance.disable = true;
+        fixture.detectChanges();
+        expect(button.disabled).toBeTrue();
+
+        // Remove the explicit disabled state
+        fixture.componentInstance.disable = false;
+        fixture.detectChanges();
+        expect(button.disabled).toBeFalse();
+    }));
 
     it('starts spinner with size "sm"', fakeAsync(() => {
         // Enable spinning
-        fixture.componentInstance.value = true;
+        fixture.componentInstance.spinner = true;
         fixture.detectChanges();
 
-        // No classes are assigned yet
-        expect(button.classList).not.toContain('is-spinning-sm');
-        expect(button.classList).not.toContain('is-spinning-lg');
+        // No spinner and not disabled
+        expectClasses([]);
+        expect(button.disabled).toBeFalse();
 
-        // One class gets assigned after 200 ms
-        tick(250);
-        expect(button.classList).toContain('is-spinning-sm');
-        expect(button.classList).not.toContain('is-spinning-lg');
-
-        // Disable spinning
-        fixture.componentInstance.value = false;
-        fixture.detectChanges();
-
-        // The class disappears immediately
-        expect(button.classList).not.toContain('is-spinning-sm');
-        expect(button.classList).not.toContain('is-spinning-lg');
+        // Wait for the timer: the spinner is spinning, the element is disabled
+        delay();
+        expectClasses(['is-spinning-sm']);
+        expect(button.disabled).toBeTrue();
     }));
 
     it('starts spinner with size "lg"', fakeAsync(() => {
         // Enable spinning
-        fixture.componentInstance.value = true;
-        fixture.componentInstance.size = 'lg';
+        fixture.componentInstance.size    = 'lg';
+        fixture.componentInstance.spinner = true;
         fixture.detectChanges();
 
-        // No classes are assigned yet
-        expect(button.classList).not.toContain('is-spinning-sm');
-        expect(button.classList).not.toContain('is-spinning-lg');
+        // No spinner and not disabled
+        expectClasses([]);
+        expect(button.disabled).toBeFalse();
 
-        // One class gets assigned after 200 ms
-        tick(250);
-        expect(button.classList).not.toContain('is-spinning-sm');
-        expect(button.classList).toContain('is-spinning-lg');
-
-        // Disable spinning
-        fixture.componentInstance.value = false;
-        fixture.detectChanges();
-
-        // The class disappears immediately
-        expect(button.classList).not.toContain('is-spinning-sm');
-        expect(button.classList).not.toContain('is-spinning-lg');
+        // Wait for the timer: the spinner is spinning, the element is disabled
+        delay();
+        expectClasses(['is-spinning-lg']);
+        expect(button.disabled).toBeTrue();
     }));
 
     it('places spinner text into data attribute', () => {
