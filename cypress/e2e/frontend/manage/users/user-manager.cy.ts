@@ -41,7 +41,8 @@ context('User Manager', () => {
         cy.get('@userManager').find('#filter-string').as('filterString').should('have.value', '');
 
         // Users
-        cy.get('@userManager').find('#user-list').as('userList').should('be.visible');
+        cy.get('@userManager').find('#user-list').as('userList')
+            .find('.list-group-item').should('have.length.above', 0);
     };
 
     //------------------------------------------------------------------------------------------------------------------

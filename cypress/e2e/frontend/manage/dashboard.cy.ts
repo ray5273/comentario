@@ -45,9 +45,11 @@ context('Dashboard', () => {
 
         // If there are top pages tables
         if (hasTopPages) {
-            cy.get('@topPages').find('#stats-top-page-tables').as('topPagesTables');
+            cy.get('@topPages').find('#stats-top-pages-views')   .as('pagesByViews');
+            cy.get('@topPages').find('#stats-top-pages-comments').as('pagesByComments');
         } else {
-            cy.get('@dashboard').find('#stats-top-page-tables').should('not.exist');
+            cy.get('@dashboard').find('#stats-top-pages-views')   .should('not.exist');
+            cy.get('@dashboard').find('#stats-top-pages-comments').should('not.exist');
         }
     };
 
@@ -296,15 +298,13 @@ context('Dashboard', () => {
                     // Verify top pages tables
                     if (test.topPages) {
                         // By views
-                        cy.get('@topPagesTables').find('.top-pages-by-views').as('byViews');
-                        cy.get('@byViews').texts('.domain-page-domain').should('arrayMatch', test.topPages.byViews.map(p => p.domain));
-                        cy.get('@byViews').texts('.domain-page-path')  .should('arrayMatch', test.topPages.byViews.map(p => p.path));
-                        cy.get('@byViews').texts('.domain-page-metric').should('arrayMatch', test.topPages.byViews.map(p => p.metric));
+                        cy.get('@pagesByViews')   .texts('.domain-page-domain').should('arrayMatch', test.topPages.byViews.map(p => p.domain));
+                        cy.get('@pagesByViews')   .texts('.domain-page-path')  .should('arrayMatch', test.topPages.byViews.map(p => p.path));
+                        cy.get('@pagesByViews')   .texts('.domain-page-metric').should('arrayMatch', test.topPages.byViews.map(p => p.metric));
                         // By comments
-                        cy.get('@topPagesTables').find('.top-pages-by-comments').as('byComments');
-                        cy.get('@byComments').texts('.domain-page-domain').should('arrayMatch', test.topPages.byComments.map(p => p.domain));
-                        cy.get('@byComments').texts('.domain-page-path')  .should('arrayMatch', test.topPages.byComments.map(p => p.path));
-                        cy.get('@byComments').texts('.domain-page-metric').should('arrayMatch', test.topPages.byComments.map(p => p.metric));
+                        cy.get('@pagesByComments').texts('.domain-page-domain').should('arrayMatch', test.topPages.byComments.map(p => p.domain));
+                        cy.get('@pagesByComments').texts('.domain-page-path')  .should('arrayMatch', test.topPages.byComments.map(p => p.path));
+                        cy.get('@pagesByComments').texts('.domain-page-metric').should('arrayMatch', test.topPages.byComments.map(p => p.metric));
                     }
                 }));
     });

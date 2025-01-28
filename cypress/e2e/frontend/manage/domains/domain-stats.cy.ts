@@ -86,15 +86,13 @@ context('Domain Statistics page', () => {
                         - {label: Others,  value: 9}
                         `);
 
-                    // Verify top pages
-                    cy.get('@domainStats').find('#stats-top-page-tables').as('topPagesTables');
-                    // By views
-                    cy.get('@topPagesTables').find('.top-pages-by-views').as('byViews');
+                    // Top pages by views
+                    cy.get('@domainStats').find('#stats-top-pages-views').as('byViews');
                     cy.get('@byViews').find('.domain-page-domain') .should('not.exist');
                     cy.get('@byViews').texts('.domain-page-path')  .should('arrayMatch', [TEST_PATHS.home]);
                     cy.get('@byViews').texts('.domain-page-metric').should('arrayMatch', ['217 views']);
-                    // By comments
-                    cy.get('@topPagesTables').find('.top-pages-by-comments').as('byComments');
+                    // Top pages by comments
+                    cy.get('@domainStats').find('#stats-top-pages-comments').as('byComments');
                     cy.get('@byComments').find('.domain-page-domain') .should('not.exist');
                     cy.get('@byComments').texts('.domain-page-path')  .should('arrayMatch', [
                         TEST_PATHS.home,

@@ -24,92 +24,91 @@
     </app-info-block>
 }
 
-<div *appLoader="!pages && pagesLoading.active">
-    <!-- Toolbar -->
-    <div class="mb-3">
-        <div class="row g-2 flex-grow-1">
-            <!-- Placeholder to push other items to the right -->
-            <div class="col"></div>
+<!-- Toolbar -->
+<div class="mb-3">
+    <div class="row g-2 flex-grow-1">
+        <!-- Placeholder to push other items to the right -->
+        <div class="col"></div>
 
-            <!-- Sort -->
-            <div class="col-auto">
-                <app-sort-selector [sort]="sort">
-                    <app-sort-property by="path"          label="Path"               i18n-label/>
-                    <app-sort-property by="title"         label="Title"              i18n-label/>
-                    <app-sort-property by="created"       label="Created"            i18n-label/>
-                    <app-sort-property by="countComments" label="Number of comments" i18n-label/>
-                    <app-sort-property by="countViews"    label="Number of views"    i18n-label/>
-                </app-sort-selector>
-            </div>
-
-            <!-- Filter form -->
-            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
-                <!-- Substring filter -->
-                <div class="col-sm-auto">
-                    <input formControlName="filter" id="filter-string" class="form-control" type="search"
-                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
-                </div>
-            </form>
+        <!-- Sort -->
+        <div class="col-auto">
+            <app-sort-selector [sort]="sort">
+                <app-sort-property by="path"          label="Path"               i18n-label/>
+                <app-sort-property by="title"         label="Title"              i18n-label/>
+                <app-sort-property by="created"       label="Created"            i18n-label/>
+                <app-sort-property by="countComments" label="Number of comments" i18n-label/>
+                <app-sort-property by="countViews"    label="Number of views"    i18n-label/>
+            </app-sort-selector>
         </div>
-    </div>
 
+        <!-- Filter form -->
+        <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+            <!-- Substring filter -->
+            <div class="col-sm-auto">
+                <input formControlName="filter" id="filter-string" class="form-control" type="search"
+                       placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div *appLoader="!pages && pagesLoading.active">
     <!-- Page list -->
-    @if (pages?.length) {
-        <div class="list-group" id="page-list">
-            @for (p of pages; track p.id) {
-                <a @fadeIn-slow [routerLink]="p.id" class="list-group-item list-group-item-action">
-                    <div class="row flex-nowrap">
-                        <!-- Host/path -->
-                        <div class="col overflow-hidden">
-                            <div style="word-break: break-word">
-                                <!-- Domain host (sm+) -->
-                                <span class="text-black-50 d-none d-sm-inline domain-page-domain">{{ domainMeta?.domain?.host }}</span>
-                                <!-- Page path -->
-                                <span class="fw-bold domain-page-path">{{ p.path }}</span>
-                                <!-- Readonly badge -->
-                                @if (p.isReadonly) {
-                                    <span class="badge rounded-pill bg-light-subtle text-danger border border-danger ms-2" i18n>Read-only</span>
-                                }
-                            </div>
-                            @if (p.title) {
-                                <div class="domain-page-title">{{ p.title }}</div>
-                            }
-                            <!-- Comment/view counts (up to sm) -->
-                            @if (p.countComments! >= 0 && p.countViews! >= 0) {
-                                <div class="d-sm-none small text-dimmed">
-                                    <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
-                                    <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
-                                </div>
+    <div class="list-group" id="domain-page-list">
+        @for (p of pages; track p.id) {
+            <a @fadeIn-slow [routerLink]="p.id" class="list-group-item list-group-item-action">
+                <div class="row flex-nowrap">
+                    <!-- Host/path -->
+                    <div class="col overflow-hidden">
+                        <div style="word-break: break-word">
+                            <!-- Domain host (sm+) -->
+                            <span class="text-black-50 d-none d-sm-inline domain-page-domain">{{ domainMeta?.domain?.host }}</span>
+                            <!-- Page path -->
+                            <span class="fw-bold domain-page-path">{{ p.path }}</span>
+                            <!-- Readonly badge -->
+                            @if (p.isReadonly) {
+                                <span class="badge rounded-pill bg-light-subtle text-danger border border-danger ms-2" i18n>Read-only</span>
                             }
                         </div>
-                        <!-- Open page in new tab button -->
-                        <div class="col-auto">
-                            <a class="btn btn-sm btn-outline-secondary" [href]="domainMeta?.domain?.rootUrl! + p.path"
-                               (click)="$event.stopPropagation()"
-                               target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
-                                <fa-icon [icon]="faUpRightFromSquare"/>
-                            </a>
-                        </div>
-                        <!-- Comment count (sm+) -->
-                        @if (p.countComments! >= 0) {
-                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-page-cnt-comments">
-                                <div class="lead">{{ p.countComments | number }}</div>
-                                <div class="small" i18n>comments</div>
-                            </div>
+                        @if (p.title) {
+                            <div class="domain-page-title">{{ p.title }}</div>
                         }
-                        <!-- View count (sm+) -->
-                        @if (p.countViews! >= 0) {
-                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-page-cnt-views">
-                                <div class="lead">{{ p.countViews | number }}</div>
-                                <div class="small" i18n>views</div>
+                        <!-- Comment/view counts (up to sm) -->
+                        @if (p.countComments! >= 0 && p.countViews! >= 0) {
+                            <div class="d-sm-none small text-dimmed">
+                                <ng-container>{{ p.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
+                                <ng-container>, {{ p.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
                             </div>
                         }
                     </div>
-                </a>
-            }
-        </div>
-    }
+                    <!-- Open page in new tab button -->
+                    <div class="col-auto">
+                        <a class="btn btn-sm btn-outline-secondary" [href]="domainMeta?.domain?.rootUrl! + p.path"
+                           (click)="$event.stopPropagation()"
+                           target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
+                            <fa-icon [icon]="faUpRightFromSquare"/>
+                        </a>
+                    </div>
+                    <!-- Comment count (sm+) -->
+                    @if (p.countComments! >= 0) {
+                        <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-page-cnt-comments">
+                            <div class="lead">{{ p.countComments | number }}</div>
+                            <div class="small" i18n>comments</div>
+                        </div>
+                    }
+                    <!-- View count (sm+) -->
+                    @if (p.countViews! >= 0) {
+                        <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-page-cnt-views">
+                            <div class="lead">{{ p.countViews | number }}</div>
+                            <div class="small" i18n>views</div>
+                        </div>
+                    }
+                </div>
+            </a>
+        }
+    </div>
 
     <!-- List footer -->
-    <app-list-footer [canLoadMore]="canLoadMore" [loading]="pagesLoading.active" [count]="pages?.length" (loadMore)="load.next(false)"/>
+    <app-list-footer [canLoadMore]="canLoadMore" [loading]="pagesLoading.active" [count]="pages?.length"
+                     (loadMore)="load.next(false)"/>
 </div>

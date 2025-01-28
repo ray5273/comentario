@@ -78,11 +78,10 @@ context('Comment Manager', () => {
         }
 
         // Comments
-        if (hasItems) {
-            cy.get('@commentManager').find('#comment-list').as('commentList').should('be.visible');
-            if (canLoadMore) {
-                cy.get('@commentManager').contains('app-list-footer button', 'Load more').as('loadMore');
-            }
+        cy.get('@commentManager').find('#comment-list').as('commentList')
+            .find('.list-group-item').should(hasItems ? 'have.length.above' : 'have.length', 0);
+        if (canLoadMore) {
+            cy.get('@commentManager').contains('app-list-footer button', 'Load more').as('loadMore');
         }
     };
 

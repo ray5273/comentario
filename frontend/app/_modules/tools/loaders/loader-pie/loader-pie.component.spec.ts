@@ -1,18 +1,18 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { LoaderPiesComponent } from './loader-pies.component';
+import { LoaderPieComponent } from './loader-pie.component';
 
-describe('LoaderPiesComponent', () => {
+describe('LoaderPieComponent', () => {
 
-    let component: LoaderPiesComponent;
-    let fixture: ComponentFixture<LoaderPiesComponent>;
+    let component: LoaderPieComponent;
+    let fixture: ComponentFixture<LoaderPieComponent>;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
-                imports: [LoaderPiesComponent],
+                imports: [LoaderPieComponent],
             })
             .compileComponents();
 
-        fixture = TestBed.createComponent(LoaderPiesComponent);
+        fixture = TestBed.createComponent(LoaderPieComponent);
         component = fixture.componentInstance;
         fixture.detectChanges();
     });

@@ -1,0 +1,34 @@
+@import '/scss/vars';
+
+// Must be consistent with pie-stats-chart.component.scss
+.chart-container {
+    display: inline-block;
+    position: relative;
+    width: 100%;
+    min-height: 7rem;
+    height: 7rem;
+
+    .circle {
+        border-radius: 50%;
+        width: 7rem;
+        height: 7rem;
+    }
+
+    @include media-breakpoint-up(md) {
+        height: 8rem;
+
+        .circle {
+            width: 8rem;
+            height: 8rem;
+        }
+    }
+
+    @include media-breakpoint-up(lg) {
+        height: 10rem;
+
+        .circle {
+            width: 10rem;
+            height: 10rem;
+        }
+    }
+}

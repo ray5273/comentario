@@ -13,11 +13,8 @@ context('Domain Manager', () => {
             cy.get('@domainManager').contains('button', 'New domain').should('not.exist');
         }
 
-        if (hasItems) {
-            cy.get('@domainManager').find('#domain-list').as('domainList');
-        } else {
-            cy.get('@domainManager').find('#domain-list').should('not.exist');
-        }
+        cy.get('@domainManager').find('#domain-list').as('domainList')
+            .find('.list-group-item').should(hasItems ? 'have.length.above' : 'have.length', 0);
 
         if (canLoadMore) {
             cy.get('@domainManager').contains('app-list-footer button', 'Load more').as('loadMore');

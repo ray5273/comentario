@@ -35,7 +35,12 @@ export class StatsComponent {
 
     // Page views data
     pageViewsStats?: Partial<Record<PageViewDimension, StatsDimensionItem[]>>;
-    readonly loadingPageViews = new ProcessingStatus();
+    readonly loadingPageViews: Record<PageViewDimension, ProcessingStatus> = {
+        country: new ProcessingStatus(true),
+        device:  new ProcessingStatus(true),
+        browser: new ProcessingStatus(true),
+        os:      new ProcessingStatus(true),
+    };
 
     // Top pages data
     topPagesByViews?: PageStatsItem[];
@@ -140,10 +145,9 @@ export class StatsComponent {
             .pipe(
                 concatMap(dim =>
                     this.api.dashboardPageViewStats(dim, this._numberOfDays, domainId)
-                        .pipe(tap(d => this.pageViewsStats![dim] = d))),
-
-                // Loading indicator
-                this.loadingPageViews.processing());
+                        .pipe(
+                            this.loadingPageViews[dim].processing(),
+                            tap(d => this.pageViewsStats![dim] = d))));
     }
 
     /**

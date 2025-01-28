@@ -28,9 +28,9 @@
     <h2 i18n="heading">Page view statistics</h2>
 
     <!-- Page view pie charts, if there are any views -->
-    <ng-template [appLoader]="loadingPageViews.active" loaderKind="pies">
-        @if (pageViewsStats) {
-            <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2" id="stats-page-view-charts">
+    @if (pageViewsStats) {
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-4 g-2" id="stats-page-view-charts">
+            <ng-template [appLoader]="loadingPageViews.country.active" loaderKind="pie">
                 <div class="col">
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Countries</div>
@@ -39,6 +39,8 @@
                         </div>
                     </div>
                 </div>
+            </ng-template>
+            <ng-template [appLoader]="loadingPageViews.device.active" loaderKind="pie">
                 <div class="col">
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Devices</div>
@@ -47,6 +49,8 @@
                         </div>
                     </div>
                 </div>
+            </ng-template>
+            <ng-template [appLoader]="loadingPageViews.browser.active" loaderKind="pie">
                 <div class="col">
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Browsers</div>
@@ -55,6 +59,8 @@
                         </div>
                     </div>
                 </div>
+            </ng-template>
+            <ng-template [appLoader]="loadingPageViews.os.active" loaderKind="pie">
                 <div class="col">
                     <div class="card shadow-none border-0 text-center">
                         <div class="card-title fw-bold" i18n>Operating systems</div>
@@ -63,11 +69,11 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        } @else {
-            <app-no-data/>
-        }
-    </ng-template>
+            </ng-template>
+        </div>
+    } @else {
+        <app-no-data/>
+    }
 </div>
 
 <!-- Top performing pages -->
@@ -75,16 +81,23 @@
     <!-- Subheading -->
     <h2 i18n="heading">Top performing pages</h2>
 
-    <!-- Top pages tables, if there are any views or comments -->
-    <div *appLoader="loadingTopPages.active">
-        @if (topPagesByViews || topPagesByComments) {
-            <app-top-pages-stats [pagesByViews]="topPagesByViews"
-                                 [pagesByComments]="topPagesByComments"
-                                 [domainId]="_domainId"
-                                 id="stats-top-page-tables"/>
-
-        } @else {
-            <app-no-data/>
-        }
-    </div>
+    <!-- Top pages tables, while loading of if there are any views or comments -->
+    @if (loadingTopPages.active || topPagesByViews || topPagesByComments) {
+        <div class="row row-cols-1 row-cols-lg-2 g-2">
+            <!-- Stats by views -->
+            <div *appLoader="loadingTopPages.active" class="col">
+                <app-top-pages-stats [items]="topPagesByViews" [domainId]="_domainId"
+                                     title="By views" metricName="views" i18n-title i18n-metricName="metric|"
+                                     id="stats-top-pages-views"/>
+            </div>
+            <!-- Stats by comments -->
+            <div *appLoader="loadingTopPages.active" class="col">
+                <app-top-pages-stats [items]="topPagesByComments" [domainId]="_domainId"
+                                     title="By comments" metricName="comments" i18n-title i18n-metricName="metric|"
+                                     id="stats-top-pages-comments"/>
+            </div>
+        </div>
+    } @else {
+        <app-no-data/>
+    }
 </div>

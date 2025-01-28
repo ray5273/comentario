@@ -1,7 +1,9 @@
 <div class="py-2 text-center">
-    <!-- Loading text -->
+    <!-- Loading placeholder -->
     @if (loading) {
-        <span class="item-loading" i18n>Loading…</span>
+        <div class="item-loading placeholder-wave">
+            <span class="placeholder col-3"></span>
+        </div>
 
     } @else if (count) {
         <!-- Not loading. Item count -->

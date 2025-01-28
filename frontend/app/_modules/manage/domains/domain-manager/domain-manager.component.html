@@ -17,98 +17,96 @@
     </app-info-block>
 }
 
+<!-- Toolbar. Hide when no domains are available and none can be added -->
+@if (canAdd || domains?.length || filterActive) {
+    <div class="mb-3">
+        <div class="row g-2 flex-grow-1">
+            <!-- New domain button -->
+            <div class="col">
+                @if (canAdd) {
+                    <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
+                        <fa-icon [icon]="faPlus" class="me-1"/>
+                        <ng-container i18n>New domain</ng-container>
+                    </button>
+                }
+            </div>
+
+            <!-- Sort -->
+            <div class="col-auto">
+                <app-sort-selector [sort]="sort">
+                    <app-sort-property by="name"          label="Name"               i18n-label/>
+                    <app-sort-property by="host"          label="Host"               i18n-label/>
+                    <app-sort-property by="created"       label="Created"            i18n-label/>
+                    <app-sort-property by="countComments" label="Number of comments" i18n-label/>
+                    <app-sort-property by="countViews"    label="Number of views"    i18n-label/>
+                </app-sort-selector>
+            </div>
+
+            <!-- Filter form -->
+            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+                <!-- Substring filter -->
+                <div class="col-sm-auto">
+                    <input formControlName="filter" id="filter-string" class="form-control" type="search"
+                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
+                </div>
+            </form>
+        </div>
+    </div>
+}
+
 <div *appLoader="(!domains && domainsLoading.active) || domainLoading.active">
-    <!-- Toolbar. Hide when no domains are available and none can be added -->
-    @if (canAdd || domains?.length || filterActive) {
-        <div class="mb-3">
-            <div class="row g-2 flex-grow-1">
-                <!-- New domain button -->
-                <div class="col">
-                    @if (canAdd) {
-                        <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
-                            <fa-icon [icon]="faPlus" class="me-1"/>
-                            <ng-container i18n>New domain</ng-container>
-                        </button>
+    <!-- Domain list -->
+    <div class="list-group" id="domain-list">
+        @for (d of domains; track d.id) {
+            <a @fadeIn-slow [routerLink]="d.id" [class.active]="d.id === domainMeta?.domain?.id"
+               class="list-group-item list-group-item-action">
+                <div class="row">
+                    <!-- Checkmark for the selected domain -->
+                    <div class="d-none d-sm-flex col-1 justify-content-center align-items-center">
+                        @if (d.id === domainMeta?.domain?.id) {
+                            <fa-icon [icon]="faCheck" size="2x"/>
+                        }
+                    </div>
+                    <!-- Domain name/host -->
+                    <div class="col">
+                        <div>
+                            <span class="fw-bold domain-host">{{ d.host }}</span>
+                            <app-domain-user-badge [domainUser]="domainUsers.get(d.id!)" class="ms-2"/>
+                        </div>
+                        @if (d.name) {
+                            <div class="domain-name">{{ d.name }}</div>
+                        }
+                        <!-- Comment/view counts (up to sm) -->
+                        @if (d.countComments! >= 0 && d.countViews! >= 0) {
+                            <div class="d-sm-none small text-dimmed">
+                                <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
+                                <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
+                            </div>
+                        }
+                    </div>
+                    <!-- Comment count (sm+) -->
+                    @if (d.countComments! >= 0) {
+                        <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-cnt-comments">
+                            <div class="lead">{{ d.countComments | number }}</div>
+                            <div class="small" i18n>comments</div>
+                        </div>
+                    }
+                    <!-- View count (sm+) -->
+                    @if (d.countViews! >= 0) {
+                        <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-cnt-views">
+                            <div class="lead">{{ d.countViews | number }}</div>
+                            <div class="small" i18n>views</div>
+                        </div>
                     }
                 </div>
-
-                <!-- Sort -->
-                <div class="col-auto">
-                    <app-sort-selector [sort]="sort">
-                        <app-sort-property by="name"          label="Name"               i18n-label/>
-                        <app-sort-property by="host"          label="Host"               i18n-label/>
-                        <app-sort-property by="created"       label="Created"            i18n-label/>
-                        <app-sort-property by="countComments" label="Number of comments" i18n-label/>
-                        <app-sort-property by="countViews"    label="Number of views"    i18n-label/>
-                    </app-sort-selector>
-                </div>
-
-                <!-- Filter form -->
-                <form [formGroup]="filterForm" class="col-12 col-sm-auto">
-                    <!-- Substring filter -->
-                    <div class="col-sm-auto">
-                        <input formControlName="filter" id="filter-string" class="form-control" type="search"
-                               placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
-                    </div>
-                </form>
-            </div>
-        </div>
-    }
-
-    <!-- Domain list -->
-    @if (domains?.length) {
-        <div class="list-group" id="domain-list">
-            @for (d of domains; track d.id) {
-                <a @fadeIn-slow [routerLink]="d.id" [class.active]="d.id === domainMeta?.domain?.id"
-                   class="list-group-item list-group-item-action">
-                    <div class="row">
-                        <!-- Checkmark for the selected domain -->
-                        <div class="d-none d-sm-flex col-1 justify-content-center align-items-center">
-                            @if (d.id === domainMeta?.domain?.id) {
-                                <fa-icon [icon]="faCheck" size="2x"/>
-                            }
-                        </div>
-                        <!-- Domain name/host -->
-                        <div class="col">
-                            <div>
-                                <span class="fw-bold domain-host">{{ d.host }}</span>
-                                <app-domain-user-badge [domainUser]="domainUsers.get(d.id!)" class="ms-2"/>
-                            </div>
-                            @if (d.name) {
-                                <div class="domain-name">{{ d.name }}</div>
-                            }
-                            <!-- Comment/view counts (up to sm) -->
-                            @if (d.countComments! >= 0 && d.countViews! >= 0) {
-                                <div class="d-sm-none small text-dimmed">
-                                    <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
-                                    <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
-                                </div>
-                            }
-                        </div>
-                        <!-- Comment count (sm+) -->
-                        @if (d.countComments! >= 0) {
-                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-cnt-comments">
-                                <div class="lead">{{ d.countComments | number }}</div>
-                                <div class="small" i18n>comments</div>
-                            </div>
-                        }
-                        <!-- View count (sm+) -->
-                        @if (d.countViews! >= 0) {
-                            <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-cnt-views">
-                                <div class="lead">{{ d.countViews | number }}</div>
-                                <div class="small" i18n>views</div>
-                            </div>
-                        }
-                    </div>
-                </a>
-            }
-        </div>
-    }
+            </a>
+        }
+    </div>
 
     <!-- List footer -->
-    <app-list-footer [canLoadMore]="canLoadMore" [loading]="domainsLoading.active" [count]="domains?.length" (loadMore)="load.next(false)">
+    <app-list-footer [canLoadMore]="canLoadMore" [count]="domains?.length" [loading]="domainsLoading.active" (loadMore)="load.next(false)">
         <!-- No data placeholder -->
-        @if (!filterActive) {
+        @if (!domainsLoading.active && !filterActive) {
             <div class="text-dimmed">
                 <p>
                     <ng-container i18n>You have no connected domains.</ng-container>

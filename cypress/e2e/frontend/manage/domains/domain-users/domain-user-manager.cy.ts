@@ -24,11 +24,10 @@ context('Domain User Manager', () => {
         cy.get('@domainUserManager').find('#filter-string').as('filterString').should('have.value', '');
 
         // Users
-        if (hasItems) {
-            cy.get('@domainUserManager').find('#domain-user-list').as('domainUserList').should('be.visible');
-            if (canLoadMore) {
-                cy.get('@domainUserManager').contains('app-list-footer button', 'Load more').as('loadMore');
-            }
+        cy.get('@domainUserManager').find('#domain-user-list').as('domainUserList')
+            .find('.list-group-item').should(hasItems ? 'have.length.above' : 'have.length', 0);
+        if (canLoadMore) {
+            cy.get('@domainUserManager').contains('app-list-footer button', 'Load more').as('loadMore');
         }
     };
 

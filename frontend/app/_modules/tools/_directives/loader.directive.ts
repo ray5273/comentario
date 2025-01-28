@@ -2,9 +2,9 @@ import { AfterViewInit, ComponentRef, Directive, EmbeddedViewRef, Input, Templat
 import { BehaviorSubject, of, switchMap, timer } from 'rxjs';
 import { LoaderListComponent } from '../loaders/loader-list/loader-list.component';
 import { LoaderCardsComponent } from '../loaders/loader-cards/loader-cards.component';
-import { LoaderPiesComponent } from '../loaders/loader-pies/loader-pies.component';
+import { LoaderPieComponent } from '../loaders/loader-pie/loader-pie.component';
 
-export type LoaderKind = 'list' | 'cards' | 'pies';
+export type LoaderKind = 'list' | 'cards' | 'pie';
 
 @Directive({
     selector: '[appLoader]',
@@ -50,8 +50,8 @@ export class LoaderDirective implements AfterViewInit {
                             case 'cards':
                                 comp = LoaderCardsComponent;
                                 break;
-                            case 'pies':
-                                comp = LoaderPiesComponent;
+                            case 'pie':
+                                comp = LoaderPieComponent;
                                 break;
                         }
                         this.loaderComp = this.vc.createComponent(comp);

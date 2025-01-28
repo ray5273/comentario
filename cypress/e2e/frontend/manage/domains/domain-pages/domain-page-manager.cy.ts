@@ -36,9 +36,8 @@ context('Domain Page Manager', () => {
         // Filter
         cy.get('@pageManager').find('#sortByDropdown').as('sortDropdown');
         cy.get('@pageManager').find('#filter-string') .as('filterString').should('have.value', '');
-        if (hasItems) {
-            cy.get('@pageManager').find('#page-list').as('pageList').should('be.visible');
-        }
+        cy.get('@pageManager').find('#domain-page-list').as('pageList')
+            .find('.list-group-item').should(hasItems ? 'have.length.above' : 'have.length', 0);
     };
 
     //------------------------------------------------------------------------------------------------------------------
@@ -170,7 +169,7 @@ context('Domain Page Manager', () => {
 
     it('shows page list for readonly user', () => {
         cy.loginViaApi(USERS.commenterThree, pagePath);
-        makeAliases(false);
+        makeAliases(true);
         cy.get('@pageManager').verifyListFooter(1, false);
     });
 });

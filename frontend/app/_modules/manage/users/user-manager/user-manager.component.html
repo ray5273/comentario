@@ -4,85 +4,83 @@
 <!-- Info block -->
 <app-info-block i18n>Below is a list of users registered in the system.</app-info-block>
 
-<div *appLoader="!users && usersLoading.active">
-    <!-- Toolbar -->
-    <div class="mb-3">
-        <div class="row g-2 flex-grow-1">
-            <!-- Placeholder to push other items to the right -->
-            <div class="col"></div>
+<!-- Toolbar -->
+<div class="mb-3">
+    <div class="row g-2 flex-grow-1">
+        <!-- Placeholder to push other items to the right -->
+        <div class="col"></div>
 
-            <!-- Sort -->
-            <div class="col-auto">
-                <app-sort-selector [sort]="sort">
-                    <app-sort-property by="email"        label="Email"         i18n-label/>
-                    <app-sort-property by="name"         label="Name"          i18n-label/>
-                    <app-sort-property by="created"      label="Created"       i18n-label/>
-                    <app-sort-property by="federatedIdP" label="Federated IdP" i18n-label/>
-                </app-sort-selector>
+        <!-- Sort -->
+        <div class="col-auto">
+            <app-sort-selector [sort]="sort">
+                <app-sort-property by="email"        label="Email"         i18n-label/>
+                <app-sort-property by="name"         label="Name"          i18n-label/>
+                <app-sort-property by="created"      label="Created"       i18n-label/>
+                <app-sort-property by="federatedIdP" label="Federated IdP" i18n-label/>
+            </app-sort-selector>
+        </div>
+
+        <!-- Filter form -->
+        <form [formGroup]="filterForm" class="col-12 col-sm-auto">
+            <!-- Substring filter -->
+            <div class="col-sm-auto">
+                <input formControlName="filter" id="filter-string" class="form-control" type="search"
+                       placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
             </div>
-
-            <!-- Filter form -->
-            <form [formGroup]="filterForm" class="col-12 col-sm-auto">
-                <!-- Substring filter -->
-                <div class="col-sm-auto">
-                    <input formControlName="filter" id="filter-string" class="form-control" type="search"
-                           placeholder="Filter" aria-label="Filter" i18n-placeholder i18n-aria-label>
-                </div>
-            </form>
-        </div>
+        </form>
     </div>
+</div>
 
+<div *appLoader="!users && usersLoading.active">
     <!-- User list -->
-    @if (users?.length) {
-        <div class="list-group" id="user-list">
-            @for (u of users; track u.id) {
-                <a @fadeIn-slow [routerLink]="u.id" [class.text-dimmed]="u.banned || u.isLocked"
-                   class="list-group-item list-group-item-action d-flex">
-                    <!-- Avatar -->
-                    <div class="col-auto d-flex align-items-center pe-2"><app-user-avatar [user]="u" size="M"/></div>
-                    <div class="col">
-                        <!-- Name and badge -->
-                        <div>
-                            <!-- Name -->
-                            <span class="fw-bold user-name">{{ u.name }}</span>
-                            <!-- System account badge -->
-                            @if (u.systemAccount) {
-                                <span class="badge rounded-pill bg-secondary ms-2">
-                                    <fa-icon [icon]="faLock" class="me-1"/>
-                                    <ng-container i18n>System</ng-container>
-                                </span>
-                            }
-                            <!-- Superuser badge -->
-                            @if (u.isSuperuser) { <app-superuser-badge class="ms-2"/> }
-                            <!-- Banned badge -->
-                            @if (u.banned) {
-                                <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
-                                    <fa-icon [icon]="faBan" class="me-1"/>
-                                    <ng-container i18n>Banned</ng-container>
-                                </span>
-                            }
-                            <!-- Locked badge -->
-                            @if (u.isLocked) {
-                                <span class="badge rounded-pill bg-danger border border-warning text-light ms-2">
-                                    <fa-icon [icon]="faUserLock" class="me-1"/>
-                                    <ng-container i18n>Locked</ng-container>
-                                </span>
-                            }
-                            <!-- Current user badge -->
-                            <app-current-user-badge [userId]="u.id" badgeClasses="ms-2"/>
-                        </div>
-                        <!-- Provider icon and email -->
-                        <div>
-                            @if (u.federatedSso || u.federatedIdP) {
-                                <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-2"/>
-                            }
-                            <span class="user-email">{{ u.email }}</span>
-                        </div>
+    <div class="list-group" id="user-list">
+        @for (u of users; track u.id) {
+            <a @fadeIn-slow [routerLink]="u.id" [class.text-dimmed]="u.banned || u.isLocked"
+               class="list-group-item list-group-item-action d-flex">
+                <!-- Avatar -->
+                <div class="col-auto d-flex align-items-center pe-2"><app-user-avatar [user]="u" size="M"/></div>
+                <div class="col">
+                    <!-- Name and badge -->
+                    <div>
+                        <!-- Name -->
+                        <span class="fw-bold user-name">{{ u.name }}</span>
+                        <!-- System account badge -->
+                        @if (u.systemAccount) {
+                            <span class="badge rounded-pill bg-secondary ms-2">
+                                <fa-icon [icon]="faLock" class="me-1"/>
+                                <ng-container i18n>System</ng-container>
+                            </span>
+                        }
+                        <!-- Superuser badge -->
+                        @if (u.isSuperuser) { <app-superuser-badge class="ms-2"/> }
+                        <!-- Banned badge -->
+                        @if (u.banned) {
+                            <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
+                                <fa-icon [icon]="faBan" class="me-1"/>
+                                <ng-container i18n>Banned</ng-container>
+                            </span>
+                        }
+                        <!-- Locked badge -->
+                        @if (u.isLocked) {
+                            <span class="badge rounded-pill bg-danger border border-warning text-light ms-2">
+                                <fa-icon [icon]="faUserLock" class="me-1"/>
+                                <ng-container i18n>Locked</ng-container>
+                            </span>
+                        }
+                        <!-- Current user badge -->
+                        <app-current-user-badge [userId]="u.id" badgeClasses="ms-2"/>
                     </div>
-                </a>
-            }
-        </div>
-    }
+                    <!-- Provider icon and email -->
+                    <div>
+                        @if (u.federatedSso || u.federatedIdP) {
+                            <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-2"/>
+                        }
+                        <span class="user-email">{{ u.email }}</span>
+                    </div>
+                </div>
+            </a>
+        }
+    </div>
 
     <!-- List footer -->
     <app-list-footer [canLoadMore]="canLoadMore" [loading]="usersLoading.active" [count]="users?.length" (loadMore)="load.next(false)"/>
