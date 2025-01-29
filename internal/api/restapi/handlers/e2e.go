@@ -134,16 +134,10 @@ func E2eConfigVersionLatestReleaseUpdate(params api_e2e.E2eConfigVersionLatestRe
 }
 
 func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
-	// Parse domain ID
-	domainID, r := parseUUID(params.UUID)
+	// Load the domain
+	domain, r := domainGet(params.UUID)
 	if r != nil {
 		return r
-	}
-
-	// Load the domain
-	domain, err := svc.TheDomainService.FindByID(domainID)
-	if err != nil {
-		return respServiceError(err)
 	}
 
 	// Convert the domain into a DTO model
@@ -267,16 +261,10 @@ func E2eOAuthFederatedLogin(params api_e2e.E2eOAuthFederatedLoginParams) middlew
 }
 
 func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) middleware.Responder {
-	// Parse domain ID
-	domainID, r := parseUUID(params.UUID)
+	// Load the domain
+	domain, r := domainGet(params.UUID)
 	if r != nil {
 		return r
-	}
-
-	// Find the domain
-	domain, err := svc.TheDomainService.FindByID(domainID)
-	if err != nil {
-		return respServiceError(err)
 	}
 
 	// Verify domain SSO config
@@ -298,10 +286,10 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 
 	secBytes, err := domain.SSOSecretBytes()
 	if err != nil {
-		logger.Errorf("Failed to decode domain (ID=%s) SSO secret: %v", domainID, err)
+		logger.Errorf("Failed to decode domain (ID=%s) SSO secret: %v", &domain.ID, err)
 		return respInternalError(nil)
 	} else if secBytes == nil {
-		logger.Errorf("Domain (ID=%d) SSO secret not set", domainID)
+		logger.Errorf("Domain (ID=%d) SSO secret not set", &domain.ID)
 		return respInternalError(nil)
 	}
 

@@ -2,19 +2,23 @@ package restapi
 
 import (
 	"crypto/tls"
+	"encoding/xml"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"github.com/gorilla/feeds"
 	"github.com/justinas/alice"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/api/restapi/handlers"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
+	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_rss"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"io"
 	"net/http"
 )
 
@@ -38,6 +42,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.JSONProducer = runtime.JSONProducer()
 	api.GzipProducer = runtime.ByteStreamProducer()
 	api.HTMLProducer = runtime.TextProducer()
+	api.XMLProducer = XMLAndRSSProducer()
 
 	// Use a more strict email validator than the default, RFC5322-compliant one
 	var eml strfmt.Email
@@ -166,6 +171,12 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// Page
 	api.APIEmbedEmbedPageUpdateHandler = api_embed.EmbedPageUpdateHandlerFunc(handlers.EmbedPageUpdate)
 
+	//------------------------------------------------------------------------------------------------------------------
+	// RSS API
+	//------------------------------------------------------------------------------------------------------------------
+
+	api.APIRssRssCommentsHandler = api_rss.RssCommentsHandlerFunc(handlers.RssComments)
+
 	// Shutdown functions
 	api.PreServerShutdown = func() {}
 	api.ServerShutdown = svc.TheServiceManager.Shutdown
@@ -228,4 +239,17 @@ func configureServer(_ *http.Server, scheme, _ string) {
 
 	// Start background services
 	svc.TheServiceManager.Run()
+}
+
+// XMLAndRSSProducer returns a new XML producer, which detects RSS feed and handles it accordingly
+func XMLAndRSSProducer() runtime.Producer {
+	return runtime.ProducerFunc(func(writer io.Writer, data interface{}) error {
+		// Detect if it's an RSS feed
+		if feed, ok := data.(*feeds.Feed); ok {
+			return feed.WriteRss(writer)
+		}
+
+		// Fall back to the standard XML encoder otherwise
+		return xml.NewEncoder(writer).Encode(data)
+	})
 }

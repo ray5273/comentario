@@ -3893,6 +3893,39 @@ paths:
                 description: List of extensions, with a default configuration
 
   #---------------------------------------------------------------------------------------------------------------------
+  # RSS
+  #---------------------------------------------------------------------------------------------------------------------
+
+  /rss/comments:
+    get:
+      operationId: RssComments
+      summary: Get an RSS feed of comments for the given domain, page, commenter
+      tags:
+        - ApiRss
+      security: []
+      produces:
+        - application/rss+xml
+      parameters:
+        - $ref: "#/parameters/queryDomainId"
+        - in: query
+          name: pageId
+          required: false
+          description: Optional domain page ID to filter comments by
+          type: string
+          format: uuid
+        - in: query
+          name: userId
+          required: false
+          description: Optional user ID to filter comments by
+          type: string
+          format: uuid
+      responses:
+        200:
+          description: Comment RSS feed
+          schema:
+            type: object
+
+  #---------------------------------------------------------------------------------------------------------------------
   # Testing endpoints
   # These endpoints are only available during the test cycle and never in production
   #---------------------------------------------------------------------------------------------------------------------

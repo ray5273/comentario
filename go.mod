@@ -16,6 +16,7 @@ require (
 	github.com/go-openapi/validate v0.24.0
 	github.com/google/uuid v1.6.0
 	github.com/gorilla/csrf v1.7.2
+	github.com/gorilla/feeds v1.2.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-version v1.7.0

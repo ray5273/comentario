@@ -365,6 +365,22 @@ func domainConvertExtensions(exIn []*models.DomainExtension) ([]*data.DomainExte
 	return exOut, nil
 }
 
+// domainGet parses a string UUID and fetches the corresponding domain
+func domainGet(domainUUID strfmt.UUID) (*data.Domain, middleware.Responder) {
+	// Parse domain ID
+	if domainID, r := parseUUID(domainUUID); r != nil {
+		return nil, r
+
+		// Find the domain
+	} else if domain, err := svc.TheDomainService.FindByID(domainID); err != nil {
+		return nil, respServiceError(err)
+
+	} else {
+		// Succeeded
+		return domain, nil
+	}
+}
+
 // domainGetWithUser parses a string UUID and fetches the corresponding domain and its user, optionally verifying they
 // are allowed to manage the domain
 func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, checkCanManage bool) (*data.Domain, *data.DomainUser, middleware.Responder) {
