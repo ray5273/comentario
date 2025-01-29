@@ -75,10 +75,10 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 		items[i] = &feeds.Item{
 			Title:       fmt.Sprintf("%s | %s | Comentario", author, domain.Host),
 			Link:        &feeds.Link{Href: string(c.URL)},
-			Author:      &feeds.Author{Email: "noreply@comentario.app", Name: author},
+			Author:      &feeds.Author{Name: author}, // Only include name as Email is omitted anyway
 			Description: c.HTML,
 			Id:          c.ID.String(),
-			IsPermaLink: "",
+			IsPermaLink: "false",
 			Updated:     time.Time(c.EditedTime),
 			Created:     time.Time(c.CreatedTime),
 		}
