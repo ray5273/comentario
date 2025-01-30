@@ -3908,15 +3908,21 @@ paths:
       parameters:
         - $ref: "#/parameters/queryDomainId"
         - in: query
-          name: pageId
+          name: page
           required: false
           description: Optional domain page ID to filter comments by
           type: string
           format: uuid
         - in: query
-          name: userId
+          name: author
           required: false
-          description: Optional user ID to filter comments by
+          description: Optional user ID who authored the comments, to filter comments by
+          type: string
+          format: uuid
+        - in: query
+          name: replyToUser
+          required: false
+          description: Optional user ID whose comments are replied to, to filter comments by
           type: string
           format: uuid
       responses:
