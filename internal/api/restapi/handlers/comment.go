@@ -10,6 +10,8 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"maps"
+	"slices"
 	"time"
 )
 
@@ -153,12 +155,13 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	}
 
 	// Fetch comments the user has access to
-	cs, crs, err := svc.TheCommentService.ListWithCommentersByDomainPage(
+	cs, crMap, err := svc.TheCommentService.ListWithCommenters(
 		user,
 		domainUser,
 		domainID,
 		pageID,
 		userID,
+		nil,
 		swag.BoolValue(params.Approved),
 		swag.BoolValue(params.Pending),
 		swag.BoolValue(params.Rejected),
@@ -173,7 +176,10 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	}
 
 	// Succeeded
-	return api_general.NewCommentListOK().WithPayload(&api_general.CommentListOKBody{Commenters: crs, Comments: cs})
+	return api_general.NewCommentListOK().WithPayload(&api_general.CommentListOKBody{
+		Commenters: slices.Collect(maps.Values(crMap)),
+		Comments:   cs,
+	})
 }
 
 func CommentModerate(params api_general.CommentModerateParams, user *data.User) middleware.Responder {

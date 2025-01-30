@@ -3,9 +3,8 @@ package handlers
 import (
 	"fmt"
 	"github.com/go-openapi/runtime/middleware"
-	"github.com/go-openapi/strfmt"
+	"github.com/google/uuid"
 	"github.com/gorilla/feeds"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_rss"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -20,7 +19,7 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 	}
 
 	// Extract page ID
-	pageID, r := parseUUIDPtr(params.PageID)
+	pageID, r := parseUUIDPtr(params.Page)
 	if r != nil {
 		return r
 	}
@@ -34,16 +33,22 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 		}
 	}
 
-	// Extract user ID
-	userID, r := parseUUIDPtr(params.UserID)
+	// Extract author user ID
+	authorUserID, r := parseUUIDPtr(params.Author)
+	if r != nil {
+		return r
+	}
+
+	// Extract reply-to user ID
+	replyToUserID, r := parseUUIDPtr(params.ReplyToUser)
 	if r != nil {
 		return r
 	}
 
 	// Fetch the comments
-	comments, commenters, err := svc.TheCommentService.ListWithCommentersByDomainPage(
-		data.AnonymousUser, nil, &domain.ID, pageID, userID, true, false, false, false, false, "", "created",
-		data.SortDesc, 0)
+	comments, commenterMap, err := svc.TheCommentService.ListWithCommenters(
+		data.AnonymousUser, nil, &domain.ID, pageID, authorUserID, replyToUserID, true, false, false, false, false, "",
+		"created", data.SortDesc, 0)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -54,12 +59,6 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 		feedURL += page.Path
 	}
 
-	// Convert commenters into a map
-	commenterMap := map[strfmt.UUID]*models.Commenter{}
-	for _, cr := range commenters {
-		commenterMap[cr.ID] = cr
-	}
-
 	// Convert the comments into RSS items
 	items := make([]*feeds.Item, len(comments))
 	for i, c := range comments {
@@ -67,8 +66,10 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 		author := data.AnonymousUser.Name
 		if c.AuthorName != "" {
 			author = c.AuthorName
-		} else if cr, ok := commenterMap[c.UserCreated]; ok {
-			author = cr.Name
+		} else if aID, err := uuid.Parse(string(c.UserCreated)); err == nil {
+			if cr, ok := commenterMap[aID]; ok {
+				author = cr.Name
+			}
 		}
 
 		// Convert the comment

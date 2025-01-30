@@ -42,13 +42,14 @@ type CommentService interface {
 	// ListByDomain returns a list of comments for the given domain. No comment property filtering is applied, so
 	// minimum access privileges are domain moderator
 	ListByDomain(domainID *uuid.UUID) ([]*models.Comment, error)
-	// ListWithCommentersByDomainPage returns a list of comments and related commenters for the given domain and,
-	// optionally, page.
+	// ListWithCommenters returns a list of comments and related commenters for the given domain and, optionally, page
+	// and/or user.
 	//   - curUser is the current authenticated/anonymous user.
 	//   - curDomainUser is the current domain user (can be nil).
 	//   - domainID is the mandatory domain ID.
 	//   - pageID is an optional page ID to filter the result by.
-	//   - userID is an optional user ID to filter the result by.
+	//   - authorUserID is an optional comment author user ID to filter the result by.
+	//   - replyToUserID is an optional user ID, whose comments are replied to, to filter the result by.
 	//   - inclApproved indicates whether to include approved comments.
 	//   - inclPending indicates whether to include comments pending moderation.
 	//   - inclRejected indicates whether to include rejected comments.
@@ -60,10 +61,10 @@ type CommentService interface {
 	//   - sortBy is an optional property name to sort the result by. If empty, sorts by the path.
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
-	ListWithCommentersByDomainPage(
-		curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,
+	ListWithCommenters(
+		curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, authorUserID, replyToUserID *uuid.UUID,
 		inclApproved, inclPending, inclRejected, inclDeleted, removeOrphans bool, filter, sortBy string, dir data.SortDirection,
-		pageIndex int) ([]*models.Comment, []*models.Commenter, error)
+		pageIndex int) ([]*models.Comment, map[uuid.UUID]*models.Commenter, error)
 	// MarkDeleted marks a comment with the given ID deleted by the given user
 	MarkDeleted(commentID, userID *uuid.UUID) error
 	// MarkDeletedByUser deletes all comments by the specified user, returning the affected comment count
@@ -242,13 +243,14 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 	return comments, nil
 }
 
-func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, curDomainUser *data.DomainUser,
-	domainID, pageID, userID *uuid.UUID, inclApproved, inclPending, inclRejected, inclDeleted, removeOrphans bool,
+func (svc *commentService) ListWithCommenters(curUser *data.User, curDomainUser *data.DomainUser,
+	domainID, pageID, authorUserID, replyToUserID *uuid.UUID,
+	inclApproved, inclPending, inclRejected, inclDeleted, removeOrphans bool,
 	filter, sortBy string, dir data.SortDirection, pageIndex int,
-) ([]*models.Comment, []*models.Commenter, error) {
+) ([]*models.Comment, map[uuid.UUID]*models.Commenter, error) {
 	logger.Debugf(
-		"commentService.ListWithCommentersByDomainPage(%s, %#v, %s, %s, %s, %v, %v, %v, %v, %v, %q, '%s', %s, %d)",
-		&curUser.ID, curDomainUser, domainID, pageID, userID, inclApproved, inclPending, inclRejected, inclDeleted,
+		"commentService.ListWithCommenters(%s, %#v, %s, %s, %s, %s, %v, %v, %v, %v, %v, %q, '%s', %s, %d)",
+		&curUser.ID, curDomainUser, domainID, pageID, authorUserID, replyToUserID, inclApproved, inclPending, inclRejected, inclDeleted,
 		removeOrphans, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
@@ -296,8 +298,16 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 	}
 
 	// If there's a user ID specified, include only comments by that user
-	if userID != nil {
-		q = q.Where(goqu.Ex{"c.user_created": userID})
+	if authorUserID != nil {
+		q = q.Where(goqu.Ex{"c.user_created": authorUserID})
+	}
+
+	// If there's a reply-to-user ID specified, include only replies to comments by that user, by inner-joining on the
+	// parent comment authored by the user
+	if replyToUserID != nil {
+		q = q.Join(
+			goqu.T("cm_comments").As("pc"),
+			goqu.On(goqu.Ex{"pc.id": goqu.I("c.parent_id"), "pc.user_created": replyToUserID}))
 	}
 
 	// Add status filter
@@ -373,7 +383,7 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		DomainHTTPS     bool           `db:"d_is_https"`
 	}
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("commentService.ListWithCommentersByDomainPage: ScanStructs() failed: %v", err)
+		logger.Errorf("commentService.ListWithCommenters: ScanStructs() failed: %v", err)
 		return nil, nil, translateDBErrors(err)
 	}
 
@@ -463,14 +473,8 @@ func (svc *commentService) ListWithCommentersByDomainPage(curUser *data.User, cu
 		}
 	}
 
-	// Convert commenter map into a slice
-	var commenters []*models.Commenter
-	for _, cr := range commenterMap {
-		commenters = append(commenters, cr)
-	}
-
 	// Succeeded
-	return comments, commenters, nil
+	return comments, commenterMap, nil
 }
 
 func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {

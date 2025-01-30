@@ -13,6 +13,8 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
+	"maps"
+	"slices"
 	"time"
 )
 
@@ -167,11 +169,12 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	}
 
 	// Fetch comments and commenters
-	comments, commenters, err := svc.TheCommentService.ListWithCommentersByDomainPage(
+	comments, commenterMap, err := svc.TheCommentService.ListWithCommenters(
 		user,
 		domainUser,
 		&domain.ID,
 		&page.ID,
+		nil,
 		nil,
 		true,
 		true,
@@ -192,7 +195,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 
 	// Succeeded
 	return api_embed.NewEmbedCommentListOK().WithPayload(&api_embed.EmbedCommentListOKBody{
-		Commenters: commenters,
+		Commenters: slices.Collect(maps.Values(commenterMap)),
 		Comments:   comments,
 		PageInfo:   pageInfo,
 	})
