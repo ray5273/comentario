@@ -25,15 +25,15 @@ data:
     -- Cleanup all transient data
     delete from cm_auth_sessions;
     delete from cm_tokens;
-    delete from cm_user_sessions;
+    delete from cm_user_sessions where ts_created < current_timestamp - interval '7 days';
 
     -- Cleanup other irrelevant data
-    delete from cm_comment_votes;
+    delete from cm_comment_votes where ts_voted < current_timestamp - interval '7 days';
     delete from cm_domain_attrs;
     delete from cm_user_attrs;
 
     -- Cleanup obsolete stats
-    delete from cm_domain_page_views where ts_created < now() - interval '30 days';
+    delete from cm_domain_page_views where ts_created < current_timestamp - interval '30 days';
 
     -- Reset the dynamic config to its defaults
     delete from cm_configuration;
