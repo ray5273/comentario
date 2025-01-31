@@ -757,6 +757,7 @@ definitions:
       - commentEditingAuthor
       - commentEditingModerator
       - enableCommentVoting
+      - enableRss
       - showDeletedComments
       - maxCommentLength
       - localSignupEnabled
@@ -870,6 +871,11 @@ definitions:
       enableCommentVoting:
         type: boolean
         description: Whether voting on comments is enabled
+        x-isnullable: false
+        x-omitempty: false
+      enableRss:
+        type: boolean
+        description: Whether comment RSS feed is enabled
         x-isnullable: false
         x-omitempty: false
       showDeletedComments:

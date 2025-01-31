@@ -10,6 +10,7 @@ values
     ('domain.defaults.comments.editing.author',     'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.comments.editing.moderator',  'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.comments.enableVoting',       'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.comments.rss.enabled',        'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.comments.showDeleted',        'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.comments.text.maxLength',     '1024',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.markdown.images.enabled',     'true',  '0001-01-01 00:00:00.000000'),
@@ -158,7 +159,8 @@ values
     ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.images.enabled',     'true', '2024-04-01 10:11:46.816290', '00000000-0000-0000-0000-000000000001'),
     ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.author',    'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
     ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.enableVoting',       'true', '2024-04-01 10:11:46.816293', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.text.maxLength',     '4096', '2024-04-01 10:11:46.816294', '00000000-0000-0000-0000-000000000001');
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.rss.enabled',        'true', '2024-04-01 10:11:46.816294', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.text.maxLength',     '4096', '2024-04-01 10:11:46.816295', '00000000-0000-0000-0000-000000000001');
 
 insert into cm_domains_idps (domain_id, fed_idp_id)
 values

@@ -36,6 +36,7 @@ context('Domain Edit page', () => {
         cy.get('@domainEdit').find('#comments_editing_author')    .as('cfgCommentsEditingAuthor');
         cy.get('@domainEdit').find('#comments_editing_moderator') .as('cfgCommentsEditingModerator');
         cy.get('@domainEdit').find('#comments_enableVoting')      .as('cfgCommentsEnableVoting');
+        cy.get('@domainEdit').find('#comments_rss_enabled')       .as('cfgCommentsEnableRss');
         cy.get('@domainEdit').find('#comments_showDeleted')       .as('cfgCommentsShowDeleted');
         cy.get('@domainEdit').find('#comments_text_maxLength')    .as('cfgCommentsTextMaxLength');
         // Config - Markdown
@@ -263,6 +264,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingAuthor')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsEditingModerator') .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsEnableVoting')     .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEnableRss')        .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsShowDeleted')      .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsTextMaxLength')    .should('be.visible').and('be.enabled').and('have.value', '1024');
                 cy.get('@cfgMarkdownImagesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
@@ -367,6 +369,7 @@ context('Domain Edit page', () => {
                         ['Allow comment authors to edit comments',              '✔'],
                         ['Allow moderators to edit comments',                   '✔'],
                         ['Enable voting on comments',                           '✔'],
+                        ['Enable comment RSS feeds',                            '✔'],
                         ['Show deleted comments',                               '✔'],
                         ['Maximum comment text length',                         '1,024'],
                     ['Markdown'],
@@ -414,6 +417,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingAuthor')    .clickLabel();
                 cy.get('@cfgCommentsEditingModerator') .clickLabel();
                 cy.get('@cfgCommentsEnableVoting')     .clickLabel();
+                cy.get('@cfgCommentsEnableRss')        .clickLabel();
                 cy.get('@cfgCommentsShowDeleted')      .clickLabel();
                 cy.get('@cfgCommentsTextMaxLength')    .setValue('8987');
                 cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
@@ -490,6 +494,7 @@ context('Domain Edit page', () => {
                         ['Allow comment authors to edit comments',              ''],
                         ['Allow moderators to edit comments',                   ''],
                         ['Enable voting on comments',                           ''],
+                        ['Enable comment RSS feeds',                            ''],
                         ['Show deleted comments',                               ''],
                         ['Maximum comment text length',                         '8,987'],
                     ['Markdown'],
@@ -578,6 +583,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingAuthor')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsEditingModerator') .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsEnableVoting')     .should('be.visible').and('be.enabled').and('be.checked');
+                cy.get('@cfgCommentsEnableRss')        .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsShowDeleted')      .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgCommentsTextMaxLength')    .should('be.visible').and('be.enabled').and('have.value', '4096');
                 cy.get('@cfgMarkdownImagesEnabled')    .should('be.visible').and('be.enabled').and('be.checked');
@@ -652,6 +658,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingAuthor')    .clickLabel();
                 cy.get('@cfgCommentsEditingModerator') .clickLabel();
                 cy.get('@cfgCommentsEnableVoting')     .clickLabel();
+                cy.get('@cfgCommentsEnableRss')        .clickLabel();
                 cy.get('@cfgCommentsShowDeleted')      .clickLabel();
                 cy.get('@cfgCommentsTextMaxLength')    .setValue('123456');
                 cy.get('@cfgMarkdownImagesEnabled')    .clickLabel();
@@ -727,6 +734,7 @@ context('Domain Edit page', () => {
                         ['Allow comment authors to edit comments',              ''],
                         ['Allow moderators to edit comments',                   ''],
                         ['Enable voting on comments',                           ''],
+                        ['Enable comment RSS feeds',                            ''],
                         ['Show deleted comments',                               ''],
                         ['Maximum comment text length',                         '123,456'],
                     ['Markdown'],
@@ -770,6 +778,7 @@ context('Domain Edit page', () => {
                 cy.get('@cfgCommentsEditingAuthor')    .should('not.be.checked');
                 cy.get('@cfgCommentsEditingModerator') .should('not.be.checked');
                 cy.get('@cfgCommentsEnableVoting')     .should('not.be.checked');
+                cy.get('@cfgCommentsEnableRss')        .should('not.be.checked');
                 cy.get('@cfgCommentsShowDeleted')      .should('not.be.checked');
                 cy.get('@cfgCommentsTextMaxLength')    .should('have.value', '123456');
                 cy.get('@cfgMarkdownImagesEnabled')    .should('not.be.checked');

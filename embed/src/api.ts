@@ -107,7 +107,7 @@ export class ApiService {
      * @param size Size of the requested avatar.
      */
     getAvatarUrl(userId: string, size: 'S' | 'M' | 'L'): string {
-        return Utils.joinUrl(this.baseUrl, 'users', userId, 'avatar') + `?size=${size}`;
+        return Utils.joinUrl(this.baseUrl, 'users', userId, 'avatar') + '?' + new URLSearchParams({size}).toString();
     }
 
     /**
@@ -117,7 +117,14 @@ export class ApiService {
      * @param token Anonymous token to bind to the user session.
      */
     getOAuthInitUrl(idp: string, host: string, token: string): string {
-        return Utils.joinUrl(this.baseUrl, 'oauth', idp) + `?host=${encodeURIComponent(host)}&token=${token}`;
+        return Utils.joinUrl(this.baseUrl, 'oauth', idp) + '?' + new URLSearchParams({host, token}).toString();
+    }
+
+    /**
+     * Return the base URL for the comment RSS feed.
+     */
+    getCommentRssUrl(): string {
+        return Utils.joinUrl(this.baseUrl, 'rss/comments');
     }
 
     /**

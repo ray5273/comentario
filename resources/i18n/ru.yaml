@@ -46,6 +46,7 @@
 - {id: btnTable,                    translation: 'Таблица'}
 - {id: btnUnlock,                   translation: 'Разблокировать'}
 - {id: clickButtonBelow,            translation: 'Чтобы сделать это, кликните по кнопке ниже.'}
+- {id: commentCount,                translation: 'комментариев'}
 - {id: commentIsApproved,           translation: 'Этот комментарий утверждён модератором.'}
 - {id: commentIsPending,            translation: 'Этот комментарий ожидает утверждения модератором.'}
 - {id: commentIsRejected,           translation: 'Этот комментарий отклонён модератором, так как содержит спам или иной недопустимый контент.'}
@@ -61,6 +62,7 @@
 - {id: confirmEmailUpdateRequest,   translation: 'Вы только что запросили изменение вашего емэйла в Comentario на данный адрес.'}
 - {id: confirmYourEmail,            translation: 'Подтверждение емэйла'}
 - {id: confirmYourEmailUpdate,      translation: 'Подтверждение смены емэйла'}
+- {id: dlgTitleCommentRssFeed,      translation: 'RSS-лента комментариев'}
 - {id: dlgTitleConfirm,             translation: 'Подтверждение'}
 - {id: dlgTitleCreateAccount,       translation: 'Создать аккаунт'}
 - {id: dlgTitleLogIn,               translation: 'Войти'}
@@ -72,6 +74,8 @@
 - {id: errorUnknownHost,            translation: 'Этот домен не зарегистрирован в Comentario'}
 - {id: fieldComStatusNotifications, translation: 'Уведомления об изменении статуса комментария'}
 - {id: fieldModNotifications,       translation: 'Уведомления о модерации'}
+- {id: fieldOnlyThisPage,           translation: 'Только эта страница'}
+- {id: fieldOnlyReplies,            translation: 'Только ответы на ваши комментарии'}
 - {id: fieldPassword,               translation: 'Пароль'}
 - {id: fieldRealName,               translation: 'Настоящее имя'}
 - {id: fieldReplyNotifications,     translation: 'Уведомления об ответах'}
@@ -80,6 +84,7 @@
 - {id: forgotPasswordLink,          translation: 'Забыли пароль?'}
 - {id: helloName,                   translation: 'Привет, {{ index . 0 }}!'}
 - {id: ignoreEmail,                 translation: 'Если вы этого не делали, пожалуйста, игнорируйте это письмо.'}
+- {id: labelUseRssLink,             translation: 'Используйте эту ссылку для своего RSS-ридера'}
 - {id: loginViaLocalAuth,           translation: 'Вход с емэйлом и паролем'}
 - {id: loginWith,                   translation: 'Вход через'}
 - {id: newComment,                  translation: 'Новый комментарий'}

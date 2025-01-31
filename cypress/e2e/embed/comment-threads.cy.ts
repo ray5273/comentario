@@ -1,4 +1,4 @@
-import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Comment threads', () => {
@@ -94,7 +94,7 @@ context('Comment threads', () => {
             cy.get('@mainArea').find('.comentario-main-area-placeholder').should('not.exist');
 
             // Verify the regular UI elements
-            EmbedUtils.makeAliases({anonymous: true});
+            EmbedUtils.makeAliases({anonymous: true, numComments: 1});
         });
     });
 
@@ -113,10 +113,11 @@ context('Comment threads', () => {
 
             [
                 {
-                    path:        TEST_PATHS.home,
-                    heading:     'Comentario test',
-                    subheading:  true,
-                    verifyLogin: true,
+                    path:          TEST_PATHS.home,
+                    heading:       'Comentario test',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    layoutOptions: {numComments: 16},
                     comments:
                         // language=yaml
                         `
@@ -230,10 +231,11 @@ context('Comment threads', () => {
                         `,
                 },
                 {
-                    path:        TEST_PATHS.comments,
-                    heading:     'Comments',
-                    subheading:  true,
-                    verifyLogin: true,
+                    path:          TEST_PATHS.comments,
+                    heading:       'Comments',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    layoutOptions: {numComments: 1},
                     comments:
                         // language=yaml
                         `
@@ -251,6 +253,7 @@ context('Comment threads', () => {
                     subheading:    true,
                     verifyLogin:   false, // Two Comentario instances screw the user name check
                     rootSelectors: ['#com-1', '#com-2'],
+                    layoutOptions: {numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -276,6 +279,7 @@ context('Comment threads', () => {
                     verifyLogin:   false, // No Comentario until it's dynamically inserted
                     postLogin:     insertDynamic,
                     rootSelectors: ['#com-1', '#com-2', '#com-3'],
+                    layoutOptions: {numComments: userTest.isModerator ? 2 : 1},
                     comments:
                         // This page contains a pending comment so its appearance differs for a moderator
                         // language=yaml
@@ -309,7 +313,7 @@ context('Comment threads', () => {
                     heading:       'No comment',
                     subheading:    true,
                     verifyLogin:   true,
-                    layoutOptions: {hasSortBar: false},
+                    layoutOptions: {hasSortButtons: false},
                     comments:      '',
                 },
                 {
@@ -317,14 +321,15 @@ context('Comment threads', () => {
                     heading:       'Read-only',
                     subheading:    true,
                     verifyLogin:   true,
-                    layoutOptions: {readonly: true, hasSortBar: false, notice: 'This thread is locked. You cannot add new comments.'},
+                    layoutOptions: {readonly: true, hasSortButtons: false, notice: 'This thread is locked. You cannot add new comments.'},
                     comments:      '',
                 },
                 {
-                    path:        TEST_PATHS.darkMode,
-                    heading:     'Dark mode',
-                    subheading:  true,
-                    verifyLogin: true,
+                    path:          TEST_PATHS.darkMode,
+                    heading:       'Dark mode',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    layoutOptions: {numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -344,11 +349,12 @@ context('Comment threads', () => {
                         `,
                 },
                 {
-                    path:        TEST_PATHS.attr.autoInit,
-                    heading:     'Attribute: auto-init=false',
-                    subheading:  true,
-                    verifyLogin: false, // No Comentario until it's initialised
-                    postLogin:   initComentario,
+                    path:          TEST_PATHS.attr.autoInit,
+                    heading:       'Attribute: auto-init=false',
+                    subheading:    true,
+                    verifyLogin:   false, // No Comentario until it's initialised
+                    postLogin:     initComentario,
+                    layoutOptions: {numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -372,7 +378,7 @@ context('Comment threads', () => {
                     heading:       'Attribute: no-fonts=true',
                     subheading:    true,
                     verifyLogin:   true,
-                    layoutOptions: {hasRootFont: false},
+                    layoutOptions: {hasRootFont: false, numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -392,11 +398,12 @@ context('Comment threads', () => {
                         `,
                 },
                 {
-                    path:        TEST_PATHS.attr.cssOverride,
-                    heading:     'Attribute: css-override',
-                    subheading:  true,
-                    verifyLogin: true,
-                    postLogin:   checkCssOverride,
+                    path:          TEST_PATHS.attr.cssOverride,
+                    heading:       'Attribute: css-override',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    postLogin:     checkCssOverride,
+                    layoutOptions: {numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -416,11 +423,12 @@ context('Comment threads', () => {
                         `,
                 },
                 {
-                    path:        TEST_PATHS.attr.cssOverrideFalse,
-                    heading:     'Attribute: css-override=false',
-                    subheading:  true,
-                    verifyLogin: true,
-                    postLogin:   checkNoCssOverride,
+                    path:          TEST_PATHS.attr.cssOverrideFalse,
+                    heading:       'Attribute: css-override=false',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    postLogin:     checkNoCssOverride,
+                    layoutOptions: {numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -440,10 +448,11 @@ context('Comment threads', () => {
                         `,
                 },
                 {
-                    path:        TEST_PATHS.attr.pageId,
-                    heading:     'Attribute: page-id',
-                    subheading:  true,
-                    verifyLogin: true,
+                    path:          TEST_PATHS.attr.pageId,
+                    heading:       'Attribute: page-id',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    layoutOptions: {numComments: 2},
                     comments:
                         // language=yaml
                         `
@@ -463,11 +472,12 @@ context('Comment threads', () => {
                         `,
                 },
                 {
-                    path:        TEST_PATHS.attr.maxLevel,
-                    heading:     'Attribute: max-level=2',
-                    subheading:  true,
-                    verifyLogin: true,
-                    postLogin:   checkUnnesting,
+                    path:          TEST_PATHS.attr.maxLevel,
+                    heading:       'Attribute: max-level=2',
+                    subheading:    true,
+                    verifyLogin:   true,
+                    postLogin:     checkUnnesting,
+                    layoutOptions: {numComments: 6},
                     comments:
                         // language=yaml
                         `
@@ -557,11 +567,23 @@ context('Comment threads', () => {
         // Go to the comments page and verify the layout
         cy.testSiteVisit(TEST_PATHS.comments);
         EmbedUtils.makeAliases({
-            anonymous: true,
-            login:     false,
-            readonly:  true,
-            notice:    'This domain has no authentication method available. You cannot add new comments.',
+            anonymous:   true,
+            login:       false,
+            readonly:    true,
+            notice:      'This domain has no authentication method available. You cannot add new comments.',
+            numComments: 1,
         });
+    });
+
+    it('hides RSS button when RSS is disabled', () => {
+        cy.backendReset();
+
+        // Disable RSS
+        cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.enableRss]: false});
+
+        // Check a comment page: no RSS button
+        cy.testSiteVisit(TEST_PATHS.comments);
+        EmbedUtils.makeAliases({anonymous: true, hasRss: false, numComments: 1});
     });
 
     context('non-interactive SSO', () => {

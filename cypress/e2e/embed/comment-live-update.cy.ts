@@ -1,4 +1,5 @@
 import { COOKIES, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('Live comment update', () => {
 
@@ -9,6 +10,7 @@ context('Live comment update', () => {
 
     it('updates comments for anonymous user', () => {
         cy.testSiteVisit(pagePath);
+        EmbedUtils.makeAliases({anonymous: true, numComments: 1});
         cy.commentTree('html', 'author', 'score', 'sticky')
             .should('yamlMatch',
                 // language=yaml
@@ -22,6 +24,7 @@ context('Live comment update', () => {
         // Add a comment via API and expect a new comment to arrive
         cy.testSiteLoginViaApi(USERS.ace);
         cy.commentAddViaApi(host, pagePath, null, 'New comment');
+        EmbedUtils.checkNumComments(2);
         cy.commentTree('html', 'author', 'score', 'sticky')
             .should('yamlMatch',
                 // language=yaml
@@ -39,6 +42,7 @@ context('Live comment update', () => {
         // Now add a child comment
         cy.testSiteLoginViaApi(USERS.king);
         cy.commentAddViaApi(host, pagePath, '0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'Another comment');
+        EmbedUtils.checkNumComments(3);
         cy.commentTree('html', 'author', 'score', 'sticky')
             .should('yamlMatch',
                 // language=yaml
@@ -61,6 +65,7 @@ context('Live comment update', () => {
 
     it('updates comments for authenticated user', () => {
         cy.testSiteLoginViaApi(USERS.ace, pagePath);
+        EmbedUtils.makeAliases({numComments: 1});
         cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -75,6 +80,7 @@ context('Live comment update', () => {
         // Add a child comment
         cy.testSiteLoginViaApi(USERS.king);
         cy.commentAddViaApi(host, pagePath, '0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'Foo comment');
+        EmbedUtils.checkNumComments(2);
         cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -95,6 +101,7 @@ context('Live comment update', () => {
         // Add an anonymous comment
         cy.clearCookie(COOKIES.embedCommenterSession);
         cy.commentAddViaApi(host, pagePath, null, 'Bar comment').its('body.comment.id').as('anonCommentId');
+        EmbedUtils.checkNumComments(3);
         cy.commentTree('html', 'author', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -120,6 +127,7 @@ context('Live comment update', () => {
         // Delete the first comment
         cy.testSiteLoginViaApi(USERS.king);
         cy.commentDeleteViaApi('0b5e258b-ecc6-4a9c-9f31-f775d88a258b');
+        EmbedUtils.checkNumComments(3);
         cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -147,6 +155,7 @@ context('Live comment update', () => {
 
         // Approve the last added comment
         cy.get<string>('@anonCommentId').then(id => cy.commentModerateViaApi(id, true));
+        EmbedUtils.checkNumComments(3);
         cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -174,6 +183,7 @@ context('Live comment update', () => {
 
         // Vote for the last comment
         cy.get<string>('@anonCommentId').then(id => cy.commentVoteViaApi(id, -1));
+        EmbedUtils.checkNumComments(3);
         cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -201,6 +211,7 @@ context('Live comment update', () => {
 
         // Sticky the last comment
         cy.get<string>('@anonCommentId').then(id => cy.commentStickyViaApi(id, true));
+        EmbedUtils.checkNumComments(3);
         cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending')
             .should('yamlMatch',
                 // language=yaml
@@ -230,6 +241,7 @@ context('Live comment update', () => {
     it('doesn\'t update comments when disabled', () => {
         // Navigate to the page that has live update disabled
         cy.testSiteLoginViaApi(USERS.ace, TEST_PATHS.attr.noLiveUpdate);
+        EmbedUtils.makeAliases({hasSortButtons: false, numComments: 0});
         cy.commentTree().should('be.empty');
 
         // Submit a comment via API
@@ -237,10 +249,12 @@ context('Live comment update', () => {
 
         // Wait 2 seconds and there's still no comment
         cy.wait(2000);
+        EmbedUtils.checkNumComments(0);
         cy.commentTree().should('be.empty');
 
         // Reload and the comment is there
         cy.reload();
+        EmbedUtils.makeAliases({numComments: 1});
         cy.commentTree('html', 'author', 'subtitle')
             .should('yamlMatch',
                 // language=yaml

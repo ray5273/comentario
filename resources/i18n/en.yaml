@@ -49,6 +49,7 @@
 - {id: btnTable,                    translation: 'Table'}
 - {id: btnUnlock,                   translation: 'Unlock'}
 - {id: clickButtonBelow,            translation: 'To do that, please click the button below.'}
+- {id: commentCount,                translation: 'comment(s)'}
 - {id: commentIsApproved,           translation: 'This comment has been approved by a moderator.'}
 - {id: commentIsPending,            translation: 'This comment is awaiting moderator approval.'}
 - {id: commentIsRejected,           translation: 'This comment was rejected by a moderator because it''s spam or inappropriate.'}
@@ -64,6 +65,7 @@
 - {id: confirmEmailUpdateRequest,   translation: 'You recently requested updating your Comentario email to this address.'}
 - {id: confirmYourEmail,            translation: 'Confirm Your Email'}
 - {id: confirmYourEmailUpdate,      translation: 'Confirm Updating Your Email'}
+- {id: dlgTitleCommentRssFeed,      translation: 'Comment RSS feed'}
 - {id: dlgTitleConfirm,             translation: 'Confirm'}
 - {id: dlgTitleCreateAccount,       translation: 'Create an account'}
 - {id: dlgTitleLogIn,               translation: 'Log in'}
@@ -75,6 +77,8 @@
 - {id: errorUnknownHost,            translation: 'This domain is not registered in Comentario'}
 - {id: fieldComStatusNotifications, translation: 'Comment status notifications'}
 - {id: fieldModNotifications,       translation: 'Moderator notifications'}
+- {id: fieldOnlyThisPage,           translation: 'Only this page'}
+- {id: fieldOnlyReplies,            translation: 'Only replies to your comments'}
 - {id: fieldPassword,               translation: 'Password'}
 - {id: fieldRealName,               translation: 'Real name'}
 - {id: fieldReplyNotifications,     translation: 'Reply notifications'}
@@ -83,6 +87,7 @@
 - {id: forgotPasswordLink,          translation: 'Forgot your password?'}
 - {id: helloName,                   translation: 'Hello {{ index . 0 }}!'}
 - {id: ignoreEmail,                 translation: 'If you didn''t do this, please ignore this email.'}
+- {id: labelUseRssLink,             translation: 'Use this link for your RSS reader'}
 - {id: loginViaLocalAuth,           translation: 'Log in with your email and password'}
 - {id: loginWith,                   translation: 'Log in with'}
 - {id: newComment,                  translation: 'New comment'}

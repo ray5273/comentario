@@ -20,6 +20,7 @@ export class DynConfigItemNamePipe implements PipeTransform {
         [InstanceConfigItemKey.domainDefaultsCommentEditingAuthor]:     $localize`Allow comment authors to edit comments`,
         [InstanceConfigItemKey.domainDefaultsCommentEditingModerator]:  $localize`Allow moderators to edit comments`,
         [InstanceConfigItemKey.domainDefaultsEnableCommentVoting]:      $localize`Enable voting on comments`,
+        [InstanceConfigItemKey.domainDefaultsEnableRss]:                $localize`Enable comment RSS feeds`,
         [InstanceConfigItemKey.domainDefaultsShowDeletedComments]:      $localize`Show deleted comments`,
         [InstanceConfigItemKey.domainDefaultsMaxCommentLength]:         $localize`Maximum comment text length`,
         [InstanceConfigItemKey.domainDefaultsMarkdownImagesEnabled]:    $localize`Enable images in comments`,

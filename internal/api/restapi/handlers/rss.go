@@ -5,6 +5,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/google/uuid"
 	"github.com/gorilla/feeds"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_rss"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
@@ -16,6 +17,11 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 	domain, r := domainGet(params.Domain)
 	if r != nil {
 		return r
+	}
+
+	// Verify RSS is enabled for this domain
+	if !svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyRSSEnabled) {
+		return respForbidden(exmodels.ErrorFeatureDisabled.WithDetails("RSS"))
 	}
 
 	// Extract page ID

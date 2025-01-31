@@ -1,33 +1,17 @@
-import {
-    ANONYMOUS_ID,
-    Comment,
-    Commenter,
-    CommenterMap,
-    CommentSort,
-    ErrorMessage, LoginChoice, LoginData,
-    Message,
-    OkMessage,
-    PageInfo,
-    Principal,
-    SignupData,
-    SsoLoginResponse,
-    StringBooleanMap,
-    User,
-    UserSettings,
-    UUID,
-} from './models';
+import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, CommentSort, ErrorMessage, LoginChoice, LoginData, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
 import { ApiCommentListResponse, ApiService } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { CommentCard, CommentParentMap, CommentRenderingContext } from './comment-card';
 import { CommentEditor } from './comment-editor';
 import { ProfileBar } from './profile-bar';
-import { SortBar } from './sort-bar';
+import { ThreadToolbar } from './thread-toolbar';
 import { Utils } from './utils';
 import { LocalConfig } from './config';
 import { WebSocketClient, WebSocketMessage } from './ws-client';
 import { I18nService } from './i18n';
 import { PopupBlockedDialog } from './popup-blocked-dialog';
+import { RssDialog } from './rss-dialog';
 
 export class Comentario extends HTMLElement {
 
@@ -66,8 +50,8 @@ export class Comentario extends HTMLElement {
     /** User profile toolbar. */
     private profileBar?: ProfileBar;
 
-    /** Comment sort toolbar. */
-    private sortBar?: SortBar;
+    /** Thread toolbar. */
+    private threadToolbar?: ThreadToolbar;
 
     /** Main area panel. */
     private mainArea?: Wrap<HTMLDivElement>;
@@ -361,12 +345,13 @@ export class Comentario extends HTMLElement {
      * (Re)render all comments recursively, adding them to the comments area.
      */
     private renderComments() {
+        // Clean up and repopulate the comment area
         this.commentsArea!
             .html('')
             .append(...CommentCard.renderChildComments(this.makeCommentRenderingContext(), 1));
 
-        // Show or hide the sort bar on comment list change
-        this.updateSortBar();
+        // Update the thread toolbar on comment list change
+        this.updateThreadToolbar();
     }
 
     /**
@@ -383,11 +368,13 @@ export class Comentario extends HTMLElement {
     }
 
     /**
-     * Update the sort bar visibility based on the presence of comments.
+     * Update the thread toolbar visibility and comment number.
      * @private
      */
-    private updateSortBar() {
-        this.sortBar?.setClasses(!this.commentsArea?.hasChildren, 'hidden');
+    private updateThreadToolbar() {
+        if (this.threadToolbar) {
+            this.threadToolbar.commentCount = this.parentMap.commentCount;
+        }
     }
 
     /**
@@ -489,11 +476,13 @@ export class Comentario extends HTMLElement {
         }
 
         this.mainArea!.append(
-            // Sort bar
-            this.sortBar = new SortBar(
+            // Thread toolbar
+            this.threadToolbar = new ThreadToolbar(
                 this.i18n.t,
+                el => this.showRssDialog(el),
                 cs => this.applySort(cs),
                 this.localConfig.commentSort,
+                !!this.pageInfo?.enableRss,
                 !!this.pageInfo?.enableCommentVoting),
             // Create a panel for comments
             this.commentsArea = UIToolkit.div('comments').appendTo(this.mainArea!));
@@ -867,8 +856,8 @@ export class Comentario extends HTMLElement {
             // Delete the card, it'll also delete all its children
             card.remove();
 
-            // Hide the sort bar, if needed
-            this.updateSortBar();
+            // Update the thread toolbar
+            this.updateThreadToolbar();
         }
     }
 
@@ -1077,8 +1066,8 @@ export class Comentario extends HTMLElement {
                 .appendTo(parentCard?.children ?? this.commentsArea!) as CommentCard;
         }
 
-        // Show or hide the sort bar on comment list change
-        this.updateSortBar();
+        // Update the thread toolbar on comment list change
+        this.updateThreadToolbar();
 
         // On success blink the card, except for vote updates
         if (msg.action !== 'vote') {
@@ -1136,15 +1125,28 @@ export class Comentario extends HTMLElement {
      */
     private async openComentarioProfile(): Promise<void> {
         // Request a new login token bound to the current user
-        const token = await this.apiService.authNewLoginToken(false);
-        const path = '/manage/account/profile';
+        const authToken = await this.apiService.authNewLoginToken(false);
 
         // Try to open a new tab for Profile
-        while (!window.open(`${this.origin}?authToken=${encodeURIComponent(token)}&path=${encodeURIComponent(path)}`, '_blank')) {
+        while (!window.open(this.origin + '?' + new URLSearchParams({authToken, path: '/manage/account/profile'}).toString(), '_blank')) {
             // Failed to open popup: show a Popup blocked dialog
             if (!await PopupBlockedDialog.run(this.i18n.t, this.root, {ref: this.profileBar!.btnSettings!, placement: 'bottom-end'})) {
                 return this.reject('Failed to open Admin UI popup');
             }
         }
+    }
+
+    /**
+     * Show RSS popup dialog.
+     * @param ref Reference element for the popup
+     */
+    private async showRssDialog(ref: Wrap<any>): Promise<void> {
+        await RssDialog.run(
+            this.i18n.t,
+            this.root,
+            {ref, placement: 'bottom-start'},
+            this.apiService.getCommentRssUrl(),
+            this.pageInfo!,
+            this.principal);
     }
 }

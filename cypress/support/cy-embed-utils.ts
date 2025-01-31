@@ -10,10 +10,14 @@ export interface LayoutSettings {
     readonly?: boolean;
     /** Whether root font is applied. Defaults to true. */
     hasRootFont?: boolean;
-    /** Whether sort bar is visible. Defaults to true. */
-    hasSortBar?: boolean;
+    /** Whether RSS button is visible in the thread toolbar. Defaults to true. */
+    hasRss?: boolean;
+    /** Whether sort buttons are visible in the thread toolbar. Defaults to true. */
+    hasSortButtons?: boolean;
     /** Moderation notice, if any. */
     notice?: string;
+    /** Number of comments expected. */
+    numComments?: number;
 }
 
 export class EmbedUtils {
@@ -47,8 +51,17 @@ export class EmbedUtils {
             cy.get('@mainArea').find('.comentario-add-comment-host').as('addCommentHost').should('exist');
         }
 
-        // Check sort buttons
-        cy.get('@mainArea').find('.comentario-sort-bar').should((settings?.hasSortBar ?? true) ? 'be.visible' : 'not.be.visible');
+        // Thread toolbar
+        cy.get('@mainArea').find('.comentario-thread-toolbar').as('threadToolbar').should('be.visible');
+        if (settings?.hasRss ?? true) {
+            cy.get('@threadToolbar').contains('button', 'RSS').as('btnRss').should('be.visible');
+        } else {
+            cy.get('@threadToolbar').contains('button', 'RSS').should('not.exist');
+        }
+        cy.get('@threadToolbar').find('.comentario-sort-buttons').should((settings?.hasSortButtons ?? true) ? 'be.visible' : 'not.be.visible');
+        if (settings?.numComments !== undefined) {
+            this.checkNumComments(settings.numComments);
+        }
 
         // Check comments
         cy.get('@mainArea').find('.comentario-comments').as('comments').should('exist');
@@ -69,6 +82,16 @@ export class EmbedUtils {
             }
         });
     };
+
+    /**
+     * Verifies the number of comments reported in the thread toolbar is correct.
+     * NB: requires makeAliases() to have been called prior to this one.
+     * @param num Expected number of comments
+     */
+    static checkNumComments(num: number) {
+        cy.get('@threadToolbar').find('.comentario-comment-count')
+            .should(num ? 'have.text' : 'not.be.visible', `${num} comment(s)`);
+    }
 
     /**
      * Find and return a titled comment toolbar button for a comment with the given ID.

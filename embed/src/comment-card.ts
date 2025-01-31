@@ -36,6 +36,13 @@ export class CommentParentMap {
     private _data?: Record<UUID, CommentWithCard[]>;
 
     /**
+     * Return the total renderable number of comments in the map, not taking any orphans into account.
+     */
+    get commentCount(): number {
+        return this.recursiveCount('');
+    }
+
+    /**
      * Add the given comment to the map.
      */
     add(c: Comment) {
@@ -134,6 +141,21 @@ export class CommentParentMap {
             list![idx] = cc;
         }
         return cc;
+    }
+
+    /**
+     * Return the total count of the comments for the given parent comment ID, recursively diving into child lists.
+     * @param parentId Parent comment ID to count children for.
+     * @private
+     */
+    private recursiveCount(parentId: string): number {
+        // Fetch the child list
+        const list = this._data?.[parentId];
+        let n = list?.length ?? 0;
+
+        // Recursively count each list's comments children
+        list?.forEach(c => n += this.recursiveCount(c.id));
+        return n;
     }
 }
 

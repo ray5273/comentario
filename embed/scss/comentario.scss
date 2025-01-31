@@ -50,6 +50,6 @@ comentario-comments {
     @include meta.load-css("page-controls");
     @include meta.load-css("placeholders");
     @include meta.load-css("spinners");
-    @include meta.load-css("sort-bar");
+    @include meta.load-css("thread-toolbar");
     @include meta.load-css("toolbar");
 }

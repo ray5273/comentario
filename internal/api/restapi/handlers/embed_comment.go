@@ -137,6 +137,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		DomainID:                 strfmt.UUID(domain.ID.String()),
 		DomainName:               domain.DisplayName(),
 		EnableCommentVoting:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting),
+		EnableRss:                svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyRSSEnabled),
 		FederatedSignupEnabled:   svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled),
 		IsDomainReadonly:         domain.IsReadonly,
 		IsPageReadonly:           page.IsReadonly,

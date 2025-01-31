@@ -151,6 +151,7 @@ context('Config Manager', () => {
                     ['Allow comment authors to edit comments',              '✔'],
                     ['Allow moderators to edit comments',                   '✔'],
                     ['Enable voting on comments',                           '✔'],
+                    ['Enable comment RSS feeds',                            '✔'],
                     ['Show deleted comments',                               '✔'],
                     ['Maximum comment text length',                         '1,024'],
                 ['Integrations'],
@@ -184,6 +185,7 @@ context('Config Manager', () => {
             cy.get('@configEdit').find('#domain_defaults_comments_editing_author')    .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_editing_moderator') .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_enableVoting')      .should('be.checked')    .clickLabel().should('not.be.checked');
+            cy.get('@configEdit').find('#domain_defaults_comments_rss_enabled')       .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_showDeleted')       .should('be.checked')    .clickLabel().should('not.be.checked');
             cy.get('@configEdit').find('#domain_defaults_comments_text_maxLength')    .should('have.value', '1024').setValue('876');
             cy.get('@configEdit').find('#domain_defaults_markdown_images_enabled')    .should('be.checked')    .clickLabel().should('not.be.checked');
@@ -223,6 +225,7 @@ context('Config Manager', () => {
                     ['Allow comment authors to edit comments',              ''],
                     ['Allow moderators to edit comments',                   ''],
                     ['Enable voting on comments',                           ''],
+                    ['Enable comment RSS feeds',                            ''],
                     ['Show deleted comments',                               '✔'],
                     ['Maximum comment text length',                         '876'],
                 ['Integrations'],
@@ -255,6 +258,7 @@ context('Config Manager', () => {
                     ['Allow comment authors to edit comments',              '✔'],
                     ['Allow moderators to edit comments',                   '✔'],
                     ['Enable voting on comments',                           '✔'],
+                    ['Enable comment RSS feeds',                            '✔'],
                     ['Show deleted comments',                               '✔'],
                     ['Maximum comment text length',                         '4,096'],
                 ['Integrations'],
@@ -279,6 +283,7 @@ context('Config Manager', () => {
                 [InstanceConfigKey.domainDefaultsCommentEditingAuthor]:     true,
                 [InstanceConfigKey.domainDefaultsCommentEditingModerator]:  false,
                 [InstanceConfigKey.domainDefaultsEnableCommentVoting]:      false,
+                [InstanceConfigKey.domainDefaultsEnableRss]:                false,
                 [InstanceConfigKey.domainDefaultsShowDeletedComments]:      false,
                 [InstanceConfigKey.domainDefaultsMaxCommentLength]:         516,
                 [InstanceConfigKey.domainDefaultsMarkdownImagesEnabled]:    true,
@@ -309,6 +314,7 @@ context('Config Manager', () => {
                     ['Allow comment authors to edit comments',              '✔'],
                     ['Allow moderators to edit comments',                   ''],
                     ['Enable voting on comments',                           ''],
+                    ['Enable comment RSS feeds',                            ''],
                     ['Show deleted comments',                               ''],
                     ['Maximum comment text length',                         '516'],
                 ['Integrations'],

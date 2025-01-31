@@ -120,6 +120,8 @@ export interface PageInfo {
     readonly commentEditingModerator: boolean;
     /** Whether voting on comments is enabled */
     readonly enableCommentVoting: boolean;
+    /** Whether comment RSS feeds are enabled */
+    readonly enableRss: boolean;
     /** Whether deleted comments should be shown */
     readonly showDeletedComments: boolean;
     /** Maximum comment text length */

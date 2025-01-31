@@ -1,4 +1,4 @@
-import { DOMAINS, USERS } from '../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, USERS } from '../../support/cy-utils';
 
 const { $ } = Cypress;
 
@@ -10,22 +10,36 @@ context('API / RSS', () => {
 
         const feedUrl = (query: Record<string, string>) => `/api/rss/comments?${new URLSearchParams(query).toString()}`;
 
-        const fetchRssItems = (query: Record<string, string>) =>
+        const fetchRssItems = (query: Record<string, string>, expectPath: string) =>
             cy.request({method: 'GET', url: feedUrl(query)})
                 .then(r => {
-                expect(r.status).eq(200);
-                expect(r.headers['content-type']).eq('application/rss+xml');
-                return $($.parseXML(r.body)).find('rss channel item').toArray().map(el => ({
-                    title:       el.querySelector('title')      .textContent,
-                    link:        el.querySelector('link')       .textContent,
-                    description: el.querySelector('description').textContent,
-                    author:      el.querySelector('author')     .textContent,
-                    guid:        el.querySelector('guid')       .textContent,
-                }));
-            });
+                    expect(r.status).eq(200);
+                    expect(r.headers['content-type']).eq('application/rss+xml');
+
+                    // Parse the RSS (XML) response
+                    const xml = $($.parseXML(r.body));
+                    expect(xml.find('rss').attr('version')).eq('2.0');
+                    expect(xml.find('rss').attr('xmlns:content')).eq('http://purl.org/rss/1.0/modules/content/');
+                    expect(xml.find('rss channel').toArray()).to.have.length(1);
+
+                    // Check the channel
+                    const channel = xml.find('rss channel');
+                    expect(channel.find('> title').text()).eq('Comentario comments on localhost:8000');
+                    expect(channel.find('> link').text()).eq('http://localhost:8000' + expectPath);
+                    expect(channel.find('> description').text()).eq('Comentario RSS Feed for http://localhost:8000' + expectPath);
+
+                    // Convert items into an array of objects
+                    return xml.find('rss channel item').toArray().map(el => ({
+                        title:       el.querySelector('title').textContent,
+                        link:        el.querySelector('link').textContent,
+                        description: el.querySelector('description').textContent,
+                        author:      el.querySelector('author').textContent,
+                        guid:        el.querySelector('guid').textContent,
+                    }));
+                });
 
         it('returns RSS feed for a domain', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id}).should('yamlMatch',
+            fetchRssItems({domain: DOMAINS.localhost.id}, '').should('yamlMatch',
                 // language=yaml
                 `
                 - title: Commenter Two | localhost:8000 | Comentario
@@ -157,7 +171,7 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for a domain page', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id, page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c6'}).should('yamlMatch',
+            fetchRssItems({domain: DOMAINS.localhost.id, page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c6'}, '/comments/').should('yamlMatch',
                 // language=yaml
                 `
                 - title: Anonymous | localhost:8000 | Comentario
@@ -169,7 +183,7 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for an author user', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id, author: USERS.queen.id}).should('yamlMatch',
+            fetchRssItems({domain: DOMAINS.localhost.id, author: USERS.queen.id}, '').should('yamlMatch',
                 // language=yaml
                 `
                 - title: Cook Queen | localhost:8000 | Comentario
@@ -191,7 +205,7 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for replies to a user', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id, replyToUser: USERS.queen.id}).should('yamlMatch',
+            fetchRssItems({domain: DOMAINS.localhost.id, replyToUser: USERS.queen.id}, '').should('yamlMatch',
                 // language=yaml
                 `
                 - title: Captain Ace | localhost:8000 | Comentario
@@ -213,12 +227,15 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for all filters', () => {
-            fetchRssItems({
-                  domain:      DOMAINS.localhost.id,
-                  page:        '0ebb8a1b-12f6-421e-b1bb-75867ac480c7',
-                  author:      USERS.ace.id,
-                  replyToUser: USERS.queen.id,
-            }).should('yamlMatch',
+            fetchRssItems(
+                {
+                    domain: DOMAINS.localhost.id,
+                    page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c7',
+                    author: USERS.ace.id,
+                    replyToUser: USERS.queen.id,
+                },
+                '/')
+            .should('yamlMatch',
                 // language=yaml
                 `
                 - title: Captain Ace | localhost:8000 | Comentario
@@ -232,6 +249,25 @@ context('API / RSS', () => {
                   author: Captain Ace
                   guid: 4922acc5-0330-4d1a-8092-ca7c67536b08
             `);
+        });
+
+        it('errors when RSS is disabled', () => {
+            cy.backendReset();
+
+            // Disable RSS
+            cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.enableRss]: false});
+
+            // RSS endpoint must return an error now
+            cy.request({method: 'GET', url: feedUrl({domain: DOMAINS.localhost.id}), failOnStatusCode: false})
+                .then(r => {
+                    expect(r.status).eq(403);
+                    expect(r.body).eq(
+                        '<Error>' +
+                            '<ID>feature-disabled</ID>' +
+                            '<Message>This feature is disabled</Message>' +
+                            '<Details>RSS</Details>' +
+                        '</Error>');
+                });
         });
     });
 });

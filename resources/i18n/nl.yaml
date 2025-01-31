@@ -46,6 +46,7 @@
 - {id: btnTable,                    translation: 'Tabel'}
 - {id: btnUnlock,                   translation: 'Ontgrendelen'}
 - {id: clickButtonBelow,            translation: 'Klik hiervoor op de onderstaande knop.'}
+- {id: commentCount,                translation: 'comment(s)'}
 - {id: commentIsApproved,           translation: 'Dit comment is goedgekeurd door een moderator.'}
 - {id: commentIsPending,            translation: 'Dit comment moet nog worden goedgekeurd door een moderator.'}
 - {id: commentIsRejected,           translation: 'Dit comment is geweigerd door een moderator omdat het spam of ongepast is.'}
@@ -61,6 +62,7 @@
 - {id: confirmEmailUpdateRequest,   translation: 'Je hebt onlangs een wijziging van je Comentario account naar dit e-mailadres aangevraagd.'}
 - {id: confirmYourEmail,            translation: 'Bevestig je e-mailadres'}
 - {id: confirmYourEmailUpdate,      translation: 'Bevestig wijziging e-mailadres'}
+- {id: dlgTitleCommentRssFeed,      translation: 'Comment RSS-feed'}
 - {id: dlgTitleConfirm,             translation: 'Bevestiging'}
 - {id: dlgTitleCreateAccount,       translation: 'Account aanmaken'}
 - {id: dlgTitleLogIn,               translation: 'Inloggen'}
@@ -72,6 +74,8 @@
 - {id: errorUnknownHost,            translation: 'Dit domein is niet geregistreerd in Comentario'}
 - {id: fieldComStatusNotifications, translation: 'Commentstatus-notificaties'}
 - {id: fieldModNotifications,       translation: 'Moderator-notificaties'}
+- {id: fieldOnlyThisPage,           translation: 'Alleen deze pagina'}
+- {id: fieldOnlyReplies,            translation: 'Alleen reacties op jouw comments'}
 - {id: fieldPassword,               translation: 'Wachtwoord'}
 - {id: fieldRealName,               translation: 'Echte naam'}
 - {id: fieldReplyNotifications,     translation: 'Reactie-notificaties'}
@@ -80,6 +84,7 @@
 - {id: forgotPasswordLink,          translation: 'Wachtwoord vergeten?'}
 - {id: helloName,                   translation: 'Hallo {{ index . 0 }}!'}
 - {id: ignoreEmail,                 translation: 'Als je dit niet hebt gedaan, negeer dan deze e-mail.'}
+- {id: labelUseRssLink,             translation: 'Gebruik deze link voor je RSS-reader'}
 - {id: loginViaLocalAuth,           translation: 'Log in met je e-mailadres en wachtwoord'}
 - {id: loginWith,                   translation: 'Log in met'}
 - {id: newComment,                  translation: 'Nieuw comment'}

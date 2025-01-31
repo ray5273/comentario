@@ -1,6 +1,12 @@
 @use "colours";
 
-.comentario-sort-bar {
+.comentario-thread-toolbar {
+    display: flex;
+    align-content: center;
+    align-items: center;
+    flex-wrap: nowrap;
+    color: var(--cmntr-muted-color);
+    font-size: 12px;
 
     // Clearfix
     &::after {
@@ -9,8 +15,19 @@
         content: "";
     }
 
+    .comentario-thread-buttons {
+        flex-grow: 0;
+        text-align: left;
+    }
+
+    .comentario-comment-count {
+        flex-grow: 1;
+        text-align: center;
+    }
+
     .comentario-sort-buttons {
-        float: right;
+        flex-grow: 0;
+        text-align: right;
     }
 
     .comentario-btn {

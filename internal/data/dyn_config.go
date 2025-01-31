@@ -147,6 +147,7 @@ const (
 	DomainConfigKeyCommentEditingAuthor     DynConfigItemKey = "comments.editing.author"
 	DomainConfigKeyCommentEditingModerator  DynConfigItemKey = "comments.editing.moderator"
 	DomainConfigKeyEnableCommentVoting      DynConfigItemKey = "comments.enableVoting"
+	DomainConfigKeyRSSEnabled               DynConfigItemKey = "comments.rss.enabled"
 	DomainConfigKeyShowDeletedComments      DynConfigItemKey = "comments.showDeleted"
 	DomainConfigKeyMaxCommentLength         DynConfigItemKey = "comments.text.maxLength"
 	DomainConfigKeyMarkdownImagesEnabled    DynConfigItemKey = "markdown.images.enabled"
@@ -174,6 +175,7 @@ var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingAuthor:     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyCommentEditingModerator:  {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyEnableCommentVoting:      {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyRSSEnabled:               {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyShowDeletedComments:      {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionComments},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMaxCommentLength:         {DefaultValue: "4096", Datatype: ConfigDatatypeInt, Section: DynConfigItemSectionComments, Min: 140, Max: 1048576},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "false", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},

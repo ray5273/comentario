@@ -131,7 +131,7 @@ context('Domain User Edit page', () => {
 
                     // Login into a comment page and check the user's settings there
                     cy.testSiteLoginViaApi(subj.user, TEST_PATHS.noComment);
-                    EmbedUtils.makeAliases({hasSortBar: false});
+                    EmbedUtils.makeAliases({hasSortButtons: false});
 
                     // Open the Settings dialog
                     cy.get('@profileBar').find('button[title="Settings"]').click();

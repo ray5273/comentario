@@ -5,7 +5,7 @@ context('Comment Editor', () => {
 
     context('comment editing', () => {
 
-        const addUnregisteredComment = (authorName?: string) => {
+        const addUnregisteredComments = (authorName?: string) => {
             // Submit a root comment. First time a Login dialog may appear
             EmbedUtils.addComment(undefined, 'This is also a root', true, authorName);
 
@@ -61,7 +61,7 @@ context('Comment Editor', () => {
         it('can be entered and canceled', () => {
             // Visit the page as anonymous
             cy.testSiteVisit(TEST_PATHS.comments);
-            EmbedUtils.makeAliases({anonymous: true});
+            EmbedUtils.makeAliases({anonymous: true, numComments: 1});
 
             // Verify comments
             cy.commentTree().should('have.length', 1);
@@ -78,6 +78,7 @@ context('Comment Editor', () => {
 
             // Still one comment
             cy.commentTree().should('have.length', 1);
+            EmbedUtils.checkNumComments(1);
 
             // Open the editor by clicking it
             cy.get('@addCommentHost').click()
@@ -100,6 +101,7 @@ context('Comment Editor', () => {
 
             // Still one comment
             cy.commentTree().should('have.length', 1);
+            EmbedUtils.checkNumComments(1);
         });
 
         context('submission', () => {
@@ -161,14 +163,16 @@ context('Comment Editor', () => {
 
             it('submits comment anonymously', () => {
                 cy.testSiteVisit(TEST_PATHS.comments);
-                EmbedUtils.makeAliases({anonymous: true});
-                addUnregisteredComment();
+                EmbedUtils.makeAliases({anonymous: true, numComments: 1});
+                addUnregisteredComments();
+                EmbedUtils.checkNumComments(3);
             });
 
             it('submits comment with a name', () => {
                 cy.testSiteVisit(TEST_PATHS.comments);
-                EmbedUtils.makeAliases({anonymous: true});
-                addUnregisteredComment('Bambarbia Kirgudu');
+                EmbedUtils.makeAliases({anonymous: true, numComments: 1});
+                addUnregisteredComments('Bambarbia Kirgudu');
+                EmbedUtils.checkNumComments(3);
             });
 
             it('submits comment with a name when only unregistered is enabled', () => {
@@ -178,8 +182,9 @@ context('Comment Editor', () => {
 
                 // Visit the page as anonymous
                 cy.testSiteVisit(TEST_PATHS.comments);
-                EmbedUtils.makeAliases({anonymous: true});
-                addUnregisteredComment('Bambarbia Kirgudu');
+                EmbedUtils.makeAliases({anonymous: true, numComments: 1});
+                addUnregisteredComments('Bambarbia Kirgudu');
+                EmbedUtils.checkNumComments(3);
             });
 
             it('allows to preview comment text', () => {
@@ -227,12 +232,13 @@ context('Comment Editor', () => {
         it('submits non-anonymous comment', () => {
             // Visit the page as commenter
             cy.testSiteLoginViaApi(USERS.commenterOne, TEST_PATHS.comments);
-            EmbedUtils.makeAliases();
+            EmbedUtils.makeAliases({numComments: 1});
 
             // Submit a root comment
             EmbedUtils.addComment(undefined, 'Here goes', false);
 
             // New comment is added, NOT in the Pending state
+            EmbedUtils.checkNumComments(2);
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
@@ -254,6 +260,7 @@ context('Comment Editor', () => {
             EmbedUtils.addComment('0b5e258b-ecc6-4a9c-9f31-f775d88a258b', 'A reply *here*!', false);
 
             // New comment is added, also not in the Pending state
+            EmbedUtils.checkNumComments(3);
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
                 // language=yaml
                 `
@@ -288,16 +295,17 @@ context('Comment Editor', () => {
             const x139   = 'ab '.repeat(46) + 'c';
             const x99999 = '9 letters'.repeat(11_111);
 
-            const postComment = (text: string, extraChars: string, wantLength: number) => {
-                EmbedUtils.makeAliases();
+            const postComment = (text: string, extraChars: string, wantLength: number, numBfore: number, numAfter: number) => {
+                EmbedUtils.makeAliases({numComments: numBfore});
                 cy.get('@addCommentHost').click();
                 cy.get('@mainArea').find('textarea').as('textarea').setValue(text).type(extraChars)
                     .invoke('val').should('have.length', wantLength);
                 cy.get('@textarea').type('{ctrl+enter}');
+                EmbedUtils.checkNumComments(numAfter);
             };
 
             // Input 4097 chars: the input is capped at 4096
-            postComment(x4094, 'abc', 4096);
+            postComment(x4094, 'abc', 4096, 1, 2);
             cy.commentTree('html', 'author').should('yamlMatch',
                 // language=yaml
                 `
@@ -312,7 +320,7 @@ context('Comment Editor', () => {
             cy.reload();
 
             // Input 141 chars: the input is capped at 140
-            postComment(x139, 'xyz', 140);
+            postComment(x139, 'xyz', 140, 2, 3);
             cy.commentTree('html', 'author').should('yamlMatch',
                 // language=yaml
                 `
@@ -329,7 +337,7 @@ context('Comment Editor', () => {
             cy.reload();
 
             // Input 100K+1 chars: the input is capped at 100K
-            postComment(x99999, 'qwe', 100_000);
+            postComment(x99999, 'qwe', 100_000, 3, 4);
             cy.commentTree('html', 'author').should('yamlMatch',
                 // language=yaml
                 `
@@ -347,7 +355,9 @@ context('Comment Editor', () => {
             const s1M = 'abcdefghi '.repeat(104_857) + '123456';
             cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.maxCommentLength]: 1_048_576});
             cy.commentAddViaApi(DOMAINS.localhost.host, TEST_PATHS.comments, null, s1M);
+
             // Don't need to reload because of the Live Update
+            EmbedUtils.checkNumComments(5);
             cy.commentTree('html', 'author').should('yamlMatch',
                 // language=yaml
                 `
@@ -449,7 +459,7 @@ context('Comment Editor', () => {
         const visitAndEdit = () => {
             // Visit the page as anonymous
             cy.testSiteVisit(TEST_PATHS.comments);
-            EmbedUtils.makeAliases({anonymous: true});
+            EmbedUtils.makeAliases({anonymous: true, numComments: 1});
 
             // Open the editor
             cy.get('.comentario-root .comentario-add-comment-host').focus();
