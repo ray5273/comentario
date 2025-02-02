@@ -1,8 +1,7 @@
 import { TestBed } from '@angular/core/testing';
 import { LOCALE_ID } from '@angular/core';
-import { MockProvider } from 'ng-mocks';
 import { DocsService } from './docs.service';
-import { ConfigService } from './config.service';
+import { mockConfigService } from '../_utils/_mocks.spec';
 
 describe('DocsService', () => {
 
@@ -12,7 +11,7 @@ describe('DocsService', () => {
         TestBed.configureTestingModule({
             providers: [
                 {provide: LOCALE_ID, useValue: 'it'},
-                MockProvider(ConfigService, {staticConfig: {baseDocsUrl: 'https://whatever.org'} as any}),
+                mockConfigService(),
             ],
         });
         service = TestBed.inject(DocsService);
@@ -23,22 +22,22 @@ describe('DocsService', () => {
     });
 
     it('returns home URL', () => {
-        expect(service.urlHome).toBe('https://whatever.org/it/');
+        expect(service.urlHome).toBe('https://docs.base.url/it/');
     });
 
     it('returns about URL', () => {
-        expect(service.urlAbout).toBe('https://whatever.org/it/about/');
+        expect(service.urlAbout).toBe('https://docs.base.url/it/about/');
     });
 
     it('returns embed page URL', () => {
-        expect(service.getEmbedPageUrl('rabbit-breeding')).toBe('https://whatever.org/it/embed/rabbit-breeding/');
+        expect(service.getEmbedPageUrl('rabbit-breeding')).toBe('https://docs.base.url/it/embed/rabbit-breeding/');
     });
 
     it('returns page URL for default language', () => {
-        expect(service.getPageUrl('uh/oh/eh/page.html')).toBe('https://whatever.org/it/uh/oh/eh/page.html');
+        expect(service.getPageUrl('uh/oh/eh/page.html')).toBe('https://docs.base.url/it/uh/oh/eh/page.html');
     });
 
     it('returns page URL for specified language', () => {
-        expect(service.getPageUrl('uh/oh/eh/page.html', 'zx')).toBe('https://whatever.org/zx/uh/oh/eh/page.html');
+        expect(service.getPageUrl('uh/oh/eh/page.html', 'zx')).toBe('https://docs.base.url/zx/uh/oh/eh/page.html');
     });
 });

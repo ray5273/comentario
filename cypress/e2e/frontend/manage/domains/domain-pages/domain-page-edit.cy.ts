@@ -114,6 +114,7 @@ context('Domain Page Edit page', () => {
                             ['Created',            REGEXES.datetime],
                             ['Number of comments', '0'],
                             ['Number of views',    '0'],
+                            ['Comment RSS feed',   null],
                         ]);
 
                     // Revert path so that we can check the comments
@@ -146,6 +147,7 @@ context('Domain Page Edit page', () => {
                             ['Created',            REGEXES.datetime],
                             ['Number of comments', '0'],
                             ['Number of views',    '1'], // A view is registered
+                            ['Comment RSS feed',   null],
                         ]);
 
                     // Go to the test page again and verify it isn't readonly anymore
@@ -182,10 +184,11 @@ context('Domain Page Edit page', () => {
             cy.get('app-domain-page-properties').as('pageProps')
                 .find('#domainPageDetailTable').as('pageDetails')
                 .dlTexts().should('matrixMatch', [
-                    ['Domain',    DOMAINS.localhost.host],
-                    ['Path',      pathComments],
-                    ['Title',     'Comments'],
-                    ['Read-only', '✔'],
+                    ['Domain',           DOMAINS.localhost.host],
+                    ['Path',             pathComments],
+                    ['Title',            'Comments'],
+                    ['Read-only',        '✔'],
+                    ['Comment RSS feed', null],
                 ]);
 
             // Login into a comment page and check the page is now readonly
@@ -204,10 +207,11 @@ context('Domain Page Edit page', () => {
             cy.get('app-domain-page-properties').as('pageProps')
                 .find('#domainPageDetailTable').as('pageDetails')
                 .dlTexts().should('matrixMatch', [
-                ['Domain',    DOMAINS.localhost.host],
-                ['Path',      pathComments],
-                ['Title',     'Comments'],
-                ['Read-only', ''],
+                ['Domain',           DOMAINS.localhost.host],
+                ['Path',             pathComments],
+                ['Title',            'Comments'],
+                ['Read-only',        ''],
+                ['Comment RSS feed', null],
             ]);
 
             // Go to the test page again and verify it isn't readonly anymore

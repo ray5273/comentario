@@ -86,6 +86,7 @@ context('Domain Properties page', () => {
             ['Created',                                   REGEXES.datetime],
             ['Number of comments',                        '16'],
             ['Number of views',                           '5'],
+            ['Comment RSS feed',                          null], // TODO check elsewhere
         ]);
     };
 
@@ -137,6 +138,7 @@ context('Domain Properties page', () => {
                 ['Enable links in comments',                            '✔'],
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',                                  ['Commenting without registration', 'Local (password-based)']],
+            ['Comment RSS feed',                                        null],
         ]);
         checkNoAttributes();
     });
@@ -166,6 +168,7 @@ context('Domain Properties page', () => {
                 ['Enable links in comments',                            '✔'],
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',                                  'Local (password-based)'],
+            ['Comment RSS feed',                                        null], // TODO check elsewhere
         ]);
         checkNoAttributes();
     });
@@ -207,6 +210,7 @@ context('Domain Properties page', () => {
                         `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
                 ],
             ],
+            ['Comment RSS feed',                                        null], // TODO check elsewhere
         ]);
         checkNoAttributes();
     });

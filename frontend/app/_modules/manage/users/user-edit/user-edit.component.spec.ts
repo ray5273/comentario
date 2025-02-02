@@ -3,10 +3,9 @@ import { ReactiveFormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { UserEditComponent } from './user-edit.component';
-import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generated-api';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
-import { mockAuthService } from '../../../../_utils/_mocks.spec';
-import { ConfigService } from '../../../../_services/config.service';
+import { mockAuthService, mockConfigService } from '../../../../_utils/_mocks.spec';
 
 describe('UserEditComponent', () => {
 
@@ -17,8 +16,8 @@ describe('UserEditComponent', () => {
         await TestBed.configureTestingModule({
                 imports: [RouterModule.forRoot([]), ReactiveFormsModule, UserEditComponent, MockComponents(InfoIconComponent)],
                 providers: [
-                    MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
                     MockProvider(ApiGeneralService),
+                    mockConfigService(),
                     mockAuthService(),
                 ],
             })

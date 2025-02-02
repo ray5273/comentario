@@ -5,6 +5,7 @@ import { DomainPagePropertiesComponent } from './domain-page-properties.componen
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { DomainRssLinkComponent } from '../../domain-rss-link/domain-rss-link.component';
 
 describe('DomainPagePropertiesComponent', () => {
 
@@ -16,7 +17,7 @@ describe('DomainPagePropertiesComponent', () => {
                 imports: [
                     RouterModule.forRoot([]),
                     DomainPagePropertiesComponent,
-                    MockComponents(NoDataComponent),
+                    MockComponents(NoDataComponent, DomainRssLinkComponent),
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),

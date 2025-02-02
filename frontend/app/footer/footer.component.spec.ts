@@ -4,9 +4,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockProvider } from 'ng-mocks';
 import { FooterComponent } from './footer.component';
 import { DocsService } from '../_services/docs.service';
-import { ConfigService } from '../_services/config.service';
-import { InstanceStaticConfig } from '../../generated-api';
-import { mockAuthService } from '../_utils/_mocks.spec';
+import { mockAuthService, mockConfigService } from '../_utils/_mocks.spec';
 import { PluginService } from '../_modules/plugin/_services/plugin.service';
 
 describe('FooterComponent', () => {
@@ -19,8 +17,8 @@ describe('FooterComponent', () => {
                 imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, FooterComponent],
                 providers: [
                     MockProvider(DocsService),
-                    MockProvider(ConfigService, {staticConfig: {} as InstanceStaticConfig}),
                     MockProvider(PluginService),
+                    mockConfigService(),
                     mockAuthService(),
                 ],
             })

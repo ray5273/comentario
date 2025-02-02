@@ -17,6 +17,8 @@ import { CheckmarkComponent } from '../../../../tools/checkmark/checkmark.compon
 import { DatetimePipe } from '../../../_pipes/datetime.pipe';
 import { CommentListComponent } from '../../comments/comment-list/comment-list.component';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
+import { DomainRssLinkComponent } from '../../domain-rss-link/domain-rss-link.component';
+import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 
 @UntilDestroy()
 @Component({
@@ -32,6 +34,8 @@ import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
         DecimalPipe,
         CommentListComponent,
         NoDataComponent,
+        DomainRssLinkComponent,
+        InfoIconComponent,
     ],
 })
 export class DomainPagePropertiesComponent implements OnInit {

@@ -1,0 +1,38 @@
+@if (rssUrl; as url) {
+    <div class="px-1">
+        <!-- Filter form -->
+        <form [formGroup]="form">
+            <!-- User filter -->
+            <div class="d-grid d-md-flex flex-wrap gap-2">
+                <!-- All -->
+                <div class="form-check form-check-inline">
+                    <input formControlName="userFilter" class="form-check-input" type="radio" id="rssUserFilterAll" value="all">
+                    <label class="form-check-label" for="rssUserFilterAll" i18n>All</label>
+                </div>
+                <!-- By you -->
+                <div class="form-check form-check-inline">
+                    <input formControlName="userFilter" class="form-check-input" type="radio" id="rssUserFilterAuthor" value="author">
+                    <label class="form-check-label" for="rssUserFilterAuthor" i18n>By you</label>
+                </div>
+                <!-- Replies to you -->
+                <div class="form-check form-check-inline">
+                    <input formControlName="userFilter" class="form-check-input" type="radio" id="rssUserFilterReplies" value="replies">
+                    <label class="form-check-label" for="rssUserFilterReplies" i18n>Replies to you</label>
+                </div>
+            </div>
+            <!-- RSS feed URL -->
+            <div class="d-sm-flex align-items-sm-start border rounded p-2">
+                <div class="flex-grow-1 overflow-hidden text-wrap pe-2">
+                    <a [appExternalLink]="url" class="text-break" id="rssFeedUrl">{{ url }}</a>
+                </div>
+                <button [appCopyText]="url" ngbTooltip class="btn btn-outline-secondary" type="button" title="Copy" i18n-title>
+                    <fa-icon [icon]="faCopy" class="me-1"/>
+                </button>
+            </div>
+        </form>
+    </div>
+
+} @else {
+    <!-- RSS is disabled -->
+    <div i18n>Disabled for this domain</div>
+}

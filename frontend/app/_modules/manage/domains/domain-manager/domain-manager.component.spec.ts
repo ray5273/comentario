@@ -6,10 +6,9 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainManagerComponent } from './domain-manager.component';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { ConfigService } from '../../../../_services/config.service';
 import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
-import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector } from '../../../../_utils/_mocks.spec';
 
 describe('DomainManagerComponent', () => {
 
@@ -27,8 +26,8 @@ describe('DomainManagerComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService, {domainList: () => of({domains: []} as any)}),
+                    mockConfigService(),
                     mockDomainSelector(),
-                    MockProvider(ConfigService),
                 ],
             })
             .compileComponents();

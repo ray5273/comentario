@@ -5,8 +5,7 @@ import { UserPropertiesComponent } from './user-properties.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
-import { mockAuthService } from '../../../../_utils/_mocks.spec';
-import { ConfigService } from '../../../../_services/config.service';
+import { mockAuthService, mockConfigService } from '../../../../_utils/_mocks.spec';
 import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
 
 describe('UserPropertiesComponent', () => {
@@ -24,7 +23,7 @@ describe('UserPropertiesComponent', () => {
                 providers: [
                     MockProvider(ApiGeneralService),
                     MockProvider(ToastService),
-                    MockProvider(ConfigService),
+                    mockConfigService(),
                     mockAuthService(),
                 ],
             })

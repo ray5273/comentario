@@ -3,9 +3,8 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
-import { MockProvider } from 'ng-mocks';
 import { DocEmbedDirective } from './doc-embed.directive';
-import { ConfigService } from '../_services/config.service';
+import { mockConfigService } from '../_utils/_mocks.spec';
 
 @Component({
     template: '<div appDocEmbed="https://page.url/test"><p>Content <span>Subcontent</span></p></div>',
@@ -27,7 +26,7 @@ describe('DocEmbedDirective', () => {
                 providers: [
                     provideHttpClient(),
                     provideHttpClientTesting(),
-                    MockProvider(ConfigService),
+                    mockConfigService(),
                 ],
             })
         .createComponent(TestComponent);

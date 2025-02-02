@@ -61,10 +61,11 @@ context('Domain Page Properties page', () => {
                 cy.loginViaApi(test.user, localhostPagePath);
                 makeAliases(test.editable, test.editable);
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
-                    ['Domain',    DOMAINS.localhost.host],
-                    ['Path',      '/'],
-                    ['Title',     'Home'],
-                    ['Read-only', ''],
+                    ['Domain',           DOMAINS.localhost.host],
+                    ['Path',             '/'],
+                    ['Title',            'Home'],
+                    ['Read-only',        ''],
+                    ['Comment RSS feed', null], // TODO check elsewhere
                 ]);
 
                 // Check number of comments in the Comments section
@@ -87,6 +88,7 @@ context('Domain Page Properties page', () => {
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '17'],
                     ['Number of views',    '10'],
+                    ['Comment RSS feed',   null], // TODO check elsewhere
                 ]);
 
                 // Test Update title button

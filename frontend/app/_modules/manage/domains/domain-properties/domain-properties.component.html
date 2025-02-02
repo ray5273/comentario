@@ -184,6 +184,14 @@
                             <dd>{{ domain.countViews | number }}</dd>
                         </div>
                     }
+                    <!-- Comment RSS feed -->
+                    <div>
+                        <dt>
+                            <ng-container i18n>Comment RSS feed</ng-container>
+                            <app-info-icon docLink="kb/rss/" position="right"/>
+                        </dt>
+                        <dd><app-domain-rss-link/></dd>
+                    </div>
                 </dl>
 
                 <!-- Attributes -->

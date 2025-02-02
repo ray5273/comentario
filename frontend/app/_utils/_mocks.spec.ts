@@ -6,6 +6,37 @@ import { ProcessingStatus } from './processing-status';
 import { AuthService } from '../_services/auth.service';
 import { Principal } from '../../generated-api';
 import { HighlightLoader } from 'ngx-highlightjs';
+import { ConfigService } from '../_services/config.service';
+import { DynamicConfig } from '../_models/config';
+
+export const mockConfigService = () => MockProvider(
+    ConfigService, {
+        staticConfig: {
+            baseUrl:              '',
+            baseDocsUrl:          'https://docs.base.url',
+            termsOfServiceUrl:    '',
+            privacyPolicyUrl:     '',
+            version:              '',
+            buildDate:            '',
+            serverTime:           '',
+            dbVersion:            '',
+            defaultLangId:        '',
+            homeContentUrl:       '',
+            federatedIdps:        [],
+            resultPageSize:       25,
+            uiLanguages:          [{id: 'en', nameEnglish: 'English', nameNative: 'English', isFrontendLanguage: true}],
+            liveUpdateEnabled:    true,
+            pageViewStatsEnabled: true,
+        },
+        pluginConfig: {
+            plugins: [],
+        },
+        latestRelease: of({name: '', version: '', pageUrl: ''}),
+        isUpgradable:  of(false),
+        canLoadMore:   () => false,
+        extensions:    of([]),
+        dynamicConfig: of(new DynamicConfig()),
+    });
 
 export const mockDomainSelector = (domainEmitter?: Observable<DomainMeta>) => MockProvider(
     DomainSelectorService, {

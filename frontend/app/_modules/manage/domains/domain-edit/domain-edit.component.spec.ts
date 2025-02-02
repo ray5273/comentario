@@ -5,13 +5,12 @@ import { of } from 'rxjs';
 import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockComponents, MockPipes, MockProvider } from 'ng-mocks';
 import { DomainEditComponent } from './domain-edit.component';
-import { ApiGeneralService, InstanceStaticConfig } from '../../../../../generated-api';
-import { ConfigService } from '../../../../_services/config.service';
+import { ApiGeneralService } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.pipe';
 import { CommentSortPipe } from '../../_pipes/comment-sort.pipe';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
-import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector } from '../../../../_utils/_mocks.spec';
 import { DomainEditGeneralComponent } from './domain-edit-general/domain-edit-general.component';
 import { DomainEditAuthComponent } from './domain-edit-auth/domain-edit-auth.component';
 import { DomainEditModerationComponent } from './domain-edit-moderation/domain-edit-moderation.component';
@@ -21,10 +20,6 @@ describe('DomainEditComponent', () => {
 
     let component: DomainEditComponent;
     let fixture: ComponentFixture<DomainEditComponent>;
-
-    const config: InstanceStaticConfig = {
-        federatedIdps: [],
-    } as any;
 
     beforeEach(async () => {
         await TestBed.configureTestingModule({
@@ -44,9 +39,9 @@ describe('DomainEditComponent', () => {
                     ),
                 ],
                 providers: [
-                    MockProvider(ConfigService, {staticConfig: config, extensions: of(undefined)}),
                     MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                     MockProvider(ToastService),
+                    mockConfigService(),
                     mockDomainSelector(),
                 ],
             })

@@ -24,6 +24,7 @@ import { ModeratorNotifyPolicyPipe } from '../../_pipes/moderator-notify-policy.
 import { DatetimePipe } from '../../_pipes/datetime.pipe';
 import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
+import { DomainRssLinkComponent } from '../domain-rss-link/domain-rss-link.component';
 
 @UntilDestroy()
 @Component({
@@ -49,6 +50,7 @@ import { NoDataComponent } from '../../../tools/no-data/no-data.component';
         DecimalPipe,
         AttributeTableComponent,
         NoDataComponent,
+        DomainRssLinkComponent,
     ],
 })
 export class DomainPropertiesComponent implements OnInit {

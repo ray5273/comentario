@@ -1,13 +1,11 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { ReactiveFormsModule } from '@angular/forms';
-import { of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { ConfigEditComponent } from './config-edit.component';
-import { ConfigService } from '../../../../_services/config.service';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
-import { DynamicConfig } from '../../../../_models/config';
+import { mockConfigService } from '../../../../_utils/_mocks.spec';
 
 describe('ConfigEditComponent', () => {
 
@@ -18,9 +16,9 @@ describe('ConfigEditComponent', () => {
         await TestBed.configureTestingModule({
                 imports: [RouterModule.forRoot([]), ReactiveFormsModule, ConfigEditComponent],
                 providers: [
-                    MockProvider(ConfigService, {dynamicConfig: of(new DynamicConfig())}),
                     MockProvider(ApiGeneralService),
                     MockProvider(ToastService),
+                    mockConfigService(),
                 ],
             })
             .compileComponents();

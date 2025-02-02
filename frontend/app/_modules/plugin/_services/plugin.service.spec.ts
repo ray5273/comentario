@@ -2,8 +2,8 @@ import { TestBed } from '@angular/core/testing';
 import { MockProvider } from 'ng-mocks';
 import { PluginService } from './plugin.service';
 import { LANGUAGE } from '../../../../environments/languages';
-import { ConfigService } from '../../../_services/config.service';
 import { PluginMessageService } from './plugin-message.service';
+import { mockConfigService } from '../../../_utils/_mocks.spec';
 
 describe('PluginService', () => {
 
@@ -13,7 +13,7 @@ describe('PluginService', () => {
         TestBed.configureTestingModule({
             providers:[
                 {provide: LANGUAGE, useValue: {}},
-                MockProvider(ConfigService, {pluginConfig: {plugins: []}}),
+                mockConfigService(),
                 MockProvider(PluginMessageService),
             ],
         });

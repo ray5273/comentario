@@ -5,11 +5,10 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainUserManagerComponent } from './domain-user-manager.component';
 import { DomainBadgeComponent } from '../../../badges/domain-badge/domain-badge.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
-import { ConfigService } from '../../../../../_services/config.service';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
-import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainUserManagerComponent', () => {
 
@@ -30,7 +29,7 @@ describe('DomainUserManagerComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),
-                    MockProvider(ConfigService),
+                    mockConfigService(),
                     mockDomainSelector(),
                 ],
             })

@@ -46,6 +46,8 @@ tags:
   The so-called [extensions](/configuration/frontend/domain/extensions) link Comentario to external services that check comment text for spam, offensive language, or toxic content. Those services include [Akismet](/configuration/frontend/domain/extensions/akismet), [APILayer](/configuration/frontend/domain/extensions/api-layer-spam-checker), and [Perspective](/configuration/frontend/domain/extensions/perspective), and they are configured separately for each domain.
 * **Statistics**\
   Comentario collects and displays statistics on views and comments. It includes high-level depersonalised data, such as country, language, OS, browser, and device type. The statistical data can be viewed per-domain or for the entire system.
+* **RSS feeds**\
+  You can [subscribe via RSS](/kb/rss) to comment updates on the entire domain or a specific page, optionally filtering by user and/or replies to a user.
 * **Data import/export**\
   Comments and users can be easily [imported](/installation/migration) from [Disqus](/installation/migration/disqus), [WordPress](/installation/migration/wordpress), [Commento/Commento++](/installation/migration/commento). Existing data can also be exported as a JSON file.
 

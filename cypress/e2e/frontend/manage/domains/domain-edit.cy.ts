@@ -397,6 +397,7 @@ context('Domain Edit page', () => {
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '0'],
                     ['Number of views',    '0'],
+                    ['Comment RSS feed',   null],
                 ]);
 
                 // Go to the domain list and verify there's a new domain
@@ -526,6 +527,7 @@ context('Domain Edit page', () => {
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '0'],
                     ['Number of views',    '0'],
+                    ['Comment RSS feed',   null],
                 ]);
 
                 // Go to the domain list and verify there's a new domain
@@ -762,6 +764,7 @@ context('Domain Edit page', () => {
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '16'],
                     ['Number of views',    '5'],
+                    ['Comment RSS feed',   null],
                 ]);
 
                 // Edit the domain again and verify control values

@@ -1,9 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { EMPTY } from 'rxjs';
-import { MockPipes, MockProvider } from 'ng-mocks';
+import { MockPipes } from 'ng-mocks';
 import { StaticConfigComponent } from './static-config.component';
-import { ConfigService } from '../../../../_services/config.service';
 import { DatetimePipe } from '../../_pipes/datetime.pipe';
+import { mockConfigService } from '../../../../_utils/_mocks.spec';
 
 describe('StaticConfigComponent', () => {
 
@@ -14,12 +13,7 @@ describe('StaticConfigComponent', () => {
         await TestBed.configureTestingModule({
                 imports: [StaticConfigComponent, MockPipes(DatetimePipe)],
                 providers: [
-                    MockProvider(ConfigService, {
-                        staticConfig:  {} as any,
-                        extensions:    EMPTY,
-                        isUpgradable:  EMPTY,
-                        latestRelease: EMPTY,
-                    }),
+                    mockConfigService(),
                 ],
             })
             .compileComponents();

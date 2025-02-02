@@ -48,6 +48,8 @@ Available features:
   The so-called extensions link Comentario to external services that check comment text for spam, offensive language, or toxic content. Those services include Akismet, APILayer, and Perspective, and they are configured separately for each domain.
 * **Statistics**\
   Comentario collects and displays statistics on views and comments. It includes high-level depersonalised data, such as country, language, OS, browser, and device type. The statistical data can be viewed per-domain or for the entire system.
+* **RSS feeds**\
+  You can subscribe via RSS to comment updates on the entire domain or a specific page, optionally filtering by user and/or replies to a user.
 * **Data import/export**\
   Comments and users can be easily imported from Disqus, WordPress, Commento/Commento++. Existing data can also be exported as a JSON file.
 

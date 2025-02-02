@@ -1,12 +1,10 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
-import { of } from 'rxjs';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider } from 'ng-mocks';
 import { DynamicConfigComponent } from './dynamic-config.component';
-import { ConfigService } from '../../../../_services/config.service';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { DynamicConfig } from '../../../../_models/config';
+import { mockConfigService } from '../../../../_utils/_mocks.spec';
 
 describe('DynamicConfigComponent', () => {
 
@@ -17,8 +15,8 @@ describe('DynamicConfigComponent', () => {
         await TestBed.configureTestingModule({
                 imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, DynamicConfigComponent],
                 providers: [
-                    MockProvider(ConfigService, {dynamicConfig: of(new DynamicConfig())}),
                     MockProvider(ApiGeneralService),
+                    mockConfigService(),
                 ],
             })
             .compileComponents();
