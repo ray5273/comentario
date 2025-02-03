@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, REGEXES, UI_LANGUAGES, USERS, Util } from '../../../../support/cy-utils';
+import { DomainConfigKey, DOMAINS, PATHS, REGEXES, UI_LANGUAGES, USERS, Util } from '../../../../support/cy-utils';
 
 context('Domain Properties page', () => {
 
@@ -44,7 +44,7 @@ context('Domain Properties page', () => {
         }
     };
 
-    const checkAllProperties = () => {
+    const checkAllProperties = (user: Cypress.User) => {
         cy.contains('h2', 'Properties').should('be.visible');
         cy.get('@domainProps').find('#domainDetailTable').dlTexts().should('matrixMatch', [
             ['Host',                                                    DOMAINS.localhost.host],
@@ -86,8 +86,11 @@ context('Domain Properties page', () => {
             ['Created',                                   REGEXES.datetime],
             ['Number of comments',                        '16'],
             ['Number of views',                           '5'],
-            ['Comment RSS feed',                          null], // TODO check elsewhere
+            ['Comment RSS feed',                          null], // Checked separately below
         ]);
+
+        // Verify the RSS link
+        cy.get('@domainProps').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, user.id);
     };
 
     const checkNoAttributes = () => cy.get('@domainProps').find('app-attribute-table').should('not.exist');
@@ -168,9 +171,12 @@ context('Domain Properties page', () => {
                 ['Enable links in comments',                            '✔'],
                 ['Enable tables in comments',                           '✔'],
             ['Authentication methods',                                  'Local (password-based)'],
-            ['Comment RSS feed',                                        null], // TODO check elsewhere
+            ['Comment RSS feed',                                        null], // Checked separately below
         ]);
         checkNoAttributes();
+
+        // Verify the RSS link
+        cy.get('@domainProps').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.market.id, USERS.king.id);
     });
 
     it('shows properties for moderator user', () => {
@@ -210,9 +216,13 @@ context('Domain Properties page', () => {
                         `via ${baseUrl}/api/e2e/oauth/${DOMAINS.localhost.id}/sso/noninteractive`,
                 ],
             ],
-            ['Comment RSS feed',                                        null], // TODO check elsewhere
+            ['Comment RSS feed',                                        null], // Checked separately below
         ]);
         checkNoAttributes();
+
+
+        // Verify the RSS link
+        cy.get('@domainProps').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, USERS.king.id);
     });
 
     context('for owner user', () => {
@@ -341,7 +351,7 @@ context('Domain Properties page', () => {
         it('shows properties for SSO-enabled domain', () => {
             cy.loginViaApi(USERS.ace, localhostPagePath, Util.stubWriteText);
             makeAliases(DOMAINS.localhost.host, true, true, true);
-            checkAllProperties();
+            checkAllProperties(USERS.ace);
             checkNoAttributes();
             checkEditButtons(DOMAINS.localhost.id, true);
         });
@@ -357,7 +367,7 @@ context('Domain Properties page', () => {
     it('shows properties for superuser', () => {
         cy.loginViaApi(USERS.root, localhostPagePath);
         makeAliases(DOMAINS.localhost.host, false, true, true);
-        checkAllProperties();
+        checkAllProperties(USERS.root);
 
         // No attributes initially
         checkNoAttributes();
@@ -393,9 +403,13 @@ context('Domain Properties page', () => {
                 ['subscriptionId', '1234567890'],
             ]);
 
-        // Clean all and reload: no attributes section anymore
+        // Clean all, disable RSS and reload: no attributes section anymore
         cy.backendUpdateDomainAttrs(DOMAINS.localhost.id, {subscriptionId: '', active: ''});
+        cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.enableRss]: false});
         cy.reload();
         checkNoAttributes();
+
+        // No RSS widget either
+        cy.get('@domainProps').ddItem('Comment RSS feed').should('have.text', 'Disabled for this domain');
     });
 });

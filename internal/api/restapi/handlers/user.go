@@ -329,3 +329,14 @@ func userGet(id strfmt.UUID) (*data.User, middleware.Responder) {
 	// Succeeded
 	return user, nil
 }
+
+// userGetOptional parses a pointer to string UUID and fetches the corresponding user, or nil if the pointer was nil
+func userGetOptional(pid *strfmt.UUID) (*data.User, middleware.Responder) {
+	// Return nil if nil input is provided
+	if pid == nil {
+		return nil, nil
+	}
+
+	// Parse the ID and fetch the user otherwise
+	return userGet(*pid)
+}

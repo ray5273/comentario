@@ -551,6 +551,31 @@ Cypress.Commands.add(
     });
 
 Cypress.Commands.add(
+    'verifyRssLink',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, domainId: string, curUserId: string, pageId?: string) => {
+        // Prepare params
+        const params = pageId ? {domain: domainId, page: pageId} : {domain: domainId};
+
+        // Initially "All" is checked
+        cy.wrap(element).as('rssHost');
+        cy.get('@rssHost').find('#rssUserFilterAll').should('be.checked');
+        cy.get('@rssHost').find('#rssFeedUrl').should('be.rssLink', params);
+
+        // Check feed by the current user
+        cy.get('@rssHost').find('#rssUserFilterAuthor').click();
+        cy.get('@rssHost').find('#rssFeedUrl').should('be.rssLink', {...params, author: curUserId});
+
+        // Check feed for replies to the current user
+        cy.get('@rssHost').find('#rssUserFilterReplies').click();
+        cy.get('@rssHost').find('#rssFeedUrl').should('be.rssLink', {...params, replyToUser: curUserId});
+
+        // Back to "All"
+        cy.get('@rssHost').find('#rssUserFilterAll').click();
+        cy.get('@rssHost').find('#rssFeedUrl').should('be.rssLink', params);
+    });
+
+Cypress.Commands.add(
     'commentAddViaApi',
     {prevSubject: false},
     (host: string, path: string, parentId: string | null | undefined, markdown: string, authorName?: string) =>

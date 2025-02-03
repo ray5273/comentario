@@ -10,7 +10,7 @@ context('API / RSS', () => {
 
         const feedUrl = (query: Record<string, string>) => `/api/rss/comments?${new URLSearchParams(query).toString()}`;
 
-        const fetchRssItems = (query: Record<string, string>, expectPath: string) =>
+        const fetchRssItems = (query: Record<string, string>, expectPath: string, expectTitle: string) =>
             cy.request({method: 'GET', url: feedUrl(query)})
                 .then(r => {
                     expect(r.status).eq(200);
@@ -24,7 +24,7 @@ context('API / RSS', () => {
 
                     // Check the channel
                     const channel = xml.find('rss channel');
-                    expect(channel.find('> title').text()).eq('Comentario comments on localhost:8000');
+                    expect(channel.find('> title').text()).eq(expectTitle);
                     expect(channel.find('> link').text()).eq('http://localhost:8000' + expectPath);
                     expect(channel.find('> description').text()).eq('Comentario RSS Feed for http://localhost:8000' + expectPath);
 
@@ -39,7 +39,11 @@ context('API / RSS', () => {
                 });
 
         it('returns RSS feed for a domain', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id}, '').should('yamlMatch',
+            fetchRssItems(
+                {domain: DOMAINS.localhost.id},
+                '',
+                'Comentario comments on localhost:8000',
+            ).should('yamlMatch',
                 // language=yaml
                 `
                 - title: Commenter Two | localhost:8000 | Comentario
@@ -171,7 +175,11 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for a domain page', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id, page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c6'}, '/comments/').should('yamlMatch',
+            fetchRssItems(
+                {domain: DOMAINS.localhost.id, page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c6'},
+                '/comments/',
+                'Comentario page comments on localhost:8000',
+            ).should('yamlMatch',
                 // language=yaml
                 `
                 - title: Anonymous | localhost:8000 | Comentario
@@ -183,7 +191,11 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for an author user', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id, author: USERS.queen.id}, '').should('yamlMatch',
+            fetchRssItems(
+                {domain: DOMAINS.localhost.id, author: USERS.queen.id},
+                '',
+                'Comentario comments by Cook Queen on localhost:8000',
+            ).should('yamlMatch',
                 // language=yaml
                 `
                 - title: Cook Queen | localhost:8000 | Comentario
@@ -205,7 +217,11 @@ context('API / RSS', () => {
         });
 
         it('returns RSS feed for replies to a user', () => {
-            fetchRssItems({domain: DOMAINS.localhost.id, replyToUser: USERS.queen.id}, '').should('yamlMatch',
+            fetchRssItems(
+                {domain: DOMAINS.localhost.id, replyToUser: USERS.queen.id},
+                '',
+                'Comentario comments in reply to Cook Queen on localhost:8000',
+            ).should('yamlMatch',
                 // language=yaml
                 `
                 - title: Captain Ace | localhost:8000 | Comentario
@@ -234,7 +250,9 @@ context('API / RSS', () => {
                     author: USERS.ace.id,
                     replyToUser: USERS.queen.id,
                 },
-                '/')
+                '/',
+                'Comentario page comments by Captain Ace in reply to Cook Queen on localhost:8000',
+            )
             .should('yamlMatch',
                 // language=yaml
                 `

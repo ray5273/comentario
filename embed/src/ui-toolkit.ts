@@ -50,9 +50,20 @@ export class UIToolkit {
      * Create and return a new link (anchor) element.
      * @param text Link text.
      * @param href Href of the anchor.
+     * @param options Options for the link
      */
-    static a(text: string, href: string): Wrap<HTMLAnchorElement> {
-        return Wrap.new('a').inner(text).attr({href, target: '_blank', rel: 'noopener'});
+    static a(text: string, href: string, options: {noFollow?: boolean; noOpener?: boolean; noReferrer?: boolean} = {noOpener: true}): Wrap<HTMLAnchorElement> {
+        const rel = [];
+        if (options.noFollow) {
+            rel.push('nofollow');
+        }
+        if (options.noOpener) {
+            rel.push('noopener');
+        }
+        if (options.noReferrer) {
+            rel.push('noreferrer');
+        }
+        return Wrap.new('a').inner(text).attr({href, target: '_blank', rel: rel.join(' ')});
     }
 
     /**

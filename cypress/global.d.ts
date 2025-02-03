@@ -338,6 +338,14 @@ declare namespace Cypress {
         verifyPasswordInputValidation(options?: {required?: boolean, strong?: boolean}): Chainable<JQueryWithSelector>;
 
         /**
+         * Run common validations against the passed RSS link component.
+         * @param domainId ID of the currently selected domain.
+         * @param curUserId ID of the currently authenticated user.
+         * @param pageId Optional ID of the domain page, if there's any selected.
+         */
+        verifyRssLink(domainId: string, curUserId: string, pageId?: string): Chainable<JQueryWithSelector>;
+
+        /**
          * Submit a new comment via an API call. If the user is logged in (i.e. the commenter session cookie exists),
          * the comment is submitted as that user, otherwise as unregistered author.
          * @param host Host to submit comment on.
@@ -519,5 +527,6 @@ declare namespace Chai {
         matrixMatch(expected: (string | string[] | RegExp)[][]): void;
         yamlMatch(expected: string): void;
         anchor(expectedUrl: string | RegExp, options?: {newTab?: boolean; noOpener?: boolean; noReferrer?: boolean; noFollow?: boolean}): void;
+        rssLink(params: Record<string, string>): void;
     }
 }

@@ -2,7 +2,8 @@ import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../suppo
 
 context('Domain Page Properties page', () => {
 
-    const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + '/0ebb8a1b-12f6-421e-b1bb-75867ac480c7';
+    const localhostPageId   = '0ebb8a1b-12f6-421e-b1bb-75867ac480c7';
+    const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + `/${localhostPageId}`;
 
     const makeAliases = (hasUpdateTitle: boolean, hasEdit: boolean) => {
         cy.get('app-domain-page-properties').as('pageProps');
@@ -65,11 +66,14 @@ context('Domain Page Properties page', () => {
                     ['Path',             '/'],
                     ['Title',            'Home'],
                     ['Read-only',        ''],
-                    ['Comment RSS feed', null], // TODO check elsewhere
+                    ['Comment RSS feed', null], // Checked separately below
                 ]);
 
                 // Check number of comments in the Comments section
                 cy.get('@commentList').verifyListFooter(test.numComments, false);
+
+                // Verify the RSS link
+                cy.get('@pageDetails').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, test.user.id, localhostPageId);
             }));
 
     [
@@ -88,8 +92,11 @@ context('Domain Page Properties page', () => {
                     ['Created',            REGEXES.datetime],
                     ['Number of comments', '17'],
                     ['Number of views',    '10'],
-                    ['Comment RSS feed',   null], // TODO check elsewhere
+                    ['Comment RSS feed',   null], // Checked separately below
                 ]);
+
+                // Verify the RSS link
+                cy.get('@pageDetails').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, test.user.id, localhostPageId);
 
                 // Test Update title button
                 cy.get('@btnUpdateTitle').click();

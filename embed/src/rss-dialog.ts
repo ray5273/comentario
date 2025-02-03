@@ -59,7 +59,7 @@ export class RssDialog extends Dialog {
                 // RSS feed link
                 Wrap.new('hr'),
                 UIToolkit.div('dialog-centered').append(UIToolkit.span(this.t('labelUseRssLink') + ': ')),
-                UIToolkit.div('dialog-centered').append(this.link = UIToolkit.a('', ''))));
+                UIToolkit.div('dialog-centered').append(this.link = UIToolkit.a('', '', {noOpener: true, noReferrer: true}))));
         this.updateLink();
         return d;
     }

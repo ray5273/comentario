@@ -1,6 +1,6 @@
 import * as YAML from 'yamljs';
 
-chai.use((_chai) => {
+chai.use((_chai: Chai.ChaiStatic) => {
 
     // Checks the passed array against the expectation. If a string array is passed for expected, it's converted into a linebreak-separated
     // string
@@ -281,4 +281,13 @@ chai.use((_chai) => {
             }
         });
 
+
+    // Checks the passed anchor element is an RSS feed link
+    _chai.Assertion.addMethod(
+        'rssLink',
+        function(params: Record<string, string>) {
+            expect(this._obj).anchor(
+                Cypress.config().baseUrl + '/api/rss/comments?' + Object.entries(params).map(([k, v]) => `${k}=${v}`).join('&'),
+                {newTab: true, noOpener: true, noReferrer: true, noFollow: false});
+        });
 });
