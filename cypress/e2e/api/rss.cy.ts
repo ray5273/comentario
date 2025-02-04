@@ -23,18 +23,25 @@ context('API / RSS', () => {
                     expect(xml.find('rss channel').toArray()).to.have.length(1);
 
                     // Check the channel
+                    const pageUrl = `http://localhost:8000${expectPath}`;
                     const channel = xml.find('rss channel');
-                    expect(channel.find('> title').text()).eq(expectTitle);
-                    expect(channel.find('> link').text()).eq('http://localhost:8000' + expectPath);
-                    expect(channel.find('> description').text()).eq('Comentario RSS Feed for http://localhost:8000' + expectPath);
+                    expect(channel.find('> title')      .text()).eq(expectTitle);
+                    expect(channel.find('> link')       .text()).eq(pageUrl);
+                    expect(channel.find('> description').text()).eq(`Comentario RSS Feed for ${pageUrl}`);
+                    // -- Image
+                    expect(channel.find('> image > url')   .text()).eq('http://localhost:8080/icon-rss-64px.png');
+                    expect(channel.find('> image > title') .text()).eq(expectTitle);
+                    expect(channel.find('> image > link')  .text()).eq(pageUrl);
+                    expect(channel.find('> image > width') .text()).eq('64');
+                    expect(channel.find('> image > height').text()).eq('64');
 
                     // Convert items into an array of objects
                     return xml.find('rss channel item').toArray().map(el => ({
-                        title:       el.querySelector('title').textContent,
-                        link:        el.querySelector('link').textContent,
+                        title:       el.querySelector('title')      .textContent,
+                        link:        el.querySelector('link')       .textContent,
                         description: el.querySelector('description').textContent,
-                        author:      el.querySelector('author').textContent,
-                        guid:        el.querySelector('guid').textContent,
+                        author:      el.querySelector('author')     .textContent,
+                        guid:        el.querySelector('guid')       .textContent,
                     }));
                 });
 

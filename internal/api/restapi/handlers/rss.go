@@ -7,6 +7,7 @@ import (
 	"github.com/gorilla/feeds"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_rss"
+	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -116,11 +117,19 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 	// Succeeded. Provide the feed as a payload, the XMLAndRSSProducer will take care of encoding it
 	// NB: it would be nice to localise the title and the description, but there's no way to define the feed's
 	// language; it may also vary depending on the specific page of the domain. So we keep it in English.
+	ts := strings.Join(title, " ")
 	return api_rss.NewRssCommentsOK().WithPayload(&feeds.Feed{
-		Title:       strings.Join(title, " "),
+		Title:       ts,
 		Link:        &feeds.Link{Href: feedURL},
 		Description: util.TruncateStr("Comentario RSS Feed for "+feedURL, 200),
 		Created:     created,
 		Items:       items,
+		Image: &feeds.Image{
+			Url:    config.ServerConfig.URLFor("icon-rss-64px.png", nil),
+			Title:  ts,
+			Link:   feedURL,
+			Width:  64,
+			Height: 64,
+		},
 	})
 }

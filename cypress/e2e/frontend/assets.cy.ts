@@ -10,6 +10,7 @@ context('Static assets', () => {
         {path: '/favicon.ico',                dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/vnd.microsoft.icon'},
         {path: '/favicon-16x16.png',          dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
         {path: '/favicon-32x32.png',          dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
+        {path: '/icon-rss-64px.png',          dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
         {path: '/mstile-70x70.png',           dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
         {path: '/mstile-144x144.png',         dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},
         {path: '/mstile-150x150.png',         dir: 'frontend/assets/favicons', encoding: 'binary', ctype: 'image/png'},

@@ -80,6 +80,7 @@ var (
 		"favicon.ico":                false,
 		"favicon-16x16.png":          false,
 		"favicon-32x32.png":          false,
+		"icon-rss-64px.png":          false,
 		"mstile-70x70.png":           false,
 		"mstile-144x144.png":         false,
 		"mstile-150x150.png":         false,
