@@ -1,80 +1,45 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta name="viewport" content="user-scalable=no,initial-scale=1">
-    <title>
-        Comentario: {{ if eq .Kind "commentStatus" }}{{ T "commentStatusChanged" }}{{ else }}{{ T "newCommentOn" .PageTitle }}{{ end }}
-    </title>
-</head>
-<body style="font-size: 14px; background: white; font-family: sans-serif; padding: 0; margin: 0;">
-    <div style="max-width: 600px; margin-top: 16px;">
-        <!-- Heading with logo -->
-        <div style="text-align: center; margin-top: 12px; padding: 8px; border-bottom: 1px solid #eee;">
-            <img src="cid:logo.png" alt="Comentario" style="border: 0; max-width: 100%; width: 500px; height: auto;">
-        </div>
-
-        <!-- Body -->
-        <div style="padding: 16px;">
-            <div style="margin: 12px 0;">
-                <div style="margin: 0; font-size: 20px; font-weight: bold;">
-                    {{- if eq .Kind "reply" }}
-                        {{- T "unreadReply" -}}
-                    {{- else if .IsPending -}}
-                        {{- T "commentIsPending" -}}
-                    {{- else if eq .Kind "commentStatus" -}}
-                        {{- if .IsApproved }}{{ T "commentIsApproved" }}{{ else }}{{ T "commentIsRejected" }}{{ end -}}
-                    {{- else -}}
-                        {{- T "newComment" -}}
-                    {{- end -}}
-                </div>
-
-                <!-- Reason for the pending status -->
-                {{- if and .IsPending .PendingReason }}
-                    <div style="font-size: 14px; color: #868e96">{{ .PendingReason }}</div>
-                {{- end }}
-            </div>
-
-            <!-- Comment -->
-            <div style="margin-bottom: 12px; padding: 10px; border: 1px solid #eeeeee; border-radius: 2px;">
-                <!-- Header -->
-                <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px; margin-bottom: 12px;">
-                    <span style="font-size: 14px; font-weight: bold; color: #1e2127;">{{ .CommenterName }}</span>
-                    —
-                    <a href="{{ .PageURL }}" class="page" style="margin-bottom: 10px; text-decoration: none; color: #4950d8;">"{{ .PageTitle }}"</a>
-                </div>
-
-                <!-- Comment text -->
-                <div style="line-height: 20px; margin-bottom: 12px">{{ .HTML }}</div>
-
-                <!-- Moderation actions bar -->
-                <div style="text-align: right; font-size:12px; font-weight: bold;">
-                    {{ if .CanModerate }}
-                        {{ if .IsPending }}
-                            <a href="{{ .ApproveURL }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #198754; border: 1px solid #198754; border-radius: 2px;">{{ T "actionApprove" }}</a>
-                            <a href="{{ .RejectURL  }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #ffc107; border: 1px solid #ffc107; border-radius: 2px;">{{ T "actionReject" }}</a>
-                        {{ end }}
-                        <a href="{{ .DeleteURL      }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #dc3545; border: 1px solid #dc3545; border-radius: 2px;">{{ T "actionDelete" }}</a>
-                    {{ end }}
-                    <a href="{{ .CommentURL         }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #495057; border: 1px solid #495057; border-radius: 2px;">{{ T "actionContext" }}</a>
-                </div>
-            </div>
-        </div>
-
-        <!-- Footer -->
-        <div class="footer" style="margin: 16px 0;">
-            <p style="padding: 12px 0; color: #868e96; font-size: 13px; text-align: left; border-top: 1px solid #eeeeee; border-bottom: 1px solid #eeeeee;">
-                {{- if eq .Kind "reply" }}{{ T "notificationNewReply" }}
-                {{- else if eq .Kind "commentStatus" }}{{ T "notificationCommentStatus" }}
-                {{- else if .IsPending }}{{ T "notificationModPending" }}
-                {{- else }}{{ T "notificationModAll" }}
-                {{- end -}}
-                &nbsp;
-                <a href="{{ .UnsubscribeURL }}" style="color: #868e96; font-weight: bold; text-decoration: none;">{{ T "actionUnsubscribe" }}</a>.
-            </p>
-            <p style="padding-top: 6px;">
-                <a href="https://comentario.app/" style="float: right; font-weight: bold; color: #868e96; font-size: 13px; text-decoration: none;">{{ T "poweredBy" }}</a>
-            </p>
-        </div>
+{{ define "content" }}
+<div style="margin: 12px 0;">
+    <div style="margin: 0; font-size: 20px; font-weight: bold;">
+        {{- if eq .Kind "reply" }}
+            {{- T "unreadReply" -}}
+        {{- else if .IsPending -}}
+            {{- T "commentIsPending" -}}
+        {{- else if eq .Kind "commentStatus" -}}
+            {{- if .IsApproved }}{{ T "commentIsApproved" }}{{ else }}{{ T "commentIsRejected" }}{{ end -}}
+        {{- else -}}
+            {{- T "newComment" -}}
+        {{- end -}}
     </div>
-</body>
-</html>
+
+    <!-- Reason for the pending status -->
+    {{- if and .IsPending .PendingReason }}
+        <div style="font-size: 14px; color: #868e96">{{ .PendingReason }}</div>
+    {{- end }}
+</div>
+
+<!-- Comment -->
+<div style="margin-bottom: 12px; padding: 10px; border: 1px solid #eeeeee; border-radius: 2px;">
+    <!-- Header -->
+    <div style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis; padding-right: 10px; margin-bottom: 12px;">
+        <span style="font-size: 14px; font-weight: bold; color: #1e2127;">{{ .CommenterName }}</span>
+        —
+        <a href="{{ .PageURL }}" class="page" style="margin-bottom: 10px; text-decoration: none; color: #4950d8;">"{{ .PageTitle }}"</a>
+    </div>
+
+    <!-- Comment text -->
+    <div style="line-height: 20px; margin-bottom: 12px">{{ .HTML }}</div>
+
+    <!-- Moderation actions bar -->
+    <div style="text-align: right; font-size:12px; font-weight: bold;">
+        {{ if .CanModerate }}
+            {{ if .IsPending }}
+                <a href="{{ .ApproveURL }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #198754; border: 1px solid #198754; border-radius: 2px;">{{ T "actionApprove" }}</a>
+                <a href="{{ .RejectURL  }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #ffc107; border: 1px solid #ffc107; border-radius: 2px;">{{ T "actionReject" }}</a>
+            {{ end }}
+            <a href="{{ .DeleteURL      }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #dc3545; border: 1px solid #dc3545; border-radius: 2px;">{{ T "actionDelete" }}</a>
+        {{ end }}
+        <a href="{{ .CommentURL         }}" style="padding: 5px; text-decoration: none; text-transform: uppercase; color: #495057; border: 1px solid #495057; border-radius: 2px;">{{ T "actionContext" }}</a>
+    </div>
+</div>
+{{ end }}

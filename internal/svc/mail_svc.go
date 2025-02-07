@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"html/template"
+	"os"
 	"path"
 	"reflect"
 	"sync"
@@ -47,17 +48,44 @@ type mailService struct {
 }
 
 func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recipient *data.User, canModerate bool, domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenterName string) error {
+	lang := recipient.LangID
+	t := func(id string, args ...reflect.Value) string { return TheI18nService.Translate(lang, id, args...) }
+
+	// Figure out the email title/subject
+	var subject string
+	if kind == MailNotificationKindCommentStatus {
+		subject = t("commentStatusChanged")
+	} else {
+		subject = t("newCommentOn", reflect.ValueOf(page.DisplayTitle(domain)))
+	}
+
+	// Figure out email reason
+	var reason string
+	switch {
+	case kind == MailNotificationKindReply:
+		reason = t("notificationNewReply")
+	case kind == MailNotificationKindCommentStatus:
+		reason = t("notificationCommentStatus")
+	case comment.IsPending:
+		reason = t("notificationModPending")
+	default:
+		reason = t("notificationModAll")
+	}
+
 	// Prepare params
 	params := map[string]any{
-		"Kind":          kind,
 		"CanModerate":   canModerate,
 		"CommenterName": commenterName,
 		"CommentURL":    comment.URL(domain.IsHTTPS, domain.Host, page.Path),
+		"EmailReason":   reason,
 		"HTML":          template.HTML(comment.HTML),
-		"IsPending":     comment.IsPending,
 		"IsApproved":    comment.IsApproved,
+		"IsPending":     comment.IsPending,
+		"Kind":          kind,
+		"Lang":          lang,
 		"PageTitle":     page.DisplayTitle(domain),
 		"PageURL":       domain.RootURL() + page.Path,
+		"Title":         subject,
 		"UnsubscribeURL": config.ServerConfig.URLForAPI(
 			"mail/unsubscribe",
 			map[string]string{
@@ -75,69 +103,79 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 
 		// Add moderation URLs and a reason only for pending comments
 		if comment.IsPending {
-			params["ApproveURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "approve"})
-			params["RejectURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "reject"})
+			params["ApproveURL"] = TheI18nService.FrontendURL(lang, commentPropPath, map[string]string{"action": "approve"})
+			params["RejectURL"] = TheI18nService.FrontendURL(lang, commentPropPath, map[string]string{"action": "reject"})
 			params["PendingReason"] = comment.PendingReason
 		}
 
 		// Add delete URL
-		params["DeleteURL"] = TheI18nService.FrontendURL(recipient.LangID, commentPropPath, map[string]string{"action": "delete"})
-	}
-
-	// Figure out the email subject
-	var subject string
-	if kind == MailNotificationKindCommentStatus {
-		subject = TheI18nService.Translate(recipient.LangID, "commentStatusChanged")
-	} else {
-		subject = TheI18nService.Translate(recipient.LangID, "newCommentOn", reflect.ValueOf(page.DisplayTitle(domain)))
+		params["DeleteURL"] = TheI18nService.FrontendURL(lang, commentPropPath, map[string]string{"action": "delete"})
 	}
 
 	// Send out a notification email
-	return svc.sendFromTemplate(recipient.LangID, "", recipient.Email, subject, "comment-notification.gohtml", params)
+	return svc.sendFromTemplate(lang, "", recipient.Email, subject, "comment-notification.gohtml", params)
 }
 
 func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) error {
+	t := func(id string) string { return TheI18nService.Translate(user.LangID, id) }
 	return svc.sendFromTemplate(
 		user.LangID,
 		"",
 		user.Email,
-		TheI18nService.Translate(user.LangID, "confirmYourEmail"),
-		"confirm-email.gohtml",
+		t("confirmYourEmail"),
+		"action.gohtml",
 		map[string]any{
-			"ConfirmURL": config.ServerConfig.URLForAPI("auth/confirm", map[string]string{"access_token": token.Value}),
-			"Name":       user.Name,
+			"ActionAct":     t("confirmEmailAct"),
+			"ActionButton":  t("actionConfirmEmail"),
+			"ActionRequest": t("confirmEmailRequest"),
+			"ActionURL":     config.ServerConfig.URLForAPI("auth/confirm", map[string]string{"access_token": token.Value}),
+			"EmailReason":   t("confirmEmailExplanation") + " " + t("ignoreEmail"),
+			"Title":         t("confirmYourEmail"),
+			"UserName":      user.Name,
 		})
 }
 
 func (svc *mailService) SendEmailUpdateConfirmEmail(user *data.User, token *data.Token, newEmail string, hmacSignature []byte) error {
+	t := func(id string) string { return TheI18nService.Translate(user.LangID, id) }
 	return svc.sendFromTemplate(
 		user.LangID,
 		"",
 		newEmail,
-		TheI18nService.Translate(user.LangID, "confirmYourEmailUpdate"),
-		"confirm-email-update.gohtml",
+		t("confirmYourEmailUpdate"),
+		"action.gohtml",
 		map[string]any{
-			"ConfirmURL": config.ServerConfig.URLForAPI(
+			"ActionAct":     t("confirmEmailUpdateAct"),
+			"ActionButton":  t("actionConfirmEmailUpdate"),
+			"ActionRequest": t("confirmEmailUpdateRequest"),
+			"ActionURL": config.ServerConfig.URLForAPI(
 				"user/email/confirm",
 				map[string]string{
 					"access_token": token.Value,
 					"email":        newEmail,
 					"hmac":         hex.EncodeToString(hmacSignature),
 				}),
-			"Name": user.Name,
+			"EmailReason": t("confirmEmailUpdateExpl") + " " + t("ignoreEmail"),
+			"Title":       t("confirmYourEmailUpdate"),
+			"UserName":    user.Name,
 		})
 }
 
 func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) error {
+	t := func(id string) string { return TheI18nService.Translate(user.LangID, id) }
 	return svc.sendFromTemplate(
 		user.LangID,
 		"",
 		user.Email,
-		TheI18nService.Translate(user.LangID, "resetYourPassword"),
-		"reset-password.gohtml",
+		t("resetYourPassword"),
+		"action.gohtml",
 		map[string]any{
-			"ResetURL": TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.Value}),
-			"Name":     user.Name,
+			"ActionAct":     t("clickButtonBelow"),
+			"ActionButton":  t("actionResetPassword"),
+			"ActionRequest": t("pwdResetRequest"),
+			"ActionURL":     TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.Value}),
+			"EmailReason":   t("pwdResetExplanation") + " " + t("ignoreEmail"),
+			"Title":         t("resetYourPassword"),
+			"UserName":      user.Name,
 		})
 }
 
@@ -148,7 +186,8 @@ func (svc *mailService) getTemplate(lang, name string) *template.Template {
 	return svc.templates[lang+"/"+name]
 }
 
-// execTemplateFile loads and executes a named template from the corresponding file. Returns the resulting string
+// execTemplateFile loads and executes a named template from the corresponding file, as well as the base template.
+// Returns the resulting string
 func (svc *mailService) execTemplateFile(lang, name string, data map[string]any) (string, error) {
 	// Identify a language best matching the requested one
 	langID := TheI18nService.BestLangFor(lang)
@@ -157,17 +196,15 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 	templ := svc.getTemplate(langID, name)
 	if templ == nil {
 		// Create a new template
-		filePath := path.Join(config.ServerConfig.TemplatePath, name)
-		var err error
-		templ, err = template.New(name).
+		templ = template.New(name).
 			// Add required functions
 			Funcs(template.FuncMap{
 				"T": func(id string, args ...reflect.Value) string { return TheI18nService.Translate(langID, id, args...) },
-			}).
-			// Parse the file
-			ParseFiles(filePath)
-		if err != nil {
-			return "", fmt.Errorf("parsing HTML template file %q failed: %w", filePath, err)
+			})
+
+		// Parse the base and the "flesh" template files
+		if err := svc.parseTemplateFiles(templ, "_base.gohtml", name); err != nil {
+			return "", fmt.Errorf("parsing HTML template files failed: %w", err)
 		}
 
 		// Cache the parsed template. We need to "namespace" them by language because the "T" (Translate) function,
@@ -175,7 +212,7 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 		svc.templMu.Lock()
 		svc.templates[langID+"/"+name] = templ
 		svc.templMu.Unlock()
-		logger.Debugf("Parsed HTML template %q", filePath)
+		logger.Debugf("Parsed HTML template %q", name)
 	}
 
 	// Execute the template
@@ -188,7 +225,22 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 	return buf.String(), nil
 }
 
-// Send sends an email and logs the outcome
+// parseTemplateFiles reads and parses the specified template file from the template dir
+func (svc *mailService) parseTemplateFiles(t *template.Template, names ...string) error {
+	// Read the files
+	for _, name := range names {
+		s, err := os.ReadFile(path.Join(config.ServerConfig.TemplatePath, name))
+		if err == nil {
+			_, err = t.Parse(string(s))
+		}
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// send an email and log the outcome
 func (svc *mailService) send(replyTo, recipient, subject, htmlMessage string, embedFiles ...string) error {
 	logger.Debugf("mailService.send('%s', '%s', '%s', ...)", replyTo, recipient, subject)
 
@@ -214,5 +266,10 @@ func (svc *mailService) sendFromTemplate(lang, replyTo, recipient, subject, temp
 	}
 
 	// Send the mail, prepending the subject with the app name and embedding the logo
-	return svc.send(replyTo, recipient, "Comentario: "+subject, body, path.Join(config.ServerConfig.TemplatePath, "images", "logo.png"))
+	return svc.send(
+		replyTo,
+		recipient,
+		"Comentario: "+subject,
+		body,
+		path.Join(config.ServerConfig.TemplatePath, "images", "logo.png"))
 }
