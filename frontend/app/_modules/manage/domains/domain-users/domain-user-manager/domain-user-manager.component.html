@@ -59,8 +59,8 @@
                         <div>
                             <!-- Name -->
                             <span class="fw-bold domain-user-name">{{ u.name }}</span>
-                            <!-- Domain user badge -->
-                            <app-domain-user-badge [domainUser]="du" class="ms-2"/>
+                            <!-- Domain user role badge -->
+                            <app-domain-user-role-badge [role]="du.role" class="ms-2"/>
                             <!-- Superuser badge -->
                             @if (u.isSuperuser) { <app-superuser-badge class="ms-2"/> }
                             <!-- Banned badge -->

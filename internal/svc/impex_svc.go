@@ -131,12 +131,11 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 		user = u
 
 		// Check if domain user exists, too
-		if _, _, err := TheDomainService.FindDomainUserByID(domainID, &u.ID); err == nil {
-			return user, false, false, nil
-
-		} else if !errors.Is(err, ErrNotFound) {
-			// Any other error than "not found"
+		if _, du, err := TheDomainService.FindDomainUserByID(domainID, &u.ID, false); err != nil {
 			return nil, false, false, err
+		} else if du != nil {
+			// Domain user already exists
+			return user, false, false, nil
 		}
 
 	} else if !errors.Is(err, ErrNotFound) {

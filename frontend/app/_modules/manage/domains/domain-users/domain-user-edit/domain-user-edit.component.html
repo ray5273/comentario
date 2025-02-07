@@ -22,25 +22,25 @@
                 <!-- Owner -->
                 <div class="form-check mb-3">
                     <input formControlName="role" class="form-check-input" type="radio" id="role-owner" value="owner">
-                    <label class="form-check-label" for="role-owner" i18n><app-domain-user-badge [domainUser]="{isOwner: true}"/></label>
+                    <label class="form-check-label" for="role-owner" i18n><app-domain-user-role-badge role="owner"/></label>
                     <div class="form-text" i18n>Domain owners can change domain settings or delete the domain. They can also manage other domain users.</div>
                 </div>
                 <!-- Moderator -->
                 <div class="form-check mb-3">
                     <input formControlName="role" class="form-check-input" type="radio" id="role-moderator" value="moderator">
-                    <label class="form-check-label" for="role-moderator" i18n><app-domain-user-badge [domainUser]="{isModerator: true}"/></label>
+                    <label class="form-check-label" for="role-moderator" i18n><app-domain-user-role-badge role="moderator"/></label>
                     <div class="form-text" i18n>Domain moderators can approve or reject comments on any page of the domain. They cannot see user list or change domain settings.</div>
                 </div>
                 <!-- Commenter -->
                 <div class="form-check mb-3">
                     <input formControlName="role" class="form-check-input" type="radio" id="role-commenter" value="commenter">
-                    <label class="form-check-label" for="role-commenter" i18n><app-domain-user-badge [domainUser]="{isCommenter: true}"/></label>
+                    <label class="form-check-label" for="role-commenter" i18n><app-domain-user-role-badge role="commenter"/></label>
                     <div class="form-text" i18n>Commenters can write comments on any page of the domain (except locked ones). This is the default role a user gets after registration.</div>
                 </div>
                 <!-- Read-only -->
                 <div class="form-check mb-3">
                     <input formControlName="role" class="form-check-input" type="radio" id="role-readonly" value="readonly">
-                    <label class="form-check-label" for="role-readonly" i18n><app-domain-user-badge [domainUser]="{}"/></label>
+                    <label class="form-check-label" for="role-readonly" i18n><app-domain-user-role-badge role="readonly"/></label>
                     <div class="form-text" i18n>Read-only users can only view comments. Use this role to prevent a user from writing any comments.</div>
                 </div>
             </div>

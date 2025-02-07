@@ -910,6 +910,22 @@ func (du *DomainUser) IsReadonly() bool {
 	return du != nil && !du.IsOwner && !du.IsModerator && !du.IsCommenter
 }
 
+// Role returns a named domain user role. Can be called against a nil receiver, in which case returns empty string
+func (du *DomainUser) Role() models.DomainUserRole {
+	switch {
+	case du == nil:
+		return ""
+	case du.IsOwner:
+		return models.DomainUserRoleOwner
+	case du.IsModerator:
+		return models.DomainUserRoleModerator
+	case du.IsCommenter:
+		return models.DomainUserRoleCommenter
+	default:
+		return models.DomainUserRoleReadonly
+	}
+}
+
 // ToDTO converts this model into an API model. Can be called against a nil receiver
 func (du *DomainUser) ToDTO() *models.DomainUser {
 	if du == nil {
@@ -918,12 +934,10 @@ func (du *DomainUser) ToDTO() *models.DomainUser {
 	return &models.DomainUser{
 		CreatedTime:         strfmt.DateTime(du.CreatedTime),
 		DomainID:            strfmt.UUID(du.DomainID.String()),
-		IsCommenter:         du.IsCommenter,
-		IsModerator:         du.IsModerator,
-		IsOwner:             du.IsOwner,
 		NotifyCommentStatus: du.NotifyCommentStatus,
 		NotifyModerator:     du.NotifyModerator,
 		NotifyReplies:       du.NotifyReplies,
+		Role:                du.Role(),
 		UserID:              strfmt.UUID(du.UserID.String()),
 	}
 }
@@ -952,11 +966,24 @@ func (du *DomainUser) WithNotifyReplies(b bool) *DomainUser {
 	return du
 }
 
-// WithRoles sets the role flags
-func (du *DomainUser) WithRoles(isOwner, isModerator, isCommenter bool) *DomainUser {
-	du.IsOwner = isOwner
-	du.IsModerator = du.IsOwner || isModerator     // Owner is always a moderator
-	du.IsCommenter = du.IsModerator || isCommenter // Moderator is always a commenter
+// WithRole sets the named role by updating the user's role flags
+func (du *DomainUser) WithRole(r models.DomainUserRole) *DomainUser {
+	switch owner, moderator, commenter := false, false, false; r {
+	case models.DomainUserRoleOwner:
+		owner = true
+		fallthrough
+	case models.DomainUserRoleModerator:
+		moderator = true
+		fallthrough
+	case models.DomainUserRoleCommenter:
+		commenter = true
+		fallthrough
+	case models.DomainUserRoleReadonly:
+		// Apply the role flags here (thus ignoring any invalid/unknown role)
+		du.IsOwner = owner
+		du.IsModerator = moderator
+		du.IsCommenter = commenter
+	}
 	return du
 }
 

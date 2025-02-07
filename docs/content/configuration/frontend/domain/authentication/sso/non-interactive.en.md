@@ -77,6 +77,7 @@ The payload value holds a JSON-formatted user data, providing the following prop
 * `name`, providing the user's full name;
 * `photo`, an optional user avatar URL;
 * `link`, an optional user profile or website URL.
+* `role`, an optional [role](/kb/permissions/roles) to give to the user on this specific domain, one of [`owner`, `moderator`, `commenter`, `readonly`]. If not provided, any *new user* will be assigned the default `commenter` role, and any *existing user* will keep their role unchanged.
 
 For example:
 

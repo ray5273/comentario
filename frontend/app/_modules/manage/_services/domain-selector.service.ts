@@ -3,14 +3,7 @@ import { HttpContext } from '@angular/common/http';
 import { BehaviorSubject, combineLatestWith, Observable, tap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import {
-    ApiGeneralService,
-    Domain,
-    DomainExtension,
-    DomainGet200Response,
-    DomainUser,
-    Principal,
-} from '../../../../generated-api';
+import { ApiGeneralService, Domain, DomainExtension, DomainGet200Response, DomainUser, DomainUserRole, Principal } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
 import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-error-handler.interceptor';
@@ -23,7 +16,7 @@ interface DomainSelectorSettings {
 }
 
 /** Kind of the current user in relation to a domain. */
-export type DomainUserKind = 'superuser' | 'owner' | 'moderator' | 'commenter' | 'readonly';
+export type DomainUserKind = 'superuser' | DomainUserRole;
 
 // An object that combines domain, user, and IdP data
 export class DomainMeta {
@@ -56,21 +49,9 @@ export class DomainMeta {
         readonly principalUpdated?: number,
     ) {
         // Calculate additional properties
-        if (principal) {
-            if (principal.isSuperuser) {
-                this.userKind = 'superuser';
-            } else if (domainUser?.isOwner) {
-                this.userKind = 'owner';
-            } else if (domainUser?.isModerator) {
-                this.userKind = 'moderator';
-            } else if (domainUser?.isCommenter) {
-                this.userKind = 'commenter';
-            } else {
-                this.userKind = 'readonly';
-            }
-        }
-        this.canManageDomain = !!(domain && (principal?.isSuperuser || domainUser?.isOwner));
-        this.canModerateDomain = this.canManageDomain || !!(domain && domainUser?.isModerator);
+        this.userKind = principal?.isSuperuser ? 'superuser' : domainUser?.role;
+        this.canManageDomain = !!(domain && (this.userKind === 'superuser' || this.userKind === DomainUserRole.Owner));
+        this.canModerateDomain = this.canManageDomain || this.userKind === DomainUserRole.Moderator;
     }
 }
 

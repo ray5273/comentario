@@ -35,7 +35,7 @@ func CommentCount(params api_general.CommentCountParams, user *data.User) middle
 	}
 
 	// Find the domain user, if any
-	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID)
+	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, false)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -149,7 +149,7 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	}
 
 	// Find the domain user, if any
-	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID)
+	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, false)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -239,7 +239,7 @@ func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, curUserID *uuid.UU
 		return nil, nil, nil, nil, respServiceError(err)
 
 		// Fetch the domain and the user
-	} else if domain, curDomainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, curUserID); err != nil {
+	} else if domain, curDomainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, curUserID, false); err != nil {
 		return nil, nil, nil, nil, respServiceError(err)
 
 	} else {

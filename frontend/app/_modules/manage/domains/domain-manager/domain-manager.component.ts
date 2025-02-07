@@ -17,7 +17,7 @@ import { Animations } from '../../../../_utils/animations';
 import { InstanceConfigItemKey } from '../../../../_models/config';
 import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
 import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
-import { DomainUserBadgeComponent } from '../../badges/domain-user-badge/domain-user-badge.component';
+import { DomainUserRoleBadgeComponent } from '../../badges/domain-user-role-badge/domain-user-role-badge.component';
 import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
 import { LoaderDirective } from '../../../tools/_directives/loader.directive';
@@ -32,7 +32,7 @@ import { LoaderDirective } from '../../../tools/_directives/loader.directive';
         RouterLink,
         FaIconComponent,
         SortSelectorComponent,
-        DomainUserBadgeComponent,
+        DomainUserRoleBadgeComponent,
         DecimalPipe,
         ListFooterComponent,
         SortPropertyComponent,

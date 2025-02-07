@@ -5,7 +5,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DomainUserEditComponent } from './domain-user-edit.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { ToastService } from '../../../../../_services/toast.service';
-import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
+import { DomainUserRoleBadgeComponent } from '../../../badges/domain-user-role-badge/domain-user-role-badge.component';
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 import { mockDomainSelector } from '../../../../../_utils/_mocks.spec';
 
@@ -20,7 +20,7 @@ describe('DomainUserEditComponent', () => {
                     RouterModule.forRoot([]),
                     ReactiveFormsModule,
                     DomainUserEditComponent,
-                    MockComponents(DomainUserBadgeComponent, InfoIconComponent),
+                    MockComponents(DomainUserRoleBadgeComponent, InfoIconComponent),
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),

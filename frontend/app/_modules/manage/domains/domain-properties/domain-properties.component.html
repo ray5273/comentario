@@ -5,7 +5,7 @@
 </header>
 
 <!-- Installation, only for an owner user -->
-@if (domainMeta?.domainUser?.isOwner) {
+@if (domainMeta?.domainUser?.role === 'owner') {
     <section>
         <!-- Heading -->
         <h2 i18n>Installation</h2>

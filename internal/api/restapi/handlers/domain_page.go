@@ -126,7 +126,7 @@ func domainPageGetDomainUser(pageID strfmt.UUID, user *data.User) (*data.DomainP
 	}
 
 	// Find the page's domain and user
-	domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID)
+	domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID, false)
 	if err != nil {
 		return nil, nil, nil, respServiceError(err)
 	}

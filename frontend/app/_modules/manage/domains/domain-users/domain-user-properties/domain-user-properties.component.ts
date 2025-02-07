@@ -10,7 +10,7 @@ import { DomainSelectorService } from '../../../_services/domain-selector.servic
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
 import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
-import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
+import { DomainUserRoleBadgeComponent } from '../../../badges/domain-user-role-badge/domain-user-role-badge.component';
 import { CheckmarkComponent } from '../../../../tools/checkmark/checkmark.component';
 import { DatetimePipe } from '../../../_pipes/datetime.pipe';
 import { UserDetailsComponent } from '../../../users/user-details/user-details.component';
@@ -24,7 +24,7 @@ import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
     imports: [
         SpinnerDirective,
         FaIconComponent,
-        DomainUserBadgeComponent,
+        DomainUserRoleBadgeComponent,
         CheckmarkComponent,
         DatetimePipe,
         UserDetailsComponent,

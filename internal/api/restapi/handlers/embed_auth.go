@@ -182,31 +182,20 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 	}
 
 	// Fetch the domain user
-	_, du, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID)
+	_, du, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}
 
-	// If there's no user yet
-	if du == nil {
-		// Add a new domain user record
-		du = data.NewDomainUser(domainID, &user.ID, false, false, true).
+	// Update the domain user, if the settings change
+	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
+		if err := svc.TheDomainService.UserModify(du.
 			WithNotifyReplies(params.Body.NotifyReplies).
 			WithNotifyModerator(params.Body.NotifyModerator).
-			WithNotifyCommentStatus(params.Body.NotifyCommentStatus)
-		err = svc.TheDomainService.UserAdd(du)
-
-		// Domain user exists. Update it, if the settings change
-	} else if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
-		err = svc.TheDomainService.UserModify(du.
-			WithNotifyReplies(params.Body.NotifyReplies).
-			WithNotifyModerator(params.Body.NotifyModerator).
-			WithNotifyCommentStatus(params.Body.NotifyCommentStatus))
-	}
-
-	// Error check
-	if err != nil {
-		return respServiceError(err)
+			WithNotifyCommentStatus(params.Body.NotifyCommentStatus),
+		); err != nil {
+			return respServiceError(err)
+		}
 	}
 
 	// Succeeded

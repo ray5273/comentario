@@ -423,43 +423,59 @@ definitions:
     description: Registered user on a domain
     type: object
     readOnly: true
+    required:
+      - domainId
+      - userId
+      - role
+      - notifyReplies
+      - notifyModerator
+      - notifyCommentStatus
     properties:
       domainId:
         type: string
         format: uuid
         description: ID of the domain
+        x-omitempty: false
+        x-isnullable: false
       userId:
         type: string
         format: uuid
         description: ID of the user
-      isOwner:
-        type: boolean
-        description: Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
         x-omitempty: false
-      isModerator:
-        type: boolean
-        description: Whether the user is a moderator of the domain (assumes is_commenter)
-        x-omitempty: false
-      isCommenter:
-        type: boolean
-        description: Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
-        x-omitempty: false
+        x-isnullable: false
+      role:
+        $ref: "#/definitions/domainUserRole"
+        description: Role of the user
       notifyReplies:
         type: boolean
         description: Whether the user is to be notified about replies to their comments
         x-omitempty: false
+        x-isnullable: false
       notifyModerator:
         type: boolean
         description: Whether the user is to receive moderator notifications (only when is_moderator is true)
         x-omitempty: false
+        x-isnullable: false
       notifyCommentStatus:
         type: boolean
         description: Whether the user is to be notified about status changes (approved/rejected) of their comments
         x-omitempty: false
+        x-isnullable: false
       createdTime:
         type: string
         format: date-time
         description: When the domain user was created
+
+  domainUserRole:
+    description: Role of a domain user
+    type: string
+    enum:
+      - owner
+      - moderator
+      - commenter
+      - readonly
+    x-omitempty: false
+    x-isnullable: false
 
   dynamicConfigItem:
     description: Dynamic configuration item
@@ -3563,15 +3579,9 @@ paths:
                 type: string
                 format: uuid
                 description: Domain ID
-              isOwner:
-                type: boolean
-                description: Whether the user is an owner of the domain (assumes is_moderator and is_commenter)
-              isModerator:
-                type: boolean
-                description: Whether the user is a moderator of the domain (assumes is_commenter)
-              isCommenter:
-                type: boolean
-                description: Whether the user is a commenter of the domain (if false, the user is readonly on the domain)
+              role:
+                $ref: "#/definitions/domainUserRole"
+                description: Role of the user
               notifyReplies:
                 type: boolean
                 description: Whether the user is to be notified about replies to their comments

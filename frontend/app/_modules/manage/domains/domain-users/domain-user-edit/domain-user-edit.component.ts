@@ -4,7 +4,7 @@ import { Router, RouterLink } from '@angular/router';
 import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { ApiGeneralService, DomainUser, Principal } from '../../../../../../generated-api';
+import { ApiGeneralService, DomainUser, DomainUserRole, Principal } from '../../../../../../generated-api';
 import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
@@ -12,9 +12,7 @@ import { ToastService } from '../../../../../_services/toast.service';
 import { InfoBlockComponent } from '../../../../tools/info-block/info-block.component';
 import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
-import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
-
-type UserRole = 'owner' | 'moderator' | 'commenter' | 'readonly';
+import { DomainUserRoleBadgeComponent } from '../../../badges/domain-user-role-badge/domain-user-role-badge.component';
 
 @UntilDestroy()
 @Component({
@@ -25,7 +23,7 @@ type UserRole = 'owner' | 'moderator' | 'commenter' | 'readonly';
         ReactiveFormsModule,
         SpinnerDirective,
         InfoIconComponent,
-        DomainUserBadgeComponent,
+        DomainUserRoleBadgeComponent,
         RouterLink,
     ],
 })
@@ -40,12 +38,10 @@ export class DomainUserEditComponent implements OnInit {
     /** Currently authenticated principal. */
     principal?: Principal;
 
-    private origRole?: UserRole;
-
     readonly loading = new ProcessingStatus();
     readonly saving  = new ProcessingStatus();
     readonly form = this.fb.nonNullable.group({
-        role:                ['commenter' as UserRole, [Validators.required]],
+        role:                [DomainUserRole.Commenter, [Validators.required]],
         notifyReplies:       false,
         notifyModerator:     false,
         notifyCommentStatus: false,
@@ -84,12 +80,11 @@ export class DomainUserEditComponent implements OnInit {
                 this.domainUser = r.domainUser;
                 this.email      = r.user!.email;
                 const du = this.domainUser!;
-                this.origRole = du.isOwner ? 'owner' : du.isModerator ? 'moderator' : du.isCommenter ? 'commenter' : 'readonly';
                 this.form.setValue({
-                    role:                this.origRole,
-                    notifyReplies:       !!du.notifyReplies,
-                    notifyModerator:     !!du.notifyModerator,
-                    notifyCommentStatus: !!du.notifyCommentStatus,
+                    role:                du.role,
+                    notifyReplies:       du.notifyReplies,
+                    notifyModerator:     du.notifyModerator,
+                    notifyCommentStatus: du.notifyCommentStatus,
                 });
 
                 // Only superuser can change their own role
@@ -105,14 +100,12 @@ export class DomainUserEditComponent implements OnInit {
 
         // Submit the form if it's valid
         if (this.form.valid) {
-            const val = {role: this.origRole, ...this.form.value};
+            const val = {role: this.domainUser?.role, ...this.form.value};
             this.api.domainUserUpdate(
                     this.domainUser!.userId!,
                     {
                         domainId:            this.domainUser!.domainId!,
-                        isOwner:             val.role === 'owner',
-                        isModerator:         val.role === 'moderator',
-                        isCommenter:         val.role === 'commenter',
+                        role:                val.role,
                         notifyReplies:       val.notifyReplies,
                         notifyModerator:     val.notifyModerator,
                         notifyCommentStatus: val.notifyCommentStatus,

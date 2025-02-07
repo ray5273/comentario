@@ -56,9 +56,9 @@ context('Domain Manager', () => {
         cy.get('@domainManager').verifyListFooter(1, false);
 
         // Check domain list
-        cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.localhost.host]);
-        cy.get('@domainList').texts('.domain-name').should('arrayMatch', [DOMAINS.localhost.name]);
-        cy.get('@domainList').texts('app-domain-user-badge').should('arrayMatch', ['Owner']);
+        cy.get('@domainList').texts('.domain-host')              .should('arrayMatch', [DOMAINS.localhost.host]);
+        cy.get('@domainList').texts('.domain-name')              .should('arrayMatch', [DOMAINS.localhost.name]);
+        cy.get('@domainList').texts('app-domain-user-role-badge').should('arrayMatch', ['Owner']);
 
         // Select the domain
         cy.get('@domainList').find('a').eq(0).click();
@@ -85,7 +85,7 @@ context('Domain Manager', () => {
             DOMAINS.spirit.host,
         ]);
         cy.get('@domainList').texts('.domain-name').should('be.empty'); // No names, also because they're only visible to owners
-        cy.get('@domainList').texts('app-domain-user-badge').should('arrayMatch', ['Owner', 'Moderator', 'Commenter', 'Read-only']);
+        cy.get('@domainList').texts('app-domain-user-role-badge').should('arrayMatch', ['Owner', 'Moderator', 'Commenter', 'Read-only']);
 
         // Select the domain
         cy.get('@domainList').find('a').eq(2).click();

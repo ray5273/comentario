@@ -28,6 +28,7 @@ type ssoPayload struct {
 	Name  string `json:"name"`
 	Photo string `json:"photo"`
 	Link  string `json:"link"`
+	Role  string `json:"role"`
 }
 
 func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Responder {
@@ -89,6 +90,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	reqParams := params.HTTPRequest.URL.Query()
 	var fedUser goth.User
 	var userWebsiteURL string
+	var userRole models.DomainUserRole
 
 	// SSO auth
 	nonIntSSO := false
@@ -142,6 +144,9 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		if util.IsValidURL(payload.Link, true) {
 			userWebsiteURL = payload.Link
 		}
+
+		// Take over the user role, if any
+		userRole = models.DomainUserRole(payload.Role)
 
 		// Non-SSO auth
 	} else {
@@ -303,6 +308,21 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 	token.Owner = user.ID
 	if err := svc.TheTokenService.Update(token); err != nil {
 		return oauthFailureInternal(nonIntSSO, err)
+	}
+
+	// If there's a domain, make sure a domain user exists for this user
+	if domain != nil {
+		_, du, err := svc.TheDomainService.FindDomainUserByID(&domain.ID, &user.ID, true)
+		if err != nil {
+			return oauthFailureInternal(nonIntSSO, err)
+		}
+
+		// If a role was returned by the (SSO) provider and it's changing, update the domain user
+		if userRole != "" && userRole != du.Role() {
+			if err := svc.TheDomainService.UserModify(du.WithRole(userRole)); err != nil {
+				return oauthFailureInternal(nonIntSSO, err)
+			}
+		}
 	}
 
 	// Auth successful. If it's non-interactive SSO

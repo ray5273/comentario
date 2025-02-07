@@ -220,7 +220,7 @@ context('User Properties page', () => {
                 DOMAINS.market.host,
                 DOMAINS.spirit.host,
             ]);
-            cy.get('@domainRoles').texts('app-domain-user-badge')
+            cy.get('@domainRoles').texts('app-domain-user-role-badge')
                 .should('arrayMatch', ['Owner', 'Moderator', 'Commenter', 'Read-only']);
 
             // Click on Edit user and land on the Edit User page

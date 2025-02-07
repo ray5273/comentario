@@ -26,7 +26,7 @@ import { DomainPageManagerComponent } from './domains/domain-pages/domain-page-m
 import { DomainBadgeComponent } from './badges/domain-badge/domain-badge.component';
 import { SortSelectorComponent } from './sort-selector/sort-selector.component';
 import { SortPropertyComponent } from './sort-selector/sort-property/sort-property.component';
-import { DomainUserBadgeComponent } from './badges/domain-user-badge/domain-user-badge.component';
+import { DomainUserRoleBadgeComponent } from './badges/domain-user-role-badge/domain-user-role-badge.component';
 import { DatetimePipe } from './_pipes/datetime.pipe';
 import { DomainPagePropertiesComponent } from './domains/domain-pages/domain-page-properties/domain-page-properties.component';
 import { CommentListComponent } from './domains/comments/comment-list/comment-list.component';
@@ -102,10 +102,10 @@ import { SuperuserBadgeComponent } from './badges/superuser-badge/superuser-badg
         DomainPropertiesComponent,
         DomainSsoSecretComponent,
         DomainStatsComponent,
-        DomainUserBadgeComponent,
         DomainUserEditComponent,
         DomainUserManagerComponent,
         DomainUserPropertiesComponent,
+        DomainUserRoleBadgeComponent,
         DynamicConfigComponent,
         DynConfigItemNamePipe,
         DynConfigItemValueComponent,

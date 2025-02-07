@@ -402,9 +402,9 @@ context('Domain Edit page', () => {
 
                 // Go to the domain list and verify there's a new domain
                 cy.sidebarClick('Domains', PATHS.manage.domains);
-                cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['google.com', DOMAINS.localhost.host]);
-                cy.texts('#domain-list .domain-name')         .should('arrayMatch', [DOMAINS.localhost.name]);
-                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner']);
+                cy.texts('#domain-list .domain-host')              .should('arrayMatch', ['google.com', DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-name')              .should('arrayMatch', [DOMAINS.localhost.name]);
+                cy.texts('#domain-list app-domain-user-role-badge').should('arrayMatch', ['Owner', 'Owner']);
             });
 
             it('allows to add domain with custom settings', () => {
@@ -532,9 +532,9 @@ context('Domain Edit page', () => {
 
                 // Go to the domain list and verify there's a new domain
                 cy.sidebarClick('Domains', PATHS.manage.domains);
-                cy.texts('#domain-list .domain-host')         .should('arrayMatch', ['facebook.com:4551', DOMAINS.localhost.host]);
-                cy.texts('#domain-list .domain-name')         .should('arrayMatch', ['Face Book', DOMAINS.localhost.name]);
-                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner', 'Owner']);
+                cy.texts('#domain-list .domain-host')              .should('arrayMatch', ['facebook.com:4551', DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-name')              .should('arrayMatch', ['Face Book', DOMAINS.localhost.name]);
+                cy.texts('#domain-list app-domain-user-role-badge').should('arrayMatch', ['Owner', 'Owner']);
             });
         });
     });
@@ -830,9 +830,9 @@ context('Domain Edit page', () => {
 
                 // Go to the domain list and verify the domain is updated
                 cy.sidebarClick('Domains', PATHS.manage.domains);
-                cy.texts('#domain-list .domain-host')         .should('arrayMatch', [DOMAINS.localhost.host]);
-                cy.texts('#domain-list .domain-name')         .should('arrayMatch', ['Big Time']);
-                cy.texts('#domain-list app-domain-user-badge').should('arrayMatch', ['Owner']);
+                cy.texts('#domain-list .domain-host')              .should('arrayMatch', [DOMAINS.localhost.host]);
+                cy.texts('#domain-list .domain-name')              .should('arrayMatch', ['Big Time']);
+                cy.texts('#domain-list app-domain-user-role-badge').should('arrayMatch', ['Owner']);
             });
         });
     });

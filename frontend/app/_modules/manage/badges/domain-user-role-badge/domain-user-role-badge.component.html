@@ -1,0 +1,10 @@
+@if (role) {
+    <span class="badge rounded-pill" [class]="role">
+        @switch (role) {
+            @case (r.Owner)     {<ng-container i18n>Owner</ng-container>}
+            @case (r.Moderator) {<ng-container i18n>Moderator</ng-container>}
+            @case (r.Commenter) {<ng-container i18n>Commenter</ng-container>}
+            @case (r.Readonly)  {<ng-container i18n>Read-only</ng-container>}
+        }
+    </span>
+}

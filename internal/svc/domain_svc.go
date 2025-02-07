@@ -41,8 +41,10 @@ type DomainService interface {
 	//  - if createIfMissing == false, returns nil for DomainUser
 	FindDomainUserByHost(host string, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error)
 	// FindDomainUserByID fetches and returns a Domain and DomainUser by domain and user IDs. If the domain exists, but
-	// there's no record for the user on that domain, returns nil for DomainUser
-	FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error)
+	// there's no record for the user on that domain:
+	//  - if createIfMissing == true, creates a new domain user and returns it
+	//  - if createIfMissing == false, returns nil for DomainUser
+	FindDomainUserByID(domainID, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error)
 	// GenerateSSOSecret (re)generates a new SSO secret token for the given domain and saves that in domain properties
 	GenerateSSOSecret(domainID *uuid.UUID) (string, error)
 	// IncrementCounts increments (or decrements if the value is negative) the domain's comment/view counts
@@ -195,86 +197,54 @@ func (svc *domainService) FindDomainUserByHost(host string, userID *uuid.UUID, c
 	logger.Debugf("domainService.FindDomainUserByHost('%s', %s, %v)", host, userID, createIfMissing)
 
 	// Query domain and domain user
-	q := db.From(goqu.T("cm_domains").As("d")).
-		Select(
-			// Domain fields
-			"d.*",
-			// Domain user fields
-			goqu.I("du.domain_id").As("du_domain_id"),
-			goqu.I("du.user_id").As("du_user_id"),
-			goqu.I("du.is_owner").As("du_is_owner"),
-			goqu.I("du.is_moderator").As("du_is_moderator"),
-			goqu.I("du.is_commenter").As("du_is_commenter"),
-			goqu.I("du.notify_replies").As("du_notify_replies"),
-			goqu.I("du.notify_moderator").As("du_notify_moderator"),
-			goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
-			goqu.I("du.ts_created").As("du_ts_created")).
-		LeftJoin(
-			goqu.T("cm_domains_users").As("du"),
-			goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})).
-		Where(goqu.Ex{"d.host": host})
-
-	var r struct {
-		data.Domain
-		data.NullDomainUser
-	}
-	if b, err := q.ScanStruct(&r); err != nil {
-		logger.Errorf("domainService.FindDomainUserByHost: ScanStruct() failed: %v", err)
-		return nil, nil, translateDBErrors(err)
-	} else if !b {
-		return nil, nil, ErrNotFound
-	}
-
-	// If no domain user found, and we need to create one
-	du := r.NullDomainUser.ToDomainUser()
-	if du == nil && createIfMissing {
-		// Make the user a commenter, which is the default
-		du = data.NewDomainUser(&r.Domain.ID, userID, false, false, true)
-		if err := svc.UserAdd(du); err != nil {
-			return nil, nil, err
-		}
-	}
-
-	// Succeeded
-	return &r.Domain, du, nil
+	return svc.fetchDomainUser(
+		db.From(goqu.T("cm_domains").As("d")).
+			Select(
+				// Domain fields
+				"d.*",
+				// Domain user fields
+				goqu.I("du.domain_id").As("du_domain_id"),
+				goqu.I("du.user_id").As("du_user_id"),
+				goqu.I("du.is_owner").As("du_is_owner"),
+				goqu.I("du.is_moderator").As("du_is_moderator"),
+				goqu.I("du.is_commenter").As("du_is_commenter"),
+				goqu.I("du.notify_replies").As("du_notify_replies"),
+				goqu.I("du.notify_moderator").As("du_notify_moderator"),
+				goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
+				goqu.I("du.ts_created").As("du_ts_created")).
+			LeftJoin(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})).
+			Where(goqu.Ex{"d.host": host}),
+		userID,
+		createIfMissing)
 }
 
-func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID) (*data.Domain, *data.DomainUser, error) {
-	logger.Debugf("domainService.FindDomainUserByID(%s, %s)", domainID, userID)
+func (svc *domainService) FindDomainUserByID(domainID, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error) {
+	logger.Debugf("domainService.FindDomainUserByID(%s, %s, %v)", domainID, userID, createIfMissing)
 
-	// Query the row
-	q := db.From(goqu.T("cm_domains").As("d")).
-		Select(
-			// Domain fields
-			"d.*",
-			// Domain user fields
-			goqu.I("du.domain_id").As("du_domain_id"),
-			goqu.I("du.user_id").As("du_user_id"),
-			goqu.I("du.is_owner").As("du_is_owner"),
-			goqu.I("du.is_moderator").As("du_is_moderator"),
-			goqu.I("du.is_commenter").As("du_is_commenter"),
-			goqu.I("du.notify_replies").As("du_notify_replies"),
-			goqu.I("du.notify_moderator").As("du_notify_moderator"),
-			goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
-			goqu.I("du.ts_created").As("du_ts_created")).
-		LeftJoin(
-			goqu.T("cm_domains_users").As("du"),
-			goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})).
-		Where(goqu.Ex{"d.id": domainID})
-
-	var r struct {
-		data.Domain
-		data.NullDomainUser
-	}
-	if b, err := q.ScanStruct(&r); err != nil {
-		logger.Errorf("domainService.FindDomainUserByID: ScanStruct() failed: %v", err)
-		return nil, nil, translateDBErrors(err)
-	} else if !b {
-		return nil, nil, ErrNotFound
-	}
-
-	// Succeeded
-	return &r.Domain, r.NullDomainUser.ToDomainUser(), nil
+	// Query domain and domain user
+	return svc.fetchDomainUser(
+		db.From(goqu.T("cm_domains").As("d")).
+			Select(
+				// Domain fields
+				"d.*",
+				// Domain user fields
+				goqu.I("du.domain_id").As("du_domain_id"),
+				goqu.I("du.user_id").As("du_user_id"),
+				goqu.I("du.is_owner").As("du_is_owner"),
+				goqu.I("du.is_moderator").As("du_is_moderator"),
+				goqu.I("du.is_commenter").As("du_is_commenter"),
+				goqu.I("du.notify_replies").As("du_notify_replies"),
+				goqu.I("du.notify_moderator").As("du_notify_moderator"),
+				goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
+				goqu.I("du.ts_created").As("du_ts_created")).
+			LeftJoin(
+				goqu.T("cm_domains_users").As("du"),
+				goqu.On(goqu.Ex{"du.domain_id": goqu.I("d.id"), "du.user_id": userID})).
+			Where(goqu.Ex{"d.id": domainID}),
+		userID,
+		createIfMissing)
 }
 
 func (svc *domainService) GenerateSSOSecret(domainID *uuid.UUID) (string, error) {
@@ -694,4 +664,31 @@ func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
 
 	// Successfully handled and no change from event
 	return nil
+}
+
+// fetchDomainUser retrieves a domain and a domain user from the provided dataset, creating a domain user if necessary
+func (svc *domainService) fetchDomainUser(q *goqu.SelectDataset, userID *uuid.UUID, createIfMissing bool) (*data.Domain, *data.DomainUser, error) {
+	var r struct {
+		data.Domain
+		data.NullDomainUser
+	}
+	if b, err := q.ScanStruct(&r); err != nil {
+		logger.Errorf("domainService.fetchDomainUser: ScanStruct() failed: %v", err)
+		return nil, nil, translateDBErrors(err)
+	} else if !b {
+		return nil, nil, ErrNotFound
+	}
+
+	// If no domain user found, and we need to create one
+	du := r.NullDomainUser.ToDomainUser()
+	if du == nil && createIfMissing {
+		// Make the user a commenter, which is the default
+		du = data.NewDomainUser(&r.Domain.ID, userID, false, false, true)
+		if err := svc.UserAdd(du); err != nil {
+			return nil, nil, err
+		}
+	}
+
+	// Succeeded
+	return &r.Domain, du, nil
 }

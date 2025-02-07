@@ -82,7 +82,7 @@ context('Domain User Manager', () => {
                             .to.matrixMatch([
                             name === 'superuser' ? ['Owner'] : ['Owner', 'You'],
                             ['Moderator'],
-                            ['Commenter', 'SSO'],
+                            ['Moderator', 'SSO'],
                             ['Moderator'],
                             ['Moderator'],
                             ['Read-only'],

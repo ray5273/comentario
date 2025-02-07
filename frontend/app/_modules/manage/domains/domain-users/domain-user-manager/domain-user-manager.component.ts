@@ -17,7 +17,7 @@ import { InfoBlockComponent } from '../../../../tools/info-block/info-block.comp
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { UserAvatarComponent } from '../../../../tools/user-avatar/user-avatar.component';
-import { DomainUserBadgeComponent } from '../../../badges/domain-user-badge/domain-user-badge.component';
+import { DomainUserRoleBadgeComponent } from '../../../badges/domain-user-role-badge/domain-user-role-badge.component';
 import { SuperuserBadgeComponent } from '../../../badges/superuser-badge/superuser-badge.component';
 import { CurrentUserBadgeComponent } from '../../../badges/current-user-badge/current-user-badge.component';
 import { IdentityProviderIconComponent } from '../../../../tools/identity-provider-icon/identity-provider-icon.component';
@@ -36,7 +36,7 @@ import { LoaderDirective } from '../../../../tools/_directives/loader.directive'
         ReactiveFormsModule,
         RouterLink,
         UserAvatarComponent,
-        DomainUserBadgeComponent,
+        DomainUserRoleBadgeComponent,
         SuperuserBadgeComponent,
         FaIconComponent,
         CurrentUserBadgeComponent,

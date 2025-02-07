@@ -17,7 +17,7 @@ import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
 import { UserDetailsComponent } from '../user-details/user-details.component';
 import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
-import { DomainUserBadgeComponent } from '../../badges/domain-user-badge/domain-user-badge.component';
+import { DomainUserRoleBadgeComponent } from '../../badges/domain-user-role-badge/domain-user-role-badge.component';
 import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
 import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
 import { DatetimePipe } from '../../_pipes/datetime.pipe';
@@ -35,7 +35,7 @@ import { NoDataComponent } from '../../../tools/no-data/no-data.component';
         UserDetailsComponent,
         AttributeTableComponent,
         RouterLink,
-        DomainUserBadgeComponent,
+        DomainUserRoleBadgeComponent,
         ListFooterComponent,
         InfoBlockComponent,
         DatetimePipe,

@@ -303,6 +303,7 @@ func E2eOAuthSSONonInteractive(params api_e2e.E2eOAuthSSONonInteractiveParams) m
 		Token: hex.EncodeToString(token),
 		Email: "john.doe.sso@comentario.app",
 		Name:  "John Doe",
+		Role:  string(models.DomainUserRoleModerator),
 	}
 	payloadBytes, err := json.Marshal(payload)
 	if err != nil {

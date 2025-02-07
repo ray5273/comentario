@@ -389,7 +389,7 @@ func domainGetWithUser(domainUUID strfmt.UUID, user *data.User, checkCanManage b
 		return nil, nil, r
 
 		// Find the domain and domain user
-	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID); err != nil {
+	} else if domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, false); err != nil {
 		return nil, nil, respServiceError(err)
 
 	} else {
