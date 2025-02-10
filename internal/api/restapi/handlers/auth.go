@@ -55,7 +55,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 	// Figure out which domains the user owns
 	var ownedDomains []*data.Domain
 	if ds, dus, err := svc.TheDomainService.ListByDomainUser(&user.ID, &user.ID, false, true, "", "", data.SortAsc, -1); err != nil {
-		respServiceError(err)
+		return respServiceError(err)
 	} else {
 		for _, du := range dus {
 			if du.IsOwner {

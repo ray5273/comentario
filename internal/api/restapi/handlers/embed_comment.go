@@ -22,7 +22,7 @@ func EmbedCommentCount(params api_embed.EmbedCommentCountParams) middleware.Resp
 	// Fetch the domain for the given host
 	d, err := svc.TheDomainService.FindByHost(string(params.Body.Host))
 	if err != nil {
-		respServiceError(err)
+		return respServiceError(err)
 	}
 
 	// Fetch comment counts
