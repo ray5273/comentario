@@ -24,3 +24,4 @@ Comentario's **embedded comment engine** allows to render a [comment thread (tre
 
 * There's a variety of login options available for commenters; there's also an [option](/configuration/frontend/domain/authentication) to write a comment without logging in (with an optional name), should the site owner enable it for this specific domain.
 * Users can upload their own avatars, or opt to use [images from Gravatar](/configuration/backend/dynamic/integrations.usegravatar).
+* There's also a [separate widget](/configuration/embedding/count-tag) for displaying number of comments on a page.

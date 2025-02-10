@@ -112,7 +112,7 @@ context('Domain Page Edit page', () => {
                             ['Title',              'Comments'],
                             ['Read-only',          '✔'],
                             ['Created',            REGEXES.datetime],
-                            ['Number of comments', '0'],
+                            ['Number of comments', '1'],
                             ['Number of views',    '0'],
                             ['Comment RSS feed',   null],
                         ]);
@@ -145,7 +145,7 @@ context('Domain Page Edit page', () => {
                             ['Title',              'Comments'],
                             ['Read-only',          ''],
                             ['Created',            REGEXES.datetime],
-                            ['Number of comments', '0'],
+                            ['Number of comments', '1'],
                             ['Number of views',    '1'], // A view is registered
                             ['Comment RSS feed',   null],
                         ]);

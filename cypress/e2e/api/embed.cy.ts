@@ -67,7 +67,7 @@ context('API / Embed', () => {
                 expect(r.status).eq(200);
                 expect(r.body.commentCounts).deep.eq({
                     [TEST_PATHS.home]:      17,
-                    [TEST_PATHS.comments]:  0,
+                    [TEST_PATHS.comments]:  1,
                     [TEST_PATHS.noComment]: 0,
                 });
             });

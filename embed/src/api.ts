@@ -10,6 +10,11 @@ export interface ApiErrorResponse {
 
 export type ApiI18nMessageResponse = Record<string, string>;
 
+export interface ApiCommentCountsResponse {
+    /** Comment counts per path. */
+    readonly commentCounts: Record<string, number>;
+}
+
 export interface ApiCommentListResponse {
     /** Page info. */
     readonly pageInfo: PageInfo;
@@ -218,7 +223,8 @@ export class ApiService {
      * @param domainId ID of the domain to apply user settings on.
      * @param notifyReplies Whether the user is to be notified about replies to their comments.
      * @param notifyModerator Whether the user is to receive moderator notifications.
-     * @param notifyCommentStatus Whether the user is to be notified about status changes (approved/rejected) of their comments.
+     * @param notifyCommentStatus Whether the user is to be notified about status changes (approved/rejected) of their
+     *     comments.
      */
     async authUserSettingsUpdate(domainId: UUID, notifyReplies: boolean, notifyModerator: boolean, notifyCommentStatus: boolean): Promise<void> {
         await this.httpClient.put<void>('embed/auth/user', {domainId, notifyReplies, notifyModerator, notifyCommentStatus}, this.addAuth());
@@ -239,6 +245,15 @@ export class ApiService {
     async authSignup(domainId: UUID, email: string, name: string, password: string, websiteUrl: string | undefined, url: string): Promise<boolean> {
         const r = await this.httpClient.post<ApiAuthSignupResponse>('embed/auth/signup', {domainId, email, name, password, websiteUrl, url});
         return r.isConfirmed;
+    }
+
+    /**
+     * Fetch the count of comments on the given page paths.
+     * @param host Host the comments reside on.
+     * @param paths Paths of the pages to retrieve comment counts for. A maximum of 32 elements is supported.
+     */
+    async commentCount(host: string, paths: string[]): Promise<ApiCommentCountsResponse> {
+        return this.httpClient.post<ApiCommentCountsResponse>('embed/comments/counts', {host, paths});
     }
 
     /**

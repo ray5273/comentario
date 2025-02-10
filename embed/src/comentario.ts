@@ -13,19 +13,19 @@ import { I18nService } from './i18n';
 import { PopupBlockedDialog } from './popup-blocked-dialog';
 import { RssDialog } from './rss-dialog';
 
-export class Comentario extends HTMLElement {
+/**
+ * Base class for components capable of talking to Comentario via its API.
+ */
+export class ComentarioBase extends HTMLElement {
 
     /** Origin URL, injected by the backend on serving the file. */
-    private readonly origin = '[[[.Origin]]]';
+    protected readonly origin = '[[[.Origin]]]';
 
     /** CDN URL, injected by the backend on serving the file. */
-    private readonly cdn = '[[[.CdnPrefix]]]';
+    protected readonly cdn = '[[[.CdnPrefix]]]';
 
     /** Service handling API requests. */
-    private readonly apiService = new ApiService(Utils.joinUrl(this.origin, 'api'));
-
-    /** I18n service for obtaining localised messages. */
-    private readonly i18n = new I18nService(this.apiService);
+    protected readonly apiService = new ApiService(Utils.joinUrl(this.origin, 'api'));
 
     /**
      * Location of the current page.
@@ -33,7 +33,16 @@ export class Comentario extends HTMLElement {
      * Note. The below is kinda hacky: it detects whether it's running under Cypress (e2e tests), which runs the web app
      * inside an iframe. Not quite sure why otherwise the parent should be used, it comes from the legacy code.
      */
-    private readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
+    protected readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
+}
+
+/**
+ * Web component implementing the <comentario-comments> element.
+ */
+export class Comentario extends ComentarioBase {
+
+    /** I18n service for obtaining localised messages. */
+    private readonly i18n = new I18nService(this.apiService);
 
     /** Size of the avatar image to request. For pixel ratios < 2 use 'M' (32 px) avatars, 2 and up 'L' (128 px). */
     private readonly avatarSize = devicePixelRatio < 2 ? 'M' : 'L';
@@ -1148,5 +1157,69 @@ export class Comentario extends HTMLElement {
             this.apiService.getCommentRssUrl(),
             this.pageInfo!,
             this.principal);
+    }
+}
+
+/**
+ * Web component implementing the <comentario-count> element.
+ */
+export class ComentarioCount extends ComentarioBase {
+
+    /** The root element fo the component. */
+    private root?: Wrap<HTMLSpanElement>;
+
+    /** Mutation observer watching element attribute changes. */
+    private readonly mo = new MutationObserver(() => this.update());
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Called by the browser when the element is added to the DOM.
+     */
+    connectedCallback() {
+        // Create a root element
+        this.root?.remove();
+        this.root = UIToolkit.span('', 'comment-count').appendTo(new Wrap(this));
+
+        // Start observing attribute changes
+        this.mo.disconnect();
+        this.mo.observe(this, {attributes: true, attributeFilter: ['path']});
+
+        // Update the widget
+        this.update();
+    }
+
+    // noinspection JSUnusedGlobalSymbols
+    /**
+     * Called by the browser when the element is removed from the DOM.
+     */
+    disconnectedCallback() {
+        // Stop observing attribute changes
+        this.mo.disconnect();
+
+        // Clean up
+        this.root?.inner('');
+    }
+
+    /**
+     * Update the displayed comment count.
+     */
+    async update(): Promise<void> {
+        // Update the element text
+        this.root?.inner(await this.getCount() ?? '?');
+    }
+
+    /**
+     * Request the comment count for the currently specified page path, or undefined on error.
+     * @private
+     */
+    private async getCount(): Promise<string | undefined> {
+        try {
+            const path = this.getAttribute('path') || this.location.pathname;
+            const r = await this.apiService.commentCount(this.location.host, [path]);
+            const cnt = r.commentCounts[path];
+            return cnt != null ? String(cnt) : undefined;
+        } catch {
+            return undefined;
+        }
     }
 }

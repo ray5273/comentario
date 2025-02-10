@@ -52,6 +52,8 @@ Available features:
   You can subscribe via RSS to comment updates on the entire domain or a specific page, optionally filtering by user and/or replies to a user.
 * **Data import/export**\
   Comments and users can be easily imported from Disqus, WordPress, Commento/Commento++. Existing data can also be exported as a JSON file.
+* **Comment count widget**\
+  You can display the number of comments on a specific page using a simple widget.
 
 ## FAQ
 

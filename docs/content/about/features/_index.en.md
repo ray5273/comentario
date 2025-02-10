@@ -50,5 +50,7 @@ tags:
   You can [subscribe via RSS](/kb/rss) to comment updates on the entire domain or a specific page, optionally filtering by user and/or replies to a user.
 * **Data import/export**\
   Comments and users can be easily [imported](/installation/migration) from [Disqus](/installation/migration/disqus), [WordPress](/installation/migration/wordpress), [Commento/Commento++](/installation/migration/commento). Existing data can also be exported as a JSON file.
+* **Comment count widget**\
+  You can display the number of comments on a specific page using a [simple widget](/configuration/embedding/count-tag).
 
 From the end-user perspective, Comentario consists of two parts: the **[embedded comment engine](embedded)** and the **[Administration UI](admin-ui)** (we also call it the frontend). 

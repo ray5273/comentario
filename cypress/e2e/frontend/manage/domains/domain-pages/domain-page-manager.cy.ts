@@ -6,20 +6,22 @@ context('Domain Page Manager', () => {
 
     /** Pages, ordered by creation date. */
     const pages = [
-        {path: TEST_PATHS.comments,              title: 'Comments',                      cntComments: 0,  cntViews: 0},
-        {path: TEST_PATHS.home,                  title: 'Home',                          cntComments: 17, cntViews: 10},
-        {path: TEST_PATHS.noComment,             title: 'No comment',                    cntComments: 0,  cntViews: 2},
-        {path: TEST_PATHS.readonly,              title: 'Readonly page',                 cntComments: 0,  cntViews: 42},
-        {path: TEST_PATHS.looooong,              title: '',                              cntComments: 0,  cntViews: 0},
-        {path: TEST_PATHS.double,                title: 'Double Comentario',             cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.autoInit,         title: 'Attribute: auto-init=false',    cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.darkMode,              title: 'Dark mode',                     cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.dynamic,               title: 'Dynamic insertion',             cntComments: 1,  cntViews: 4},
-        {path: TEST_PATHS.attr.noFonts,          title: 'Attribute: no-fonts=true',      cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.cssOverride,      title: 'Attribute: css-override',       cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.cssOverrideFalse, title: 'Attribute: css-override=false', cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.pageIdAlias,      title: 'Attribute: page-id',            cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.maxLevel,         title: 'Attribute: max-level=2',        cntComments: 6,  cntViews: 0},
+        {path: TEST_PATHS.comments,                   title: 'Comments',                                 cntComments: 1,  cntViews: 0},
+        {path: TEST_PATHS.home,                       title: 'Home',                                     cntComments: 17, cntViews: 10},
+        {path: TEST_PATHS.noComment,                  title: 'No comment',                               cntComments: 0,  cntViews: 2},
+        {path: TEST_PATHS.readonly,                   title: 'Readonly page',                            cntComments: 0,  cntViews: 42},
+        {path: TEST_PATHS.looooong,                   title: '',                                         cntComments: 0,  cntViews: 0},
+        {path: TEST_PATHS.double,                     title: 'Double Comentario',                        cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.autoInit,              title: 'Attribute: auto-init=false',               cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.darkMode,                   title: 'Dark mode',                                cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.dynamic,                    title: 'Dynamic insertion',                        cntComments: 1,  cntViews: 4},
+        {path: TEST_PATHS.attr.noFonts,               title: 'Attribute: no-fonts=true',                 cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.autoNonInteractiveSso, title: 'Attribute: auto-non-interactive-sso=true', cntComments: 0,  cntViews: 23},
+        {path: TEST_PATHS.attr.cssOverride,           title: 'Attribute: css-override',                  cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.cssOverrideFalse,      title: 'Attribute: css-override=false',            cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.pageIdAlias,           title: 'Attribute: page-id',                       cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.maxLevel,              title: 'Attribute: max-level=2',                   cntComments: 6,  cntViews: 0},
+        {path: TEST_PATHS.attr.noLiveUpdate,          title: 'Attribute: live-update=false',             cntComments: 0,  cntViews: 0},
     ];
     const pagesByPath        = pages.slice().sort((a, b) => a.path.localeCompare(b.path))  .map(p => p.path);
     const pagesByTitle       = pages.slice().sort((a, b) => a.title.localeCompare(b.title)).map(p => p.title).filter(s => s);
@@ -125,9 +127,17 @@ context('Domain Page Manager', () => {
 
             // Test filtering by path
             filterOn('tr/');
-            cy.get('@pageManager').verifyListFooter(5, false);
+            cy.get('@pageManager').verifyListFooter(7, false);
             cy.get('@pageList').texts('.domain-page-path')
-                .should('arrayMatch', ['/attr/auto-init/', '/attr/css-override-false/', '/attr/css-override/', '/attr/max-level/', '/attr/no-fonts/']);
+                .should('arrayMatch', [
+                    '/attr/auto-init/',
+                    '/attr/auto-non-interactive-sso/',
+                    '/attr/css-override-false/',
+                    '/attr/css-override/',
+                    '/attr/live-update/',
+                    '/attr/max-level/',
+                    '/attr/no-fonts/',
+                ]);
 
             // Test filtering by title
             filterOn('cOmEnT');

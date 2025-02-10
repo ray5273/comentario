@@ -33,4 +33,14 @@ The HTML snippet is displayed in domain properties and looks like this:
 <comentario-comments></comentario-comments>
 ```
 
-As you can see, it consists of two tags: a `<script>` and a `<comentario-comments>`.
+As you can see, it consists of two tags: a `<script>` and a `<comentario-comments>`, more on which below.
+
+## Adding a comment counter to a web page
+
+You can also add a widget that displays the number of comments on a specific page.
+
+Just like the comments tag mentioned above, it also requires:
+* A domain registered in Comentario, and
+* Two tags: `<script>` and `<comentario-count>`.
+ 
+The `<script>` tag is the same as the one above, it must be only added once to the page. Then it will be shared amongst any number of `<comentario-comments>` and `<comentario-count>` elements.

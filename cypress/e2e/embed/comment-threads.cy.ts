@@ -525,36 +525,38 @@ context('Comment threads', () => {
                         `,
                 },
             ]
-                .forEach(pageTest => it(`on page "${pageTest.heading}"`, () => {
-                    // Go directly to the page if the user is anonymous
-                    if (userTest.user.isAnonymous) {
-                        cy.testSiteVisit(pageTest.path);
+                .forEach(pageTest =>
+                    it(`on page "${pageTest.heading}"`, () => {
+                        // Go directly to the page if the user is anonymous
+                        if (userTest.user.isAnonymous) {
+                            cy.testSiteVisit(pageTest.path);
 
-                    // Login via API otherwise
-                    } else {
-                        cy.testSiteLoginViaApi(userTest.user, pageTest.path, {verify: pageTest.verifyLogin});
-                    }
+                        // Login via API otherwise
+                        } else {
+                            cy.testSiteLoginViaApi(userTest.user, pageTest.path, {verify: pageTest.verifyLogin});
+                        }
 
-                    // Verify the headings
-                    cy.get('h1').should('have.text', pageTest.heading).and('be.visible');
-                    if (pageTest.subheading) {
-                        cy.get('h2#comments').should('have.text', 'Comments').and('be.visible');
-                    }
+                        // Verify the headings
+                        cy.get('h1').should('have.text', pageTest.heading).and('be.visible');
+                        if (pageTest.subheading) {
+                            cy.get('h2#comments').should('be.visible')
+                                .invoke('text').should('match', /^Comments \(\d+\)$/);
+                        }
 
-                    // Run the post-login routine, if any
-                    pageTest.postLogin?.();
+                        // Run the post-login routine, if any
+                        pageTest.postLogin?.();
 
-                    // Iterate all selectors or use the default
-                    (pageTest.rootSelectors || ['comentario-comments'])
-                        .forEach(rootSelector => {
-                            // Make aliases / check the layout
-                            EmbedUtils.makeAliases({rootSelector, anonymous: userTest.user.isAnonymous, ...pageTest.layoutOptions});
+                        // Iterate all selectors or use the default
+                        (pageTest.rootSelectors || ['comentario-comments'])
+                            .forEach(rootSelector => {
+                                // Make aliases / check the layout
+                                EmbedUtils.makeAliases({rootSelector, anonymous: userTest.user.isAnonymous, ...pageTest.layoutOptions});
 
-                            // Check the comments
-                            cy.get(rootSelector).commentTree('id', 'html', 'author', 'subtitle', 'score', 'sticky')
-                                .should('yamlMatch', pageTest.comments);
-                        });
-                }));
+                                // Check the comments
+                                cy.get(rootSelector).commentTree('id', 'html', 'author', 'subtitle', 'score', 'sticky')
+                                    .should('yamlMatch', pageTest.comments);
+                            });
+                    }));
         }));
 
     it('disallows adding comment when no authentication method is available', () => {

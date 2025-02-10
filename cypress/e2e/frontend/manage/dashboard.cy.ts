@@ -107,7 +107,7 @@ context('Dashboard', () => {
                     `
                     - {label: Domains,      sublabel: you own,             value: 1}
                     - {label: Domains,      sublabel: you're commenter on, value: 0}
-                    - {label: Pages,        sublabel: you moderate,        value: 14}
+                    - {label: Pages,        sublabel: you moderate,        value: 16}
                     - {label: Pages,        sublabel: you commented on,    value: 9}
                     - {label: Domain users, sublabel: you manage,          value: 6}
                     - {label: Comments,     sublabel: total,               value: 40}
@@ -183,7 +183,7 @@ context('Dashboard', () => {
                     - {label: Domains,      sublabel: you moderate,        value: 1}
                     - {label: Domains,      sublabel: you're commenter on, value: 1}
                     - {label: Domains,      sublabel: you're read-only on, value: 1}
-                    - {label: Pages,        sublabel: you moderate,        value: 17}
+                    - {label: Pages,        sublabel: you moderate,        value: 19}
                     - {label: Pages,        sublabel: you commented on,    value: 2}
                     - {label: Domain users, sublabel: you manage,          value: 1}
                     - {label: Comments,     sublabel: total,               value: 40}
@@ -208,7 +208,7 @@ context('Dashboard', () => {
                     `
                     - {label: Users,        sublabel: total,               value: 16}
                     - {label: Domains,      sublabel: you're commenter on, value: 0}
-                    - {label: Pages,        sublabel: you moderate,        value: 18}
+                    - {label: Pages,        sublabel: you moderate,        value: 20}
                     - {label: Domain users, sublabel: you manage,          value: 9}
                     - {label: Comments,     sublabel: total,               value: 41}
                     - {label: Commenters,   sublabel: total,               value: 7}
