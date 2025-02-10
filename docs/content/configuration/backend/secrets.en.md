@@ -55,7 +55,7 @@ Below is a summary of the values in the secrets file.
 
 | Key                                                     | Type    | Description                                                                                   |    Default value    |
 |---------------------------------------------------------|---------|-----------------------------------------------------------------------------------------------|:-------------------:|
-| **Database**                                            |         |                                                                                               |                     |
+| **[Database](#db)**                                     |         |                                                                                               |                     |
 | `postgres.host`                                         | string  | Hostname or IP address of PostgreSQL DB                                                       |                     |
 | `postgres.port`                                         | integer | Port number of PostgreSQL DB                                                                  |       `5432`        |
 | `postgres.database`                                     | string  | Name of the PostgreSQL database                                                               |                     |
@@ -63,7 +63,7 @@ Below is a summary of the values in the secrets file.
 | `postgres.password`                                     | string  | Password to connect to PostgreSQL                                                             |                     |
 | `postgres.sslmode`                                      | string  | SSL mode for PostgreSQL (`disable`, `allow`, `prefer`, `require`, `verify-ca`, `verify-full`) |      `disable`      |
 | `sqlite3.file`                                          | string  | Path to the SQLite3 database file                                                             |                     |
-| **SMTP server**                                         |         |                                                                                               |                     |
+| **[SMTP server](#smtp)**                                |         |                                                                                               |                     |
 | `smtpServer.host`                                       | string  | Hostname or IP address of SMTP server. Required for emailing to work                          |                     |
 | `smtpServer.port`                                       | integer | Port number of SMTP server                                                                    |  `587` (STARTTLS)   |
 | `smtpServer.username`                                   | string  | Username to connect to SMTP server                                                            |                     |
@@ -107,19 +107,67 @@ Below is a summary of the values in the secrets file.
 {.table .table-striped}
 </div>
 
-## Database
+## Database {#db}
 
 The only mandatory settings in the above table concern database configuration: Comentario [requires](/installation/requirements) a database for data storage.
 
 * If `postgres.host` is specified, **PostgreSQL database** will be used. Then you'll also need to provide `postgres.database`, `postgres.username`, and `postgres.password`.
 * Otherwise, Comentario will use a local, file-based **SQLite3** database: you have to specify a complete file path in `sqlite3.file`. If the file doesn't exist, it will be created, but the path must exist and be writable.
 
-## Email sending
+## Email sending & SMTP server settings {#smtp}
 
 Comentario can optionally send notification emails. In order for this to work, SMTP server settings need to be specified:
 
 * If `smtpServer.host` is not provided, no emails will be sent.
 * If `smtpServer.username` is not provided, Comentario will try to connect to the SMTP server without authentication.
+
+You may also need to provide a correct SMTP server port number and the encryption used. Comentario will try to guess the encryption from the port number:
+
+* `tls` (a.k.a. `STARTTLS`) — if the port is `587` (the **default**),
+* `ssl` (a.k.a. "implicit TLS") — if the port is `465`,
+* or `none` otherwise.
+
+If unsure, look up the corresponding values in your email service provider's documentation. Below are a few examples for popular services.
+
+### Mailgun:
+
+```yaml
+smtpServer:
+  host:     smtp.mailgun.org
+  port:     587
+  username: '<your username@domain>'
+  password: '<your password>'
+```
+
+### Mailtrap:
+
+```yaml
+smtpServer:
+  host:     live.smtp.mailtrap.io
+  port:     587
+  username: api
+  password: '<your API key>'
+```
+
+### PrivateEmail:
+
+```yaml
+smtpServer:
+  host:     mail.privateemail.com
+  port:     587
+  username: '<your username@domain>'
+  password: '<your password>'
+```
+
+### SendGrid:
+
+```yaml
+smtpServer:
+  host:     smtp.sendgrid.net
+  port:     587
+  username: apikey
+  password: '<your API key>'
+```
 
 ## External identity providers
 
