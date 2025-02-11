@@ -16,6 +16,7 @@ export const Paths = {
     manage: {
         dashboard:      '/manage/dashboard',
         domains:        '/manage/domains',
+        domainCreate:   '/manage/domains/create',
         users:          '/manage/users',
         config: {
             _:          '/manage/config',

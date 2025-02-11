@@ -81,11 +81,6 @@ context('Dashboard', () => {
                 name:         'user without domains',
                 user:         USERS.commenterOne,
                 hasStats:     false,
-                metrics:
-                    // language=yaml
-                    `
-                    - {label: Domains, sublabel: you're commenter on, value: 0}
-                    `,
             },
             {
                 name:         'commenter user',
@@ -105,14 +100,13 @@ context('Dashboard', () => {
                 metrics:
                     // language=yaml
                     `
-                    - {label: Domains,      sublabel: you own,             value: 1}
-                    - {label: Domains,      sublabel: you're commenter on, value: 0}
-                    - {label: Pages,        sublabel: you moderate,        value: 16}
-                    - {label: Pages,        sublabel: you commented on,    value: 9}
-                    - {label: Domain users, sublabel: you manage,          value: 6}
-                    - {label: Comments,     sublabel: total,               value: 40}
-                    - {label: Comments,     sublabel: you authored,        value: 17}
-                    - {label: Commenters,   sublabel: total,               value: 7}
+                    - {label: Domains,      sublabel: you own,          value: 1}
+                    - {label: Pages,        sublabel: you moderate,     value: 16}
+                    - {label: Pages,        sublabel: you commented on, value: 9}
+                    - {label: Domain users, sublabel: you manage,       value: 6}
+                    - {label: Comments,     sublabel: total,            value: 40}
+                    - {label: Comments,     sublabel: you authored,     value: 17}
+                    - {label: Commenters,   sublabel: total,            value: 7}
                     `,
                 dailyMetrics:
                     // language=yaml
@@ -206,12 +200,11 @@ context('Dashboard', () => {
                 metrics:
                     // language=yaml
                     `
-                    - {label: Users,        sublabel: total,               value: 16}
-                    - {label: Domains,      sublabel: you're commenter on, value: 0}
-                    - {label: Pages,        sublabel: you moderate,        value: 20}
-                    - {label: Domain users, sublabel: you manage,          value: 9}
-                    - {label: Comments,     sublabel: total,               value: 41}
-                    - {label: Commenters,   sublabel: total,               value: 7}
+                    - {label: Users,        sublabel: total,        value: 16}
+                    - {label: Pages,        sublabel: you moderate, value: 20}
+                    - {label: Domain users, sublabel: you manage,   value: 9}
+                    - {label: Comments,     sublabel: total,        value: 41}
+                    - {label: Commenters,   sublabel: total,        value: 7}
                     `,
                 dailyMetrics:
                     // language=yaml
@@ -277,8 +270,15 @@ context('Dashboard', () => {
                     cy.loginViaApi(test.user, PATHS.manage.dashboard);
                     makeAliases(test.hasStats, !!test.dailyMetrics, !!test.pageViewMetrics, !!test.topPages);
 
-                    // Verify metric cards
-                    cy.get('@totals').metricCards().should('yamlMatch', test.metrics);
+                    // Verify metric cards, if any
+                    if (test.metrics) {
+                        cy.get('@totals').metricCards().should('yamlMatch', test.metrics);
+
+                    } else {
+                        // Otherwise, a welcome message must be visible
+                        cy.get('@dashboard').contains('h2', 'Welcome to Comentario Dashboard!').should('be.visible');
+                        cy.get('@dashboard').contains('p', 'This application allows you to navigate domains, pages, and comments you authored.').should('be.visible');
+                    }
 
                     // Verify total figures above the daily charts
                     if (test.dailyMetrics) {

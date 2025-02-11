@@ -24,7 +24,7 @@
             <!-- New domain button -->
             <div class="col">
                 @if (canAdd) {
-                    <button type="button" [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success">
+                    <button type="button" [routerLink]="Paths.manage.domainCreate" class="btn btn-success">
                         <fa-icon [icon]="faPlus" class="me-1"/>
                         <ng-container i18n>New domain</ng-container>
                     </button>
@@ -116,7 +116,7 @@
                 </p>
                 <!-- Add domain button: if adding domains is allowed -->
                 @if (canAdd) {
-                    <div><a [routerLink]="[Paths.manage.domains, 'create']" class="btn btn-success" i18n>Add domain</a></div>
+                    <div><a [routerLink]="Paths.manage.domainCreate" class="btn btn-success" i18n>Add domain</a></div>
                 }
             </div>
         }

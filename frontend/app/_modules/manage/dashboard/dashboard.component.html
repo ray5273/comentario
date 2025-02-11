@@ -20,8 +20,10 @@
                 <app-metric-card [value]="c" [fullHeight]="true"
                                  label="Domains" sublabel="you moderate" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
             }
-            <app-metric-card [value]="totals.countDomainsCommenter" [fullHeight]="true"
-                             label="Domains" sublabel="you're commenter on" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
+            @if (totals.countDomainsCommenter; as c) {
+                <app-metric-card [value]="c" [fullHeight]="true"
+                                 label="Domains" sublabel="you're commenter on" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
+            }
             @if (totals.countDomainsReadonly; as c) {
                 <app-metric-card [value]="c" [fullHeight]="true"
                                  label="Domains" sublabel="you're read-only on" i18n-label="metric-label|" i18n-sublabel="metric-sublabel|"/>
@@ -70,8 +72,26 @@
         }
     }
 
-    <!-- Placeholder when no data -->
-    @if (!totals) {
-        <app-no-data/>
+    <!-- Welcome message when no data -->
+    @if (hasData === false) {
+        <div class="d-flex flex-column justify-content-center align-items-center">
+            <h2 class="text-center heading-separator" i18n>Welcome to Comentario Dashboard!</h2>
+            <p class="text-center" i18n>This application allows you to navigate domains, pages, and comments you authored.</p>
+
+            <!-- Steps in case the user can add a domain -->
+            @if (canAddDomain === true) {
+                <p class="text-center lead fw-bold fade-in-1s" i18n>Do you want to connect Comentario to your website?</p>
+                <ol class="fade-in-3s">
+                    <li i18n>Add its domain to Comentario in the <a [routerLink]="Paths.manage.domainCreate">Domain Manager</a>.</li>
+                    <li i18n>Install the Comentario snippet on your website.</li>
+                    <li i18n>Engage in discussions with your visitors!</li>
+                </ol>
+
+            <!-- Explanation in case they can't -->
+            } @else {
+                <p class="text-center fade-in-1s" i18n>Since you've not written a single comment yet, it's a bit empty in here.</p>
+                <p class="text-center fade-in-2s" i18n>As soon as there's more data available, this page should prove more useful!</p>
+            }
+        </div>
     }
 </ng-template>

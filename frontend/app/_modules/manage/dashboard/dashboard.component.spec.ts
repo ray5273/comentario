@@ -4,7 +4,7 @@ import { MockComponents, MockProvider } from 'ng-mocks';
 import { DashboardComponent } from './dashboard.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { MetricCardComponent } from './metric-card/metric-card.component';
-import { mockAuthService } from '../../../_utils/_mocks.spec';
+import { mockAuthService, mockConfigService } from '../../../_utils/_mocks.spec';
 import { StatsComponent } from '../stats/stats/stats.component';
 
 describe('DashboardComponent', () => {
@@ -24,6 +24,7 @@ describe('DashboardComponent', () => {
                         dashboardDailyStats: () => of([]) as any,
                     }),
                     mockAuthService(),
+                    mockConfigService(),
                 ],
             })
             .compileComponents();
