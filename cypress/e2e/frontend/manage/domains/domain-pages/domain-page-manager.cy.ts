@@ -12,16 +12,16 @@ context('Domain Page Manager', () => {
         {path: TEST_PATHS.readonly,                   title: 'Readonly page',                            cntComments: 0,  cntViews: 42},
         {path: TEST_PATHS.looooong,                   title: '',                                         cntComments: 0,  cntViews: 0},
         {path: TEST_PATHS.double,                     title: 'Double Comentario',                        cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.autoInit,              title: 'Attribute: auto-init=false',               cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.darkMode,                   title: 'Dark mode',                                cntComments: 2,  cntViews: 0},
         {path: TEST_PATHS.dynamic,                    title: 'Dynamic insertion',                        cntComments: 1,  cntViews: 4},
-        {path: TEST_PATHS.attr.noFonts,               title: 'Attribute: no-fonts=true',                 cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.darkMode,                   title: 'Dark mode',                                cntComments: 2,  cntViews: 0},
+        {path: TEST_PATHS.attr.autoInit,              title: 'Attribute: auto-init=false',               cntComments: 2,  cntViews: 0},
         {path: TEST_PATHS.attr.autoNonInteractiveSso, title: 'Attribute: auto-non-interactive-sso=true', cntComments: 0,  cntViews: 23},
+        {path: TEST_PATHS.attr.noFonts,               title: 'Attribute: no-fonts=true',                 cntComments: 2,  cntViews: 0},
         {path: TEST_PATHS.attr.cssOverride,           title: 'Attribute: css-override',                  cntComments: 2,  cntViews: 0},
         {path: TEST_PATHS.attr.cssOverrideFalse,      title: 'Attribute: css-override=false',            cntComments: 2,  cntViews: 0},
         {path: TEST_PATHS.attr.pageIdAlias,           title: 'Attribute: page-id',                       cntComments: 2,  cntViews: 0},
-        {path: TEST_PATHS.attr.maxLevel,              title: 'Attribute: max-level=2',                   cntComments: 6,  cntViews: 0},
         {path: TEST_PATHS.attr.noLiveUpdate,          title: 'Attribute: live-update=false',             cntComments: 0,  cntViews: 0},
+        {path: TEST_PATHS.attr.maxLevel,              title: 'Attribute: max-level=2',                   cntComments: 6,  cntViews: 0},
     ];
     const pagesByPath        = pages.slice().sort((a, b) => a.path.localeCompare(b.path))  .map(p => p.path);
     const pagesByTitle       = pages.slice().sort((a, b) => a.title.localeCompare(b.title)).map(p => p.title).filter(s => s);
