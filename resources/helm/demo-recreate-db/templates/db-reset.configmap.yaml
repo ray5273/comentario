@@ -392,6 +392,12 @@ data:
                 user_created   = excluded.user_created,
                 pending_reason = excluded.pending_reason;
 
+    -- Actualise the number of comments for the domain and domain pages
+    update cm_domains
+        set count_comments = (select count(*) from cm_comments c where c.is_deleted != true);
+    update cm_domain_pages p
+        set count_comments = (select count(*) from cm_comments c where c.page_id=p.id and c.is_deleted != true);
+
     -- Delete all avatars except the admin's
     delete from cm_user_avatars where user_id != '39a71854-bcfd-42d5-af62-5e931d7a72d8';
     insert into cm_user_avatars(user_id, ts_updated, is_custom, avatar_s, avatar_m, avatar_l)
