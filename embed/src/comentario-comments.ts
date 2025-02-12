@@ -1,5 +1,6 @@
+import { ComentarioBase, WebComponent } from './comentario-base';
 import { ANONYMOUS_ID, Comment, Commenter, CommenterMap, CommentSort, ErrorMessage, LoginChoice, LoginData, Message, OkMessage, PageInfo, Principal, SignupData, SsoLoginResponse, StringBooleanMap, User, UserSettings, UUID } from './models';
-import { ApiCommentListResponse, ApiService } from './api';
+import { ApiCommentListResponse } from './api';
 import { Wrap } from './element-wrap';
 import { UIToolkit } from './ui-toolkit';
 import { CommentCard, CommentParentMap, CommentRenderingContext } from './comment-card';
@@ -14,32 +15,9 @@ import { PopupBlockedDialog } from './popup-blocked-dialog';
 import { RssDialog } from './rss-dialog';
 
 /**
- * Base class for components capable of talking to Comentario via its API.
- */
-export class ComentarioBase extends HTMLElement {
-
-    /** Origin URL, injected by the backend on serving the file. */
-    protected readonly origin = '[[[.Origin]]]';
-
-    /** CDN URL, injected by the backend on serving the file. */
-    protected readonly cdn = '[[[.CdnPrefix]]]';
-
-    /** Service handling API requests. */
-    protected readonly apiService = new ApiService(Utils.joinUrl(this.origin, 'api'));
-
-    /**
-     * Location of the current page.
-     *
-     * Note. The below is kinda hacky: it detects whether it's running under Cypress (e2e tests), which runs the web app
-     * inside an iframe. Not quite sure why otherwise the parent should be used, it comes from the legacy code.
-     */
-    protected readonly location: Location = (parent as any)['Cypress'] ? window.location : parent.location;
-}
-
-/**
  * Web component implementing the <comentario-comments> element.
  */
-export class Comentario extends ComentarioBase {
+export class ComentarioComments extends ComentarioBase implements WebComponent {
 
     /** I18n service for obtaining localised messages. */
     private readonly i18n = new I18nService(this.apiService);
@@ -125,10 +103,6 @@ export class Comentario extends ComentarioBase {
     /** Timer for adding a content placeholder. */
     private contentPlaceholderTimer?: any;
 
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Called by the browser when the element is added to the DOM.
-     */
     connectedCallback() {
         // Create a root DIV
         this.root = UIToolkit.div('root').appendTo(new Wrap(this));
@@ -139,10 +113,6 @@ export class Comentario extends ComentarioBase {
         }
     }
 
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Called by the browser when the element is removed from the DOM.
-     */
     disconnectedCallback() {
         // Clean up
         this.root.inner('');
@@ -1157,69 +1127,5 @@ export class Comentario extends ComentarioBase {
             this.apiService.getCommentRssUrl(),
             this.pageInfo!,
             this.principal);
-    }
-}
-
-/**
- * Web component implementing the <comentario-count> element.
- */
-export class ComentarioCount extends ComentarioBase {
-
-    /** The root element fo the component. */
-    private root?: Wrap<HTMLSpanElement>;
-
-    /** Mutation observer watching element attribute changes. */
-    private readonly mo = new MutationObserver(() => this.update());
-
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Called by the browser when the element is added to the DOM.
-     */
-    connectedCallback() {
-        // Create a root element
-        this.root?.remove();
-        this.root = UIToolkit.span('', 'comment-count').appendTo(new Wrap(this));
-
-        // Start observing attribute changes
-        this.mo.disconnect();
-        this.mo.observe(this, {attributes: true, attributeFilter: ['path']});
-
-        // Update the widget
-        this.update();
-    }
-
-    // noinspection JSUnusedGlobalSymbols
-    /**
-     * Called by the browser when the element is removed from the DOM.
-     */
-    disconnectedCallback() {
-        // Stop observing attribute changes
-        this.mo.disconnect();
-
-        // Clean up
-        this.root?.inner('');
-    }
-
-    /**
-     * Update the displayed comment count.
-     */
-    async update(): Promise<void> {
-        // Update the element text
-        this.root?.inner(await this.getCount() ?? '?');
-    }
-
-    /**
-     * Request the comment count for the currently specified page path, or undefined on error.
-     * @private
-     */
-    private async getCount(): Promise<string | undefined> {
-        try {
-            const path = this.getAttribute('path') || this.location.pathname;
-            const r = await this.apiService.commentCount(this.location.host, [path]);
-            const cnt = r.commentCounts[path];
-            return cnt != null ? String(cnt) : undefined;
-        } catch {
-            return undefined;
-        }
     }
 }

@@ -26,14 +26,24 @@ You can further customise this element by adding attributes to the `<comentario-
 
 <div class="table-responsive">
 
-| Attribute      | Description                                                        | Default value       |
-|----------------|--------------------------------------------------------------------|---------------------|
-| [`path`](path) | Overrides the path (URL) of the page to display comment count for. | Current page's path |
+| Attribute                    | Description                                                | Default value               |
+|------------------------------|------------------------------------------------------------|-----------------------------|
+| [`error-text`](error-text)   | Text to display if fetching the count fails for any reason | `"?"`                       |
+| [`path`](path)               | Path (URL) of the page to display comment count for        | Current page's path         |
+| [`placeholder`](placeholder) | Text to display before the count becomes available         | `""`                        |
+| [`prefix`](prefix)           | Text that prefixes a successfully fetched, non-zero count  | `""`                        |
+| [`suffix`](suffix)           | Text that suffixes a successfully fetched, non-zero count  | `""`                        |
+| [`zero-text`](zero-text)     | Text to display if count is zero                           | `prefix` + `"0"` + `suffix` |
 {.table .table-striped}
 </div>
 
 Here's an example of a customised `<comentario-count>` tag:
 
 ```html
-<comentario-count path="/blog/post/123"></comentario-count>
+<comentario-count path="/blog/post/123" 
+                  placeholder="..."
+                  error-text="ERR"
+                  zero-text=""
+                  prefix="("
+                  suffix=")"></comentario-count>
 ```

@@ -115,7 +115,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.home,
                     heading:       'Comentario test',
-                    subheading:    true,
+                    subheading:    'Comments (17)',
                     verifyLogin:   true,
                     layoutOptions: {numComments: 16},
                     comments:
@@ -233,7 +233,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.comments,
                     heading:       'Comments',
-                    subheading:    true,
+                    subheading:    'Comments (1)',
                     verifyLogin:   true,
                     layoutOptions: {numComments: 1},
                     comments:
@@ -250,7 +250,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.double,
                     heading:       'Double',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   false, // Two Comentario instances screw the user name check
                     rootSelectors: ['#com-1', '#com-2'],
                     layoutOptions: {numComments: 2},
@@ -311,7 +311,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.noComment,
                     heading:       'No comment',
-                    subheading:    true,
+                    subheading:    'Comments',
                     verifyLogin:   true,
                     layoutOptions: {hasSortButtons: false},
                     comments:      '',
@@ -319,7 +319,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.readonly,
                     heading:       'Read-only',
-                    subheading:    true,
+                    subheading:    'Comments',
                     verifyLogin:   true,
                     layoutOptions: {readonly: true, hasSortButtons: false, notice: 'This thread is locked. You cannot add new comments.'},
                     comments:      '',
@@ -327,7 +327,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.darkMode,
                     heading:       'Dark mode',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   true,
                     layoutOptions: {numComments: 2},
                     comments:
@@ -351,7 +351,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.attr.autoInit,
                     heading:       'Attribute: auto-init=false',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   false, // No Comentario until it's initialised
                     postLogin:     initComentario,
                     layoutOptions: {numComments: 2},
@@ -376,7 +376,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.attr.noFonts,
                     heading:       'Attribute: no-fonts=true',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   true,
                     layoutOptions: {hasRootFont: false, numComments: 2},
                     comments:
@@ -400,7 +400,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.attr.cssOverride,
                     heading:       'Attribute: css-override',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   true,
                     postLogin:     checkCssOverride,
                     layoutOptions: {numComments: 2},
@@ -425,7 +425,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.attr.cssOverrideFalse,
                     heading:       'Attribute: css-override=false',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   true,
                     postLogin:     checkNoCssOverride,
                     layoutOptions: {numComments: 2},
@@ -450,7 +450,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.attr.pageId,
                     heading:       'Attribute: page-id',
-                    subheading:    true,
+                    subheading:    'Comments (2)',
                     verifyLogin:   true,
                     layoutOptions: {numComments: 2},
                     comments:
@@ -474,7 +474,7 @@ context('Comment threads', () => {
                 {
                     path:          TEST_PATHS.attr.maxLevel,
                     heading:       'Attribute: max-level=2',
-                    subheading:    true,
+                    subheading:    'Comments (6)',
                     verifyLogin:   true,
                     postLogin:     checkUnnesting,
                     layoutOptions: {numComments: 6},
@@ -539,8 +539,7 @@ context('Comment threads', () => {
                         // Verify the headings
                         cy.get('h1').should('have.text', pageTest.heading).and('be.visible');
                         if (pageTest.subheading) {
-                            cy.get('h2#comments').should('be.visible')
-                                .invoke('text').should('match', /^Comments \(\d+\)$/);
+                            cy.get('h2#comments').should('be.visible').and('have.text', pageTest.subheading);
                         }
 
                         // Run the post-login routine, if any

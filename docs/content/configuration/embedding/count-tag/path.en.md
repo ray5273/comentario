@@ -8,6 +8,7 @@ tags:
     - HTML
 seeAlso:
     - ../count-tag
+    - error-text
     - ../comments-tag
     - ../comments-tag/page-id
 ---
