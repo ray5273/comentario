@@ -114,9 +114,18 @@ ol.list-motley {
     li {
         display: flex;
         align-items: center;
+        padding-top: 0.25rem;
+        padding-bottom: 0.25rem;
+
+        @include media-breakpoint-down(md) {
+            &:not(:last-child) {
+                border-bottom: 1px solid $secondary;
+            }
+        }
 
         .marker {
             display: inline-flex;
+            flex: 0 0 1.67em;
             width: 1.67em;
             height: 1.67em;
             justify-content: center;
@@ -126,7 +135,7 @@ ol.list-motley {
             font-size: 150%;
             font-weight: bold;
             border-radius: 50%;
-            margin: 0.25rem;
+            margin-right: 0.25rem;
         }
     }
 }
