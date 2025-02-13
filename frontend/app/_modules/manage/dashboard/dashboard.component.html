@@ -81,10 +81,19 @@
             <!-- Steps in case the user can add a domain -->
             @if (canAddDomain === true) {
                 <p class="text-center lead fw-bold fade-in-1s" i18n>Do you want to connect Comentario to your website?</p>
-                <ol class="fade-in-3s">
-                    <li i18n>Add its domain to Comentario in the <a [routerLink]="Paths.manage.domainCreate">Domain Manager</a>.</li>
-                    <li i18n>Install the Comentario snippet on your website.</li>
-                    <li i18n>Engage in discussions with your visitors!</li>
+                <ol class="fade-in-3s list-motley">
+                    <li>
+                        <div class="marker bg-motley-1">1</div>
+                        <div i18n><a [routerLink]="Paths.manage.domainCreate">Add its domain</a> to Comentario in the Domain Manager.</div>
+                    </li>
+                    <li>
+                        <div class="marker bg-motley-2">2</div>
+                        <div i18n>Install Comentario snippet on your website.</div>
+                    </li>
+                    <li>
+                        <div class="marker bg-motley-3">3</div>
+                        <div i18n>Engage in discussions with your visitors!</div>
+                    </li>
                 </ol>
 
             <!-- Explanation in case they can't -->

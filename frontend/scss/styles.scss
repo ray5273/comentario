@@ -90,6 +90,47 @@ section {
     background-image: linear-gradient(180deg, #7c82f7 0%, #b763fd 100%);
 }
 
+.bg-motley-1 {
+    box-shadow:
+        #898eff -1px -2px 30px,
+        #ffce84 -1px -2px 63px;
+}
+
+.bg-motley-2 {
+    box-shadow:
+        #ffc04b 1px -2px 30px,
+        #ffb9f8 1px -2px 63px;
+}
+
+.bg-motley-3 {
+    box-shadow:
+        #16d9d9 1px -2px 30px,
+        #f8ff85 1px -2px 63px;
+}
+
+ol.list-motley {
+    list-style-type: none;
+
+    li {
+        display: flex;
+        align-items: center;
+
+        .marker {
+            display: inline-flex;
+            width: 1.67em;
+            height: 1.67em;
+            justify-content: center;
+            align-items: center;
+            background-color: $primary;
+            color: $white;
+            font-size: 150%;
+            font-weight: bold;
+            border-radius: 50%;
+            margin: 0.25rem;
+        }
+    }
+}
+
 // Collapse toggler
 .collapse-toggler {
 
