@@ -43,9 +43,6 @@ $sidebar-size-collapsed: 40px;
             .cc-hide-collapsed {
                 opacity: 0;
             }
-            .cc-vshrink-collapsed {
-                height: 0;
-            }
             .cc-logo-expanded {
                 opacity: 0;
                 transform: translateX(-165px);
@@ -97,13 +94,6 @@ $sidebar-size-collapsed: 40px;
 
 .cc-hide-collapsed {
     transition: opacity 0.3s linear;
-}
-
-.cc-vshrink-collapsed {
-    overflow: hidden;
-    line-height: 1.1em;
-    height: 1.1em;
-    transition: height 0.3s linear;
 }
 
 .cc-divider {

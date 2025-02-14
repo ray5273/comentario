@@ -1,4 +1,4 @@
 {{- $cur := .page.IsMenuCurrent "footer" .item -}}
 <li>
-    <a {{ if $cur }}class="active" aria-current="page"{{ end }} href="{{ .item.URL | absLangURL }}">{{ .item.Title }}</a>
+    <a {{ if $cur }}class="active" aria-current="page" {{- end }} href="{{ .item.URL | absLangURL }}">{{ .item.Title }}</a>
 </li>

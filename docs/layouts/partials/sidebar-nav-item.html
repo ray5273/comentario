@@ -15,7 +15,7 @@
     <!-- Link to the section page -->
     <a class="nav-link{{ if $isCurrent }} active{{ end }}{{ if and $isSection $children }} has-children{{ end }}{{ if $isExpanded }} is-expanded{{ end }}"
        href="{{ $url }}"
-       {{ if $isCurrent }}aria-current="page"{{ end }}>
+       {{ if $isCurrent }}aria-current="page" {{- end }}>
         {{- with .item }}{{ .Title }}{{ else }}{{ .page.Title }}{{ end -}}
     </a>
 

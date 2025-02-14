@@ -210,7 +210,10 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 // - paths starting from a language root ('/en/', '/ru/' etc.)
 func staticHandler(next http.Handler) http.Handler {
 	// Set the correct MIME type for the web app manifest
-	mime.AddExtensionType(".webmanifest", "application/manifest+json")
+	if err := mime.AddExtensionType(".webmanifest", "application/manifest+json"); err != nil {
+		panic(err)
+	}
+
 	// Instantiate a file server for static content
 	fileHandler := http.FileServer(http.Dir(config.ServerConfig.StaticPath))
 

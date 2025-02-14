@@ -31,6 +31,4 @@ export class TopPagesStatsComponent {
     metricName?: string;
 
     readonly Paths = Paths;
-    readonly viewsHeading    = $localize`:metric|:views`;
-    readonly commentsHeading = $localize`:metric|:comments`;
 }

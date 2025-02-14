@@ -7,7 +7,7 @@
         <fa-icon [icon]="faUser"/>
     } @else if (_src) {
         <!-- User avatar image -->
-        <img [src]="_src" alt="">
+        <img [ngSrc]="_src" [width]="pixelSize" [height]="pixelSize" alt="">
     } @else {
         <!-- User initial in case there's no avatar -->
         <span>{{ user?.name?.substring(0, 1)?.toUpperCase() || '*' }}</span>

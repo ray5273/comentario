@@ -1,5 +1,6 @@
 import { Component, Inject, Input, OnChanges, OnDestroy, SimpleChanges } from '@angular/core';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { NgOptimizedImage } from '@angular/common';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faUser } from '@fortawesome/free-solid-svg-icons';
 import { Commenter, Configuration, Principal, User } from '../../../../generated-api';
@@ -13,6 +14,7 @@ import { HashColourPipe } from '../_pipes/hash-colour.pipe';
     imports: [
         HashColourPipe,
         FaIconComponent,
+        NgOptimizedImage,
     ],
 })
 export class UserAvatarComponent implements OnChanges, OnDestroy {
@@ -41,10 +43,21 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
         private readonly sanitizer: DomSanitizer,
     ) {}
 
+    get pixelSize(): number {
+        switch (this.size) {
+            case 'S':
+                return 16;
+            case 'M':
+                return 32;
+            default: // 'L' or anything else
+                return 128;
+        }
+    }
+
     /**
-     * The "pixel size" of the avatar, which takes the current device pixel ratio into account.
+     * The "fetch size" of the avatar, which takes the current device pixel ratio into account.
      */
-    get pixelSize(): 'S' | 'M' | 'L' {
+    get fetchSize(): 'S' | 'M' | 'L' {
         switch (true) {
             // For smaller ratios just use the "CSS size"
             case devicePixelRatio < 2:
@@ -101,7 +114,7 @@ export class UserAvatarComponent implements OnChanges, OnDestroy {
             // Otherwise, use the user's avatar, if any
             (this.urlOverride === undefined) && this.user?.hasAvatar && this.user?.id ?
                 this.sanitizer.bypassSecurityTrustResourceUrl(
-                    `${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.pixelSize}` +
+                    `${this.API_CONFIG.basePath}/users/${this.user.id}/avatar?size=${this.fetchSize}` +
                     (this.updated ? `&_ts=${this.updated}` : '')) :
                 undefined;
     }

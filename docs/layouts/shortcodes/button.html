@@ -12,5 +12,5 @@
 {{- if in (.Get 3) `O` }}{{ $rel = $rel | append "noopener" }}{{ end -}}
 {{- if in (.Get 3) `R` }}{{ $rel = $rel | append "noreferrer" }}{{ end -}}
 <a href="{{ .Get 0 | absLangURL }}" class="btn btn-{{ .Get 2 | default `primary` }}{{ if in (.Get 3) `D`}} disabled{{ end }}"
-   {{- with $rel }} rel="{{ delimit . ` ` }}"{{ end -}}
+   {{- with $rel }} rel="{{ delimit . ` ` }}" {{- end -}}
    {{- if in (.Get 3) "B" }} target="_blank"{{ end -}}>{{ .Get 1 | .Page.RenderString }}</a>

@@ -18,7 +18,7 @@
             <div class="card-text">
                 <!-- Metric value -->
                 @if (value !== undefined) {
-                    <div [class.metric-value-1m]="value >= 1000000" class="metric-value">{{ value | number }}</div>
+                    <div [class.metric-value-1m]="value >= 1e6" class="metric-value">{{ value | number }}</div>
                 } @else {
                     <!-- Spinner in case the value is not yet known -->
                     <div class="spinner-grow spinner-grow-sm" role="status"></div>
