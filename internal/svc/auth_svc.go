@@ -15,8 +15,8 @@ import (
 var (
 	ErrSessionHeaderMissing = errors.New("session auth header missing in request")
 
-	ErrUnauthorised  = oaerrors.New(http.StatusUnauthorized, http.StatusText(http.StatusUnauthorized))
-	ErrInternalError = oaerrors.New(http.StatusInternalServerError, http.StatusText(http.StatusInternalServerError))
+	ErrUnauthorised  = oaerrors.New(http.StatusUnauthorized, "Unauthorized")
+	ErrInternalError = oaerrors.New(http.StatusInternalServerError, "Internal Server Error")
 )
 
 // TheAuthService is a global AuthService implementation
