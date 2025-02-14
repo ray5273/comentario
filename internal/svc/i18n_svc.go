@@ -39,6 +39,9 @@ type I18nService interface {
 	IsInterfaceLang(s string) bool
 	// LangTags returns tags of supported interface languages
 	LangTags() []language.Tag
+	// MergeMessages adds all messages from the given YAML-formatted byte buffer to the existing messages for that
+	// language
+	MergeMessages(content []byte, path string) error
 	// Messages returns all messages in the form of an ID-indexed map, either for the given language or a fallback, and
 	// the actual language the messages are from
 	Messages(lang string) (map[string]string, string)
@@ -189,6 +192,18 @@ func (svc *i18nService) LangTags() []language.Tag {
 	return svc.tags
 }
 
+func (svc *i18nService) MergeMessages(content []byte, path string) error {
+	// Parse the file content
+	mf, err := svc.bundle.ParseMessageFileBytes(content, path)
+	if err != nil {
+		return fmt.Errorf("i18nService.MergeMessages: failed to parse i18n file %q: %w", path, err)
+	}
+
+	// Merge the file's messages into the existing translations
+	svc.addMessageFile(mf)
+	return nil
+}
+
 func (svc *i18nService) Messages(lang string) (map[string]string, string) {
 	l := svc.BestLangFor(lang)
 	return svc.msgs[l], l
@@ -207,6 +222,30 @@ func (svc *i18nService) Translate(lang, id string, args ...reflect.Value) string
 	} else {
 		return fmt.Sprintf("!%v", err)
 	}
+}
+
+// addMessageFile registers or merges the given message file into the service
+func (svc *i18nService) addMessageFile(mf *i18n.MessageFile) {
+	// Check if the language is already known
+	lang := mf.Tag.String()
+	mm := svc.msgs[lang]
+	op := "Merged"
+	if mm == nil {
+		// It's a new language: store the tag and the messages
+		svc.tags = append(svc.tags, mf.Tag)
+		mm = make(map[string]string, len(mf.Messages))
+		svc.msgs[lang] = mm
+
+		// Create a localizer for this language
+		svc.locs[lang] = i18n.NewLocalizer(svc.bundle, lang, util.DefaultLanguage.String())
+		op = "Loaded"
+	}
+
+	// Add the messages from the slice to the map
+	for _, m := range mf.Messages {
+		mm[m.ID] = m.Other
+	}
+	logger.Debugf("%s i18n file %q for language %q (%d messages)", op, mf.Path, lang, len(mf.Messages))
 }
 
 // findBestLangFor tries to identify the "best" interface language (from the list of supported ones) for the given user
@@ -270,26 +309,9 @@ func (svc *i18nService) scanDir(dirPath string) error {
 		if err != nil {
 			return fmt.Errorf("failed to read i18n file %q: %w", fp, err)
 		}
-
-		// Store the tag and the messages
-		svc.tags = append(svc.tags, mf.Tag)
-		lang := mf.Tag.String()
-		svc.msgs[lang] = makeMsgMap(mf.Messages)
-
-		// Create a localizer per language
-		svc.locs[lang] = i18n.NewLocalizer(svc.bundle, lang, util.DefaultLanguage.String())
-		logger.Debugf("Loaded i18n file %q for language %q (%d messages)", fp, lang, len(mf.Messages))
+		svc.addMessageFile(mf)
 	}
 
 	// Succeeded
 	return nil
-}
-
-// makeMsgMap converts a message slice into an ID-indexed string map
-func makeMsgMap(ms []*i18n.Message) map[string]string {
-	mm := make(map[string]string, len(ms))
-	for _, m := range ms {
-		mm[m.ID] = m.Other
-	}
-	return mm
 }

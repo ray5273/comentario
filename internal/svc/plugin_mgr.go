@@ -353,6 +353,13 @@ func (pm *pluginManager) initPlugin(p cplugin.ComentarioPlugin, secrets cplugin.
 	// Correct the path by removing any leading and trailing slash
 	cfg.Path = strings.Trim(cfg.Path, "/")
 
+	// Merge the plugin's messages into the message repository
+	for _, me := range cfg.Messages {
+		if err := TheI18nService.MergeMessages(me.Content, me.Path); err != nil {
+			return nil, err
+		}
+	}
+
 	// Extend the XSRF-safe path registry with items provided by the plugin, if any
 	for _, s := range cfg.XSRFSafePaths {
 		util.XSRFSafePaths.Add(fmt.Sprintf("%s%s/%s", util.APIPath, cfg.Path, strings.TrimPrefix(s, "/")))

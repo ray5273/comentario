@@ -227,9 +227,6 @@ func configureServer(_ *http.Server, scheme, _ string) {
 		return
 	}
 
-	// Initialise the service manager
-	svc.TheServiceManager.Initialise()
-
 	// Init the e2e handler, if in the e2e testing mode
 	if config.ServerConfig.E2e {
 		if err := handlers.E2eInit(); err != nil {

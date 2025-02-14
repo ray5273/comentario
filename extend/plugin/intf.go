@@ -92,13 +92,20 @@ type UIPlug struct {
 	Path         string         // Path the plug's component will be available at. Only required for "standalone" components available on a path
 }
 
+// MessageEntry combines a message file path and content
+type MessageEntry struct {
+	Path    string // Message file path, which provides language specification
+	Content []byte // Message file content
+}
+
 // Config describes plugin configuration
 // Warning: Unstable API
 type Config struct {
-	Path          string       // Path the plugin's handlers are invoked on
-	UIResources   []UIResource // UI resources to be loaded for the plugin
-	UIPlugs       []UIPlug     // UI plugs
-	XSRFSafePaths []string     // API endpoint path prefixes to exclude from XSRF protection (for methods other than GET/HEAD/OPTIONS), relative to plugin API root (may contain leading "/")
+	Path          string         // Path the plugin's handlers are invoked on
+	UIResources   []UIResource   // UI resources to be loaded for the plugin
+	UIPlugs       []UIPlug       // UI plugs
+	Messages      []MessageEntry // Plugin messages
+	XSRFSafePaths []string       // API endpoint path prefixes to exclude from XSRF protection (for methods other than GET/HEAD/OPTIONS), relative to plugin API root (may contain leading "/")
 }
 
 // YAMLDecoder allows for unmarshalling configuration into a user-defined structure, which provides `yaml` metadata

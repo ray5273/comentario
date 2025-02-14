@@ -49,16 +49,19 @@ func main() {
 		logger.Fatalf("Failed to post-process configuration: %v", err)
 	}
 
-	// Load plugins
-	if err := svc.ThePluginManager.Init(); err != nil {
-		logger.Fatalf("Failed to init plugin manager: %v", err)
-	}
-
 	// Link the translations to the embedded filesystem
 	config.I18nFS = &i18nFS
 
 	// Configure the API
 	server.ConfigureAPI()
+
+	// Initialise the service manager
+	svc.TheServiceManager.Initialise()
+
+	// Load plugins
+	if err := svc.ThePluginManager.Init(); err != nil {
+		logger.Fatalf("Failed to init plugin manager: %v", err)
+	}
 
 	// Serve the API
 	if err := server.Serve(); err != nil {
