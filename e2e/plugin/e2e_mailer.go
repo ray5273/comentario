@@ -2,7 +2,7 @@ package main
 
 import (
 	"fmt"
-	"gitlab.com/comentario/comentario/internal/intf"
+	"gitlab.com/comentario/comentario/v3/internal/intf"
 )
 
 // e2eMailer is a Mailer implementation that stores emails in memory instead of sending them out

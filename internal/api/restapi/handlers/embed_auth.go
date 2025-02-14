@@ -5,12 +5,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi/operations/api_embed"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 )
 
 func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder {

@@ -2,9 +2,9 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
-	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi/operations/api_embed"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
 )
 
 func EmbedI18nMessages(params api_embed.EmbedI18nMessagesParams) middleware.Responder {

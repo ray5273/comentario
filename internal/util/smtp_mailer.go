@@ -2,7 +2,7 @@ package util
 
 import (
 	"crypto/tls"
-	"gitlab.com/comentario/comentario/internal/intf"
+	"gitlab.com/comentario/comentario/v3/internal/intf"
 	"gopkg.in/gomail.v2"
 )
 

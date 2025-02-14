@@ -9,8 +9,8 @@ import (
 	"github.com/markbates/goth/providers/google"
 	"github.com/markbates/goth/providers/openidConnect"
 	"github.com/markbates/goth/providers/twitter"
-	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/api/models"
+	"gitlab.com/comentario/comentario/v3/internal/data"
 	"strings"
 )
 

@@ -1,4 +1,4 @@
-module gitlab.com/comentario/comentario
+module gitlab.com/comentario/comentario/v3
 
 go 1.24
 

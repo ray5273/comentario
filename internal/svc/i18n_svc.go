@@ -3,8 +3,8 @@ package svc
 import (
 	"fmt"
 	"github.com/nicksnyder/go-i18n/v2/i18n"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 	"net/http"

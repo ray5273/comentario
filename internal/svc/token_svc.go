@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/doug-martin/goqu/v9"
-	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/data"
 	"time"
 )
 

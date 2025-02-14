@@ -4,7 +4,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/models"
+	"gitlab.com/comentario/comentario/v3/internal/api/models"
 	"reflect"
 	"strings"
 	"testing"

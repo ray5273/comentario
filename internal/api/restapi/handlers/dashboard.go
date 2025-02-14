@@ -3,10 +3,10 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi/operations/api_general"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
 )
 
 func DashboardDailyStats(params api_general.DashboardDailyStatsParams, user *data.User) middleware.Responder {

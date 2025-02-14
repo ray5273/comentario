@@ -7,11 +7,11 @@ import (
 	"github.com/gorilla/csrf"
 	"github.com/gorilla/handlers"
 	"github.com/justinas/alice"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi/operations/api_general"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"mime"
 	"net/http"
 	"net/url"
@@ -210,7 +210,8 @@ func serveFileWithPlaceholders(filePath string, w http.ResponseWriter, r *http.R
 // - paths starting from a language root ('/en/', '/ru/' etc.)
 func staticHandler(next http.Handler) http.Handler {
 	// Set the correct MIME type for the web app manifest
-	mime.AddExtensionType(".webmanifest", "application/manifest+json")
+	_ = mime.AddExtensionType(".webmanifest", "application/manifest+json")
+
 	// Instantiate a file server for static content
 	fileHandler := http.FileServer(http.Dir(config.ServerConfig.StaticPath))
 

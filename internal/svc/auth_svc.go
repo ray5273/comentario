@@ -6,9 +6,9 @@ import (
 	"fmt"
 	oaerrors "github.com/go-openapi/errors"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"net/http"
 )
 

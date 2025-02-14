@@ -2,11 +2,11 @@ package handlers
 
 import (
 	"github.com/go-openapi/runtime/middleware"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi/operations/api_general"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 )
 
 func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Responder {

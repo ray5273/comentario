@@ -17,7 +17,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/extension"
 	gmhtml "github.com/yuin/goldmark/renderer/html"
-	"gitlab.com/comentario/comentario/internal/intf"
+	"gitlab.com/comentario/comentario/v3/internal/intf"
 	"golang.org/x/net/html"
 	"io"
 	"math/rand"

@@ -2,8 +2,8 @@ package svc
 
 import (
 	"github.com/doug-martin/goqu/v9"
-	"gitlab.com/comentario/comentario/internal/persistence"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/persistence"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"time"
 )
 

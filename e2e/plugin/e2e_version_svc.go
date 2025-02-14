@@ -1,7 +1,7 @@
 package main
 
 import (
-	"gitlab.com/comentario/comentario/internal/intf"
+	"gitlab.com/comentario/comentario/v3/internal/intf"
 	"strings"
 	"time"
 )

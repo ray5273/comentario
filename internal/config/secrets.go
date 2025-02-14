@@ -4,7 +4,7 @@ import (
 	"crypto/sha256"
 	"errors"
 	"fmt"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"gopkg.in/yaml.v3"
 	"os"
 	"regexp"

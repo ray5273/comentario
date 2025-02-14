@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/models"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"strings"
 	"time"
 )

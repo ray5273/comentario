@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/gorilla/websocket"
-	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/config"
 	"net/http"
 	"sync"
 	"sync/atomic"

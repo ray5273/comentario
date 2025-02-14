@@ -2,8 +2,8 @@ package svc
 
 import (
 	"fmt"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/persistence"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/persistence"
 )
 
 // TheServiceManager is a global service manager interface

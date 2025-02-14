@@ -3,7 +3,7 @@ package svc
 import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/data"
 	"time"
 )
 

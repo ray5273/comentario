@@ -8,9 +8,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/extend/plugin"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/extend/plugin"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"maps"
 	"time"
 )

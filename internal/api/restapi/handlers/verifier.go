@@ -6,12 +6,12 @@ import (
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
 	"github.com/markbates/goth"
-	"gitlab.com/comentario/comentario/internal/api/exmodels"
-	"gitlab.com/comentario/comentario/internal/api/models"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/exmodels"
+	"gitlab.com/comentario/comentario/v3/internal/api/models"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"time"
 )
 

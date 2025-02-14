@@ -2,7 +2,7 @@ package config
 
 import (
 	"fmt"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"net/http"
 	"net/url"
 	"testing"

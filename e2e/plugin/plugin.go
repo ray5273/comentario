@@ -2,7 +2,7 @@ package main
 
 import (
 	_ "embed"
-	"gitlab.com/comentario/comentario/internal/intf"
+	"gitlab.com/comentario/comentario/v3/internal/intf"
 	"time"
 )
 

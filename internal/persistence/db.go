@@ -15,8 +15,8 @@ import (
 	_ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"os"
 	"os/signal"
 	"path"

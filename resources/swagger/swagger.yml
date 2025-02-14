@@ -55,7 +55,7 @@ definitions:
         type: string
     x-go-type:
       import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+        package: "gitlab.com/comentario/comentario/v3/internal/api/exmodels"
       type: "Error"
 
   comment:
@@ -743,7 +743,7 @@ definitions:
     type: object
     x-go-type:
       import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+        package: "gitlab.com/comentario/comentario/v3/internal/api/exmodels"
       type: "KeyValueMap"
 
   pageInfo:
@@ -967,7 +967,7 @@ definitions:
         x-isnullable: false
     x-go-type:
       import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+        package: "gitlab.com/comentario/comentario/v3/internal/api/exmodels"
       type: "PageStatsItem"
 
   path:
@@ -1196,7 +1196,7 @@ definitions:
         x-isnullable: false
     x-go-type:
       import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+        package: "gitlab.com/comentario/comentario/v3/internal/api/exmodels"
       type: "StatsDimensionItem"
 
   statsDimensionCounts:
@@ -1207,7 +1207,7 @@ definitions:
       $ref: "#/definitions/statsDimensionItem"
     x-go-type:
       import:
-        package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+        package: "gitlab.com/comentario/comentario/v3/internal/api/exmodels"
       type: "StatsDimensionCounts"
 
   statsTotals:
@@ -2255,7 +2255,7 @@ paths:
             type: object
             x-go-type:
               import:
-                package: "gitlab.com/comentario/comentario/internal/api/exmodels"
+                package: "gitlab.com/comentario/comentario/v3/internal/api/exmodels"
               type: "KeyValueMap"
 
   # Auth

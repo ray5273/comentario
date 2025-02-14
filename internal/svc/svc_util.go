@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 )
 
 // logger represents a package-wide logger instance

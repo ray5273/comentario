@@ -6,8 +6,8 @@ import (
 	"errors"
 	"fmt"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/data"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"time"
 )
 

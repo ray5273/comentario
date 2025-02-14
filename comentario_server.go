@@ -1,7 +1,7 @@
 package main
 
 //go:generate rm -rf internal/api/models internal/api/restapi/operations
-//go:generate swagger generate server --exclude-main --name Comentario --target internal/api --spec ./resources/swagger/swagger.yml --principal gitlab.com/comentario/comentario/internal/data.User
+//go:generate swagger generate server --exclude-main --name Comentario --target internal/api --spec ./resources/swagger/swagger.yml --principal gitlab.com/comentario/comentario/v3/internal/data.User
 
 import (
 	"embed"
@@ -9,11 +9,11 @@ import (
 	"github.com/go-openapi/loads"
 	"github.com/jessevdk/go-flags"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/api/restapi"
-	"gitlab.com/comentario/comentario/internal/api/restapi/operations"
-	"gitlab.com/comentario/comentario/internal/config"
-	"gitlab.com/comentario/comentario/internal/svc"
-	"gitlab.com/comentario/comentario/internal/util"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi"
+	"gitlab.com/comentario/comentario/v3/internal/api/restapi/operations"
+	"gitlab.com/comentario/comentario/v3/internal/config"
+	"gitlab.com/comentario/comentario/v3/internal/svc"
+	"gitlab.com/comentario/comentario/v3/internal/util"
 	"os"
 )
 
