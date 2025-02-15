@@ -1,5 +1,40 @@
 # Comentario changelog
 
+## v3.13.0 Garvagh
+
+In this version we've added RSS support for comments, a new comment count widget (`<comentario-count>`) for websites, implemented animated content loaders, introduced the `--no-page-view-stats` command-line parameter, and made quite a few code and presentation fixes.
+
+### Changes
+
+* Implement RSS feeds: for the entire domain, one specific page, and optionally filtering by author or as a reply - ba59e8ba, ef88d1b4, 726bcde0, 5f5a818d, 0c023549, 20d8db0b, 2a059536, 34fdab5b 
+* Add <comentario-count> tag (#147) - 2f3b72b4, 94965a66, c20e4a0d
+* Admin UI: add welcome screen to the Dashboard - 7cac91b3, 5f6ba263, f948920f
+* Admin UI: replace spinners on large elements with loaders - 5466d4bb, 3e4fd557
+* Admin UI: make selected domain be always at the top of the list - 0f733135
+* Admin UI: improve validation, skip focus on "show password" button - 60fa016c
+* Admin UI: improve detail tables, streamline form controls - 3a449822, 08fa35ba
+* Admin UI: improve and unify user badges - cc5a58d3
+* Admin UI: refactor toasts, add syntax highlighting to technical error details - a7a80ad7
+* Admin UI: uniform spinners, fix spinner label alignment - fad9c466
+* Admin UI: add domain page edit function (#148) - 2b2ce2b1, d7eb66c1
+* Admin UI: allow owner/superuser to edit domain self-user - 9655f1be
+* Admin UI: upgrade to Angular 19, bump other deps, ci-tools v41 - 7127efc2
+* Admin UI: switch to `application` build system - 4eff4f16
+* SSO: add role to SSO payload (#157) - 8a1e68c1
+* Refactor/unify mail templates - 26608c3f
+* Helm: add args value - e627351b, ea326a96, 058226ef, e6996f51
+* Add `--no-page-view-stats` CLI param (#102) - dc159c94
+* Fix truncating text (result length, damaged Unicode chars) (#145) - fabdb10f
+* Packaging: flag config files in /etc to prevent overwriting them (#146) - 3007bdae
+* Docs: clarify SMTP port/encryption (#158) - 1b0f04db
+* Go 1.24, ci-tools v45, bump deps - a7b25f58
+* Plugin subsystem improvements - 02480097, 710df9e1, 0f8cf59b, 656d54d7, 3f525f42, 44d44c07, edcc19e6, bf06e9df, 00658e6b, cf932309, 2e9fde81
+* Code fixes and optimisations - 79983544, f2fdfed5, 90ef348a, ffb63f52, 0fc69408
+* Demo DB: actualise comment count for domain and pages - 6ce6b979
+* Demo DB: let user sessions and votes survive reset (up to a week) - 26efcb88
+* Demo DB: make predefined comments appear the oldest - 3ff69bbd
+* CI: add Helm chart linting - e6996f51
+
 ## v3.12.0 Faughanvale
 
 This release brings proper multilingual support for commenter users (for example, emails will now be sent in the user's language if it's supported), user email address update feature, maximum comment text length setting, and support for PostgreSQL 17 and ARM64 Docker images, as well as a multitude of bugfixes and improvements.
