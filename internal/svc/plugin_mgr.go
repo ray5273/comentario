@@ -5,9 +5,9 @@ import (
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
 	cplugin "gitlab.com/comentario/comentario/extend/plugin"
-	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
+	"iter"
 	"net/http"
 	"os"
 	"path"
@@ -23,8 +23,8 @@ type PluginManager interface {
 	HandleEvent(event any) error
 	// Init the manager
 	Init() error
-	// PluginConfig returns configuration of all registered plugins as DTOs
-	PluginConfig() []*models.PluginConfig
+	// PluginConfigs returns an iterator for each plugin's ID and configuration
+	PluginConfigs() iter.Seq2[string, *cplugin.Config]
 	// ServeHandler returns an HTTP handler for processing requests
 	ServeHandler(next http.Handler) http.Handler
 	// Shutdown the manager
@@ -198,44 +198,6 @@ type pluginEntry struct {
 	c  *cplugin.Config          // Configuration obtained from the plugin
 }
 
-// ToDTO converts this model into a DTO model
-func (pe pluginEntry) ToDTO() *models.PluginConfig {
-	// Convert plugs to DTOs
-	var plugs []*models.PluginUIPlugConfig
-	for _, p := range pe.c.UIPlugs {
-		// Convert the plug's labels into DTOs
-		var labels []*models.PluginUILabel
-		for _, l := range p.Labels {
-			labels = append(labels, &models.PluginUILabel{Language: l.Language, Text: l.Text})
-		}
-
-		// Convert the plug itself into a DTO
-		plugs = append(plugs, &models.PluginUIPlugConfig{
-			ComponentTag: p.ComponentTag,
-			Labels:       labels,
-			Location:     string(p.Location),
-			Path:         p.Path,
-		})
-	}
-
-	// Convert resources to DTOs
-	var resources []*models.PluginUIResourceConfig
-	for _, r := range pe.c.UIResources {
-		resources = append(resources, &models.PluginUIResourceConfig{
-			Rel:  r.Rel,
-			Type: r.Type,
-			URL:  r.URL,
-		})
-	}
-
-	return &models.PluginConfig{
-		ID:          pe.id,
-		Path:        pe.c.Path,
-		UIPlugs:     plugs,
-		UIResources: resources,
-	}
-}
-
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
@@ -280,14 +242,14 @@ func (pm *pluginManager) Init() error {
 	return nil
 }
 
-func (pm *pluginManager) PluginConfig() []*models.PluginConfig {
-	var res []*models.PluginConfig
-
-	// Iterate over plugins and convert their configs into DTOs
-	for _, pe := range pm.plugs {
-		res = append(res, pe.ToDTO())
+func (pm *pluginManager) PluginConfigs() iter.Seq2[string, *cplugin.Config] {
+	return func(yield func(string, *cplugin.Config) bool) {
+		for _, pe := range pm.plugs {
+			if !yield(pe.id, pe.c) {
+				return
+			}
+		}
 	}
-	return res
 }
 
 func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
@@ -331,10 +293,10 @@ func (pm *pluginManager) Shutdown() {
 
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found
 func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
-	for _, plug := range pm.plugs {
+	for _, pe := range pm.plugs {
 		// If the plugin can handle this path
-		if strings.HasPrefix(requestPath, prefix+plug.c.Path+"/") {
-			return plug
+		if strings.HasPrefix(requestPath, prefix+pe.c.Path+"/") {
+			return pe
 		}
 	}
 	return nil
@@ -352,18 +314,6 @@ func (pm *pluginManager) initPlugin(p cplugin.ComentarioPlugin, secrets cplugin.
 
 	// Correct the path by removing any leading and trailing slash
 	cfg.Path = strings.Trim(cfg.Path, "/")
-
-	// Merge the plugin's messages into the message repository
-	for _, me := range cfg.Messages {
-		if err := TheI18nService.MergeMessages(me.Content, me.Path); err != nil {
-			return nil, err
-		}
-	}
-
-	// Extend the XSRF-safe path registry with items provided by the plugin, if any
-	for _, s := range cfg.XSRFSafePaths {
-		util.XSRFSafePaths.Add(fmt.Sprintf("%s%s/%s", util.APIPath, cfg.Path, strings.TrimPrefix(s, "/")))
-	}
 	return &cfg, nil
 }
 

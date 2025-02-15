@@ -3,6 +3,7 @@ package restapi
 import (
 	"crypto/tls"
 	"encoding/xml"
+	"fmt"
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/runtime"
 	"github.com/go-openapi/strfmt"
@@ -20,6 +21,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
 	"net/http"
+	"strings"
 )
 
 // logger represents a package-wide logger instance
@@ -200,6 +202,13 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 		logger.Warning("XSRF protection is disabled")
 	} else {
 		chain = chain.Append(xsrfProtectHandler, xsrfCookieHandler)
+
+		// Extend the XSRF-safe path registry with items provided by plugins: iterate each plugin's config
+		for _, cfg := range svc.ThePluginManager.PluginConfigs() {
+			for _, s := range cfg.XSRFSafePaths {
+				util.XSRFSafePaths.Add(fmt.Sprintf("%s%s/%s", util.APIPath, cfg.Path, strings.TrimPrefix(s, "/")))
+			}
+		}
 	}
 
 	// Add the security headers, the static handler (after the XSRF one, since with the UI also a corresponding cookie

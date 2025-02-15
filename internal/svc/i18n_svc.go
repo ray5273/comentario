@@ -129,6 +129,21 @@ func (svc *i18nService) Init() error {
 		return err
 	}
 
+	// Merge all plugin messages into the message repository: iterate plugin configs
+	for id, cfg := range ThePluginManager.PluginConfigs() {
+		// Iterate each plugin's messages
+		for _, me := range cfg.Messages {
+			// Create an artificial path spec that contains plugin ID (so that we can distinguish between message
+			// sources). The message parser only looks at the file name and ignores the actual path
+			p := fmt.Sprintf("{plugin:%s}/%s", id, strings.TrimPrefix(me.Path, "/"))
+
+			// Merge the plugin's message into the repository
+			if err := TheI18nService.MergeMessages(me.Content, p); err != nil {
+				return fmt.Errorf("failed to merge plugin (ID=%q) messages: %w", id, err)
+			}
+		}
+	}
+
 	// Sort translations by language code
 	slices.SortFunc(svc.tags, func(a, b language.Tag) int {
 		// The default language must always come first

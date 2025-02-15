@@ -52,16 +52,17 @@ func main() {
 	// Link the translations to the embedded filesystem
 	config.I18nFS = &i18nFS
 
+	// Load and init plugins. It has to happen *before* API configuration and service initialisation, because they take
+	// plugin configs into account
+	if err := svc.ThePluginManager.Init(); err != nil {
+		logger.Fatalf("Failed to init plugin manager: %v", err)
+	}
+
 	// Configure the API
 	server.ConfigureAPI()
 
 	// Initialise the service manager
 	svc.TheServiceManager.Initialise()
-
-	// Load plugins
-	if err := svc.ThePluginManager.Init(); err != nil {
-		logger.Fatalf("Failed to init plugin manager: %v", err)
-	}
 
 	// Serve the API
 	if err := server.Serve(); err != nil {

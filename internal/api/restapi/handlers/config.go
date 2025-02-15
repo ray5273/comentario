@@ -3,6 +3,7 @@ package handlers
 import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -96,13 +97,17 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 		return respServiceError(err)
 	}
 
+	// Convert plugin config into DTOs
+	var pluginCfgs []*models.PluginConfig
+	for id, cfg := range svc.ThePluginManager.PluginConfigs() {
+		pluginCfgs = append(pluginCfgs, pluginConfigToDTO(id, cfg))
+	}
+
 	// Succeeded
 	return api_general.NewConfigGetOK().
 		WithPayload(&models.InstanceConfig{
 			DynamicConfig: data.DynConfigMapToDTOs(dynConfig),
-			PluginConfig: &models.InstancePluginConfig{
-				Plugins: svc.ThePluginManager.PluginConfig(),
-			},
+			PluginConfig:  &models.InstancePluginConfig{Plugins: pluginCfgs},
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:          config.ServerConfig.BaseDocsURL,
 				BaseURL:              config.ServerConfig.ParsedBaseURL().String(),
@@ -144,4 +149,42 @@ func ConfigVersionsGet(_ api_general.ConfigVersionsGetParams, user *data.User) m
 		IsUpgradable:  svc.TheVersionService.IsUpgradable(),
 		LatestRelease: rm,
 	})
+}
+
+// pluginConfigToDTO converts the given plugin config into a DTO model
+func pluginConfigToDTO(id string, cfg *plugin.Config) *models.PluginConfig {
+	// Convert plugs to DTOs
+	var plugs []*models.PluginUIPlugConfig
+	for _, p := range cfg.UIPlugs {
+		// Convert the plug's labels into DTOs
+		var labels []*models.PluginUILabel
+		for _, l := range p.Labels {
+			labels = append(labels, &models.PluginUILabel{Language: l.Language, Text: l.Text})
+		}
+
+		// Convert the plug itself into a DTO
+		plugs = append(plugs, &models.PluginUIPlugConfig{
+			ComponentTag: p.ComponentTag,
+			Labels:       labels,
+			Location:     string(p.Location),
+			Path:         p.Path,
+		})
+	}
+
+	// Convert resources to DTOs
+	var resources []*models.PluginUIResourceConfig
+	for _, r := range cfg.UIResources {
+		resources = append(resources, &models.PluginUIResourceConfig{
+			Rel:  r.Rel,
+			Type: r.Type,
+			URL:  r.URL,
+		})
+	}
+
+	return &models.PluginConfig{
+		ID:          id,
+		Path:        cfg.Path,
+		UIPlugs:     plugs,
+		UIResources: resources,
+	}
 }
