@@ -18,7 +18,7 @@ The `<comentario-count>` tag represents an optional widget that displays the num
 
 Like the "main" [comments tag](../comments-tag), it also requires a [script tag](../script-tag) being added to the same page, and it's also a [web component](https://developer.mozilla.org/en-US/docs/Web/API/Web_components).
 
-This tag marks the location for displayed comments. After Comentario engine is initialised, the comment count will appear inside the corresponding HTML element.
+This tag marks the location for the displayed comment count. After Comentario engine is initialised, the comment count will appear inside the corresponding HTML element.
 
 ## Customising the element
 
