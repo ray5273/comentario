@@ -1,0 +1,126 @@
+- {id: accountCreatedConfirmEmail,  translation: 'Das Konto wurde erfolgreich erstellt. Bitte prüfe deine E-Mail und klicke auf den darin enthaltenen Bestätigungslink.'}
+- {id: actionAddComment,            translation: 'Kommentar hinzufügen'}
+- {id: actionApprove,               translation: 'Genehmigen'}
+- {id: actionCancel,                translation: 'Abbrechen'}
+- {id: actionClose,                 translation: 'Schließen'}
+- {id: actionCollapseChildren,      translation: 'Zuklappen'}
+- {id: actionCommentUnreg,          translation: 'Kommentieren ohne Registrierung'}
+- {id: actionConfirmEmail,          translation: 'Bestätige deine E-Mail'}
+- {id: actionConfirmEmailUpdate,    translation: 'Bestätige deine E-Mail-Änderung'}
+- {id: actionContext,               translation: 'Bezug'}
+- {id: actionDelete,                translation: 'Löschen'}
+- {id: actionDownvote,              translation: 'Abwerten'}
+- {id: actionEdit,                  translation: 'Bearbeiten'}
+- {id: actionEditComentarioProfile, translation: 'Comentario-Profil bearbeiten'}
+- {id: actionExpandChildren,        translation: 'Aufklappen'}
+- {id: actionLogIn,                 translation: 'Anmelden'}
+- {id: actionOk,                    translation: 'OK'}
+- {id: actionPreview,               translation: 'Vorschau'}
+- {id: actionReject,                translation: 'Ablehnen'}
+- {id: actionReply,                 translation: 'Antworten'}
+- {id: actionResetPassword,         translation: 'Passwort zurücksetzen'}
+- {id: actionRetry,                 translation: 'Wiederholen'}
+- {id: actionSave,                  translation: 'Speichern'}
+- {id: actionSignIn,                translation: 'Anmelden'}
+- {id: actionSignUp,                translation: 'Registrieren'}
+- {id: actionSignUpLink,            translation: 'Hier registrieren'}
+- {id: actionSso,                   translation: 'Single Sign-On'}
+- {id: actionSticky,                translation: 'Anheften'}
+- {id: actionUnsticky,              translation: 'Abheften'}
+- {id: actionUnsubscribe,           translation: 'Abbestellen'}
+- {id: actionUpvote,                translation: 'Aufwerten'}
+- {id: addCommentPlaceholder,       translation: 'Kommentar hinzufügen'}
+- {id: btnBold,                     translation: 'Fett'}
+- {id: btnBulletList,               translation: 'Aufzählungsliste'}
+- {id: btnCode,                     translation: 'Code'}
+- {id: btnEditorHelp,               translation: 'Editor-Hilfe'}
+- {id: btnImage,                    translation: 'Bild'}
+- {id: btnItalic,                   translation: 'Kursiv'}
+- {id: btnLink,                     translation: 'Link'}
+- {id: btnLock,                     translation: 'Sperren'}
+- {id: btnLogout,                   translation: 'Abmelden'}
+- {id: btnNumberedList,             translation: 'Nummerierte Liste'}
+- {id: btnQuote,                    translation: 'Zitat'}
+- {id: btnSettings,                 translation: 'Einstellungen'}
+- {id: btnStrikethrough,            translation: 'Durchgestrichen'}
+- {id: btnTable,                    translation: 'Tabelle'}
+- {id: btnUnlock,                   translation: 'Entsperren'}
+- {id: clickButtonBelow,            translation: 'Zum Durchführen klicke die untenstehende Schaltfläche.'}
+- {id: commentCount,                translation: 'Kommentar(e)'}
+- {id: commentIsApproved,           translation: 'Dieser Kommentar wurde von einem Moderator genehmigt.'}
+- {id: commentIsPending,            translation: 'Dieser Kommentar wartet auf die Genehmigung durch einen Moderator.'}
+- {id: commentIsRejected,           translation: 'Dieser Kommentar wurde von einem Moderator abgelehnt, weil er Spam oder unangemessen ist.'}
+- {id: commentNotFound,             translation: 'Der Kommentar den du suchst, existiert nicht. Möglicherweise wurde er gelöscht.'}
+- {id: commentScore,                translation: 'Kommentarbewertung'}
+- {id: commentStatusChanged,        translation: 'Kommentarstatus geändert'}
+- {id: confirmCommentDeletion,      translation: 'Bist du sicher, dass du diesen Kommentar löschen willst?'}
+- {id: confirmEmailAct,             translation: 'Wenn du die Registrierung abschließen möchtest, klicke bitte auf die Schaltfläche unten.'}
+- {id: confirmEmailExplanation,     translation: 'Du hast diese E-Mail erhalten, weil du (oder eine andere Person) diese E-Mail-Adresse in unserem Dienst registriert hast.'}
+- {id: confirmEmailRequest,         translation: 'Du hast kürzlich ein neues Comentario-Konto mit dieser E-Mail-Adresse registriert.'}
+- {id: confirmEmailUpdateAct,       translation: 'Um die Aktualisierung deiner E-Mail zu bestätigen, klicke bitte auf die Schaltfläche unten.'}
+- {id: confirmEmailUpdateExpl,      translation: 'Du hast diese E-Mail erhalten, weil du (oder jemand anderes) eine Aktualisierung deiner E-Mail-Adresse in unserem Dienst angefordert hast.'}
+- {id: confirmEmailUpdateRequest,   translation: 'Du hast kürzlich darum gebeten, deine Comentario-E-Mail auf diese Adresse zu aktualisieren.'}
+- {id: confirmYourEmail,            translation: 'Bestätige deine E-Mail'}
+- {id: confirmYourEmailUpdate,      translation: 'Bestätige das Aktualisieren deiner E-Mail'}
+- {id: dlgTitleCommentRssFeed,      translation: 'Kommentar RSS-Feed'}
+- {id: dlgTitleConfirm,             translation: 'Bestätigen'}
+- {id: dlgTitleCreateAccount,       translation: 'Ein Konto erstellen'}
+- {id: dlgTitleLogIn,               translation: 'Anmelden'}
+- {id: dlgTitlePopupBlocked,        translation: 'Popup blockiert'}
+- {id: dlgTitleUserSettings,        translation: 'Benutzereinstellungen'}
+- {id: domainAuthUnconfigured,      translation: 'Für diese Domain ist keine Authentifizierungsmethode verfügbar. Du kannst keine neuen Kommentare hinzufügen.'}
+- {id: error,                       translation: 'Fehler'}
+- {id: errorUnknown,                translation: 'Unbekannter Fehler'}
+- {id: errorUnknownHost,            translation: 'Diese Domain ist nicht in Comentario registriert'}
+- {id: fieldComStatusNotifications, translation: 'Benachrichtigungen über den Kommentarstatus'}
+- {id: fieldModNotifications,       translation: 'Moderator-Benachrichtigungen'}
+- {id: fieldOnlyThisPage,           translation: 'Nur diese Seite'}
+- {id: fieldOnlyReplies,            translation: 'Nur Antworten auf deine Kommentare'}
+- {id: fieldPassword,               translation: 'Passwort'}
+- {id: fieldRealName,               translation: 'Wirklicher Name'}
+- {id: fieldReplyNotifications,     translation: 'Benachrichtigungen über Antworten'}
+- {id: fieldWebsiteOpt,             translation: 'Webseite (optional)'}
+- {id: fieldYourNameOptional,       translation: 'Dein Name (optional)'}
+- {id: forgotPasswordLink,          translation: 'Hast du dein Passwort vergessen?'}
+- {id: helloName,                   translation: 'Hallo {{ index . 0 }}!'}
+- {id: ignoreEmail,                 translation: 'Wenn du das nicht getan hast, ignoriere bitte diese E-Mail.'}
+- {id: labelUseRssLink,             translation: 'Verwende diesen Link für deinen RSS-Reader'}
+- {id: loginViaLocalAuth,           translation: 'Melde dich mit deiner E-Mail und deinem Passwort an'}
+- {id: loginWith,                   translation: 'Anmelden mit'}
+- {id: newComment,                  translation: 'Neuer Kommentar'}
+- {id: newCommentOn,                translation: 'Neuer Kommentar zu {{ index . 0 }}'}
+- {id: noAccountYet,                translation: 'Du hast noch kein Konto?'}
+- {id: notificationCommentStatus,   translation: 'Du hast diese E-Mail erhalten, weil du dich für den Erhalt von E-Mail-Benachrichtigungen über Aktualisierungen des Kommentarstatus entschieden hast.'}
+- {id: notificationModAll,          translation: 'Du hast diese E-Mail erhalten, weil der Inhaber der Domain entschieden hat, die Moderatoren über alle neuen Kommentare per E-Mail zu informieren.'}
+- {id: notificationModPending,      translation: 'Du hast diese E-Mail erhalten, weil der Inhaber der Domain sich entschieden hat, die Moderatoren per E-Mail über Kommentare zu benachrichtigen, die noch moderiert werden müssen.'}
+- {id: notificationNewReply,        translation: 'Du hast diese E-Mail erhalten, weil du dich für den Erhalt von E-Mail-Benachrichtigungen über Kommentarantworten entschieden hast.'}
+- {id: notWillingToSignup,          translation: 'Du willst dich nicht anmelden? Du kannst ohne Registrierung kommentieren'}
+- {id: pageIsReadonly,              translation: 'Dieses Thema ist gesperrt. Du kannst keine neuen Kommentare hinzufügen.'}
+- {id: popupWasBlocked,             translation: 'Popup-Fenster wurde von deinem Browser blockiert. Bitte lass Popups auf dieser Website zu und klicke dann auf die Schaltfläche „Erneut versuchen“ unten.'}
+- {id: poweredBy,                   translation: 'Powered by Comentario'}
+- {id: previewFailed,               translation: 'Vorschau fehlgeschlagen'}
+- {id: pwdResetExplanation,         translation: 'Du hast diese E-Mail erhalten, weil du (oder eine andere Person) eine Passwortrücksetzung in unserem Dienst beantragt hast.'}
+- {id: pwdResetRequest,             translation: 'Du hast vor kurzem das Verfahren zum Zurücksetzen deines Comentario-Kontopassworts eingeleitet.'}
+- {id: pwdStrengthExplained,        translation: 'Das Passwort muss mindestens 8 Zeichen lang sein und einen Großbuchstaben, einen Kleinbuchstaben und eine Ziffer oder ein Symbol enthalten.'}
+- {id: resetYourPassword,           translation: 'Passwort zurücksetzen'}
+- {id: sampleText,                  translation: 'Text'}
+- {id: signUpAgreeAnd,              translation: 'und'}
+- {id: signUpAgreePrivacyPolicy,    translation: 'unserer Datenschutzrichtlinie'}
+- {id: signUpAgreeTerms,            translation: 'unseren Nutzungsbedingungen'}
+- {id: signUpAgreeTo,               translation: 'Mit der Anmeldung erklärst du dich mit'}
+- {id: sortNewest,                  translation: 'Neueste'}
+- {id: sortOldest,                  translation: 'Älteste'}
+- {id: sortVotes,                   translation: 'Stimmen'}
+- {id: ssoAuthFailed,               translation: 'SSO-Authentifizierung fehlgeschlagen.'}
+- {id: statusDeleted,               translation: 'gelöscht'}
+- {id: statusDeletedByAuthor,       translation: 'vom Autor gelöscht'}
+- {id: statusDeletedByModerator,    translation: 'vom Moderator gelöscht'}
+- {id: statusDeletedUser,           translation: 'Gelöschter Benutzer'}
+- {id: statusEditedByAuthor,        translation: 'bearbeitet vom Autor'}
+- {id: statusEditedByModerator,     translation: 'bearbeitet von Moderator'}
+- {id: statusModerator,             translation: 'Moderator'}
+- {id: statusPending,               translation: 'Ausstehend'}
+- {id: stickyComment,               translation: 'Angehefteter Kommentar'}
+- {id: technicalDetails,            translation: 'Technische Details'}
+- {id: timeJustNow,                 translation: 'soeben'}
+- {id: unreadReply,                 translation: 'Ungelesene Antwort'}
