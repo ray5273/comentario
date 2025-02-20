@@ -28,7 +28,7 @@ stages:
 
 variables:
   CI_TOOLS_VERSION: "v45"
-  DEPLOYER_IMAGE: "alpine/k8s:1.31"
+  DEPLOYER_IMAGE: "alpine/k8s:1.31.5"
   # Namespace to deploy Kubernetes objects into
   NAMESPACE: ys-comentario
   PUSH_IMAGE: "false"
