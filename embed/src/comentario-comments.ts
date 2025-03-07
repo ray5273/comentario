@@ -101,7 +101,7 @@ export class ComentarioComments extends ComentarioBase implements WebComponent {
     private readonly liveUpdate = this.getAttribute('live-update') !== 'false';
 
     /** Timer for adding a content placeholder. */
-    private contentPlaceholderTimer?: any;
+    private contentPlaceholderTimer?: ReturnType<typeof setTimeout>;
 
     connectedCallback() {
         // Create a root DIV
