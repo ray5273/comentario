@@ -23,6 +23,7 @@ import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
+import { DomainEventService } from '../../_services/domain-event.service';
 
 @UntilDestroy()
 @Component({
@@ -76,6 +77,7 @@ export class DomainOperationsComponent implements OnInit {
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
+        private readonly domainEventSvc: DomainEventService,
     ) {}
 
     get freezeAction(): string {
@@ -114,11 +116,14 @@ export class DomainOperationsComponent implements OnInit {
 
     delete() {
         // Run deletion with the API
-        this.api.domainDelete(this.domain!.id!)
+        const domain = this.domain!;
+        this.api.domainDelete(domain.id!)
             .pipe(this.deleting.processing())
             .subscribe(() => {
                 // Deselect the domain
                 this.domainSelectorSvc.setDomainId(undefined);
+                // Emit a domain event
+                this.domainEventSvc.events.next({kind: 'delete', domain});
                 // Add a toast
                 this.toastSvc.success({messageId: 'domain-deleted', keepOnRouteChange: true});
                 // Navigate to the domain list page

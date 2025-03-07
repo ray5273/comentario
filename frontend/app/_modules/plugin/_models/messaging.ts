@@ -16,6 +16,8 @@ export enum PluginEventKind {
 export enum PluginSubscriptionKind {
     /** Authentication status. */
     AuthStatus = 'AUTH_STATUS',
+    /** Domain events. */
+    DomainEvents = 'DOMAIN_EVENTS',
 }
 
 /**
@@ -29,7 +31,7 @@ export interface PluginEventPayload {
 }
 
 //======================================================================================================================
-// Comentario => plugin port message events
+// Comentario ⇒ plugin port message events
 //======================================================================================================================
 
 /**
@@ -71,6 +73,9 @@ export interface PluginPortEventNavigationRequest extends PluginPortEventBase {
     /** Route or commands to navigate to. */
     readonly route: string | any[];
 }
+
+/** Payload for the ReloadPrincipalRequest event. */
+export type PluginPortEventReloadPrincipalRequest = PluginPortEventBase;
 
 /** Payload for the ShowToastRequest event. */
 export interface PluginPortEventShowToastRequest extends PluginPortEventBase {

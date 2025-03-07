@@ -15,6 +15,7 @@ import { DomainEditGeneralComponent } from './domain-edit-general/domain-edit-ge
 import { DomainEditAuthComponent } from './domain-edit-auth/domain-edit-auth.component';
 import { DomainEditModerationComponent } from './domain-edit-moderation/domain-edit-moderation.component';
 import { DomainEditExtensionsComponent } from './domain-edit-extensions/domain-edit-extensions.component';
+import { DomainEventService } from '../../_services/domain-event.service';
 
 describe('DomainEditComponent', () => {
 
@@ -41,6 +42,7 @@ describe('DomainEditComponent', () => {
                 providers: [
                     MockProvider(ApiGeneralService, {domainGet: () => of(null)} as any),
                     MockProvider(ToastService),
+                    MockProvider(DomainEventService),
                     mockConfigService(),
                     mockDomainSelector(),
                 ],

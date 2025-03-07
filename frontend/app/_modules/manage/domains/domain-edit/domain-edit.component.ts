@@ -28,6 +28,7 @@ import { DomainEditGeneralComponent } from './domain-edit-general/domain-edit-ge
 import { DomainEditAuthComponent } from './domain-edit-auth/domain-edit-auth.component';
 import { DomainEditModerationComponent } from './domain-edit-moderation/domain-edit-moderation.component';
 import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
+import { DomainEventService } from '../../_services/domain-event.service';
 
 interface ExtensionValue {
     enabled: boolean;
@@ -86,6 +87,7 @@ export class DomainEditComponent implements OnInit {
         private readonly cfgSvc: ConfigService,
         private readonly toastSvc: ToastService,
         private readonly domainSelectorSvc: DomainSelectorService,
+        private readonly domainEventSvc: DomainEventService,
     ) {}
 
     /**
@@ -264,6 +266,8 @@ export class DomainEditComponent implements OnInit {
                     this.toastSvc.success({messageId: 'data-saved', keepOnRouteChange: true});
                     // Reload the current domain
                     this.domainSelectorSvc.reload();
+                    // Emit a domain event
+                    this.domainEventSvc.events.next({kind: this.isNew ? 'create' : 'update', domain});
                     // Navigate to the edited/created domain
                     return this.router.navigate([Paths.manage.domains, newDomain.id]);
                 });

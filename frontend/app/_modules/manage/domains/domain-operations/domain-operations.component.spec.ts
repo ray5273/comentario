@@ -8,6 +8,7 @@ import { ApiGeneralService } from '../../../../../generated-api';
 import { ToastService } from '../../../../_services/toast.service';
 import { DomainBadgeComponent } from '../../badges/domain-badge/domain-badge.component';
 import { mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { DomainEventService } from '../../_services/domain-event.service';
 
 describe('DomainOperationsComponent', () => {
 
@@ -26,6 +27,7 @@ describe('DomainOperationsComponent', () => {
                 providers: [
                     MockProvider(ApiGeneralService),
                     MockProvider(ToastService),
+                    MockProvider(DomainEventService),
                     mockDomainSelector(),
                 ],
             })
