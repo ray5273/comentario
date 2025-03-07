@@ -1,3 +1,9 @@
+:host {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .avatar-backdrop {
     aspect-ratio: 1 / 1;
     border-radius: 50%;
