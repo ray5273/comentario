@@ -126,6 +126,8 @@ export interface PageInfo {
     readonly showDeletedComments: boolean;
     /** Maximum comment text length */
     readonly maxCommentLength: number;
+    /** Whether to show login dialog when an unauthenticated user is submitting a comment */
+    readonly showLoginForUnauth: boolean;
     /** Whether new users can register locally (with email and password) */
     readonly localSignupEnabled: boolean;
     /** Whether new users can register via a federated identity provider */

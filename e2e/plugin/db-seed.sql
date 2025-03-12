@@ -16,6 +16,7 @@ values
     ('domain.defaults.markdown.images.enabled',     'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.markdown.links.enabled',      'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.markdown.tables.enabled',     'true',  '0001-01-01 00:00:00.000000'),
+    ('domain.defaults.signup.login.showForUnauth',  'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.signup.enableFederated',      'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.signup.enableLocal',          'true',  '0001-01-01 00:00:00.000000'),
     ('domain.defaults.signup.enableSso',            'true',  '0001-01-01 00:00:00.000000'),
@@ -147,20 +148,21 @@ values
 
 insert into cm_domain_configuration (domain_id, key, value, ts_updated, user_updated)
 values
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.editing.moderator',  'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.moderator', 'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableSso',            'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableLocal',          'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.editing.author',     'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.links.enabled',      'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.tables.enabled',     'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableFederated',      'true', '2024-04-01 10:11:46.816291', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.showDeleted',        'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.images.enabled',     'true', '2024-04-01 10:11:46.816290', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.author',    'true', '2024-04-01 10:11:46.816292', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.enableVoting',       'true', '2024-04-01 10:11:46.816293', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.rss.enabled',        'true', '2024-04-01 10:11:46.816294', '00000000-0000-0000-0000-000000000001'),
-    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.text.maxLength',     '4096', '2024-04-01 10:11:46.816295', '00000000-0000-0000-0000-000000000001');
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.editing.moderator',  'true', '2024-04-01 10:11:46.816200', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.moderator', 'true', '2024-04-01 10:11:46.816201', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'login.showForUnauth',         'true', '2024-04-01 10:11:46.816202', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableSso',            'true', '2024-04-01 10:11:46.816203', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableLocal',          'true', '2024-04-01 10:11:46.816204', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.editing.author',     'true', '2024-04-01 10:11:46.816205', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.links.enabled',      'true', '2024-04-01 10:11:46.816206', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.tables.enabled',     'true', '2024-04-01 10:11:46.816207', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'signup.enableFederated',      'true', '2024-04-01 10:11:46.816208', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.showDeleted',        'true', '2024-04-01 10:11:46.816209', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'markdown.images.enabled',     'true', '2024-04-01 10:11:46.816210', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.deletion.author',    'true', '2024-04-01 10:11:46.816211', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.enableVoting',       'true', '2024-04-01 10:11:46.816212', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.rss.enabled',        'true', '2024-04-01 10:11:46.816213', '00000000-0000-0000-0000-000000000001'),
+    ('3bcdd9c0-5e9b-4724-9d87-8c520fb2b5c2', 'comments.text.maxLength',     '4096', '2024-04-01 10:11:46.816214', '00000000-0000-0000-0000-000000000001');
 
 insert into cm_domains_idps (domain_id, fed_idp_id)
 values

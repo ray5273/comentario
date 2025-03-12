@@ -47,6 +47,7 @@ context('Domain Edit page', () => {
 
     const makeAuthAliases = (sso: boolean) => {
         // Options
+        cy.get('@domainEdit').find('#login_showForUnauth')   .as('cfgLoginShowForUnauth');
         cy.get('@domainEdit').find('#signup_enableFederated').as('cfgSignupEnableFederated');
         cy.get('@domainEdit').find('#signup_enableLocal')    .as('cfgSignupEnableLocal');
         cy.get('@domainEdit').find('#signup_enableSso')      .as('cfgSignupEnableSso');
@@ -189,11 +190,11 @@ context('Domain Edit page', () => {
             /** All known domain params. */
             const params = Object.values(DomainConfigKey);
 
-            /** General tab params (whose key doesn't start with 'signup'). */
-            const paramsGeneral = params.filter(k => !k.startsWith('signup.'));
+            /** Auth tab params (whose key starts with 'signup' / 'login'). */
+            const paramsAuth = params.filter(k => k.startsWith('signup.') || k.startsWith('login.'));
 
-            /** Auth tab params (whose key starts with 'signup'). */
-            const paramsAuth = params.filter(k => k.startsWith('signup.'));
+            /** General tab params (those not in the Auth list). */
+            const paramsGeneral = params.filter(k => !paramsAuth.includes(k));
 
             /** Object with every instance domain default set to false (for boolean params) or 1000 (for integer ones). */
             const allDefaultParams = params.reduce(
@@ -276,6 +277,7 @@ context('Domain Edit page', () => {
                 checkActiveTabs([false, true, false, false]);
                 makeAuthAliases(false);
                 // -- Options
+                cy.get('@cfgLoginShowForUnauth')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgSignupEnableFederated').should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgSignupEnableLocal')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgSignupEnableSso')      .should('be.visible').and('be.enabled').and('be.checked');
@@ -360,6 +362,7 @@ context('Domain Edit page', () => {
                     ['Read-only',                                               ''],
                     ['Default comment sort',                                    'Newest first'],
                     ['Authentication'],
+                        ['Show login dialog for unauthenticated users',         '✔'],
                         ['Enable commenter registration via external provider', '✔'],
                         ['Enable local commenter registration',                 '✔'],
                         ['Enable commenter registration via SSO',               '✔'],
@@ -432,6 +435,7 @@ context('Domain Edit page', () => {
                 cy.get('@tabAuth').click();
                 makeAuthAliases(false);
                 // -- Options
+                cy.get('@cfgLoginShowForUnauth')   .clickLabel();
                 cy.get('@cfgSignupEnableFederated').clickLabel();
                 cy.get('@cfgSignupEnableLocal')    .clickLabel();
                 cy.get('@cfgSignupEnableSso')      .clickLabel();
@@ -486,6 +490,7 @@ context('Domain Edit page', () => {
                     ['Read-only',                                               ''],
                     ['Default comment sort',                                    'Most upvoted first'],
                     ['Authentication'],
+                        ['Show login dialog for unauthenticated users',         ''],
                         ['Enable commenter registration via external provider', ''],
                         ['Enable local commenter registration',                 ''],
                         ['Enable commenter registration via SSO',               ''],
@@ -597,6 +602,7 @@ context('Domain Edit page', () => {
                 checkActiveTabs([false, true, false, false]);
                 makeAuthAliases(true);
                 // -- Options
+                cy.get('@cfgLoginShowForUnauth')   .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgSignupEnableFederated').should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgSignupEnableLocal')    .should('be.visible').and('be.enabled').and('be.checked');
                 cy.get('@cfgSignupEnableSso')      .should('be.visible').and('be.enabled').and('be.checked');
@@ -674,6 +680,7 @@ context('Domain Edit page', () => {
                 cy.get('@tabAuth').click();
                 makeAuthAliases(false);
                 // -- Options
+                cy.get('@cfgLoginShowForUnauth')   .clickLabel();
                 cy.get('@cfgSignupEnableFederated').clickLabel();
                 cy.get('@cfgSignupEnableLocal')    .clickLabel();
                 cy.get('@cfgSignupEnableSso')      .clickLabel();
@@ -727,6 +734,7 @@ context('Domain Edit page', () => {
                     ['Read-only',                                               ''],
                     ['Default comment sort',                                    'Least upvoted first'],
                     ['Authentication'],
+                        ['Show login dialog for unauthenticated users',         ''],
                         ['Enable commenter registration via external provider', ''],
                         ['Enable local commenter registration',                 ''],
                         ['Enable commenter registration via SSO',               ''],
@@ -792,6 +800,7 @@ context('Domain Edit page', () => {
                 cy.contains('app-domain-edit li[ngbnavitem]', 'Authentication').click();
                 makeAuthAliases(false);
                 // -- Options
+                cy.get('@cfgLoginShowForUnauth')   .should('not.be.checked');
                 cy.get('@cfgSignupEnableFederated').should('not.be.checked');
                 cy.get('@cfgSignupEnableLocal')    .should('not.be.checked');
                 cy.get('@cfgSignupEnableSso')      .should('not.be.checked');

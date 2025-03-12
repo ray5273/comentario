@@ -776,6 +776,7 @@ definitions:
       - enableRss
       - showDeletedComments
       - maxCommentLength
+      - showLoginForUnauth
       - localSignupEnabled
       - federatedSignupEnabled
       - ssoSignupEnabled
@@ -902,6 +903,11 @@ definitions:
       maxCommentLength:
         type: integer
         description: Maximum comment text length
+        x-isnullable: false
+        x-omitempty: false
+      showLoginForUnauth:
+        type: boolean
+        description: Whether to show login dialog when an unauthenticated user is submitting a comment
         x-isnullable: false
         x-omitempty: false
       localSignupEnabled:

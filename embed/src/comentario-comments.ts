@@ -270,6 +270,15 @@ export class ComentarioComments extends ComentarioBase implements WebComponent {
         // Fetch page data and comments
         await this.loadPageData();
 
+        // If the user is logged in, remove any stored unregistered commenting status
+        if (this.principal) {
+            this.localConfig.setUnregisteredCommenting(false);
+
+        // User is unauthenticated. If the login dialog is to be skipped, activate unregistered commenting by default
+        } else if (this.pageInfo?.authAnonymous && !this.pageInfo.showLoginForUnauth) {
+            this.localConfig.setUnregisteredCommenting(true, this.localConfig.unregisteredName);
+        }
+
         // Update the main area
         this.setupMainArea();
 
@@ -412,11 +421,6 @@ export class ComentarioComments extends ComentarioBase implements WebComponent {
      */
     private async updateAuthStatus(): Promise<void> {
         this.principal = await this.apiService.getPrincipal();
-
-        // If the user is logged in, remove any stored unregistered commenting status
-        if (this.principal) {
-            this.localConfig.setUnregisteredCommenting(false);
-        }
 
         // Update the profile bar
         this.profileBar!.principal = this.principal;

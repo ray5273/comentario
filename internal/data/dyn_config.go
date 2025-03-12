@@ -153,6 +153,7 @@ const (
 	DomainConfigKeyMarkdownImagesEnabled    DynConfigItemKey = "markdown.images.enabled"
 	DomainConfigKeyMarkdownLinksEnabled     DynConfigItemKey = "markdown.links.enabled"
 	DomainConfigKeyMarkdownTablesEnabled    DynConfigItemKey = "markdown.tables.enabled"
+	DomainConfigKeyShowLoginForUnauth       DynConfigItemKey = "login.showForUnauth"
 	DomainConfigKeyLocalSignupEnabled       DynConfigItemKey = "signup.enableLocal"
 	DomainConfigKeyFederatedSignupEnabled   DynConfigItemKey = "signup.enableFederated"
 	DomainConfigKeySsoSignupEnabled         DynConfigItemKey = "signup.enableSso"
@@ -181,6 +182,7 @@ var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownImagesEnabled:    {DefaultValue: "false", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownLinksEnabled:     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyMarkdownTablesEnabled:    {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionMarkdown},
+	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyShowLoginForUnauth:       {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyLocalSignupEnabled:       {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeyFederatedSignupEnabled:   {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyDomainDefaultsPrefix + DomainConfigKeySsoSignupEnabled:         {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},

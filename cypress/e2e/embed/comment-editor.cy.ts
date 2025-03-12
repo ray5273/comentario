@@ -5,9 +5,9 @@ context('Comment Editor', () => {
 
     context('comment editing', () => {
 
-        const addUnregisteredComments = (authorName?: string) => {
+        const addUnregisteredComments = (clickUnregistered: boolean, authorName?: string) => {
             // Submit a root comment. First time a Login dialog may appear
-            EmbedUtils.addComment(undefined, 'This is also a root', true, authorName);
+            EmbedUtils.addComment(undefined, 'This is also a root', clickUnregistered, authorName);
 
             // New comment is added, in the Pending state since anonymous comments are to be moderated
             cy.commentTree('html', 'author', 'subtitle', 'score', 'sticky', 'pending').should('yamlMatch',
@@ -161,17 +161,28 @@ context('Comment Editor', () => {
 
         context('without registration', () => {
 
-            it('submits comment anonymously', () => {
+            it('submits anonymous comment, confirming in Login dialog', () => {
                 cy.testSiteVisit(TEST_PATHS.comments);
                 EmbedUtils.makeAliases({anonymous: true, numComments: 1});
-                addUnregisteredComments();
+                addUnregisteredComments(true);
+                EmbedUtils.checkNumComments(3);
+            });
+
+            it('submits anonymous comment, skipping Login dialog', () => {
+                // Turn off the login dialog for unauthenticated user
+                cy.backendUpdateDomainConfig(DOMAINS.localhost.id, {[DomainConfigKey.showLoginForUnauth]: false});
+
+                // Submit a comment: no login dialog expected and the comment is added right away
+                cy.testSiteVisit(TEST_PATHS.comments);
+                EmbedUtils.makeAliases({anonymous: true, numComments: 1});
+                addUnregisteredComments(false);
                 EmbedUtils.checkNumComments(3);
             });
 
             it('submits comment with a name', () => {
                 cy.testSiteVisit(TEST_PATHS.comments);
                 EmbedUtils.makeAliases({anonymous: true, numComments: 1});
-                addUnregisteredComments('Bambarbia Kirgudu');
+                addUnregisteredComments(true, 'Bambarbia Kirgudu');
                 EmbedUtils.checkNumComments(3);
             });
 
@@ -183,7 +194,7 @@ context('Comment Editor', () => {
                 // Visit the page as anonymous
                 cy.testSiteVisit(TEST_PATHS.comments);
                 EmbedUtils.makeAliases({anonymous: true, numComments: 1});
-                addUnregisteredComments('Bambarbia Kirgudu');
+                addUnregisteredComments(true, 'Bambarbia Kirgudu');
                 EmbedUtils.checkNumComments(3);
             });
 
@@ -295,8 +306,8 @@ context('Comment Editor', () => {
             const x139   = 'ab '.repeat(46) + 'c';
             const x99999 = '9 letters'.repeat(11_111);
 
-            const postComment = (text: string, extraChars: string, wantLength: number, numBfore: number, numAfter: number) => {
-                EmbedUtils.makeAliases({numComments: numBfore});
+            const postComment = (text: string, extraChars: string, wantLength: number, numBefore: number, numAfter: number) => {
+                EmbedUtils.makeAliases({numComments: numBefore});
                 cy.get('@addCommentHost').click();
                 cy.get('@mainArea').find('textarea').as('textarea').setValue(text).type(extraChars)
                     .invoke('val').should('have.length', wantLength);

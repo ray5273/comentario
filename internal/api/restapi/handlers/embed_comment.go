@@ -150,6 +150,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		PageID:                   strfmt.UUID(page.ID.String()),
 		PrivacyPolicyURL:         config.ServerConfig.PrivacyPolicyURL,
 		ShowDeletedComments:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
+		ShowLoginForUnauth:       svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowLoginForUnauth),
 		SsoNonInteractive:        domain.SSONonInteractive,
 		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
 		SsoURL:                   domain.SSOURL,

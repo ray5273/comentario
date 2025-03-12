@@ -26,6 +26,7 @@ export class DynConfigItemNamePipe implements PipeTransform {
         [InstanceConfigItemKey.domainDefaultsMarkdownImagesEnabled]:    $localize`Enable images in comments`,
         [InstanceConfigItemKey.domainDefaultsMarkdownLinksEnabled]:     $localize`Enable links in comments`,
         [InstanceConfigItemKey.domainDefaultsMarkdownTablesEnabled]:    $localize`Enable tables in comments`,
+        [InstanceConfigItemKey.domainDefaultsShowLoginForUnauth]:       $localize`Show login dialog for unauthenticated users`,
         [InstanceConfigItemKey.domainDefaultsLocalSignupEnabled]:       $localize`Enable local commenter registration`,
         [InstanceConfigItemKey.domainDefaultsFederatedSignupEnabled]:   $localize`Enable commenter registration via external provider`,
         [InstanceConfigItemKey.domainDefaultsSsoSignupEnabled]:         $localize`Enable commenter registration via SSO`,
