@@ -166,47 +166,49 @@ func NewAuthSession(data, host string, token string) *AuthSession {
 
 // User represents an authenticated or an anonymous user
 type User struct {
-	ID                  uuid.UUID      `db:"id"`                                      // Unique user ID
-	Email               string         `db:"email"`                                   // Unique user email
-	Name                string         `db:"name"`                                    // User's full name
-	LangID              string         `db:"lang_id"`                                 // User's interface language ID
-	PasswordHash        string         `db:"password_hash"`                           // Password hash
-	SystemAccount       bool           `db:"system_account"`                          // Whether the user is a system account (cannot sign in)
-	IsSuperuser         bool           `db:"is_superuser"`                            // Whether the user is a "superuser" (instance admin)
-	Confirmed           bool           `db:"confirmed"`                               // Whether the user's email has been confirmed
-	ConfirmedTime       sql.NullTime   `db:"ts_confirmed"`                            // When the user's email has been confirmed
-	CreatedTime         time.Time      `db:"ts_created"`                              // When the user was created
-	UserCreated         uuid.NullUUID  `db:"user_created"`                            // Reference to the user who created this one. null if the used signed up themselves
-	SignupIP            string         `db:"signup_ip"`                               // IP address the user signed up or was created from
-	SignupCountry       string         `db:"signup_country"`                          // 2-letter country code matching the SignupIP
-	SignupHost          string         `db:"signup_host"`                             // Host the user signed up on (only for commenter signup, empty for UI signup)
-	Banned              bool           `db:"banned"`                                  // Whether the user is banned
-	BannedTime          sql.NullTime   `db:"ts_banned"`                               // When the user was banned
-	UserBanned          uuid.NullUUID  `db:"user_banned"`                             // Reference to the user who banned this one
-	Remarks             string         `db:"remarks"`                                 // Optional remarks for the user
-	FederatedIdP        sql.NullString `db:"federated_idp"`                           // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
-	FederatedSSO        bool           `db:"federated_sso"`                           // Whether the user is authenticated via SSO
-	FederatedID         string         `db:"federated_id"`                            // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
-	WebsiteURL          string         `db:"website_url"`                             // Optional user's website URL
-	SecretToken         uuid.UUID      `db:"secret_token"`                            // User's secret token, for example, for unsubscribing from notifications
-	PasswordChangeTime  time.Time      `db:"ts_password_change"`                      // When the user last changed their password
-	LastLoginTime       sql.NullTime   `db:"ts_last_login"`                           // When the user last logged in successfully
-	LastFailedLoginTime sql.NullTime   `db:"ts_last_failed_login"`                    // When the user last failed to log in due to wrong credentials
-	FailedLoginAttempts int            `db:"failed_login_attempts"`                   // Number of failed login attempts
-	IsLocked            bool           `db:"is_locked"`                               // Whether the user is locked out
-	LockedTime          sql.NullTime   `db:"ts_locked"`                               // When the user was locked
-	HasAvatar           bool           `db:"has_avatar" goqu:"skipinsert,skipupdate"` // Whether the user has an avatar image. Calculated field populated only while loading from the DB
+	ID                  uuid.UUID      `db:"id"`                                              // Unique user ID
+	Email               string         `db:"email"`                                           // Unique user email
+	Name                string         `db:"name"`                                            // User's full name
+	LangID              string         `db:"lang_id"`                                         // User's interface language ID
+	PasswordHash        string         `db:"password_hash"`                                   // Password hash
+	SystemAccount       bool           `db:"system_account"`                                  // Whether the user is a system account (cannot sign in)
+	IsSuperuser         bool           `db:"is_superuser"`                                    // Whether the user is a "superuser" (instance admin)
+	Confirmed           bool           `db:"confirmed"`                                       // Whether the user's email has been confirmed
+	ConfirmedTime       sql.NullTime   `db:"ts_confirmed"`                                    // When the user's email has been confirmed
+	CreatedTime         time.Time      `db:"ts_created"`                                      // When the user was created
+	UserCreated         uuid.NullUUID  `db:"user_created"`                                    // Reference to the user who created this one. null if the used signed up themselves
+	SignupIP            string         `db:"signup_ip"`                                       // IP address the user signed up or was created from
+	SignupCountry       string         `db:"signup_country"`                                  // 2-letter country code matching the SignupIP
+	SignupHost          string         `db:"signup_host"`                                     // Host the user signed up on (only for commenter signup, empty for UI signup)
+	Banned              bool           `db:"banned"`                                          // Whether the user is banned
+	BannedTime          sql.NullTime   `db:"ts_banned"`                                       // When the user was banned
+	UserBanned          uuid.NullUUID  `db:"user_banned"`                                     // Reference to the user who banned this one
+	Remarks             string         `db:"remarks"`                                         // Optional remarks for the user
+	FederatedIdP        sql.NullString `db:"federated_idp"`                                   // Optional ID of the federated identity provider used for authentication. If empty and FederatedSSO is false, it's a local user
+	FederatedSSO        bool           `db:"federated_sso"`                                   // Whether the user is authenticated via SSO
+	FederatedID         string         `db:"federated_id"`                                    // User ID as reported by the federated identity provider (only when FederatedIdP/FederatedSSO is set)
+	WebsiteURL          string         `db:"website_url"`                                     // Optional user's website URL
+	SecretToken         uuid.UUID      `db:"secret_token"`                                    // User's secret token, for example, for unsubscribing from notifications
+	PasswordChangeTime  time.Time      `db:"ts_password_change"`                              // When the user last changed their password
+	LastLoginTime       sql.NullTime   `db:"ts_last_login"`                                   // When the user last logged in successfully
+	LastFailedLoginTime sql.NullTime   `db:"ts_last_failed_login"`                            // When the user last failed to log in due to wrong credentials
+	FailedLoginAttempts int            `db:"failed_login_attempts"`                           // Number of failed login attempts
+	IsLocked            bool           `db:"is_locked"`                                       // Whether the user is locked out
+	LockedTime          sql.NullTime   `db:"ts_locked"`                                       // When the user was locked
+	HasAvatar           bool           `db:"has_avatar"         goqu:"skipinsert,skipupdate"` // Whether the user has an avatar image. Calculated field populated only while loading from the DB
+	CountDomainsOwned   int            `db:"owned_domain_count" goqu:"skipinsert,skipupdate"` // Number of domains the user owns (-1 means "unknown"). Calculated field populated only while loading from the DB
 }
 
 // NewUser instantiates a new User
 func NewUser(email, name string) *User {
 	return &User{
-		ID:          uuid.New(),
-		Email:       email,
-		Name:        name,
-		LangID:      util.DefaultLanguage.String(),
-		CreatedTime: time.Now().UTC(),
-		SecretToken: uuid.New(),
+		ID:                uuid.New(),
+		Email:             email,
+		Name:              name,
+		LangID:            util.DefaultLanguage.String(),
+		CreatedTime:       time.Now().UTC(),
+		SecretToken:       uuid.New(),
+		CountDomainsOwned: -1,
 	}
 }
 
@@ -221,11 +223,12 @@ func (u *User) CloneWithClearance(isSuperuser, isOwner, isModerator bool) *User 
 
 	// Start with properties publicly available
 	user := &User{
-		ID:            u.ID,
-		HasAvatar:     u.HasAvatar,
-		Name:          u.Name,
-		SystemAccount: u.SystemAccount,
-		WebsiteURL:    u.WebsiteURL,
+		ID:                u.ID,
+		HasAvatar:         u.HasAvatar,
+		Name:              u.Name,
+		SystemAccount:     u.SystemAccount,
+		WebsiteURL:        u.WebsiteURL,
+		CountDomainsOwned: -1,
 	}
 
 	// Owner or moderator
@@ -316,7 +319,7 @@ func (u *User) ToCommenter(isCommenter, isModerator bool) *models.Commenter {
 
 // ToDTO converts this user into an API model
 func (u *User) ToDTO() *models.User {
-	return &models.User{
+	dto := &models.User{
 		Banned:              u.Banned,
 		BannedTime:          NullDateTime(u.BannedTime),
 		ColourIndex:         u.ColourIndex(),
@@ -347,6 +350,10 @@ func (u *User) ToDTO() *models.User {
 		UserCreated:         NullUUIDStr(&u.UserCreated),
 		WebsiteURL:          strfmt.URI(u.WebsiteURL),
 	}
+	if c := int64(u.CountDomainsOwned); c >= 0 {
+		dto.CountDomainsOwned = &c
+	}
+	return dto
 }
 
 // ToPluginUser returns a new plugin.User instance for this user

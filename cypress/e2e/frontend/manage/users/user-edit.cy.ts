@@ -138,15 +138,16 @@ context('User Edit page', () => {
 
                 // Verify user details
                 cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                    ['ID',                   user.id],
-                    ['Name',                 user.name],
-                    ['Email',                user.email],
-                    ['Language',             'en'],
-                    ['Remarks',              'Almighty king'],
-                    ['Confirmed',            REGEXES.checkDatetime],
-                    ['Created',              REGEXES.datetime],
-                    ['Last password change', REGEXES.datetime],
-                    ['Last login',           '(never)'],
+                    ['ID',                      user.id],
+                    ['Name',                    user.name],
+                    ['Email',                   user.email],
+                    ['Language',                'en'],
+                    ['Remarks',                 'Almighty king'],
+                    ['Confirmed',               REGEXES.checkDatetime],
+                    ['Created',                 REGEXES.datetime],
+                    ['Last password change',    REGEXES.datetime],
+                    ['Last login',              '(never)'],
+                    ['Number of owned domains', '1'],
                 ]);
             });
 
@@ -167,16 +168,17 @@ context('User Edit page', () => {
 
                 // Verify user details
                 cy.get('app-user-properties #user-details').dlTexts().should('matrixMatch', [
-                    ['ID',                   user.id],
-                    ['Name',                 'King Lear'],
-                    ['Email',                'lear@example.com'],
-                    ['Language',             'ru'],
-                    ['Remarks',              'Elderly and wanting to retire'],
-                    ['Website URL',          'https://en.wikipedia.org/wiki/King_Lear'],
-                    ['Superuser',            '✔'],
-                    ['Created',              REGEXES.datetime],
-                    ['Last password change', REGEXES.datetime],
-                    ['Last login',           '(never)'],
+                    ['ID',                      user.id],
+                    ['Name',                    'King Lear'],
+                    ['Email',                   'lear@example.com'],
+                    ['Language',                'ru'],
+                    ['Remarks',                 'Elderly and wanting to retire'],
+                    ['Website URL',             'https://en.wikipedia.org/wiki/King_Lear'],
+                    ['Superuser',               '✔'],
+                    ['Created',                 REGEXES.datetime],
+                    ['Last password change',    REGEXES.datetime],
+                    ['Last login',              '(never)'],
+                    ['Number of owned domains', '1'],
                 ]);
             });
         });

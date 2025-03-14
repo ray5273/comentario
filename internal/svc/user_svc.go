@@ -304,10 +304,16 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			goqu.I("du.notify_replies").As("du_notify_replies"),
 			goqu.I("du.notify_moderator").As("du_notify_moderator"),
 			goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
-			goqu.I("du.ts_created").As("du_ts_created")).
+			goqu.I("du.ts_created").As("du_ts_created"),
+			// Owned domain count
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.COUNT("*")).
+				Where(goqu.Ex{"duo.user_id": userID, "duo.is_owner": true}).As("owned_domain_count")).
+		// Outer-join domain users
 		LeftJoin(
 			goqu.T("cm_domains_users").As("du"),
 			goqu.On(goqu.Ex{"du.user_id": goqu.I("u.id"), "du.domain_id": domainID})).
+		// Outer-join avatar
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
 		Where(goqu.Ex{"u.id": userID})
 
@@ -331,7 +337,14 @@ func (svc *userService) FindUserByEmail(email string) (*data.User, error) {
 
 	// Prepare the query
 	q := db.From(goqu.T("cm_users").As("u")).
-		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
+		Select(
+			"u.*",
+			// Avatar
+			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.COUNT("*")).
+				Where(goqu.Ex{"duo.user_id": goqu.I("u.id"), "duo.is_owner": true}).As("owned_domain_count")).
 		Where(goqu.Ex{"u.email": email}).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
@@ -354,7 +367,14 @@ func (svc *userService) FindUserByFederatedID(idp, id string) (*data.User, error
 
 	// Prepare the query
 	q := db.From(goqu.T("cm_users").As("u")).
-		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
+		Select(
+			"u.*",
+			// Avatar
+			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.COUNT("*")).
+				Where(goqu.Ex{"duo.user_id": goqu.I("u.id"), "duo.is_owner": true}).As("owned_domain_count")).
 		Where(goqu.Ex{"u.federated_id": id}).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
@@ -389,7 +409,14 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 
 	// Prepare the query
 	q := db.From(goqu.T("cm_users").As("u")).
-		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
+		Select(
+			"u.*",
+			// Avatar
+			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.COUNT("*")).
+				Where(goqu.Ex{"duo.user_id": id, "duo.is_owner": true}).As("owned_domain_count")).
 		Where(goqu.Ex{"u.id": id}).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
@@ -423,6 +450,10 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 			"u.*",
 			// User avatar columns
 			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.COUNT("*")).
+				Where(goqu.Ex{"duo.user_id": goqu.I("u.id"), "duo.is_owner": true}).As("owned_domain_count"),
 			// User session columns
 			goqu.I("s.id").As("s_id"),
 			goqu.I("s.user_id").As("s_user_id"),
@@ -496,9 +527,22 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 
 	// Prepare a statement
 	q := db.From(goqu.T("cm_users").As("u")).
-		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
+		Select(
+			"u.*",
+			// Avatar
+			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			goqu.Case().When(goqu.I("owned.cnt").IsNull(), 0).Else(goqu.I("owned.cnt")).As("owned_domain_count")).
 		// Outer-join user avatars
-		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")}))
+		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
+		// Outer-join grouped owned domains for retrieving their count
+		LeftJoin(
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.I("duo.user_id").As("user_id"), goqu.COUNT("*").As("cnt")).
+				Where(goqu.Ex{"duo.is_owner": true}).
+				GroupBy("duo.user_id").
+				As("owned"),
+			goqu.On(goqu.Ex{"owned.user_id": goqu.I("u.id")}))
 
 	// Add substring filter
 	if filter != "" {
@@ -552,6 +596,8 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 			"u.*",
 			// User avatar columns
 			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			goqu.Case().When(goqu.I("owned.cnt").IsNull(), 0).Else(goqu.I("owned.cnt")).As("owned_domain_count"),
 			// Domain user columns
 			goqu.I("du.domain_id").As("du_domain_id"),
 			goqu.I("du.user_id").As("du_user_id"),
@@ -563,7 +609,16 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 			goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
 			goqu.I("du.ts_created").As("du_ts_created")).
 		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
+		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("du.user_id")})).
+		// Outer-join grouped owned domains for retrieving their count
+		LeftJoin(
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.I("duo.user_id").As("user_id"), goqu.COUNT("*").As("cnt")).
+				Where(goqu.Ex{"duo.is_owner": true}).
+				GroupBy("duo.user_id").
+				As("owned"),
+			goqu.On(goqu.Ex{"owned.user_id": goqu.I("u.id")})).
 		Where(goqu.Ex{"du.domain_id": domainID})
 
 	// Add substring filter
@@ -626,11 +681,24 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 
 	// Prepare a query
 	q := db.From(goqu.T("cm_domains_users").As("du")).
-		Select("u.*", goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar")).
+		Select(
+			"u.*",
+			// Avatar
+			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
+			// Owned domain count
+			goqu.Case().When(goqu.I("owned.cnt").IsNull(), 0).Else(goqu.I("owned.cnt")).As("owned_domain_count")).
 		// Join users
 		Join(goqu.T("cm_users").As("u"), goqu.On(goqu.Ex{"u.id": goqu.I("du.user_id")})).
 		// Outer-join user avatars
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
+		// Outer-join grouped owned domains for retrieving their count
+		LeftJoin(
+			db.From(goqu.T("cm_domains_users").As("duo")).
+				Select(goqu.I("duo.user_id").As("user_id"), goqu.COUNT("*").As("cnt")).
+				Where(goqu.Ex{"duo.is_owner": true}).
+				GroupBy("duo.user_id").
+				As("owned"),
+			goqu.On(goqu.Ex{"owned.user_id": goqu.I("u.id")})).
 		Where(goqu.And(
 			goqu.I("du.domain_id").Eq(domainID),
 			goqu.ExOr{"du.is_owner": true, "du.is_moderator": true}))

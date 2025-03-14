@@ -1477,14 +1477,20 @@ definitions:
       isLocked:
         type: boolean
         readOnly: true
+        description: Whether the user is locked out
         x-omitempty: false
         x-isnullable: false
-        description: Whether the user is locked out
       lockedTime:
         type: string
         format: datetime
         readOnly: true
         description: When the user was locked (only if isLocked is true)
+      countDomainsOwned:
+        type: integer
+        readOnly: true
+        description: Number of domains the user owns. -1 means "unknown". Is only returned by certain endpoints
+        x-omitempty: false
+        x-isnullable: true
 
   userSession:
     description: User session

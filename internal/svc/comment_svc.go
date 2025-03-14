@@ -404,12 +404,13 @@ func (svc *commentService) ListWithCommenters(curUser *data.User, curDomainUser 
 			// If the commenter isn't present in the map yet
 			if _, ok := commenterMap[r.UserID.UUID]; !ok {
 				u := data.User{
-					ID:          r.UserID.UUID,
-					Email:       r.UserEmail.String,
-					Name:        r.UserName.String,
-					IsSuperuser: r.UserIsSuperuser.Valid && r.UserIsSuperuser.Bool,
-					WebsiteURL:  r.UserWebsiteUrl.String,
-					HasAvatar:   r.AvatarID.Valid,
+					ID:                r.UserID.UUID,
+					Email:             r.UserEmail.String,
+					Name:              r.UserName.String,
+					IsSuperuser:       r.UserIsSuperuser.Valid && r.UserIsSuperuser.Bool,
+					WebsiteURL:        r.UserWebsiteUrl.String,
+					HasAvatar:         r.AvatarID.Valid,
+					CountDomainsOwned: -1,
 				}
 
 				// Calculate commenter roles

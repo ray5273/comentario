@@ -184,6 +184,13 @@
                     <dd>{{ v }}</dd>
                 </div>
             }
+            <!-- Number of owned domains -->
+            @if (user.countDomainsOwned; as v) {
+                <div>
+                    <dt i18n>Number of owned domains</dt>
+                    <dd>{{ v | number }}</dd>
+                </div>
+            }
         }
     </dl>
 }

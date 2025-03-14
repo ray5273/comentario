@@ -198,15 +198,16 @@ context('User Properties page', () => {
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
-                ['ID',                   USERS.king.id],
-                ['Name',                 USERS.king.name],
-                ['Email',                USERS.king.email],
-                ['Language',             'en'],
-                ['Remarks',              'Almighty king'],
-                ['Confirmed',            REGEXES.checkDatetime],
-                ['Created',              REGEXES.datetime],
-                ['Last password change', REGEXES.datetime],
-                ['Last login',           REGEXES.datetime],
+                ['ID',                      USERS.king.id],
+                ['Name',                    USERS.king.name],
+                ['Email',                   USERS.king.email],
+                ['Language',                'en'],
+                ['Remarks',                 'Almighty king'],
+                ['Confirmed',               REGEXES.checkDatetime],
+                ['Created',                 REGEXES.datetime],
+                ['Last password change',    REGEXES.datetime],
+                ['Last login',              REGEXES.datetime],
+                ['Number of owned domains', '1'],
             ]);
 
             // Verify no attributes section
