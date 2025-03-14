@@ -64,6 +64,11 @@ func main() {
 	// Initialise the service manager
 	svc.TheServiceManager.Initialise()
 
+	// Activate plugin
+	if err := svc.ThePluginManager.ActivatePlugins(); err != nil {
+		logger.Fatalf("Failed to activate plugins: %v", err)
+	}
+
 	// Serve the API
 	if err := server.Serve(); err != nil {
 		logger.Fatalf("Serve() failed: %v", err)

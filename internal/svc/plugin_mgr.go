@@ -19,6 +19,8 @@ import (
 type PluginManager interface {
 	// Active returns whether the plugin manager is active (i.e. there's at least one plugin)
 	Active() bool
+	// ActivatePlugins activates every plugin
+	ActivatePlugins() error
 	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled or errored
 	HandleEvent(event any) error
 	// Init the manager
@@ -205,6 +207,15 @@ type pluginManager struct {
 
 func (pm *pluginManager) Active() bool {
 	return len(pm.plugs) > 0
+}
+
+func (pm *pluginManager) ActivatePlugins() error {
+	for _, pe := range pm.plugs {
+		if err := pe.p.Activate(); err != nil {
+			return fmt.Errorf("plugin (ID=%q) activation failed: %w", pe.id, err)
+		}
+	}
+	return nil
 }
 
 func (pm *pluginManager) HandleEvent(event any) error {

@@ -120,6 +120,9 @@ type ComentarioPlugin interface {
 	ID() string
 	// Init initialises the plugin, supplying it with a host reference and an optional secrets config decoder
 	Init(host HostApp, secretsDecoder YAMLDecoder) error
+	// Activate the plugin's background processes that make use of Comentario resources (such as database). This method
+	// is called right before Comentario starts serving its API
+	Activate() error
 	// Shutdown the plugin by e.g. freeing up resources, closing files etc. Called when the server is about to shut down
 	Shutdown()
 	// Config should return the plugin's configuration
