@@ -25,8 +25,8 @@ context('Domain Page Manager', () => {
     ];
     const pagesByPath        = pages.slice().sort((a, b) => a.path.localeCompare(b.path))  .map(p => p.path);
     const pagesByTitle       = pages.slice().sort((a, b) => a.title.localeCompare(b.title)).map(p => p.title).filter(s => s);
-    const pagesByCntComments = pages.slice().sort((a, b) => a.cntComments - b.cntComments) .map(p => `${p.cntComments}\ncomments`);
-    const pagesByCntViews    = pages.slice().sort((a, b) => a.cntViews - b.cntViews)       .map(p => `${p.cntViews}\nviews`);
+    const pagesByCntComments = pages.slice().sort((a, b) => a.cntComments - b.cntComments) .map(p => p.cntComments === 1 ? '1\ncomment' : `${p.cntComments}\ncomments`);
+    const pagesByCntViews    = pages.slice().sort((a, b) => a.cntViews - b.cntViews)       .map(p => p.cntViews    === 1 ? '1\nview'    : `${p.cntViews}\nviews`);
 
     const makeAliases = (hasItems: boolean) => {
         cy.get('app-domain-page-manager').as('pageManager');
@@ -159,7 +159,7 @@ context('Domain Page Manager', () => {
             // Go back to the list and check the counts
             cy.visit(pagePath);
             cy.get('@pageList').contains('a.list-group-item', TEST_PATHS.comments)
-                .find('.domain-page-cnt-views').should('have.text', '1' + 'views');
+                .find('.domain-page-cnt-views').should('have.text', '1' + 'view');
         });
     });
 
