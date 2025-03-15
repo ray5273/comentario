@@ -1151,6 +1151,11 @@ definitions:
         format: uint8
         description: Colour hash, number based on the user's ID
         x-omitempty: false
+      countDomainsOwned:
+        type: integer
+        description: Number of domains the user owns, null if unknown
+        x-omitempty: false
+        x-isnullable: true
       attributes:
         $ref: "#/definitions/keyValueMap"
         description: The principal's attributes
@@ -1488,7 +1493,7 @@ definitions:
       countDomainsOwned:
         type: integer
         readOnly: true
-        description: Number of domains the user owns. -1 means "unknown". Is only returned by certain endpoints
+        description: Number of domains the user owns, null if unknown
         x-omitempty: false
         x-isnullable: true
 

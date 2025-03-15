@@ -20,6 +20,7 @@ import { CurrentUserBadgeComponent } from '../../badges/current-user-badge/curre
 import { IdentityProviderIconComponent } from '../../../tools/identity-provider-icon/identity-provider-icon.component';
 import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
 import { LoaderDirective } from '../../../tools/_directives/loader.directive';
+import { DecimalPipe } from '@angular/common';
 
 @UntilDestroy()
 @Component({
@@ -39,6 +40,7 @@ import { LoaderDirective } from '../../../tools/_directives/loader.directive';
         IdentityProviderIconComponent,
         ListFooterComponent,
         LoaderDirective,
+        DecimalPipe,
     ],
 })
 export class UserManagerComponent implements OnInit {

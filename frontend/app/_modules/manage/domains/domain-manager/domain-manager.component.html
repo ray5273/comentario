@@ -79,8 +79,8 @@
                         <!-- Comment/view counts (up to sm) -->
                         @if (d.countComments! >= 0 && d.countViews! >= 0) {
                             <div class="d-sm-none small text-dimmed">
-                                <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>comments</ng-container>
-                                <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>views</ng-container>
+                                <ng-container>{{ d.countComments | number }}</ng-container>&nbsp;<ng-container i18n>{ d.countComments, plural, =1 {comment} other {comments} }</ng-container>
+                                <ng-container>, {{ d.countViews | number }}</ng-container>&nbsp;<ng-container i18n>{ d.countViews, plural, =1 {view} other {views} }</ng-container>
                             </div>
                         }
                     </div>
@@ -88,14 +88,14 @@
                     @if (d.countComments! >= 0) {
                         <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-cnt-comments">
                             <div class="lead">{{ d.countComments | number }}</div>
-                            <div class="small" i18n>comments</div>
+                            <div class="small" i18n>{ d.countComments, plural, =1 {comment} other {comments} }</div>
                         </div>
                     }
                     <!-- View count (sm+) -->
                     @if (d.countViews! >= 0) {
                         <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed domain-cnt-views">
                             <div class="lead">{{ d.countViews | number }}</div>
-                            <div class="small" i18n>views</div>
+                            <div class="small" i18n>{ d.countViews, plural, =1 {view} other {views} }</div>
                         </div>
                     }
                 </div>

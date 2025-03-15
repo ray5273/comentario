@@ -36,47 +36,63 @@
     <div class="list-group" id="user-list">
         @for (u of users; track u.id) {
             <a @fadeIn-slow [routerLink]="u.id" [class.text-dimmed]="u.banned || u.isLocked"
-               class="list-group-item list-group-item-action d-flex">
-                <!-- Avatar -->
-                <div class="col-auto d-flex align-items-center pe-2"><app-user-avatar [user]="u" size="M"/></div>
-                <div class="col">
-                    <!-- Name and badge -->
-                    <div>
-                        <!-- Name -->
-                        <span class="fw-bold user-name">{{ u.name }}</span>
-                        <!-- System account badge -->
-                        @if (u.systemAccount) {
-                            <span class="badge rounded-pill bg-secondary ms-2">
-                                <fa-icon [icon]="faLock" class="me-1"/>
-                                <ng-container i18n>System</ng-container>
-                            </span>
+               class="list-group-item list-group-item-action">
+                <div class="row flex-nowrap">
+                    <!-- Avatar -->
+                    <div class="col-auto d-flex align-items-center pe-2"><app-user-avatar [user]="u" size="M"/></div>
+                    <div class="col">
+                        <!-- Name and badge -->
+                        <div>
+                            <!-- Name -->
+                            <span class="fw-bold user-name">{{ u.name }}</span>
+                            <!-- System account badge -->
+                            @if (u.systemAccount) {
+                                <span class="badge rounded-pill bg-secondary ms-2">
+                                    <fa-icon [icon]="faLock" class="me-1"/>
+                                    <ng-container i18n>System</ng-container>
+                                </span>
+                            }
+                            <!-- Superuser badge -->
+                            @if (u.isSuperuser) { <app-superuser-badge class="ms-2"/> }
+                            <!-- Banned badge -->
+                            @if (u.banned) {
+                                <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
+                                    <fa-icon [icon]="faBan" class="me-1"/>
+                                    <ng-container i18n>Banned</ng-container>
+                                </span>
+                            }
+                            <!-- Locked badge -->
+                            @if (u.isLocked) {
+                                <span class="badge rounded-pill bg-danger border border-warning text-light ms-2">
+                                    <fa-icon [icon]="faUserLock" class="me-1"/>
+                                    <ng-container i18n>Locked</ng-container>
+                                </span>
+                            }
+                            <!-- Current user badge -->
+                            <app-current-user-badge [userId]="u.id" badgeClasses="ms-2"/>
+                        </div>
+                        <!-- Provider icon and email -->
+                        <div>
+                            @if (u.federatedSso || u.federatedIdP) {
+                                <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-2"/>
+                            }
+                            <span class="user-email">{{ u.email }}</span>
+                        </div>
+                        <!-- Owned domain count (up to sm) -->
+                        @if (u.countDomainsOwned) {
+                            <div class="d-sm-none small text-dimmed">
+                                <ng-container>{{ u.countDomainsOwned | number }}</ng-container>&nbsp;
+                                <ng-container i18n>{ u.countDomainsOwned, plural, =1 {domain} other {domains} }</ng-container>
+                            </div>
                         }
-                        <!-- Superuser badge -->
-                        @if (u.isSuperuser) { <app-superuser-badge class="ms-2"/> }
-                        <!-- Banned badge -->
-                        @if (u.banned) {
-                            <span class="badge rounded-pill bg-warning border border-danger text-danger ms-2">
-                                <fa-icon [icon]="faBan" class="me-1"/>
-                                <ng-container i18n>Banned</ng-container>
-                            </span>
-                        }
-                        <!-- Locked badge -->
-                        @if (u.isLocked) {
-                            <span class="badge rounded-pill bg-danger border border-warning text-light ms-2">
-                                <fa-icon [icon]="faUserLock" class="me-1"/>
-                                <ng-container i18n>Locked</ng-container>
-                            </span>
-                        }
-                        <!-- Current user badge -->
-                        <app-current-user-badge [userId]="u.id" badgeClasses="ms-2"/>
                     </div>
-                    <!-- Provider icon and email -->
-                    <div>
-                        @if (u.federatedSso || u.federatedIdP) {
-                            <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-2"/>
-                        }
-                        <span class="user-email">{{ u.email }}</span>
-                    </div>
+                    <!-- Owned domain count (sm+) -->
+                    @if (u.countDomainsOwned) {
+                        <div class="d-none d-sm-block col-sm-3 col-md-2 text-center border-start text-dimmed user-cnt-domains-owned">
+                            <div class="lead">{{ u.countDomainsOwned | number }}</div>
+                            <div class="small" i18n>{ u.countDomainsOwned, plural, =1 {domain} other {domains} }</div>
+                        </div>
+                    }
                 </div>
             </a>
         }

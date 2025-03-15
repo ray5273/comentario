@@ -373,7 +373,7 @@ func (u *User) ToPluginUser() *plugin.User {
 // ToPrincipal converts this user into a Principal model. attr is the user's attribute map. du is an optional domain
 // user model, which only applies to commenter authentication; should be nil for UI authentication
 func (u *User) ToPrincipal(attr plugin.AttrValues, du *DomainUser) *models.Principal {
-	return &models.Principal{
+	dto := &models.Principal{
 		Attributes:          exmodels.KeyValueMap(attr),
 		ColourIndex:         u.ColourIndex(),
 		Email:               strfmt.Email(u.Email),
@@ -393,6 +393,10 @@ func (u *User) ToPrincipal(attr plugin.AttrValues, du *DomainUser) *models.Princ
 		NotifyReplies:       du != nil && du.NotifyReplies,
 		WebsiteURL:          strfmt.URI(u.WebsiteURL),
 	}
+	if c := int64(u.CountDomainsOwned); c >= 0 {
+		dto.CountDomainsOwned = &c
+	}
+	return dto
 }
 
 // VerifyPassword checks whether the provided password matches the hash
