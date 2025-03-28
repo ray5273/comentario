@@ -1,0 +1,11 @@
+[build]
+    base = "/"
+    command = "cd docs && yarn run build:prod"
+    publish = "build/docs"
+
+[build.environment]
+    HUGO_VERSION = "0.145.0"
+    NODE_VERSION = "22"
+
+[context.branch-deploy]
+    command = "cd docs && yarn run build"
