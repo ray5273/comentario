@@ -22,7 +22,7 @@ languages:
 module:
   hugoVersion:
     extended: true
-    min: "0.142.0"
+    min: "0.145.0"
   mounts:
     - source: ../node_modules
       target: assets/node_modules
