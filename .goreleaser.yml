@@ -41,9 +41,9 @@ builds:
 
 archives:
   - id: comentario-tarball
-    builds:
+    ids:
       - comentario
-    wrap_in_directory: 'true'
+    wrap_in_directory: true
     files:
       - CHANGELOG.md
       - LICENSE
@@ -55,10 +55,10 @@ archives:
       - src: resources/etc
         dst: etc
   - id: comentario-static-tarball
-    builds:
+    ids:
       - comentario-static
     name_template: '{{ .ProjectName }}-static_{{ .Version }}_{{ .Os }}_{{ .Arch }}'
-    wrap_in_directory: 'true'
+    wrap_in_directory: true
     files:
       - CHANGELOG.md
       - LICENSE
@@ -89,7 +89,7 @@ changelog:
 nfpms:
   - id: comentario
     package_name: comentario
-    builds:
+    ids:
       # We make packages only from a dynamically-linked binary
       - comentario
     vendor: Dmitry Kann

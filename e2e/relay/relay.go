@@ -78,8 +78,8 @@ func (p *proxy) ServeHTTP(wr http.ResponseWriter, req *http.Request) {
 }
 
 func main() {
-	var addrListen = flag.String("listen", "127.0.0.1:8080", "interface to listen on")
-	var target = flag.String("target", "", "target server URL")
+	addrListen := flag.String("listen", "127.0.0.1:8080", "interface to listen on")
+	target := flag.String("target", "", "target server URL")
 	flag.Parse()
 
 	// Parse target URL
