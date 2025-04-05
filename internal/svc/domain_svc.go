@@ -633,29 +633,27 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 	return nil
 }
 
-// checkFireNewOwnerEvent fires a "user became owner" if necessary
+// checkFireNewOwnerEvent fires a "user becomes owner" if necessary
 func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
 	// Skip unless it's about an owner user and the plugin manager is active
 	if !du.IsOwner || !ThePluginManager.Active() {
 		return nil
 	}
 
-	// Check whether the user is an owner of any domain yet
-	if i, err := svc.CountForUser(&du.UserID, true, false); err != nil {
+	// Find out how many domains the user is already an owner of
+	domainCnt, err := svc.CountForUser(&du.UserID, true, false)
+	if err != nil {
 		return err
-	} else if i > 0 {
-		// Already an owner
-		return nil
 	}
 
-	// Not an owner yet: lookup the user by ID
+	// Lookup the user by ID
 	u, err := TheUserService.FindUserByID(&du.UserID)
 	if err != nil {
 		return err
 	}
 
 	// Fire an event
-	if changed, err := handleUserEvent(&plugin.UserBecameOwnerEvent{}, u); err != nil {
+	if changed, err := handleUserEvent(&plugin.UserBecomesOwnerEvent{CountOwnedDomains: domainCnt}, u); err != nil {
 		return err
 	} else if changed {
 		// The user was modified while handling the event: we need to save it
