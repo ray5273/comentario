@@ -65,9 +65,10 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	}
 
 	// Set up auth handlers
-	api.TokenAuth = svc.TheAuthService.AuthenticateBearerToken
-	api.UserSessionHeaderAuth = svc.TheAuthService.AuthenticateUserBySessionHeader
-	api.UserCookieAuth = svc.TheAuthService.AuthenticateUserByCookieHeader
+	authSvc := svc.Services.AuthService(nil)
+	api.TokenAuth = authSvc.AuthenticateBearerToken
+	api.UserSessionHeaderAuth = authSvc.AuthenticateUserBySessionHeader
+	api.UserCookieAuth = authSvc.AuthenticateUserByCookieHeader
 
 	//------------------------------------------------------------------------------------------------------------------
 	// General API
@@ -181,7 +182,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 
 	// Shutdown functions
 	api.PreServerShutdown = func() {}
-	api.ServerShutdown = svc.TheServiceManager.Shutdown
+	api.ServerShutdown = svc.Services.Shutdown
 
 	// If in e2e-testing mode, configure the backend accordingly
 	if config.ServerConfig.E2e {
@@ -204,7 +205,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 		chain = chain.Append(xsrfProtectHandler, xsrfCookieHandler)
 
 		// Extend the XSRF-safe path registry with items provided by plugins: iterate each plugin's config
-		for _, cfg := range svc.ThePluginManager.PluginConfigs() {
+		for _, cfg := range svc.Services.PluginManager().PluginConfigs() {
 			for _, s := range cfg.XSRFSafePaths {
 				util.XSRFSafePaths.Add(fmt.Sprintf("%s%s/%s", util.APIPath, cfg.Path, strings.TrimPrefix(s, "/")))
 			}
@@ -215,7 +216,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	// must be delivered), and the API handler
 	chain = chain.Append(
 		securityHeadersHandler,
-		svc.ThePluginManager.ServeHandler, // Comes before "regular" statics/API handlers because it can serve both
+		svc.Services.PluginManager().ServeHandler, // Comes before "regular" statics/API handlers because it can serve both
 		staticHandler,
 		makeAPIHandler(api.Serve(nil)),
 	)
@@ -244,7 +245,7 @@ func configureServer(_ *http.Server, scheme, _ string) {
 	}
 
 	// Start background services
-	svc.TheServiceManager.Run()
+	svc.Services.Run()
 }
 
 // XMLAndRSSProducer returns a new XML producer, which detects RSS feed and handles it accordingly

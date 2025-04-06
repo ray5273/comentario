@@ -9,16 +9,15 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"sort"
 	"strings"
 )
 
-// TheDomainService is a global DomainService implementation
-var TheDomainService DomainService = &domainService{}
-
 // DomainService is a service interface for dealing with domains
 type DomainService interface {
+	persistence.TxAware
 	// ClearByID removes most dependent objects (pages, comments, votes, views, but not users) for the specified domain
 	// by its ID
 	ClearByID(id *uuid.UUID) error
@@ -89,7 +88,7 @@ type DomainService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // domainService is a blueprint DomainService implementation
-type domainService struct{}
+type domainService struct{ dbAware }
 
 func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.ClearByID(%s)", id)
@@ -101,7 +100,7 @@ func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	}
 
 	// Zero the domain's counters
-	if err := db.ExecOne(db.Update("cm_domains").Set(goqu.Record{"count_comments": 0, "count_views": 0}).Where(goqu.Ex{"id": id})); err != nil {
+	if err := execOne(db.Update("cm_domains").Set(goqu.Record{"count_comments": 0, "count_views": 0}).Where(goqu.Ex{"id": id})); err != nil {
 		logger.Errorf("domainService.ClearByID: ExecOne() for domain update failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -136,7 +135,7 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
 	logger.Debugf("domainService.Create(%s, %#v)", userID, domain)
 
 	// Insert a new domain record
-	if err := db.ExecOne(db.Insert("cm_domains").Rows(domain)); err != nil {
+	if err := execOne(db.Insert("cm_domains").Rows(domain)); err != nil {
 		logger.Errorf("domainService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -152,7 +151,7 @@ func (svc *domainService) Create(userID *uuid.UUID, domain *data.Domain) error {
 
 func (svc *domainService) DeleteByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.DeleteByID(%s)", id)
-	if err := db.ExecOne(db.Delete("cm_domains").Where(goqu.Ex{"id": id})); err != nil {
+	if err := execOne(db.Delete("cm_domains").Where(goqu.Ex{"id": id})); err != nil {
 		logger.Errorf("domainService.DeleteByID: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -258,7 +257,7 @@ func (svc *domainService) GenerateSSOSecret(domainID *uuid.UUID) (string, error)
 	}
 
 	// Update the domain record
-	if err := db.ExecOne(db.Update("cm_domains").Set(goqu.Record{"sso_secret": d.SSOSecret}).Where(goqu.Ex{"id": &d.ID})); err != nil {
+	if err := execOne(db.Update("cm_domains").Set(goqu.Record{"sso_secret": d.SSOSecret}).Where(goqu.Ex{"id": &d.ID})); err != nil {
 		logger.Errorf("domainService.GenerateSSOSecret: ExecOne() failed: %v", err)
 		return "", translateDBErrors(err)
 	}
@@ -271,7 +270,7 @@ func (svc *domainService) IncrementCounts(domainID *uuid.UUID, incComments, incV
 	logger.Debugf("domainService.IncrementCounts(%s, %d, %d)", domainID, incComments, incViews)
 
 	// Update the domain record
-	if err := db.ExecOne(
+	if err := execOne(
 		db.Update("cm_domains").
 			Set(goqu.Record{
 				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
@@ -549,7 +548,7 @@ func (svc *domainService) SetReadonly(domainID *uuid.UUID, readonly bool) error 
 	logger.Debugf("domainService.SetReadonly(%s, %v)", domainID, readonly)
 
 	// Update the domain record
-	if err := db.ExecOne(db.Update("cm_domains").Set(goqu.Record{"is_readonly": readonly}).Where(goqu.Ex{"id": domainID})); err != nil {
+	if err := execOne(db.Update("cm_domains").Set(goqu.Record{"is_readonly": readonly}).Where(goqu.Ex{"id": domainID})); err != nil {
 		logger.Errorf("domainService.SetReadonly: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -562,7 +561,7 @@ func (svc *domainService) Update(domain *data.Domain) error {
 	logger.Debugf("domainService.Update(%#v)", domain)
 
 	// Update the domain record
-	if err := db.ExecOne(db.Update("cm_domains").Set(domain).Where(goqu.Ex{"id": &domain.ID})); err != nil {
+	if err := execOne(db.Update("cm_domains").Set(domain).Where(goqu.Ex{"id": &domain.ID})); err != nil {
 		logger.Errorf("domainService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -585,7 +584,7 @@ func (svc *domainService) UserAdd(du *data.DomainUser) error {
 	}
 
 	// Insert a new domain-user link record
-	if err := db.ExecOne(db.Insert("cm_domains_users").Rows(du)); err != nil {
+	if err := execOne(db.Insert("cm_domains_users").Rows(du)); err != nil {
 		logger.Errorf("domainService.UserAdd: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -608,7 +607,7 @@ func (svc *domainService) UserModify(du *data.DomainUser) error {
 	}
 
 	// Update the domain-user link record
-	if err := db.ExecOne(db.Update("cm_domains_users").Set(du).Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID})); err != nil {
+	if err := execOne(db.Update("cm_domains_users").Set(du).Where(goqu.Ex{"domain_id": &du.DomainID, "user_id": &du.UserID})); err != nil {
 		logger.Errorf("domainService.UserModify: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -623,7 +622,7 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 	// Don't bother if the user is an anonymous one
 	if *userID != data.AnonymousUser.ID {
 		// Delete the domain-user link record
-		if err := db.ExecOne(db.Delete("cm_domains_users").Where(goqu.Ex{"domain_id": domainID, "user_id": userID})); err != nil {
+		if err := execOne(db.Delete("cm_domains_users").Where(goqu.Ex{"domain_id": domainID, "user_id": userID})); err != nil {
 			logger.Errorf("domainService.UserRemove: ExecOne() failed: %v", err)
 			return translateDBErrors(err)
 		}
@@ -636,7 +635,7 @@ func (svc *domainService) UserRemove(userID, domainID *uuid.UUID) error {
 // checkFireNewOwnerEvent fires a "user becomes owner" if necessary
 func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
 	// Skip unless it's about an owner user and the plugin manager is active
-	if !du.IsOwner || !ThePluginManager.Active() {
+	if !du.IsOwner || !Services.PluginManager().Active() {
 		return nil
 	}
 
@@ -647,7 +646,7 @@ func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
 	}
 
 	// Lookup the user by ID
-	u, err := TheUserService.FindUserByID(&du.UserID)
+	u, err := Services.UserService(nil /* TODO */).FindUserByID(&du.UserID)
 	if err != nil {
 		return err
 	}
@@ -657,7 +656,7 @@ func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
 		return err
 	} else if changed {
 		// The user was modified while handling the event: we need to save it
-		return TheUserService.Persist(u)
+		return Services.UserService(nil /* TODO */).Persist(u)
 	}
 
 	// Successfully handled and no change from event

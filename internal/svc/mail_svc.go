@@ -14,11 +14,6 @@ import (
 	"sync"
 )
 
-// TheMailService is a global MailService implementation
-var TheMailService MailService = &mailService{
-	templates: make(map[string]*template.Template),
-}
-
 type MailNotificationKind string
 
 const (
@@ -41,6 +36,13 @@ type MailService interface {
 
 //----------------------------------------------------------------------------------------------------------------------
 
+// newMailService instantiates a mailService
+func newMailService() *mailService {
+	return &mailService{
+		templates: make(map[string]*template.Template),
+	}
+}
+
 // mailService is a blueprint MailService implementation
 type mailService struct {
 	templates map[string]*template.Template // Template cache
@@ -49,7 +51,8 @@ type mailService struct {
 
 func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recipient *data.User, canModerate bool, domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenterName string) error {
 	lang := recipient.LangID
-	t := func(id string, args ...reflect.Value) string { return TheI18nService.Translate(lang, id, args...) }
+	i18n := Services.I18nService()
+	t := func(id string, args ...reflect.Value) string { return i18n.Translate(lang, id, args...) }
 
 	// Figure out the email title/subject
 	var subject string
@@ -103,13 +106,13 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 
 		// Add moderation URLs and a reason only for pending comments
 		if comment.IsPending {
-			params["ApproveURL"] = TheI18nService.FrontendURL(lang, commentPropPath, map[string]string{"action": "approve"})
-			params["RejectURL"] = TheI18nService.FrontendURL(lang, commentPropPath, map[string]string{"action": "reject"})
+			params["ApproveURL"] = i18n.FrontendURL(lang, commentPropPath, map[string]string{"action": "approve"})
+			params["RejectURL"] = i18n.FrontendURL(lang, commentPropPath, map[string]string{"action": "reject"})
 			params["PendingReason"] = comment.PendingReason
 		}
 
 		// Add delete URL
-		params["DeleteURL"] = TheI18nService.FrontendURL(lang, commentPropPath, map[string]string{"action": "delete"})
+		params["DeleteURL"] = i18n.FrontendURL(lang, commentPropPath, map[string]string{"action": "delete"})
 	}
 
 	// Send out a notification email
@@ -117,7 +120,8 @@ func (svc *mailService) SendCommentNotification(kind MailNotificationKind, recip
 }
 
 func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) error {
-	t := func(id string) string { return TheI18nService.Translate(user.LangID, id) }
+	i18n := Services.I18nService()
+	t := func(id string) string { return i18n.Translate(user.LangID, id) }
 	return svc.sendFromTemplate(
 		user.LangID,
 		"",
@@ -136,7 +140,8 @@ func (svc *mailService) SendConfirmEmail(user *data.User, token *data.Token) err
 }
 
 func (svc *mailService) SendEmailUpdateConfirmEmail(user *data.User, token *data.Token, newEmail string, hmacSignature []byte) error {
-	t := func(id string) string { return TheI18nService.Translate(user.LangID, id) }
+	i18n := Services.I18nService()
+	t := func(id string) string { return i18n.Translate(user.LangID, id) }
 	return svc.sendFromTemplate(
 		user.LangID,
 		"",
@@ -161,7 +166,8 @@ func (svc *mailService) SendEmailUpdateConfirmEmail(user *data.User, token *data
 }
 
 func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) error {
-	t := func(id string) string { return TheI18nService.Translate(user.LangID, id) }
+	i18n := Services.I18nService()
+	t := func(id string) string { return i18n.Translate(user.LangID, id) }
 	return svc.sendFromTemplate(
 		user.LangID,
 		"",
@@ -172,7 +178,7 @@ func (svc *mailService) SendPasswordReset(user *data.User, token *data.Token) er
 			"ActionAct":     t("clickButtonBelow"),
 			"ActionButton":  t("actionResetPassword"),
 			"ActionRequest": t("pwdResetRequest"),
-			"ActionURL":     TheI18nService.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.Value}),
+			"ActionURL":     i18n.FrontendURL(user.LangID, "", map[string]string{"passwordResetToken": token.Value}),
 			"EmailReason":   t("pwdResetExplanation") + " " + t("ignoreEmail"),
 			"Title":         t("resetYourPassword"),
 			"UserName":      user.Name,
@@ -190,7 +196,8 @@ func (svc *mailService) getTemplate(lang, name string) *template.Template {
 // Returns the resulting string
 func (svc *mailService) execTemplateFile(lang, name string, data map[string]any) (string, error) {
 	// Identify a language best matching the requested one
-	langID := TheI18nService.BestLangFor(lang)
+	i18n := Services.I18nService()
+	langID := i18n.BestLangFor(lang)
 
 	// If the template hasn't been loaded yet, load and parse it
 	templ := svc.getTemplate(langID, name)
@@ -199,7 +206,7 @@ func (svc *mailService) execTemplateFile(lang, name string, data map[string]any)
 		templ = template.New(name).
 			// Add required functions
 			Funcs(template.FuncMap{
-				"T": func(id string, args ...reflect.Value) string { return TheI18nService.Translate(langID, id, args...) },
+				"T": func(id string, args ...reflect.Value) string { return i18n.Translate(langID, id, args...) },
 			})
 
 		// Parse the base and the "flesh" template files

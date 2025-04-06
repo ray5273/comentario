@@ -20,13 +20,13 @@ import (
 
 func EmbedCommentCount(params api_embed.EmbedCommentCountParams) middleware.Responder {
 	// Fetch the domain for the given host
-	d, err := svc.TheDomainService.FindByHost(string(params.Body.Host))
+	d, err := svc.Services.DomainService(nil).FindByHost(string(params.Body.Host))
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Fetch comment counts
-	cc, err := svc.ThePageService.CommentCounts(&d.ID, util.ToStringSlice(params.Body.Paths))
+	cc, err := svc.Services.PageService(nil).CommentCounts(&d.ID, util.ToStringSlice(params.Body.Paths))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -47,7 +47,7 @@ func EmbedCommentDelete(params api_embed.EmbedCommentDeleteParams, user *data.Us
 
 func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responder {
 	// Try to authenticate the user
-	user, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest)
+	user, _, err := svc.Services.AuthService(nil).GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
 		// Failed, consider the user anonymous
 		user = data.AnonymousUser
@@ -81,7 +81,7 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 			cr = data.AnonymousUser.ToCommenter(true, false)
 
 			// Non-anonymous, existing user: fetch it
-		} else if u, du, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
+		} else if u, du, err := svc.Services.UserService(nil).FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
 			return respServiceError(err)
 
 		} else {
@@ -101,14 +101,14 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 
 func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Responder {
 	// Try to authenticate the user
-	user, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest)
+	user, _, err := svc.Services.AuthService(nil).GetUserSessionBySessionHeader(params.HTTPRequest)
 	if err != nil {
 		// Failed, consider the user anonymous
 		user = data.AnonymousUser
 	}
 
 	// Fetch the domain and the user (don't create one yet if there's none)
-	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
+	domain, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByHost(string(params.Body.Host), &user.ID, false)
 	if errors.Is(err, svc.ErrNotFound) {
 		// No domain found for this host
 		return respForbidden(exmodels.ErrorUnknownHost)
@@ -117,7 +117,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	}
 
 	// Fetch the page, registering a new pageview
-	page, _, err := svc.ThePageService.UpsertByDomainPath(domain, data.PathToString(params.Body.Path), "", params.HTTPRequest)
+	page, _, err := svc.Services.PageService(nil).UpsertByDomainPath(domain, data.PathToString(params.Body.Path), "", params.HTTPRequest)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -141,7 +141,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		FederatedSignupEnabled:   svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled),
 		IsDomainReadonly:         domain.IsReadonly,
 		IsPageReadonly:           page.IsReadonly,
-		LiveUpdateEnabled:        svc.TheWebSocketsService.Active(),
+		LiveUpdateEnabled:        svc.Services.WebSocketsService().Active(),
 		LocalSignupEnabled:       svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyLocalSignupEnabled),
 		MarkdownImagesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
 		MarkdownLinksEnabled:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
@@ -155,11 +155,11 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
 		SsoURL:                   domain.SSOURL,
 		TermsOfServiceURL:        config.ServerConfig.TermsOfServiceURL,
-		Version:                  svc.TheVersionService.CurrentVersion(),
+		Version:                  svc.Services.VersionService().CurrentVersion(),
 	}
 
 	// Fetch the domain's identity providers
-	if idpIDs, err := svc.TheDomainService.ListDomainFederatedIdPs(&domain.ID); err != nil {
+	if idpIDs, err := svc.Services.DomainService(nil).ListDomainFederatedIdPs(&domain.ID); err != nil {
 		return respServiceError(err)
 	} else {
 		// Make a list of identity providers whose IDs are on the list
@@ -171,7 +171,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	}
 
 	// Fetch comments and commenters
-	comments, commenterMap, err := svc.TheCommentService.ListWithCommenters(
+	comments, commenterMap, err := svc.Services.CommentService(nil).ListWithCommenters(
 		user,
 		domainUser,
 		&domain.ID,
@@ -193,7 +193,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 
 	// Register a view in domain statistics in the background, ignoring any error (pageviews are already incremented in
 	// the upsert above)
-	go func() { _ = svc.TheDomainService.IncrementCounts(&domain.ID, 0, 1) }()
+	go func() { _ = svc.Services.DomainService(nil).IncrementCounts(&domain.ID, 0, 1) }()
 
 	// Succeeded
 	return api_embed.NewEmbedCommentListOK().WithPayload(&api_embed.EmbedCommentListOKBody{
@@ -218,7 +218,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 
 	// If the comment isn't submitted as a unregistered, authenticate the user
 	if !params.Body.Unregistered {
-		if u, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
+		if u, _, err := svc.Services.AuthService(nil).GetUserSessionBySessionHeader(params.HTTPRequest); err != nil {
 			return respUnauthorized(exmodels.ErrorUnauthenticated)
 		} else {
 			// Successfully authenticated
@@ -227,7 +227,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	}
 
 	// Fetch the domain and the user, creating one if necessary
-	domain, domainUser, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	domain, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if errors.Is(err, svc.ErrNotFound) {
 		// No domain found for this host
 		return respForbidden(exmodels.ErrorUnknownHost)
@@ -244,7 +244,7 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 
 	// Fetch the page: it must exist at this point, under the assumption that one has to list existing comments prior to
 	// adding a new one
-	page, err := svc.ThePageService.FindByDomainPath(&domain.ID, data.PathToString(params.Body.Path))
+	page, err := svc.Services.PageService(nil).FindByDomainPath(&domain.ID, data.PathToString(params.Body.Path))
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -280,13 +280,13 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 	if params.Body.Unregistered {
 		comment.AuthorName = params.Body.AuthorName
 	}
-	if err := svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil); err != nil {
+	if err := svc.Services.CommentService(nil).SetMarkdown(comment, params.Body.Markdown, &domain.ID, nil); err != nil {
 		return respServiceError(err)
 	}
 	comment.AuthorIP, comment.AuthorCountry = util.UserIPCountry(params.HTTPRequest, !config.ServerConfig.LogFullIPs)
 
 	// Determine comment state
-	if b, reason, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
+	if b, reason, err := svc.Services.PerlustrationService().NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, false); err != nil {
 		return respServiceError(err)
 	} else if b {
 		// Comment needs to be approved
@@ -296,15 +296,15 @@ func EmbedCommentNew(params api_embed.EmbedCommentNewParams) middleware.Responde
 		comment.WithModerated(&user.ID, false, true, "")
 	}
 
-	// Persist a new comment record
-	if err := svc.TheCommentService.Create(comment); err != nil {
+	// Persist a new comment record. No transaction required as it's an atomic operation
+	if err := svc.Services.CommentService(nil).Create(comment); err != nil {
 		return respServiceError(err)
 	}
 
 	// Increment page/domain comment counts in the background, ignoring any error
 	go func() {
-		_ = svc.ThePageService.IncrementCounts(&page.ID, 1, 0)
-		_ = svc.TheDomainService.IncrementCounts(&domain.ID, 1, 0)
+		_ = svc.Services.PageService(nil).IncrementCounts(&page.ID, 1, 0)
+		_ = svc.Services.DomainService(nil).IncrementCounts(&domain.ID, 1, 0)
 	}()
 
 	// Send an email notification to moderators, if we notify about every comment or comments pending moderation and
@@ -339,7 +339,7 @@ func EmbedCommentPreview(params api_embed.EmbedCommentPreviewParams) middleware.
 
 	// Render the passed markdown
 	c := &data.Comment{}
-	if err := svc.TheCommentService.SetMarkdown(c, params.Body.Markdown, domainID, nil); err != nil {
+	if err := svc.Services.CommentService(nil).SetMarkdown(c, params.Body.Markdown, domainID, nil); err != nil {
 		return respServiceError(err)
 	}
 
@@ -367,7 +367,7 @@ func EmbedCommentSticky(params api_embed.EmbedCommentStickyParams, user *data.Us
 	// Update the comment, if necessary
 	b := swag.BoolValue(params.Body.Sticky)
 	if comment.IsSticky != b {
-		if err := svc.TheCommentService.UpdateSticky(&comment.ID, b); err != nil {
+		if err := svc.Services.CommentService(nil).UpdateSticky(&comment.ID, b); err != nil {
 			return respServiceError(err)
 		}
 
@@ -395,7 +395,7 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	unapprove := false
 	if !comment.IsPending && comment.IsApproved {
 		// Run the approval rules
-		if b, s, err := svc.ThePerlustrationService.NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, true); err != nil {
+		if b, s, err := svc.Services.PerlustrationService().NeedsModeration(params.HTTPRequest, comment, domain, page, user, domainUser, true); err != nil {
 			return respServiceError(err)
 		} else if b {
 			unapprove = true
@@ -404,16 +404,17 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Update the comment text/HTML
-	if err := svc.TheCommentService.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID); err != nil {
+	cSvc := svc.Services.CommentService(nil /* TODO */)
+	if err := cSvc.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID); err != nil {
 		return respServiceError(err)
 	}
-	if err := svc.TheCommentService.Edited(comment); err != nil {
+	if err := cSvc.Edited(comment); err != nil {
 		return respServiceError(err)
 	}
 
 	// If the comment approval was revoked
 	if unapprove {
-		if err := svc.TheCommentService.Moderated(comment); err != nil {
+		if err := cSvc.Moderated(comment); err != nil {
 			return respServiceError(err)
 		}
 	}
@@ -446,7 +447,7 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 	}
 
 	// Update the vote and the comment
-	score, err := svc.TheCommentService.Vote(&comment.ID, &user.ID, *params.Body.Direction)
+	score, err := svc.Services.CommentService(nil).Vote(&comment.ID, &user.ID, *params.Body.Direction)
 	if err != nil {
 		return respServiceError(err)
 

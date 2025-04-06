@@ -37,7 +37,7 @@ func (a *e2eApp) SetMailer(mailer intf.Mailer) {
 }
 
 func (a *e2eApp) SetVersionService(s intf.VersionService) {
-	svc.TheVersionService = s
+	svc.Services.SetVersionService(s)
 }
 
 func (a *e2eApp) LogError(fmt string, args ...any) {
@@ -53,7 +53,7 @@ func (a *e2eApp) LogWarning(fmt string, args ...any) {
 }
 
 func (a *e2eApp) RecreateDBSchema(seedSQL string) error {
-	return svc.TheServiceManager.E2eRecreateDBSchema(seedSQL)
+	return svc.Services.E2eRecreateDBSchema(seedSQL)
 }
 
 func (a *e2eApp) XSRFSafePaths() intf.PathRegistry {
@@ -159,7 +159,7 @@ func E2eDomainPatch(params api_e2e.E2eDomainPatchParams) middleware.Responder {
 
 	// Save the changes back into the DB
 	domain.FromDTO(dto)
-	if err := svc.TheDomainService.Update(domain); err != nil {
+	if err := svc.Services.DomainService(nil).Update(domain); err != nil {
 		return respServiceError(err)
 	}
 
@@ -207,7 +207,7 @@ func E2eDomainUpdateIdps(params api_e2e.E2eDomainUpdateIdpsParams) middleware.Re
 	}
 
 	// Update the list of IdPs
-	if err := svc.TheDomainService.SaveIdPs(domainID, params.Body); err != nil {
+	if err := svc.Services.DomainService(nil).SaveIdPs(domainID, params.Body); err != nil {
 		return respServiceError(err)
 	}
 

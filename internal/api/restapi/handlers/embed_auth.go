@@ -31,7 +31,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	}
 
 	// Find the domain user, creating one if necessary
-	_, du, err := svc.TheDomainService.FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+	_, du, err := svc.Services.DomainService(nil /* TODO */).FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -47,7 +47,7 @@ func EmbedAuthLoginTokenNew(params api_embed.EmbedAuthLoginTokenNewParams) middl
 	var userID *uuid.UUID
 
 	// Try to authenticate the user
-	if u, _, err := svc.TheAuthService.GetUserSessionBySessionHeader(params.HTTPRequest); errors.Is(err, svc.ErrSessionHeaderMissing) {
+	if u, _, err := svc.Services.AuthService(nil).GetUserSessionBySessionHeader(params.HTTPRequest); errors.Is(err, svc.ErrSessionHeaderMissing) {
 		// No auth header: an anonymous token is requested
 	} else if err != nil {
 		// Any error other than "auth header missing"
@@ -82,7 +82,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 	}
 
 	// Find the domain user, creating one if necessary
-	_, du, err := svc.TheDomainService.FindDomainUserByHost(host, &user.ID, true)
+	_, du, err := svc.Services.DomainService(nil /* TODO */).FindDomainUserByHost(host, &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -96,13 +96,13 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 
 func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the session header
-	_, sessionID, err := svc.TheAuthService.ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
+	_, sessionID, err := svc.Services.AuthService(nil /* TODO */).ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
 	if err != nil {
 		return respUnauthorized(nil)
 	}
 
 	// Delete the session token, ignoring any error
-	_ = svc.TheUserService.DeleteUserSession(sessionID)
+	_ = svc.Services.UserService(nil /* TODO */).DeleteUserSession(sessionID)
 
 	// Regardless of whether the above was successful, return a success response
 	return api_embed.NewEmbedAuthLogoutNoContent()
@@ -153,9 +153,9 @@ func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.
 	// Fetch the session header value
 	if s := params.HTTPRequest.Header.Get(util.HeaderUserSession); s != "" {
 		// Try to fetch the user
-		if user, userSession, err := svc.TheAuthService.FetchUserBySessionHeader(s); err == nil {
+		if user, userSession, err := svc.Services.AuthService(nil).FetchUserBySessionHeader(s); err == nil {
 			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
-			if _, domainUser, err := svc.TheDomainService.FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
+			if _, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
 				// Fetch the user's attributes
 				if attr, err := svc.TheUserAttrService.GetAll(&user.ID); err != nil {
 					return respServiceError(err)
@@ -182,14 +182,14 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 	}
 
 	// Fetch the domain user
-	_, du, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, true)
+	_, du, err := svc.Services.DomainService(nil /* TODO */).FindDomainUserByID(domainID, &user.ID, true)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Update the domain user, if the settings change
 	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
-		if err := svc.TheDomainService.UserModify(du.
+		if err := svc.Services.DomainService(nil /* TODO */).UserModify(du.
 			WithNotifyReplies(params.Body.NotifyReplies).
 			WithNotifyModerator(params.Body.NotifyModerator).
 			WithNotifyCommentStatus(params.Body.NotifyCommentStatus),

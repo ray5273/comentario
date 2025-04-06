@@ -35,13 +35,13 @@ func CommentCount(params api_general.CommentCountParams, user *data.User) middle
 	}
 
 	// Find the domain user, if any
-	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, false)
+	_, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByID(domainID, &user.ID, false)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Fetch comments the user has access to
-	cnt, err := svc.TheCommentService.Count(
+	cnt, err := svc.Services.CommentService(nil).Count(
 		user,
 		domainUser,
 		domainID,
@@ -79,7 +79,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 	// Find the comment author, if any
 	var cr *models.Commenter
 	if comment.UserCreated.Valid && comment.UserCreated.UUID != data.AnonymousUser.ID {
-		if u, du, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
+		if u, du, err := svc.Services.UserService(nil).FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
 			return respServiceError(err)
 		} else {
 			cr = u.
@@ -93,7 +93,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 	if user.IsSuperuser || domainUser.IsAnOwner() {
 		// Fetch the user moderated, if any
 		if comment.UserModerated.Valid {
-			if u, err := svc.TheUserService.FindUserByID(&comment.UserModerated.UUID); err != nil {
+			if u, err := svc.Services.UserService(nil).FindUserByID(&comment.UserModerated.UUID); err != nil {
 				return respServiceError(err)
 			} else {
 				um = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
@@ -101,7 +101,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 		}
 		// Fetch the user deleted, if any
 		if comment.IsDeleted && comment.UserDeleted.Valid {
-			if u, err := svc.TheUserService.FindUserByID(&comment.UserDeleted.UUID); err != nil {
+			if u, err := svc.Services.UserService(nil).FindUserByID(&comment.UserDeleted.UUID); err != nil {
 				return respServiceError(err)
 			} else {
 				ud = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
@@ -109,7 +109,7 @@ func CommentGet(params api_general.CommentGetParams, user *data.User) middleware
 		}
 		// Fetch the user edited, if any
 		if comment.UserEdited.Valid {
-			if u, err := svc.TheUserService.FindUserByID(&comment.UserEdited.UUID); err != nil {
+			if u, err := svc.Services.UserService(nil).FindUserByID(&comment.UserEdited.UUID); err != nil {
 				return respServiceError(err)
 			} else {
 				ue = u.CloneWithClearance(user.IsSuperuser, true, true).ToDTO()
@@ -149,13 +149,13 @@ func CommentList(params api_general.CommentListParams, user *data.User) middlewa
 	}
 
 	// Find the domain user, if any
-	_, domainUser, err := svc.TheDomainService.FindDomainUserByID(domainID, &user.ID, false)
+	_, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByID(domainID, &user.ID, false)
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Fetch comments the user has access to
-	cs, crMap, err := svc.TheCommentService.ListWithCommenters(
+	cs, crMap, err := svc.Services.CommentService(nil).ListWithCommenters(
 		user,
 		domainUser,
 		domainID,
@@ -205,15 +205,15 @@ func commentDelete(commentUUID strfmt.UUID, user *data.User) middleware.Responde
 		return r
 	}
 
-	// Mark the comment deleted
-	if err := svc.TheCommentService.MarkDeleted(&comment.ID, &user.ID); err != nil {
+	// Mark the comment deleted. No transaction required as it's an atomic operation
+	if err := svc.Services.CommentService(nil).MarkDeleted(&comment.ID, &user.ID); err != nil {
 		return respServiceError(err)
 	}
 
 	// Decrement page/domain comment count in the background, ignoring any errors
 	go func() {
-		_ = svc.ThePageService.IncrementCounts(&page.ID, -1, 0)
-		_ = svc.TheDomainService.IncrementCounts(&domain.ID, -1, 0)
+		_ = svc.Services.PageService(nil).IncrementCounts(&page.ID, -1, 0)
+		_ = svc.Services.DomainService(nil).IncrementCounts(&domain.ID, -1, 0)
 	}()
 
 	// Notify websocket subscribers
@@ -231,15 +231,15 @@ func commentGetCommentPageDomainUser(commentUUID strfmt.UUID, curUserID *uuid.UU
 		return nil, nil, nil, nil, r
 
 		// Find the comment
-	} else if comment, err := svc.TheCommentService.FindByID(commentID); err != nil {
+	} else if comment, err := svc.Services.CommentService(nil).FindByID(commentID); err != nil {
 		return nil, nil, nil, nil, respServiceError(err)
 
 		// Find the domain page
-	} else if page, err := svc.ThePageService.FindByID(&comment.PageID); err != nil {
+	} else if page, err := svc.Services.PageService(nil).FindByID(&comment.PageID); err != nil {
 		return nil, nil, nil, nil, respServiceError(err)
 
 		// Fetch the domain and the user
-	} else if domain, curDomainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, curUserID, false); err != nil {
+	} else if domain, curDomainUser, err := svc.Services.DomainService(nil).FindDomainUserByID(&page.DomainID, curUserID, false); err != nil {
 		return nil, nil, nil, nil, respServiceError(err)
 
 	} else {
@@ -267,9 +267,9 @@ func commentModerate(commentUUID strfmt.UUID, curUser *data.User, pending, appro
 		reason = fmt.Sprintf("Set to pending by %s <%s>", curUser.Name, curUser.Email)
 	}
 
-	// Update the comment's state in the database
+	// Update the comment's state in the database. No transaction required as it's an atomic operation
 	comment.WithModerated(&curUser.ID, pending, approve, reason)
-	if err := svc.TheCommentService.Moderated(comment); err != nil {
+	if err := svc.Services.CommentService(nil).Moderated(comment); err != nil {
 		return respServiceError(err)
 	}
 
@@ -285,11 +285,12 @@ func commentModerate(commentUUID strfmt.UUID, curUser *data.User, pending, appro
 
 // commentWebSocketNotify notifies websocket subscribers about a change in the given comment, in background
 func commentWebSocketNotify(page *data.DomainPage, comment *data.Comment, action string) {
-	if svc.TheWebSocketsService.Active() {
+	ws := svc.Services.WebSocketsService()
+	if ws.Active() {
 		go func() {
 			// Postpone the update a bit to let the client finish the API call
 			time.Sleep(500 * time.Millisecond)
-			svc.TheWebSocketsService.Send(&page.DomainID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, action)
+			ws.Send(&page.DomainID, &comment.ID, data.NullUUIDPtr(&comment.ParentID), page.Path, action)
 		}()
 	}
 }

@@ -20,15 +20,6 @@ const (
 	wsMaxMessageSize = 2999                  // Maximum allowed incoming/outgoing message size. Must accommodate a complete wsMsgPayload
 )
 
-// TheWebSocketsService is a global WebSocketsService implementation
-var TheWebSocketsService WebSocketsService = &webSocketsService{
-	clients:    make(map[*wsClient]bool),
-	send:       make(chan *wsMsgPayload),
-	register:   make(chan *wsClient),
-	unregister: make(chan *wsClient),
-	quit:       make(chan bool),
-}
-
 // WebSocketsService is a service interface for managing WebSocket subscriptions
 type WebSocketsService interface {
 	// Active returns whether the service is running
@@ -65,6 +56,17 @@ type webSocketsService struct {
 	register   chan *wsClient     // Register requests from the clients
 	unregister chan *wsClient     // Unregister requests from the clients
 	quit       chan bool          // Channel for shutting down the service
+}
+
+// newWebSocketsService creates an instance of webSocketsService
+func newWebSocketsService() *webSocketsService {
+	return &webSocketsService{
+		clients:    make(map[*wsClient]bool),
+		send:       make(chan *wsMsgPayload),
+		register:   make(chan *wsClient),
+		unregister: make(chan *wsClient),
+		quit:       make(chan bool),
+	}
 }
 
 func (svc *webSocketsService) Active() bool {

@@ -15,9 +15,6 @@ import (
 	"sync"
 )
 
-// TheI18nService is a global I18nService implementation
-var TheI18nService I18nService = newI18nService()
-
 // I18nService is a service interface for dealing with translations and internationalisation (i18)
 type I18nService interface {
 	// BestLangFor returns the "best" language for the given language ID from the list of supported interface languages
@@ -130,7 +127,7 @@ func (svc *i18nService) Init() error {
 	}
 
 	// Merge all plugin messages into the message repository: iterate plugin configs
-	for id, cfg := range ThePluginManager.PluginConfigs() {
+	for id, cfg := range Services.PluginManager().PluginConfigs() {
 		// Iterate each plugin's messages
 		for _, me := range cfg.Messages {
 			// Create an artificial path spec that contains plugin ID (so that we can distinguish between message
@@ -138,7 +135,7 @@ func (svc *i18nService) Init() error {
 			p := fmt.Sprintf("{plugin:%s}/%s", id, strings.TrimPrefix(me.Path, "/"))
 
 			// Merge the plugin's message into the repository
-			if err := TheI18nService.MergeMessages(me.Content, p); err != nil {
+			if err := svc.MergeMessages(me.Content, p); err != nil {
 				return fmt.Errorf("failed to merge plugin (ID=%q) messages: %w", id, err)
 			}
 		}

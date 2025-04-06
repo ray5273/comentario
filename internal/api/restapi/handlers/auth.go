@@ -26,7 +26,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 	// Don't bother if the user is already confirmed
 	if !user.Confirmed {
 		// Update the user
-		if err := svc.TheUserService.ConfirmUser(user); err != nil {
+		if err := svc.Services.UserService(nil).ConfirmUser(user); err != nil {
 			return respServiceError(err)
 		}
 	}
@@ -35,7 +35,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 	loc := user.SignupHost
 	if loc == "" {
 		// Redirect to the UI login page otherwise
-		loc = svc.TheI18nService.FrontendURL(user.LangID, "auth/login", map[string]string{"confirmed": "true"})
+		loc = svc.Services.I18nService().FrontendURL(user.LangID, "auth/login", map[string]string{"confirmed": "true"})
 	}
 
 	// Redirect the user's browser
@@ -45,7 +45,7 @@ func AuthConfirm(_ api_general.AuthConfirmParams, user *data.User) middleware.Re
 func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.User) middleware.Responder {
 	// If the current user is a superuser, make sure there are others
 	if user.IsSuperuser {
-		if cnt, err := svc.TheUserService.CountUsers(true, false, false, true, true); err != nil {
+		if cnt, err := svc.Services.UserService(nil /* TODO */).CountUsers(true, false, false, true, true); err != nil {
 			return respServiceError(err)
 		} else if cnt <= 1 {
 			return respBadRequest(exmodels.ErrorDeletingLastSuperuser)
@@ -54,7 +54,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 
 	// Figure out which domains the user owns
 	var ownedDomains []*data.Domain
-	if ds, dus, err := svc.TheDomainService.ListByDomainUser(&user.ID, &user.ID, false, true, "", "", data.SortAsc, -1); err != nil {
+	if ds, dus, err := svc.Services.DomainService(nil /* TODO */).ListByDomainUser(&user.ID, &user.ID, false, true, "", "", data.SortAsc, -1); err != nil {
 		return respServiceError(err)
 	} else {
 		for _, du := range dus {
@@ -75,7 +75,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 		// Figure out which domains have no other owners
 		for _, d := range ownedDomains {
 			hasOtherOwners := false
-			_, dus, err := svc.TheUserService.ListByDomain(&d.ID, false, "", "", data.SortAsc, -1)
+			_, dus, err := svc.Services.UserService(nil /* TODO */).ListByDomain(&d.ID, false, "", "", data.SortAsc, -1)
 			if err != nil {
 				return respServiceError(err)
 			}
@@ -99,7 +99,7 @@ func AuthDeleteProfile(params api_general.AuthDeleteProfileParams, user *data.Us
 	}
 
 	// Delete the user, optionally deleting their comments
-	if cntDel, err := svc.TheUserService.DeleteUserByID(user, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
+	if cntDel, err := svc.Services.UserService(nil /* TODO */).DeleteUserByID(user, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
 		return respServiceError(err)
 	} else {
 		// Succeeded
@@ -148,13 +148,13 @@ func AuthLoginTokenRedeem(params api_general.AuthLoginTokenRedeemParams, user *d
 
 func AuthLogout(params api_general.AuthLogoutParams, _ *data.User) middleware.Responder {
 	// Extract session from the cookie
-	_, sessionID, err := svc.TheAuthService.FetchUserSessionIDFromCookie(params.HTTPRequest)
+	_, sessionID, err := svc.Services.AuthService(nil /* TODO */).FetchUserSessionIDFromCookie(params.HTTPRequest)
 	if err != nil {
 		return respUnauthorized(nil)
 	}
 
 	// Delete the session token, ignoring any error
-	_ = svc.TheUserService.DeleteUserSession(sessionID)
+	_ = svc.Services.UserService(nil /* TODO */).DeleteUserSession(sessionID)
 
 	// Regardless of whether the above was successful, return a success response, removing the session cookie
 	return NewCookieResponder(api_general.NewAuthLogoutNoContent()).WithoutCookie(util.CookieNameUserSession, "/")
@@ -167,7 +167,7 @@ func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.
 	}
 
 	// Update the user's password
-	if err := svc.TheUserService.Update(user.WithPassword(data.PasswordPtrToString(params.Body.Password))); err != nil {
+	if err := svc.Services.UserService(nil /* TODO */).Update(user.WithPassword(data.PasswordPtrToString(params.Body.Password))); err != nil {
 		return respServiceError(err)
 	}
 
@@ -177,7 +177,7 @@ func AuthPwdResetChange(params api_general.AuthPwdResetChangeParams, user *data.
 
 func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middleware.Responder {
 	// Find the user with that email
-	user, err := svc.TheUserService.FindUserByEmail(data.EmailPtrToString(params.Body.Email))
+	user, err := svc.Services.UserService(nil /* TODO */).FindUserByEmail(data.EmailPtrToString(params.Body.Email))
 	if errors.Is(err, svc.ErrNotFound) || err == nil && !user.IsLocal() {
 		// No such email: apply a random delay to discourage email polling
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
@@ -195,11 +195,11 @@ func AuthPwdResetSendEmail(params api_general.AuthPwdResetSendEmailParams) middl
 		return respServiceError(err)
 
 		// Persist the token
-	} else if err := svc.TheTokenService.Create(token); err != nil {
+	} else if err := svc.Services.TokenService(nil).Create(token); err != nil {
 		return respServiceError(err)
 
 		// Send out an email
-	} else if err := svc.TheMailService.SendPasswordReset(user, token); err != nil {
+	} else if err := svc.Services.MailService().SendPasswordReset(user, token); err != nil {
 		return respServiceError(err)
 	}
 
@@ -226,7 +226,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		WithSignup(params.HTTPRequest, "", !config.ServerConfig.LogFullIPs)
 
 	// If it's the first registered LOCAL user, make them a superuser
-	if cnt, err := svc.TheUserService.CountUsers(true, true, false, true, false); err != nil {
+	if cnt, err := svc.Services.UserService(nil /* TODO */).CountUsers(true, true, false, true, false); err != nil {
 		return respServiceError(err)
 	} else if cnt == 0 {
 		user.WithConfirmed(true).IsSuperuser = true
@@ -262,7 +262,7 @@ func authCreateLoginToken(ownerID *uuid.UUID) (*data.Token, error) {
 		return nil, err
 
 		// Persist the token
-	} else if err := svc.TheTokenService.Create(t); err != nil {
+	} else if err := svc.Services.TokenService(nil).Create(t); err != nil {
 		return nil, err
 
 	} else {
@@ -297,7 +297,7 @@ func authAddUserSessionToResponse(resp PrincipalResponder, user *data.User, us *
 // session. In case of error an error responder is returned
 func loginLocalUser(email, password, host string, req *http.Request) (*data.User, *data.UserSession, middleware.Responder) {
 	// Find the user
-	user, err := svc.TheUserService.FindUserByEmail(email)
+	user, err := svc.Services.UserService(nil /* TODO */).FindUserByEmail(email)
 	if errors.Is(err, svc.ErrNotFound) || err == nil && !user.IsLocal() {
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
 		return nil, nil, respUnauthorized(exmodels.ErrorInvalidCredentials)
@@ -316,7 +316,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 		}
 
 		// Persist ignoring possible errors
-		_ = svc.TheUserService.UpdateLoginLocked(user)
+		_ = svc.Services.UserService(nil /* TODO */).UpdateLoginLocked(user)
 
 		// Pause for a random while
 		util.RandomSleep(util.WrongAuthDelayMin, util.WrongAuthDelayMax)
@@ -336,24 +336,25 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 // case of error an error responder is returned
 func loginUser(user *data.User, host string, req *http.Request) (*data.UserSession, middleware.Responder) {
 	// Verify the user is allowed to log in
-	if errm := svc.TheAuthService.UserCanAuthenticate(user, true); errm != nil {
+	if errm := svc.Services.AuthService(nil /* TODO */).UserCanAuthenticate(user, true); errm != nil {
 		return nil, respUnauthorized(errm)
 	}
 
 	// Create a new session
 	us := data.NewUserSession(&user.ID, host, req, !config.ServerConfig.LogFullIPs)
-	if err := svc.TheUserService.CreateUserSession(us); err != nil {
+	if err := svc.Services.UserService(nil /* TODO */).CreateUserSession(us); err != nil {
 		return nil, respServiceError(err)
 	}
 
 	// Update the user's last login timestamp
-	if err := svc.TheUserService.UpdateLoginLocked(user.WithLastLogin(true)); err != nil {
+	if err := svc.Services.UserService(nil /* TODO */).UpdateLoginLocked(user.WithLastLogin(true)); err != nil {
 		return nil, respServiceError(err)
 	}
 
 	// If Gravatar is enabled, try to fetch the user's avatar, in the background
 	if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
-		svc.TheAvatarService.SetFromGravatarAsync(&user.ID, user.Email, false)
+		// We intentionally run this in a non-transactional context, since it's a background operation
+		svc.Services.AvatarService(nil).SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
 
 	// Succeeded
@@ -363,7 +364,7 @@ func loginUser(user *data.User, host string, req *http.Request) (*data.UserSessi
 // signupUser saves the given user and runs post-signup tasks
 func signupUser(user *data.User) middleware.Responder {
 	// Save the new user
-	if err := svc.TheUserService.Create(user); err != nil {
+	if err := svc.Services.UserService(nil /* TODO */).Create(user); err != nil {
 		return respServiceError(err)
 	}
 
@@ -375,7 +376,8 @@ func signupUser(user *data.User) middleware.Responder {
 	// If Gravatar is enabled, try to fetch the user's avatar, ignoring any error. Do that synchronously to let the user
 	// see their avatar right away
 	if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
-		svc.TheAvatarService.SetFromGravatarAsync(&user.ID, user.Email, false)
+		// We intentionally run this in a non-transactional context, since it's a background operation
+		svc.Services.AvatarService(nil).SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
 
 	// Succeeded

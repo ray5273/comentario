@@ -9,7 +9,7 @@ import (
 
 func EmbedI18nMessages(params api_embed.EmbedI18nMessagesParams) middleware.Responder {
 	// Fetch the messages with fallback
-	ms, lang := svc.TheI18nService.Messages(params.Lang)
+	ms, lang := svc.Services.I18nService().Messages(params.Lang)
 
 	// Convert the source message map into an API map
 	mm := exmodels.KeyValueMap(ms)

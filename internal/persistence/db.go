@@ -93,7 +93,21 @@ type MigrationLogEntry struct {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// Database is an opaque structure providing database operations
+// DBX is a database query/statement executor interface, implemented by both Database and DB transaction
+type DBX interface {
+	// Delete returns a new DeleteDataset
+	Delete(table any) *goqu.DeleteDataset
+	// From returns a new SelectDataset
+	From(v ...any) *goqu.SelectDataset
+	// Insert returns a new InsertDataset
+	Insert(table any) *goqu.InsertDataset
+	// Update returns a new UpdateDataset
+	Update(table any) *goqu.UpdateDataset
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// Database is an opaque structure providing database operations and implementing DBX
 type Database struct {
 	dialect     dbDialect   // Database dialect in use
 	debug       bool        // Whether debug logging is enabled
@@ -146,41 +160,14 @@ func InitDB() (*Database, error) {
 	return db, nil
 }
 
-// Delete returns a new DeleteDataset
 func (db *Database) Delete(table any) *goqu.DeleteDataset {
 	return db.goquDB().Delete(table)
 }
 
-// goquDB returns a goqu.Database to use for queries
-func (db *Database) goquDB() *goqu.Database {
-	gd := db.dialect.dialectWrapper().DB(db.db)
-	gd.Logger(db.debugLogger)
-	return gd
-}
-
-// ExecOne executes the provided Executable statement against the database and verifies there's exactly one row affected
-func (db *Database) ExecOne(x Executable) error {
-	// Run the statement
-	if res, err := x.Executor().Exec(); err != nil {
-		return err
-	} else if cnt, err := res.RowsAffected(); err != nil {
-		return fmt.Errorf("RowsAffected() failed: %v", err)
-	} else if cnt == 0 {
-		return sql.ErrNoRows
-	} else if cnt != 1 {
-		return fmt.Errorf("statement affected %d rows, want 1", cnt)
-	}
-
-	// Succeeded
-	return nil
-}
-
-// From returns a new SelectDataset
 func (db *Database) From(v ...any) *goqu.SelectDataset {
 	return db.goquDB().From(v...)
 }
 
-// Insert returns a new InsertDataset
 func (db *Database) Insert(table any) *goqu.InsertDataset {
 	return db.goquDB().Insert(table)
 }
@@ -216,7 +203,7 @@ func (db *Database) Migrate(seed string) error {
 		// If something was actually done
 		if status != "" {
 			// Add a log record, logging any error to the console
-			if dbErr := db.ExecOne(db.Insert("cm_migration_log").Rows(&MigrationLogEntry{
+			if dbErr := ExecOne(db.Insert("cm_migration_log").Rows(&MigrationLogEntry{
 				Filename:    filename,
 				CreatedTime: time.Now().UTC(),
 				MD5Expected: util.MD5ToHex(csExpected),
@@ -239,7 +226,7 @@ func (db *Database) Migrate(seed string) error {
 			InstalledTime: time.Now().UTC(),
 			MD5:           util.MD5ToHex(&csActual),
 		}
-		if err := db.ExecOne(db.Insert("cm_migrations").Rows(mig).OnConflict(goqu.DoUpdate("filename", mig))); err != nil {
+		if err := ExecOne(db.Insert("cm_migrations").Rows(mig).OnConflict(goqu.DoUpdate("filename", mig))); err != nil {
 			return fmt.Errorf("failed to register migration '%s' in the database: %v", filename, err)
 		}
 
@@ -520,6 +507,13 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	return migMap, nil
 }
 
+// goquDB returns a goqu.Database to use for queries
+func (db *Database) goquDB() *goqu.Database {
+	gd := db.dialect.dialectWrapper().DB(db.db)
+	gd.Logger(db.debugLogger)
+	return gd
+}
+
 // installMigration installs a database migration contained in the given file, returning its actual MD5 checksum and the
 // status
 func (db *Database) installMigration(filename string, csExpected *[16]byte) (csActual [16]byte, status string, err error) {
@@ -683,4 +677,54 @@ func (db *Database) tryConnect(num, total int) (err error) {
 		logger.Warningf("[Attempt %d/%d] Failed to ping database: %v", num, total, err)
 	}
 	return
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// DatabaseTx represents a database transaction, implementing DBX
+type DatabaseTx struct {
+	tx *goqu.TxDatabase
+}
+
+func (dt *DatabaseTx) Delete(table any) *goqu.DeleteDataset {
+	return dt.tx.Delete(table)
+}
+
+func (dt *DatabaseTx) From(v ...any) *goqu.SelectDataset {
+	return dt.tx.From(v...)
+}
+
+func (dt *DatabaseTx) Insert(table any) *goqu.InsertDataset {
+	return dt.tx.Insert(table)
+}
+
+func (dt *DatabaseTx) Update(table any) *goqu.UpdateDataset {
+	return dt.tx.Update(table)
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// TxAware is used as a base interface for services making use of database transactions
+type TxAware interface {
+	// Tx returns transaction to execute its DB statements in, if any, otherwise nil
+	Tx() *DatabaseTx
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// ExecOne executes the provided Executable statement and verifies there's exactly one row affected
+func ExecOne(x Executable) error {
+	// Run the statement
+	if res, err := x.Executor().Exec(); err != nil {
+		return err
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		return fmt.Errorf("RowsAffected() failed: %v", err)
+	} else if cnt == 0 {
+		return sql.ErrNoRows
+	} else if cnt != 1 {
+		return fmt.Errorf("statement affected %d rows, want 1", cnt)
+	}
+
+	// Succeeded
+	return nil
 }

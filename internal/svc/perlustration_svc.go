@@ -17,9 +17,6 @@ import (
 	"time"
 )
 
-// ThePerlustrationService is a global PerlustrationService implementation
-var ThePerlustrationService PerlustrationService = &perlustrationService{}
-
 // commentScanningContext is a context for scanning a comment
 type commentScanningContext struct {
 	Request    *http.Request    // HTTP request sent by the commenter
@@ -116,7 +113,7 @@ func (svc *perlustrationService) NeedsModeration(
 			// If there's a number of comments specified for the domain
 			if domain.ModNumComments > 0 {
 				// Verify the user has the required number of approved comments
-				if cnt, err := TheCommentService.Count(user, domainUser, &domain.ID, nil, &user.ID, true, false, false, false); err != nil {
+				if cnt, err := Services.CommentService(nil).Count(user, domainUser, &domain.ID, nil, &user.ID, true, false, false, false); err != nil {
 					return false, "", err
 				} else if cnt < int64(domain.ModNumComments) {
 					return true, fmt.Sprintf("User has %d approved comments (domain policy requires at least %d)", cnt, domain.ModNumComments), nil
@@ -161,7 +158,7 @@ func (svc *perlustrationService) NeedsModeration(
 // Scan scans the provided comment for inappropriate content and returns whether it was found
 func (svc *perlustrationService) scan(ctx *commentScanningContext) (bool, string, error) {
 	// Fetch domain extensions
-	extensions, err := TheDomainService.ListDomainExtensions(&ctx.Domain.ID)
+	extensions, err := Services.DomainService(nil).ListDomainExtensions(&ctx.Domain.ID)
 	if err != nil {
 		return false, "", err
 	}

@@ -29,7 +29,7 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 	}
 
 	// Find the domain user
-	user, domainUser, err := svc.TheUserService.FindDomainUserByID(uID, dID)
+	user, domainUser, err := svc.Services.UserService(nil /* TODO */).FindDomainUserByID(uID, dID)
 	if err != nil {
 		return respServiceError(err)
 
@@ -63,29 +63,30 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 
 	// Persist the changes, if any
 	if changed {
-		if err := svc.TheDomainService.UserModify(domainUser); err != nil {
+		if err := svc.Services.DomainService(nil /* TODO */).UserModify(domainUser); err != nil {
 			return respServiceError(err)
 		}
 	}
 
 	// Succeeded: redirect to the homepage
 	return api_general.NewMailUnsubscribeTemporaryRedirect().
-		WithLocation(svc.TheI18nService.FrontendURL(user.LangID, "", map[string]string{"unsubscribed": "true"}))
+		WithLocation(svc.Services.I18nService().FrontendURL(user.LangID, "", map[string]string{"unsubscribed": "true"}))
 }
 
 // sendCommentModNotifications sends a comment notification to all domain moderators
 func sendCommentModNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenter *data.User) error {
 	// Fetch domain moderators to be notified
-	mods, err := svc.TheUserService.ListDomainModerators(&domain.ID, true)
+	mods, err := svc.Services.UserService(nil).ListDomainModerators(&domain.ID, true)
 	if err != nil {
 		return err
 	}
 
 	// Iterate the moderator users
+	mail := svc.Services.MailService()
 	for _, mod := range mods {
 		// Do not email the commenting moderator their own comment
 		if mod.ID != commenter.ID {
-			_ = svc.TheMailService.SendCommentNotification(svc.MailNotificationKindModerator, mod, true, domain, page, comment, commenter.Name)
+			_ = mail.SendCommentNotification(svc.MailNotificationKindModerator, mod, true, domain, page, comment, commenter.Name)
 		}
 	}
 
@@ -96,7 +97,7 @@ func sendCommentModNotifications(domain *data.Domain, page *data.DomainPage, com
 // sendCommentReplyNotifications sends a comment reply notification
 func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, comment *data.Comment, commenter *data.User) error {
 	// Fetch the parent comment
-	if parentComment, err := svc.TheCommentService.FindByID(&comment.ParentID.UUID); err != nil {
+	if parentComment, err := svc.Services.CommentService(nil).FindByID(&comment.ParentID.UUID); err != nil {
 		return err
 
 		// No reply notifications for anonymous users and self replies
@@ -104,7 +105,7 @@ func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, c
 		return nil
 
 		// Find the parent commenter user and the corresponding domain user
-	} else if parentUser, parentDomainUser, err := svc.TheUserService.FindDomainUserByID(&parentComment.UserCreated.UUID, &domain.ID); err != nil {
+	} else if parentUser, parentDomainUser, err := svc.Services.UserService(nil).FindDomainUserByID(&parentComment.UserCreated.UUID, &domain.ID); err != nil {
 		return err
 
 		// Don't send notification if reply notifications are turned off
@@ -113,7 +114,7 @@ func sendCommentReplyNotifications(domain *data.Domain, page *data.DomainPage, c
 
 		// Send a reply notification
 	} else {
-		return svc.TheMailService.SendCommentNotification(
+		return svc.Services.MailService().SendCommentNotification(
 			svc.MailNotificationKindReply,
 			parentUser,
 			parentUser.IsSuperuser || parentDomainUser.CanModerate(),
@@ -131,7 +132,7 @@ func sendCommentStatusNotifications(domain *data.Domain, page *data.DomainPage, 
 		return nil
 
 		// Find the commenter user and the corresponding domain user
-	} else if commenter, domainUser, err := svc.TheUserService.FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
+	} else if commenter, domainUser, err := svc.Services.UserService(nil).FindDomainUserByID(&comment.UserCreated.UUID, &domain.ID); err != nil {
 		return err
 
 		// Don't send notification if comment status notifications are turned off
@@ -140,7 +141,7 @@ func sendCommentStatusNotifications(domain *data.Domain, page *data.DomainPage, 
 
 		// Send a comment status notification
 	} else {
-		return svc.TheMailService.SendCommentNotification(
+		return svc.Services.MailService().SendCommentNotification(
 			svc.MailNotificationKindCommentStatus,
 			commenter,
 			false,
@@ -165,12 +166,12 @@ func sendConfirmationEmail(user *data.User) middleware.Responder {
 	}
 
 	// Persist the token
-	if err := svc.TheTokenService.Create(token); err != nil {
+	if err := svc.Services.TokenService(nil).Create(token); err != nil {
 		return respServiceError(err)
 	}
 
 	// Send a confirmation email
-	if err = svc.TheMailService.SendConfirmEmail(user, token); err != nil {
+	if err = svc.Services.MailService().SendConfirmEmail(user, token); err != nil {
 		return respServiceError(err)
 	}
 
@@ -187,12 +188,12 @@ func sendEmailUpdateConfirmation(user *data.User, newEmail string) middleware.Re
 	}
 
 	// Persist the token
-	if err := svc.TheTokenService.Create(token); err != nil {
+	if err := svc.Services.TokenService(nil).Create(token); err != nil {
 		return respServiceError(err)
 	}
 
 	// Send a confirmation email
-	if err = svc.TheMailService.SendEmailUpdateConfirmEmail(user, token, newEmail, signUserEmailUpdate(user, newEmail)); err != nil {
+	if err = svc.Services.MailService().SendEmailUpdateConfirmEmail(user, token, newEmail, signUserEmailUpdate(user, newEmail)); err != nil {
 		return respServiceError(err)
 	}
 

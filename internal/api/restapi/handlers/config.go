@@ -82,12 +82,13 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 
 	// Prepare a languages slice
 	var langs []*models.UILanguage
-	for _, t := range svc.TheI18nService.LangTags() {
+	i18n := svc.Services.I18nService()
+	for _, t := range i18n.LangTags() {
 		langs = append(langs, &models.UILanguage{
 			ID:                 t.String(),
 			NameEnglish:        display.English.Languages().Name(t),
 			NameNative:         display.Self.Name(t),
-			IsFrontendLanguage: svc.TheI18nService.IsFrontendTag(t),
+			IsFrontendLanguage: i18n.IsFrontendTag(t),
 		})
 	}
 
@@ -99,11 +100,12 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 
 	// Convert plugin config into DTOs
 	var pluginCfgs []*models.PluginConfig
-	for id, cfg := range svc.ThePluginManager.PluginConfigs() {
+	for id, cfg := range svc.Services.PluginManager().PluginConfigs() {
 		pluginCfgs = append(pluginCfgs, pluginConfigToDTO(id, cfg))
 	}
 
 	// Succeeded
+	ver := svc.Services.VersionService()
 	return api_general.NewConfigGetOK().
 		WithPayload(&models.InstanceConfig{
 			DynamicConfig: data.DynConfigMapToDTOs(dynConfig),
@@ -111,19 +113,19 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:          config.ServerConfig.BaseDocsURL,
 				BaseURL:              config.ServerConfig.ParsedBaseURL().String(),
-				BuildDate:            strfmt.DateTime(svc.TheVersionService.BuildDate()),
-				DbVersion:            svc.TheVersionService.DBVersion(),
+				BuildDate:            strfmt.DateTime(ver.BuildDate()),
+				DbVersion:            ver.DBVersion(),
 				DefaultLangID:        util.DefaultLanguage.String(),
 				FederatedIdps:        idps,
 				HomeContentURL:       strfmt.URI(config.ServerConfig.HomeContentURL),
-				LiveUpdateEnabled:    svc.TheWebSocketsService.Active(),
+				LiveUpdateEnabled:    svc.Services.WebSocketsService().Active(),
 				PageViewStatsEnabled: !config.ServerConfig.DisablePageViewStats,
 				PrivacyPolicyURL:     config.ServerConfig.PrivacyPolicyURL,
 				ResultPageSize:       util.ResultPageSize,
 				ServerTime:           strfmt.DateTime(time.Now().UTC()),
 				TermsOfServiceURL:    config.ServerConfig.TermsOfServiceURL,
 				UILanguages:          langs,
-				Version:              svc.TheVersionService.CurrentVersion(),
+				Version:              ver.CurrentVersion(),
 			},
 		})
 }
@@ -135,7 +137,8 @@ func ConfigVersionsGet(_ api_general.ConfigVersionsGetParams, user *data.User) m
 	}
 
 	var rm *models.ReleaseMetadata
-	if d := svc.TheVersionService.LatestRelease(); d != nil {
+	ver := svc.Services.VersionService()
+	if d := ver.LatestRelease(); d != nil {
 		rm = &models.ReleaseMetadata{
 			Name:    d.Name(),
 			PageURL: d.PageURL(),
@@ -145,8 +148,8 @@ func ConfigVersionsGet(_ api_general.ConfigVersionsGetParams, user *data.User) m
 
 	// Succeeded
 	return api_general.NewConfigVersionsGetOK().WithPayload(&api_general.ConfigVersionsGetOKBody{
-		Current:       svc.TheVersionService.CurrentVersion(),
-		IsUpgradable:  svc.TheVersionService.IsUpgradable(),
+		Current:       ver.CurrentVersion(),
+		IsUpgradable:  ver.IsUpgradable(),
 		LatestRelease: rm,
 	})
 }

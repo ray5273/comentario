@@ -75,21 +75,21 @@ func comentarioExport(domainID *uuid.UUID) ([]byte, error) {
 	exp := comentarioExportV3{Version: 3}
 
 	// Fetch pages
-	if ps, err := ThePageService.ListByDomain(domainID); err != nil {
+	if ps, err := Services.PageService(nil).ListByDomain(domainID); err != nil {
 		return nil, err
 	} else {
 		exp.Pages = data.SliceToDTOs[*data.DomainPage, *models.DomainPage](ps)
 	}
 
 	// Fetch comments
-	if cs, err := TheCommentService.ListByDomain(domainID); err != nil {
+	if cs, err := Services.CommentService(nil).ListByDomain(domainID); err != nil {
 		return nil, err
 	} else {
 		exp.Comments = cs
 	}
 
 	// Fetch commenters
-	if um, dus, err := TheUserService.ListByDomain(domainID, false, "", "", data.SortAsc, -1); err != nil {
+	if um, dus, err := Services.UserService(nil).ListByDomain(domainID, false, "", "", data.SortAsc, -1); err != nil {
 		return nil, err
 	} else {
 		cs := make([]*models.Commenter, 0, len(dus))
@@ -241,7 +241,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			pageID = id
 
 			// Page doesn't exist. Find or insert a page with this path
-		} else if page, added, err := ThePageService.UpsertByDomainPath(domain, pagePath, "", nil); err != nil {
+		} else if page, added, err := Services.PageService(nil /* TODO */).UpsertByDomainPath(domain, pagePath, "", nil); err != nil {
 			return result.WithError(err)
 
 		} else {
@@ -283,7 +283,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 		// Render Markdown into HTML (the latter doesn't get exported)
 		if !del {
 			// Truncate comment text to avoid errors
-			if err := TheCommentService.SetMarkdown(c, util.TruncateStr(comment.Markdown, maxLength), &domain.ID, nil); err != nil {
+			if err := Services.CommentService(nil).SetMarkdown(c, util.TruncateStr(comment.Markdown, maxLength), &domain.ID, nil); err != nil {
 				return result.WithError(err)
 			}
 		}
@@ -302,12 +302,12 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(util.ZeroUUID, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
-	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+	_ = Services.DomainService(nil /* TODO */).IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
 
 	// Increase comment counts on all pages
 	for pageID, pc := range countsPerPage {
 		if pc > 0 {
-			_ = ThePageService.IncrementCounts(&pageID, pc, 0)
+			_ = Services.PageService(nil /* TODO */).IncrementCounts(&pageID, pc, 0)
 		}
 	}
 
@@ -369,7 +369,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 		result.PagesTotal++
 
 		// Find the page for the comment based on path
-		p, added, err := ThePageService.UpsertByDomainPath(domain, string(page.Path), page.Title, nil)
+		p, added, err := Services.PageService(nil /* TODO */).UpsertByDomainPath(domain, string(page.Path), page.Title, nil)
 		if err != nil {
 			return result.WithError(err)
 
@@ -472,12 +472,12 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(util.ZeroUUID, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
-	_ = TheDomainService.IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+	_ = Services.DomainService(nil /* TODO */).IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
 
 	// Increase comment counts on all pages
 	for pageID, pc := range countsPerPage {
 		if pc > 0 {
-			_ = ThePageService.IncrementCounts(&pageID, pc, 0)
+			_ = Services.PageService(nil /* TODO */).IncrementCounts(&pageID, pc, 0)
 		}
 	}
 

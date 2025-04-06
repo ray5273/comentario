@@ -23,7 +23,7 @@ func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) mi
 	// Update the page properties, if necessary
 	ro := swag.BoolValue(params.Body.IsReadonly)
 	if page.IsReadonly != ro {
-		if err := svc.ThePageService.Update(page.WithIsReadonly(ro)); err != nil {
+		if err := svc.Services.PageService(nil).Update(page.WithIsReadonly(ro)); err != nil {
 			return respServiceError(err)
 		}
 	}

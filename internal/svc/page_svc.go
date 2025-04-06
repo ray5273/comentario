@@ -7,6 +7,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"net/url"
@@ -14,11 +15,9 @@ import (
 	"time"
 )
 
-// ThePageService is a global PageService implementation
-var ThePageService PageService = &pageService{}
-
 // PageService is a service interface for dealing with pages
 type PageService interface {
+	persistence.TxAware
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
 	// FetchUpdatePageTitle fetches and updates the title of the provided page based on its URL, returning if there was
@@ -52,7 +51,7 @@ type PageService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // pageService is a blueprint PageService implementation
-type pageService struct{}
+type pageService struct{ dbAware }
 
 func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error) {
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))
@@ -104,7 +103,7 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 	}
 
 	// Update the page in the database
-	if err := db.ExecOne(db.Update("cm_domain_pages").Set(goqu.Record{"title": title}).Where(goqu.Ex{"id": &page.ID})); err != nil {
+	if err := execOne(db.Update("cm_domain_pages").Set(goqu.Record{"title": title}).Where(goqu.Ex{"id": &page.ID})); err != nil {
 		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecOne() failed: %v", err)
 		return false, err
 	}
@@ -149,7 +148,7 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 	logger.Debugf("pageService.IncrementCounts(%s, %d, %d)", pageID, incComments, incViews)
 
 	// Update the page record
-	if err := db.ExecOne(
+	if err := execOne(
 		db.Update("cm_domain_pages").
 			Set(goqu.Record{
 				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
@@ -267,7 +266,7 @@ func (svc *pageService) Update(page *data.DomainPage) error {
 	logger.Debugf("pageService.Update(%#v)", page)
 
 	// Update the page record
-	if err := db.ExecOne(db.Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID})); err != nil {
+	if err := execOne(db.Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID})); err != nil {
 		logger.Errorf("pageService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -347,7 +346,7 @@ func (svc *pageService) insertPageView(pageID *uuid.UUID, req *http.Request) {
 		OSVersion:      util.FormatVersion(&ua.OS.Version),
 		Device:         ua.DeviceType.StringTrimPrefix(),
 	}
-	if err := db.ExecOne(db.Insert("cm_domain_page_views").Rows(r)); err != nil {
+	if err := execOne(db.Insert("cm_domain_page_views").Rows(r)); err != nil {
 		logger.Errorf("pageService.insertPageView: ExecOne() failed: %v", err)
 	}
 }

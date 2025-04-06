@@ -12,11 +12,6 @@ import (
 	"time"
 )
 
-// TheVersionService is a global VersionService implementation
-var TheVersionService intf.VersionService = &versionService{}
-
-//----------------------------------------------------------------------------------------------------------------------
-
 // releaseMetadata represents GitLab release information and implements intf.ReleaseMetadata
 type releaseMetadata struct {
 	RName   string `json:"name"`     // Release name

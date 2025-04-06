@@ -35,14 +35,14 @@ func CurUserEmailUpdateConfirm(params api_general.CurUserEmailUpdateConfirmParam
 
 	// Update the user, if the email is changing
 	if newEmail != user.Email {
-		if err := svc.TheUserService.Update(user.WithEmail(newEmail)); err != nil {
+		if err := svc.Services.UserService(nil).Update(user.WithEmail(newEmail)); err != nil {
 			return respServiceError(err)
 		}
 	}
 
 	// Succeeded, redirect the user to the profile
 	return api_general.NewCurUserEmailUpdateConfirmTemporaryRedirect().
-		WithLocation(svc.TheI18nService.FrontendURL(user.LangID, "manage/account/profile", nil))
+		WithLocation(svc.Services.I18nService().FrontendURL(user.LangID, "manage/account/profile", nil))
 }
 
 func CurUserEmailUpdateRequest(params api_general.CurUserEmailUpdateRequestParams, user *data.User) middleware.Responder {
@@ -67,7 +67,7 @@ func CurUserEmailUpdateRequest(params api_general.CurUserEmailUpdateRequestParam
 
 		// If there's no configured mailer, update the email right away
 		if !util.TheMailer.Operational() {
-			if err := svc.TheUserService.Update(user.WithEmail(newEmail)); err != nil {
+			if err := svc.Services.UserService(nil).Update(user.WithEmail(newEmail)); err != nil {
 				return respServiceError(err)
 			}
 
@@ -87,7 +87,7 @@ func CurUserEmailUpdateRequest(params api_general.CurUserEmailUpdateRequestParam
 
 func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	// Try to authenticate the user
-	user, err := svc.TheAuthService.GetUserBySessionCookie(params.HTTPRequest)
+	user, err := svc.Services.AuthService(nil).GetUserBySessionCookie(params.HTTPRequest)
 	if errors.Is(err, svc.ErrDB) {
 		// Houston, we have a problem
 		return respInternalError(nil)
@@ -111,8 +111,8 @@ func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User
 		defer util.LogError(params.Data.Close, "CurUserSetAvatar, params.Data.Close()")
 	}
 
-	// Update the user's avatar, marking it as customised
-	if err := svc.TheAvatarService.UpdateByUserID(&user.ID, params.Data, true); err != nil {
+	// Update the user's avatar, marking it as customised. No transaction required as it's an atomic update
+	if err := svc.Services.AvatarService(nil).UpdateByUserID(&user.ID, params.Data, true); err != nil {
 		return respServiceError(err)
 	}
 
@@ -121,8 +121,8 @@ func CurUserSetAvatar(params api_general.CurUserSetAvatarParams, user *data.User
 }
 
 func CurUserSetAvatarFromGravatar(_ api_general.CurUserSetAvatarFromGravatarParams, user *data.User) middleware.Responder {
-	// Download and update the user's avatar, marking it as customised
-	if err := svc.TheAvatarService.SetFromGravatar(&user.ID, user.Email, true); err != nil {
+	// Download and update the user's avatar, marking it as customised. No transaction required as it's an atomic update
+	if err := svc.Services.AvatarService(nil).SetFromGravatar(&user.ID, user.Email, true); err != nil {
 		return respServiceError(err)
 	}
 
@@ -157,7 +157,7 @@ func CurUserUpdate(params api_general.CurUserUpdateParams, user *data.User) midd
 
 	// Update the user
 	user.WithLangID(swag.StringValue(params.Body.LangID))
-	if err := svc.TheUserService.Update(user); err != nil {
+	if err := svc.Services.UserService(nil).Update(user); err != nil {
 		return respServiceError(err)
 	}
 

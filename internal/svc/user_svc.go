@@ -6,16 +6,15 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
 	"time"
 )
 
-// TheUserService is a global UserService implementation
-var TheUserService UserService = &userService{}
-
 // UserService is a service interface for dealing with users
 type UserService interface {
+	persistence.TxAware
 	// ConfirmUser sets the confirmed status of the user
 	ConfirmUser(u *data.User) error
 	// CountUsers returns a number of registered users.
@@ -87,7 +86,7 @@ type UserService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // userService is a blueprint UserService implementation
-type userService struct{}
+type userService struct{ dbAware }
 
 func (svc *userService) ConfirmUser(u *data.User) error {
 	logger.Debugf("userService.ConfirmUser(%v)", u)
@@ -113,7 +112,7 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 	logger.Debug("userService.CountUsers(%v, %v, %v, %v, %v)", inclSuper, inclNonSuper, inclSystem, inclLocal, inclFederated)
 
 	// Prepare the query
-	q := db.From("cm_users")
+	q := svc.dbx().From("cm_users")
 	if !inclSuper {
 		q = q.Where(goqu.Ex{"is_superuser": false})
 	}
@@ -156,7 +155,7 @@ func (svc *userService) Create(u *data.User) error {
 	}
 
 	// Insert a new record
-	if err := db.ExecOne(db.Insert("cm_users").Rows(u)); err != nil {
+	if err := execOne(svc.dbx().Insert("cm_users").Rows(u)); err != nil {
 		logger.Errorf("userService.Create: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -167,7 +166,7 @@ func (svc *userService) Create(u *data.User) error {
 
 func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	logger.Debugf("userService.CreateUserSession(%#v)", s)
-	if err := db.ExecOne(db.Insert("cm_user_sessions").Rows(s)); err != nil {
+	if err := execOne(svc.dbx().Insert("cm_user_sessions").Rows(s)); err != nil {
 		logger.Errorf("userService.CreateUserSession: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -191,20 +190,20 @@ func (svc *userService) DeleteUserByID(u *data.User, delComments, purgeComments 
 		// If comments need to be purged
 		if purgeComments {
 			// Purge all comments created by the user
-			if cntDel, err = TheCommentService.DeleteByUser(&u.ID); err != nil {
+			if cntDel, err = Services.CommentService(nil /* TODO */).DeleteByUser(&u.ID); err != nil {
 				logger.Errorf("userService.DeleteUserByID: DeleteByUser() failed: %v", err)
 				return 0, err
 			}
 
 			// Mark all comments created by the user as deleted
-		} else if cntDel, err = TheCommentService.MarkDeletedByUser(&u.ID, &u.ID); err != nil {
+		} else if cntDel, err = Services.CommentService(nil /* TODO */).MarkDeletedByUser(&u.ID, &u.ID); err != nil {
 			logger.Errorf("userService.DeleteUserByID: MarkDeletedByUser() failed: %v", err)
 			return 0, err
 		}
 	}
 
 	// Delete the user
-	if err := db.ExecOne(db.Delete("cm_users").Where(goqu.Ex{"id": &u.ID})); err != nil {
+	if err := execOne(svc.dbx().Delete("cm_users").Where(goqu.Ex{"id": &u.ID})); err != nil {
 		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
 		return 0, translateDBErrors(err)
 	}
@@ -217,7 +216,7 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserSession(%s)", id)
 
 	// Delete the record
-	if err := db.ExecOne(db.Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
+	if err := execOne(svc.dbx().Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
 		logger.Errorf("userService.DeleteUserSession: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -271,7 +270,7 @@ func (svc *userService) ExpireUserSessions(userID *uuid.UUID) error {
 	logger.Debugf("userService.ExpireUserSessions(%s)", userID)
 
 	// Update all user's sessions
-	if _, err := db.Update("cm_user_sessions").Set(goqu.Record{"ts_expires": time.Now().UTC()}).Where(goqu.Ex{"user_id": userID}).Executor().Exec(); err != nil {
+	if _, err := svc.dbx().Update("cm_user_sessions").Set(goqu.Record{"ts_expires": time.Now().UTC()}).Where(goqu.Ex{"user_id": userID}).Executor().Exec(); err != nil {
 		logger.Errorf("userService.ExpireUserSessions: Exec() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -289,7 +288,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 	}
 
 	// Query the database
-	q := db.From(goqu.T("cm_users").As("u")).
+	q := svc.dbx().From(goqu.T("cm_users").As("u")).
 		Select(
 			// User columns
 			"u.*",
@@ -306,7 +305,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 			goqu.I("du.notify_comment_status").As("du_notify_comment_status"),
 			goqu.I("du.ts_created").As("du_ts_created"),
 			// Owned domain count
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.COUNT("*")).
 				Where(goqu.Ex{"duo.user_id": userID, "duo.is_owner": true}).As("owned_domain_count")).
 		// Outer-join domain users
@@ -336,13 +335,13 @@ func (svc *userService) FindUserByEmail(email string) (*data.User, error) {
 	logger.Debugf("userService.FindUserByEmail(%q)", email)
 
 	// Prepare the query
-	q := db.From(goqu.T("cm_users").As("u")).
+	q := svc.dbx().From(goqu.T("cm_users").As("u")).
 		Select(
 			"u.*",
 			// Avatar
 			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
 			// Owned domain count
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.COUNT("*")).
 				Where(goqu.Ex{"duo.user_id": goqu.I("u.id"), "duo.is_owner": true}).As("owned_domain_count")).
 		Where(goqu.Ex{"u.email": email}).
@@ -366,13 +365,13 @@ func (svc *userService) FindUserByFederatedID(idp, id string) (*data.User, error
 	logger.Debugf("userService.FindUserByFederatedID(%q, %q)", idp, id)
 
 	// Prepare the query
-	q := db.From(goqu.T("cm_users").As("u")).
+	q := svc.dbx().From(goqu.T("cm_users").As("u")).
 		Select(
 			"u.*",
 			// Avatar
 			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
 			// Owned domain count
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.COUNT("*")).
 				Where(goqu.Ex{"duo.user_id": goqu.I("u.id"), "duo.is_owner": true}).As("owned_domain_count")).
 		Where(goqu.Ex{"u.federated_id": id}).
@@ -408,13 +407,13 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	}
 
 	// Prepare the query
-	q := db.From(goqu.T("cm_users").As("u")).
+	q := svc.dbx().From(goqu.T("cm_users").As("u")).
 		Select(
 			"u.*",
 			// Avatar
 			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
 			// Owned domain count
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.COUNT("*")).
 				Where(goqu.Ex{"duo.user_id": id, "duo.is_owner": true}).As("owned_domain_count")).
 		Where(goqu.Ex{"u.id": id}).
@@ -444,14 +443,14 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 
 	// Prepare the query
 	now := time.Now().UTC()
-	q := db.From(goqu.T("cm_users").As("u")).
+	q := svc.dbx().From(goqu.T("cm_users").As("u")).
 		Select(
 			// User columns
 			"u.*",
 			// User avatar columns
 			goqu.Case().When(goqu.I("a.user_id").IsNull(), false).Else(true).As("has_avatar"),
 			// Owned domain count
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.COUNT("*")).
 				Where(goqu.Ex{"duo.user_id": goqu.I("u.id"), "duo.is_owner": true}).As("owned_domain_count"),
 			// User session columns
@@ -526,7 +525,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	logger.Debugf("userService.List('%s', '%s', %s, %d)", filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := db.From(goqu.T("cm_users").As("u")).
+	q := svc.dbx().From(goqu.T("cm_users").As("u")).
 		Select(
 			"u.*",
 			// Avatar
@@ -537,7 +536,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
 		// Outer-join grouped owned domains for retrieving their count
 		LeftJoin(
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.I("duo.user_id").As("user_id"), goqu.COUNT("*").As("cnt")).
 				Where(goqu.Ex{"duo.is_owner": true}).
 				GroupBy("duo.user_id").
@@ -590,7 +589,7 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 	logger.Debugf("userService.ListByDomain(%s, %v, '%s', '%s', %s, %d)", domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a query
-	q := db.From(goqu.T("cm_domains_users").As("du")).
+	q := svc.dbx().From(goqu.T("cm_domains_users").As("du")).
 		Select(
 			// User columns
 			"u.*",
@@ -613,7 +612,7 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("du.user_id")})).
 		// Outer-join grouped owned domains for retrieving their count
 		LeftJoin(
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.I("duo.user_id").As("user_id"), goqu.COUNT("*").As("cnt")).
 				Where(goqu.Ex{"duo.is_owner": true}).
 				GroupBy("duo.user_id").
@@ -680,7 +679,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	logger.Debugf("userService.ListDomainModerators(%s, %v)", domainID, enabledNotifyOnly)
 
 	// Prepare a query
-	q := db.From(goqu.T("cm_domains_users").As("du")).
+	q := svc.dbx().From(goqu.T("cm_domains_users").As("du")).
 		Select(
 			"u.*",
 			// Avatar
@@ -693,7 +692,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 		LeftJoin(goqu.T("cm_user_avatars").As("a"), goqu.On(goqu.Ex{"a.user_id": goqu.I("u.id")})).
 		// Outer-join grouped owned domains for retrieving their count
 		LeftJoin(
-			db.From(goqu.T("cm_domains_users").As("duo")).
+			svc.dbx().From(goqu.T("cm_domains_users").As("duo")).
 				Select(goqu.I("duo.user_id").As("user_id"), goqu.COUNT("*").As("cnt")).
 				Where(goqu.Ex{"duo.is_owner": true}).
 				GroupBy("duo.user_id").
@@ -721,7 +720,7 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 	logger.Debugf("userService.ListUserSessions(%s, %d)", userID, pageIndex)
 
 	// Prepare a query
-	q := db.From("cm_user_sessions").
+	q := svc.dbx().From("cm_user_sessions").
 		Where(goqu.Ex{"user_id": userID}).
 		Order(goqu.I("ts_created").Desc())
 
@@ -742,7 +741,7 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 }
 
 func (svc *userService) Persist(u *data.User) error {
-	if err := db.ExecOne(db.Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
+	if err := execOne(svc.dbx().Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
 		logger.Errorf("userService.Persist: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -803,7 +802,7 @@ func (svc *userService) UpdateLoginLocked(u *data.User) error {
 // handleUserEvent fires a user event. It returns true if the user has been modified during the event handling
 func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err error) {
 	// Skip unless the plugin manager is active
-	if !ThePluginManager.Active() {
+	if !Services.PluginManager().Active() {
 		return
 	}
 
@@ -815,7 +814,7 @@ func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err
 	uc := u.ToPluginUser()
 
 	// Fire an event
-	if err = ThePluginManager.HandleEvent(e); err != nil {
+	if err = Services.PluginManager().HandleEvent(e); err != nil {
 		return
 	}
 

@@ -31,7 +31,7 @@ func DomainUserList(params api_general.DomainUserListParams, user *data.User) mi
 	}
 
 	// Fetch domain users and corresponding users
-	um, dus, err := svc.TheUserService.ListByDomain(
+	um, dus, err := svc.Services.UserService(nil).ListByDomain(
 		&domain.ID,
 		user.IsSuperuser,
 		swag.StringValue(params.Filter),
@@ -74,7 +74,7 @@ func DomainUserUpdate(params api_general.DomainUserUpdateParams, user *data.User
 		WithNotifyReplies(params.Body.NotifyReplies).
 		WithNotifyModerator(params.Body.NotifyModerator).
 		WithNotifyCommentStatus(params.Body.NotifyCommentStatus)
-	if err := svc.TheDomainService.UserModify(du); err != nil {
+	if err := svc.Services.DomainService(nil /* TODO */).UserModify(du); err != nil {
 		return respServiceError(err)
 	}
 
@@ -94,7 +94,7 @@ func domainUserGet(domainID, userID strfmt.UUID, curUser *data.User) (*data.User
 		return nil, nil, r
 
 		// Find the domain user
-	} else if u, du, err := svc.TheUserService.FindDomainUserByID(uID, &domain.ID); err != nil {
+	} else if u, du, err := svc.Services.UserService(nil).FindDomainUserByID(uID, &domain.ID); err != nil {
 		return nil, nil, respServiceError(err)
 
 		// Make sure the domain user exists

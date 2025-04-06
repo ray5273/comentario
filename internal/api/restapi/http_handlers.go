@@ -122,13 +122,13 @@ func redirectToLangRootHandler(next http.Handler) http.Handler {
 				http.Redirect(
 					w,
 					r,
-					replacePath(r.URL, fmt.Sprintf("/%s/", svc.TheI18nService.GuessFrontendUserLanguage(r))),
+					replacePath(r.URL, fmt.Sprintf("/%s/", svc.Services.I18nService().GuessFrontendUserLanguage(r))),
 					http.StatusFound)
 				return
 
 			// If it's an "incomplete" language root, redirect to the full root, permanently
 			case 2:
-				if svc.TheI18nService.IsFrontendLang(p) {
+				if svc.Services.I18nService().IsFrontendLang(p) {
 					http.Redirect(
 						w,
 						r,
@@ -225,7 +225,7 @@ func staticHandler(next http.Handler) http.Handler {
 			if ok, p := config.ServerConfig.PathOfBaseURL(r.URL.Path); ok {
 				// Check if it's a static resource or a path on/under a language root
 				repl, static := util.UIStaticPaths[p]
-				hasLang := !static && len(p) >= 3 && p[2] == '/' && svc.TheI18nService.IsFrontendLang(p[0:2])
+				hasLang := !static && len(p) >= 3 && p[2] == '/' && svc.Services.I18nService().IsFrontendLang(p[0:2])
 				langRoot := hasLang && len(p) == 3 // If the path looks like 'xx/', it's a language root
 
 				// If it's a static file with placeholders, serve it with replacements
@@ -290,7 +290,7 @@ func webSocketsHandler(next http.Handler) http.Handler {
 			// Ignore if websockets aren't enabled. For now, we only support websockets subscription on the comment list
 			if strings.HasPrefix(p, util.WebSocketsPath+"comments") {
 				// Hand over to the websockets service
-				if err := svc.TheWebSocketsService.Add(w, r); err != nil {
+				if err := svc.Services.WebSocketsService().Add(w, r); err != nil {
 					// Failed to upgrade or accept
 					logger.Debugf("Failed to accept websocket connection: %v", err)
 

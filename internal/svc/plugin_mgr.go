@@ -33,11 +33,6 @@ type PluginManager interface {
 	Shutdown()
 }
 
-// ThePluginManager is a global plugin manager instance
-var ThePluginManager PluginManager = &pluginManager{
-	plugs: map[string]*pluginEntry{},
-}
-
 //----------------------------------------------------------------------------------------------------------------------
 
 // PluginConnector is a HostApp implementation aimed at a specific plugin instance
@@ -105,7 +100,7 @@ func newPluginConnector(pluginID string) PluginConnector {
 
 func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*cplugin.User, error) {
 	// Hand over to the cookie auth handler
-	u, err := TheAuthService.AuthenticateUserByCookieHeader(value)
+	u, err := Services.AuthService(nil).AuthenticateUserByCookieHeader(value)
 	if err != nil {
 		return nil, err
 	}
@@ -184,7 +179,7 @@ func (as *pluginAttrStore) Set(ownerID *uuid.UUID, attr cplugin.AttrValues) erro
 type userStore struct{}
 
 func (us *userStore) FindUserByID(id *uuid.UUID) (*cplugin.User, error) {
-	if u, err := TheUserService.FindUserByID(id); err != nil {
+	if u, err := Services.UserService(nil).FindUserByID(id); err != nil {
 		return nil, err
 	} else {
 		return u.ToPluginUser(), nil
@@ -203,6 +198,13 @@ type pluginEntry struct {
 // pluginManager is a blueprint PluginManager implementation
 type pluginManager struct {
 	plugs map[string]*pluginEntry // Map of loaded plugin entries by ID
+}
+
+// newPluginManager instantiates a new pluginManager
+func newPluginManager() *pluginManager {
+	return &pluginManager{
+		plugs: map[string]*pluginEntry{},
+	}
 }
 
 func (pm *pluginManager) Active() bool {

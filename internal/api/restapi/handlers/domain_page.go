@@ -33,7 +33,7 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 	}
 
 	// Fetch pages the user has access to
-	ps, err := svc.ThePageService.ListByDomainUser(
+	ps, err := svc.Services.PageService(nil).ListByDomainUser(
 		&user.ID,
 		domainID,
 		user.IsSuperuser,
@@ -79,7 +79,7 @@ func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User
 
 	// Update the page
 	ro := swag.BoolValue(params.Body.IsReadonly)
-	if err := svc.ThePageService.Update(page.WithIsReadonly(ro).WithPath(path)); err != nil {
+	if err := svc.Services.PageService(nil).Update(page.WithIsReadonly(ro).WithPath(path)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -100,7 +100,7 @@ func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user 
 	}
 
 	// Update the page title
-	if changed, err := svc.ThePageService.FetchUpdatePageTitle(domain, page); err != nil {
+	if changed, err := svc.Services.PageService(nil).FetchUpdatePageTitle(domain, page); err != nil {
 		return respServiceError(err)
 
 	} else {
@@ -120,13 +120,13 @@ func domainPageGetDomainUser(pageID strfmt.UUID, user *data.User) (*data.DomainP
 	}
 
 	// Fetch page
-	page, err := svc.ThePageService.FindByID(pageUUID)
+	page, err := svc.Services.PageService(nil).FindByID(pageUUID)
 	if err != nil {
 		return nil, nil, nil, respServiceError(err)
 	}
 
 	// Find the page's domain and user
-	domain, domainUser, err := svc.TheDomainService.FindDomainUserByID(&page.DomainID, &user.ID, false)
+	domain, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByID(&page.DomainID, &user.ID, false)
 	if err != nil {
 		return nil, nil, nil, respServiceError(err)
 	}

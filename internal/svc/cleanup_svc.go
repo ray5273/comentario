@@ -7,16 +7,15 @@ import (
 	"time"
 )
 
-var TheCleanupService CleanupService = &cleanupService{}
-
 type CleanupService interface {
-	// Init the service
-	Init() error
+	persistence.TxAware
+	// Run the service
+	Run() error
 }
 
-type cleanupService struct{}
+type cleanupService struct{ dbAware }
 
-func (svc *cleanupService) Init() error {
+func (svc *cleanupService) Run() error {
 	logger.Debugf("cleanupService: initialising")
 	go svc.cleanupExpiredAuthSessions()
 	go svc.cleanupExpiredTokens()
@@ -31,7 +30,7 @@ func (svc *cleanupService) cleanupExpiredAuthSessions() {
 	for svc.runLogSleep(
 		time.Hour,
 		"expired auth sessions",
-		db.Delete("cm_auth_sessions").
+		svc.dbx().Delete("cm_auth_sessions").
 			Where(goqu.I("ts_expires").Lt(time.Now().UTC())),
 	) == nil {
 	}
@@ -43,7 +42,7 @@ func (svc *cleanupService) cleanupExpiredTokens() {
 	for svc.runLogSleep(
 		time.Hour,
 		"expired tokens",
-		db.Delete("cm_tokens").
+		svc.dbx().Delete("cm_tokens").
 			Where(goqu.I("ts_expires").Lt(time.Now().UTC())),
 	) == nil {
 	}
@@ -55,7 +54,7 @@ func (svc *cleanupService) cleanupExpiredUserSessions() {
 	for svc.runLogSleep(
 		util.OneDay,
 		"expired user sessions",
-		db.Delete("cm_user_sessions").
+		svc.dbx().Delete("cm_user_sessions").
 			Where(goqu.I("ts_expires").Lt(time.Now().UTC())),
 	) == nil {
 	}
@@ -67,7 +66,7 @@ func (svc *cleanupService) cleanupStalePageViews() {
 	for svc.runLogSleep(
 		util.OneDay,
 		"stale page views",
-		db.Delete("cm_domain_page_views").
+		svc.dbx().Delete("cm_domain_page_views").
 			Where(goqu.I("ts_created").Lt(time.Now().UTC().Add(-util.PageViewRetentionPeriod))),
 	) == nil {
 	}

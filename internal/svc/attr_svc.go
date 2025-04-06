@@ -151,7 +151,7 @@ func (as *attrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
 
 		// Insert or update the record
 		a := &data.Attribute{Key: key, Value: value, UpdatedTime: time.Now().UTC()}
-		err := db.ExecOne(db.Insert(goqu.T(as.tableName).As("t")).
+		err := execOne(db.Insert(goqu.T(as.tableName).As("t")).
 			// Can't just pass a struct here since we depend on the variable key column name
 			Rows(goqu.Record{as.keyColName: ownerID, "key": a.Key, "value": a.Value, "ts_updated": a.UpdatedTime}).
 			OnConflict(goqu.DoUpdate(as.keyColName+",key", a)))

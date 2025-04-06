@@ -31,7 +31,7 @@ var i18nFS embed.FS // Translations
 
 func main() {
 	// Init the version service
-	svc.TheVersionService.Init(version, date)
+	svc.Services.VersionService().Init(version, date)
 
 	// Load the embedded Swagger file
 	swaggerSpec, err := loads.Analyzed(restapi.SwaggerJSON, "")
@@ -54,7 +54,7 @@ func main() {
 
 	// Load and init plugins. It has to happen *before* API configuration and service initialisation, because they take
 	// plugin configs into account
-	if err := svc.ThePluginManager.Init(); err != nil {
+	if err := svc.Services.PluginManager().Init(); err != nil {
 		logger.Fatalf("Failed to init plugin manager: %v", err)
 	}
 
@@ -62,12 +62,7 @@ func main() {
 	server.ConfigureAPI()
 
 	// Initialise the service manager
-	svc.TheServiceManager.Initialise()
-
-	// Activate plugin
-	if err := svc.ThePluginManager.ActivatePlugins(); err != nil {
-		logger.Fatalf("Failed to activate plugins: %v", err)
-	}
+	svc.Services.Initialise()
 
 	// Serve the API
 	if err := server.Serve(); err != nil {

@@ -5,6 +5,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"time"
 )
 
@@ -49,11 +50,9 @@ func (ir *ImportResult) WithError(err error) *ImportResult {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// TheImportExportService is a global ImportExportService implementation
-var TheImportExportService ImportExportService = &importExportService{}
-
 // ImportExportService is a service interface for dealing with data import/export
 type ImportExportService interface {
+	persistence.TxAware
 	// Export exports the data for the specified domain, returning gzip-compressed binary data
 	Export(domainID *uuid.UUID) ([]byte, error)
 	// Import performs data import in the native Comentario (or legacy Commento v1/Comentario v2) format from the
@@ -70,7 +69,7 @@ type ImportExportService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // importExportService is a blueprint ImportExportService implementation
-type importExportService struct{}
+type importExportService struct{ dbAware }
 
 // importError returns an ImportResult containing only the specified error
 func importError(err error) *ImportResult {
@@ -102,7 +101,7 @@ func (svc *importExportService) ImportWordPress(curUser *data.User, domain *data
 func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID][]*data.Comment, countsPerPage map[uuid.UUID]int) (countImported, countNonDeleted int, err error) {
 	for _, c := range commentParentMap[parentID] {
 		// Insert the comment
-		if err = TheCommentService.Create(c); err != nil {
+		if err = Services.CommentService(nil /* TODO */).Create(c); err != nil {
 			return
 		}
 		countImported++
@@ -126,12 +125,12 @@ func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID]
 func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, realEmail, federatedSSO bool, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
 	// Try to find an existing user with the same email
 	var user *data.User
-	if u, err := TheUserService.FindUserByEmail(email); err == nil {
+	if u, err := Services.UserService(nil /* TODO */).FindUserByEmail(email); err == nil {
 		// User already exists
 		user = u
 
 		// Check if domain user exists, too
-		if _, du, err := TheDomainService.FindDomainUserByID(domainID, &u.ID, false); err != nil {
+		if _, du, err := Services.DomainService(nil /* TODO */).FindDomainUserByID(domainID, &u.ID, false); err != nil {
 			return nil, false, false, err
 		} else if du != nil {
 			// Domain user already exists
@@ -153,19 +152,19 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 		if federatedSSO || federatedIdpID != "" {
 			user.WithFederated("", federatedIdpID)
 		}
-		if err := TheUserService.Create(user); err != nil {
+		if err := Services.UserService(nil /* TODO */).Create(user); err != nil {
 			return nil, false, false, err
 		}
 
 		// If the email is real and Gravatar is enabled, enqueue a fetching operation
 		if realEmail && TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
-			TheAvatarService.QueueGravatarUpdate(&user.ID, user.Email)
+			Services.GravatarProcessor().Enqueue(&user.ID, user.Email)
 		}
 		userAdded = true
 	}
 
 	// Add a domain user as well
-	if err := TheDomainService.UserAdd(data.NewDomainUser(domainID, &user.ID, false, false, true).WithCreated(creationTime)); err != nil {
+	if err := Services.DomainService(nil /* TODO */).UserAdd(data.NewDomainUser(domainID, &user.ID, false, false, true).WithCreated(creationTime)); err != nil {
 		return user, userAdded, false, err
 	}
 
