@@ -20,7 +20,7 @@ type AuthSessionService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // authSessionService is a blueprint AuthSessionService implementation
-type authSessionService struct{ dbAware }
+type authSessionService struct{ dbTxAware }
 
 func (svc *authSessionService) Create(sessData, host, token string) (*data.AuthSession, error) {
 	logger.Debugf("authSessionService.Create(%q, %q, %q)", sessData, host, token)

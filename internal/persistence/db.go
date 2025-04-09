@@ -23,6 +23,7 @@ import (
 	"regexp"
 	"sort"
 	"strings"
+	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -158,6 +159,15 @@ func InitDB() (*Database, error) {
 
 	// Succeeded
 	return db, nil
+}
+
+// Begin initiates and returns a new transaction
+func (db *Database) Begin() (*DatabaseTx, error) {
+	if gtx, err := db.goquDB().Begin(); err != nil {
+		return nil, err
+	} else {
+		return &DatabaseTx{tx: gtx}, nil
+	}
 }
 
 func (db *Database) Delete(table any) *goqu.DeleteDataset {
@@ -359,6 +369,32 @@ func (db *Database) Version() string {
 		}
 	}
 	return db.version
+}
+
+// WithTx runs the provided function in the context of a transaction, which is created before calling the function and
+// either committed or rolled back (if the function returned an error)
+func (db *Database) WithTx(f func(tx *DatabaseTx) error) (err error) {
+	// Initiate a transaction
+	tx, err := db.Begin()
+	if err != nil {
+		return err
+	}
+
+	// Call the wrapped function, providing it with an instance of the transaction
+	defer func() {
+		if p := recover(); p != nil {
+			_ = tx.Rollback()
+			panic(p)
+		}
+		if err != nil {
+			if e := tx.Rollback(); e != nil {
+				err = e
+			}
+		} else if e := tx.Commit(); e != nil {
+			err = e
+		}
+	}()
+	return f(tx)
 }
 
 // connect establishes a database connection up to the configured number of attempts
@@ -683,31 +719,61 @@ func (db *Database) tryConnect(num, total int) (err error) {
 
 // DatabaseTx represents a database transaction, implementing DBX
 type DatabaseTx struct {
-	tx *goqu.TxDatabase
+	tx     *goqu.TxDatabase // Reference to the underlying transaction
+	rbhs   []func()         // List of rollback handlers
+	rbhsMu sync.Mutex       // Mutex for rbhs
 }
 
+// AddRollbackHandler appends the given rollback cleanup function to the transaction
+func (dt *DatabaseTx) AddRollbackHandler(rbh func()) {
+	dt.rbhsMu.Lock()
+	defer dt.rbhsMu.Unlock()
+	dt.rbhs = append(dt.rbhs, rbh)
+}
+
+// Commit the transaction
+func (dt *DatabaseTx) Commit() error {
+	return dt.tx.Commit()
+}
+
+// Delete implementation of DBX
 func (dt *DatabaseTx) Delete(table any) *goqu.DeleteDataset {
 	return dt.tx.Delete(table)
 }
 
+// From implementation of DBX
 func (dt *DatabaseTx) From(v ...any) *goqu.SelectDataset {
 	return dt.tx.From(v...)
 }
 
+// Insert implementation of DBX
 func (dt *DatabaseTx) Insert(table any) *goqu.InsertDataset {
 	return dt.tx.Insert(table)
 }
 
+// Rollback the transaction
+func (dt *DatabaseTx) Rollback() error {
+	// Invoke all registered rollback handlers
+	for _, rbh := range dt.rbhs {
+		rbh()
+	}
+	// Roll back the DB transaction
+	return dt.tx.Rollback()
+}
+
+// Update implementation of DBX
 func (dt *DatabaseTx) Update(table any) *goqu.UpdateDataset {
 	return dt.tx.Update(table)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// TxAware is used as a base interface for services making use of database transactions
+// TxAware is used as a base interface for services capable of handling transactions
 type TxAware interface {
-	// Tx returns transaction to execute its DB statements in, if any, otherwise nil
-	Tx() *DatabaseTx
+	// TxCommit commits the running transaction
+	TxCommit() error
+	// TxRollback rolls back the running transaction
+	TxRollback() error
 }
 
 //----------------------------------------------------------------------------------------------------------------------

@@ -49,7 +49,7 @@ type AuthService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // authService is a blueprint AuthSessionService implementation
-type authService struct{ dbAware }
+type authService struct{ dbTxAware }
 
 // AuthenticateBearerToken inspects the token (usually provided in a header) and determines if the token is of one of
 // the provided scopes

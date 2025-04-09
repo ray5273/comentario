@@ -51,7 +51,7 @@ type PageService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // pageService is a blueprint PageService implementation
-type pageService struct{ dbAware }
+type pageService struct{ dbTxAware }
 
 func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error) {
 	logger.Debugf("pageService.CommentCounts(%s, [%d items])", domainID, len(paths))

@@ -82,7 +82,7 @@ type CommentService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // commentService is a blueprint CommentService implementation
-type commentService struct{ dbAware }
+type commentService struct{ dbTxAware }
 
 func (svc *commentService) Count(
 	curUser *data.User, curDomainUser *data.DomainUser, domainID, pageID, userID *uuid.UUID,

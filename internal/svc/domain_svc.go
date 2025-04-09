@@ -88,7 +88,7 @@ type DomainService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // domainService is a blueprint DomainService implementation
-type domainService struct{ dbAware }
+type domainService struct{ dbTxAware }
 
 func (svc *domainService) ClearByID(id *uuid.UUID) error {
 	logger.Debugf("domainService.ClearByID(%s)", id)

@@ -10,6 +10,7 @@ import (
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"maps"
 	"time"
@@ -26,8 +27,14 @@ const (
 	MaxAttrValueLength = 4096 // Maximum length allowed for an attribute value
 )
 
+// AttrService is a service interface extending plugin.AttrStore
+type AttrService interface {
+	persistence.TxAware
+	plugin.AttrStore
+}
+
 // newAttrStore returns a new AttrStore implementation
-func newAttrStore(tableName, keyColName string, checkAnonymous bool) plugin.AttrStore {
+func newAttrStore(tableName, keyColName string, checkAnonymous bool) AttrService {
 	as := &attrStore{
 		cache: ttlcache.New[uuid.UUID, plugin.AttrValues](
 			ttlcache.WithTTL[uuid.UUID, plugin.AttrValues](util.AttrCacheTTL)),
@@ -46,6 +53,57 @@ func newAttrStore(tableName, keyColName string, checkAnonymous bool) plugin.Attr
 	// Start the cache cleaner
 	go as.cache.Start()
 	return as
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// Key used for indexing overridden values in attrService
+type attrServiceKey struct {
+	uuid.UUID // Owner ID
+	string    // Attribute key
+}
+
+// attrService is a blueprint attribute service implementation, which makes use of an underlying attribute store
+type attrService struct {
+	s    attrStore
+	vals map[attrServiceKey]string
+}
+
+func (a *attrService) TxCommit() error {
+	// Apply all set values to the underlying store
+	// TODO
+	return nil
+}
+
+func (a *attrService) TxRollback() error {
+	// Do nothing: the underlying store remains unchanged
+	return nil
+}
+
+func (a *attrService) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
+	// Query the underlying store first
+	r, err := a.s.FindByAttrValue(key, value)
+	if err != nil {
+		return nil, err
+	}
+
+	// Now apply any value overrides
+	for k, v := range a.vals {
+		// !!!
+	}
+}
+
+func (a *attrService) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
+	//TODO implement me
+	panic("implement me")
+}
+
+func (a *attrService) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
+	// Store the value as an override
+	for k, v := range attr {
+		a.vals[attrServiceKey{*ownerID, k}] = v
+	}
+	return nil
 }
 
 //----------------------------------------------------------------------------------------------------------------------

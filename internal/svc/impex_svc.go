@@ -69,7 +69,7 @@ type ImportExportService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // importExportService is a blueprint ImportExportService implementation
-type importExportService struct{ dbAware }
+type importExportService struct{ dbTxAware }
 
 // importError returns an ImportResult containing only the specified error
 func importError(err error) *ImportResult {

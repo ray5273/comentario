@@ -40,7 +40,7 @@ type StatsService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // statsService is a blueprint StatsService implementation
-type statsService struct{ dbAware }
+type statsService struct{ dbTxAware }
 
 func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error) {
 	logger.Debugf("statsService.GetDailyCommentCounts(%v, %s, %s, %d)", isSuperuser, userID, domainID, numDays)

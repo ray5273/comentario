@@ -86,7 +86,7 @@ type UserService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // userService is a blueprint UserService implementation
-type userService struct{ dbAware }
+type userService struct{ dbTxAware }
 
 func (svc *userService) ConfirmUser(u *data.User) error {
 	logger.Debugf("userService.ConfirmUser(%v)", u)

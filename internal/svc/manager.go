@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"errors"
 	"fmt"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/intf"
@@ -75,18 +76,28 @@ type ServiceManager interface {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// dbAware is a base implementation of persistence.TxAware
-type dbAware struct {
+// dbTxAware is a database implementation of persistence.TxAware
+type dbTxAware struct {
 	tx *persistence.DatabaseTx // Optional transaction
 }
 
-func (d *dbAware) Tx() *persistence.DatabaseTx {
-	return d.tx
+func (d *dbTxAware) TxCommit() error {
+	if d.tx == nil {
+		return errors.New("commit: no transaction")
+	}
+	return d.tx.Commit()
+}
+
+func (d *dbTxAware) TxRollback() error {
+	if d.tx == nil {
+		return errors.New("rollback: no transaction")
+	}
+	return d.tx.Rollback()
 }
 
 // dbx returns a database executor to be used with database statements and queries: the transaction, if set, otherwise
 // the database itself
-func (d *dbAware) dbx() persistence.DBX {
+func (d *dbTxAware) dbx() persistence.DBX {
 	if d.tx != nil {
 		return d.tx
 	}
@@ -118,19 +129,19 @@ func (m *serviceManager) GravatarProcessor() GravatarProcessor {
 }
 
 func (m *serviceManager) AuthService(tx *persistence.DatabaseTx) AuthService {
-	return &authService{dbAware{tx}}
+	return &authService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) AuthSessionService(tx *persistence.DatabaseTx) AuthSessionService {
-	return &authSessionService{dbAware{tx}}
+	return &authSessionService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) AvatarService(tx *persistence.DatabaseTx) AvatarService {
-	return &avatarService{dbAware{tx}}
+	return &avatarService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) CommentService(tx *persistence.DatabaseTx) CommentService {
-	return &commentService{dbAware{tx}}
+	return &commentService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService {
@@ -139,7 +150,7 @@ func (m *serviceManager) DomainConfigService(tx *persistence.DatabaseTx) DomainC
 }
 
 func (m *serviceManager) DomainService(tx *persistence.DatabaseTx) DomainService {
-	return &domainService{dbAware{tx}}
+	return &domainService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) DynConfigService(tx *persistence.DatabaseTx) DynConfigService {
@@ -155,7 +166,7 @@ func (m *serviceManager) I18nService() I18nService {
 }
 
 func (m *serviceManager) ImportExportService(tx *persistence.DatabaseTx) ImportExportService {
-	return &importExportService{dbAware{tx}}
+	return &importExportService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) MailService() MailService {
@@ -166,7 +177,7 @@ func (m *serviceManager) MailService() MailService {
 }
 
 func (m *serviceManager) PageService(tx *persistence.DatabaseTx) PageService {
-	return &pageService{dbAware{tx}}
+	return &pageService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) PerlustrationService() PerlustrationService {
@@ -178,15 +189,15 @@ func (m *serviceManager) PluginManager() PluginManager {
 }
 
 func (m *serviceManager) StatsService(tx *persistence.DatabaseTx) StatsService {
-	return &statsService{dbAware{tx}}
+	return &statsService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) TokenService(tx *persistence.DatabaseTx) TokenService {
-	return &tokenService{dbAware{tx}}
+	return &tokenService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) UserService(tx *persistence.DatabaseTx) UserService {
-	return &userService{dbAware{tx}}
+	return &userService{dbTxAware{tx}}
 }
 
 func (m *serviceManager) VersionService() intf.VersionService {

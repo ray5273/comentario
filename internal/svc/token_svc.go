@@ -25,7 +25,7 @@ type TokenService interface {
 //----------------------------------------------------------------------------------------------------------------------
 
 // tokenService is a blueprint TokenService implementation
-type tokenService struct{ dbAware }
+type tokenService struct{ dbTxAware }
 
 func (svc *tokenService) Create(t *data.Token) error {
 	logger.Debugf("tokenService.Create(%#v)", t)

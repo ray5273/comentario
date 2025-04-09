@@ -13,7 +13,7 @@ type CleanupService interface {
 	Run() error
 }
 
-type cleanupService struct{ dbAware }
+type cleanupService struct{ dbTxAware }
 
 func (svc *cleanupService) Run() error {
 	logger.Debugf("cleanupService: initialising")

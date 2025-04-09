@@ -46,7 +46,7 @@ type GravatarProcessor interface {
 }
 
 // avatarService is a blueprint AvatarService implementation
-type avatarService struct{ dbAware }
+type avatarService struct{ dbTxAware }
 
 //----------------------------------------------------------------------------------------------------------------------
 

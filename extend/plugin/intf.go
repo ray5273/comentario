@@ -42,7 +42,7 @@ type HostApp interface {
 }
 
 // AttrValues is a key-indexed value map
-type AttrValues map[string]string
+type AttrValues = map[string]string
 
 // AttrStore allows to store and retrieve attributes consisting of a string key and a string value
 type AttrStore interface {
