@@ -13,28 +13,17 @@ import (
 	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"maps"
+	"slices"
 	"time"
 )
-
-// TheUserAttrService is a global, unprefixed user attribute store
-var TheUserAttrService = newAttrStore("cm_user_attrs", "user_id", true)
-
-// TheDomainAttrService is a global, unprefixed domain attribute store
-var TheDomainAttrService = newAttrStore("cm_domain_attrs", "domain_id", false)
 
 const (
 	MaxAttrKeyLength   = 255  // Maximum length allowed for an attribute key
 	MaxAttrValueLength = 4096 // Maximum length allowed for an attribute value
 )
 
-// AttrService is a service interface extending plugin.AttrStore
-type AttrService interface {
-	persistence.TxAware
-	plugin.AttrStore
-}
-
-// newAttrStore returns a new AttrStore implementation
-func newAttrStore(tableName, keyColName string, checkAnonymous bool) AttrService {
+// newAttrStore returns a new attrStore implementation
+func newAttrStore(tableName, keyColName string, checkAnonymous bool) *attrStore {
 	as := &attrStore{
 		cache: ttlcache.New[uuid.UUID, plugin.AttrValues](
 			ttlcache.WithTTL[uuid.UUID, plugin.AttrValues](util.AttrCacheTTL)),
@@ -55,54 +44,106 @@ func newAttrStore(tableName, keyColName string, checkAnonymous bool) AttrService
 	return as
 }
 
+// newTxAttrStore returns a new transactional attribute store implementation based on the given underlying attrStore
+func newTxAttrStore(as *attrStore, tx *persistence.DatabaseTx) *txAttrStore {
+	s := &txAttrStore{s: as}
+
+	// Register commit/rollback handlers
+	tx.AddCommitHandler(s.TxCommit)
+	tx.AddRollbackHandler(s.TxRollback)
+	return s
+}
+
 //----------------------------------------------------------------------------------------------------------------------
 
-// Key used for indexing overridden values in attrService
-type attrServiceKey struct {
-	uuid.UUID // Owner ID
-	string    // Attribute key
+// txAttrStore is a blueprint attribute service implementation, which makes use of an underlying attribute store
+type txAttrStore struct {
+	s *attrStore                      // Underlying (database-backed) attribute store
+	v map[uuid.UUID]plugin.AttrValues // Overridden values
 }
 
-// attrService is a blueprint attribute service implementation, which makes use of an underlying attribute store
-type attrService struct {
-	s    attrStore
-	vals map[attrServiceKey]string
-}
+func (a *txAttrStore) TxCommit() error {
+	// Apply all set values, if any, to the underlying store
+	if a.v != nil {
+		for id, av := range a.v {
+			if err := a.s.Set(&id, av); err != nil {
+				return err
+			}
+		}
 
-func (a *attrService) TxCommit() error {
-	// Apply all set values to the underlying store
-	// TODO
+		// Cleanup the overrides
+		a.v = nil
+	}
 	return nil
 }
 
-func (a *attrService) TxRollback() error {
+func (a *txAttrStore) TxRollback() error {
 	// Do nothing: the underlying store remains unchanged
 	return nil
 }
 
-func (a *attrService) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
+func (a *txAttrStore) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
+	// Query the underlying store first and convert the result into a set
+	rs := map[uuid.UUID]bool{}
+	if r, err := a.s.FindByAttrValue(key, value); err != nil {
+		return nil, err
+	} else {
+		for _, id := range r {
+			rs[id] = true
+		}
+	}
+
+	// Search for any matches in the overrides
+	if a.v != nil {
+		for id, av := range a.v {
+			if rs[id] {
+				// If there was a match, but not anymore, remove the key from the set
+				if av[key] != value {
+					delete(rs, id)
+				}
+
+			} else if av[key] == value {
+				// There's a new match: add the key
+				rs[id] = true
+			}
+		}
+	}
+
+	// Collect the keys (IDs)
+	return slices.Collect(maps.Keys(rs)), nil
+}
+
+func (a *txAttrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
 	// Query the underlying store first
-	r, err := a.s.FindByAttrValue(key, value)
+	r, err := a.s.GetAll(ownerID)
 	if err != nil {
 		return nil, err
 	}
 
-	// Now apply any value overrides
-	for k, v := range a.vals {
-		// !!!
+	// Apply any overrides
+	if a.v != nil {
+		if av, ok := a.v[*ownerID]; ok {
+			maps.Copy(r, av)
+		}
 	}
+	return r, nil
 }
 
-func (a *attrService) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
-	//TODO implement me
-	panic("implement me")
-}
-
-func (a *attrService) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
-	// Store the value as an override
-	for k, v := range attr {
-		a.vals[attrServiceKey{*ownerID, k}] = v
+func (a *txAttrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
+	// Create an override map if none yet
+	if a.v != nil {
+		a.v = make(map[uuid.UUID]plugin.AttrValues)
 	}
+
+	// Create an AttrValues map if none yet for this owner
+	av := a.v[*ownerID]
+	if av == nil {
+		av = make(plugin.AttrValues)
+		a.v[*ownerID] = av
+	}
+
+	// Store the value(s) as an override
+	maps.Copy(av, attr)
 	return nil
 }
 

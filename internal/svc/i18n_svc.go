@@ -28,6 +28,8 @@ type I18nService interface {
 	GuessFrontendUserLanguage(r *http.Request) string
 	// Init the service
 	Init() error
+	// Inited indicates whether the service is initialised
+	Inited() bool
 	// IsFrontendLang returns whether the provided string is a supported frontend (Admin UI) language
 	IsFrontendLang(s string) bool
 	// IsFrontendTag returns whether the provided language tag is a supported frontend (Admin UI) language
@@ -179,6 +181,10 @@ func (svc *i18nService) Init() error {
 
 	// Succeeded
 	return nil
+}
+
+func (svc *i18nService) Inited() bool {
+	return svc.bundle != nil
 }
 
 func (svc *i18nService) IsFrontendLang(s string) bool {

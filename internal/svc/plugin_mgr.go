@@ -93,8 +93,8 @@ func newPluginConnector(pluginID string) PluginConnector {
 	prefix := pluginID + "/"
 	return &pluginConnector{
 		pluginID:        pluginID,
-		domainAttrStore: &pluginAttrStore{p: prefix, s: TheDomainAttrService},
-		userAttrStore:   &pluginAttrStore{p: prefix, s: TheUserAttrService},
+		domainAttrStore: &pluginAttrStore{p: prefix, s: Services.DomainAttrService(nil)},
+		userAttrStore:   &pluginAttrStore{p: prefix, s: Services.UserAttrService(nil)},
 	}
 }
 

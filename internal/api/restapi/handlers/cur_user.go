@@ -97,7 +97,7 @@ func CurUserGet(params api_general.CurUserGetParams) middleware.Responder {
 	}
 
 	// Fetch the user's attributes
-	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	attr, err := svc.Services.UserAttrService(nil).GetAll(&user.ID)
 	if err != nil {
 		return respServiceError(err)
 	}

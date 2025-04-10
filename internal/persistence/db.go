@@ -719,20 +719,36 @@ func (db *Database) tryConnect(num, total int) (err error) {
 
 // DatabaseTx represents a database transaction, implementing DBX
 type DatabaseTx struct {
-	tx     *goqu.TxDatabase // Reference to the underlying transaction
-	rbhs   []func()         // List of rollback handlers
-	rbhsMu sync.Mutex       // Mutex for rbhs
+	tx    *goqu.TxDatabase // Reference to the underlying transaction
+	chs   []func() error   // List of commit handlers
+	chsMu sync.Mutex       // Mutex for chs
+	rhs   []func() error   // List of rollback handlers
+	rhsMu sync.Mutex       // Mutex for rhs
+}
+
+// AddCommitHandler appends the given commit cleanup function to the transaction
+func (dt *DatabaseTx) AddCommitHandler(f func() error) {
+	dt.chsMu.Lock()
+	defer dt.chsMu.Unlock()
+	dt.chs = append(dt.chs, f)
 }
 
 // AddRollbackHandler appends the given rollback cleanup function to the transaction
-func (dt *DatabaseTx) AddRollbackHandler(rbh func()) {
-	dt.rbhsMu.Lock()
-	defer dt.rbhsMu.Unlock()
-	dt.rbhs = append(dt.rbhs, rbh)
+func (dt *DatabaseTx) AddRollbackHandler(f func() error) {
+	dt.rhsMu.Lock()
+	defer dt.rhsMu.Unlock()
+	dt.rhs = append(dt.rhs, f)
 }
 
 // Commit the transaction
 func (dt *DatabaseTx) Commit() error {
+	// Invoke all registered commit handlers
+	for _, f := range dt.chs {
+		if err := f(); err != nil {
+			return err
+		}
+	}
+	// Commit the DB transaction
 	return dt.tx.Commit()
 }
 
@@ -754,8 +770,10 @@ func (dt *DatabaseTx) Insert(table any) *goqu.InsertDataset {
 // Rollback the transaction
 func (dt *DatabaseTx) Rollback() error {
 	// Invoke all registered rollback handlers
-	for _, rbh := range dt.rbhs {
-		rbh()
+	for _, f := range dt.rhs {
+		if err := f(); err != nil {
+			return err
+		}
 	}
 	// Roll back the DB transaction
 	return dt.tx.Rollback()

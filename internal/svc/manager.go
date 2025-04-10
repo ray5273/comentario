@@ -3,6 +3,7 @@ package svc
 import (
 	"errors"
 	"fmt"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/persistence"
@@ -10,11 +11,7 @@ import (
 )
 
 // Services is a global service serviceManager interface
-var Services ServiceManager = &serviceManager{
-	plugMgr: newPluginManager(),
-	verSvc:  &versionService{},
-	wsSvc:   newWebSocketsService(),
-}
+var Services ServiceManager = newServiceManager()
 
 // db is a global database instance (only available in the services package)
 var db *persistence.Database
@@ -41,6 +38,8 @@ type ServiceManager interface {
 	AvatarService(tx *persistence.DatabaseTx) AvatarService
 	// CommentService returns an instance of CommentService
 	CommentService(tx *persistence.DatabaseTx) CommentService
+	// DomainAttrService returns an instance of an plugin.AttrStore for domains
+	DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore
 	// DomainConfigService returns an instance of DomainConfigService
 	DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService
 	// DomainService returns an instance of DomainService
@@ -65,6 +64,8 @@ type ServiceManager interface {
 	TokenService(tx *persistence.DatabaseTx) TokenService
 	// UserService returns an instance of UserService
 	UserService(tx *persistence.DatabaseTx) UserService
+	// UserAttrService returns an instance of an plugin.AttrStore for users
+	UserAttrService(tx *persistence.DatabaseTx) plugin.AttrStore
 	// VersionService returns an instance of VersionService
 	VersionService() intf.VersionService
 	// WebSocketsService returns an instance of WebSocketsService
@@ -107,16 +108,32 @@ func (d *dbTxAware) dbx() persistence.DBX {
 //----------------------------------------------------------------------------------------------------------------------
 
 type serviceManager struct {
-	inited   bool
-	gp       GravatarProcessor    // Instance of a GravatarProcessor (lazy-inited)
-	gpMu     sync.Mutex           // Mutex for gp
-	cleanSvc CleanupService       // Cleanup service singleton
-	i18nSvc  I18nService          // I18n service singleton
-	mailSvc  MailService          // Mail service singleton
-	perlSvc  PerlustrationService // Perlustration service singleton
-	plugMgr  PluginManager        // Plugin manager singleton
-	verSvc   intf.VersionService  // Version service singleton
-	wsSvc    WebSocketsService    // WebSockets service singleton
+	inited      bool
+	gp          GravatarProcessor    // Instance of a GravatarProcessor (lazy-inited)
+	gpMu        sync.Mutex           // Mutex for gp
+	cleanSvc    CleanupService       // Cleanup service singleton
+	i18nSvc     I18nService          // I18n service singleton
+	mailSvc     MailService          // Mail service singleton
+	perlSvc     PerlustrationService // Perlustration service singleton
+	plugMgr     PluginManager        // Plugin manager singleton
+	verSvc      intf.VersionService  // Version service singleton
+	wsSvc       WebSocketsService    // WebSockets service singleton
+	domainAttrs *attrStore           // Cached domain attribute store singleton
+	userAttrs   *attrStore           // Cached user attribute store singleton
+}
+
+func newServiceManager() *serviceManager {
+	return &serviceManager{
+		cleanSvc:    &cleanupService{},
+		i18nSvc:     newI18nService(),
+		mailSvc:     newMailService(),
+		perlSvc:     &perlustrationService{},
+		plugMgr:     newPluginManager(),
+		verSvc:      &versionService{},
+		wsSvc:       newWebSocketsService(),
+		domainAttrs: newAttrStore("cm_domain_attrs", "domain_id", false),
+		userAttrs:   newAttrStore("cm_user_attrs", "user_id", true),
+	}
 }
 
 func (m *serviceManager) GravatarProcessor() GravatarProcessor {
@@ -144,6 +161,16 @@ func (m *serviceManager) CommentService(tx *persistence.DatabaseTx) CommentServi
 	return &commentService{dbTxAware{tx}}
 }
 
+func (m *serviceManager) DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
+	// Use the attr store directly if there's no transaction
+	if tx == nil {
+		return m.domainAttrs
+	}
+
+	// Wrap in a txAttrStore otherwise
+	return newTxAttrStore(m.domainAttrs, tx)
+}
+
 func (m *serviceManager) DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService {
 	//TODO implement me
 	panic("implement me")
@@ -159,7 +186,7 @@ func (m *serviceManager) DynConfigService(tx *persistence.DatabaseTx) DynConfigS
 }
 
 func (m *serviceManager) I18nService() I18nService {
-	if m.i18nSvc == nil {
+	if !m.i18nSvc.Inited() {
 		panic("serviceManager: I18nService hasn't been initialised yet")
 	}
 	return m.i18nSvc
@@ -170,9 +197,6 @@ func (m *serviceManager) ImportExportService(tx *persistence.DatabaseTx) ImportE
 }
 
 func (m *serviceManager) MailService() MailService {
-	if m.mailSvc == nil {
-		m.mailSvc = newMailService()
-	}
 	return m.mailSvc
 }
 
@@ -194,6 +218,16 @@ func (m *serviceManager) StatsService(tx *persistence.DatabaseTx) StatsService {
 
 func (m *serviceManager) TokenService(tx *persistence.DatabaseTx) TokenService {
 	return &tokenService{dbTxAware{tx}}
+}
+
+func (m *serviceManager) UserAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
+	// Use the attr store directly if there's no transaction
+	if tx == nil {
+		return m.userAttrs
+	}
+
+	// Wrap in a txAttrStore otherwise
+	return newTxAttrStore(m.userAttrs, tx)
 }
 
 func (m *serviceManager) UserService(tx *persistence.DatabaseTx) UserService {
@@ -250,13 +284,11 @@ func (m *serviceManager) Initialise() {
 
 	// Init i18n
 	var err error
-	m.i18nSvc = newI18nService()
 	if err = m.i18nSvc.Init(); err != nil {
 		logger.Fatalf("Failed to initialise i18n: %v", err)
 	}
 
 	// Init content scanners
-	m.perlSvc = &perlustrationService{}
 	m.perlSvc.Init()
 
 	// Initiate a DB connection
@@ -277,7 +309,6 @@ func (m *serviceManager) Initialise() {
 
 func (m *serviceManager) Run() {
 	// Start the cleanup service
-	m.cleanSvc = &cleanupService{}
 	if err := m.cleanSvc.Run(); err != nil {
 		logger.Fatalf("Failed to run cleanup service: %v", err)
 	}

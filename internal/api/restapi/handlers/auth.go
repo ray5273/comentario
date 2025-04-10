@@ -245,7 +245,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 	}
 
 	// Fetch the user's attributes
-	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	attr, err := svc.Services.UserAttrService(nil /* TODO */).GetAll(&user.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -274,7 +274,7 @@ func authCreateLoginToken(ownerID *uuid.UUID) (*data.Token, error) {
 // authAddUserSessionToResponse returns a responder that sets a session cookie for the given session and user
 func authAddUserSessionToResponse(resp PrincipalResponder, user *data.User, us *data.UserSession) middleware.Responder {
 	// Fetch the user's attributes
-	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	attr, err := svc.Services.UserAttrService(nil /* TODO */).GetAll(&user.ID)
 	if err != nil {
 		return respServiceError(err)
 	}

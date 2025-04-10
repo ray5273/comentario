@@ -25,7 +25,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	}
 
 	// Fetch the user's attributes
-	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	attr, err := svc.Services.UserAttrService(nil /* TODO */).GetAll(&user.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -76,7 +76,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 	}
 
 	// Fetch the user's attributes
-	attr, err := svc.TheUserAttrService.GetAll(&user.ID)
+	attr, err := svc.Services.UserAttrService(nil /* TODO */).GetAll(&user.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -157,7 +157,7 @@ func EmbedAuthCurUserGet(params api_embed.EmbedAuthCurUserGetParams) middleware.
 			// User is authenticated. Try to find the corresponding domain user by the host stored in the session
 			if _, domainUser, err := svc.Services.DomainService(nil).FindDomainUserByHost(userSession.Host, &user.ID, true); err == nil {
 				// Fetch the user's attributes
-				if attr, err := svc.TheUserAttrService.GetAll(&user.ID); err != nil {
+				if attr, err := svc.Services.UserAttrService(nil).GetAll(&user.ID); err != nil {
 					return respServiceError(err)
 				} else {
 					// Succeeded: user is authenticated
