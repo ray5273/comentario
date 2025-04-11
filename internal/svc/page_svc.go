@@ -1,6 +1,7 @@
 package svc
 
 import (
+	"container/list"
 	"database/sql"
 	"github.com/avct/uasurfer"
 	"github.com/doug-martin/goqu/v9"
@@ -12,6 +13,7 @@ import (
 	"net/http"
 	"net/url"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -46,6 +48,12 @@ type PageService interface {
 	// new pageview (if req is not nil), returning whether the page was added. title is an optional page title, if not
 	// provided, it will be fetched from the URL in the background
 	UpsertByDomainPath(domain *data.Domain, path, title string, req *http.Request) (*data.DomainPage, bool, error)
+}
+
+// PageTitleFetcher is a service for background page title fetching
+type PageTitleFetcher interface {
+	// Enqueue adds a request to the queue
+	Enqueue(domain *data.Domain, page *data.DomainPage)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -310,7 +318,7 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path, title stri
 
 		// If no title was provided, fetch it in the background, ignoring possible errors
 		if title == "" {
-			go func() { _, _ = svc.FetchUpdatePageTitle(domain, &pResult) }()
+			Services.PageTitleFetcher().Enqueue(domain, &pResult)
 		}
 	}
 
@@ -348,5 +356,75 @@ func (svc *pageService) insertPageView(pageID *uuid.UUID, req *http.Request) {
 	}
 	if err := execOne(db.Insert("cm_domain_page_views").Rows(r)); err != nil {
 		logger.Errorf("pageService.insertPageView: ExecOne() failed: %v", err)
+	}
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// newPageTitleFetcher creates a new PageTitleFetcher instance
+func newPageTitleFetcher() PageTitleFetcher {
+	p := &pageTitleFetcher{
+		incoming: make(chan bool),
+	}
+	go p.run()
+	return p
+}
+
+// pageTitleFetcher is an implementation of PageTitleFetcher
+type pageTitleFetcher struct {
+	mu       sync.Mutex
+	queue    list.List
+	incoming chan bool
+}
+
+// pageTitleRequest represents page metadata for fetching its title
+type pageTitleRequest struct {
+	*data.Domain
+	*data.DomainPage
+}
+
+func (p *pageTitleFetcher) Enqueue(domain *data.Domain, page *data.DomainPage) {
+	logger.Debugf("pageTitleFetcher.Enqueue(%#v, %#v)", domain, page)
+
+	// Enqueue the request
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	p.queue.PushBack(&pageTitleRequest{domain, page})
+
+	// Ping the fetcher, non-blocking
+	select {
+	case p.incoming <- true:
+	default:
+	}
+}
+
+// run continuously processes the queue
+func (p *pageTitleFetcher) run() {
+	logger.Debug("Starting pageTitleFetcher")
+
+	// Loop until there are no more requests
+	for {
+		// Fetch the first request
+		var req *pageTitleRequest
+		p.mu.Lock()
+		if el := p.queue.Front(); el != nil {
+			req = p.queue.Remove(el).(*pageTitleRequest)
+		} else {
+			// The queue is empty, clear the incoming flag, non-blocking
+			select {
+			case <-p.incoming:
+			default:
+			}
+		}
+		p.mu.Unlock()
+
+		// If there's anything to process, execute an page title update
+		if req != nil {
+			// We intentionally run this in a non-transactional context, since it's a background operation
+			_, _ = Services.PageService(nil).FetchUpdatePageTitle(req.Domain, req.DomainPage)
+		} else {
+			// The queue was empty, pause until we get an incoming request
+			<-p.incoming
+		}
 	}
 }

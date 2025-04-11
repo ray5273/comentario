@@ -1,5 +1,12 @@
 # Comentario changelog
 
+## v3.13.1 Glenarm
+
+This is a bugfix version:
+
+* Fix: comment import being terminated halfway when the number of untitled pages is high (#163) - ddb5fad0
+* Fix: background Gravatar processor being created multiple times - 24906377
+
 ## v3.13.0 Garvagh
 
 In this version we've added RSS support for comments, a new comment count widget (`<comentario-count>`) for websites, implemented animated content loaders, introduced the `--no-page-view-stats` command-line parameter, and made quite a few code and presentation fixes.

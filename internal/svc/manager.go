@@ -29,6 +29,8 @@ type ServiceManager interface {
 
 	// GravatarProcessor returns an instance of GravatarProcessor
 	GravatarProcessor() GravatarProcessor
+	// PageTitleFetcher returns an instance of PageTitleFetcher
+	PageTitleFetcher() PageTitleFetcher
 
 	// AuthService returns an instance of AuthService
 	AuthService(tx *persistence.DatabaseTx) AuthService
@@ -111,6 +113,8 @@ type serviceManager struct {
 	inited      bool
 	gp          GravatarProcessor    // Instance of a GravatarProcessor (lazy-inited)
 	gpMu        sync.Mutex           // Mutex for gp
+	ptf         PageTitleFetcher     // Instance of a PageTitleFetcher (lazy-inited)
+	ptfMu       sync.Mutex           // Mutex for ptf
 	cleanSvc    CleanupService       // Cleanup service singleton
 	i18nSvc     I18nService          // I18n service singleton
 	mailSvc     MailService          // Mail service singleton
@@ -202,6 +206,15 @@ func (m *serviceManager) MailService() MailService {
 
 func (m *serviceManager) PageService(tx *persistence.DatabaseTx) PageService {
 	return &pageService{dbTxAware{tx}}
+}
+
+func (m *serviceManager) PageTitleFetcher() PageTitleFetcher {
+	m.ptfMu.Lock()
+	defer m.ptfMu.Unlock()
+	if m.ptf == nil {
+		m.ptf = newPageTitleFetcher()
+	}
+	return m.ptf
 }
 
 func (m *serviceManager) PerlustrationService() PerlustrationService {
