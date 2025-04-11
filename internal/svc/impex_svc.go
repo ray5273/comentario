@@ -52,7 +52,7 @@ func (ir *ImportResult) WithError(err error) *ImportResult {
 
 // ImportExportService is a service interface for dealing with data import/export
 type ImportExportService interface {
-	persistence.TxAware
+	persistence.Tx
 	// Export exports the data for the specified domain, returning gzip-compressed binary data
 	Export(domainID *uuid.UUID) ([]byte, error)
 	// Import performs data import in the native Comentario (or legacy Commento v1/Comentario v2) format from the
@@ -157,7 +157,7 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 		}
 
 		// If the email is real and Gravatar is enabled, enqueue a fetching operation
-		if realEmail && TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
+		if realEmail && Services.DynConfigService().GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 			Services.GravatarProcessor().Enqueue(&user.ID, user.Email)
 		}
 		userAdded = true

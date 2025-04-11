@@ -48,9 +48,8 @@ func newAttrStore(tableName, keyColName string, checkAnonymous bool) *attrStore 
 func newTxAttrStore(as *attrStore, tx *persistence.DatabaseTx) *txAttrStore {
 	s := &txAttrStore{s: as}
 
-	// Register commit/rollback handlers
-	tx.AddCommitHandler(s.TxCommit)
-	tx.AddRollbackHandler(s.TxRollback)
+	// Add the store as a child to the transaction
+	tx.AddChild(s)
 	return s
 }
 
@@ -62,7 +61,7 @@ type txAttrStore struct {
 	v map[uuid.UUID]plugin.AttrValues // Overridden values
 }
 
-func (a *txAttrStore) TxCommit() error {
+func (a *txAttrStore) Commit() error {
 	// Apply all set values, if any, to the underlying store
 	if a.v != nil {
 		for id, av := range a.v {
@@ -77,7 +76,7 @@ func (a *txAttrStore) TxCommit() error {
 	return nil
 }
 
-func (a *txAttrStore) TxRollback() error {
+func (a *txAttrStore) Rollback() error {
 	// Do nothing: the underlying store remains unchanged
 	return nil
 }

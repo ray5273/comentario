@@ -88,7 +88,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 	}
 
 	// Fetch domain config
-	cfg, err := svc.TheDomainConfigService.GetAll(&d.ID)
+	cfg, err := svc.Services.DomainConfigService().GetAll(&d.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -116,7 +116,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 	// Succeeded
 	return api_general.NewDomainGetOK().WithPayload(&api_general.DomainGetOKBody{
 		Attributes:      attr,
-		Configuration:   data.DynConfigMapToDTOs(cfg),
+		Configuration:   cfg.ToDTO(),
 		Domain:          d.ToDTO(),
 		DomainUser:      du.ToDTO(),
 		Extensions:      data.SliceToDTOs[*data.DomainExtension, *models.DomainExtension](exts),
@@ -239,7 +239,7 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 
 	// Update the dependent lists
 	err := util.CheckErrors(
-		svc.TheDomainConfigService.Update(&d.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
+		svc.Services.DomainConfigService().Update(&d.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
 		svc.Services.DomainService(nil /* TODO */).SaveIdPs(&d.ID, params.Body.FederatedIdpIds),
 		svc.Services.DomainService(nil /* TODO */).SaveExtensions(&d.ID, exts))
 	if err != nil {
@@ -329,7 +329,7 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	// Persist the updated properties
 	err := util.CheckErrors(
 		svc.Services.DomainService(nil /* TODO */).Update(domain),
-		svc.TheDomainConfigService.Update(&domain.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
+		svc.Services.DomainConfigService().Update(&domain.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
 		svc.Services.DomainService(nil /* TODO */).SaveIdPs(&domain.ID, params.Body.FederatedIdpIds),
 		svc.Services.DomainService(nil /* TODO */).SaveExtensions(&domain.ID, exts))
 	if err != nil {

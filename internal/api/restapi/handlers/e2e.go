@@ -116,7 +116,7 @@ func E2eInit() error {
 
 func E2eConfigDynamicUpdate(params api_e2e.E2eConfigDynamicUpdateParams) middleware.Responder {
 	// Update the config
-	if err := svc.TheDynConfigService.Update(nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
+	if err := svc.Services.DynConfigService().Update(nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -174,7 +174,7 @@ func E2eDomainConfigUpdate(params api_e2e.E2eDomainConfigUpdateParams) middlewar
 	}
 
 	// Update the domain setting
-	if err := svc.TheDomainConfigService.Update(domainID, nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
+	if err := svc.Services.DomainConfigService().Update(domainID, nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 

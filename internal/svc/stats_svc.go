@@ -16,7 +16,7 @@ import (
 
 // StatsService is a service interface for dealing with stats
 type StatsService interface {
-	persistence.TxAware
+	persistence.Tx
 	// GetDailyCommentCounts collects and returns a daily statistics for comments, optionally limited to a specific
 	// domain
 	GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)

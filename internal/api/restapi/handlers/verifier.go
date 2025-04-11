@@ -77,7 +77,7 @@ func (v *verifier) DomainConfigItems(items []*models.DynamicConfigItem) middlewa
 	// Iterate every item from the list
 	for _, item := range items {
 		// Pass the key and the value to the domain config service for validation
-		if err := svc.TheDomainConfigService.ValidateKeyValue(swag.StringValue(item.Key), swag.StringValue(item.Value)); err != nil {
+		if err := svc.Services.DomainConfigService().ValidateKeyValue(swag.StringValue(item.Key), swag.StringValue(item.Value)); err != nil {
 			return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(err.Error()))
 		}
 	}
@@ -189,11 +189,11 @@ func (v *verifier) LocalSignupEnabled(domainID *uuid.UUID) middleware.Responder 
 	var err error
 	if domainID == nil {
 		// Frontend signup
-		item, err = svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupEnabled)
+		item, err = svc.Services.DynConfigService().Get(data.ConfigKeyAuthSignupEnabled)
 
 	} else {
 		// Embed signup
-		item, err = svc.TheDomainConfigService.Get(domainID, data.DomainConfigKeyLocalSignupEnabled)
+		item, err = svc.Services.DomainConfigService().Get(domainID, data.DomainConfigKeyLocalSignupEnabled)
 	}
 
 	// Check for error
@@ -212,7 +212,7 @@ func (v *verifier) LocalSignupEnabled(domainID *uuid.UUID) middleware.Responder 
 
 func (v *verifier) UserCanAddDomain(user *data.User) middleware.Responder {
 	// If the user isn't a superuser and no new owners are allowed
-	if !user.IsSuperuser && !svc.TheDynConfigService.GetBool(data.ConfigKeyOperationNewOwnerEnabled) {
+	if !user.IsSuperuser && !svc.Services.DynConfigService().GetBool(data.ConfigKeyOperationNewOwnerEnabled) {
 		// Check if this user already owns any domain
 		if i, err := svc.Services.DomainService(nil).CountForUser(&user.ID, true, false); err != nil {
 			return respServiceError(err)
@@ -256,7 +256,7 @@ func (v *verifier) UserCanChangeEmailTo(user *data.User, newEmail string) middle
 func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
 	// If the user is a moderator+, deletion is controlled by the "moderator deletion" setting
 	if (user.IsSuperuser || domainUser.CanModerate()) &&
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentDeletionModerator) {
+		svc.Services.DomainConfigService().GetBool(domainID, data.DomainConfigKeyCommentDeletionModerator) {
 		return nil
 	}
 
@@ -264,7 +264,7 @@ func (v *verifier) UserCanDeleteComment(domainID *uuid.UUID, user *data.User, do
 	if !comment.IsAnonymous() &&
 		domainUser != nil &&
 		comment.UserCreated.UUID == domainUser.UserID &&
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentDeletionAuthor) {
+		svc.Services.DomainConfigService().GetBool(domainID, data.DomainConfigKeyCommentDeletionAuthor) {
 		return nil
 	}
 
@@ -316,7 +316,7 @@ func (v *verifier) UserCanSignupWithEmail(email string) (*exmodels.Error, middle
 func (v *verifier) UserCanUpdateComment(domainID *uuid.UUID, user *data.User, domainUser *data.DomainUser, comment *data.Comment) middleware.Responder {
 	// If the user is a moderator+, editing is controlled by the "moderator editing" setting
 	if (user.IsSuperuser || domainUser.CanModerate()) &&
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentEditingModerator) {
+		svc.Services.DomainConfigService().GetBool(domainID, data.DomainConfigKeyCommentEditingModerator) {
 		return nil
 	}
 
@@ -324,7 +324,7 @@ func (v *verifier) UserCanUpdateComment(domainID *uuid.UUID, user *data.User, do
 	if !comment.IsAnonymous() &&
 		domainUser != nil &&
 		comment.UserCreated.UUID == domainUser.UserID &&
-		svc.TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyCommentEditingAuthor) {
+		svc.Services.DomainConfigService().GetBool(domainID, data.DomainConfigKeyCommentEditingAuthor) {
 		return nil
 	}
 

@@ -235,7 +235,7 @@ func AuthSignup(params api_general.AuthSignupParams) middleware.Responder {
 		// If no operational mailer is configured, or confirmation is switched off in the config, mark the user
 		// confirmed right away
 	} else if !util.TheMailer.Operational() ||
-		!svc.TheDynConfigService.GetBool(data.ConfigKeyAuthSignupConfirmUser) {
+		!svc.Services.DynConfigService().GetBool(data.ConfigKeyAuthSignupConfirmUser) {
 		user.WithConfirmed(true)
 	}
 
@@ -311,7 +311,7 @@ func loginLocalUser(email, password, host string, req *http.Request) (*data.User
 		user.WithLastLogin(false)
 
 		// Lock the user out if they exhausted the allowed attempts (and maxAttempts > 0)
-		if i := svc.TheDynConfigService.GetInt(data.ConfigKeyAuthLoginLocalMaxAttempts); i > 0 && user.FailedLoginAttempts > i {
+		if i := svc.Services.DynConfigService().GetInt(data.ConfigKeyAuthLoginLocalMaxAttempts); i > 0 && user.FailedLoginAttempts > i {
 			user.WithLocked(true)
 		}
 
@@ -352,7 +352,7 @@ func loginUser(user *data.User, host string, req *http.Request) (*data.UserSessi
 	}
 
 	// If Gravatar is enabled, try to fetch the user's avatar, in the background
-	if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
+	if svc.Services.DynConfigService().GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 		// We intentionally run this in a non-transactional context, since it's a background operation
 		svc.Services.AvatarService(nil).SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
@@ -375,7 +375,7 @@ func signupUser(user *data.User) middleware.Responder {
 
 	// If Gravatar is enabled, try to fetch the user's avatar, ignoring any error. Do that synchronously to let the user
 	// see their avatar right away
-	if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
+	if svc.Services.DynConfigService().GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 		// We intentionally run this in a non-transactional context, since it's a background operation
 		svc.Services.AvatarService(nil).SetFromGravatarAsync(&user.ID, user.Email, false)
 	}

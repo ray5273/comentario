@@ -22,7 +22,7 @@ func ConfigDynamicReset(_ api_general.ConfigDynamicResetParams, user *data.User)
 	}
 
 	// Reset the config
-	if err := svc.TheDynConfigService.Reset(); err != nil {
+	if err := svc.Services.DynConfigService().Reset(); err != nil {
 		return respServiceError(err)
 	}
 
@@ -37,7 +37,7 @@ func ConfigDynamicUpdate(params api_general.ConfigDynamicUpdateParams, user *dat
 	}
 
 	// Update the config
-	if err := svc.TheDynConfigService.Update(&user.ID, data.DynConfigDTOsToMap(params.Body)); err != nil {
+	if err := svc.Services.DynConfigService().Update(&user.ID, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -93,7 +93,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	}
 
 	// Fetch dynamic config
-	dynConfig, err := svc.TheDynConfigService.GetAll()
+	dynConfig, err := svc.Services.DynConfigService().GetAll()
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -108,7 +108,7 @@ func ConfigGet(api_general.ConfigGetParams) middleware.Responder {
 	ver := svc.Services.VersionService()
 	return api_general.NewConfigGetOK().
 		WithPayload(&models.InstanceConfig{
-			DynamicConfig: data.DynConfigMapToDTOs(dynConfig),
+			DynamicConfig: dynConfig.ToDTO(),
 			PluginConfig:  &models.InstancePluginConfig{Plugins: pluginCfgs},
 			StaticConfig: &models.InstanceStaticConfig{
 				BaseDocsURL:          config.ServerConfig.BaseDocsURL,

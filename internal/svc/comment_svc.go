@@ -16,7 +16,7 @@ import (
 
 // CommentService is a service interface for dealing with comments
 type CommentService interface {
-	persistence.TxAware
+	persistence.Tx
 	// Count returns number of comments for the given domain and, optionally, page.
 	//   - curUser is the current authenticated/anonymous user.
 	//   - curDomainUser is the current domain user (can be nil).
@@ -551,8 +551,13 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error {
 	logger.Debugf("commentService.SetMarkdown(%v, %q, %s, %s)", comment, markdown, domainID, editedUserID)
 
+	dc, err := Services.DomainConfigService().GetAll(domainID)
+	if err != nil {
+		return err
+	}
+
 	// Validate comment length
-	maxLen := TheDomainConfigService.GetInt(domainID, data.DomainConfigKeyMaxCommentLength)
+	maxLen := dc.GetInt(data.DomainConfigKeyMaxCommentLength)
 	md := strings.TrimSpace(markdown)
 	if l := len(md); l > maxLen {
 		logger.Errorf("commentService.SetMarkdown: comment text length (%d bytes) > allowed (%d bytes)", l, maxLen)
@@ -563,9 +568,9 @@ func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, d
 	comment.Markdown = md
 	comment.HTML = util.MarkdownToHTML(
 		md,
-		TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownLinksEnabled),
-		TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownImagesEnabled),
-		TheDomainConfigService.GetBool(domainID, data.DomainConfigKeyMarkdownTablesEnabled))
+		dc.GetBool(data.DomainConfigKeyMarkdownLinksEnabled),
+		dc.GetBool(data.DomainConfigKeyMarkdownImagesEnabled),
+		dc.GetBool(data.DomainConfigKeyMarkdownTablesEnabled))
 
 	// Update the audit fields, if required
 	if editedUserID != nil {

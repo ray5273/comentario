@@ -22,7 +22,7 @@ var (
 
 // AuthService is a service interface to authenticate users
 type AuthService interface {
-	persistence.TxAware
+	persistence.Tx
 	// AuthenticateBearerToken inspects the token (usually provided in a header) and determines if the token is of one of
 	// the provided scopes
 	AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error)

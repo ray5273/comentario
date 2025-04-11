@@ -23,7 +23,6 @@ import (
 	"regexp"
 	"sort"
 	"strings"
-	"sync"
 	"sync/atomic"
 	"time"
 )
@@ -719,32 +718,20 @@ func (db *Database) tryConnect(num, total int) (err error) {
 
 // DatabaseTx represents a database transaction, implementing DBX
 type DatabaseTx struct {
-	tx    *goqu.TxDatabase // Reference to the underlying transaction
-	chs   []func() error   // List of commit handlers
-	chsMu sync.Mutex       // Mutex for chs
-	rhs   []func() error   // List of rollback handlers
-	rhsMu sync.Mutex       // Mutex for rhs
+	tx *goqu.TxDatabase // Reference to the underlying transaction
+	cc []Tx             // Child transactions
 }
 
-// AddCommitHandler appends the given commit cleanup function to the transaction
-func (dt *DatabaseTx) AddCommitHandler(f func() error) {
-	dt.chsMu.Lock()
-	defer dt.chsMu.Unlock()
-	dt.chs = append(dt.chs, f)
-}
-
-// AddRollbackHandler appends the given rollback cleanup function to the transaction
-func (dt *DatabaseTx) AddRollbackHandler(f func() error) {
-	dt.rhsMu.Lock()
-	defer dt.rhsMu.Unlock()
-	dt.rhs = append(dt.rhs, f)
+// AddChild adds a child transaction to the transaction
+func (dt *DatabaseTx) AddChild(tx Tx) {
+	dt.cc = append(dt.cc, tx)
 }
 
 // Commit the transaction
 func (dt *DatabaseTx) Commit() error {
-	// Invoke all registered commit handlers
-	for _, f := range dt.chs {
-		if err := f(); err != nil {
+	// Commit all child transactions
+	for _, c := range dt.cc {
+		if err := c.Commit(); err != nil {
 			return err
 		}
 	}
@@ -769,9 +756,9 @@ func (dt *DatabaseTx) Insert(table any) *goqu.InsertDataset {
 
 // Rollback the transaction
 func (dt *DatabaseTx) Rollback() error {
-	// Invoke all registered rollback handlers
-	for _, f := range dt.rhs {
-		if err := f(); err != nil {
+	// Roll back all child transactions
+	for _, c := range dt.cc {
+		if err := c.Rollback(); err != nil {
 			return err
 		}
 	}
@@ -786,12 +773,12 @@ func (dt *DatabaseTx) Update(table any) *goqu.UpdateDataset {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// TxAware is used as a base interface for services capable of handling transactions
-type TxAware interface {
-	// TxCommit commits the running transaction
-	TxCommit() error
-	// TxRollback rolls back the running transaction
-	TxRollback() error
+// Tx is a transaction
+type Tx interface {
+	// Commit the running transaction
+	Commit() error
+	// Rollback the running transaction
+	Rollback() error
 }
 
 //----------------------------------------------------------------------------------------------------------------------

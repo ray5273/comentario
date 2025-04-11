@@ -19,7 +19,7 @@ import (
 
 // PageService is a service interface for dealing with pages
 type PageService interface {
-	persistence.TxAware
+	persistence.Tx
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
 	// FetchUpdatePageTitle fetches and updates the title of the provided page based on its URL, returning if there was
@@ -69,7 +69,7 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 		Path  string `db:"path"`
 		Count int    `db:"count_comments"`
 	}
-	if err := db.From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)).ScanStructs(&dbRecs); err != nil {
+	if err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)).ScanStructs(&dbRecs); err != nil {
 		logger.Errorf("pageService.CommentCounts: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
@@ -111,7 +111,7 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 	}
 
 	// Update the page in the database
-	if err := execOne(db.Update("cm_domain_pages").Set(goqu.Record{"title": title}).Where(goqu.Ex{"id": &page.ID})); err != nil {
+	if err := execOne(svc.dbx().Update("cm_domain_pages").Set(goqu.Record{"title": title}).Where(goqu.Ex{"id": &page.ID})); err != nil {
 		logger.Errorf("pageService.FetchUpdatePageTitle(): ExecOne() failed: %v", err)
 		return false, err
 	}
@@ -125,7 +125,7 @@ func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*dat
 
 	// Query a page row
 	var p data.DomainPage
-	if b, err := db.From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID, "path": path}).ScanStruct(&p); err != nil {
+	if b, err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID, "path": path}).ScanStruct(&p); err != nil {
 		logger.Errorf("pageService.FindByDomainPath: ScanStruct() failed: %v", err)
 		return nil, translateDBErrors(err)
 	} else if !b {
@@ -141,7 +141,7 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 
 	// Query a page row
 	var p data.DomainPage
-	if b, err := db.From("cm_domain_pages").Where(goqu.Ex{"id": id}).ScanStruct(&p); err != nil {
+	if b, err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"id": id}).ScanStruct(&p); err != nil {
 		logger.Errorf("pageService.FindByID: Scan() failed: %v", err)
 		return nil, translateDBErrors(err)
 	} else if !b {
@@ -157,7 +157,7 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 
 	// Update the page record
 	if err := execOne(
-		db.Update("cm_domain_pages").
+		svc.dbx().Update("cm_domain_pages").
 			Set(goqu.Record{
 				"count_comments": goqu.L("? + ?", goqu.I("count_comments"), incComments),
 				"count_views":    goqu.L("? + ?", goqu.I("count_views"), incViews),
@@ -176,7 +176,7 @@ func (svc *pageService) ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, e
 	logger.Debugf("pageService.ListByDomain(%s)", domainID)
 
 	var ps []*data.DomainPage
-	if err := db.From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}).ScanStructs(&ps); err != nil {
+	if err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}).ScanStructs(&ps); err != nil {
 		logger.Errorf("pageService.ListByDomain: ScanStructs() failed: %v", err)
 		return nil, translateDBErrors(err)
 	}
@@ -189,7 +189,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	logger.Debugf("pageService.ListByDomainUser(%s, %s, %v, '%s', '%s', %s, %d)", userID, domainID, superuser, filter, sortBy, dir, pageIndex)
 
 	// Prepare a statement
-	q := db.From(goqu.T("cm_domain_pages").As("p")).
+	q := svc.dbx().From(goqu.T("cm_domain_pages").As("p")).
 		Select("p.*").
 		Join(goqu.T("cm_domains").As("d"), goqu.On(goqu.Ex{"d.id": goqu.I("p.domain_id")})).
 		Where(goqu.Ex{"d.id": domainID})
@@ -214,7 +214,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 					goqu.L(
 						// Work around extra parens not understood by SQLite: https://github.com/doug-martin/goqu/issues/204
 						"exists ?",
-						db.From(goqu.T("cm_comments").As("c")).
+						svc.dbx().From(goqu.T("cm_comments").As("c")).
 							Where(goqu.Ex{"c.page_id": goqu.I("p.id"), "c.user_created": userID})),
 				))
 	}
@@ -274,7 +274,7 @@ func (svc *pageService) Update(page *data.DomainPage) error {
 	logger.Debugf("pageService.Update(%#v)", page)
 
 	// Update the page record
-	if err := execOne(db.Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID})); err != nil {
+	if err := execOne(svc.dbx().Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID})); err != nil {
 		logger.Errorf("pageService.Update: ExecOne() failed: %v", err)
 		return translateDBErrors(err)
 	}
@@ -298,7 +298,7 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path, title stri
 		CountViews:    util.If(req != nil, int64(1), 0),
 	}
 	var pResult data.DomainPage
-	b, err := db.Insert(goqu.T("cm_domain_pages").As("p")).
+	b, err := svc.dbx().Insert(goqu.T("cm_domain_pages").As("p")).
 		Rows(&pOrig).
 		OnConflict(goqu.DoUpdate("domain_id, path", goqu.C("count_views").Set(goqu.L("p.count_views + ?", pOrig.CountViews)))).
 		Returning(&pResult).
@@ -354,7 +354,7 @@ func (svc *pageService) insertPageView(pageID *uuid.UUID, req *http.Request) {
 		OSVersion:      util.FormatVersion(&ua.OS.Version),
 		Device:         ua.DeviceType.StringTrimPrefix(),
 	}
-	if err := execOne(db.Insert("cm_domain_page_views").Rows(r)); err != nil {
+	if err := execOne(svc.dbx().Insert("cm_domain_page_views").Rows(r)); err != nil {
 		logger.Errorf("pageService.insertPageView: ExecOne() failed: %v", err)
 	}
 }

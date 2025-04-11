@@ -22,7 +22,7 @@ import (
 
 // AvatarService is a service interface for dealing with avatars
 type AvatarService interface {
-	persistence.TxAware
+	persistence.Tx
 	// DownloadAndUpdateByUserID downloads an avatar from the specified URL and updates the given user. isCustom
 	// indicates whether the avatar is customised by the user
 	DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string, isCustom bool) error

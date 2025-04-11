@@ -61,7 +61,7 @@ func CurUserEmailUpdateRequest(params api_general.CurUserEmailUpdateRequestParam
 	confirmation := false
 	if newEmail != user.Email {
 		// Verify email change is enabled
-		if !svc.TheDynConfigService.GetBool(data.ConfigKeyAuthEmailUpdateEnabled) {
+		if !svc.Services.DynConfigService().GetBool(data.ConfigKeyAuthEmailUpdateEnabled) {
 			return respForbidden(exmodels.ErrorEmailUpdateForbidden)
 		}
 

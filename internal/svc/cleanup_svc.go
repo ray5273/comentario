@@ -8,7 +8,7 @@ import (
 )
 
 type CleanupService interface {
-	persistence.TxAware
+	persistence.Tx
 	// Run the service
 	Run() error
 }

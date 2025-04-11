@@ -10,15 +10,12 @@ import (
 	"time"
 )
 
-// TheDynConfigService is a global DynConfigService implementation
-var TheDynConfigService DynConfigService = newDynConfigService()
-
 // DynConfigService is a service interface for dealing with dynamic instance configuration
 type DynConfigService interface {
 	// Get returns a configuration item by its key
 	Get(key data.DynConfigItemKey) (*data.DynConfigItem, error)
 	// GetAll returns all available configuration items
-	GetAll() (map[data.DynConfigItemKey]*data.DynConfigItem, error)
+	GetAll() (data.DynConfigMap, error)
 	// GetBool returns the bool value of a configuration item by its key, or the default value on error
 	GetBool(key data.DynConfigItemKey) bool
 	// GetInt returns the int value of a configuration item by its key, or the default value on error
@@ -45,9 +42,9 @@ var errConfigUninitialised = errors.New("config is not initialised")
 
 // ConfigStore is a transient, concurrent store for DynConfigItem's
 type ConfigStore struct {
-	mu       sync.RWMutex                                                  // Config item mutex
-	items    map[data.DynConfigItemKey]*data.DynConfigItem                 // Config items
-	defaults func() (map[data.DynConfigItemKey]*data.DynConfigItem, error) // Function returning a new, fresh map of items, all with their default values
+	mu       sync.RWMutex                      // Config item mutex
+	items    data.DynConfigMap                 // Config items
+	defaults func() (data.DynConfigMap, error) // Function returning a new, fresh map of items, all with their default values
 }
 
 func (cs *ConfigStore) Get(key data.DynConfigItemKey) (*data.DynConfigItem, error) {
@@ -56,7 +53,7 @@ func (cs *ConfigStore) Get(key data.DynConfigItemKey) (*data.DynConfigItem, erro
 	return cs.get(key)
 }
 
-func (cs *ConfigStore) GetAll() (map[data.DynConfigItemKey]*data.DynConfigItem, error) {
+func (cs *ConfigStore) GetAll() (data.DynConfigMap, error) {
 	// Prevent concurrent write access
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
@@ -67,7 +64,7 @@ func (cs *ConfigStore) GetAll() (map[data.DynConfigItemKey]*data.DynConfigItem, 
 	}
 
 	// Make an (immutable) copy of the items
-	items := make(map[data.DynConfigItemKey]*data.DynConfigItem, len(cs.items))
+	items := make(data.DynConfigMap, len(cs.items))
 	for k, v := range cs.items {
 		vCopy := *v
 		items[k] = &vCopy
@@ -229,9 +226,9 @@ func (cs *instanceConfigStore) Save() error {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// getInstanceDefaults returns a clone of the default config
-func getInstanceDefaults() (map[data.DynConfigItemKey]*data.DynConfigItem, error) {
-	m := make(map[data.DynConfigItemKey]*data.DynConfigItem, len(data.DefaultDynInstanceConfig))
+// getInstanceDefaults returns a clone of the default config, with all values set to the default
+func getInstanceDefaults() (data.DynConfigMap, error) {
+	m := make(data.DynConfigMap, len(data.DefaultDynInstanceConfig))
 	for key, item := range data.DefaultDynInstanceConfig {
 		m[key] = &data.DynConfigItem{
 			Value:        item.DefaultValue,
@@ -261,7 +258,7 @@ func (svc *dynConfigService) Get(key data.DynConfigItemKey) (*data.DynConfigItem
 	return svc.s.Get(key)
 }
 
-func (svc *dynConfigService) GetAll() (map[data.DynConfigItemKey]*data.DynConfigItem, error) {
+func (svc *dynConfigService) GetAll() (data.DynConfigMap, error) {
 	logger.Debug("dynConfigService.GetAll()")
 	return svc.s.GetAll()
 }
@@ -314,7 +311,7 @@ func (svc *dynConfigService) Reset() error {
 	}
 
 	// Flush any cached domain config to enforce any new defaults
-	TheDomainConfigService.ResetCache()
+	Services.DomainConfigService().ResetCache()
 
 	// Succeeded
 	return nil
@@ -334,7 +331,7 @@ func (svc *dynConfigService) Update(curUserID *uuid.UUID, vals map[data.DynConfi
 	}
 
 	// Flush any cached domain config to enforce any new defaults
-	TheDomainConfigService.ResetCache()
+	Services.DomainConfigService().ResetCache()
 
 	// Succeeded
 	return nil

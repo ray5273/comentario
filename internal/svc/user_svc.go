@@ -14,7 +14,7 @@ import (
 
 // UserService is a service interface for dealing with users
 type UserService interface {
-	persistence.TxAware
+	persistence.Tx
 	// ConfirmUser sets the confirmed status of the user
 	ConfirmUser(u *data.User) error
 	// CountUsers returns a number of registered users.

@@ -10,7 +10,7 @@ import (
 
 // AuthSessionService is a service interface for dealing with AuthSession objects
 type AuthSessionService interface {
-	persistence.TxAware
+	persistence.Tx
 	// Create saves a new auth session
 	Create(sessData, host, token string) (*data.AuthSession, error)
 	// TakeByID returns and deletes an existing auth session by its ID

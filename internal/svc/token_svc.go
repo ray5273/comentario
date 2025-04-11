@@ -11,7 +11,7 @@ import (
 
 // TokenService is a service interface for dealing with Token objects
 type TokenService interface {
-	persistence.TxAware
+	persistence.Tx
 	// Create persists a new token
 	Create(t *data.Token) error
 	// DeleteByValue deletes a token by its (string) value

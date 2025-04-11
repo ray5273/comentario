@@ -68,7 +68,7 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 	moderator := user.IsSuperuser || domainUser.CanModerate()
 	anonymous := !moderator && user.IsAnonymous()
 	ownComment := !anonymous && comment.UserCreated.Valid && comment.UserCreated.UUID == user.ID
-	delHidden := comment.IsDeleted && !svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments)
+	delHidden := comment.IsDeleted && !svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments)
 	if rejected || delHidden || pending && !moderator && !ownComment {
 		return respNotFound(nil)
 	}
@@ -122,37 +122,43 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		return respServiceError(err)
 	}
 
+	// Obtain domain config
+	dc, err := svc.Services.DomainConfigService().GetAll(&domain.ID)
+	if err != nil {
+		return respServiceError(err)
+	}
+
 	// Prepare page info
 	pageInfo := &models.PageInfo{
 		AuthAnonymous:            domain.AuthAnonymous,
 		AuthLocal:                domain.AuthLocal,
 		AuthSso:                  domain.AuthSSO,
 		BaseDocsURL:              config.ServerConfig.BaseDocsURL,
-		CommentDeletionAuthor:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionAuthor),
-		CommentDeletionModerator: svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentDeletionModerator),
-		CommentEditingAuthor:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingAuthor),
-		CommentEditingModerator:  svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyCommentEditingModerator),
+		CommentDeletionAuthor:    dc.GetBool(data.DomainConfigKeyCommentDeletionAuthor),
+		CommentDeletionModerator: dc.GetBool(data.DomainConfigKeyCommentDeletionModerator),
+		CommentEditingAuthor:     dc.GetBool(data.DomainConfigKeyCommentEditingAuthor),
+		CommentEditingModerator:  dc.GetBool(data.DomainConfigKeyCommentEditingModerator),
 		DefaultLangID:            util.DefaultLanguage.String(),
 		DefaultSort:              models.CommentSort(domain.DefaultSort),
 		DomainID:                 strfmt.UUID(domain.ID.String()),
 		DomainName:               domain.DisplayName(),
-		EnableCommentVoting:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting),
-		EnableRss:                svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyRSSEnabled),
-		FederatedSignupEnabled:   svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled),
+		EnableCommentVoting:      dc.GetBool(data.DomainConfigKeyEnableCommentVoting),
+		EnableRss:                dc.GetBool(data.DomainConfigKeyRSSEnabled),
+		FederatedSignupEnabled:   dc.GetBool(data.DomainConfigKeyFederatedSignupEnabled),
 		IsDomainReadonly:         domain.IsReadonly,
 		IsPageReadonly:           page.IsReadonly,
 		LiveUpdateEnabled:        svc.Services.WebSocketsService().Active(),
-		LocalSignupEnabled:       svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyLocalSignupEnabled),
-		MarkdownImagesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownImagesEnabled),
-		MarkdownLinksEnabled:     svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownLinksEnabled),
-		MarkdownTablesEnabled:    svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyMarkdownTablesEnabled),
-		MaxCommentLength:         int64(svc.TheDomainConfigService.GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)),
+		LocalSignupEnabled:       dc.GetBool(data.DomainConfigKeyLocalSignupEnabled),
+		MarkdownImagesEnabled:    dc.GetBool(data.DomainConfigKeyMarkdownImagesEnabled),
+		MarkdownLinksEnabled:     dc.GetBool(data.DomainConfigKeyMarkdownLinksEnabled),
+		MarkdownTablesEnabled:    dc.GetBool(data.DomainConfigKeyMarkdownTablesEnabled),
+		MaxCommentLength:         int64(dc.GetInt(data.DomainConfigKeyMaxCommentLength)),
 		PageID:                   strfmt.UUID(page.ID.String()),
 		PrivacyPolicyURL:         config.ServerConfig.PrivacyPolicyURL,
-		ShowDeletedComments:      svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
-		ShowLoginForUnauth:       svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowLoginForUnauth),
+		ShowDeletedComments:      dc.GetBool(data.DomainConfigKeyShowDeletedComments),
+		ShowLoginForUnauth:       dc.GetBool(data.DomainConfigKeyShowLoginForUnauth),
 		SsoNonInteractive:        domain.SSONonInteractive,
-		SsoSignupEnabled:         svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeySsoSignupEnabled),
+		SsoSignupEnabled:         dc.GetBool(data.DomainConfigKeySsoSignupEnabled),
 		SsoURL:                   domain.SSOURL,
 		TermsOfServiceURL:        config.ServerConfig.TermsOfServiceURL,
 		Version:                  svc.Services.VersionService().CurrentVersion(),
@@ -181,7 +187,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		true,
 		true,
 		false, // Don't include rejected: no one's interested in spam
-		svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
+		svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
 		true, // Filter out orphans (they won't show up on the client anyway)
 		"",
 		"",
@@ -437,7 +443,7 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 	}
 
 	// Make sure voting is enabled
-	if !svc.TheDomainConfigService.GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting) {
+	if !svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting) {
 		return respForbidden(exmodels.ErrorFeatureDisabled.WithDetails("comment voting"))
 	}
 

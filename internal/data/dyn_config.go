@@ -97,6 +97,39 @@ func (ci *DynConfigItem) ValidateValue(value string) error {
 	return nil
 }
 
+//----------------------------------------------------------------------------------------------------------------------
+
+// DynConfigMap is a key-indexed map of DynConfigItem
+type DynConfigMap map[DynConfigItemKey]*DynConfigItem
+
+// GetBool returns the bool value of a configuration item by its key, or false on error
+func (m DynConfigMap) GetBool(key DynConfigItemKey) bool {
+	if i, ok := m[key]; ok {
+		return i.AsBool()
+	}
+	return false
+}
+
+// GetInt returns the bool value of a configuration item by its key, or -1 on error
+func (m DynConfigMap) GetInt(key DynConfigItemKey) int {
+	if i, ok := m[key]; ok {
+		return i.AsInt()
+	}
+	return -1
+}
+
+// ToDTO converts a key-value map of dynamic config items into a slice of DTO models
+func (m DynConfigMap) ToDTO() []*models.DynamicConfigItem {
+	result := make([]*models.DynamicConfigItem, 0, len(m))
+	for key, item := range m {
+		result = append(result, item.ToDTO(key))
+	}
+	return result
+
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
 // DynConfigDTOsToMap converts a slice of dynamic config item DTOs into a key-value map
 func DynConfigDTOsToMap(items []*models.DynamicConfigItem) map[DynConfigItemKey]string {
 	m := make(map[DynConfigItemKey]string, len(items))
@@ -104,15 +137,6 @@ func DynConfigDTOsToMap(items []*models.DynamicConfigItem) map[DynConfigItemKey]
 		m[DynConfigItemKey(swag.StringValue(item.Key))] = swag.StringValue(item.Value)
 	}
 	return m
-}
-
-// DynConfigMapToDTOs converts a key-value map of dynamic config items into a slice of DTO models
-func DynConfigMapToDTOs(config map[DynConfigItemKey]*DynConfigItem) []*models.DynamicConfigItem {
-	result := make([]*models.DynamicConfigItem, 0, len(config))
-	for key, item := range config {
-		result = append(result, item.ToDTO(key))
-	}
-	return result
 }
 
 const (
@@ -163,7 +187,7 @@ const (
 const ConfigKeyDomainDefaultsPrefix = "domain.defaults."
 
 // DefaultDynInstanceConfig is the default dynamic instance configuration
-var DefaultDynInstanceConfig = map[DynConfigItemKey]*DynConfigItem{
+var DefaultDynInstanceConfig = DynConfigMap{
 	ConfigKeyAuthEmailUpdateEnabled:                                         {DefaultValue: "false", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},
 	ConfigKeyAuthLoginLocalMaxAttempts:                                      {DefaultValue: "10", Datatype: ConfigDatatypeInt, Section: DynConfigItemSectionAuth, Min: 0, Max: 1<<31 - 1},
 	ConfigKeyAuthSignupConfirmCommenter:                                     {DefaultValue: "true", Datatype: ConfigDatatypeBool, Section: DynConfigItemSectionAuth},

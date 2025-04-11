@@ -43,11 +43,11 @@ type ServiceManager interface {
 	// DomainAttrService returns an instance of an plugin.AttrStore for domains
 	DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore
 	// DomainConfigService returns an instance of DomainConfigService
-	DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService
+	DomainConfigService() DomainConfigService
 	// DomainService returns an instance of DomainService
 	DomainService(tx *persistence.DatabaseTx) DomainService
 	// DynConfigService returns an instance of DynConfigService
-	DynConfigService(tx *persistence.DatabaseTx) DynConfigService
+	DynConfigService() DynConfigService
 	// I18nService returns an instance of I18nService
 	I18nService() I18nService
 	// ImportExportService returns an instance of ImportExportService
@@ -79,19 +79,19 @@ type ServiceManager interface {
 
 //----------------------------------------------------------------------------------------------------------------------
 
-// dbTxAware is a database implementation of persistence.TxAware
+// dbTxAware is a database implementation of persistence.Tx
 type dbTxAware struct {
 	tx *persistence.DatabaseTx // Optional transaction
 }
 
-func (d *dbTxAware) TxCommit() error {
+func (d *dbTxAware) Commit() error {
 	if d.tx == nil {
 		return errors.New("commit: no transaction")
 	}
 	return d.tx.Commit()
 }
 
-func (d *dbTxAware) TxRollback() error {
+func (d *dbTxAware) Rollback() error {
 	if d.tx == nil {
 		return errors.New("rollback: no transaction")
 	}
@@ -116,6 +116,8 @@ type serviceManager struct {
 	ptf         PageTitleFetcher     // Instance of a PageTitleFetcher (lazy-inited)
 	ptfMu       sync.Mutex           // Mutex for ptf
 	cleanSvc    CleanupService       // Cleanup service singleton
+	domCfgSvc   DomainConfigService  // Domain config service singleton
+	dynCfgSvc   DynConfigService     // Dynamic config service singleton
 	i18nSvc     I18nService          // I18n service singleton
 	mailSvc     MailService          // Mail service singleton
 	perlSvc     PerlustrationService // Perlustration service singleton
@@ -129,6 +131,8 @@ type serviceManager struct {
 func newServiceManager() *serviceManager {
 	return &serviceManager{
 		cleanSvc:    &cleanupService{},
+		domCfgSvc:   newDomainConfigService(),
+		dynCfgSvc:   newDynConfigService(),
 		i18nSvc:     newI18nService(),
 		mailSvc:     newMailService(),
 		perlSvc:     &perlustrationService{},
@@ -175,18 +179,16 @@ func (m *serviceManager) DomainAttrService(tx *persistence.DatabaseTx) plugin.At
 	return newTxAttrStore(m.domainAttrs, tx)
 }
 
-func (m *serviceManager) DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService {
-	//TODO implement me
-	panic("implement me")
+func (m *serviceManager) DomainConfigService() DomainConfigService {
+	return m.domCfgSvc
 }
 
 func (m *serviceManager) DomainService(tx *persistence.DatabaseTx) DomainService {
 	return &domainService{dbTxAware{tx}}
 }
 
-func (m *serviceManager) DynConfigService(tx *persistence.DatabaseTx) DynConfigService {
-	//TODO implement me
-	panic("implement me")
+func (m *serviceManager) DynConfigService() DynConfigService {
+	return m.dynCfgSvc
 }
 
 func (m *serviceManager) I18nService() I18nService {
@@ -358,12 +360,12 @@ func (m *serviceManager) Shutdown() {
 // postDBInit is called after the DB is initialised to finalise schema initialisation
 func (m *serviceManager) postDBInit() error {
 	// Initialise the config service
-	if err := TheDynConfigService.Load(); err != nil {
+	if err := m.dynCfgSvc.Load(); err != nil {
 		return fmt.Errorf("failed to load configuration: %v", err)
 	}
 
 	// Reset any cached config
-	TheDomainConfigService.ResetCache()
+	Services.DomainConfigService().ResetCache()
 
 	// If superuser's ID or email is provided, turn that user into a superuser
 	if s := config.ServerConfig.Superuser; s != "" {

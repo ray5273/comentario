@@ -12,15 +12,12 @@ import (
 	"strings"
 )
 
-// TheDomainConfigService is a global DomainConfigService implementation
-var TheDomainConfigService DomainConfigService = newDomainConfigService()
-
 // DomainConfigService is a service interface for dealing with dynamic domain configuration
 type DomainConfigService interface {
 	// Get returns a configuration item by its key
 	Get(domainID *uuid.UUID, key data.DynConfigItemKey) (*data.DynConfigItem, error)
 	// GetAll returns all available configuration items
-	GetAll(domainID *uuid.UUID) (map[data.DynConfigItemKey]*data.DynConfigItem, error)
+	GetAll(domainID *uuid.UUID) (data.DynConfigMap, error)
 	// GetBool returns the bool value of a configuration item by its key, or the default value on error
 	GetBool(domainID *uuid.UUID, key data.DynConfigItemKey) bool
 	// GetInt returns the int value of a configuration item by its key, or the default value on error
@@ -52,16 +49,16 @@ func (cs *domainConfigStore) Save() error {
 //----------------------------------------------------------------------------------------------------------------------
 
 // getDomainDefaults returns default domain config items
-func getDomainDefaults() (map[data.DynConfigItemKey]*data.DynConfigItem, error) {
+func getDomainDefaults() (data.DynConfigMap, error) {
 	// Fetch the instance defaults
-	items, err := TheDynConfigService.GetAll()
+	items, err := Services.DynConfigService().GetAll()
 	if err != nil {
 		return nil, fmt.Errorf("getDomainDefaults: TheDynConfigService.GetAll() failed: %w", err)
 	}
 
 	// Pick those whose key starts with the domain.defaults prefix
 	prefixLen := len(data.ConfigKeyDomainDefaultsPrefix)
-	m := make(map[data.DynConfigItemKey]*data.DynConfigItem)
+	m := data.DynConfigMap{}
 	for key, item := range items {
 		if strings.HasPrefix(string(key), data.ConfigKeyDomainDefaultsPrefix) {
 			// Strip the prefix from the key name
@@ -111,7 +108,7 @@ func (svc *domainConfigService) Get(domainID *uuid.UUID, key data.DynConfigItemK
 	}
 }
 
-func (svc *domainConfigService) GetAll(domainID *uuid.UUID) (map[data.DynConfigItemKey]*data.DynConfigItem, error) {
+func (svc *domainConfigService) GetAll(domainID *uuid.UUID) (data.DynConfigMap, error) {
 	logger.Debugf("domainConfigService.GetAll(%s)", domainID)
 	if s, err := svc.getStore(domainID); err != nil {
 		return nil, err
@@ -127,7 +124,7 @@ func (svc *domainConfigService) GetBool(domainID *uuid.UUID, key data.DynConfigI
 	}
 
 	// Fall back to the instance default on error
-	return TheDynConfigService.GetBool(data.ConfigKeyDomainDefaultsPrefix + key)
+	return Services.DynConfigService().GetBool(data.ConfigKeyDomainDefaultsPrefix + key)
 }
 
 func (svc *domainConfigService) GetInt(domainID *uuid.UUID, key data.DynConfigItemKey) int {
@@ -137,7 +134,7 @@ func (svc *domainConfigService) GetInt(domainID *uuid.UUID, key data.DynConfigIt
 	}
 
 	// Fall back to the instance default on error
-	return TheDynConfigService.GetInt(data.ConfigKeyDomainDefaultsPrefix + key)
+	return Services.DynConfigService().GetInt(data.ConfigKeyDomainDefaultsPrefix + key)
 }
 
 func (svc *domainConfigService) ResetCache() {

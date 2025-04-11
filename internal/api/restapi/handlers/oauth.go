@@ -214,15 +214,15 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 		var cfgItem *data.DynConfigItem
 		if domain == nil {
 			// Frontend signup
-			cfgItem, err = svc.TheDynConfigService.Get(data.ConfigKeyAuthSignupEnabled)
+			cfgItem, err = svc.Services.DynConfigService().Get(data.ConfigKeyAuthSignupEnabled)
 
 		} else if provider != nil {
 			// Federated embed signup
-			cfgItem, err = svc.TheDomainConfigService.Get(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled)
+			cfgItem, err = svc.Services.DomainConfigService().Get(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled)
 
 		} else {
 			// SSO embed signup
-			cfgItem, err = svc.TheDomainConfigService.Get(&domain.ID, data.DomainConfigKeySsoSignupEnabled)
+			cfgItem, err = svc.Services.DomainConfigService().Get(&domain.ID, data.DomainConfigKeySsoSignupEnabled)
 		}
 
 		// Check for setting fetching error
@@ -305,7 +305,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			})
 
 		// Otherwise, try to fetch an image from Gravatar, if enabled
-	} else if svc.TheDynConfigService.GetBool(data.ConfigKeyIntegrationsUseGravatar) {
+	} else if svc.Services.DynConfigService().GetBool(data.ConfigKeyIntegrationsUseGravatar) {
 		// We intentionally run this in a non-transactional context, since it's a background operation
 		svc.Services.AvatarService(nil).SetFromGravatarAsync(&user.ID, user.Email, false)
 	}
