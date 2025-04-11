@@ -104,7 +104,9 @@ func (svc *avatarService) QueueGravatarUpdate(userID *uuid.UUID, userEmail strin
 	// Instantiate a Gravatar processor, if none yet exists
 	svc.gravatarProcMU.Lock()
 	defer svc.gravatarProcMU.Unlock()
-	svc.gravatarProc = newGravatarProcessor()
+	if svc.gravatarProc == nil {
+		svc.gravatarProc = newGravatarProcessor()
+	}
 
 	// Enqueue the request
 	svc.gravatarProc.enqueue(&gravatarRequest{userID: userID, userEmail: userEmail})
