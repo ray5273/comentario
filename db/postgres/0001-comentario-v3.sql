@@ -31,7 +31,7 @@ begin
                 migCount;
 
         -- Commento++ had 3 more migrations, which is OK too (they didn't add anything significant to impact the conversion)
-        elseif migCount > 30 and migCount != 33 then
+        elsif migCount > 30 and migCount != 33 then
             raise exception
                 E'\n\nToo many database migrations installed: found %, expected 30 or 33.\n\n',
                 migCount;
