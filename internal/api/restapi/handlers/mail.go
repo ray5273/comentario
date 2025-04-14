@@ -5,6 +5,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 )
@@ -29,7 +30,7 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 	}
 
 	// Find the domain user
-	user, domainUser, err := svc.Services.UserService(nil /* TODO */).FindDomainUserByID(uID, dID)
+	user, domainUser, err := svc.Services.UserService(nil).FindDomainUserByID(uID, dID)
 	if err != nil {
 		return respServiceError(err)
 
@@ -63,7 +64,10 @@ func MailUnsubscribe(params api_general.MailUnsubscribeParams) middleware.Respon
 
 	// Persist the changes, if any
 	if changed {
-		if err := svc.Services.DomainService(nil /* TODO */).UserModify(domainUser); err != nil {
+		err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+			return svc.Services.DomainService(tx).UserModify(domainUser)
+		})
+		if err != nil {
 			return respServiceError(err)
 		}
 	}

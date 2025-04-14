@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 )
 
@@ -74,7 +75,10 @@ func DomainUserUpdate(params api_general.DomainUserUpdateParams, user *data.User
 		WithNotifyReplies(params.Body.NotifyReplies).
 		WithNotifyModerator(params.Body.NotifyModerator).
 		WithNotifyCommentStatus(params.Body.NotifyCommentStatus)
-	if err := svc.Services.DomainService(nil /* TODO */).UserModify(du); err != nil {
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		return svc.Services.DomainService(tx).UserModify(du)
+	})
+	if err != nil {
 		return respServiceError(err)
 	}
 

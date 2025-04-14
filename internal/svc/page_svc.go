@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 	"net/url"
@@ -19,7 +18,6 @@ import (
 
 // PageService is a service interface for dealing with pages
 type PageService interface {
-	persistence.Tx
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
 	// FetchUpdatePageTitle fetches and updates the title of the provided page based on its URL, returning if there was
@@ -70,8 +68,7 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 		Count int    `db:"count_comments"`
 	}
 	if err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}, goqu.I("path").In(paths)).ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("pageService.CommentCounts: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("pageService.CommentCounts/ScanStructs", err)
 	}
 
 	// Convert the slice into a map
@@ -126,8 +123,7 @@ func (svc *pageService) FindByDomainPath(domainID *uuid.UUID, path string) (*dat
 	// Query a page row
 	var p data.DomainPage
 	if b, err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID, "path": path}).ScanStruct(&p); err != nil {
-		logger.Errorf("pageService.FindByDomainPath: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("pageService.FindByDomainPath/ScanStruct", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}
@@ -142,8 +138,7 @@ func (svc *pageService) FindByID(id *uuid.UUID) (*data.DomainPage, error) {
 	// Query a page row
 	var p data.DomainPage
 	if b, err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"id": id}).ScanStruct(&p); err != nil {
-		logger.Errorf("pageService.FindByID: Scan() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("pageService.FindByID/Scan", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}
@@ -164,8 +159,7 @@ func (svc *pageService) IncrementCounts(pageID *uuid.UUID, incComments, incViews
 			}).
 			Where(goqu.Ex{"id": pageID}),
 	); err != nil {
-		logger.Errorf("pageService.IncrementCounts: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("pageService.IncrementCounts/ExecOne", err)
 	}
 
 	// Succeeded
@@ -177,8 +171,7 @@ func (svc *pageService) ListByDomain(domainID *uuid.UUID) ([]*data.DomainPage, e
 
 	var ps []*data.DomainPage
 	if err := svc.dbx().From("cm_domain_pages").Where(goqu.Ex{"domain_id": domainID}).ScanStructs(&ps); err != nil {
-		logger.Errorf("pageService.ListByDomain: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("pageService.ListByDomain/ScanStructs", err)
 	}
 
 	// Succeeded
@@ -256,8 +249,7 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 		IsOwner sql.NullBool `db:"is_owner"`
 	}
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("pageService.ListByDomainUser: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("pageService.ListByDomainUser/ScanStructs", err)
 	}
 
 	// Convert the page list, applying the current user's authorisations
@@ -275,8 +267,7 @@ func (svc *pageService) Update(page *data.DomainPage) error {
 
 	// Update the page record
 	if err := execOne(svc.dbx().Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID})); err != nil {
-		logger.Errorf("pageService.Update: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("pageService.Update/ExecOne", err)
 	}
 
 	// Succeeded
@@ -305,8 +296,7 @@ func (svc *pageService) UpsertByDomainPath(domain *data.Domain, path, title stri
 		Executor().
 		ScanStruct(&pResult)
 	if err != nil {
-		logger.Errorf("pageService.UpsertByDomainPath: ScanStruct() failed: %v", err)
-		return nil, false, translateDBErrors(err)
+		return nil, false, translateDBErrors("pageService.UpsertByDomainPath/ScanStruct", err)
 	} else if !b {
 		return nil, false, ErrNotFound
 	}

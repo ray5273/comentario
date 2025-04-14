@@ -5,13 +5,11 @@ import (
 	"errors"
 	"github.com/doug-martin/goqu/v9"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"time"
 )
 
 // TokenService is a service interface for dealing with Token objects
 type TokenService interface {
-	persistence.Tx
 	// Create persists a new token
 	Create(t *data.Token) error
 	// DeleteByValue deletes a token by its (string) value
@@ -32,8 +30,7 @@ func (svc *tokenService) Create(t *data.Token) error {
 
 	// Insert a new record
 	if err := execOne(svc.dbx().Insert("cm_tokens").Rows(t)); err != nil {
-		logger.Errorf("tokenService.Create: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("tokenService.Create/ExecOne", err)
 	}
 
 	// Succeeded
@@ -50,8 +47,7 @@ func (svc *tokenService) DeleteByValue(s string) error {
 		return ErrBadToken
 	} else if err != nil {
 		// Any other error
-		logger.Errorf("tokenService.DeleteByValue: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("tokenService.DeleteByValue/ExecOne", err)
 	}
 
 	// Succeeded
@@ -69,8 +65,7 @@ func (svc *tokenService) FindByValue(s string, allowExpired bool) (*data.Token, 
 	// Query the token
 	var t data.Token
 	if b, err := q.ScanStruct(&t); err != nil {
-		logger.Errorf("tokenService.FindByValue: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("tokenService.FindByValue/ScanStruct", err)
 	} else if !b {
 		return nil, ErrBadToken
 	}
@@ -84,8 +79,7 @@ func (svc *tokenService) Update(t *data.Token) error {
 
 	// Update the token record
 	if err := execOne(svc.dbx().Update("cm_tokens").Set(t).Where(goqu.Ex{"value": t.Value})); err != nil {
-		logger.Errorf("tokenService.Update: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("tokenService.Update/ExecOne", err)
 	}
 
 	// Succeeded

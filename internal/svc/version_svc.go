@@ -52,7 +52,7 @@ func (svc *versionService) CurrentVersion() string {
 }
 
 func (svc *versionService) DBVersion() string {
-	return db.Version()
+	return Services.DBVersion()
 }
 
 func (svc *versionService) Init(curVersion, buildDate string) {

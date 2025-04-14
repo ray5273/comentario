@@ -12,6 +12,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"io"
@@ -22,11 +23,16 @@ import (
 
 func DomainClear(params api_general.DomainClearParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+	d, _, r := domainGetWithUser(params.UUID, user, true)
+	if r != nil {
 		return r
+	}
 
-		// Clear all domain's users/pages/comments
-	} else if err := svc.Services.DomainService(nil).ClearByID(&d.ID); err != nil {
+	// Clear all domain's users/pages/comments
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		return svc.Services.DomainService(tx).ClearByID(&d.ID)
+	})
+	if err != nil {
 		return respServiceError(err)
 	}
 
@@ -47,11 +53,16 @@ func DomainCount(params api_general.DomainCountParams, user *data.User) middlewa
 // DomainDelete deletes an existing domain belonging to the current user
 func DomainDelete(params api_general.DomainDeleteParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+	d, _, r := domainGetWithUser(params.UUID, user, true)
+	if r != nil {
 		return r
+	}
 
-		// Delete the domain and all dependent objects
-	} else if err := svc.Services.DomainService(nil).DeleteByID(&d.ID); err != nil {
+	// Delete the domain and all dependent objects
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		return svc.Services.DomainService(tx).DeleteByID(&d.ID)
+	})
+	if err != nil {
 		return respServiceError(err)
 	}
 
@@ -61,22 +72,30 @@ func DomainDelete(params api_general.DomainDeleteParams, user *data.User) middle
 
 func DomainExport(params api_general.DomainExportParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+	d, _, r := domainGetWithUser(params.UUID, user, true)
+	if r != nil {
 		return r
-
-		// Export the data
-	} else if b, err := svc.Services.ImportExportService(nil /* TODO */).Export(&d.ID); err != nil {
-		return respServiceError(err)
-	} else {
-		// Succeeded. Send the data as a file
-		return api_general.NewDomainExportOK().
-			WithContentDisposition(
-				fmt.Sprintf(
-					`inline; filename="%s-%s.json.gz"`,
-					strings.ReplaceAll(d.Host, ":", "-"),
-					time.Now().UTC().Format("2006-01-02-15-04-05"))).
-			WithPayload(io.NopCloser(bytes.NewReader(b)))
 	}
+
+	// Export the data
+	var b []byte
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+		b, err = svc.Services.ImportExportService(tx).Export(&d.ID)
+		return err
+	})
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded. Send the data as a file
+	return api_general.NewDomainExportOK().
+		WithContentDisposition(
+			fmt.Sprintf(
+				`inline; filename="%s-%s.json.gz"`,
+				strings.ReplaceAll(d.Host, ":", "-"),
+				time.Now().UTC().Format("2006-01-02-15-04-05"))).
+		WithPayload(io.NopCloser(bytes.NewReader(b)))
 }
 
 // DomainGet returns properties of a domain belonging to the current user
@@ -88,7 +107,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 	}
 
 	// Fetch domain config
-	cfg, err := svc.Services.DomainConfigService().GetAll(&d.ID)
+	cfg, err := svc.Services.DomainConfigService(nil).GetAll(&d.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -157,18 +176,26 @@ func DomainImport(params api_general.DomainImportParams, user *data.User) middle
 
 	// Perform import
 	var res *svc.ImportResult
-	switch params.Source {
-	case "comentario":
-		res = svc.Services.ImportExportService(nil /* TODO */).Import(user, domain, expData)
+	err = svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		switch params.Source {
+		case "comentario":
+			res = svc.Services.ImportExportService(tx).Import(user, domain, expData)
+			return nil
 
-	case "disqus":
-		res = svc.Services.ImportExportService(nil /* TODO */).ImportDisqus(user, domain, expData)
+		case "disqus":
+			res = svc.Services.ImportExportService(tx).ImportDisqus(user, domain, expData)
+			return nil
 
-	case "wordpress":
-		res = svc.Services.ImportExportService(nil /* TODO */).ImportWordPress(user, domain, expData)
+		case "wordpress":
+			res = svc.Services.ImportExportService(tx).ImportWordPress(user, domain, expData)
+			return nil
 
-	default:
-		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("source"))
+		default:
+			return fmt.Errorf("unknown import source: %q", params.Source)
+		}
+	})
+	if err != nil {
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails(err.Error()))
 	}
 
 	// Succeeded
@@ -232,16 +259,22 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 		return r
 	}
 
-	// Persist a new domain record in the database
-	if err := svc.Services.DomainService(nil /* TODO */).Create(&user.ID, d); err != nil {
-		return respServiceError(err)
-	}
-
-	// Update the dependent lists
-	err := util.CheckErrors(
-		svc.Services.DomainConfigService().Update(&d.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
-		svc.Services.DomainService(nil /* TODO */).SaveIdPs(&d.ID, params.Body.FederatedIdpIds),
-		svc.Services.DomainService(nil /* TODO */).SaveExtensions(&d.ID, exts))
+	// Run in a transaction
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		ds := svc.Services.DomainService(tx)
+		return util.RunCheckErr([]util.ErrFunc{
+			// Persist a new domain record in the database
+			func() error { return ds.Create(&user.ID, d) },
+			// Update domain config
+			func() error {
+				return svc.Services.DomainConfigService(tx).Update(&d.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration))
+			},
+			// Store the domain's IdPs
+			func() error { return ds.SaveIdPs(&d.ID, params.Body.FederatedIdpIds) },
+			// Store the domain's extensions
+			func() error { return ds.SaveExtensions(&d.ID, exts) },
+		})
+	})
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -252,42 +285,63 @@ func DomainNew(params api_general.DomainNewParams, user *data.User) middleware.R
 
 func DomainPurge(params api_general.DomainPurgeParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+	d, _, r := domainGetWithUser(params.UUID, user, true)
+	if r != nil {
 		return r
+	}
 
-		// Purge comments
-	} else if cnt, err := svc.Services.DomainService(nil).PurgeByID(&d.ID, params.Body.MarkedDeleted, params.Body.UserCreatedDeleted); err != nil {
+	// Purge comments
+	var cnt int64
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+		cnt, err = svc.Services.DomainService(tx).PurgeByID(&d.ID, params.Body.MarkedDeleted, params.Body.UserCreatedDeleted)
+		return err
+	})
+	if err != nil {
 		return respServiceError(err)
 
-	} else {
-		// Succeeded
-		return api_general.NewDomainPurgeOK().WithPayload(&api_general.DomainPurgeOKBody{CommentCount: cnt})
 	}
+
+	// Succeeded
+	return api_general.NewDomainPurgeOK().WithPayload(&api_general.DomainPurgeOKBody{CommentCount: cnt})
 }
 
 func DomainSsoSecretNew(params api_general.DomainSsoSecretNewParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+	d, _, r := domainGetWithUser(params.UUID, user, true)
+	if r != nil {
 		return r
+	}
 
-		// Generate a new SSO secret for the domain
-	} else if ss, err := svc.Services.DomainService(nil).GenerateSSOSecret(&d.ID); err != nil {
+	// Generate a new SSO secret for the domain
+	var ss string
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+		ss, err = svc.Services.DomainService(tx).GenerateSSOSecret(&d.ID)
+		return err
+	})
+	if err != nil {
 		return respServiceError(err)
 
-	} else {
-		// Succeeded
-		return api_general.NewDomainSsoSecretNewOK().WithPayload(&api_general.DomainSsoSecretNewOKBody{SsoSecret: ss})
 	}
+
+	// Succeeded
+	return api_general.NewDomainSsoSecretNewOK().WithPayload(&api_general.DomainSsoSecretNewOKBody{SsoSecret: ss})
 }
 
 // DomainReadonly sets the domain's readonly state
 func DomainReadonly(params api_general.DomainReadonlyParams, user *data.User) middleware.Responder {
 	// Find the domain and verify the user's privileges
-	if d, _, r := domainGetWithUser(params.UUID, user, true); r != nil {
+	d, _, r := domainGetWithUser(params.UUID, user, true)
+	if r != nil {
 		return r
+	}
 
-		// Update the domain status
-	} else if err := svc.Services.DomainService(nil).SetReadonly(&d.ID, swag.BoolValue(params.Body.Readonly)); err != nil {
+	// Update the domain status
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		return svc.Services.DomainService(tx).SetReadonly(&d.ID, swag.BoolValue(params.Body.Readonly))
+	})
+	if err != nil {
 		return respServiceError(err)
 	}
 
@@ -327,11 +381,21 @@ func DomainUpdate(params api_general.DomainUpdateParams, user *data.User) middle
 	domain.FromDTO(params.Body.Domain)
 
 	// Persist the updated properties
-	err := util.CheckErrors(
-		svc.Services.DomainService(nil /* TODO */).Update(domain),
-		svc.Services.DomainConfigService().Update(&domain.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration)),
-		svc.Services.DomainService(nil /* TODO */).SaveIdPs(&domain.ID, params.Body.FederatedIdpIds),
-		svc.Services.DomainService(nil /* TODO */).SaveExtensions(&domain.ID, exts))
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		ds := svc.Services.DomainService(tx)
+		return util.RunCheckErr([]util.ErrFunc{
+			// Update the domain record in the database
+			func() error { return ds.Update(domain) },
+			// Update domain config
+			func() error {
+				return svc.Services.DomainConfigService(tx).Update(&domain.ID, &user.ID, data.DynConfigDTOsToMap(params.Body.Configuration))
+			},
+			// Store the domain's IdPs
+			func() error { return ds.SaveIdPs(&domain.ID, params.Body.FederatedIdpIds) },
+			// Store the domain's extensions
+			func() error { return ds.SaveExtensions(&domain.ID, exts) },
+		})
+	})
 	if err != nil {
 		return respServiceError(err)
 	}

@@ -376,20 +376,25 @@ func (db *Database) WithTx(f func(tx *DatabaseTx) error) (err error) {
 	// Initiate a transaction
 	tx, err := db.Begin()
 	if err != nil {
+		logger.Errorf("Database.WithTx: Begin() failed: %v", err)
 		return err
 	}
 
 	// Call the wrapped function, providing it with an instance of the transaction
 	defer func() {
 		if p := recover(); p != nil {
+			logger.Errorf("Database.WithTx: panic from func: %v", p)
 			_ = tx.Rollback()
 			panic(p)
 		}
 		if err != nil {
+			logger.Errorf("Database.WithTx: func() failed: %v", err)
 			if e := tx.Rollback(); e != nil {
+				logger.Errorf("Database.WithTx: post-func Rollback() failed: %v", err)
 				err = e
 			}
 		} else if e := tx.Commit(); e != nil {
+			logger.Errorf("Database.WithTx: post-func Commit() failed: %v", err)
 			err = e
 		}
 	}()
@@ -718,8 +723,9 @@ func (db *Database) tryConnect(num, total int) (err error) {
 
 // DatabaseTx represents a database transaction, implementing DBX
 type DatabaseTx struct {
-	tx *goqu.TxDatabase // Reference to the underlying transaction
-	cc []Tx             // Child transactions
+	tx    *goqu.TxDatabase // Reference to the underlying transaction
+	cc    []Tx             // Child transactions, which get commited and rolled back together with (prior to) this one
+	stale bool             // Whether the transaction is ended and hence unusable
 }
 
 // AddChild adds a child transaction to the transaction
@@ -729,6 +735,7 @@ func (dt *DatabaseTx) AddChild(tx Tx) {
 
 // Commit the transaction
 func (dt *DatabaseTx) Commit() error {
+	defer func() { dt.stale = true }()
 	// Commit all child transactions
 	for _, c := range dt.cc {
 		if err := c.Commit(); err != nil {
@@ -741,21 +748,25 @@ func (dt *DatabaseTx) Commit() error {
 
 // Delete implementation of DBX
 func (dt *DatabaseTx) Delete(table any) *goqu.DeleteDataset {
+	dt.checkStale()
 	return dt.tx.Delete(table)
 }
 
 // From implementation of DBX
 func (dt *DatabaseTx) From(v ...any) *goqu.SelectDataset {
+	dt.checkStale()
 	return dt.tx.From(v...)
 }
 
 // Insert implementation of DBX
 func (dt *DatabaseTx) Insert(table any) *goqu.InsertDataset {
+	dt.checkStale()
 	return dt.tx.Insert(table)
 }
 
 // Rollback the transaction
 func (dt *DatabaseTx) Rollback() error {
+	defer func() { dt.stale = true }()
 	// Roll back all child transactions
 	for _, c := range dt.cc {
 		if err := c.Rollback(); err != nil {
@@ -768,7 +779,15 @@ func (dt *DatabaseTx) Rollback() error {
 
 // Update implementation of DBX
 func (dt *DatabaseTx) Update(table any) *goqu.UpdateDataset {
+	dt.checkStale()
 	return dt.tx.Update(table)
+}
+
+// checkStale panics if the transaction is stale
+func (dt *DatabaseTx) checkStale() {
+	if dt.stale {
+		panic("transaction is stale and hence unusable")
+	}
 }
 
 //----------------------------------------------------------------------------------------------------------------------

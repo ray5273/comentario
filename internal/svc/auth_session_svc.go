@@ -4,13 +4,11 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"time"
 )
 
 // AuthSessionService is a service interface for dealing with AuthSession objects
 type AuthSessionService interface {
-	persistence.Tx
 	// Create saves a new auth session
 	Create(sessData, host, token string) (*data.AuthSession, error)
 	// TakeByID returns and deletes an existing auth session by its ID
@@ -30,8 +28,7 @@ func (svc *authSessionService) Create(sessData, host, token string) (*data.AuthS
 
 	// Persist the session
 	if err := execOne(svc.dbx().Insert("cm_auth_sessions").Rows(as)); err != nil {
-		logger.Errorf("authSessionService.Create: ExecOne() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("authSessionService.Create/ExecOne", err)
 	}
 
 	// Succeeded
@@ -49,8 +46,7 @@ func (svc *authSessionService) TakeByID(id *uuid.UUID) (*data.AuthSession, error
 		Executor().
 		ScanStruct(&as)
 	if err != nil {
-		logger.Errorf("authSessionService.TakeByID: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("authSessionService.TakeByID/ScanStruct", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}

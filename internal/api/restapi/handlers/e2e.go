@@ -174,7 +174,7 @@ func E2eDomainConfigUpdate(params api_e2e.E2eDomainConfigUpdateParams) middlewar
 	}
 
 	// Update the domain setting
-	if err := svc.Services.DomainConfigService().Update(domainID, nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
+	if err := svc.Services.DomainConfigService(nil).Update(domainID, nil, data.DynConfigDTOsToMap(params.Body)); err != nil {
 		return respServiceError(err)
 	}
 

@@ -9,7 +9,6 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"image"
 	"image/color"
@@ -22,7 +21,6 @@ import (
 
 // AvatarService is a service interface for dealing with avatars
 type AvatarService interface {
-	persistence.Tx
 	// DownloadAndUpdateByUserID downloads an avatar from the specified URL and updates the given user. isCustom
 	// indicates whether the avatar is customised by the user
 	DownloadAndUpdateByUserID(userID *uuid.UUID, avatarURL string, isCustom bool) error
@@ -102,7 +100,7 @@ func (svc *avatarService) GetByUserID(userID *uuid.UUID) (*data.UserAvatar, erro
 	// Query the database
 	var ua data.UserAvatar
 	if b, err := svc.dbx().From("cm_user_avatars").Where(goqu.Ex{"user_id": userID}).ScanStruct(&ua); err != nil {
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("avatarService.GetByUserID/ScanStruct", err)
 	} else if !b {
 		// No avatar exists
 		return nil, nil

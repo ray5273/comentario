@@ -11,6 +11,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 	"maps"
@@ -68,7 +69,7 @@ func EmbedCommentGet(params api_embed.EmbedCommentGetParams) middleware.Responde
 	moderator := user.IsSuperuser || domainUser.CanModerate()
 	anonymous := !moderator && user.IsAnonymous()
 	ownComment := !anonymous && comment.UserCreated.Valid && comment.UserCreated.UUID == user.ID
-	delHidden := comment.IsDeleted && !svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments)
+	delHidden := comment.IsDeleted && !svc.Services.DomainConfigService(nil).GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments)
 	if rejected || delHidden || pending && !moderator && !ownComment {
 		return respNotFound(nil)
 	}
@@ -123,7 +124,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 	}
 
 	// Obtain domain config
-	dc, err := svc.Services.DomainConfigService().GetAll(&domain.ID)
+	dc, err := svc.Services.DomainConfigService(nil).GetAll(&domain.ID)
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -187,7 +188,7 @@ func EmbedCommentList(params api_embed.EmbedCommentListParams) middleware.Respon
 		true,
 		true,
 		false, // Don't include rejected: no one's interested in spam
-		svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
+		svc.Services.DomainConfigService(nil).GetBool(&domain.ID, data.DomainConfigKeyShowDeletedComments),
 		true, // Filter out orphans (they won't show up on the client anyway)
 		"",
 		"",
@@ -410,19 +411,23 @@ func EmbedCommentUpdate(params api_embed.EmbedCommentUpdateParams, user *data.Us
 	}
 
 	// Update the comment text/HTML
-	cSvc := svc.Services.CommentService(nil /* TODO */)
-	if err := cSvc.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID); err != nil {
-		return respServiceError(err)
-	}
-	if err := cSvc.Edited(comment); err != nil {
-		return respServiceError(err)
-	}
-
-	// If the comment approval was revoked
-	if unapprove {
-		if err := cSvc.Moderated(comment); err != nil {
-			return respServiceError(err)
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		cSvc := svc.Services.CommentService(tx)
+		if err := cSvc.SetMarkdown(comment, params.Body.Markdown, &domain.ID, &user.ID); err != nil {
+			return err
 		}
+		if err := cSvc.Edited(comment); err != nil {
+			return err
+		}
+
+		// If the comment approval was revoked
+		if unapprove {
+			return cSvc.Moderated(comment)
+		}
+		return nil
+	})
+	if err != nil {
+		return respServiceError(err)
 	}
 
 	// Notify websocket subscribers
@@ -443,7 +448,7 @@ func EmbedCommentVote(params api_embed.EmbedCommentVoteParams, user *data.User) 
 	}
 
 	// Make sure voting is enabled
-	if !svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting) {
+	if !svc.Services.DomainConfigService(nil).GetBool(&domain.ID, data.DomainConfigKeyEnableCommentVoting) {
 		return respForbidden(exmodels.ErrorFeatureDisabled.WithDetails("comment voting"))
 	}
 

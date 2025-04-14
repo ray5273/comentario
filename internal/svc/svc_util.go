@@ -25,12 +25,19 @@ func execOne(x persistence.Executable) error {
 	return persistence.ExecOne(x)
 }
 
-// translateDBErrors "translates" database errors into a service error, picking the first non-nil error
-func translateDBErrors(errs ...error) error {
-	switch err := util.CheckErrors(errs...); {
-	case err == nil:
+// translateDBErrors "translates" database errors into a service error, picking the first non-nil error and logging it
+func translateDBErrors(op string, errs ...error) error {
+	err := util.CheckErrors(errs...)
+	if err == nil {
 		// No error
 		return nil
+	}
+
+	// Log the operation and the error
+	logger.Errorf("%s: DB error: %v", op, err)
+
+	// Translate the DB error into a functional one
+	switch {
 	case errors.Is(err, sql.ErrNoRows):
 		// Not found
 		return ErrNotFound

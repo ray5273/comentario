@@ -5,7 +5,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"time"
 )
 
@@ -52,7 +51,6 @@ func (ir *ImportResult) WithError(err error) *ImportResult {
 
 // ImportExportService is a service interface for dealing with data import/export
 type ImportExportService interface {
-	persistence.Tx
 	// Export exports the data for the specified domain, returning gzip-compressed binary data
 	Export(domainID *uuid.UUID) ([]byte, error)
 	// Import performs data import in the native Comentario (or legacy Commento v1/Comentario v2) format from the
@@ -101,7 +99,7 @@ func (svc *importExportService) ImportWordPress(curUser *data.User, domain *data
 func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID][]*data.Comment, countsPerPage map[uuid.UUID]int) (countImported, countNonDeleted int, err error) {
 	for _, c := range commentParentMap[parentID] {
 		// Insert the comment
-		if err = Services.CommentService(nil /* TODO */).Create(c); err != nil {
+		if err = Services.CommentService(nil).Create(c); err != nil {
 			return
 		}
 		countImported++
@@ -125,12 +123,12 @@ func insertCommentsForParent(parentID uuid.UUID, commentParentMap map[uuid.UUID]
 func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, realEmail, federatedSSO bool, curUserID, domainID *uuid.UUID, creationTime time.Time) (*data.User, bool, bool, error) {
 	// Try to find an existing user with the same email
 	var user *data.User
-	if u, err := Services.UserService(nil /* TODO */).FindUserByEmail(email); err == nil {
+	if u, err := Services.UserService(nil).FindUserByEmail(email); err == nil {
 		// User already exists
 		user = u
 
 		// Check if domain user exists, too
-		if _, du, err := Services.DomainService(nil /* TODO */).FindDomainUserByID(domainID, &u.ID, false); err != nil {
+		if _, du, err := Services.DomainService(nil).FindDomainUserByID(domainID, &u.ID, false); err != nil {
 			return nil, false, false, err
 		} else if du != nil {
 			// Domain user already exists
@@ -152,7 +150,7 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 		if federatedSSO || federatedIdpID != "" {
 			user.WithFederated("", federatedIdpID)
 		}
-		if err := Services.UserService(nil /* TODO */).Create(user); err != nil {
+		if err := Services.UserService(nil).Create(user); err != nil {
 			return nil, false, false, err
 		}
 
@@ -164,7 +162,7 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 	}
 
 	// Add a domain user as well
-	if err := Services.DomainService(nil /* TODO */).UserAdd(data.NewDomainUser(domainID, &user.ID, false, false, true).WithCreated(creationTime)); err != nil {
+	if err := Services.DomainService(nil).UserAdd(data.NewDomainUser(domainID, &user.ID, false, false, true).WithCreated(creationTime)); err != nil {
 		return user, userAdded, false, err
 	}
 

@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
 )
@@ -22,7 +21,6 @@ var (
 
 // AuthService is a service interface to authenticate users
 type AuthService interface {
-	persistence.Tx
 	// AuthenticateBearerToken inspects the token (usually provided in a header) and determines if the token is of one of
 	// the provided scopes
 	AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error)
@@ -55,7 +53,7 @@ type authService struct{ dbTxAware }
 // the provided scopes
 func (svc *authService) AuthenticateBearerToken(tokenStr string, scopes []string) (*data.User, error) {
 	// Try to find the token
-	token, err := Services.TokenService(nil /* TODO */).FindByValue(tokenStr, false)
+	token, err := Services.TokenService(nil).FindByValue(tokenStr, false)
 	if err != nil {
 		return nil, ErrUnauthorised
 	}
@@ -67,7 +65,7 @@ func (svc *authService) AuthenticateBearerToken(tokenStr string, scopes []string
 
 	// Token seems legitimate, now find its owner
 	var user *data.User
-	if user, err = Services.UserService(nil /* TODO */).FindUserByID(&token.Owner); err != nil {
+	if user, err = Services.UserService(nil).FindUserByID(&token.Owner); err != nil {
 		return nil, ErrInternalError
 
 		// Verify the user is allowed to authenticate at all
@@ -78,7 +76,7 @@ func (svc *authService) AuthenticateBearerToken(tokenStr string, scopes []string
 
 	// If it's a disposable token, revoke it, ignoring any error
 	if !token.Multiuse {
-		_ = Services.TokenService(nil /* TODO */).DeleteByValue(token.Value)
+		_ = Services.TokenService(nil).DeleteByValue(token.Value)
 	}
 
 	// Succeeded
@@ -151,7 +149,7 @@ func (svc *authService) FetchUserBySessionHeader(headerValue string) (*data.User
 		return nil, nil, err
 
 		// Find the user and the session
-	} else if user, us, err := Services.UserService(nil /* TODO */).FindUserBySession(userID, sessionID); err != nil {
+	} else if user, us, err := Services.UserService(nil).FindUserBySession(userID, sessionID); err != nil {
 		return nil, nil, err
 
 		// Verify the user is allowed to authenticate
@@ -185,7 +183,7 @@ func (svc *authService) GetUserBySessionCookie(r *http.Request) (*data.User, err
 	}
 
 	// Find the user
-	user, _, err := Services.UserService(nil /* TODO */).FindUserBySession(userID, sessionID)
+	user, _, err := Services.UserService(nil).FindUserBySession(userID, sessionID)
 	if err != nil {
 		return nil, err
 	}

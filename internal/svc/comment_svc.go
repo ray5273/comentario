@@ -2,13 +2,13 @@ package svc
 
 import (
 	"database/sql"
+	"fmt"
 	"github.com/doug-martin/goqu/v9"
 	"github.com/doug-martin/goqu/v9/exp"
 	"github.com/go-openapi/strfmt"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
 	"time"
@@ -16,7 +16,6 @@ import (
 
 // CommentService is a service interface for dealing with comments
 type CommentService interface {
-	persistence.Tx
 	// Count returns number of comments for the given domain and, optionally, page.
 	//   - curUser is the current authenticated/anonymous user.
 	//   - curDomainUser is the current domain user (can be nil).
@@ -134,8 +133,7 @@ func (svc *commentService) Count(
 
 	cnt, err := q.Count()
 	if err != nil {
-		logger.Errorf("commentService.Count: Count() failed: %v", err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("commentService.Count/Count", err)
 	}
 
 	// Succeeded
@@ -145,8 +143,7 @@ func (svc *commentService) Count(
 func (svc *commentService) Create(c *data.Comment) error {
 	logger.Debugf("commentService.Create(%#v)", c)
 	if err := execOne(svc.dbx().Insert("cm_comments").Rows(c)); err != nil {
-		logger.Errorf("commentService.Create: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("commentService.Create/ExecOne", err)
 	}
 
 	// Succeeded
@@ -183,8 +180,7 @@ func (svc *commentService) Edited(comment *data.Comment) error {
 			}).
 			Where(goqu.Ex{"id": &comment.ID}),
 	); err != nil {
-		logger.Errorf("commentService.Edited: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("commentService.Edited/ExecOne", err)
 	}
 
 	// Succeeded
@@ -197,8 +193,7 @@ func (svc *commentService) FindByID(id *uuid.UUID) (*data.Comment, error) {
 	// Query the database
 	var c data.Comment
 	if b, err := svc.dbx().From("cm_comments").Where(goqu.Ex{"id": id}).ScanStruct(&c); err != nil {
-		logger.Errorf("commentService.FindByID: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("commentService.FindByID/ScanStruct", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}
@@ -228,8 +223,7 @@ func (svc *commentService) ListByDomain(domainID *uuid.UUID) ([]*models.Comment,
 		DomainHTTPS bool   `db:"is_https"`
 	}
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("commentService.ListByDomain: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("commentService.ListByDomain/ScanStructs", err)
 	}
 
 	// Convert models into DTOs
@@ -382,8 +376,7 @@ func (svc *commentService) ListWithCommenters(curUser *data.User, curDomainUser 
 		DomainHTTPS     bool           `db:"d_is_https"`
 	}
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("commentService.ListWithCommenters: ScanStructs() failed: %v", err)
-		return nil, nil, translateDBErrors(err)
+		return nil, nil, translateDBErrors("commentService.ListWithCommenters/ScanStructs", err)
 	}
 
 	// Prepare commenter map: begin with only the "anonymous" one
@@ -493,8 +486,7 @@ func (svc *commentService) MarkDeleted(commentID, userID *uuid.UUID) error {
 			}).
 			Where(goqu.Ex{"id": commentID}),
 	); err != nil {
-		logger.Errorf("commentService.MarkDeleted: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("commentService.MarkDeleted/ExecOne", err)
 	}
 
 	// Succeeded
@@ -514,11 +506,9 @@ func (svc *commentService) MarkDeletedByUser(curUserID, userID *uuid.UUID) (int6
 		"user_deleted":   curUserID,
 	}
 	if res, err := svc.dbx().Update("cm_comments").Set(r).Where(goqu.Ex{"user_created": userID}).Executor().Exec(); err != nil {
-		logger.Errorf("commentService.MarkDeletedByUser: Exec() failed: %v", err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("commentService.MarkDeletedByUser/Exec", err)
 	} else if cnt, err := res.RowsAffected(); err != nil {
-		logger.Errorf("commentService.MarkDeletedByUser: RowsAffected() failed: %v", err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("commentService.MarkDeletedByUser/RowsAffected", err)
 	} else {
 		// Succeeded
 		return cnt, nil
@@ -540,8 +530,7 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 			}).
 			Where(goqu.Ex{"id": &comment.ID}),
 	); err != nil {
-		logger.Errorf("commentService.Moderated: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("commentService.Moderated/ExecOne", err)
 	}
 
 	// Succeeded
@@ -551,7 +540,7 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error {
 	logger.Debugf("commentService.SetMarkdown(%v, %q, %s, %s)", comment, markdown, domainID, editedUserID)
 
-	dc, err := Services.DomainConfigService().GetAll(domainID)
+	dc, err := Services.DomainConfigService(nil).GetAll(domainID)
 	if err != nil {
 		return err
 	}
@@ -587,8 +576,7 @@ func (svc *commentService) UpdateSticky(commentID *uuid.UUID, sticky bool) error
 
 	// Update the row in the database
 	if err := execOne(svc.dbx().Update("cm_comments").Set(goqu.Record{"is_sticky": sticky}).Where(goqu.Ex{"id": commentID})); err != nil {
-		logger.Errorf("commentService.UpdateSticky: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("commentService.UpdateSticky/ExecOne", err)
 	}
 
 	// Succeeded
@@ -609,8 +597,7 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 		Where(goqu.Ex{"c.id": commentID}).
 		ScanStruct(&r)
 	if err != nil {
-		logger.Errorf("commentService.Vote: ScanStruct() failed: %v", err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("commentService.Vote/ScanStruct", err)
 	} else if !b {
 		return 0, ErrNotFound
 	}
@@ -656,15 +643,13 @@ func (svc *commentService) Vote(commentID, userID *uuid.UUID, direction int8) (i
 		op = "vote update"
 	}
 	if err != nil {
-		logger.Errorf("commentService.Vote: ExecOne() failed for %s: %v", op, err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors(fmt.Sprintf("commentService.Vote/ExecOne[op=%q]", op), err)
 	}
 
 	// Update the comment score
 	r.Score += inc
 	if err := execOne(svc.dbx().Update("cm_comments").Set(r).Where(goqu.Ex{"id": commentID})); err != nil {
-		logger.Errorf("commentService.Vote: ExecOne() failed for comment update: %v", err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("commentService.Vote/ExecOne[comment update]", err)
 	}
 
 	// Succeeded

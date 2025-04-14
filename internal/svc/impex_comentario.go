@@ -156,7 +156,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	result := &ImportResult{}
 
 	// Fetch domain config
-	maxLength := Services.DomainConfigService().GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)
+	maxLength := Services.DomainConfigService(nil).GetInt(&domain.ID, data.DomainConfigKeyMaxCommentLength)
 	logger.Debugf("Max. comment text length is %d", maxLength)
 
 	// Create a map of commenterHex -> user ID
@@ -241,7 +241,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 			pageID = id
 
 			// Page doesn't exist. Find or insert a page with this path
-		} else if page, added, err := Services.PageService(nil /* TODO */).UpsertByDomainPath(domain, pagePath, "", nil); err != nil {
+		} else if page, added, err := Services.PageService(nil).UpsertByDomainPath(domain, pagePath, "", nil); err != nil {
 			return result.WithError(err)
 
 		} else {
@@ -302,12 +302,12 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(util.ZeroUUID, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
-	_ = Services.DomainService(nil /* TODO */).IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+	_ = Services.DomainService(nil).IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
 
 	// Increase comment counts on all pages
 	for pageID, pc := range countsPerPage {
 		if pc > 0 {
-			_ = Services.PageService(nil /* TODO */).IncrementCounts(&pageID, pc, 0)
+			_ = Services.PageService(nil).IncrementCounts(&pageID, pc, 0)
 		}
 	}
 
@@ -369,7 +369,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 		result.PagesTotal++
 
 		// Find the page for the comment based on path
-		p, added, err := Services.PageService(nil /* TODO */).UpsertByDomainPath(domain, string(page.Path), page.Title, nil)
+		p, added, err := Services.PageService(nil).UpsertByDomainPath(domain, string(page.Path), page.Title, nil)
 		if err != nil {
 			return result.WithError(err)
 
@@ -472,12 +472,12 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	result.CommentsImported, result.CommentsNonDeleted, result.Error = insertCommentsForParent(util.ZeroUUID, commentParentIDMap, countsPerPage)
 
 	// Increase comment count on the domain, ignoring errors
-	_ = Services.DomainService(nil /* TODO */).IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
+	_ = Services.DomainService(nil).IncrementCounts(&domain.ID, result.CommentsNonDeleted, 0)
 
 	// Increase comment counts on all pages
 	for pageID, pc := range countsPerPage {
 		if pc > 0 {
-			_ = Services.PageService(nil /* TODO */).IncrementCounts(&pageID, pc, 0)
+			_ = Services.PageService(nil).IncrementCounts(&pageID, pc, 0)
 		}
 	}
 

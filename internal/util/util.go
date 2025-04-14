@@ -517,6 +517,19 @@ func RequestReplacePath(req *http.Request, newPath string) *http.Request {
 	return cr
 }
 
+type ErrFunc = func() error
+
+// RunCheckErr runs the provided functions sequentially, stopping on the first non-nil error and returning it, or nil if
+// there's none
+func RunCheckErr(fs []ErrFunc) error {
+	for _, f := range fs {
+		if err := f(); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 // StripPort returns the provided hostname or IP address string with any port number part (':xxxx') removed
 func StripPort(hostOrIP string) string {
 	s := rePortInHostname.ReplaceAllString(hostOrIP, "")

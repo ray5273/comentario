@@ -5,10 +5,12 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"gitlab.com/comentario/comentario/internal/util"
 )
@@ -25,13 +27,19 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	}
 
 	// Fetch the user's attributes
-	attr, err := svc.Services.UserAttrService(nil /* TODO */).GetAll(&user.ID)
-	if err != nil {
-		return respServiceError(err)
-	}
+	var attr plugin.AttrValues
+	var du *data.DomainUser
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+		attr, err = svc.Services.UserAttrService(tx).GetAll(&user.ID)
+		if err != nil {
+			return err
+		}
 
-	// Find the domain user, creating one if necessary
-	_, du, err := svc.Services.DomainService(nil /* TODO */).FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+		// Find the domain user, creating one if necessary
+		_, du, err = svc.Services.DomainService(tx).FindDomainUserByHost(string(params.Body.Host), &user.ID, true)
+		return err
+	})
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -75,14 +83,20 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 		return r
 	}
 
-	// Fetch the user's attributes
-	attr, err := svc.Services.UserAttrService(nil /* TODO */).GetAll(&user.ID)
-	if err != nil {
-		return respServiceError(err)
-	}
+	var attr plugin.AttrValues
+	var du *data.DomainUser
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+		// Fetch the user's attributes
+		attr, err = svc.Services.UserAttrService(tx).GetAll(&user.ID)
+		if err != nil {
+			return err
+		}
 
-	// Find the domain user, creating one if necessary
-	_, du, err := svc.Services.DomainService(nil /* TODO */).FindDomainUserByHost(host, &user.ID, true)
+		// Find the domain user, creating one if necessary
+		_, du, err = svc.Services.DomainService(tx).FindDomainUserByHost(host, &user.ID, true)
+		return err
+	})
 	if err != nil {
 		return respServiceError(err)
 	}
@@ -95,16 +109,21 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 }
 
 func EmbedAuthLogout(params api_embed.EmbedAuthLogoutParams, _ *data.User) middleware.Responder {
-	// Extract session from the session header
-	_, sessionID, err := svc.Services.AuthService(nil /* TODO */).ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		// Extract session from the session header
+		_, sessionID, err := svc.Services.AuthService(tx).ExtractUserSessionIDs(params.HTTPRequest.Header.Get(util.HeaderUserSession))
+		if err != nil {
+			return err
+		}
+
+		// Delete the session token
+		return svc.Services.UserService(tx).DeleteUserSession(sessionID)
+	})
 	if err != nil {
-		return respUnauthorized(nil)
+		return respServiceError(err)
 	}
 
-	// Delete the session token, ignoring any error
-	_ = svc.Services.UserService(nil /* TODO */).DeleteUserSession(sessionID)
-
-	// Regardless of whether the above was successful, return a success response
+	// Succeeded
 	return api_embed.NewEmbedAuthLogoutNoContent()
 }
 
@@ -181,21 +200,25 @@ func EmbedAuthCurUserUpdate(params api_embed.EmbedAuthCurUserUpdateParams, user 
 		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("domainId"))
 	}
 
-	// Fetch the domain user
-	_, du, err := svc.Services.DomainService(nil /* TODO */).FindDomainUserByID(domainID, &user.ID, true)
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		// Fetch the domain user
+		_, du, err := svc.Services.DomainService(tx).FindDomainUserByID(domainID, &user.ID, true)
+		if err != nil {
+			return err
+		}
+
+		// Update the domain user, if the settings change
+		if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
+			return svc.Services.DomainService(tx).UserModify(du.
+				WithNotifyReplies(params.Body.NotifyReplies).
+				WithNotifyModerator(params.Body.NotifyModerator).
+				WithNotifyCommentStatus(params.Body.NotifyCommentStatus),
+			)
+		}
+		return nil
+	})
 	if err != nil {
 		return respServiceError(err)
-	}
-
-	// Update the domain user, if the settings change
-	if du.NotifyReplies != params.Body.NotifyReplies || du.NotifyModerator != params.Body.NotifyModerator || du.NotifyCommentStatus != params.Body.NotifyCommentStatus {
-		if err := svc.Services.DomainService(nil /* TODO */).UserModify(du.
-			WithNotifyReplies(params.Body.NotifyReplies).
-			WithNotifyModerator(params.Body.NotifyModerator).
-			WithNotifyCommentStatus(params.Body.NotifyCommentStatus),
-		); err != nil {
-			return respServiceError(err)
-		}
 	}
 
 	// Succeeded

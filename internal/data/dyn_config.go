@@ -102,6 +102,16 @@ func (ci *DynConfigItem) ValidateValue(value string) error {
 // DynConfigMap is a key-indexed map of DynConfigItem
 type DynConfigMap map[DynConfigItemKey]*DynConfigItem
 
+// Clone the map
+func (m DynConfigMap) Clone() DynConfigMap {
+	c := make(DynConfigMap, len(m))
+	for k, v := range m {
+		vCopy := *v
+		c[k] = &vCopy
+	}
+	return c
+}
+
 // GetBool returns the bool value of a configuration item by its key, or false on error
 func (m DynConfigMap) GetBool(key DynConfigItemKey) bool {
 	if i, ok := m[key]; ok {

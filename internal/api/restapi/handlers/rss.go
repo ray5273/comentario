@@ -26,7 +26,7 @@ func RssComments(params api_rss.RssCommentsParams) middleware.Responder {
 	feedURL := domain.RootURL()
 
 	// Verify RSS is enabled for this domain
-	if !svc.Services.DomainConfigService().GetBool(&domain.ID, data.DomainConfigKeyRSSEnabled) {
+	if !svc.Services.DomainConfigService(nil).GetBool(&domain.ID, data.DomainConfigKeyRSSEnabled) {
 		return respForbidden(exmodels.ErrorFeatureDisabled.WithDetails("RSS"))
 	}
 

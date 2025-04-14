@@ -9,14 +9,12 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"time"
 )
 
 // StatsService is a service interface for dealing with stats
 type StatsService interface {
-	persistence.Tx
 	// GetDailyCommentCounts collects and returns a daily statistics for comments, optionally limited to a specific
 	// domain
 	GetDailyCommentCounts(isSuperuser bool, userID, domainID *uuid.UUID, numDays int) ([]uint64, error)
@@ -49,7 +47,7 @@ func (svc *statsService) GetDailyCommentCounts(isSuperuser bool, userID, domainI
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	date := db.StartOfDay("c.ts_created")
+	date := Services.StartOfDay("c.ts_created")
 	q := svc.dbx().From(goqu.T("cm_comments").As("c")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("c.page_id")})).
@@ -81,7 +79,7 @@ func (svc *statsService) GetDailyDomainUserCounts(isSuperuser bool, userID, doma
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	date := db.StartOfDay("u.ts_created")
+	date := Services.StartOfDay("u.ts_created")
 	q := svc.dbx().From(goqu.T("cm_domains_users").As("u")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		// Filter by domain
@@ -112,7 +110,7 @@ func (svc *statsService) GetDailyDomainPageCounts(isSuperuser bool, userID, doma
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for comment counts, grouped by day
-	date := db.StartOfDay("p.ts_created")
+	date := Services.StartOfDay("p.ts_created")
 	q := svc.dbx().From(goqu.T("cm_domain_pages").As("p")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		// Filter by domain
@@ -148,7 +146,7 @@ func (svc *statsService) GetDailyViewCounts(isSuperuser bool, userID, domainID *
 	numDays, start := getStatsStartDate(numDays)
 
 	// Prepare a query for view counts, grouped by day
-	date := db.StartOfDay("v.ts_created")
+	date := Services.StartOfDay("v.ts_created")
 	q := svc.dbx().From(goqu.T("cm_domain_page_views").As("v")).
 		Select(goqu.COUNT("*").As("cnt"), date.As("date")).
 		Join(goqu.T("cm_domain_pages").As("p"), goqu.On(goqu.Ex{"p.id": goqu.I("v.page_id")})).
@@ -231,8 +229,7 @@ func (svc *statsService) GetTopPages(isSuperuser bool, prop string, userID, doma
 	// Query the data
 	var dbRecs []*exmodels.PageStatsItem
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("statsService.GetTopPages: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("statsService.GetTopPages/ScanStructs", err)
 	}
 
 	// Succeeded
@@ -245,24 +242,24 @@ func (svc *statsService) GetTotals(curUser *data.User) (*StatsTotals, error) {
 
 	// Collect stats for domains, domain pages, and domain users
 	if err := svc.fillDomainPageUserStats(curUser, totals); err != nil {
-		return nil, translateDBErrors(err)
+		return nil, err
 	}
 
 	// If the current user is a superuser, query numbers of users
 	if curUser.IsSuperuser {
 		if err := svc.fillUserStats(totals); err != nil {
-			return nil, translateDBErrors(err)
+			return nil, err
 		}
 	}
 
 	// Collect stats for comments and commenters
 	if err := svc.fillCommentCommenterStats(curUser, totals); err != nil {
-		return nil, translateDBErrors(err)
+		return nil, err
 	}
 
 	// Collect stats for own comments and pages
 	if err := svc.fillOwnStats(curUser, totals); err != nil {
-		return nil, translateDBErrors(err)
+		return nil, err
 	}
 
 	// Succeeded
@@ -305,8 +302,7 @@ func (svc *statsService) GetViewStats(isSuperuser bool, dimension string, userID
 	// Query the data
 	var res exmodels.StatsDimensionCounts
 	if err := q.ScanStructs(&res); err != nil {
-		logger.Errorf("statsService.GetViewStats: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("statsService.GetViewStats/ScanStructs", err)
 	}
 
 	// Succeeded
@@ -340,8 +336,7 @@ func (svc *statsService) fillCommentCommenterStats(curUser *data.User, totals *S
 		CountCommenters int64 `db:"cnt_commenters"`
 	}
 	if b, err := q.ScanStruct(&r); err != nil {
-		logger.Errorf("statsService.fillCommentCommenterStats: ScanStruct() failed: %v", err)
-		return err
+		return translateDBErrors("statsService.fillCommentCommenterStats/ScanStruct", err)
 	} else if !b {
 		return ErrNotFound
 	}
@@ -396,8 +391,7 @@ func (svc *statsService) fillDomainPageUserStats(curUser *data.User, totals *Sta
 		CountDomains sql.NullInt64 `db:"cnt_domains"`
 	}
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("statsService.fillDomainPageUserStats: ScanStructs() failed: %v", err)
-		return err
+		return translateDBErrors("statsService.fillDomainPageUserStats/ScanStructs", err)
 	}
 
 	// Accumulate counts
@@ -445,8 +439,7 @@ func (svc *statsService) fillOwnStats(curUser *data.User, totals *StatsTotals) e
 		CountPages    int64 `db:"cnt_pages"`
 	}
 	if b, err := q.ScanStruct(&r); err != nil {
-		logger.Errorf("statsService.fillOwnStats: ScanStruct() failed: %v", err)
-		return err
+		return translateDBErrors("statsService.fillOwnStats/ScanStruct", err)
 	} else if !b {
 		return ErrNotFound
 	}
@@ -465,8 +458,7 @@ func (svc *statsService) fillUserStats(totals *StatsTotals) error {
 		Count  int64 `db:"cnt"`
 	}
 	if err := svc.dbx().From("cm_users").Select("banned", goqu.COUNT("*").As("cnt")).GroupBy("banned").ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("statsService.fillUserStats: ScanStructs() failed: %v", err)
-		return err
+		return translateDBErrors("statsService.fillUserStats/ScanStructs", err)
 	}
 
 	// Accumulate counts by incrementing the relevant user counters
@@ -493,8 +485,7 @@ func (svc *statsService) queryDailyStats(ds *goqu.SelectDataset, start time.Time
 		Count uint64 `db:"cnt"`
 	}
 	if err := ds.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("statsService.queryDailyStats: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("statsService.queryDailyStats/ScanStructs", err)
 	}
 
 	// Iterate data rows
@@ -503,8 +494,7 @@ func (svc *statsService) queryDailyStats(ds *goqu.SelectDataset, start time.Time
 		// Parse the returned string into time
 		t, err := time.Parse(time.RFC3339, r.Date)
 		if err != nil {
-			logger.Errorf("statsService.queryDailyStats: failed to parse datetime string: %v", err)
-			return nil, translateDBErrors(err)
+			return nil, translateDBErrors("statsService.queryDailyStats[parse datetime string]", err)
 		}
 
 		// UTC-ise the time, just in case it's in a different timezone

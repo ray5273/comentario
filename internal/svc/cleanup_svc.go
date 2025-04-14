@@ -8,7 +8,6 @@ import (
 )
 
 type CleanupService interface {
-	persistence.Tx
 	// Run the service
 	Run() error
 }

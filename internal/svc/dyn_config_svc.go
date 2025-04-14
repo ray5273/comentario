@@ -6,6 +6,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"sync"
 	"time"
 )
@@ -63,13 +64,8 @@ func (cs *ConfigStore) GetAll() (data.DynConfigMap, error) {
 		return nil, errConfigUninitialised
 	}
 
-	// Make an (immutable) copy of the items
-	items := make(data.DynConfigMap, len(cs.items))
-	for k, v := range cs.items {
-		vCopy := *v
-		items[k] = &vCopy
-	}
-	return items, nil
+	// Return a (immutable) clone of the items
+	return cs.items.Clone(), nil
 }
 
 // Reset all configuration data to instance defaults
@@ -112,7 +108,7 @@ func (cs *ConfigStore) Update(curUserID *uuid.UUID, vals map[data.DynConfigItemK
 }
 
 // dbLoad loads the config from the given table, with an optional key filter
-func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
+func (cs *ConfigStore) dbLoad(dbx persistence.DBX, tableName string, extraKeyCols goqu.Ex) error {
 	// Prevent concurrent access
 	cs.mu.Lock()
 	defer cs.mu.Unlock()
@@ -126,7 +122,7 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 
 	// Query the data
 	var dbRecs []dynConfigRecord
-	if err := db.From(goqu.T(tableName)).Where(extraKeyCols).ScanStructs(&dbRecs); err != nil {
+	if err := dbx.From(goqu.T(tableName)).Where(extraKeyCols).ScanStructs(&dbRecs); err != nil {
 		logger.Errorf("ConfigStore.Load: ScanStructs() failed: %v", err)
 		return err
 	}
@@ -146,7 +142,7 @@ func (cs *ConfigStore) dbLoad(tableName string, extraKeyCols goqu.Ex) error {
 }
 
 // dbSave writes the config into the given table, with an optional key filter
-func (cs *ConfigStore) dbSave(tableName string, extraKeyCols goqu.Ex) error {
+func (cs *ConfigStore) dbSave(dbx persistence.DBX, tableName string, extraKeyCols goqu.Ex) error {
 	// Prevent concurrent access
 	cs.mu.RLock()
 	defer cs.mu.RUnlock()
@@ -183,11 +179,11 @@ func (cs *ConfigStore) dbSave(tableName string, extraKeyCols goqu.Ex) error {
 	}
 
 	// Remove and reinsert all items in scope
-	if _, err := db.Delete(tableName).Where(extraKeyCols).Executor().Exec(); err != nil {
-		return translateDBErrors(err)
+	if _, err := dbx.Delete(tableName).Where(extraKeyCols).Executor().Exec(); err != nil {
+		return translateDBErrors("ConfigStore.dbSave/Exec[delete]", err)
 	}
-	if _, err := db.Insert(tableName).Rows(rows...).Executor().Exec(); err != nil {
-		return translateDBErrors(err)
+	if _, err := dbx.Insert(tableName).Rows(rows...).Executor().Exec(); err != nil {
+		return translateDBErrors("ConfigStore.dbSave/Exec[insert]", err)
 	}
 
 	// Succeeded
@@ -214,14 +210,15 @@ func (cs *ConfigStore) get(key data.DynConfigItemKey) (*data.DynConfigItem, erro
 // instanceConfigStore is an extension to ConfigStore that stores global dynamic config
 type instanceConfigStore struct {
 	ConfigStore
+	dbx persistence.DBX
 }
 
 func (cs *instanceConfigStore) Load() error {
-	return cs.dbLoad("cm_configuration", goqu.Ex{})
+	return cs.dbLoad(cs.dbx, "cm_configuration", goqu.Ex{})
 }
 
 func (cs *instanceConfigStore) Save() error {
-	return cs.dbSave("cm_configuration", goqu.Ex{})
+	return cs.dbSave(cs.dbx, "cm_configuration", goqu.Ex{})
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -243,9 +240,9 @@ func getInstanceDefaults() (data.DynConfigMap, error) {
 }
 
 // newDynConfigService creates a new DynConfigService
-func newDynConfigService() *dynConfigService {
+func newDynConfigService(dbx persistence.DBX) *dynConfigService {
 	return &dynConfigService{
-		s: &instanceConfigStore{ConfigStore{defaults: getInstanceDefaults}},
+		s: &instanceConfigStore{ConfigStore: ConfigStore{defaults: getInstanceDefaults}, dbx: dbx},
 	}
 }
 
@@ -311,7 +308,7 @@ func (svc *dynConfigService) Reset() error {
 	}
 
 	// Flush any cached domain config to enforce any new defaults
-	Services.DomainConfigService().ResetCache()
+	Services.DomainConfigService(nil).ResetCache()
 
 	// Succeeded
 	return nil
@@ -331,7 +328,7 @@ func (svc *dynConfigService) Update(curUserID *uuid.UUID, vals map[data.DynConfi
 	}
 
 	// Flush any cached domain config to enforce any new defaults
-	Services.DomainConfigService().ResetCache()
+	Services.DomainConfigService(nil).ResetCache()
 
 	// Succeeded
 	return nil

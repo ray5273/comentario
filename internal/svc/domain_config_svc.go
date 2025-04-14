@@ -8,6 +8,7 @@ import (
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/op/go-logging"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
 )
@@ -38,15 +39,13 @@ type domainConfigStore struct {
 	domainID uuid.UUID
 }
 
-func (cs *domainConfigStore) Load() error {
-	return cs.dbLoad("cm_domain_configuration", goqu.Ex{"domain_id": &cs.domainID})
+func (cs *domainConfigStore) load(dbx persistence.DBX) error {
+	return cs.dbLoad(dbx, "cm_domain_configuration", goqu.Ex{"domain_id": &cs.domainID})
 }
 
-func (cs *domainConfigStore) Save() error {
-	return cs.dbSave("cm_domain_configuration", goqu.Ex{"domain_id": &cs.domainID})
+func (cs *domainConfigStore) save(dbx persistence.DBX) error {
+	return cs.dbSave(dbx, "cm_domain_configuration", goqu.Ex{"domain_id": &cs.domainID})
 }
-
-//----------------------------------------------------------------------------------------------------------------------
 
 // getDomainDefaults returns default domain config items
 func getDomainDefaults() (data.DynConfigMap, error) {
@@ -75,46 +74,140 @@ func getDomainDefaults() (data.DynConfigMap, error) {
 	return m, nil
 }
 
-// newDomainConfigService creates a new DomainConfigService
-func newDomainConfigService() *domainConfigService {
-	svc := &domainConfigService{
-		cache: ttlcache.New[uuid.UUID, *domainConfigStore](
+//----------------------------------------------------------------------------------------------------------------------
+
+// domainConfigCache is a cache-backed collection of domainConfigStore's
+type domainConfigCache struct {
+	c *ttlcache.Cache[uuid.UUID, *domainConfigStore] // Cached stores per domain ID
+}
+
+// newDomainConfigCache creates a new domainConfigCache
+func newDomainConfigCache() *domainConfigCache {
+	svc := &domainConfigCache{
+		c: ttlcache.New[uuid.UUID, *domainConfigStore](
 			ttlcache.WithTTL[uuid.UUID, *domainConfigStore](util.ConfigCacheTTL),
 		),
 	}
 
 	// Debug logging
 	if logger.IsEnabledFor(logging.DEBUG) {
-		svc.cache.OnEviction(func(_ context.Context, reason ttlcache.EvictionReason, i *ttlcache.Item[uuid.UUID, *domainConfigStore]) {
-			logger.Debugf("domainConfigService: evicted %s, reason=%d", i.Key(), reason)
+		svc.c.OnEviction(func(_ context.Context, reason ttlcache.EvictionReason, i *ttlcache.Item[uuid.UUID, *domainConfigStore]) {
+			logger.Debugf("domainConfigCache: evicted %s, reason=%d", i.Key(), reason)
 		})
 	}
 
 	// Start the cache cleaner
-	go svc.cache.Start()
+	go svc.c.Start()
 	return svc
 }
 
-// domainConfigService is a blueprint DomainConfigService implementation
-type domainConfigService struct {
-	cache *ttlcache.Cache[uuid.UUID, *domainConfigStore] // Cached stores per domain ID
-}
-
-func (svc *domainConfigService) Get(domainID *uuid.UUID, key data.DynConfigItemKey) (*data.DynConfigItem, error) {
-	if s, err := svc.getStore(domainID); err != nil {
+func (svc *domainConfigCache) get(dbx persistence.DBX, domainID *uuid.UUID, key data.DynConfigItemKey) (*data.DynConfigItem, error) {
+	if s, err := svc.getStore(dbx, domainID); err != nil {
 		return nil, err
 	} else {
 		return s.Get(key)
 	}
 }
 
-func (svc *domainConfigService) GetAll(domainID *uuid.UUID) (data.DynConfigMap, error) {
-	logger.Debugf("domainConfigService.GetAll(%s)", domainID)
-	if s, err := svc.getStore(domainID); err != nil {
+func (svc *domainConfigCache) getAll(dbx persistence.DBX, domainID *uuid.UUID) (data.DynConfigMap, error) {
+	logger.Debugf("domainConfigCache.getAll(%v, %s)", dbx, domainID)
+	if s, err := svc.getStore(dbx, domainID); err != nil {
 		return nil, err
 	} else {
 		return s.GetAll()
 	}
+}
+
+// getStore returns the store for the given domain
+func (svc *domainConfigCache) getStore(dbx persistence.DBX, domainID *uuid.UUID) (*domainConfigStore, error) {
+	// Try to find a cached item
+	if ci := svc.c.Get(*domainID); ci != nil {
+		return ci.Value(), nil
+	}
+
+	// Cache miss: create a new store
+	// NB: we cannot use ttlcache.WithLoader()/ttlcache.LoaderFunc because they don't support returning an error
+	logger.Debugf("domainConfigCache.getStore: cache miss for %s", domainID)
+	s := &domainConfigStore{
+		ConfigStore: ConfigStore{defaults: getDomainDefaults},
+		domainID:    *domainID,
+	}
+
+	// Load the config from the database
+	if err := s.load(dbx); err != nil {
+		logger.Errorf("domainConfigCache.getStore: s.Load() failed: %v", err)
+		return nil, err
+	}
+
+	// Cache the store
+	svc.c.Set(*domainID, s, ttlcache.DefaultTTL)
+	return s, nil
+}
+
+// resetCache empties the cached configs
+func (svc *domainConfigCache) resetCache() {
+	svc.c.DeleteAll()
+}
+
+// resetCacheFor empties the cached config for specific domain ID
+func (svc *domainConfigCache) resetCacheFor(id *uuid.UUID) {
+	svc.c.Delete(*id)
+}
+
+func (svc *domainConfigCache) update(dbx persistence.DBX, domainID, curUserID *uuid.UUID, vals map[data.DynConfigItemKey]string) error {
+	logger.Debugf("domainConfigCache.update(%v, %s, %s, %#v)", dbx, domainID, curUserID, vals)
+
+	// Fetch the required store
+	s, err := svc.getStore(dbx, domainID)
+	if err != nil {
+		return err
+	}
+
+	// Update the specified items
+	if err := s.Update(curUserID, vals); err != nil {
+		return err
+	}
+
+	// Write the store to the database
+	return s.save(dbx)
+}
+
+//----------------------------------------------------------------------------------------------------------------------
+
+// domainConfigService is a blueprint, transaction-aware domain config service implementation, making use of a cached
+// config store
+type domainConfigService struct {
+	dbTxAware
+	cc   *domainConfigCache // Underlying cached store
+	dIDs map[uuid.UUID]bool // Set of domain IDs, whose values were changed during the transaction
+}
+
+// newDomainConfigService returns a new transactional attribute store implementation based on the given underlying attrStore
+func newDomainConfigService(cc *domainConfigCache, tx *persistence.DatabaseTx, db *persistence.Database) *domainConfigService {
+	svc := &domainConfigService{
+		dbTxAware: dbTxAware{tx: tx, db: db},
+		cc:        cc,
+		dIDs:      map[uuid.UUID]bool{},
+	}
+
+	// Add the service as a child to the transaction, if any
+	if tx != nil {
+		tx.AddChild(svc)
+	}
+	return svc
+}
+
+func (svc *domainConfigService) Commit() error {
+	// Nothing to do
+	return nil
+}
+
+func (svc *domainConfigService) Get(domainID *uuid.UUID, key data.DynConfigItemKey) (*data.DynConfigItem, error) {
+	return svc.cc.get(svc.dbx(), domainID, key)
+}
+
+func (svc *domainConfigService) GetAll(domainID *uuid.UUID) (data.DynConfigMap, error) {
+	return svc.cc.getAll(svc.dbx(), domainID)
 }
 
 func (svc *domainConfigService) GetBool(domainID *uuid.UUID, key data.DynConfigItemKey) bool {
@@ -138,25 +231,19 @@ func (svc *domainConfigService) GetInt(domainID *uuid.UUID, key data.DynConfigIt
 }
 
 func (svc *domainConfigService) ResetCache() {
-	svc.cache.DeleteAll()
+	svc.cc.resetCache()
+}
+
+func (svc *domainConfigService) Rollback() error {
+	// Reset caches of the changed domains so they'll be restored in their original form with the next retrieval
+	for id := range svc.dIDs {
+		svc.cc.resetCacheFor(&id)
+	}
+	return nil
 }
 
 func (svc *domainConfigService) Update(domainID, curUserID *uuid.UUID, vals map[data.DynConfigItemKey]string) error {
-	logger.Debugf("domainConfigService.Update(%s, %s, %#v)", domainID, curUserID, vals)
-
-	// Fetch the required store
-	s, err := svc.getStore(domainID)
-	if err != nil {
-		return err
-	}
-
-	// Update the specified items
-	if err := s.Update(curUserID, vals); err != nil {
-		return err
-	}
-
-	// Write the store to the database
-	return s.Save()
+	return svc.cc.update(svc.dbx(), domainID, curUserID, vals)
 }
 
 func (svc *domainConfigService) ValidateKeyValue(key, value string) error {
@@ -167,30 +254,4 @@ func (svc *domainConfigService) ValidateKeyValue(key, value string) error {
 		// Item found, now validate the value
 		return item.ValidateValue(value)
 	}
-}
-
-// getStore returns the store for the given domain
-func (svc *domainConfigService) getStore(domainID *uuid.UUID) (*domainConfigStore, error) {
-	// Try to find a cached item
-	if ci := svc.cache.Get(*domainID); ci != nil {
-		return ci.Value(), nil
-	}
-
-	// Cache miss: create a new store
-	// NB: we cannot use ttlcache.WithLoader()/ttlcache.LoaderFunc because they don't support returning an error
-	logger.Debugf("domainConfigService.getStore: cache miss for %s", domainID)
-	s := &domainConfigStore{
-		ConfigStore: ConfigStore{defaults: getDomainDefaults},
-		domainID:    *domainID,
-	}
-
-	// Load the config from the database
-	if err := s.Load(); err != nil {
-		logger.Errorf("domainConfigService.getStore: s.Load() failed: %v", err)
-		return nil, err
-	}
-
-	// Cache the store
-	svc.cache.Set(*domainID, s, ttlcache.DefaultTTL)
-	return s, nil
 }

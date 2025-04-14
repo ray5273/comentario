@@ -8,6 +8,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 	"io"
 	"strings"
@@ -57,23 +58,29 @@ func UserBan(params api_general.UserBanParams, user *data.User) middleware.Respo
 
 	// Update the user if necessary
 	ban := swag.BoolValue(params.Body.Ban)
-	if u.Banned != ban {
-		if err := svc.Services.UserService(nil /* TODO */).UpdateBanned(&user.ID, u, ban); err != nil {
-			return respServiceError(err)
-		}
-	}
-
-	// When banning the user, all user's comments can also be deleted or purged
 	var cntDel int64
-	if ban && params.Body.DeleteComments {
-		var err error
-		if params.Body.PurgeComments {
-			if cntDel, err = svc.Services.CommentService(nil /* TODO */).DeleteByUser(&u.ID); err != nil {
-				return respServiceError(err)
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		if u.Banned != ban {
+			if err := svc.Services.UserService(tx).UpdateBanned(&user.ID, u, ban); err != nil {
+				return err
 			}
-		} else if cntDel, err = svc.Services.CommentService(nil /* TODO */).MarkDeletedByUser(&user.ID, &u.ID); err != nil {
-			return respServiceError(err)
 		}
+
+		// When banning the user, all user's comments can also be deleted or purged
+		if ban && params.Body.DeleteComments {
+			var err error
+			if params.Body.PurgeComments {
+				if cntDel, err = svc.Services.CommentService(tx).DeleteByUser(&u.ID); err != nil {
+					return err
+				}
+			} else if cntDel, err = svc.Services.CommentService(tx).MarkDeletedByUser(&user.ID, &u.ID); err != nil {
+				return err
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return respServiceError(err)
 	}
 
 	// Succeeded
@@ -103,12 +110,18 @@ func UserDelete(params api_general.UserDeleteParams, user *data.User) middleware
 	}
 
 	// Delete the user, optionally deleting their comments
-	if cntDel, err := svc.Services.UserService(nil /* TODO */).DeleteUserByID(u, params.Body.DeleteComments, params.Body.PurgeComments); err != nil {
+	var cntDel int64
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+		cntDel, err = svc.Services.UserService(tx).DeleteUserByID(u, params.Body.DeleteComments, params.Body.PurgeComments)
+		return err
+	})
+	if err != nil {
 		return respServiceError(err)
-	} else {
-		// Succeeded
-		return api_general.NewUserDeleteOK().WithPayload(&api_general.UserDeleteOKBody{CountDeletedComments: cntDel})
 	}
+
+	// Succeeded
+	return api_general.NewUserDeleteOK().WithPayload(&api_general.UserDeleteOKBody{CountDeletedComments: cntDel})
 }
 
 func UserGet(params api_general.UserGetParams, user *data.User) middleware.Responder {
@@ -139,7 +152,7 @@ func UserGet(params api_general.UserGetParams, user *data.User) middleware.Respo
 	// Succeeded
 	return api_general.NewUserGetOK().
 		WithPayload(&api_general.UserGetOKBody{
-			Attributes:  exmodels.KeyValueMap(attr),
+			Attributes:  attr,
 			DomainUsers: data.SliceToDTOs(dus),
 			Domains:     data.SliceToDTOs(ds),
 			User:        u.ToDTO(),
@@ -202,7 +215,10 @@ func UserSessionsExpire(params api_general.UserSessionsExpireParams, user *data.
 	}
 
 	// Expire user sessions
-	if err := svc.Services.UserService(nil /* TODO */).ExpireUserSessions(userID); err != nil {
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		return svc.Services.UserService(tx).ExpireUserSessions(userID)
+	})
+	if err != nil {
 		return respServiceError(err)
 	}
 

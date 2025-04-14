@@ -6,7 +6,6 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
 	"time"
@@ -14,7 +13,6 @@ import (
 
 // UserService is a service interface for dealing with users
 type UserService interface {
-	persistence.Tx
 	// ConfirmUser sets the confirmed status of the user
 	ConfirmUser(u *data.User) error
 	// CountUsers returns a number of registered users.
@@ -132,7 +130,7 @@ func (svc *userService) CountUsers(inclSuper, inclNonSuper, inclSystem, inclLoca
 	// Query the count
 	cnt, err := q.Count()
 	if err != nil {
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("userService.CountUsers/Count", err)
 	}
 
 	// Succeeded
@@ -156,8 +154,7 @@ func (svc *userService) Create(u *data.User) error {
 
 	// Insert a new record
 	if err := execOne(svc.dbx().Insert("cm_users").Rows(u)); err != nil {
-		logger.Errorf("userService.Create: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("userService.Create/ExecOne", err)
 	}
 
 	// Succeeded
@@ -167,8 +164,7 @@ func (svc *userService) Create(u *data.User) error {
 func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	logger.Debugf("userService.CreateUserSession(%#v)", s)
 	if err := execOne(svc.dbx().Insert("cm_user_sessions").Rows(s)); err != nil {
-		logger.Errorf("userService.CreateUserSession: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("userService.CreateUserSession/ExecOne", err)
 	}
 
 	// Succeeded
@@ -190,13 +186,13 @@ func (svc *userService) DeleteUserByID(u *data.User, delComments, purgeComments 
 		// If comments need to be purged
 		if purgeComments {
 			// Purge all comments created by the user
-			if cntDel, err = Services.CommentService(nil /* TODO */).DeleteByUser(&u.ID); err != nil {
+			if cntDel, err = Services.CommentService(svc.tx).DeleteByUser(&u.ID); err != nil {
 				logger.Errorf("userService.DeleteUserByID: DeleteByUser() failed: %v", err)
 				return 0, err
 			}
 
 			// Mark all comments created by the user as deleted
-		} else if cntDel, err = Services.CommentService(nil /* TODO */).MarkDeletedByUser(&u.ID, &u.ID); err != nil {
+		} else if cntDel, err = Services.CommentService(svc.tx).MarkDeletedByUser(&u.ID, &u.ID); err != nil {
 			logger.Errorf("userService.DeleteUserByID: MarkDeletedByUser() failed: %v", err)
 			return 0, err
 		}
@@ -204,8 +200,7 @@ func (svc *userService) DeleteUserByID(u *data.User, delComments, purgeComments 
 
 	// Delete the user
 	if err := execOne(svc.dbx().Delete("cm_users").Where(goqu.Ex{"id": &u.ID})); err != nil {
-		logger.Errorf("userService.DeleteUserByID: ExecOne() failed: %v", err)
-		return 0, translateDBErrors(err)
+		return 0, translateDBErrors("userService.DeleteUserByID/ExecOne", err)
 	}
 
 	// Succeeded
@@ -217,8 +212,7 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 
 	// Delete the record
 	if err := execOne(svc.dbx().Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
-		logger.Errorf("userService.DeleteUserSession: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("userService.DeleteUserSession/ExecOne", err)
 	}
 
 	// Succeeded
@@ -271,8 +265,7 @@ func (svc *userService) ExpireUserSessions(userID *uuid.UUID) error {
 
 	// Update all user's sessions
 	if _, err := svc.dbx().Update("cm_user_sessions").Set(goqu.Record{"ts_expires": time.Now().UTC()}).Where(goqu.Ex{"user_id": userID}).Executor().Exec(); err != nil {
-		logger.Errorf("userService.ExpireUserSessions: Exec() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("userService.ExpireUserSessions/Exec", err)
 	}
 
 	// Succeeded
@@ -351,8 +344,7 @@ func (svc *userService) FindUserByEmail(email string) (*data.User, error) {
 	// Query the user
 	u := data.User{}
 	if b, err := q.ScanStruct(&u); err != nil {
-		logger.Errorf("userService.FindUserByEmail: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("userService.FindUserByEmail/ScanStruct", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}
@@ -388,8 +380,7 @@ func (svc *userService) FindUserByFederatedID(idp, id string) (*data.User, error
 	// Query the user
 	u := data.User{}
 	if b, err := q.ScanStruct(&u); err != nil {
-		logger.Errorf("userService.FindUserByFederatedID: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("userService.FindUserByFederatedID/ScanStruct", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}
@@ -423,8 +414,7 @@ func (svc *userService) FindUserByID(id *uuid.UUID) (*data.User, error) {
 	// Query the user
 	u := data.User{}
 	if b, err := q.ScanStruct(&u); err != nil {
-		logger.Errorf("userService.FindUserByID: ScanStruct() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("userService.FindUserByID/ScanStruct", err)
 	} else if !b {
 		return nil, ErrNotFound
 	}
@@ -496,7 +486,7 @@ func (svc *userService) FindUserBySession(userID, sessionID *uuid.UUID) (*data.U
 		Device         string    `db:"s_ua_device"`
 	}
 	if b, err := q.ScanStruct(&r); err != nil {
-		return nil, nil, translateDBErrors(err)
+		return nil, nil, translateDBErrors("userService.FindUserBySession/ScanStruct", err)
 	} else if !b {
 		return nil, nil, ErrNotFound
 	}
@@ -577,8 +567,7 @@ func (svc *userService) List(filter, sortBy string, dir data.SortDirection, page
 	// Query users
 	var users []*data.User
 	if err := q.ScanStructs(&users); err != nil {
-		logger.Errorf("userService.List: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("userService.List/ScanStructs", err)
 	}
 
 	// Succeeded
@@ -654,8 +643,7 @@ func (svc *userService) ListByDomain(domainID *uuid.UUID, superuser bool, filter
 		data.NullDomainUser
 	}
 	if err := q.ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("userService.ListByDomainUser: ScanStructs() failed: %v", err)
-		return nil, nil, translateDBErrors(err)
+		return nil, nil, translateDBErrors("userService.ListByDomainUser/ScanStructs", err)
 	}
 
 	// Process the users
@@ -708,8 +696,7 @@ func (svc *userService) ListDomainModerators(domainID *uuid.UUID, enabledNotifyO
 	// Query domain's moderator users
 	var users []*data.User
 	if err := q.ScanStructs(&users); err != nil {
-		logger.Errorf("userService.ListDomainModerators: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("userService.ListDomainModerators/ScanStructs", err)
 	}
 
 	// Succeeded
@@ -732,8 +719,7 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 	// Query user sessions
 	var us []*data.UserSession
 	if err := q.ScanStructs(&us); err != nil {
-		logger.Errorf("userService.ListUserSessions: ScanStructs() failed: %v", err)
-		return nil, translateDBErrors(err)
+		return nil, translateDBErrors("userService.ListUserSessions/ScanStructs", err)
 	}
 
 	// Succeeded
@@ -742,8 +728,7 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 
 func (svc *userService) Persist(u *data.User) error {
 	if err := execOne(svc.dbx().Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
-		logger.Errorf("userService.Persist: ExecOne() failed: %v", err)
-		return translateDBErrors(err)
+		return translateDBErrors("userService.Persist/ExecOne", err)
 	}
 
 	// Succeeded

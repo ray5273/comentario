@@ -1,8 +1,8 @@
 package svc
 
 import (
-	"errors"
 	"fmt"
+	"github.com/doug-martin/goqu/v9/exp"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/intf"
@@ -13,24 +13,20 @@ import (
 // Services is a global service serviceManager interface
 var Services ServiceManager = newServiceManager()
 
-// db is a global database instance (only available in the services package)
-var db *persistence.Database
-
 // ServiceManager provides high-level service management routines
 type ServiceManager interface {
+	// DBVersion returns the current database version string
+	DBVersion() string
 	// E2eRecreateDBSchema recreates the DB schema and fills it with the provided seed data (only used for e2e testing)
 	E2eRecreateDBSchema(seedSQL string) error
 	// Initialise performs necessary initialisation of the services
 	Initialise()
 	// Run starts background services
 	Run()
+	// SetVersionService updates the stored instance of VersionService (used in tests)
+	SetVersionService(v intf.VersionService)
 	// Shutdown performs necessary teardown of the services
 	Shutdown()
-
-	// GravatarProcessor returns an instance of GravatarProcessor
-	GravatarProcessor() GravatarProcessor
-	// PageTitleFetcher returns an instance of PageTitleFetcher
-	PageTitleFetcher() PageTitleFetcher
 
 	// AuthService returns an instance of AuthService
 	AuthService(tx *persistence.DatabaseTx) AuthService
@@ -43,11 +39,13 @@ type ServiceManager interface {
 	// DomainAttrService returns an instance of an plugin.AttrStore for domains
 	DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore
 	// DomainConfigService returns an instance of DomainConfigService
-	DomainConfigService() DomainConfigService
+	DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService
 	// DomainService returns an instance of DomainService
 	DomainService(tx *persistence.DatabaseTx) DomainService
 	// DynConfigService returns an instance of DynConfigService
 	DynConfigService() DynConfigService
+	// GravatarProcessor returns an instance of GravatarProcessor
+	GravatarProcessor() GravatarProcessor
 	// I18nService returns an instance of I18nService
 	I18nService() I18nService
 	// ImportExportService returns an instance of ImportExportService
@@ -56,10 +54,14 @@ type ServiceManager interface {
 	MailService() MailService
 	// PageService returns an instance of PageService
 	PageService(tx *persistence.DatabaseTx) PageService
+	// PageTitleFetcher returns an instance of PageTitleFetcher
+	PageTitleFetcher() PageTitleFetcher
 	// PerlustrationService returns an instance of PerlustrationService
 	PerlustrationService() PerlustrationService
 	// PluginManager returns an instance of PluginManager
 	PluginManager() PluginManager
+	// StartOfDay returns an expression for truncating the given datetime database table column to the start of day
+	StartOfDay(col string) exp.LiteralExpression
 	// StatsService returns an instance of StatsService
 	StatsService(tx *persistence.DatabaseTx) StatsService
 	// TokenService returns an instance of TokenService
@@ -72,9 +74,8 @@ type ServiceManager interface {
 	VersionService() intf.VersionService
 	// WebSocketsService returns an instance of WebSocketsService
 	WebSocketsService() WebSocketsService
-
-	// SetVersionService updates the stored instance of VersionService (used in tests)
-	SetVersionService(v intf.VersionService)
+	// WithTx executes the given function in the context of a newly-created transaction (passed to the function)
+	WithTx(func(tx *persistence.DatabaseTx) error) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -82,20 +83,7 @@ type ServiceManager interface {
 // dbTxAware is a database implementation of persistence.Tx
 type dbTxAware struct {
 	tx *persistence.DatabaseTx // Optional transaction
-}
-
-func (d *dbTxAware) Commit() error {
-	if d.tx == nil {
-		return errors.New("commit: no transaction")
-	}
-	return d.tx.Commit()
-}
-
-func (d *dbTxAware) Rollback() error {
-	if d.tx == nil {
-		return errors.New("rollback: no transaction")
-	}
-	return d.tx.Rollback()
+	db *persistence.Database   // Connected database instance
 }
 
 // dbx returns a database executor to be used with database statements and queries: the transaction, if set, otherwise
@@ -104,35 +92,34 @@ func (d *dbTxAware) dbx() persistence.DBX {
 	if d.tx != nil {
 		return d.tx
 	}
-	return db
+	return d.db
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 type serviceManager struct {
 	inited      bool
-	gp          GravatarProcessor    // Instance of a GravatarProcessor (lazy-inited)
-	gpMu        sync.Mutex           // Mutex for gp
-	ptf         PageTitleFetcher     // Instance of a PageTitleFetcher (lazy-inited)
-	ptfMu       sync.Mutex           // Mutex for ptf
-	cleanSvc    CleanupService       // Cleanup service singleton
-	domCfgSvc   DomainConfigService  // Domain config service singleton
-	dynCfgSvc   DynConfigService     // Dynamic config service singleton
-	i18nSvc     I18nService          // I18n service singleton
-	mailSvc     MailService          // Mail service singleton
-	perlSvc     PerlustrationService // Perlustration service singleton
-	plugMgr     PluginManager        // Plugin manager singleton
-	verSvc      intf.VersionService  // Version service singleton
-	wsSvc       WebSocketsService    // WebSockets service singleton
-	domainAttrs *attrStore           // Cached domain attribute store singleton
-	userAttrs   *attrStore           // Cached user attribute store singleton
+	db          *persistence.Database // Connected database instance
+	gp          GravatarProcessor     // Instance of a GravatarProcessor (lazy-inited)
+	gpMu        sync.Mutex            // Mutex for gp
+	ptf         PageTitleFetcher      // Instance of a PageTitleFetcher (lazy-inited)
+	ptfMu       sync.Mutex            // Mutex for ptf
+	cleanSvc    CleanupService        // Cleanup service singleton
+	domCfgCache *domainConfigCache    // Domain config cache singleton
+	dynCfgSvc   DynConfigService      // Dynamic config service singleton
+	i18nSvc     I18nService           // I18n service singleton
+	mailSvc     MailService           // Mail service singleton
+	perlSvc     PerlustrationService  // Perlustration service singleton
+	plugMgr     PluginManager         // Plugin manager singleton
+	verSvc      intf.VersionService   // Version service singleton
+	wsSvc       WebSocketsService     // WebSockets service singleton
+	domainAttrs *attrStore            // Cached domain attribute store singleton
+	userAttrs   *attrStore            // Cached user attribute store singleton
 }
 
 func newServiceManager() *serviceManager {
 	return &serviceManager{
-		cleanSvc:    &cleanupService{},
-		domCfgSvc:   newDomainConfigService(),
-		dynCfgSvc:   newDynConfigService(),
+		domCfgCache: newDomainConfigCache(),
 		i18nSvc:     newI18nService(),
 		mailSvc:     newMailService(),
 		perlSvc:     &perlustrationService{},
@@ -154,111 +141,39 @@ func (m *serviceManager) GravatarProcessor() GravatarProcessor {
 }
 
 func (m *serviceManager) AuthService(tx *persistence.DatabaseTx) AuthService {
-	return &authService{dbTxAware{tx}}
+	return &authService{dbTxAware{tx: tx, db: m.db}}
 }
 
 func (m *serviceManager) AuthSessionService(tx *persistence.DatabaseTx) AuthSessionService {
-	return &authSessionService{dbTxAware{tx}}
+	return &authSessionService{dbTxAware{tx: tx, db: m.db}}
 }
 
 func (m *serviceManager) AvatarService(tx *persistence.DatabaseTx) AvatarService {
-	return &avatarService{dbTxAware{tx}}
+	return &avatarService{dbTxAware{tx: tx, db: m.db}}
 }
 
 func (m *serviceManager) CommentService(tx *persistence.DatabaseTx) CommentService {
-	return &commentService{dbTxAware{tx}}
+	return &commentService{dbTxAware{tx: tx, db: m.db}}
+}
+
+func (m *serviceManager) DBVersion() string {
+	return m.db.Version()
 }
 
 func (m *serviceManager) DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
-	// Use the attr store directly if there's no transaction
-	if tx == nil {
-		return m.domainAttrs
-	}
-
-	// Wrap in a txAttrStore otherwise
-	return newTxAttrStore(m.domainAttrs, tx)
+	return newTxAttrStore(m.domainAttrs, tx, m.db)
 }
 
-func (m *serviceManager) DomainConfigService() DomainConfigService {
-	return m.domCfgSvc
+func (m *serviceManager) DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService {
+	return newDomainConfigService(m.domCfgCache, tx, m.db)
 }
 
 func (m *serviceManager) DomainService(tx *persistence.DatabaseTx) DomainService {
-	return &domainService{dbTxAware{tx}}
+	return &domainService{dbTxAware{tx: tx, db: m.db}}
 }
 
 func (m *serviceManager) DynConfigService() DynConfigService {
 	return m.dynCfgSvc
-}
-
-func (m *serviceManager) I18nService() I18nService {
-	if !m.i18nSvc.Inited() {
-		panic("serviceManager: I18nService hasn't been initialised yet")
-	}
-	return m.i18nSvc
-}
-
-func (m *serviceManager) ImportExportService(tx *persistence.DatabaseTx) ImportExportService {
-	return &importExportService{dbTxAware{tx}}
-}
-
-func (m *serviceManager) MailService() MailService {
-	return m.mailSvc
-}
-
-func (m *serviceManager) PageService(tx *persistence.DatabaseTx) PageService {
-	return &pageService{dbTxAware{tx}}
-}
-
-func (m *serviceManager) PageTitleFetcher() PageTitleFetcher {
-	m.ptfMu.Lock()
-	defer m.ptfMu.Unlock()
-	if m.ptf == nil {
-		m.ptf = newPageTitleFetcher()
-	}
-	return m.ptf
-}
-
-func (m *serviceManager) PerlustrationService() PerlustrationService {
-	return m.perlSvc
-}
-
-func (m *serviceManager) PluginManager() PluginManager {
-	return m.plugMgr
-}
-
-func (m *serviceManager) StatsService(tx *persistence.DatabaseTx) StatsService {
-	return &statsService{dbTxAware{tx}}
-}
-
-func (m *serviceManager) TokenService(tx *persistence.DatabaseTx) TokenService {
-	return &tokenService{dbTxAware{tx}}
-}
-
-func (m *serviceManager) UserAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
-	// Use the attr store directly if there's no transaction
-	if tx == nil {
-		return m.userAttrs
-	}
-
-	// Wrap in a txAttrStore otherwise
-	return newTxAttrStore(m.userAttrs, tx)
-}
-
-func (m *serviceManager) UserService(tx *persistence.DatabaseTx) UserService {
-	return &userService{dbTxAware{tx}}
-}
-
-func (m *serviceManager) VersionService() intf.VersionService {
-	return m.verSvc
-}
-
-func (m *serviceManager) SetVersionService(v intf.VersionService) {
-	m.verSvc = v
-}
-
-func (m *serviceManager) WebSocketsService() WebSocketsService {
-	return m.wsSvc
 }
 
 func (m *serviceManager) E2eRecreateDBSchema(seedSQL string) error {
@@ -270,12 +185,12 @@ func (m *serviceManager) E2eRecreateDBSchema(seedSQL string) error {
 	}
 
 	// Drop and recreate the public schema
-	if err := db.RecreateSchema(); err != nil {
+	if err := m.db.RecreateSchema(); err != nil {
 		return err
 	}
 
 	// Install DB migrations and the seed
-	if err := db.Migrate(seedSQL); err != nil {
+	if err := m.db.Migrate(seedSQL); err != nil {
 		return err
 	}
 
@@ -286,6 +201,17 @@ func (m *serviceManager) E2eRecreateDBSchema(seedSQL string) error {
 
 	// Succeeded
 	return nil
+}
+
+func (m *serviceManager) I18nService() I18nService {
+	if !m.i18nSvc.Inited() {
+		panic("serviceManager: I18nService hasn't been initialised yet")
+	}
+	return m.i18nSvc
+}
+
+func (m *serviceManager) ImportExportService(tx *persistence.DatabaseTx) ImportExportService {
+	return &importExportService{dbTxAware{tx: tx, db: m.db}}
 }
 
 func (m *serviceManager) Initialise() {
@@ -307,7 +233,7 @@ func (m *serviceManager) Initialise() {
 	m.perlSvc.Init()
 
 	// Initiate a DB connection
-	if db, err = persistence.InitDB(); err != nil {
+	if m.db, err = persistence.InitDB(); err != nil {
 		logger.Fatalf("Failed to connect to database: %v", err)
 	}
 
@@ -322,8 +248,34 @@ func (m *serviceManager) Initialise() {
 	}
 }
 
+func (m *serviceManager) MailService() MailService {
+	return m.mailSvc
+}
+
+func (m *serviceManager) PageService(tx *persistence.DatabaseTx) PageService {
+	return &pageService{dbTxAware{tx: tx, db: m.db}}
+}
+
+func (m *serviceManager) PageTitleFetcher() PageTitleFetcher {
+	m.ptfMu.Lock()
+	defer m.ptfMu.Unlock()
+	if m.ptf == nil {
+		m.ptf = newPageTitleFetcher()
+	}
+	return m.ptf
+}
+
+func (m *serviceManager) PerlustrationService() PerlustrationService {
+	return m.perlSvc
+}
+
+func (m *serviceManager) PluginManager() PluginManager {
+	return m.plugMgr
+}
+
 func (m *serviceManager) Run() {
 	// Start the cleanup service
+	m.cleanSvc = &cleanupService{dbTxAware{db: m.db}}
 	if err := m.cleanSvc.Run(); err != nil {
 		logger.Fatalf("Failed to run cleanup service: %v", err)
 	}
@@ -352,20 +304,57 @@ func (m *serviceManager) Shutdown() {
 	m.plugMgr.Shutdown()
 
 	// Teardown the database
-	_ = db.Shutdown()
-	db = nil
+	_ = m.db.Shutdown()
+	m.db = nil
 	m.inited = false
+}
+
+func (m *serviceManager) StartOfDay(col string) exp.LiteralExpression {
+	return m.db.StartOfDay(col)
+}
+
+func (m *serviceManager) StatsService(tx *persistence.DatabaseTx) StatsService {
+	return &statsService{dbTxAware{tx: tx, db: m.db}}
+}
+
+func (m *serviceManager) TokenService(tx *persistence.DatabaseTx) TokenService {
+	return &tokenService{dbTxAware{tx: tx, db: m.db}}
+}
+
+func (m *serviceManager) UserAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
+	return newTxAttrStore(m.userAttrs, tx, m.db)
+}
+
+func (m *serviceManager) UserService(tx *persistence.DatabaseTx) UserService {
+	return &userService{dbTxAware{tx: tx, db: m.db}}
+}
+
+func (m *serviceManager) VersionService() intf.VersionService {
+	return m.verSvc
+}
+
+func (m *serviceManager) SetVersionService(v intf.VersionService) {
+	m.verSvc = v
+}
+
+func (m *serviceManager) WebSocketsService() WebSocketsService {
+	return m.wsSvc
+}
+
+func (m *serviceManager) WithTx(f func(tx *persistence.DatabaseTx) error) error {
+	return m.db.WithTx(f)
 }
 
 // postDBInit is called after the DB is initialised to finalise schema initialisation
 func (m *serviceManager) postDBInit() error {
 	// Initialise the config service
+	m.dynCfgSvc = newDynConfigService(m.db)
 	if err := m.dynCfgSvc.Load(); err != nil {
 		return fmt.Errorf("failed to load configuration: %v", err)
 	}
 
 	// Reset any cached config
-	Services.DomainConfigService().ResetCache()
+	m.domCfgCache.resetCache()
 
 	// If superuser's ID or email is provided, turn that user into a superuser
 	if s := config.ServerConfig.Superuser; s != "" {
