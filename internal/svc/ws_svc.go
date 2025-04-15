@@ -230,7 +230,7 @@ func (c *wsClient) handleIncoming(data []byte) {
 	// Try to unmarshal the JSON payload. Ignore the message if this fails
 	var msg wsMsgPayload
 	if err := json.Unmarshal(data, &msg); err != nil {
-		logger.Errorf("webSocketsService.handleIncoming: Unmarshal() failed: %v", err)
+		logger.Errorf("wsClient.handleIncoming/Unmarshal: %v", err)
 		return
 	}
 
@@ -254,7 +254,7 @@ func (c *wsClient) handleOutgoing(msg *wsMsgPayload) error {
 	// Marshal the message into a JSON string
 	b, err := json.Marshal(msg)
 	if err != nil {
-		logger.Errorf("wsClient.handleOutgoing: Marshal() failed: %v", err)
+		logger.Errorf("wsClient.handleOutgoing/Marshal: %v", err)
 		return err
 	}
 
@@ -338,7 +338,7 @@ func (c *wsClient) writeMessages() {
 
 			// Send the message
 			if err := c.handleOutgoing(msg); err != nil {
-				logger.Warningf("wsClient.writeMessages: handleOutgoing() failed: %v", err)
+				logger.Warningf("wsClient.writeMessages/handleOutgoing: %v", err)
 				return
 			}
 

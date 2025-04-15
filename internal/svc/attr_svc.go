@@ -153,12 +153,12 @@ func (as *attrStore) set(dbx persistence.DBX, ownerID *uuid.UUID, attr plugin.At
 
 		// Insert or update the record
 		a := &data.Attribute{Key: key, Value: value, UpdatedTime: time.Now().UTC()}
-		err := execOne(dbx.Insert(goqu.T(as.tableName).As("t")).
+		err := persistence.ExecOne(dbx.Insert(goqu.T(as.tableName).As("t")).
 			// Can't just pass a struct here since we depend on the variable key column name
 			Rows(goqu.Record{as.keyColName: ownerID, "key": a.Key, "value": a.Value, "ts_updated": a.UpdatedTime}).
 			OnConflict(goqu.DoUpdate(as.keyColName+",key", a)))
 		if err != nil {
-			return translateDBErrors(fmt.Sprintf("attrStore.set/ExecOne[ownerID=%s, key=%q]", ownerID, key), err)
+			return translateDBErrors(fmt.Sprintf("attrStore.set/Insert[ownerID=%s, key=%q]", ownerID, key), err)
 		}
 
 		// Also set the cached value

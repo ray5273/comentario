@@ -52,7 +52,7 @@ func getDomainDefaults() (data.DynConfigMap, error) {
 	// Fetch the instance defaults
 	items, err := Services.DynConfigService().GetAll()
 	if err != nil {
-		return nil, fmt.Errorf("getDomainDefaults: TheDynConfigService.GetAll() failed: %w", err)
+		return nil, fmt.Errorf("getDomainDefaults/DynConfigService.GetAll: %w", err)
 	}
 
 	// Pick those whose key starts with the domain.defaults prefix
@@ -135,7 +135,6 @@ func (svc *domainConfigCache) getStore(dbx persistence.DBX, domainID *uuid.UUID)
 
 	// Load the config from the database
 	if err := s.load(dbx); err != nil {
-		logger.Errorf("domainConfigCache.getStore: s.Load() failed: %v", err)
 		return nil, err
 	}
 

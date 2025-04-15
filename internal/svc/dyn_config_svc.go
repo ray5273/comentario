@@ -123,8 +123,7 @@ func (cs *ConfigStore) dbLoad(dbx persistence.DBX, tableName string, extraKeyCol
 	// Query the data
 	var dbRecs []dynConfigRecord
 	if err := dbx.From(goqu.T(tableName)).Where(extraKeyCols).ScanStructs(&dbRecs); err != nil {
-		logger.Errorf("ConfigStore.Load: ScanStructs() failed: %v", err)
-		return err
+		return translateDBErrors("ConfigStore.Load/ScanStructs", err)
 	}
 
 	// Process the fetched items

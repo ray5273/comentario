@@ -59,7 +59,7 @@ func disqusImport(curUser *data.User, domain *data.Domain, buf []byte) *ImportRe
 	// Unmarshal the XML data
 	exp := disqusXML{}
 	if err := xml.Unmarshal(buf, &exp); err != nil {
-		logger.Errorf("disqusImport: xml.Unmarshal() failed: %v", err)
+		logger.Errorf("disqusImport/Unmarshal: %v", err)
 		return importError(err)
 	}
 

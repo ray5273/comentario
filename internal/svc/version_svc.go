@@ -116,7 +116,7 @@ func (svc *versionService) fetchLatest() (intf.ReleaseMetadata, error) {
 
 	// Read open bracket
 	if t, err := dec.Token(); err != nil {
-		return nil, fmt.Errorf("versionService.fetchLatest: dec.Token() failed: %w", err)
+		return nil, fmt.Errorf("versionService.fetchLatest/dec.Token: %w", err)
 	} else if s, ok := t.(fmt.Stringer); !ok || s.String() != "[" {
 		return nil, fmt.Errorf("versionService.fetchLatest: malformed JSON response, want '[', got %v", t)
 	}
@@ -125,7 +125,7 @@ func (svc *versionService) fetchLatest() (intf.ReleaseMetadata, error) {
 	var rm releaseMetadata
 	for dec.More() {
 		if err := dec.Decode(&rm); err != nil {
-			return nil, fmt.Errorf("versionService.fetchLatest: dec.Decode() failed: %w", err)
+			return nil, fmt.Errorf("versionService.fetchLatest/dec.Decode: %w", err)
 		}
 		// Exit after the first occurrence: the releases are supposed to be returned in reverse chronological order, so
 		// the topmost item is the latest release

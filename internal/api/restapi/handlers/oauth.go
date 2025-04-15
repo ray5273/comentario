@@ -438,7 +438,7 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		// Generate a random base64-encoded nonce to use as the state on the auth URL
 		var state string
 		if b, err := util.RandomBytes(64); err != nil {
-			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit: RandomBytes() failed: %w", err))
+			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit/RandomBytes: %w", err))
 		} else {
 			state = base64.URLEncoding.EncodeToString(b)
 		}
@@ -446,12 +446,12 @@ func AuthOauthInit(params api_general.AuthOauthInitParams) middleware.Responder 
 		// Initiate an authentication session
 		sess, err := provider.BeginAuth(state)
 		if err != nil {
-			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit: provider.BeginAuth() failed: %w", err))
+			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit/provider.BeginAuth: %w", err))
 		}
 
 		// Fetch the URL for authenticating with the provider
 		if authURL, err = sess.GetAuthURL(); err != nil {
-			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit: sess.GetAuthURL() failed: %w", err))
+			return oauthFailureInternal(false, fmt.Errorf("AuthOauthInit/sess.GetAuthURL: %w", err))
 		}
 
 		// Serialise the session for persisting

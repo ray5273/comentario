@@ -6,6 +6,7 @@ import (
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"strings"
 	"time"
@@ -153,8 +154,8 @@ func (svc *userService) Create(u *data.User) error {
 	}
 
 	// Insert a new record
-	if err := execOne(svc.dbx().Insert("cm_users").Rows(u)); err != nil {
-		return translateDBErrors("userService.Create/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Insert("cm_users").Rows(u)); err != nil {
+		return translateDBErrors("userService.Create/Insert", err)
 	}
 
 	// Succeeded
@@ -163,8 +164,8 @@ func (svc *userService) Create(u *data.User) error {
 
 func (svc *userService) CreateUserSession(s *data.UserSession) error {
 	logger.Debugf("userService.CreateUserSession(%#v)", s)
-	if err := execOne(svc.dbx().Insert("cm_user_sessions").Rows(s)); err != nil {
-		return translateDBErrors("userService.CreateUserSession/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Insert("cm_user_sessions").Rows(s)); err != nil {
+		return translateDBErrors("userService.CreateUserSession/Insert", err)
 	}
 
 	// Succeeded
@@ -187,20 +188,18 @@ func (svc *userService) DeleteUserByID(u *data.User, delComments, purgeComments 
 		if purgeComments {
 			// Purge all comments created by the user
 			if cntDel, err = Services.CommentService(svc.tx).DeleteByUser(&u.ID); err != nil {
-				logger.Errorf("userService.DeleteUserByID: DeleteByUser() failed: %v", err)
 				return 0, err
 			}
 
 			// Mark all comments created by the user as deleted
 		} else if cntDel, err = Services.CommentService(svc.tx).MarkDeletedByUser(&u.ID, &u.ID); err != nil {
-			logger.Errorf("userService.DeleteUserByID: MarkDeletedByUser() failed: %v", err)
 			return 0, err
 		}
 	}
 
 	// Delete the user
-	if err := execOne(svc.dbx().Delete("cm_users").Where(goqu.Ex{"id": &u.ID})); err != nil {
-		return 0, translateDBErrors("userService.DeleteUserByID/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Delete("cm_users").Where(goqu.Ex{"id": &u.ID})); err != nil {
+		return 0, translateDBErrors("userService.DeleteUserByID/Delete", err)
 	}
 
 	// Succeeded
@@ -211,8 +210,8 @@ func (svc *userService) DeleteUserSession(id *uuid.UUID) error {
 	logger.Debugf("userService.DeleteUserSession(%s)", id)
 
 	// Delete the record
-	if err := execOne(svc.dbx().Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
-		return translateDBErrors("userService.DeleteUserSession/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Delete("cm_user_sessions").Where(goqu.Ex{"id": id})); err != nil {
+		return translateDBErrors("userService.DeleteUserSession/Delete", err)
 	}
 
 	// Succeeded
@@ -314,7 +313,7 @@ func (svc *userService) FindDomainUserByID(userID, domainID *uuid.UUID) (*data.U
 		data.NullDomainUser
 	}
 	if b, err := q.ScanStruct(&r); err != nil {
-		logger.Errorf("userService.FindDomainUserByID: ScanStruct() failed: %v", err)
+		logger.Errorf("userService.FindDomainUserByID/ScanStruct: %v", err)
 		return nil, nil, err
 	} else if !b {
 		return nil, nil, ErrNotFound
@@ -727,8 +726,8 @@ func (svc *userService) ListUserSessions(userID *uuid.UUID, pageIndex int) ([]*d
 }
 
 func (svc *userService) Persist(u *data.User) error {
-	if err := execOne(svc.dbx().Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
-		return translateDBErrors("userService.Persist/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Update("cm_users").Set(u).Where(goqu.Ex{"id": &u.ID})); err != nil {
+		return translateDBErrors("userService.Persist/Update", err)
 	}
 
 	// Succeeded

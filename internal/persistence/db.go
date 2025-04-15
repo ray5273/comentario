@@ -376,7 +376,7 @@ func (db *Database) WithTx(f func(tx *DatabaseTx) error) (err error) {
 	// Initiate a transaction
 	tx, err := db.Begin()
 	if err != nil {
-		logger.Errorf("Database.WithTx: Begin() failed: %v", err)
+		logger.Errorf("Database.WithTx/Begin: %v", err)
 		return err
 	}
 
@@ -388,13 +388,13 @@ func (db *Database) WithTx(f func(tx *DatabaseTx) error) (err error) {
 			panic(p)
 		}
 		if err != nil {
-			logger.Errorf("Database.WithTx: func() failed: %v", err)
+			logger.Errorf("Database.WithTx/func(): %v", err)
 			if e := tx.Rollback(); e != nil {
-				logger.Errorf("Database.WithTx: post-func Rollback() failed: %v", err)
+				logger.Errorf("Database.WithTx/post-func Rollback: %v", err)
 				err = e
 			}
 		} else if e := tx.Commit(); e != nil {
-			logger.Errorf("Database.WithTx: post-func Commit() failed: %v", err)
+			logger.Errorf("Database.WithTx/post-func Commit: %v", err)
 			err = e
 		}
 	}()
@@ -525,7 +525,7 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	// Query the migrations table
 	var dbRecs []Migration
 	if err := db.From("cm_migrations").ScanStructs(&dbRecs); err != nil {
-		return nil, fmt.Errorf("getInstalledMigrations: ScanStructs() failed: %w", err)
+		return nil, fmt.Errorf("Database.getInstalledMigrations/ScanStructs: %w", err)
 	}
 
 	// Convert the files into a map
@@ -533,9 +533,9 @@ func (db *Database) getInstalledMigrations() (map[string][16]byte, error) {
 	for _, r := range dbRecs {
 		// Parse the sum as binary
 		if b, err := r.MD5Bytes(); err != nil {
-			return nil, fmt.Errorf("getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", r.Filename, err)
+			return nil, fmt.Errorf("Database.getInstalledMigrations: failed to decode MD5 checksum for migration '%s': %v", r.Filename, err)
 		} else if l := len(b); l != 16 {
-			return nil, fmt.Errorf("getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", r.Filename, l)
+			return nil, fmt.Errorf("Database.getInstalledMigrations: wrong MD5 checksum length for migration '%s': got %d, want 16", r.Filename, l)
 		} else {
 			var b16 [16]byte
 			copy(b16[:], b)
@@ -808,7 +808,7 @@ func ExecOne(x Executable) error {
 	if res, err := x.Executor().Exec(); err != nil {
 		return err
 	} else if cnt, err := res.RowsAffected(); err != nil {
-		return fmt.Errorf("RowsAffected() failed: %v", err)
+		return fmt.Errorf("RowsAffected: %v", err)
 	} else if cnt == 0 {
 		return sql.ErrNoRows
 	} else if cnt != 1 {

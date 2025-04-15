@@ -55,7 +55,7 @@ func wordpressImport(curUser *data.User, domain *data.Domain, buf []byte) *Impor
 	// Unmarshal the XML data
 	exp := rssXML{}
 	if err := xml.Unmarshal(buf, &exp); err != nil {
-		logger.Errorf("wordpressImport: xml.Unmarshal() failed: %v", err)
+		logger.Errorf("wordpressImport/Unmarshal: %v", err)
 		return importError(err)
 	}
 

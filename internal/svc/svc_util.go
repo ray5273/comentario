@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"errors"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 )
 
@@ -19,11 +18,6 @@ var (
 	ErrNotFound       = errors.New("services: object not found")
 	ErrResourceFetch  = errors.New("services: failed to fetch resource")
 )
-
-// execOne executes the provided Executable statement and verifies there's exactly one row affected
-func execOne(x persistence.Executable) error {
-	return persistence.ExecOne(x)
-}
 
 // translateDBErrors "translates" database errors into a service error, picking the first non-nil error and logging it
 func translateDBErrors(op string, errs ...error) error {

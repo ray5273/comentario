@@ -6,8 +6,7 @@ import (
 	"testing"
 )
 
-//goland:noinspection GoDirectComparisonOfErrors
-func Test_translateError(t *testing.T) {
+func Test_translateDBErrors(t *testing.T) {
 	tests := []struct {
 		name    string
 		errs    []error
@@ -24,6 +23,7 @@ func Test_translateError(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
+			//goland:noinspection GoDirectComparisonOfErrors
 			if err := translateDBErrors("test", tt.errs...); err != tt.wantErr {
 				t.Errorf("translateDBErrors() error = %v, wantErr = %v", err, tt.wantErr)
 			}

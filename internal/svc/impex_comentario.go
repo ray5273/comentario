@@ -106,14 +106,14 @@ func comentarioExport(domainID *uuid.UUID) ([]byte, error) {
 	// Convert the data into JSON
 	jsonData, err := json.Marshal(exp)
 	if err != nil {
-		logger.Errorf("comentarioExport: json.Marshal() failed: %v", err)
+		logger.Errorf("comentarioExport/Marshal: %v", err)
 		return nil, err
 	}
 
 	// Compress the JSON data with Gzip
 	gzippedData, err := util.CompressGzip(jsonData)
 	if err != nil {
-		logger.Errorf("comentarioExport: CompressGzip() failed: %v", err)
+		logger.Errorf("comentarioExport/CompressGzip: %v", err)
 		return nil, err
 	}
 
@@ -125,7 +125,7 @@ func comentarioImport(curUser *data.User, domain *data.Domain, buf []byte) *Impo
 	// Unmarshal the metadata to determine the format version
 	var exp comentarioExportMeta
 	if err := json.Unmarshal(buf, &exp); err != nil {
-		logger.Errorf("comentarioImport: json.Unmarshal() failed: %v", err)
+		logger.Errorf("comentarioImport/Unmarshal: %v", err)
 		return importError(err)
 	}
 	logger.Debugf("Comentario export version: %d", exp.Version)
@@ -149,7 +149,7 @@ func comentarioImportV1(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	// Unmarshal the data
 	var exp comentarioExportV1
 	if err := json.Unmarshal(buf, &exp); err != nil {
-		logger.Errorf("comentarioImportV1: json.Unmarshal() failed: %v", err)
+		logger.Errorf("comentarioImportV1/Unmarshal: %v", err)
 		return importError(err)
 	}
 
@@ -319,7 +319,7 @@ func comentarioImportV3(curUser *data.User, domain *data.Domain, buf []byte) *Im
 	// Unmarshal the data
 	var exp comentarioExportV3
 	if err := json.Unmarshal(buf, &exp); err != nil {
-		logger.Errorf("comentarioImportV3: json.Unmarshal() failed: %v", err)
+		logger.Errorf("comentarioImportV3/Unmarshal: %v", err)
 		return importError(err)
 	}
 

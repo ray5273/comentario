@@ -71,7 +71,7 @@ func (svc *cleanupService) cleanupStalePageViews() {
 // runLogSleep runs the provided cleanup query, logs the outcome, then sleeps for the given duration
 func (svc *cleanupService) runLogSleep(interval time.Duration, entity string, x persistence.Executable) {
 	if res, err := x.Executor().Exec(); err != nil {
-		logger.Errorf("cleanupService.runLogSleep: Exec() failed for %s: %v", entity, err)
+		logger.Errorf("cleanupService.runLogSleep/Delete[%s]: %v", entity, err)
 	} else if i, err := res.RowsAffected(); err == nil && i > 0 {
 		logger.Infof("Cleanup deleted %d %s", i, entity)
 	}

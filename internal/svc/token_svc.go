@@ -5,6 +5,7 @@ import (
 	"errors"
 	"github.com/doug-martin/goqu/v9"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"time"
 )
 
@@ -29,8 +30,8 @@ func (svc *tokenService) Create(t *data.Token) error {
 	logger.Debugf("tokenService.Create(%#v)", t)
 
 	// Insert a new record
-	if err := execOne(svc.dbx().Insert("cm_tokens").Rows(t)); err != nil {
-		return translateDBErrors("tokenService.Create/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Insert("cm_tokens").Rows(t)); err != nil {
+		return translateDBErrors("tokenService.Create/Insert", err)
 	}
 
 	// Succeeded
@@ -41,13 +42,13 @@ func (svc *tokenService) DeleteByValue(s string) error {
 	logger.Debugf("tokenService.DeleteByValue(%q)", s)
 
 	// Delete the record
-	err := execOne(svc.dbx().Delete("cm_tokens").Where(goqu.Ex{"value": s}))
+	err := persistence.ExecOne(svc.dbx().Delete("cm_tokens").Where(goqu.Ex{"value": s}))
 	if errors.Is(err, sql.ErrNoRows) {
 		// No rows affected
 		return ErrBadToken
 	} else if err != nil {
 		// Any other error
-		return translateDBErrors("tokenService.DeleteByValue/ExecOne", err)
+		return translateDBErrors("tokenService.DeleteByValue/Delete", err)
 	}
 
 	// Succeeded
@@ -78,8 +79,8 @@ func (svc *tokenService) Update(t *data.Token) error {
 	logger.Debugf("tokenService.Update(%v)", t)
 
 	// Update the token record
-	if err := execOne(svc.dbx().Update("cm_tokens").Set(t).Where(goqu.Ex{"value": t.Value})); err != nil {
-		return translateDBErrors("tokenService.Update/ExecOne", err)
+	if err := persistence.ExecOne(svc.dbx().Update("cm_tokens").Set(t).Where(goqu.Ex{"value": t.Value})); err != nil {
+		return translateDBErrors("tokenService.Update/Update", err)
 	}
 
 	// Succeeded

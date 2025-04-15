@@ -9,6 +9,7 @@ import (
 	"github.com/doug-martin/goqu/v9"
 	"github.com/google/uuid"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"image"
 	"image/color"
@@ -128,8 +129,8 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 	if r == nil {
 		// If a database record exists, delete it
 		if ua != nil {
-			if err = execOne(svc.dbx().Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID})); err != nil {
-				return err
+			if err = persistence.ExecOne(svc.dbx().Delete("cm_user_avatars").Where(goqu.Ex{"user_id": userID})); err != nil {
+				return translateDBErrors("avatarService.UpdateByUserID/Delete", err)
 			}
 		}
 
@@ -143,8 +144,8 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 		ua.IsCustom = isCustom
 
 		// Update the database record
-		if err = execOne(svc.dbx().Update("cm_user_avatars").Set(ua).Where(goqu.Ex{"user_id": userID})); err != nil {
-			return err
+		if err = persistence.ExecOne(svc.dbx().Update("cm_user_avatars").Set(ua).Where(goqu.Ex{"user_id": userID})); err != nil {
+			return translateDBErrors("avatarService.UpdateByUserID/Update", err)
 		}
 
 	} else {
@@ -157,8 +158,8 @@ func (svc *avatarService) UpdateByUserID(userID *uuid.UUID, r io.Reader, isCusto
 		}
 
 		// Insert a new avatar database record
-		if err = execOne(svc.dbx().Insert("cm_user_avatars").Rows(ua)); err != nil {
-			return err
+		if err = persistence.ExecOne(svc.dbx().Insert("cm_user_avatars").Rows(ua)); err != nil {
+			return translateDBErrors("avatarService.UpdateByUserID/Insert", err)
 		}
 	}
 
