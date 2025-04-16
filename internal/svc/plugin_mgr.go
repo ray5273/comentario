@@ -212,12 +212,7 @@ func (pm *pluginManager) Active() bool {
 }
 
 func (pm *pluginManager) ActivatePlugins() error {
-	for _, pe := range pm.plugs {
-		if err := pe.p.Activate(); err != nil {
-			return fmt.Errorf("plugin (ID=%q) activation failed: %w", pe.id, err)
-		}
-	}
-	return nil
+	return pm.HandleEvent(&cplugin.ActivateEvent{})
 }
 
 func (pm *pluginManager) HandleEvent(event any) error {
@@ -298,10 +293,7 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 }
 
 func (pm *pluginManager) Shutdown() {
-	// Shutdown all known plugins
-	for _, pe := range pm.plugs {
-		pe.p.Shutdown()
-	}
+	_ = pm.HandleEvent(&cplugin.ShutdownEvent{})
 }
 
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found

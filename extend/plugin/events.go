@@ -11,6 +11,14 @@ type UserPayload interface {
 	SetUser(*User)
 }
 
+// ActivateEvent signals the plugin Comentario has readied all resources and is about to start serving the API.
+// The plugin may want to start background processes that make use of resources such as database.
+type ActivateEvent struct{}
+
+// ShutdownEvent notifies the plugin it has to shut down, by e.g. freeing up resources, closing files etc. Fired when
+// the server is about to shut down
+type ShutdownEvent struct{}
+
 // UserEvent is an event related to user, which implements UserPayload
 type UserEvent struct {
 	user *User

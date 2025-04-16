@@ -92,6 +92,9 @@ func (d *dbTxAware) dbx() persistence.DBX {
 	if d.tx != nil {
 		return d.tx
 	}
+	if d.db == nil {
+		panic("dbTxAware.dbx: db not assigned")
+	}
 	return d.db
 }
 
