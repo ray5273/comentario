@@ -209,38 +209,10 @@ func UnmarshalConfigFile(filename string, out any) error {
 }
 
 func configureMailer() error {
-	// If SMTP host is available, use a corresponding mailer
+	// Ignore unless SMTP is enabled
 	cfg := &SecretsConfig.SMTPServer
-	if cfg.Host == "" {
-		logger.Warning("SMTP host isn't provided, sending emails is not available")
+	if !cfg.enabled() {
 		return nil
-	}
-
-	// Issue a notification if no credentials are provided
-	if cfg.User == "" {
-		logger.Info("SMTP username isn't provided, no SMTP authentication will be used")
-	} else if cfg.Pass == "" {
-		logger.Warning("SMTP password isn't provided")
-	}
-
-	// Default port value is for STARTTLS
-	if cfg.Port == 0 {
-		cfg.Port = 587
-	}
-
-	// Figure out encryption params
-	useSSL, useTLS := false, false
-	switch cfg.Encryption {
-	case SMTPEncryptionNone:
-		// Do nothing
-	case SMTPEncryptionDefault:
-		useSSL, useTLS = cfg.Port == 465, cfg.Port == 587
-	case SMTPEncryptionSSL:
-		useSSL = true
-	case SMTPEncryptionTLS:
-		useTLS = true
-	default:
-		return fmt.Errorf("invalid SMTP encryption: %q", cfg.Encryption)
 	}
 
 	// Validate the From email address
@@ -248,10 +220,13 @@ func configureMailer() error {
 		return fmt.Errorf("invalid 'From' email address %q: %w", ServerConfig.EmailFrom, err)
 	}
 
+	// Figure out mailer params
+	port, useSSL, useTLS := cfg.MailerSettings()
+
 	// Create a mailer
 	util.TheMailer = util.NewSMTPMailer(
 		cfg.Host,
-		cfg.Port,
+		port,
 		cfg.User,
 		cfg.Pass,
 		ServerConfig.EmailFrom,

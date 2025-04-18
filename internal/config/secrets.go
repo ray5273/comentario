@@ -6,8 +6,11 @@ import (
 	"fmt"
 	"gitlab.com/comentario/comentario/internal/util"
 	"gopkg.in/yaml.v3"
+	"net"
+	"net/url"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 )
 
@@ -98,55 +101,231 @@ func (p *OIDCProvider) validate() error {
 	return nil
 }
 
+// PostgresConfig describes PostgreSQL settings. Used when at least host is provided
+type PostgresConfig struct {
+	Host           string `yaml:"host"`        // Host
+	Port           int    `yaml:"port"`        // Port
+	Username       string `yaml:"username"`    // Username
+	Password       string `yaml:"password"`    // Password
+	Database       string `yaml:"database"`    // Database
+	ConnectTimeout int    `yaml:"connTimeout"` // Maximum wait for connection, in seconds. Zero or not specified means wait indefinitely
+	SSLMode        string `yaml:"sslMode"`     // SSL mode, defaults to "disable"
+	SSLModeLegacy  string `yaml:"sslmode"`     // Legacy SSL mode key provided for backward compatibility
+	SSLCert        string `yaml:"sslCert"`     // Cert file location
+	SSLKey         string `yaml:"sslKey"`      // Key file location
+	SSLRootCert    string `yaml:"sslRootCert"` // Root certificate file location
+}
+
+// ConnectString returns database connect string, optionally masking the password
+func (c *PostgresConfig) ConnectString(mask bool) string {
+	// Port number
+	port := c.Port
+	if port == 0 {
+		port = 5432 // PostgreSQL default
+	}
+
+	// SSL Mode
+	sslMode := c.SSLMode
+	if sslMode == "" {
+		sslMode = c.SSLModeLegacy
+	}
+	if sslMode == "" {
+		sslMode = "disable"
+	}
+
+	// Prepare query params
+	q := make(url.Values)
+	if c.ConnectTimeout > 0 {
+		q.Set("connect_timeout", strconv.Itoa(c.ConnectTimeout))
+	}
+	q.Set("sslmode", sslMode)
+	if c.SSLCert != "" {
+		q.Set("sslcert", c.SSLCert)
+	}
+	if c.SSLKey != "" {
+		q.Set("sslkey", c.SSLKey)
+	}
+	if c.SSLRootCert != "" {
+		q.Set("sslrootcert", c.SSLRootCert)
+	}
+
+	// Prepare a URL
+	u := url.URL{
+		Scheme:   "postgres",
+		User:     url.UserPassword(c.Username, util.If(mask, "REDACTED", c.Password)),
+		Host:     net.JoinHostPort(c.Host, strconv.Itoa(port)),
+		Path:     c.Database,
+		RawQuery: q.Encode(),
+	}
+	return u.String()
+}
+
+// enabled indicates if PostgreSQL is enabled
+func (c *PostgresConfig) enabled() bool {
+	return c.Host != ""
+}
+
+// validate the configuration
+func (c *PostgresConfig) validate() error {
+	var e []string
+	if c.Host == "" {
+		e = append(e, "host is not specified")
+	}
+	if c.Database == "" {
+		e = append(e, "DB name is not specified")
+	}
+	if c.Username == "" {
+		e = append(e, "username is not specified")
+	}
+	if c.Password == "" {
+		e = append(e, "password is not specified")
+	}
+	if len(e) > 0 {
+		return fmt.Errorf("PostgreSQL database misconfigured: %s", strings.Join(e, "; "))
+	}
+	return nil
+}
+
+// SQLite3Config describes SQLite3 settings
+type SQLite3Config struct {
+	File string `yaml:"file"` // Location of the database file
+}
+
+// ConnectString returns database connect string
+func (c *SQLite3Config) ConnectString() string {
+	// Enable the enforcement of foreign keys
+	return fmt.Sprintf("%s?_fk=true", c.File)
+}
+
+// enabled indicates if SQLite3 is enabled
+func (c *SQLite3Config) enabled() bool {
+	return c.File != ""
+}
+
+// validate the configuration
+func (c *SQLite3Config) validate() error {
+	// Check file is specified
+	if c.File == "" {
+		return errors.New("SQLite3 database misconfigured: file is not specified")
+	}
+
+	// Check file exists (not an error)
+	if _, err := os.Stat(c.File); os.IsNotExist(err) {
+		logger.Warningf("SQLite3 database file %q does not exist, will create one", c.File)
+	}
+	return nil
+}
+
+// SMTPServerConfig describes SMTP server settings
+type SMTPServerConfig struct {
+	Host       string         `yaml:"host"`       // SMTP server hostname
+	Port       int            `yaml:"port"`       // SMTP server port
+	User       string         `yaml:"username"`   // SMTP server username
+	Pass       string         `yaml:"password"`   // SMTP server password
+	Encryption SMTPEncryption `yaml:"encryption"` // Encryption used for sending mails
+	Insecure   bool           `yaml:"insecure"`   // Skip SMTP server certificate verification
+}
+
+// MailerSettings returns derived mailer configuration parameters
+func (c *SMTPServerConfig) MailerSettings() (port int, useSSL, useTLS bool) {
+	// Default port value is for STARTTLS
+	port = c.Port
+	if port == 0 {
+		port = 587
+	}
+
+	// Figure out encryption params
+	switch c.Encryption {
+	case SMTPEncryptionNone:
+		// Do nothing
+	case SMTPEncryptionDefault:
+		useSSL, useTLS = port == 465, port == 587
+	case SMTPEncryptionSSL:
+		useSSL = true
+	case SMTPEncryptionTLS:
+		useTLS = true
+	}
+	return
+}
+
+// enabled indicates if SMTP is enabled
+func (c *SMTPServerConfig) enabled() bool {
+	return c.Host != ""
+}
+
+// validate the configuration
+func (c *SMTPServerConfig) validate() error {
+	if c.Host == "" {
+		logger.Warning("SMTP host isn't provided, sending emails is not available")
+		return nil
+	}
+
+	// Issue a notification if no credentials are provided
+	if c.User == "" {
+		logger.Info("SMTP username isn't provided, no SMTP authentication will be used")
+	} else if c.Pass == "" {
+		logger.Warning("SMTP password isn't provided")
+	}
+
+	// Validate encryption
+	switch c.Encryption {
+	case SMTPEncryptionNone, SMTPEncryptionDefault, SMTPEncryptionSSL, SMTPEncryptionTLS:
+		// Valid
+	default:
+		return fmt.Errorf("invalid SMTP encryption: %q", c.Encryption)
+	}
+
+	// Succeeded
+	return nil
+}
+
+// FederatedIdPConfig describes federated identity providers settings
+type FederatedIdPConfig struct {
+	Facebook KeySecret      `yaml:"facebook"` // Facebook auth config
+	GitHub   KeySecret      `yaml:"github"`   // GitHub auth config
+	GitLab   KeySecret      `yaml:"gitlab"`   // GitLab auth config
+	Google   KeySecret      `yaml:"google"`   // Google auth config
+	Twitter  KeySecret      `yaml:"twitter"`  // Twitter auth config
+	OIDC     []OIDCProvider `yaml:"oidc"`     // OIDC provider specs
+}
+
+// validate the configuration
+func (c *FederatedIdPConfig) validate() error {
+	// Iterate all available OIDC entries
+	ids := map[string]bool{}
+	for _, p := range c.OIDC {
+		// Validate the config
+		if err := p.validate(); err != nil {
+			return fmt.Errorf("invalid OIDC provider (ID=%q) config: %w", p.ID, err)
+		}
+
+		// Make sure the ID is unique
+		if ids[p.ID] {
+			return fmt.Errorf("duplicate OIDC provider ID: %q", p.ID)
+		}
+		ids[p.ID] = true
+	}
+
+	// Succeeded
+	return nil
+}
+
+// ExtensionsConfig describes Comentario extensions settings
+type ExtensionsConfig struct {
+	Akismet             APIKey `yaml:"akismet"`
+	Perspective         APIKey `yaml:"perspective"`
+	APILayerSpamChecker APIKey `yaml:"apiLayerSpamChecker"`
+}
+
 // SecretsConfiguration accumulates the entire configuration provided in a secrets file
 type SecretsConfiguration struct {
-	// PostgreSQL settings. Used when at least host is provided
-	Postgres struct {
-		Host     string `yaml:"host"`     // PostgreSQL host
-		Port     int    `yaml:"port"`     // PostgreSQL port
-		Username string `yaml:"username"` // PostgreSQL username
-		Password string `yaml:"password"` // PostgreSQL password
-		Database string `yaml:"database"` // PostgreSQL database
-		SSLMode  string `yaml:"sslmode"`  // PostgreSQL sslmode, defaults to "disable"
-	} `yaml:"postgres"`
-
-	// SQLite3 settings. Used if PostgreSQL settings are omitted
-	SQLite3 struct {
-		File string `yaml:"file"` // Location of the database file
-	} `yaml:"sqlite3"`
-
-	// SMTP server settings
-	SMTPServer struct {
-		Host       string         `yaml:"host"`       // SMTP server hostname
-		Port       int            `yaml:"port"`       // SMTP server port
-		User       string         `yaml:"username"`   // SMTP server username
-		Pass       string         `yaml:"password"`   // SMTP server password
-		Encryption SMTPEncryption `yaml:"encryption"` // Encryption used for sending mails
-		Insecure   bool           `yaml:"insecure"`   // Skip SMTP server certificate verification
-	} `yaml:"smtpServer"`
-
-	// Federated identity provider settings
-	IdP struct {
-		Facebook KeySecret      `yaml:"facebook"` // Facebook auth config
-		GitHub   KeySecret      `yaml:"github"`   // GitHub auth config
-		GitLab   KeySecret      `yaml:"gitlab"`   // GitLab auth config
-		Google   KeySecret      `yaml:"google"`   // Google auth config
-		Twitter  KeySecret      `yaml:"twitter"`  // Twitter auth config
-		OIDC     []OIDCProvider `yaml:"oidc"`     // OIDC provider specs
-	} `yaml:"idp"`
-
-	// Extension settings
-	Extensions struct {
-		Akismet             APIKey `yaml:"akismet"`
-		Perspective         APIKey `yaml:"perspective"`
-		APILayerSpamChecker APIKey `yaml:"apiLayerSpamChecker"`
-	} `yaml:"extensions"`
-
-	// Optional random string to generate XSRF key from
-	XSRFSecret string `yaml:"xsrfSecret"`
-
-	// Optional plugin config, a map indexed by plugin ID. Gets read as raw YAML nodes
-	Plugins map[string]yaml.Node `yaml:"plugins"`
+	Postgres   PostgresConfig       `yaml:"postgres"`   // PostgreSQL config
+	SQLite3    SQLite3Config        `yaml:"sqlite3"`    // SQLite3 config
+	SMTPServer SMTPServerConfig     `yaml:"smtpServer"` // SMTP server config
+	IdP        FederatedIdPConfig   `yaml:"idp"`        // Federated identity provider config
+	Extensions ExtensionsConfig     `yaml:"extensions"` // Extensions config
+	XSRFSecret string               `yaml:"xsrfSecret"` // Optional random string to generate XSRF key from
+	Plugins    map[string]yaml.Node `yaml:"plugins"`    // Optional plugin config, a map indexed by plugin ID. Gets read as raw YAML nodes
 
 	xsrfKey []byte // The generated XSRF key for the server
 }
@@ -183,14 +362,14 @@ func (sc *SecretsConfiguration) validate() error {
 	// Validate DB configuration
 	switch {
 	// PostgreSQL
-	case sc.Postgres.Host != "":
-		if err := sc.validatePostgresConfig(); err != nil {
+	case sc.Postgres.enabled():
+		if err := sc.Postgres.validate(); err != nil {
 			return err
 		}
 
 	// SQLite3
-	case sc.SQLite3.File != "":
-		if err := sc.validateSQLite3Config(); err != nil {
+	case sc.SQLite3.enabled():
+		if err := sc.SQLite3.validate(); err != nil {
 			return err
 		}
 
@@ -199,68 +378,8 @@ func (sc *SecretsConfiguration) validate() error {
 		return errors.New("could not determine DB dialect to use. Either postgres.host or sqlite3.file must be set")
 	}
 
-	// Validate identity providers
-	return sc.validateIdPConfig()
-}
-
-// validatePostgresConfig verifies the PostgreSQL database configuration is valid
-func (sc *SecretsConfiguration) validatePostgresConfig() error {
-	var e []string
-	if sc.Postgres.Host == "" {
-		e = append(e, "host is not specified")
-	}
-	if sc.Postgres.Port == 0 {
-		sc.Postgres.Port = 5432 // PostgreSQL default
-	}
-	if sc.Postgres.Database == "" {
-		e = append(e, "DB name is not specified")
-	}
-	if sc.Postgres.Username == "" {
-		e = append(e, "username is not specified")
-	}
-	if sc.Postgres.Password == "" {
-		e = append(e, "password is not specified")
-	}
-	if sc.Postgres.SSLMode == "" {
-		sc.Postgres.SSLMode = "disable"
-	}
-	if len(e) > 0 {
-		return fmt.Errorf("PostgreSQL database misconfigured: %s", strings.Join(e, "; "))
-	}
-	return nil
-}
-
-// validateSQLite3Config verifies the SQLite3 database configuration is valid
-func (sc *SecretsConfiguration) validateSQLite3Config() error {
-	// Check file is specified
-	if sc.SQLite3.File == "" {
-		return errors.New("SQLite3 database misconfigured: file is not specified")
-	}
-
-	// Check file exists (not an error)
-	if _, err := os.Stat(sc.SQLite3.File); os.IsNotExist(err) {
-		logger.Warningf("SQLite3 database file %q does not exist, will create one", sc.SQLite3.File)
-	}
-	return nil
-}
-
-// validateIdPConfig verifies the IdP configuration is valid
-func (sc *SecretsConfiguration) validateIdPConfig() error {
-	// Iterate all available OIDC entries
-	ids := map[string]bool{}
-	for _, p := range sc.IdP.OIDC {
-		// Validate the config
-		if err := p.validate(); err != nil {
-			return fmt.Errorf("invalid OIDC provider (ID=%q) config: %w", p.ID, err)
-		}
-
-		// Make sure the ID is unique
-		if ids[p.ID] {
-			return fmt.Errorf("duplicate OIDC provider ID: %q", p.ID)
-		}
-		ids[p.ID] = true
-	}
-
-	// Succeeded
-	return nil
+	// Validate mailer and identity providers
+	return util.CheckErrors(
+		sc.SMTPServer.validate(),
+		sc.IdP.validate())
 }

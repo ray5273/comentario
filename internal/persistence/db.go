@@ -498,17 +498,9 @@ func (db *Database) getAvailableMigrations() ([]string, error) {
 func (db *Database) getConnectString(mask bool) string {
 	switch db.dialect {
 	case dbPostgres:
-		return fmt.Sprintf(
-			"postgres://%s:%s@%s:%d/%s?sslmode=%s",
-			config.SecretsConfig.Postgres.Username,
-			util.If(mask, "********", config.SecretsConfig.Postgres.Password),
-			config.SecretsConfig.Postgres.Host,
-			config.SecretsConfig.Postgres.Port,
-			config.SecretsConfig.Postgres.Database,
-			config.SecretsConfig.Postgres.SSLMode)
+		return config.SecretsConfig.Postgres.ConnectString(mask)
 	case dbSQLite3:
-		// Enable the enforcement of foreign keys
-		return fmt.Sprintf("%s?_fk=true", config.SecretsConfig.SQLite3.File)
+		return config.SecretsConfig.SQLite3.ConnectString()
 	}
 	return "(?)"
 }

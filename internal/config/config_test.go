@@ -16,31 +16,6 @@ func mustParseURL(s string) *url.URL {
 	}
 }
 
-func TestKeySecret_Usable(t *testing.T) {
-	tests := []struct {
-		name    string
-		disable bool
-		key     string
-		secret  string
-		want    bool
-	}{
-		{"all empty              ", false, "", "", false},
-		{"disabled, values empty ", true, "", "", false},
-		{"enabled, key only      ", false, "SomeValue", "", false},
-		{"enabled, secret only   ", false, "", "SomeValue", false},
-		{"enabled, values filled ", false, "XYZ", "ABC", true},
-		{"disabled, values filled", true, "XYZ", "ABC", false},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			c := &KeySecret{Disableable: Disableable{tt.disable}, Key: tt.key, Secret: tt.secret}
-			if got := c.Usable(); got != tt.want {
-				t.Errorf("Usable() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestServerConfiguration_PathOfBaseURL(t *testing.T) {
 	tests := []struct {
 		name     string
@@ -226,7 +201,7 @@ func Test_configureMailer(t *testing.T) {
 	}{
 		{"no SMTP config  + no email       ", "", "", 0, "", "", SMTPEncryptionDefault, false, "", false},
 		{"host only       + no email       ", "", "foo.bar", 0, "", "", SMTPEncryptionNone, false, `invalid 'From' email address "": mail: no address`, false},
-		{"unknown encryption               ", "", "foo.bar", 0, "", "", "brute", false, `invalid SMTP encryption: "brute"`, false},
+		{"unknown encryption               ", "foo@bar", "foo.bar", 0, "", "", "brute", false, "", true},
 		{"host only       + bad email      ", "brick", "foo.bar", 0, "", "", SMTPEncryptionSSL, false, `invalid 'From' email address "brick": mail: missing '@' or angle-addr`, false},
 		{"host only       + good email     ", "foo@bar", "foo.bar", 0, "", "", SMTPEncryptionTLS, false, "", true},
 		{"host only       + good email/name", "Goblin <foo@bar>", "foo.bar", 0, "", "", SMTPEncryptionNone, false, "", true},
