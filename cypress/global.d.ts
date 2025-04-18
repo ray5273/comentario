@@ -264,11 +264,14 @@ declare namespace Cypress {
         dlgCancel(): Chainable<JQueryWithSelector>;
 
         /**
-         * Click a sort dropdown and then a sort button with the given label.
+         * Check the currently active sorting in the sort dropdown, then click the dropdown button and subsequently a
+         * sort button with the given label.
+         * @param curSort Current sort label.
+         * @param curOrder The expected current sort order.
          * @param label Sort button label to click.
          * @param expectOrder The expected sort order after the click.
          */
-        changeListSort(label: string, expectOrder: 'asc' | 'desc'): Chainable<void>;
+        changeListSort(curSort: string, curOrder: 'asc' | 'desc', label: string, expectOrder: 'asc' | 'desc'): Chainable<void>;
 
         /**
          * Verify that when visiting the given path, the application first redirects to the login page and subsequently

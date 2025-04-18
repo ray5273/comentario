@@ -102,7 +102,7 @@ context('Domain Manager', () => {
         cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false, false, false]);
 
         // Change sorting to by Host, desc. The selected domain always stays on top
-        cy.get('@domainManager').changeListSort('Host', 'desc');
+        cy.get('@domainManager').changeListSort('Host', 'asc', 'Host', 'desc');
         cy.get('@domainList').texts('.domain-host').should('arrayMatch', [
             DOMAINS.market.host,
             DOMAINS.spirit.host,
@@ -112,7 +112,7 @@ context('Domain Manager', () => {
         cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false, false, false]);
 
         // Change sorting to by Created, asc. The selected domain always stays on top
-        cy.get('@domainManager').changeListSort('Created', 'asc');
+        cy.get('@domainManager').changeListSort('Host', 'desc', 'Created', 'asc');
         cy.get('@domainList').texts('.domain-host').should('arrayMatch', [
             DOMAINS.market.host,
             DOMAINS.localhost.host,
@@ -171,7 +171,7 @@ context('Domain Manager', () => {
 
         it('sorts items by Host', () => {
             // Default sort is host ASC. Sort by host DESC
-            cy.get('@domainManager').changeListSort('Host', 'desc');
+            cy.get('@domainManager').changeListSort('Host', 'asc', 'Host', 'desc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', hostsSorted.slice(76, 101).reverse());
 
@@ -196,19 +196,19 @@ context('Domain Manager', () => {
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', hostsSorted.slice().reverse());
 
             // Sort by host ASC again
-            cy.get('@domainManager').changeListSort('Host', 'asc');
+            cy.get('@domainManager').changeListSort('Host', 'desc', 'Host', 'asc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', hostsSorted.slice(0, 25));
         });
 
         it('sorts items by Name', () => {
             // Sort by name ASC
-            cy.get('@domainManager').changeListSort('Name', 'asc');
+            cy.get('@domainManager').changeListSort('Host', 'asc', 'Name', 'asc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-name').should('be.empty');
 
             // Sort by name DESC
-            cy.get('@domainManager').changeListSort('Name', 'desc');
+            cy.get('@domainManager').changeListSort('Name', 'asc', 'Name', 'desc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-name').should('arrayMatch', namesSorted.slice().reverse().slice(0, 25));
 
@@ -220,12 +220,12 @@ context('Domain Manager', () => {
 
         it('sorts items by Created', () => {
             // Sort ASC
-            cy.get('@domainManager').changeListSort('Created', 'asc');
+            cy.get('@domainManager').changeListSort('Host', 'asc', 'Created', 'asc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', hostsByCreated.slice(0, 25));
 
             // Sort DESC
-            cy.get('@domainManager').changeListSort('Created', 'desc');
+            cy.get('@domainManager').changeListSort('Created', 'asc', 'Created', 'desc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', hostsByCreated.slice(76, 101).reverse());
 
@@ -252,12 +252,12 @@ context('Domain Manager', () => {
 
         it('sorts items by Number of comments', () => {
             // Sort ASC
-            cy.get('@domainManager').changeListSort('Number of comments', 'asc');
+            cy.get('@domainManager').changeListSort('Host', 'asc', 'Number of comments', 'asc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-cnt-comments').should('arrayMatch', Array(25).fill('0\ncomments'));
 
             // Sort DESC
-            cy.get('@domainManager').changeListSort('Number of comments', 'desc');
+            cy.get('@domainManager').changeListSort('Number of comments', 'asc', 'Number of comments', 'desc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-cnt-comments')
                 .should('arrayMatch', ['16\ncomments', '7\ncomments', ...Array(23).fill('0\ncomments')]);
@@ -265,12 +265,12 @@ context('Domain Manager', () => {
 
         it('sorts items by Number of views', () => {
             // Sort ASC
-            cy.get('@domainManager').changeListSort('Number of views', 'asc');
+            cy.get('@domainManager').changeListSort('Host', 'asc', 'Number of views', 'asc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-cnt-views').should('arrayMatch', Array(25).fill('0\nviews'));
 
             // Sort DESC
-            cy.get('@domainManager').changeListSort('Number of views', 'desc');
+            cy.get('@domainManager').changeListSort('Number of views', 'asc', 'Number of views', 'desc');
             cy.get('@domainManager').verifyListFooter(25, true);
             cy.get('@domainList').texts('.domain-cnt-views')
                 .should('arrayMatch', ['19,238,102\nviews', '5\nviews', ...Array(23).fill('0\nviews')]);
@@ -336,7 +336,7 @@ context('Domain Manager', () => {
             cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false]);
 
             // Change sorting, the selected is still on top
-            cy.get('@domainManager').changeListSort('Host', 'desc');
+            cy.get('@domainManager').changeListSort('Host', 'asc', 'Host', 'desc');
             cy.get('@domainManager').verifyListFooter(2, false);
             cy.get('@domainList').texts('.domain-host').should('arrayMatch', [DOMAINS.colour.host, DOMAINS.localhost.host]);
             cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false]);

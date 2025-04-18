@@ -79,44 +79,44 @@ context('User Manager', () => {
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByEmail.map(u => u.email));
 
         // Sort by email DESC
-        cy.get('@userManager').changeListSort('Email', 'desc');
+        cy.get('@userManager').changeListSort('Email', 'asc', 'Email', 'desc');
         cy.get('@userManager').verifyListFooter(usersByEmail.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByEmail.map(u => u.name).reverse());
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByEmail.map(u => u.email).reverse());
 
         // Sort by name ASC
-        cy.get('@userManager').changeListSort('Name', 'asc');
+        cy.get('@userManager').changeListSort('Email', 'desc', 'Name', 'asc');
         cy.get('@userManager').verifyListFooter(usersByName.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByName.map(u => u.name));
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByName.map(u => u.email));
 
         // Sort by name DESC
-        cy.get('@userManager').changeListSort('Name', 'desc');
+        cy.get('@userManager').changeListSort('Name', 'asc', 'Name', 'desc');
         cy.get('@userManager').verifyListFooter(usersByName.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', usersByName.map(u => u.name).reverse());
         cy.get('@userList').texts('.user-email').should('arrayMatch', usersByName.map(u => u.email).reverse());
 
         // Sort by created ASC
-        cy.get('@userManager').changeListSort('Created', 'asc');
+        cy.get('@userManager').changeListSort('Name', 'desc', 'Created', 'asc');
         cy.get('@userManager').verifyListFooter(users.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', users.map(u => u.name));
         cy.get('@userList').texts('.user-email').should('arrayMatch', users.map(u => u.email));
 
         // Sort by created DESC
-        cy.get('@userManager').changeListSort('Created', 'desc');
+        cy.get('@userManager').changeListSort('Created', 'asc', 'Created', 'desc');
         cy.get('@userManager').verifyListFooter(users.length, false);
         cy.get('@userList').texts('.user-name') .should('arrayMatch', users.map(u => u.name).reverse());
         cy.get('@userList').texts('.user-email').should('arrayMatch', users.map(u => u.email).reverse());
 
         // Sort by IdP (no order check yet)
-        cy.get('@userManager').changeListSort('Federated IdP', 'asc');
-        cy.get('@userManager').changeListSort('Federated IdP', 'desc');
+        cy.get('@userManager').changeListSort('Created', 'desc', 'Federated IdP', 'asc');
+        cy.get('@userManager').changeListSort('Federated IdP', 'asc', 'Federated IdP', 'desc');
 
         //--------------------------------------------------------------------------------------------------------------
         // Filtering
         //--------------------------------------------------------------------------------------------------------------
 
-        cy.get('@userManager').changeListSort('Email', 'asc');
+        cy.get('@userManager').changeListSort('Federated IdP', 'desc', 'Email', 'asc');
 
         // Test filtering by email
         cy.get('@filterString').setValue('bLoG');

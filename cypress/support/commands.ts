@@ -362,12 +362,13 @@ Cypress.Commands.add(
 Cypress.Commands.add(
     'changeListSort',
     {prevSubject: 'optional'},
-    (element: JQueryWithSelector, label: string, expectOrder: 'asc' | 'desc') => {
+    (element: JQueryWithSelector, curSort: string, curOrder: 'asc' | 'desc', label: string, expectOrder: 'asc' | 'desc') => {
         const el = () => (element ? cy.wrap(element) : cy).find('app-sort-selector');
 
         // Click the sort dropdown
         el().find('button[ngbdropdowntoggle]')
-            .should('have.text', 'Sort')
+            .should('have.text',  curSort)
+            .should('have.class', 'sort-' + curOrder)
             .click();
 
         // Click the required sort button and check the sort order
@@ -376,8 +377,11 @@ Cypress.Commands.add(
             .should('have.class', 'sort-' + expectOrder)
             .should('have.attr', 'aria-checked', 'true');
 
-        // Click on sort dropdown again
-        el().find('button[ngbdropdowntoggle]').click();
+        // Check the sort dropdown button updated title/icon, then click it again
+        el().find('button[ngbdropdowntoggle]')
+            .should('have.text',  label)
+            .should('have.class', 'sort-' + expectOrder)
+            .click();
 
         // Verify the sort menu is gone
         el().find('div[ngbdropdownmenu]').should('not.be.visible');

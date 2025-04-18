@@ -85,35 +85,35 @@ context('Domain Page Manager', () => {
                 .should('arrayMatch', pages.slice().sort((a, b) => a.path.localeCompare(b.path)).map(p => `http://${DOMAINS.localhost.host}${p.path}`));
 
             // Sort by Path DESC
-            cy.get('@pageManager').changeListSort('Path', 'desc');
+            cy.get('@pageManager').changeListSort('Path', 'asc', 'Path', 'desc');
             cy.get('@pageList').texts('.domain-page-path').should('arrayMatch', pagesByPath.slice().reverse());
 
             // Sort by Title
-            cy.get('@pageManager').changeListSort('Title', 'asc');
+            cy.get('@pageManager').changeListSort('Path', 'desc', 'Title', 'asc');
             cy.get('@pageList').texts('.domain-page-title').should('arrayMatch', pagesByTitle);
-            cy.get('@pageManager').changeListSort('Title', 'desc');
+            cy.get('@pageManager').changeListSort('Title', 'asc', 'Title', 'desc');
             cy.get('@pageList').texts('.domain-page-title').should('arrayMatch', pagesByTitle.slice().reverse());
 
             // Sort by Created
-            cy.get('@pageManager').changeListSort('Created', 'asc');
+            cy.get('@pageManager').changeListSort('Title', 'desc', 'Created', 'asc');
             cy.get('@pageList').texts('.domain-page-path').should('arrayMatch', pages.map(p => p.path));
-            cy.get('@pageManager').changeListSort('Created', 'desc');
+            cy.get('@pageManager').changeListSort('Created', 'asc', 'Created', 'desc');
             cy.get('@pageList').texts('.domain-page-path').should('arrayMatch', pages.slice().reverse().map(p => p.path));
 
             // Sort by Number of comments
-            cy.get('@pageManager').changeListSort('Number of comments', 'asc');
+            cy.get('@pageManager').changeListSort('Created', 'desc', 'Number of comments', 'asc');
             cy.get('@pageList').texts('.domain-page-cnt-comments').should('arrayMatch', pagesByCntComments);
-            cy.get('@pageManager').changeListSort('Number of comments', 'desc');
+            cy.get('@pageManager').changeListSort('Number of comments', 'asc', 'Number of comments', 'desc');
             cy.get('@pageList').texts('.domain-page-cnt-comments').should('arrayMatch', pagesByCntComments.slice().reverse());
 
             // Sort by Number of views
-            cy.get('@pageManager').changeListSort('Number of views', 'asc');
+            cy.get('@pageManager').changeListSort('Number of comments', 'desc', 'Number of views', 'asc');
             cy.get('@pageList').texts('.domain-page-cnt-views').should('arrayMatch', pagesByCntViews);
-            cy.get('@pageManager').changeListSort('Number of views', 'desc');
+            cy.get('@pageManager').changeListSort('Number of views', 'asc', 'Number of views', 'desc');
             cy.get('@pageList').texts('.domain-page-cnt-views').should('arrayMatch', pagesByCntViews.slice().reverse());
 
             // Sort by Path ASC again
-            cy.get('@pageManager').changeListSort('Path', 'asc');
+            cy.get('@pageManager').changeListSort('Number of views', 'desc', 'Path', 'asc');
             cy.get('@pageList').texts('.domain-page-path').should('arrayMatch', pagesByPath);
         });
 

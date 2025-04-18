@@ -54,7 +54,7 @@ export class UserManagerComponent implements OnInit {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
-    readonly sort = new Sort('email');
+    readonly sort = new Sort(['email', 'name', 'created', 'federatedIdP'], 'email', false);
     readonly usersLoading = new ProcessingStatus();
     readonly filterForm = this.fb.nonNullable.group({
         filter: '',

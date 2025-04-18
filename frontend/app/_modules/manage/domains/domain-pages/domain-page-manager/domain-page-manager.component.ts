@@ -52,7 +52,7 @@ export class DomainPageManagerComponent implements OnInit {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
-    readonly sort = new Sort('path');
+    readonly sort = new Sort(['path', 'title', 'created', 'countComments', 'countViews'], 'path', false);
     readonly pagesLoading = new ProcessingStatus();
 
     readonly filterForm = this.fb.nonNullable.group({

@@ -65,7 +65,7 @@ export class DomainUserManagerComponent implements OnInit {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
-    readonly sort = new Sort('email');
+    readonly sort = new Sort(['email', 'name', 'created'], 'email', false);
     readonly loading = new ProcessingStatus();
 
     readonly filterForm = this.fb.nonNullable.group({

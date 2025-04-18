@@ -60,7 +60,7 @@ export class DomainManagerComponent implements OnInit {
     /** Observable triggering a data load, while indicating whether a result reset is needed. */
     readonly load = new Subject<boolean>();
 
-    readonly sort = new Sort('host');
+    readonly sort = new Sort(['name', 'host', 'created', 'countComments', 'countViews'], 'host', false);
     readonly domainsLoading = new ProcessingStatus();
     readonly domainLoading = this.domainSelectorSvc.domainLoading;
     readonly Paths = Paths;

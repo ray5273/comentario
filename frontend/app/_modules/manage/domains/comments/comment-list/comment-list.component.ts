@@ -77,7 +77,7 @@ export class CommentListComponent implements OnInit, OnChanges {
     readonly load = new Subject<boolean>();
 
     readonly Paths = Paths;
-    readonly sort = new Sort('created', true);
+    readonly sort = new Sort(['created', 'score'], 'created', true);
     readonly commentsLoading = new ProcessingStatus();
     readonly commentUpdating = new ProcessingStatus();
 
@@ -143,7 +143,6 @@ export class CommentListComponent implements OnInit, OnChanges {
                 filter(() => !!this.domainMeta?.domain),
                 // Load the comment list
                 switchMap(() => {
-                    // Load the domain list
                     const f = this.filterForm.value;
                     const isMod = !!this.domainMeta?.canModerateDomain;
                     return this.api.commentList(

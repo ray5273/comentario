@@ -1,19 +1,30 @@
 <div ngbDropdown class="d-inline-block" placement="bottom-end">
     <!-- Dropdown toggle -->
-    <button type="button" class="btn btn-outline-secondary" id="sortByDropdown" ngbDropdownToggle i18n>Sort</button>
+    <button [class.sort-asc]="!sort?.descending"
+            [class.sort-desc]="sort?.descending"
+            type="button" class="btn btn-outline-secondary" id="sortByDropdown" title="Sort" ngbDropdownToggle i18n-title>
+        @if (itemTitle; as s) {
+            <fa-icon [icon]="itemIcon" class="me-1"/>
+            <ng-container>{{ s }}</ng-container>
+        } @else {
+            <ng-container i18n>Sort</ng-container>
+        }
+    </button>
 
     <!-- Sort buttons -->
     <div ngbDropdownMenu aria-labelledby="sortByDropdown">
         <div class="p-3 flex-column flex-md-row btn-group text-nowrap" role="group">
             @for (p of items; track p.by) {
-                <button [class.active]="sort && sort.property === p.by"
-                        [class.sort-asc]="sort && !sort.descending"
-                        [class.sort-desc]="sort?.descending"
-                        [attr.aria-checked]="sort && sort.property === p.by"
-                        [attr.id]="p.id" (click)="applyProperty(p)"
+                @let curr = sort?.property === p.by;
+                <button [class.active]="curr"
+                        [class.sort-asc]="curr && !sort?.descending"
+                        [class.sort-desc]="curr && sort?.descending"
+                        [attr.aria-checked]="curr"
+                        [attr.id]="p.id"
+                        (click)="applyProperty(p)"
                         class="btn btn-outline-secondary" type="button">
-                    @if (sort && sort.property === p.by) {
-                        <fa-icon [icon]="sort.descending ? faArrowUpShortWide : faArrowDownShortWide" class="me-1"/>
+                    @if (sort?.property === p.by) {
+                        <fa-icon [icon]="itemIcon" class="me-1"/>
                     }
                     <ng-container>{{ p.label }}</ng-container>
                 </button>
