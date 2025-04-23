@@ -45,6 +45,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return r
 		}
 	}
+	sso := provider == nil
 
 	// Obtain the auth session ID from the cookie
 	var authSession *data.AuthSession
@@ -82,7 +83,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			return oauthFailureInternal(false, err)
 		}
 
-	} else if provider == nil {
+	} else if sso {
 		// Host is mandatory for SSO
 		return oauthFailure(false, "host is missing in request", nil)
 	}
@@ -94,7 +95,7 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 
 	// SSO auth
 	nonIntSSO := false
-	if provider == nil {
+	if sso {
 		// Validate domain SSO config
 		if r := Verifier.DomainSSOConfig(domain); r != nil {
 			return r
@@ -220,13 +221,13 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 				// Frontend signup
 				cfgItem, err = svc.Services.DynConfigService().Get(data.ConfigKeyAuthSignupEnabled)
 
-			} else if provider != nil {
-				// Federated embed signup
-				cfgItem, err = svc.Services.DomainConfigService(nil).Get(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled)
-
-			} else {
+			} else if sso {
 				// SSO embed signup
 				cfgItem, err = svc.Services.DomainConfigService(nil).Get(&domain.ID, data.DomainConfigKeySsoSignupEnabled)
+
+			} else {
+				// Federated embed signup
+				cfgItem, err = svc.Services.DomainConfigService(nil).Get(&domain.ID, data.DomainConfigKeyFederatedSignupEnabled)
 			}
 
 			// Check for setting fetching error
@@ -262,14 +263,14 @@ func AuthOauthCallback(params api_general.AuthOauthCallbackParams) middleware.Re
 			errMessage = exmodels.ErrorLoginLocally.Message
 			return errors.New(errMessage)
 
-			// Existing account is a federated one. Make sure the user isn't changing their IdP
-		} else if provider != nil && user.FederatedIdP.String != idpID {
-			errMessage = exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP.String).String()
+			// Existing account is a federated one. If user is authenticating via SSO, it must stay that way
+		} else if user.FederatedSSO && !sso {
+			errMessage = exmodels.ErrorLoginUsingSSO.Message
 			return errors.New(errMessage)
 
-			// If user is authenticating via SSO, it must stay that way
-		} else if provider == nil && !user.FederatedSSO {
-			errMessage = exmodels.ErrorLoginUsingSSO.Message
+			// Make sure the user isn't trying to use SSO while having a non-SSO account, or to change their IdP
+		} else if !user.FederatedSSO && (sso || user.FederatedIdP.String != idpID) {
+			errMessage = exmodels.ErrorLoginUsingIdP.WithDetails(user.FederatedIdP.String).String()
 			return errors.New(errMessage)
 
 			// If the federated ID is available, it must match the one coming from the provider; otherwise it means the
