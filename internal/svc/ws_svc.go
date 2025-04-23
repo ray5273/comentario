@@ -78,11 +78,13 @@ func (svc *webSocketsService) Add(w http.ResponseWriter, r *http.Request) error 
 
 	// Make sure the service is running
 	if !svc.active {
+		svc.error(w, http.StatusForbidden)
 		return errors.New("cannot Add: service isn't active")
 	}
 
 	// Make sure the maximum number of clients hasn't been exceeded
 	if svc.numClients.Load() >= int32(config.ServerConfig.WSMaxClients) {
+		svc.error(w, http.StatusTooManyRequests)
 		return fmt.Errorf("cannot Add: maximum number of clients (%d) is reached", config.ServerConfig.WSMaxClients)
 	}
 
@@ -96,7 +98,8 @@ func (svc *webSocketsService) Add(w http.ResponseWriter, r *http.Request) error 
 	}
 	conn, err := upgrader.Upgrade(w, r, nil)
 	if err != nil {
-		return fmt.Errorf("upgrade failed: %v", err)
+		// No need to write out an error header here as it's done by the upgrader
+		return fmt.Errorf("upgrade failed: %w", err)
 	}
 
 	// Increment the number of clients BEFORE sending the new client over the channel (because its handling may not
@@ -155,6 +158,14 @@ func (svc *webSocketsService) Shutdown() {
 func (svc *webSocketsService) addClient(c *wsClient) {
 	logger.Debug("webSocketsService.addClient()") // Makes no sense to log client data as it's still pristine and hence indistinguishable
 	svc.clients[c] = true
+}
+
+// error writes an error header using the provided response
+func (svc *webSocketsService) error(w http.ResponseWriter, code int) {
+	// Respond with "Too Many Requests" for simplicity (status isn't readable on the client due to
+	// security considerations anyway)
+	http.Error(w, http.StatusText(code), code)
+
 }
 
 // removeClient removes a registered client

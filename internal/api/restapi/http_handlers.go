@@ -287,16 +287,11 @@ func webSocketsHandler(next http.Handler) http.Handler {
 				return
 			}
 
-			// Ignore if websockets aren't enabled. For now, we only support websockets subscription on the comment list
+			// For now, we only support websockets subscription on the comment list
 			if strings.HasPrefix(p, util.WebSocketsPath+"comments") {
 				// Hand over to the websockets service
 				if err := svc.Services.WebSocketsService().Add(w, r); err != nil {
-					// Failed to upgrade or accept
-					logger.Debugf("Failed to accept websocket connection: %v", err)
-
-					// Respond with "Too Many Requests" for simplicity (status isn't readable on the client due to
-					// security considerations anyway)
-					writeError(w, http.StatusTooManyRequests)
+					logger.Warningf("Failed to accept websocket connection: %v", err)
 				}
 				return
 			}
