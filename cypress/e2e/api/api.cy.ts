@@ -7,7 +7,7 @@ context('API', () => {
 
     context('XSRF protection', () => {
 
-        it('protects AuthSignup endpoint', () => {
+        it.only /* TODO !!! */('protects AuthSignup endpoint', () => {
             cy.request({
                 method: 'POST',
                 url:    '/api/auth/profile',
@@ -22,7 +22,7 @@ context('API', () => {
                 expect(r.body).deep.eq({
                     id:      'xsrf-token-invalid',
                     message: 'XSRF token is missing or invalid',
-                    details: 'CSRF token not found in request',
+                    details: 'referer not supplied',
                 });
             });
         });

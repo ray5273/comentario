@@ -15,7 +15,7 @@ require (
 	github.com/go-openapi/swag v0.23.1
 	github.com/go-openapi/validate v0.24.0
 	github.com/google/uuid v1.6.0
-	github.com/gorilla/csrf v1.7.2
+	github.com/gorilla/csrf v1.7.3
 	github.com/gorilla/feeds v1.2.0
 	github.com/gorilla/handlers v1.5.2
 	github.com/gorilla/websocket v1.5.3
@@ -24,23 +24,23 @@ require (
 	github.com/jessevdk/go-flags v1.6.1
 	github.com/justinas/alice v1.2.0
 	github.com/lib/pq v1.10.9
-	github.com/markbates/goth v1.80.0
-	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/markbates/goth v1.81.0
+	github.com/mattn/go-sqlite3 v1.14.28
 	github.com/microcosm-cc/bluemonday v1.0.27
-	github.com/nicksnyder/go-i18n/v2 v2.5.1
+	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/phuslu/iploc v1.0.20250228
-	github.com/yuin/goldmark v1.7.8
-	golang.org/x/crypto v0.36.0
-	golang.org/x/net v0.38.0
-	golang.org/x/text v0.23.0
+	github.com/phuslu/iploc v1.0.20250331
+	github.com/yuin/goldmark v1.7.10
+	golang.org/x/crypto v0.37.0
+	golang.org/x/net v0.39.0
+	golang.org/x/text v0.24.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
 	cloud.google.com/go/compute/metadata v0.6.0 // indirect
-	github.com/PuerkitoBio/goquery v1.10.2 // indirect
+	github.com/PuerkitoBio/goquery v1.10.3 // indirect
 	github.com/andybalholm/cascadia v1.3.3 // indirect
 	github.com/asaskevich/govalidator v0.0.0-20230301143203-a9d515a09cc2 // indirect
 	github.com/aymerick/douceur v0.2.0 // indirect
@@ -57,9 +57,9 @@ require (
 	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.17.3 // indirect
-	golang.org/x/image v0.25.0 // indirect
-	golang.org/x/oauth2 v0.28.0 // indirect
-	golang.org/x/sync v0.12.0 // indirect
-	golang.org/x/sys v0.31.0 // indirect
+	golang.org/x/image v0.26.0 // indirect
+	golang.org/x/oauth2 v0.29.0 // indirect
+	golang.org/x/sync v0.13.0 // indirect
+	golang.org/x/sys v0.32.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )

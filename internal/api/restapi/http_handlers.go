@@ -322,6 +322,8 @@ func xsrfProtectHandler(next http.Handler) http.Handler {
 	handler := csrf.Protect(
 		config.SecretsConfig.XSRFKey(),
 		csrf.ErrorHandler(http.HandlerFunc(xsrfErrorHandler)),
+		// Only trust calls originating from the frontend
+		csrf.TrustedOrigins([]string{config.ServerConfig.ParsedBaseURL().Host}),
 		// Since the presence of this cookie also controls the appearance of the "XSRF-TOKEN" cookie, they must share
 		// the same path
 		csrf.Path("/"),
