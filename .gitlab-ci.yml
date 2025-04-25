@@ -125,6 +125,7 @@ build:
     name: comentario
     expire_in: 30 days
     paths:
+      - cypress/reports
       - cypress/screenshots
       - cypress/videos
       - tmp/logs
