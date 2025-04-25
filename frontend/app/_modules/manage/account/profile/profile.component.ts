@@ -1,4 +1,4 @@
-import { Component, ElementRef, OnInit, ViewChild } from '@angular/core';
+import { Component, effect, ElementRef, ViewChild } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { concat, EMPTY, first, Observable } from 'rxjs';
@@ -23,6 +23,7 @@ import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { PluginPlugComponent } from '../../../plugin/plugin-plug/plugin-plug.component';
 import { ConfirmDirective } from '../../../tools/_directives/confirm.directive';
 import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 @UntilDestroy()
 @Component({
@@ -43,7 +44,7 @@ import { ValidatableDirective } from '../../../tools/_directives/validatable.dir
     ],
     templateUrl: './profile.component.html',
 })
-export class ProfileComponent implements OnInit {
+export class ProfileComponent {
 
     @ViewChild('avatarFileInput')
     avatarFileInput?: ElementRef<HTMLInputElement>;
@@ -105,6 +106,7 @@ export class ProfileComponent implements OnInit {
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly toastSvc: ToastService,
         private readonly api: ApiGeneralService,
         private readonly pluginSvc: PluginService,
@@ -118,33 +120,12 @@ export class ProfileComponent implements OnInit {
         this.deleteConfirmationForm.controls.deleteComments.valueChanges
             .pipe(untilDestroyed(this))
             .subscribe(b => Utils.enableControls(b, this.deleteConfirmationForm.controls.purgeComments));
-    }
 
-    /**
-     * Route to send the user to for changing their email. If undefined, email change by the user isn't possible.
-     */
-    get updateEmailRoute(): string | string[] | undefined {
-        // Email update is only possible when the user is local
-        if (this.principal?.isLocal) {
-            // User can edit email themselves
-            if (this.canEditEmail) {
-                return Paths.manage.account.email;
-
-            // User is a superuser
-            } else if (this.principal.isSuperuser) {
-                return [Paths.manage.users, this.principal.id!, 'edit'];
-            }
-        }
-
-        // Email change isn't possible
-        return undefined;
-    }
-
-    ngOnInit(): void {
         // Monitor principal changes
-        this.authSvc.principal.subscribe(p => {
+        effect(() => {
+            const p = this.principalSvc.principal();
             this.principal = p;
-            this.principalUpdated = this.authSvc.principalUpdated;
+            this.principalUpdated = this.principalSvc.updatedTime();
 
             if (p) {
                 // Make sure the current user's language is also on the list, event if it's not directly supported (in
@@ -174,6 +155,26 @@ export class ProfileComponent implements OnInit {
         });
     }
 
+    /**
+     * Route to send the user to for changing their email. If undefined, email change by the user isn't possible.
+     */
+    get updateEmailRoute(): string | string[] | undefined {
+        // Email update is only possible when the user is local
+        if (this.principal?.isLocal) {
+            // User can edit email themselves
+            if (this.canEditEmail) {
+                return Paths.manage.account.email;
+
+            // User is a superuser
+            } else if (this.principal.isSuperuser) {
+                return [Paths.manage.users, this.principal.id!, 'edit'];
+            }
+        }
+
+        // Email change isn't possible
+        return undefined;
+    }
+
     deleteAccount() {
         // Run deletion with the API
         const vals = this.deleteConfirmationForm.value;
@@ -181,11 +182,11 @@ export class ProfileComponent implements OnInit {
             .pipe(this.deleting.processing())
             .subscribe(r => {
                 // Reset the principal and update the authentication status
-                this.authSvc.update(null);
+                this.principalSvc.setPrincipal(undefined);
 
                 // Add a toast
                 this.toastSvc.success({
-                    messageId:                'account-deleted',
+                    messageId:         'account-deleted',
                     details:           vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
                     keepOnRouteChange: true});
 

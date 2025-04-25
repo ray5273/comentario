@@ -1,9 +1,10 @@
 import { Injectable } from '@angular/core';
 import { HttpContext } from '@angular/common/http';
-import { finalize, merge, Observable, of, Subject, tap } from 'rxjs';
-import { catchError, map, shareReplay, switchMap } from 'rxjs/operators';
+import { finalize, Observable, of, tap } from 'rxjs';
+import { catchError, map } from 'rxjs/operators';
 import { ApiGeneralService, Configuration, Principal } from '../../generated-api';
 import { HTTP_ERROR_HANDLING } from './http-error-handler.interceptor';
+import { PrincipalService } from './principal.service';
 
 @Injectable({
     providedIn: 'root',
@@ -13,33 +14,13 @@ export class AuthService {
     /** Last set URL to redirect to after a successful login. */
     afterLoginRedirectUrl?: string;
 
-    /** Timestamp of the last time the principal was updated (fetched or reset). */
-    principalUpdated = 0;
-
-    /**
-     * Primary observable for obtaining the principals. If the user isn't logged in, undefined is emitted. Always emits
-     * on a new subscription.
-     */
-    readonly principal: Observable<Principal | undefined>;
-
-    /** Observable that triggers a server re-fetch of the currently logged in principal */
-    private readonly _update$ = new Subject<Principal | null | undefined>();
-
     constructor(
         private readonly apiConfig: Configuration,
         private readonly api: ApiGeneralService,
+        private readonly principalSvc: PrincipalService,
     ) {
-        this.principal = merge(
-            // Initially fetch a user
-            this.safeFetchPrincipal(),
-            // Mix-in any additional principals from other methods or fetch it from the server, if undefined is given
-            this._update$.pipe(switchMap(p => p === undefined ? this.safeFetchPrincipal() : of(p ?? undefined))),
-        )
-        .pipe(
-            // Save the principal update timestamp
-            tap(() => this.principalUpdated = Date.now()),
-            // Cache the last result
-            shareReplay(1));
+        // Initially fetch a user
+        this.update();
     }
 
     /**
@@ -51,7 +32,7 @@ export class AuthService {
         return this.api.authLogin({email, password})
             .pipe(map(p => {
                 // Store the returned principal
-                this._update$.next(p);
+                this.principalSvc.setPrincipal(p);
                 return p;
             }));
     }
@@ -72,7 +53,7 @@ export class AuthService {
         return this.api.authLoginTokenRedeem(undefined, undefined, options)
             .pipe(
                 // Store the returned principal
-                tap(p => this._update$.next(p)),
+                tap(p => this.principalSvc.setPrincipal(p)),
                 // Remove the token from the API config upon completion
                 finalize(() => delete this.apiConfig.credentials.token));
     }
@@ -81,15 +62,14 @@ export class AuthService {
      * Log out the current user and return an observable for successful completion.
      */
     logout(): Observable<void> {
-        return this.api.authLogout().pipe(tap(() => this._update$.next(null)));
+        return this.api.authLogout().pipe(tap(() => this.principalSvc.setPrincipal(undefined)));
     }
 
     /**
-     * Update the current principal to the provided value, if any. If null is provided, remove the current principal,
-     * if nothing (=undefined) is provided, trigger its reloading from the backend.
+     * Trigger a principal reload from the backend.
      */
-    update(principal?: Principal | null): void {
-        this._update$.next(principal);
+    update(): void {
+        this.safeFetchPrincipal().subscribe(p => this.principalSvc.setPrincipal(p));
     }
 
     /**

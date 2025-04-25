@@ -1,8 +1,8 @@
-import { Component, Input } from '@angular/core';
-import { AsyncPipe, NgClass } from '@angular/common';
+import { Component, computed, input } from '@angular/core';
+import { NgClass } from '@angular/common';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faUserCheck } from '@fortawesome/free-solid-svg-icons';
-import { AuthService } from '../../../../_services/auth.service';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 /**
  * Component that renders a "You" badge for the current user, i.e. when the specified user ID matches the currently
@@ -12,7 +12,6 @@ import { AuthService } from '../../../../_services/auth.service';
     selector: 'app-current-user-badge',
     templateUrl: './current-user-badge.component.html',
     imports: [
-        AsyncPipe,
         NgClass,
         FaIconComponent,
     ],
@@ -20,20 +19,21 @@ import { AuthService } from '../../../../_services/auth.service';
 export class CurrentUserBadgeComponent {
 
     /** ID of the user to render a badge (or no badge) for. */
-    @Input({required: true})
-    userId?: string;
+    readonly userId = input<string>();
 
     /** Additional classes to add to the badge if it's visible. */
-    @Input()
-    badgeClasses?: string | string[];
+    readonly badgeClasses = input<string | string[]>();
 
-    /** Observable of the currently authenticated principal. */
-    readonly principal = this.authSvc.principal;
+    /** Whether the user denoted by userId is the currently authenticated one. */
+    readonly isCurrent = computed(() => {
+        const uid = this.userId();
+        return uid && uid === this.principalSvc.principal()?.id;
+    });
 
     // Icons
     readonly faUserCheck = faUserCheck;
 
     constructor(
-        private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
     ) {}
 }

@@ -1,11 +1,10 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, effect, Input } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { ApiGeneralService, Principal, User } from '../../../../../generated-api';
+import { ApiGeneralService, User } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { ToastService } from '../../../../_services/toast.service';
 import { Paths } from '../../../../_utils/consts';
-import { AuthService } from '../../../../_services/auth.service';
 import { Utils } from '../../../../_utils/utils';
 import { XtraValidators } from '../../../../_utils/xtra-validators';
 import { ConfigService } from '../../../../_services/config.service';
@@ -13,6 +12,7 @@ import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
 import { PasswordInputComponent } from '../../../tools/password-input/password-input.component';
 import { InfoIconComponent } from '../../../tools/info-icon/info-icon.component';
 import { ValidatableDirective } from '../../../tools/_directives/validatable.directive';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 @Component({
     selector: 'app-user-edit',
@@ -26,13 +26,10 @@ import { ValidatableDirective } from '../../../tools/_directives/validatable.dir
         ValidatableDirective,
     ],
 })
-export class UserEditComponent implements OnInit {
+export class UserEditComponent {
 
     /** User being edited. */
     user?: User;
-
-    /** Currently authenticated principal. */
-    principal?: Principal;
 
     /** Available interface languages. */
     readonly languages = this.cfgSvc.staticConfig.uiLanguages || [];
@@ -56,9 +53,11 @@ export class UserEditComponent implements OnInit {
         private readonly router: Router,
         private readonly api: ApiGeneralService,
         private readonly cfgSvc: ConfigService,
-        private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly toastSvc: ToastService,
-    ) {}
+    ) {
+        effect(() => this.enableControls());
+    }
 
     @Input()
     set id(id: string) {
@@ -89,21 +88,13 @@ export class UserEditComponent implements OnInit {
             });
     }
 
-    ngOnInit(): void {
-        // Monitor principal changes
-        this.authSvc.principal.subscribe(p => {
-            this.principal = p;
-            this.enableControls();
-        });
-    }
-
     submit(): void {
         // Mark all controls touched to display validation results
         this.form.markAllAsTouched();
 
         // Submit the form if it's valid
         if (this.user && this.form.valid) {
-            const selfEdit = this.principal!.id === this.user.id;
+            const selfEdit = this.principalSvc.principal()!.id === this.user.id;
             const vals = this.form.value;
             const dto: User = {
                 name:        vals.name,
@@ -133,6 +124,8 @@ export class UserEditComponent implements OnInit {
         }
 
         // Disable checkboxes when the user edits themselves
-        Utils.enableControls(this.principal?.id !== this.user?.id, this.form.controls.confirmed, this.form.controls.superuser);
+        Utils.enableControls(
+            this.principalSvc.principal()?.id !== this.user?.id,
+            this.form.controls.confirmed, this.form.controls.superuser);
     }
 }

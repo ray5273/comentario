@@ -44,7 +44,7 @@
         <div class="col-md">
             <ul class="list-unstyled">
                 <!-- Items for authenticated user -->
-                @if (isAuthenticated) {
+                @if (isAuthenticated()) {
                     <li class="heading" i18n>Manage</li>
                     <li><a [routerLink]="Paths.manage.dashboard"       routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Dashboard</a></li>
                     <li><a [routerLink]="Paths.manage.domains"         routerLinkActive="active" ariaCurrentWhenActive="page" i18n>Domains</a></li>

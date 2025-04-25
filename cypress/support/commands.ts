@@ -281,7 +281,7 @@ Cypress.Commands.add('loginFederatedViaApi', (id: string, targetUrl: string, vis
     cy.isLoggedIn();
 });
 
-Cypress.Commands.add('noToast', () => void cy.get('app-toast ngb-toast').should('not.exist'));
+Cypress.Commands.add('noToast', (): void => void cy.get('app-toast ngb-toast').should('not.exist'));
 
 Cypress.Commands.add('toastCheckAndClose', (id: string, details?: string) => {
     // Verify the toast's message ID
@@ -667,7 +667,7 @@ Cypress.Commands.add(
 Cypress.Commands.add('testSiteVisit', {prevSubject: false}, (path: string) =>
     cy.visit(`${testSiteUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`));
 
-Cypress.Commands.add('testSiteIsLoggedIn', {prevSubject: false}, (name: string) =>
+Cypress.Commands.add('testSiteIsLoggedIn', {prevSubject: false}, (name: string): void =>
     void cy.get('.comentario-root .comentario-profile-bar .comentario-name').should('have.text', name).and('be.visible'));
 
 Cypress.Commands.add(
@@ -762,12 +762,12 @@ Cypress.Commands.add('testSiteSsoLogin', {prevSubject: false}, () => {
 Cypress.Commands.add(
     'testSiteLogout',
     {prevSubject: false},
-    () => void cy.get('.comentario-root .comentario-profile-bar button[title="Logout"]').click());
+    (): void => void cy.get('.comentario-root .comentario-profile-bar button[title="Logout"]').click());
 
 Cypress.Commands.add(
     'testSiteCheckMessage',
     {prevSubject: false},
-    (message: string, success?: boolean) =>
+    (message: string, success?: boolean): void =>
         void cy.contains('.comentario-root .comentario-message-box', message)
             .should('be.visible')
             .and(success ? 'not.have.class' : 'have.class', 'comentario-error'));
@@ -775,14 +775,14 @@ Cypress.Commands.add(
 Cypress.Commands.add('backendReset', () =>
     cy.request('POST', '/api/e2e/reset').its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDynConfig', (values: Record<string, string | number | boolean>) =>
+Cypress.Commands.add('backendUpdateDynConfig', (values: Record<string, string | number | boolean>): void =>
     void cy.request(
             'PUT',
             '/api/e2e/config/dynamic',
             Object.entries(values).map(([k, v]) => ({key: k, value: String(v)})))
         .its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateLatestRelease', (name: string, version: string, pageUrl: string) =>
+Cypress.Commands.add('backendUpdateLatestRelease', (name: string, version: string, pageUrl: string): void =>
     void cy.request('PUT', '/api/e2e/config/versions/latestRelease', {name, version, pageUrl})
         .its('status').should('eq', 204));
 
@@ -792,21 +792,21 @@ Cypress.Commands.add('backendGetSentEmails', () => {
     return cy.request('/api/e2e/mails').should(response => expect(response.status).to.eq(200)).its('body');
 });
 
-Cypress.Commands.add('backendPatchDomain', (id: string, values: any) =>
+Cypress.Commands.add('backendPatchDomain', (id: string, values: any): void =>
     void cy.request('PATCH', `/api/e2e/domains/${id}`, values).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDomainAttrs', (id: string, values: Record<string, string | number | boolean>) =>
+Cypress.Commands.add('backendUpdateDomainAttrs', (id: string, values: Record<string, string | number | boolean>): void =>
     void cy.request('PUT', `/api/e2e/domains/${id}/attrs`, {values}).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: Record<string, string | number | boolean>) =>
+Cypress.Commands.add('backendUpdateDomainConfig', (id: string, values: Record<string, string | number | boolean>): void =>
     void cy.request(
             'PUT',
             `/api/e2e/domains/${id}/config`,
             Object.entries(values).map(([k, v]) => ({key: k, value: String(v)})))
         .its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateDomainIdps', (id: string, idps: string[]) =>
+Cypress.Commands.add('backendUpdateDomainIdps', (id: string, idps: string[]): void =>
     void cy.request('PUT', `/api/e2e/domains/${id}/idps`, idps).its('status').should('eq', 204));
 
-Cypress.Commands.add('backendUpdateUserAttrs', (id: string, values: Record<string, string | number | boolean>) =>
+Cypress.Commands.add('backendUpdateUserAttrs', (id: string, values: Record<string, string | number | boolean>): void =>
     void cy.request('PUT', `/api/e2e/users/${id}/attrs`, {values}).its('status').should('eq', 204));

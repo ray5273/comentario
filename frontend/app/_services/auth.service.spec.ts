@@ -1,16 +1,19 @@
 // noinspection DuplicatedCode
 
 import { TestBed } from '@angular/core/testing';
-import { Observable, of, skip, throwError } from 'rxjs';
+import { Observable, of, throwError } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { AuthService } from './auth.service';
 import { ApiGeneralService, Configuration, Principal } from '../../generated-api';
+import { PrincipalService } from './principal.service';
 
 describe('AuthService', () => {
 
     let service: AuthService;
     let api: ApiGeneralService;
+    let principalSvc: PrincipalService;
     let principalResponse: Observable<Principal | undefined>;
+    let principals: (Principal | undefined)[];
 
     const principal1: Principal = {
         id: 'one',
@@ -20,14 +23,18 @@ describe('AuthService', () => {
     };
 
     beforeEach(() => {
+        principals = [];
         TestBed.configureTestingModule({
             providers: [
                 MockProvider(ApiGeneralService),
+                MockProvider(PrincipalService),
                 MockProvider(Configuration),
             ],
         });
         api = TestBed.inject(ApiGeneralService);
+        principalSvc = TestBed.inject(PrincipalService);
         spyOn(api, 'curUserGet').and.callFake(() => principalResponse as Observable<any>);
+        spyOn(principalSvc, 'setPrincipal').and.callFake(p => principals.push(p));
     });
 
     it('is created', () => {
@@ -36,78 +43,55 @@ describe('AuthService', () => {
         expect(service).toBeTruthy();
     });
 
-    it('fetches principal on creation', (done) => {
+    it('fetches principal on creation', () => {
         // Prepare
         principalResponse = of(principal1);
 
         // Test
         service = TestBed.inject(AuthService);
-        service.principal.subscribe(p => {
-            // Verify
-            expect(p).toBeTruthy();
-            expect(p!.id).toBe('one');
-            done();
-        });
+
+        // Verify
+        expect(principals).toHaveSize(1);
+        expect(principals[0]!.id).toBe('one');
     });
 
-    it('emits undefined principal on creation when user not authenticated', (done) => {
+    it('emits undefined principal on creation when user not authenticated', () => {
+        // Prepare
         principalResponse = of(undefined);
 
         // Test
         service = TestBed.inject(AuthService);
-        service.principal.subscribe(p => {
-            // Verify
-            expect(p).toBeUndefined();
-            done();
-        });
+
+        // Verify
+        expect(principals).toHaveSize(1);
+        expect(principals[0]).toBeUndefined();
     });
 
-    it('emits undefined principal on creation on API error', (done) => {
+    it('emits undefined principal on creation on API error', () => {
         // Prepare
         principalResponse = throwError(() => 'ai-ai-ai');
 
         // Test
         service = TestBed.inject(AuthService);
-        service.principal.subscribe(p => {
-            // Verify
-            expect(p).toBeUndefined();
-            done();
-        });
+
+        // Verify
+        expect(principals).toHaveSize(1);
+        expect(principals[0]).toBeUndefined();
     });
 
-    it('re-fetches principal on update', (done) => {
+    it('re-fetches principal on update', () => {
         // Prepare
         principalResponse = of(principal1);
 
         // Test
         service = TestBed.inject(AuthService);
-        service.principal
-            .pipe(skip(1))
-            .subscribe(p => {
-                // Verify
-                expect(p).toBeTruthy();
-                expect(p!.id).toBe('two');
-                done();
-            });
         principalResponse = of(principal2);
         service.update();
-    });
 
-    it('saves and reuses principal when provided with update', (done) => {
-        // Prepare
-        principalResponse = of(principal1);
-
-        // Test
-        service = TestBed.inject(AuthService);
-        service.principal
-            .pipe(skip(1))
-            .subscribe(p => {
-                // Verify
-                expect(p).toBeTruthy();
-                expect(p!.id).toBe('two');
-                done();
-            });
-        service.update(principal2);
+        // Verify
+        expect(principals).toHaveSize(2);
+        expect(principals[0]!.id).toBe('one');
+        expect(principals[1]!.id).toBe('two');
     });
 
     describe('login()', () => {

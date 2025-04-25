@@ -2,7 +2,7 @@ import { DOMAINS, PATHS, USERS } from '../../../support/cy-utils';
 
 interface SidebarItem {
     label:    string;
-    path?:    string;
+    path?:    string | RegExp | Cypress.IsAtObjectWithUnderscore;
     partial?: boolean;
 }
 

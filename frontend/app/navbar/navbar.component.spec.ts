@@ -1,11 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
 import { MockProvider } from 'ng-mocks';
 import { NavbarComponent } from './navbar.component';
 import { DocsService } from '../_services/docs.service';
-import { mockAuthService } from '../_utils/_mocks.spec';
 import { PluginService } from '../_modules/plugin/_services/plugin.service';
+import { PrincipalService } from '../_services/principal.service';
 
 describe('NavbarComponent', () => {
     let component: NavbarComponent;
@@ -15,9 +16,9 @@ describe('NavbarComponent', () => {
         await TestBed.configureTestingModule({
                 imports: [RouterModule.forRoot([]), FontAwesomeTestingModule, NavbarComponent],
                 providers: [
-                    mockAuthService(),
                     MockProvider(DocsService),
                     MockProvider(PluginService),
+                    MockProvider(PrincipalService, {principal: signal(undefined)}),
                 ],
             })
             .compileComponents();

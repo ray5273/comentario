@@ -4,7 +4,8 @@ import { MockProvider } from 'ng-mocks';
 import { FederatedLoginComponent } from './federated-login.component';
 import { ApiGeneralService, Configuration } from '../../../../generated-api';
 import { ToastService } from '../../../_services/toast.service';
-import { mockAuthService, mockConfigService } from '../../../_utils/_mocks.spec';
+import { mockConfigService } from '../../../_utils/_mocks.spec';
+import { AuthService } from '../../../_services/auth.service';
 
 describe('FederatedLoginComponent', () => {
 
@@ -18,7 +19,7 @@ describe('FederatedLoginComponent', () => {
                     {provide: Configuration, useValue: new Configuration()},
                     MockProvider(ApiGeneralService),
                     MockProvider(ToastService),
-                    mockAuthService(),
+                    MockProvider(AuthService),
                     mockConfigService(),
                 ],
             })

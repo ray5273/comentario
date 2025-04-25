@@ -1,19 +1,19 @@
 <div class="py-2 text-center">
     <!-- Loading placeholder -->
-    @if (loading) {
+    @if (loading()) {
         <div class="item-loading placeholder-wave">
             <span class="placeholder col-3"></span>
         </div>
 
-    } @else if (count) {
+    } @else if (count()) {
         <!-- Not loading. Item count -->
         <span class="item-count">
             <!-- There are more items -->
-            @if (canLoadMore) {
-                <ng-container i18n>{{ count }} items displayed.</ng-container>
+            @if (canLoadMore()) {
+                <ng-container i18n>{{ count() }} items displayed.</ng-container>
             } @else {
                 <!-- No more items -->
-                <ng-container i18n>{ count, plural, =1 {The only item displayed.} other {All {{ count }} items displayed.} }</ng-container>
+                <ng-container i18n>{ count(), plural, =1 {The only item displayed.} other {All {{ count() }} items displayed.} }</ng-container>
             }
         </span>
 
@@ -30,9 +30,9 @@
     }
 
     <!-- Load more items button, only when there's something loaded already -->
-    @if (count && canLoadMore) {
+    @if (count() && canLoadMore()) {
         <div class="pt-2">
-            <button [appSpinner]="loading" (click)="loadMore.next()" type="button" class="btn btn-outline-secondary">
+            <button [appSpinner]="loading()" (click)="loadMore.next()" type="button" class="btn btn-outline-secondary">
                 <ng-container i18n>Load more</ng-container>
             </button>
         </div>

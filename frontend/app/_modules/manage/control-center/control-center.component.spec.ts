@@ -7,7 +7,8 @@ import { ControlCenterComponent } from './control-center.component';
 import { ConfirmDirective } from '../../tools/_directives/confirm.directive';
 import { CommentService } from '../_services/comment.service';
 import { UserAvatarComponent } from '../../tools/user-avatar/user-avatar.component';
-import { mockAuthService, mockConfigService, mockDomainSelector } from '../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector } from '../../../_utils/_mocks.spec';
+import { AuthService } from '../../../_services/auth.service';
 
 describe('ControlCenterComponent', () => {
 
@@ -24,9 +25,9 @@ describe('ControlCenterComponent', () => {
                     MockComponents(UserAvatarComponent),
                 ],
                 providers: [
-                    mockAuthService(),
                     mockDomainSelector(),
                     mockConfigService(),
+                    MockProvider(AuthService),
                     MockProvider(CommentService, {countPending: of(0)}),
                 ],
             })

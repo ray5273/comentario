@@ -1,11 +1,12 @@
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { Component, computed, effect } from '@angular/core';
 import { ActivatedRoute, ParamMap, Router } from '@angular/router';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
 import { ToastService } from '../_services/toast.service';
 import { ConfigService } from '../_services/config.service';
 import { DocEmbedDirective } from '../_directives/doc-embed.directive';
+import { PrincipalService } from '../_services/principal.service';
 
 @UntilDestroy()
 @Component({
@@ -15,9 +16,9 @@ import { DocEmbedDirective } from '../_directives/doc-embed.directive';
         DocEmbedDirective,
     ],
 })
-export class HomeComponent implements OnInit {
+export class HomeComponent {
 
-    isAuthenticated = false;
+    readonly isAuthenticated = computed(() => !!this.principalSvc.principal());
 
     readonly Paths = Paths;
     readonly embedUrl = this.configSvc.staticConfig.homeContentUrl;
@@ -33,36 +34,28 @@ export class HomeComponent implements OnInit {
     private canRedirect = true;
 
     constructor(
-        private readonly changeDetector: ChangeDetectorRef,
         private readonly route: ActivatedRoute,
         private readonly router: Router,
         private readonly configSvc: ConfigService,
         private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly toastSvc: ToastService,
-    ) {}
+    ) {
+        effect(() => {
+            const auth = this.isAuthenticated();
 
-    ngOnInit(): void {
-        // Wait until the authentication status becomes known, and react on status change
-        this.authSvc.principal
-            .pipe(untilDestroyed(this))
-            .subscribe(p => {
-                this.isAuthenticated = !!p;
+            // Handle any startup parameters, once
+            if (!this.paramsProcessed) {
+                this.paramsProcessed = true;
+                this.processParams();
+            }
 
-                // Force change detection to run (influences the appearance of controls)
-                this.changeDetector.detectChanges();
-
-                // Handle any startup parameters, once
-                if (!this.paramsProcessed) {
-                    this.paramsProcessed = true;
-                    this.processParams();
-                }
-
-                // If no upcoming redirect and no embed either
-                if (this.canRedirect && !this.embedUrl) {
-                    // Redirect a logged in user to the dashboard, otherwise to the login
-                    this.router.navigate([p ? Paths.manage.dashboard : Paths.auth.login]);
-                }
-            });
+            // If no upcoming redirect and no embed either
+            if (this.canRedirect && !this.embedUrl) {
+                // Redirect a logged in user to the dashboard, otherwise to the login
+                this.router.navigate([auth ? Paths.manage.dashboard : Paths.auth.login]);
+            }
+        });
     }
 
     /**

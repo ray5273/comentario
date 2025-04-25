@@ -7,7 +7,7 @@ context('API', () => {
 
     context('XSRF protection', () => {
 
-        it.only /* TODO !!! */('protects AuthSignup endpoint', () => {
+        it('protects AuthSignup endpoint', () => {
             cy.request({
                 method: 'POST',
                 url:    '/api/auth/profile',

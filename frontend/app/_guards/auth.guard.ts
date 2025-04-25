@@ -6,6 +6,7 @@ import { AuthService } from '../_services/auth.service';
 import { Paths } from '../_utils/consts';
 import { Utils } from '../_utils/utils';
 import { ToastService } from '../_services/toast.service';
+import { PrincipalService } from '../_services/principal.service';
 
 /**
  * Guard class that verifies various authentication and authorisation aspects.
@@ -23,6 +24,7 @@ export class AuthGuard {
     constructor(
         private readonly router: Router,
         private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly toastSvc: ToastService,
     ) {}
 
@@ -44,7 +46,7 @@ export class AuthGuard {
      */
     isAuthenticated(url: string): Observable<boolean | UrlTree> {
         // Only allow if the user is authenticated
-        return this.authSvc.principal
+        return this.principalSvc.principal$
             .pipe(
                 take(1),
                 map(p => {
@@ -63,7 +65,7 @@ export class AuthGuard {
      * Check whether the user is not authenticated and return either true or the dashboard route.
      */
     isUnauthenticated(): Observable<boolean | UrlTree> {
-        return this.authSvc.principal
+        return this.principalSvc.principal$
             .pipe(
                 take(1),
                 map(p => p ? this.router.parseUrl(Paths.manage.dashboard) : true));

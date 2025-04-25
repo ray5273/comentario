@@ -1,7 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
+import { MockProvider } from 'ng-mocks';
 import { CurrentUserBadgeComponent } from './current-user-badge.component';
-import { mockAuthService } from '../../../../_utils/_mocks.spec';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 describe('CurrentUserBadgeComponent', () => {
 
@@ -12,7 +13,7 @@ describe('CurrentUserBadgeComponent', () => {
         await TestBed.configureTestingModule({
                 imports: [FontAwesomeTestingModule, CurrentUserBadgeComponent],
                 providers: [
-                    mockAuthService(),
+                    MockProvider(PrincipalService),
                 ],
             })
             .compileComponents();

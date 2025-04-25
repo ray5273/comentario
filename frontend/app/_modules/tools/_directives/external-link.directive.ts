@@ -1,4 +1,4 @@
-import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
+import { Directive, effect, ElementRef, input, OnInit, Renderer2 } from '@angular/core';
 
 /**
  * Directive that forces a link to open in a new tab.
@@ -9,15 +9,14 @@ import { Directive, ElementRef, Input, OnInit, Renderer2 } from '@angular/core';
 export class ExternalLinkDirective implements OnInit {
 
     /** The URL to point to. */
-    @Input({required: true})
-    set appExternalLink(url: string | null | undefined) {
-        this.renderer.setAttribute(this.element.nativeElement, 'href', url ?? '');
-    }
+    readonly appExternalLink = input<string | null>();
 
     constructor(
         private readonly element: ElementRef<HTMLAnchorElement>,
         private readonly renderer: Renderer2,
-    ) {}
+    ) {
+        effect(() => this.renderer.setAttribute(this.element.nativeElement, 'href', this.appExternalLink() ?? ''));
+    }
 
     ngOnInit(): void {
         const a = this.element.nativeElement;

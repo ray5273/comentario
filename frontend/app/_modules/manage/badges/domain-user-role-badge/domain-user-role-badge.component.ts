@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DomainUserRole } from '../../../../../generated-api';
 
 /**
@@ -13,8 +13,7 @@ import { DomainUserRole } from '../../../../../generated-api';
 export class DomainUserRoleBadgeComponent {
 
     /** Domain user role in question. */
-    @Input({required: true})
-    role: DomainUserRole | null | undefined;
+    readonly role = input<DomainUserRole | null>();
 
-    readonly r = DomainUserRole;
+    readonly dur = DomainUserRole;
 }

@@ -1,15 +1,19 @@
-import { Directive, ElementRef, HostListener, Input, Optional, Renderer2 } from '@angular/core';
+import { Directive, ElementRef, input, Optional, Renderer2 } from '@angular/core';
 import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 
 @Directive({
     selector: '[appCopyText]',
+    host: {
+        '(click)': 'doCopy()',
+    }
 })
 export class CopyTextDirective {
 
     /**
-     * Text that will be copied on a click on the host element. If empty, the text content of the host element will be copied.
+     * Text that will be copied on a click on the host element. If empty, the text content of the host element will be
+     * copied.
      */
-    @Input() appCopyText?: string;
+    readonly appCopyText = input<string>();
 
     readonly tipBeforeCopy = $localize`Click to copy`;
     readonly tipAfterCopy  = $localize`Copied!`;
@@ -36,9 +40,8 @@ export class CopyTextDirective {
         }
     }
 
-    @HostListener('click')
-    private clicked() {
-        navigator.clipboard.writeText(this.appCopyText || this.element.nativeElement.textContent)
+    doCopy() {
+        navigator.clipboard.writeText(this.appCopyText() || this.element.nativeElement.textContent)
             .then(() => {
                 if (this.tooltip) {
                     // Close the tooltip because it won't change the text on the fly, and reopen with new text

@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { RouterModule } from '@angular/router';
-import { MockDirectives } from 'ng-mocks';
+import { MockDirectives, MockProvider } from 'ng-mocks';
 import { HomeComponent } from './home.component';
 import { DocEmbedDirective } from '../_directives/doc-embed.directive';
-import { mockAuthService, mockConfigService } from '../_utils/_mocks.spec';
+import { mockConfigService } from '../_utils/_mocks.spec';
+import { AuthService } from '../_services/auth.service';
+import { PrincipalService } from '../_services/principal.service';
 
 describe('HomeComponent', () => {
 
@@ -15,7 +18,8 @@ describe('HomeComponent', () => {
                 imports: [RouterModule.forRoot([]), HomeComponent, MockDirectives(DocEmbedDirective)],
                 providers: [
                     mockConfigService(),
-                    mockAuthService(),
+                    MockProvider(AuthService),
+                    MockProvider(PrincipalService, {principal: signal(undefined)}),
                 ],
             })
             .compileComponents();

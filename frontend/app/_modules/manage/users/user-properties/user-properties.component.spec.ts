@@ -1,12 +1,14 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { ReactiveFormsModule } from '@angular/forms';
+import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { UserPropertiesComponent } from './user-properties.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 import { ToastService } from '../../../../_services/toast.service';
-import { mockAuthService, mockConfigService } from '../../../../_utils/_mocks.spec';
+import { mockConfigService } from '../../../../_utils/_mocks.spec';
 import { AttributeTableComponent } from '../../attribute-table/attribute-table.component';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 describe('UserPropertiesComponent', () => {
 
@@ -23,8 +25,8 @@ describe('UserPropertiesComponent', () => {
                 providers: [
                     MockProvider(ApiGeneralService),
                     MockProvider(ToastService),
+                    MockProvider(PrincipalService, {principal$: of(undefined)}),
                     mockConfigService(),
-                    mockAuthService(),
                 ],
             })
             .compileComponents();

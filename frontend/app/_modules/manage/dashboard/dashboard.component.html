@@ -67,7 +67,7 @@
         </div>
 
         <!-- Stats charts, only if it's a superuser or there are any owned domains -->
-        @if (principal?.isSuperuser || totals.countDomainsOwned) {
+        @if (principal()?.isSuperuser || totals.countDomainsOwned) {
             <app-stats domainId=""/>
         }
     }

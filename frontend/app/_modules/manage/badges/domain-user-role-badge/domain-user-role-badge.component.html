@@ -1,10 +1,10 @@
-@if (role) {
-    <span class="badge rounded-pill" [class]="role">
-        @switch (role) {
-            @case (r.Owner)     {<ng-container i18n>Owner</ng-container>}
-            @case (r.Moderator) {<ng-container i18n>Moderator</ng-container>}
-            @case (r.Commenter) {<ng-container i18n>Commenter</ng-container>}
-            @case (r.Readonly)  {<ng-container i18n>Read-only</ng-container>}
+@if (role(); as r) {
+    <span class="badge rounded-pill" [class]="r">
+        @switch (r) {
+            @case (dur.Owner)     {<ng-container i18n>Owner</ng-container>}
+            @case (dur.Moderator) {<ng-container i18n>Moderator</ng-container>}
+            @case (dur.Commenter) {<ng-container i18n>Commenter</ng-container>}
+            @case (dur.Readonly)  {<ng-container i18n>Read-only</ng-container>}
         }
     </span>
 }

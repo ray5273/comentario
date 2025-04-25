@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { effect, Injectable } from '@angular/core';
 import { Router } from '@angular/router';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -8,6 +8,7 @@ import { Principal } from '../../../../generated-api';
 import { ToastInitProps, ToastService } from '../../../_services/toast.service';
 import { DomainEventService } from '../../manage/_services/domain-event.service';
 import { DomainEvent } from '../../manage/_models/domain-event';
+import { PrincipalService } from '../../../_services/principal.service';
 
 type MessageSender<T> = (msg: ComentarioPortEventPayload<T>) => void;
 type PluginPortEventHandler<T extends PluginPortEventBase> = (data: T) => void;
@@ -55,6 +56,7 @@ export class PluginMessageService {
     constructor(
         private readonly router: Router,
         private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly toastSvc: ToastService,
         private readonly domainEventSvc: DomainEventService,
     ) {
@@ -112,13 +114,11 @@ export class PluginMessageService {
      * @private
      */
     private addAuthStatusSubscription(sender: MessageSender<Principal | undefined>) {
-        this.authSvc.principal
-            .subscribe(p =>
-                sender({
-                    kind:             PluginEventKind.SubEmission,
-                    subscriptionKind: PluginSubscriptionKind.AuthStatus,
-                    data:             p,
-                }));
+        effect(() => sender({
+            kind:             PluginEventKind.SubEmission,
+            subscriptionKind: PluginSubscriptionKind.AuthStatus,
+            data:             this.principalSvc.principal(),
+        }));
     }
 
     /**

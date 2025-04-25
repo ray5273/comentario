@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faAsterisk } from '@fortawesome/free-solid-svg-icons';
 
@@ -11,17 +11,11 @@ import { faAsterisk } from '@fortawesome/free-solid-svg-icons';
 })
 export class UpdatesBadgeComponent {
 
-    /**
-     * Number of available updates. If 0, an asterisk is displayed instead.
-     */
-    @Input()
-    numUpdates = 0;
+    /** Number of available updates. If 0, an asterisk is displayed instead. */
+    readonly numUpdates = input(0);
 
-    /**
-     * Title to display in the tooltip.
-     */
-    @Input()
-    title = $localize`Updates available`;
+    /** Title to display in the tooltip. */
+    readonly title = input($localize`Updates available`);
 
     // Icons
     readonly faAsterisk = faAsterisk;

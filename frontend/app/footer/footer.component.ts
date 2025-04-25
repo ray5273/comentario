@@ -1,14 +1,14 @@
-import { Component } from '@angular/core';
+import { Component, computed } from '@angular/core';
 import { NgOptimizedImage } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faGitlab, faLinkedin, faXTwitter } from '@fortawesome/free-brands-svg-icons';
 import { DocsService } from '../_services/docs.service';
 import { Paths } from '../_utils/consts';
 import { ConfigService } from '../_services/config.service';
-import { AuthService } from '../_services/auth.service';
 import { PluginService } from '../_modules/plugin/_services/plugin.service';
+import { PrincipalService } from '../_services/principal.service';
 
 @UntilDestroy()
 @Component({
@@ -25,7 +25,7 @@ import { PluginService } from '../_modules/plugin/_services/plugin.service';
 export class FooterComponent {
 
     /** Whether the user is authenticated */
-    isAuthenticated = false;
+    readonly isAuthenticated = computed(() => !!this.principalSvc.principal());
 
     readonly Paths = Paths;
     readonly year = `2022–${new Date().getFullYear()}`;
@@ -42,12 +42,7 @@ export class FooterComponent {
     constructor(
         readonly docsSvc: DocsService,
         readonly configSvc: ConfigService,
-        private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly pluginSvc: PluginService,
-    ) {
-        // Fetch the auth status
-        this.authSvc.principal
-            .pipe(untilDestroyed(this))
-            .subscribe(p => this.isAuthenticated = !!p);
-    }
+    ) {}
 }

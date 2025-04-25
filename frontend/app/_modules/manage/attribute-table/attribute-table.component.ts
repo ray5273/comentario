@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { KeyValuePipe } from '@angular/common';
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
@@ -20,11 +20,8 @@ export class AttributeTableComponent {
 
     private static _id = 0;
 
-    /**
-     * Attributes to render.
-     */
-    @Input({required: true})
-    attributes?: Record<string, string>;
+    /** Attributes to render. */
+    readonly attributes = input<Record<string, string>>();
 
     collapsed = true;
 

@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, EventEmitter, input, Output } from '@angular/core';
 import { NoDataComponent } from '../no-data/no-data.component';
 import { SpinnerDirective } from '../_directives/spinner.directive';
 
@@ -21,16 +21,13 @@ import { SpinnerDirective } from '../_directives/spinner.directive';
 export class ListFooterComponent {
 
     /** Whether more items can be loaded. Defaults to false. */
-    @Input()
-    canLoadMore = false;
+    readonly canLoadMore = input(false);
 
     /** Whether items are being loaded. Defaults to false. */
-    @Input()
-    loading = false;
+    readonly loading = input(false);
 
     /** Number of items displayed in the list. Defaults to 0. */
-    @Input({required: true})
-    count?: number;
+    readonly count = input<number>();
 
     /** Event emitted when the user wants to load more items. */
     @Output()

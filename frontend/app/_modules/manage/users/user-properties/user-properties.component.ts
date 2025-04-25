@@ -9,7 +9,6 @@ import { ApiGeneralService, Domain, DomainUser, User, UserSession } from '../../
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
-import { AuthService } from '../../../../_services/auth.service';
 import { Animations } from '../../../../_utils/animations';
 import { Utils } from '../../../../_utils/utils';
 import { ConfigService } from '../../../../_services/config.service';
@@ -22,6 +21,7 @@ import { ListFooterComponent } from '../../../tools/list-footer/list-footer.comp
 import { InfoBlockComponent } from '../../../tools/info-block/info-block.component';
 import { DatetimePipe } from '../../_pipes/datetime.pipe';
 import { NoDataComponent } from '../../../tools/no-data/no-data.component';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 @UntilDestroy()
 @Component({
@@ -102,7 +102,7 @@ export class UserPropertiesComponent {
         private readonly router: Router,
         private readonly fb: FormBuilder,
         private readonly api: ApiGeneralService,
-        private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly toastSvc: ToastService,
         private readonly configSvc: ConfigService,
     ) {
@@ -120,7 +120,7 @@ export class UserPropertiesComponent {
             .pipe(
                 switchMap(() => this.api.userGet(id).pipe(this.loading.processing())),
                 // Monitor principal changes, too
-                combineLatestWith(this.authSvc.principal),
+                combineLatestWith(this.principalSvc.principal$),
                 // Save user properties
                 switchMap(([r, principal]) => {
                     // Terminate processing if not logged in anymore (for example, if the user expired their own sessions)

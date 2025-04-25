@@ -5,11 +5,11 @@ import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, Domain, DomainExtension, DomainGet200Response, DomainUser, DomainUserRole, Principal } from '../../../../generated-api';
 import { LocalSettingService } from '../../../_services/local-setting.service';
-import { AuthService } from '../../../_services/auth.service';
 import { HTTP_ERROR_HANDLING } from '../../../_services/http-error-handler.interceptor';
 import { ProcessingStatus } from '../../../_utils/processing-status';
 import { DynamicConfig } from '../../../_models/config';
 import { Utils } from '../../../_utils/utils';
+import { PrincipalService } from '../../../_services/principal.service';
 
 interface DomainSelectorSettings {
     domainId?: string;
@@ -69,7 +69,7 @@ export class DomainSelectorService {
     private readonly domainMeta$ = new BehaviorSubject<DomainMeta | undefined>(undefined);
 
     constructor(
-        private readonly authSvc: AuthService,
+        private readonly principalSvc: PrincipalService,
         private readonly api: ApiGeneralService,
         private readonly localSettingSvc: LocalSettingService,
     ) {
@@ -80,7 +80,7 @@ export class DomainSelectorService {
         }
 
         // Subscribe to authentication status changes
-        this.authSvc.principal
+        this.principalSvc.principal$
             .pipe(
                 untilDestroyed(this),
                 // Store the current principal
@@ -166,7 +166,7 @@ export class DomainSelectorService {
             v?.extensions,
             Utils.sortByKey(v?.attributes) as Record<string, string> | undefined,
             this.principal,
-            this.authSvc.principalUpdated));
+            this.principalSvc.updatedTime()));
 
         // Store the last used domainId
         this.localSettingSvc.storeValue<DomainSelectorSettings>('domainSelector', {domainId: v?.domain?.id});

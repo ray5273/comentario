@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
-import { AsyncPipe, NgOptimizedImage } from '@angular/common';
+import { NgOptimizedImage } from '@angular/common';
 import { RouterLink, RouterLinkActive } from '@angular/router';
 import { Paths } from '../_utils/consts';
 import { DocsService } from '../_services/docs.service';
-import { AuthService } from '../_services/auth.service';
 import { PluginService } from '../_modules/plugin/_services/plugin.service';
 import { UserAvatarComponent } from '../_modules/tools/user-avatar/user-avatar.component';
+import { PrincipalService } from '../_services/principal.service';
 
 @Component({
     selector: 'app-navbar',
@@ -14,7 +14,6 @@ import { UserAvatarComponent } from '../_modules/tools/user-avatar/user-avatar.c
     imports: [
         RouterLinkActive,
         RouterLink,
-        AsyncPipe,
         UserAvatarComponent,
         NgOptimizedImage,
     ],
@@ -27,7 +26,7 @@ export class NavbarComponent {
     readonly plugs = this.pluginSvc.uiPlugsForLocation('navbar.menu');
 
     constructor(
-        readonly authSvc: AuthService,
+        readonly principalSvc: PrincipalService,
         readonly docsSvc: DocsService,
         private readonly pluginSvc: PluginService,
     ) {}

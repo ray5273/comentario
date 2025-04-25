@@ -1,9 +1,12 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { MockProvider } from 'ng-mocks';
 import { ProfileComponent } from './profile.component';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { mockAuthService, mockConfigService } from '../../../../_utils/_mocks.spec';
+import { mockConfigService } from '../../../../_utils/_mocks.spec';
 import { PluginService } from '../../../plugin/_services/plugin.service';
+import { AuthService } from '../../../../_services/auth.service';
+import { PrincipalService } from '../../../../_services/principal.service';
 
 describe('ProfileComponent', () => {
 
@@ -16,7 +19,8 @@ describe('ProfileComponent', () => {
                 providers: [
                     MockProvider(ApiGeneralService),
                     MockProvider(PluginService),
-                    mockAuthService(),
+                    MockProvider(AuthService),
+                    MockProvider(PrincipalService, {principal: signal(undefined), updatedTime: signal(0)}),
                     mockConfigService(),
                 ],
             })

@@ -3,7 +3,7 @@ import { HttpContextToken, HttpErrorResponse, HttpInterceptorFn } from '@angular
 import { throwError } from 'rxjs';
 import { catchError } from 'rxjs/operators';
 import { ToastService } from './toast.service';
-import { AuthService } from './auth.service';
+import { PrincipalService } from './principal.service';
 
 /** HTTP context token that, when set to false, inhibits the standard error handling (error toasts and such). */
 export const HTTP_ERROR_HANDLING = new HttpContextToken<boolean>(() => true);
@@ -12,7 +12,7 @@ export const HTTP_ERROR_HANDLING = new HttpContextToken<boolean>(() => true);
 export const httpErrorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
     // Inject the dependencies
     const toastSvc = inject(ToastService);
-    const authSvc = inject(AuthService);
+    const principalSvc = inject(PrincipalService);
 
     // Run the original handler(s)
     return next(req)
@@ -29,7 +29,7 @@ export const httpErrorHandlerInterceptor: HttpInterceptorFn = (req, next) => {
                 // 401 Unauthorized from the backend, but not a login-related error
                 } else if (error.status === 401 && errorId !== 'invalid-credentials') {
                     // Remove the current principal if it's a 401 error, which means the user isn't logged in (anymore)
-                    authSvc.update(null);
+                    principalSvc.setPrincipal(undefined);
 
                     // Add an info toast that the user has to relogin
                     toastSvc.info({messageId: errorId, errorCode: 401, details});

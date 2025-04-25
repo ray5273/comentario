@@ -4,7 +4,7 @@ import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { MockProvider } from 'ng-mocks';
 import { EmailUpdateComponent } from './email-update.component';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { mockAuthService } from '../../../../_utils/_mocks.spec';
+import { AuthService } from '../../../../_services/auth.service';
 
 describe('EmailUpdateComponent', () => {
 
@@ -20,7 +20,7 @@ describe('EmailUpdateComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),
-                    mockAuthService(),
+                    MockProvider(AuthService),
                 ],
             })
             .compileComponents();

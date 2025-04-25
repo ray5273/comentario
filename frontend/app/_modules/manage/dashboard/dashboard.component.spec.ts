@@ -1,11 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
+import { signal } from '@angular/core';
 import { of } from 'rxjs';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { DashboardComponent } from './dashboard.component';
 import { ApiGeneralService } from '../../../../generated-api';
 import { MetricCardComponent } from './metric-card/metric-card.component';
-import { mockAuthService, mockConfigService } from '../../../_utils/_mocks.spec';
+import { mockConfigService } from '../../../_utils/_mocks.spec';
 import { StatsComponent } from '../stats/stats/stats.component';
+import { PrincipalService } from '../../../_services/principal.service';
 
 describe('DashboardComponent', () => {
 
@@ -23,7 +25,7 @@ describe('DashboardComponent', () => {
                         dashboardTotals:     () => of({}) as any,
                         dashboardDailyStats: () => of([]) as any,
                     }),
-                    mockAuthService(),
+                    MockProvider(PrincipalService, {principal: signal(undefined)}),
                     mockConfigService(),
                 ],
             })

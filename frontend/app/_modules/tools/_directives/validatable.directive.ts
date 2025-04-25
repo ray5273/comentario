@@ -1,4 +1,4 @@
-import { Directive, ElementRef, inject, Input } from '@angular/core';
+import { Directive, ElementRef, inject, input } from '@angular/core';
 
 /**
  * Directive that "converts" Angular validation classes (ng-valid, ng-invalid) to Bootstrap validation classes
@@ -21,12 +21,10 @@ export class ValidatableDirective {
      *
      * If not provided, the directive will use classes `ng-valid`/`ng-invalid` on the host element.
      */
-    @Input()
-    appValidatable: any;
+    readonly appValidatable = input<any>();
 
     /** Whether to apply validity classes only when the control is touched. */
-    @Input()
-    validateUntouched = false;
+    readonly validateUntouched = input(false);
 
     /**
      * Get the control validity state, either from the specified property of `appValidatable`, or from the given host
@@ -36,7 +34,7 @@ export class ValidatableDirective {
      */
     state(refProperty: string, hostClass: string): boolean {
         return this.shouldValidate() &&
-            (this.appValidatable ? !!this.appValidatable[refProperty] : this.classes.contains(hostClass));
+            (this.appValidatable() ? !!this.appValidatable()[refProperty] : this.classes.contains(hostClass));
     }
 
     /**
@@ -44,7 +42,7 @@ export class ValidatableDirective {
      * @private
      */
     private shouldValidate(): boolean {
-        return this.validateUntouched ||
-            (this.appValidatable ? this.appValidatable.touched : this.classes.contains('ng-touched'));
+        return this.validateUntouched() ||
+            (this.appValidatable() ? this.appValidatable().touched : this.classes.contains('ng-touched'));
     }
 }

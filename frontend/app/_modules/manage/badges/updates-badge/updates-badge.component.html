@@ -1,7 +1,8 @@
-<span class="badge rounded-pill bg-danger floating-badge" [title]="title">
-    @if (numUpdates === 0) {
+<span class="badge rounded-pill bg-danger floating-badge" [title]="title()">
+    @let n = numUpdates();
+    @if (n === 0) {
         <fa-icon [icon]="faAsterisk"/>
     } @else {
-        <ng-container>{{ numUpdates }}</ng-container>
+        <ng-container>{{ n }}</ng-container>
     }
 </span>
