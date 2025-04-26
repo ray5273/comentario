@@ -1,5 +1,5 @@
-@if (formGroup) {
-    <ng-container [formGroup]="formGroup">
+@if (formGroup(); as g) {
+    <ng-container [formGroup]="g">
         <!-- Info -->
         <app-info-block>
             <ng-container i18n>Extensions allow to engage external services for spam and toxicity checking in comments.</ng-container>
@@ -8,7 +8,7 @@
 
         <div>
             <!-- Iterate extensions enabled globally -->
-            @for (e of extensions; track e.id;let idx = $index) {
+            @for (e of extensions(); track e.id;let idx = $index) {
                 <div [formGroupName]="idx">
                     <!-- Enabled checkbox -->
                     <div class="form-check form-switch">
@@ -36,7 +36,7 @@
         </div>
 
         <!-- No data placeholder -->
-        @if (!extensions?.length) {
+        @if (!extensions()?.length) {
             <app-no-data/>
         }
     </ng-container>

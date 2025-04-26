@@ -5,20 +5,20 @@
 </app-info-block>
 
 <!-- Auth config -->
-@if (configFormGroup) {
+@if (configFormGroup(); as g) {
     <div class="mb-3 row">
         <div class="col-sm-3 colon fw-bold" i18n>Options</div>
         <div class="col-sm-9">
-            <app-config-section-edit [formGroup]="configFormGroup" [config]="config" section="auth"/>
+            <app-config-section-edit [formGroup]="g" [config]="config()" section="auth"/>
         </div>
     </div>
 }
 
 <!-- Auth methods -->
-@if (methodsFormGroup) {
+@if (methodsFormGroup(); as g) {
     <div class="mb-3 row">
         <div class="col-sm-3 colon fw-bold" i18n>Authentication methods</div>
-        <div class="col-sm-9" [formGroup]="methodsFormGroup">
+        <div class="col-sm-9" [formGroup]="g">
             <!-- Commenting without registration -->
             <div class="form-check form-switch">
                 <input formControlName="anonymous" type="checkbox" class="form-check-input" id="auth-anonymous">
@@ -31,7 +31,7 @@
             </div>
             <!-- Federated IdPs -->
             <div formArrayName="fedIdps">
-                @for (idp of federatedIdps; track idp.id; let idx = $index) {
+                @for (idp of federatedIdps(); track idp.id; let idx = $index) {
                     <div class="form-check form-switch">
                         <input #cb [formControlName]="idx" type="checkbox" class="form-check-input" [id]="'auth-' + idp.id.replace(':', '-')">
                         <label class="form-check-label" [for]=cb.id>
@@ -50,7 +50,7 @@
             </div>
 
             <!-- SSO params -->
-            @if (methodsFormGroup.controls.sso.value) {
+            @if (g.controls.sso.value) {
                 <div class="ms-4">
                     <!-- SSO server URL -->
                     <div class="mb-2">

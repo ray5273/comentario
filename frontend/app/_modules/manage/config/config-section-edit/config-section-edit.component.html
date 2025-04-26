@@ -1,9 +1,9 @@
-@if (items; as items) {
-    <ng-container [formGroup]="formGroup!">
+@if (items(); as items) {
+    <ng-container [formGroup]="formGroup()!">
         @for (item of items; track item.key) {
             <!-- Info icon template -->
             <ng-template #infoIcon>
-                <app-info-icon docLink="{{ docsBasePath }}/{{ item.key | lowercase }}/" class="ms-2"/>
+                <app-info-icon docLink="{{ docsBasePath() }}/{{ item.key | lowercase }}/" class="ms-2"/>
             </ng-template>
 
             <!-- Non-default value template -->
@@ -27,7 +27,7 @@
                         <input [formControlName]="item.controlName" [id]="item.controlName" class="form-check-input" type="checkbox">
                         <label [for]="item.controlName" class="form-check-label">{{ item.key | dynConfigItemName }}</label>
                         @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
-                        @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
+                        @if (docsBasePath()) {<span [ngTemplateOutlet]="infoIcon"></span>}
                     </div>
                 }
 
@@ -36,13 +36,13 @@
                     <div class="mb-3">
                         <label [for]="item.controlName" class="form-label colon">{{ item.key | dynConfigItemName }}</label>
                         @if (item.value !== item.defaultValue) {<span [ngTemplateOutlet]="nonDefault"></span>}
-                        @if (docsBasePath) {<span [ngTemplateOutlet]="infoIcon"></span>}
+                        @if (docsBasePath()) {<span [ngTemplateOutlet]="infoIcon"></span>}
                         <input appValidatable [formControlName]="item.controlName"
                                [id]="item.controlName" [type]="item.datatype === 'int' ? 'number' : 'text'"
                                [min]="item.min" [max]="item.max" class="form-control">
                         <!-- Invalid feedback -->
                         <div class="invalid-feedback">
-                            @if (formGroup!.get(item.controlName)!.errors; as err) {
+                            @if (formGroup()!.get(item.controlName)!.errors; as err) {
                                 @if (err.required)       { <div i18n>Please enter a value.</div> }
                                 @if (err.min || err.max) { <div i18n>Please enter a value in the range {{ item.min | number }}…{{ item.max | number }}.</div> }
                             }

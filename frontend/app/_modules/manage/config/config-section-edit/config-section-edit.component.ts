@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, SimpleChanges } from '@angular/core';
+import { Component, computed, effect, input, OnChanges, SimpleChanges } from '@angular/core';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
 import { DecimalPipe, LowerCasePipe, NgTemplateOutlet } from '@angular/common';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
@@ -28,33 +28,31 @@ import { ValidatableDirective } from '../../../tools/_directives/validatable.dir
 export class ConfigSectionEditComponent implements OnChanges {
 
     /** Form group to add controls to. */
-    @Input({required: true})
-    formGroup?: FormGroup;
+    readonly formGroup = input<FormGroup>();
 
     /** The configuration being edited. */
-    @Input({required: true})
-    config?: DynamicConfig;
+    readonly config = input<DynamicConfig>();
 
     /** Section to render editors for. */
-    @Input({required: true})
-    section?: string;
+    readonly section = input<string>();
 
     /**
      * Base path for rendering info icons for each parameter, without the trailing slash. Optional, if not provided, no
      * info icons will appear.
      */
-    @Input()
-    docsBasePath?: string;
+    readonly docsBasePath = input<string>();
+
+    /** Config items. */
+    readonly items = computed<TypedConfigItem[] | undefined>(() =>
+        this.section() ? this.config()?.bySection[this.section()!] : undefined);
 
     // Icons
     readonly faRotateLeft = faRotateLeft;
 
     constructor(
         private readonly fb: FormBuilder,
-    ) {}
-
-    get items(): TypedConfigItem[] | undefined {
-        return this.section ? this.config?.bySection[this.section] : undefined;
+    ) {
+        effect(() => this.recreateControls());
     }
 
     ngOnChanges(changes: SimpleChanges): void {
@@ -64,19 +62,20 @@ export class ConfigSectionEditComponent implements OnChanges {
     }
 
     /**
-     * Remove all form controls created for this editor.
+     * Remove all form controls created for this editor, then recreate them.
      * @private
      */
     private recreateControls() {
-        if (!this.formGroup) {
+        const g = this.formGroup();
+        if (!g) {
             return;
         }
 
         // Remove all created controls
-        Object.keys(this.formGroup.controls).forEach(c => this.formGroup!.removeControl(c, {emitEvent: false}));
+        Object.keys(g.controls).forEach(c => g.removeControl(c, {emitEvent: false}));
 
         // Create new controls
-        this.items?.forEach(item => {
+        this.items()?.forEach(item => {
             // Add necessary value validators
             const validators = [];
             switch (item.datatype) {
@@ -87,7 +86,7 @@ export class ConfigSectionEditComponent implements OnChanges {
 
             // Create a form control
             const ctl = this.fb.nonNullable.control(item.val, validators);
-            this.formGroup!.addControl(item.controlName, ctl, {emitEvent: false});
+            g.addControl(item.controlName, ctl, {emitEvent: false});
 
             // Subscribe to the control's value changes to update the underlying config
             ctl.valueChanges.subscribe(v => item.val = v);
@@ -99,6 +98,6 @@ export class ConfigSectionEditComponent implements OnChanges {
      */
     revert(item: TypedConfigItem, event?: Event) {
         event?.preventDefault();
-        this.formGroup?.controls[item.controlName]?.setValue(item.defaultVal);
+        this.formGroup()?.controls[item.controlName]?.setValue(item.defaultVal);
     }
 }

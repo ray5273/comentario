@@ -1,5 +1,7 @@
-@if (generalFormGroup && configFormGroup) {
-    <ng-container [formGroup]="generalFormGroup">
+@let gen = generalFormGroup();
+@let cfg = configFormGroup();
+@if (gen && cfg) {
+    <ng-container [formGroup]="gen">
         <!-- Info -->
         <app-info-block>
             <ng-container i18n>General settings describe the website that will display comments.</ng-container>
@@ -26,7 +28,7 @@
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback" i18n>Please enter a valid domain host.</div>
                 </div>
-                @if (isNew) {
+                @if (isNew()) {
                     <small id="nameHelpBlock" class="form-text text-warning-emphasis">
                         <fa-icon [icon]="faExclamationTriangle" class="me-1"/>
                         <ng-container i18n>You won't be able to change the host once domain is created.</ng-container>
@@ -62,7 +64,7 @@
         </div>
 
         <!-- Dynamic configuration items -->
-        @for (group of configFormGroup.controls | keyvalue; track group.key) {
+        @for (group of cfg.controls | keyvalue; track group.key) {
             <!-- Skip the 'auth' section as it's edited on the Authentication tab -->
             @if (group.key !== 'auth') {
                 <div class="mb-3 row">
@@ -70,7 +72,7 @@
                     <div class="col-sm-3 colon fw-bold">{{ group.key | dynConfigSectionName }}</div>
                     <!-- Section items -->
                     <div class="col-sm-9">
-                        <app-config-section-edit [formGroup]="$any(group.value)" [config]="config" [section]="group.key"/>
+                        <app-config-section-edit [formGroup]="$any(group.value)" [config]="config()" [section]="group.key"/>
                     </div>
                 </div>
             }

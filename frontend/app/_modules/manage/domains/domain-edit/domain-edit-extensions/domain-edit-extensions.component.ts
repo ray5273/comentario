@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
@@ -21,12 +21,10 @@ import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 export class DomainEditExtensionsComponent {
 
     /** Form group to bind controls to. */
-    @Input({required: true})
-    formGroup?: FormGroup;
+    readonly formGroup = input<FormGroup>();
 
     /** Enabled domain extensions. */
-    @Input({required: true})
-    extensions?: DomainExtension[];
+    readonly extensions = input<DomainExtension[]>();
 
     // Icons
     readonly faExclamationTriangle = faExclamationTriangle;
