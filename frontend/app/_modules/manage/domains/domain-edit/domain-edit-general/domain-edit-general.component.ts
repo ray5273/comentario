@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { KeyValuePipe } from '@angular/common';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
@@ -32,20 +32,16 @@ import { ValidatableDirective } from '../../../../tools/_directives/validatable.
 export class DomainEditGeneralComponent {
 
     /** Form group to bind general controls to. */
-    @Input({required: true})
-    generalFormGroup?: FormGroup;
+    readonly generalFormGroup = input<FormGroup>();
 
     /** Form group to bind config controls to. */
-    @Input({required: true})
-    configFormGroup?: FormGroup;
+    readonly configFormGroup = input<FormGroup>();
 
     /** Domain configuration to edit. */
-    @Input({required: true})
-    config?: DynamicConfig;
+    readonly config = input<DynamicConfig>();
 
     /** Whether the form is for creating a new domain, as opposed to editing an existing one. */
-    @Input({required: true})
-    isNew = false;
+    readonly isNew = input(false);
 
     /** Possible sort orders. */
     readonly sorts = Object.values(CommentSort);
@@ -54,10 +50,10 @@ export class DomainEditGeneralComponent {
     readonly faExclamationTriangle = faExclamationTriangle;
 
     get isHttps(): boolean {
-        return !!this.generalFormGroup?.controls.isHttps.value;
+        return !!this.generalFormGroup()?.controls.isHttps.value;
     }
 
     set isHttps(b: boolean) {
-        this.generalFormGroup?.controls.isHttps.setValue(b);
+        this.generalFormGroup()?.controls.isHttps.setValue(b);
     }
 }

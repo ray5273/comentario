@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { faExclamationTriangle } from '@fortawesome/free-solid-svg-icons';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { FederatedIdentityProvider } from '../../../../../../generated-api';
@@ -24,20 +24,16 @@ import { ValidatableDirective } from '../../../../tools/_directives/validatable.
 export class DomainEditAuthComponent {
 
     /** Form group to bind auth methods controls to. */
-    @Input({required: true})
-    methodsFormGroup?: FormGroup;
+    readonly methodsFormGroup = input<FormGroup>();
 
     /** Form group to bind auth config controls to. */
-    @Input({required: true})
-    configFormGroup?: FormGroup;
+    readonly configFormGroup = input<FormGroup>();
 
     /** Domain configuration to edit. */
-    @Input({required: true})
-    config?: DynamicConfig;
+    readonly config = input<DynamicConfig>();
 
     /** Federated IdPs configured on the current instance. */
-    @Input({required: true})
-    federatedIdps?: FederatedIdentityProvider[];
+    readonly federatedIdps = input<FederatedIdentityProvider[]>();
 
     // Icons
     readonly faExclamationTriangle = faExclamationTriangle;
