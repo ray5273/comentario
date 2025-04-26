@@ -15,8 +15,14 @@
 #         -vv
 #=======================================================================================================================
 
+ARG GO_VERSION=1.24
+ARG GOSWAGGER_VERSION=0.31.0
+ARG NODE_VERSION=22
+ARG OPENJDK_VERSION=21
+
 # Backend build (server)
-FROM golang:1.23-alpine AS backend-build
+FROM golang:${GO_VERSION}-alpine AS backend-build
+ARG GOSWAGGER_VERSION
 RUN apk add --no-cache --update git curl
 
 COPY . /go/src/comentario/
@@ -24,7 +30,6 @@ WORKDIR /go/src/comentario/
 
 RUN \
     # Install go-swagger \
-    GOSWAGGER_VERSION=0.30.5 && \
     echo 'Installing go-swagger' && \
     curl -fsSL -o /usr/local/bin/swagger \
         "https://github.com/go-swagger/go-swagger/releases/download/v${GOSWAGGER_VERSION}/swagger_linux_amd64" && \
@@ -42,8 +47,9 @@ RUN \
     CGO_ENABLED=0 go build -a -v -o 'comentario' -ldflags "-w -s -X main.version=$v -X main.date=$d"
 
 # Frontend and embed build
-FROM node:20-alpine AS frontend-build
-RUN apk add --no-cache --update openjdk17-jre-headless
+FROM node:${NODE_VERSION}-alpine AS frontend-build
+ARG OPENJDK_VERSION
+RUN apk add --no-cache --update openjdk${OPENJDK_VERSION}-jre-headless
 
 COPY . /comentario
 WORKDIR /comentario
