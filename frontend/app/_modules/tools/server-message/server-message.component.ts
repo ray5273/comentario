@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 
 @Component({
     selector: 'app-server-message',
@@ -7,14 +7,14 @@ import { Component, Input } from '@angular/core';
 export class ServerMessageComponent {
 
     /** The message ID. */
-    @Input()
-    messageId?: string;
+    readonly messageId = input<string>();
 
     /** The message text to display when messageId isn't provided. */
-    @Input()
-    message?: string;
+    readonly message = input<string>();
 
     /** The error code, used if the ID isn't recognised. */
-    @Input()
-    errorCode?: number;
+    readonly errorCode = input<number>();
+
+    /** Identifiable message ID (for testing purposes). */
+    readonly id = computed(() => this.messageId() || this.errorCode());
 }

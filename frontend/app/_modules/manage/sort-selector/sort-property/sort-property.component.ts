@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 
 /**
  * Child component of SortSelectorComponent, specifying sort options.
@@ -10,14 +10,11 @@ import { Component, Input } from '@angular/core';
 export class SortPropertyComponent {
 
     /** Optional ID to set on the sort button. */
-    @Input()
-    id?: string;
+    readonly id = input<string>();
 
     /** Name of the property to sort by. */
-    @Input({required: true})
-    by?: string;
+    readonly by = input.required<string>();
 
     /** Display name of the property to sort by. */
-    @Input({required: true})
-    label?: string;
+    readonly label = input.required<string>();
 }

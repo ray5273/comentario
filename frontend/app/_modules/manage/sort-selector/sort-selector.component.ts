@@ -1,4 +1,4 @@
-import { Component, ContentChildren, Input, QueryList } from '@angular/core';
+import { Component, ContentChildren, input, QueryList } from '@angular/core';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faArrowDownShortWide, faArrowUpShortWide, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { NgbDropdownModule } from '@ng-bootstrap/ng-bootstrap';
@@ -16,11 +16,10 @@ import { SortPropertyComponent } from './sort-property/sort-property.component';
 export class SortSelectorComponent {
 
     /** Sort instance specifying the sort options. */
-    @Input({required: true})
-    sort?: Sort;
+    readonly sort = input.required<Sort>();
 
     @ContentChildren(SortPropertyComponent)
-    items?: QueryList<SortPropertyComponent>;
+    readonly items?: QueryList<SortPropertyComponent>;
 
     // Icons
     readonly faArrowDownShortWide = faArrowDownShortWide;
@@ -28,18 +27,19 @@ export class SortSelectorComponent {
 
     /** Icon of the currently selected item. */
     get itemIcon(): IconDefinition {
-        return this.sort?.descending ? this.faArrowUpShortWide : this.faArrowDownShortWide;
+        return this.sort()?.descending ? this.faArrowUpShortWide : this.faArrowDownShortWide;
     }
 
     /** Title of the currently selected item. */
     get itemTitle(): string {
-        return this.sort && this.items?.find(i => i.by === this.sort!.property)?.label || '';
+        const s = this.sort();
+        return s && this.items?.find(i => i.by() === s.property)?.label() || '';
     }
 
     /**
      * Handles a click on the sort button.
      */
     applyProperty(p: SortPropertyComponent) {
-        this.sort?.apply(p.by);
+        this.sort()?.apply(p.by());
     }
 }

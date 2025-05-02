@@ -1,7 +1,7 @@
-import { Component, EventEmitter, forwardRef, Injector, Input, OnInit, Output } from '@angular/core';
+import { Component, computed, forwardRef, Injector, input, OnInit, signal } from '@angular/core';
 import { AbstractControl, ControlValueAccessor, FormsModule, NG_VALIDATORS, NG_VALUE_ACCESSOR, NgControl, ReactiveFormsModule, ValidationErrors } from '@angular/forms';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { faEye } from '@fortawesome/free-solid-svg-icons';
+import { faEye, faEyeSlash, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { ValidatableDirective } from '../_directives/validatable.directive';
 
 @Component({
@@ -31,42 +31,38 @@ import { ValidatableDirective } from '../_directives/validatable.directive';
 })
 export class PasswordInputComponent implements OnInit, ControlValueAccessor {
 
-    /**
-     * Patterns that turn into errors when they don't match the entered value (only when strong == true).
-     */
+    /** Patterns that turn into errors when they don't match the entered value (only when strong == true). */
     static readonly Regexes = {
         upper:   /[A-Z]/,
         lower:   /[a-z]/,
         special: /[-\d!"#$%&'()*+,./:;<=>?@[\\\]^_`{|}~]/,
     };
 
-    /** Whether the password is required to be entered. */
-    @Input() required = false;
-
-    /** Whether the password is required to be "strong". */
-    @Input() strong = false;
-
-    /** Value of the autocomplete attribute for the input. */
-    @Input() autocomplete = 'off';
-
-    /** Placeholder for the input. */
-    @Input() placeholder = '';
-
-    @Output()
-    readonly valueChange = new EventEmitter<string>();
-
+    /** Minimum *strong* password length. */
     readonly minLength = 8;
 
+    /** Maximum allowed password length. */
     readonly maxLength = 63;
 
-    // Icons
-    readonly faEye = faEye;
+    /** Whether the password is required to be entered. */
+    readonly required = input(false);
+
+    /** Whether the password is required to be "strong". */
+    readonly strong = input(false);
+
+    /** Value of the autocomplete attribute for the input. */
+    readonly autocomplete = input('off');
+
+    /** Placeholder for the input. */
+    readonly placeholder = input('');
 
     /** Whether to show/edit the password in plain text. */
-    plain = false;
+    readonly plain     = signal(false);
+    readonly inputType = computed(() => this.plain() ? 'text' : 'password');
+    readonly icon      = computed<IconDefinition>(() => this.plain() ? faEye : faEyeSlash);
 
     /** Whether the corresponding control is disabled. */
-    isDisabled = false;
+    readonly disabled = signal(false);
 
     /** Errors discovered during validation, if any. */
     errors: ValidationErrors = {};
@@ -74,7 +70,9 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     /** The associated control. */
     ngControl?: NgControl;
 
-    private _value?: string;
+    /** The currently entered password value. */
+    private _value = '';
+
     private _onChange?: (_: any) => void;
     private _onBlur?: () => void;
 
@@ -83,16 +81,12 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     ) {}
 
     get value(): string {
-        return this._value || '';
+        return this._value;
     }
 
-    @Input()
     set value(v: string) {
         this._value = v;
-        this.valueChange.emit(v);
-        if (this._onChange) {
-            this._onChange(v);
-        }
+        this._onChange?.(v);
     }
 
     ngOnInit(): void {
@@ -100,9 +94,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     }
 
     onBlur() {
-        if (this._onBlur) {
-            this._onBlur();
-        }
+        this._onBlur?.();
     }
 
     registerOnChange(fn: (_: any) => void): void {
@@ -114,7 +106,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
     }
 
     setDisabledState(isDisabled: boolean): void {
-        this.isDisabled = isDisabled;
+        this.disabled.set(isDisabled);
     }
 
     writeValue(value: string): void {
@@ -127,7 +119,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
         const val: string = control.value;
 
         // Validate required
-        if (this.required && val === '') {
+        if (this.required() && val === '') {
             this.errors.required = true;
         }
 
@@ -137,7 +129,7 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
         }
 
         // Validate strong
-        if (this.strong && val !== '') {
+        if (this.strong() && val !== '') {
             // Validate min length
             if (val.length < this.minLength) {
                 this.errors.minlength = true;
@@ -160,5 +152,9 @@ export class PasswordInputComponent implements OnInit, ControlValueAccessor {
         }
 
         return this.errors;
+    }
+
+    togglePlain() {
+        this.plain.update(b => !b);
     }
 }

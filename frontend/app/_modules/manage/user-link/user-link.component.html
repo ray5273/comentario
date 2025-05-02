@@ -1,17 +1,18 @@
 <!-- User link if the route is provided -->
-@if (user && linkRoute) {
-    <a [routerLink]="linkRoute">
-        <app-user-avatar [user]="user" size="S" class="me-1"/>
-        <span class="user-name">{{ userName || user.name }}</span>
-        @if (user.email) {
-            &ngsp;<ng-container>({{ user.email }})</ng-container>
+@let u = user();
+@if (u && linkRoute()) {
+    <a [routerLink]="linkRoute()">
+        <app-user-avatar [user]="u" size="S" class="me-1"/>
+        <span class="user-name">{{ userName() || u.name }}</span>
+        @if (u.email) {
+            &ngsp;<ng-container>({{ u.email }})</ng-container>
         }
     </a>
 
 <!-- Existing user -->
-} @else if (user) {
-    <app-user-avatar [user]="user" size="S" class="me-1"/>
-    <span class="user-name">{{ userName || user.name }}</span>
+} @else if (u) {
+    <app-user-avatar [user]="u" size="S" class="me-1"/>
+    <span class="user-name">{{ userName() || u.name }}</span>
 
 <!-- Nonexistent (deleted) user -->
 } @else {
@@ -19,4 +20,4 @@
 }
 
 <!-- Current user badge -->
-<app-current-user-badge [userId]="user?.id" badgeClasses="ms-2"/>
+<app-current-user-badge [userId]="u?.id" badgeClasses="ms-2"/>

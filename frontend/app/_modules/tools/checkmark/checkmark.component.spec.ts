@@ -3,6 +3,7 @@ import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testi
 import { CheckmarkComponent } from './checkmark.component';
 
 describe('CheckmarkComponent', () => {
+
     let component: CheckmarkComponent;
     let fixture: ComponentFixture<CheckmarkComponent>;
     let icon: () => HTMLElement;
@@ -29,33 +30,24 @@ describe('CheckmarkComponent', () => {
         expect(icon()).toBeTruthy();
     });
 
-    it('is hidden when value is false', () => {
-        component.value = false;
-        fixture.detectChanges();
-        expect(icon()).toBeNull();
-    });
-
-    it('is hidden when value is 0', () => {
-        component.value = 0;
-        fixture.detectChanges();
-        expect(icon()).toBeNull();
-    });
-
-    it('is hidden when value is null', () => {
-        component.value = null;
-        fixture.detectChanges();
-        expect(icon()).toBeNull();
-    });
-
-    it('is hidden when value is empty string', () => {
-        component.value = '';
-        fixture.detectChanges();
-        expect(icon()).toBeNull();
-    });
-
-    it('is shown when value is true', () => {
-        component.value = true;
-        fixture.detectChanges();
-        expect(icon()).toBeTruthy();
-    });
+    [
+        {in: undefined, shown: false},
+        {in: null,      shown: false},
+        {in: false,     shown: false},
+        {in: 0,         shown: false},
+        {in: '',        shown: false},
+        {in: true,      shown: true},
+        {in: 1,         shown: true},
+        {in: 'foo',     shown: true},
+    ]
+        .forEach(test =>
+            it(`is ${test.shown ? 'shown' : 'hidden'} when value is ${test.in}`, () => {
+                fixture.componentRef.setInput('value', test.in);
+                fixture.detectChanges();
+                if (test.shown) {
+                    expect(icon()).toBeTruthy();
+                } else {
+                    expect(icon()).toBeNull();
+                }
+            }));
 });

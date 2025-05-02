@@ -1,7 +1,9 @@
 <div ngbDropdown class="d-inline-block" placement="bottom-end">
+    @let prop = sort().property;
+    @let desc = sort().descending;
+
     <!-- Dropdown toggle -->
-    <button [class.sort-asc]="!sort?.descending"
-            [class.sort-desc]="sort?.descending"
+    <button [class.sort-asc]="!desc" [class.sort-desc]="desc"
             type="button" class="btn btn-outline-secondary" id="sortByDropdown" title="Sort" ngbDropdownToggle i18n-title>
         @if (itemTitle; as s) {
             <fa-icon [icon]="itemIcon" class="me-1"/>
@@ -14,19 +16,15 @@
     <!-- Sort buttons -->
     <div ngbDropdownMenu aria-labelledby="sortByDropdown">
         <div class="p-3 flex-column flex-md-row btn-group text-nowrap" role="group">
-            @for (p of items; track p.by) {
-                @let curr = sort?.property === p.by;
-                <button [class.active]="curr"
-                        [class.sort-asc]="curr && !sort?.descending"
-                        [class.sort-desc]="curr && sort?.descending"
-                        [attr.aria-checked]="curr"
-                        [attr.id]="p.id"
-                        (click)="applyProperty(p)"
+            @for (p of items; track p.by()) {
+                @let curr = prop === p.by();
+                <button [class.active]="curr" [class.sort-asc]="curr && !desc" [class.sort-desc]="curr && desc"
+                        [attr.aria-checked]="curr" [attr.id]="p.id()" (click)="applyProperty(p)"
                         class="btn btn-outline-secondary" type="button">
-                    @if (sort?.property === p.by) {
+                    @if (curr) {
                         <fa-icon [icon]="itemIcon" class="me-1"/>
                     }
-                    <ng-container>{{ p.label }}</ng-container>
+                    <ng-container>{{ p.label() }}</ng-container>
                 </button>
             }
         </div>

@@ -1,11 +1,11 @@
-@if (icon; as i) {
-    @if (sso) {
+@if (icon(); as i) {
+    @if (sso()) {
         <span class="badge rounded-pill bg-secondary-subtle bg-opacity-25 border border-secondary text-info"
               title="SSO user" i18n-title>
             <fa-icon [icon]="i" class="me-1"/>
             <ng-container>SSO</ng-container>
         </span>
     } @else {
-        <fa-icon [icon]="i" [title]="idpId ?? undefined"/>
+        <fa-icon [icon]="i" [title]="iconTitle()"/>
     }
 }

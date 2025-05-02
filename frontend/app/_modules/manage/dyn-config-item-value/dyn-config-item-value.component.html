@@ -1,11 +1,13 @@
-@switch (item?.datatype) {
-    @case ('bool') {
-        <app-checkmark [value]="item!.val"/>
-    }
-    @case ('int') {
-        <span>{{ $any(item?.val) | number }}</span>
-    }
-    @default {
-        <span>{{ item?.val }}</span>
+@if (item(); as item) {
+    @switch (item.datatype) {
+        @case ('bool') {
+            <app-checkmark [value]="item.val"/>
+        }
+        @case ('int') {
+            <span>{{ $any(item.val) | number }}</span>
+        }
+        @default {
+            <span>{{ item.val }}</span>
+        }
     }
 }

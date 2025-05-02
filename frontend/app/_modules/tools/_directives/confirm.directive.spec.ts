@@ -1,9 +1,9 @@
 import { ConfirmDirective } from './confirm.directive';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { By } from '@angular/platform-browser';
-import { Component, DebugElement, TemplateRef } from '@angular/core';
+import { Component, DebugElement, signal, TemplateRef } from '@angular/core';
 import { noop } from 'rxjs';
-import { faExclamationTriangle, faKey } from '@fortawesome/free-solid-svg-icons';
+import { faExclamationTriangle, faKey, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { NgbModal, NgbModalRef } from '@ng-bootstrap/ng-bootstrap';
 import { MockProvider } from 'ng-mocks';
 import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.component';
@@ -35,8 +35,18 @@ describe('ConfirmDirective', () => {
     // Returns a fake NgbModalRef, which points to a fake ConfirmDialogComponent
     const getModalRef = () => {
         opened = true;
-        dialog = {} as ConfirmDialogComponent;
-        return {componentInstance: dialog, result: Promise.resolve()} as NgbModalRef;
+        dialog = {
+            title:         signal<string | undefined>(undefined),
+            content:       signal<string | TemplateRef<any> | undefined>(undefined),
+            actionLabel:   signal<string | undefined>(undefined),
+            actionEnabled: signal(true),
+            actionType:    signal<string>('danger'),
+            icon:          signal<IconDefinition>(faExclamationTriangle),
+        } as ConfirmDialogComponent;
+        return {
+            componentInstance: dialog,
+            result:            Promise.reject(), // Imitate cancelling the dialog
+        } as NgbModalRef;
     };
 
     beforeEach(() => {
@@ -65,20 +75,22 @@ describe('ConfirmDirective', () => {
 
     it('opens modal with text', () => {
         btn1.click();
+        fixture.detectChanges();
         expect(opened).toBeTrue();
-        expect(dialog.title).toBeUndefined();
-        expect(dialog.content).toBe('Are you sure dude');
-        expect(dialog.actionLabel).toBe('OK');
-        expect(dialog.icon).toBe(faExclamationTriangle);
+        expect(dialog.title()).toBeUndefined();
+        expect(dialog.content()).toBe('Are you sure dude');
+        expect(dialog.actionLabel()).toBe('OK');
+        expect(dialog.icon()).toBe(faExclamationTriangle);
     });
 
     it('opens modal with template', () => {
         btn2.click();
+        fixture.detectChanges();
         expect(opened).toBeTrue();
-        expect(dialog.title).toBe('HI THERE');
-        expect(dialog.content).toBeInstanceOf(TemplateRef);
-        expect(dialog.actionLabel).toBe('YES');
-        expect(dialog.icon).toBe(faKey);
+        expect(dialog.title()).toBe('HI THERE');
+        expect(dialog.content()).toBeInstanceOf(TemplateRef);
+        expect(dialog.actionLabel()).toBe('YES');
+        expect(dialog.icon()).toBe(faKey);
     });
 
     it('confirms silently when no content available', (done: DoneFn) => {

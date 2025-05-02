@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faIdCard, faQuestionCircle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { faFacebook, faGithub, faGitlab, faGoogle, faOpenid, faTwitter } from '@fortawesome/free-brands-svg-icons';
@@ -13,16 +13,14 @@ import { faFacebook, faGithub, faGitlab, faGoogle, faOpenid, faTwitter } from '@
 export class IdentityProviderIconComponent {
 
     /** Whether it's an SSO federated user. */
-    @Input({})
-    sso: boolean | null | undefined;
+    readonly sso = input<boolean | null>();
 
     /** Federated identity provider ID. Ignored if it's an SSO user. */
-    @Input({required: true})
-    idpId: string | null | undefined;
+    readonly idpId = input<string | null>();
 
     /** Icon to render. */
-    get icon(): IconDefinition | undefined {
-        switch (this.idpId) {
+    readonly icon = computed<IconDefinition | undefined>(() => {
+        switch (this.idpId()) {
             case 'facebook':
                 return faFacebook;
 
@@ -41,8 +39,30 @@ export class IdentityProviderIconComponent {
             case null:
             case undefined:
             case '':
-                return this.sso ? faIdCard : undefined;
+                return this.sso() ? faIdCard : undefined;
         }
-        return this.idpId.startsWith('oidc:') ? faOpenid : faQuestionCircle;
-    }
+        return this.idpId()?.startsWith('oidc:') ? faOpenid : faQuestionCircle;
+    });
+
+    /** Icon title. */
+    readonly iconTitle = computed<string>(() => {
+        const id = this.idpId();
+        switch (id) {
+            case 'facebook':
+                return 'Facebook';
+
+            case 'github':
+                return 'GitHub';
+
+            case 'gitlab':
+                return 'GitLab';
+
+            case 'google':
+                return 'Google';
+
+            case 'twitter':
+                return 'Twitter/X';
+        }
+        return id?.startsWith('oidc:') ? id?.substring(5) : '';
+    });
 }

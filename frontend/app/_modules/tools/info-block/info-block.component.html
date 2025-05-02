@@ -1,10 +1,10 @@
 <div class="info-block">
     <!-- Icon -->
-    <div class="me-2 p-2 bg-info-subtle">
-        @if (icon) {
-            <fa-icon [icon]="icon" class="text-info"/>
-        }
-    </div>
+    @if (icon(); as i) {
+        <div class="me-2 p-2 bg-info-subtle">
+            <fa-icon [icon]="i" class="text-info"/>
+        </div>
+    }
     <!-- View content -->
     <div class="p-2">
         <ng-content/>

@@ -1,4 +1,4 @@
-import { Component, Input, TemplateRef, ViewChild } from '@angular/core';
+import { Component, computed, model, TemplateRef, ViewChild } from '@angular/core';
 import { NgTemplateOutlet } from '@angular/common';
 import { DomSanitizer, SafeHtml } from '@angular/platform-browser';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
@@ -16,22 +16,30 @@ import { NgbActiveModal } from '@ng-bootstrap/ng-bootstrap';
 export class ConfirmDialogComponent {
 
     /** Optional title to display in the modal header. */
-    @Input() title?: string;
+    readonly title = model<string>();
 
     /** Template or HTML string to render as the dialog's content. */
-    @Input() content?: string | TemplateRef<any>;
+    readonly content = model<string | TemplateRef<any>>();
 
     /** Action button label. */
-    @Input() actionLabel?: string;
+    readonly actionLabel = model<string>();
 
     /** Whether the action button is enabled. */
-    @Input() actionEnabled = true;
+    readonly actionEnabled = model(true);
 
     /** The class of the action button. */
-    @Input() actionType: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' = 'danger';
+    readonly actionType = model<'primary' | 'secondary' | 'success' | 'warning' | 'danger'>('danger');
 
     /** Name of the icon. */
-    @Input() icon: IconDefinition = faExclamationTriangle;
+    readonly icon = model<IconDefinition>(faExclamationTriangle);
+
+    readonly safeHtml    = computed<SafeHtml>(() => this.sanitizer.bypassSecurityTrustHtml(this.content()?.toString() || ''));
+    readonly textClass   = computed(() => `text-${this.actionType()}`);
+    readonly buttonClass = computed(() => `btn-${this.actionType()}`);
+    readonly template    = computed<TemplateRef<any> | null>(() => {
+        const c = this.content();
+        return (typeof c === 'string' ? this.textTempl : c) || null;
+    });
 
     @ViewChild('textTempl', {static: true})
     textTempl?: TemplateRef<any>;
@@ -40,12 +48,4 @@ export class ConfirmDialogComponent {
         private readonly sanitizer: DomSanitizer,
         readonly activeModal: NgbActiveModal,
     ) {}
-
-    get safeHtml(): SafeHtml {
-        return this.sanitizer.bypassSecurityTrustHtml(this.content?.toString() || '');
-    }
-
-    get template(): TemplateRef<any> | null {
-        return (typeof this.content === 'string' ? this.textTempl : this.content) || null;
-    }
 }

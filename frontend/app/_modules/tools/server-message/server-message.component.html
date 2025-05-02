@@ -1,13 +1,13 @@
 <!-- Toast ID (mostly for e2e-testing purposes) -->
-@if ((messageId || errorCode); as id) {
+@if (id(); as id) {
     <div class="d-none message-id">{{ id }}</div>
 }
 
 <!-- The message -->
-@switch (messageId) {
-    <!--------------------------------------------------------------------------------------------------------------
+@switch (messageId()) {
+    <!------------------------------------------------------------------------------------------------------------------
     Success messages
-    -------------------------------------------------------------------------------------------------------------->
+    ------------------------------------------------------------------------------------------------------------------->
     @case ('account-deleted')         { <ng-container i18n>Your account is successfully deleted.</ng-container> }
     @case ('data-saved')              { <ng-container i18n>Saved successfully.</ng-container> }
     @case ('data-updated')            { <ng-container i18n>Updated successfully.</ng-container> }
@@ -27,7 +27,7 @@
     @case ('user-is-unlocked')        { <ng-container i18n>User has been unlocked.</ng-container> }
     <!------------------------------------------------------------------------------------------------------------------
     Error messages
-    ------------------------------------------------------------------------------------------------------------------>
+    ------------------------------------------------------------------------------------------------------------------->
     @case ('bad-token')               { <ng-container i18n>Required token is missing or invalid.</ng-container> }
     @case ('comment-text-too-long')   { <ng-container i18n>Comment text is too long.</ng-container> }
     @case ('deleting-last-superuser') { <ng-container i18n>You can't delete the last superuser in the system. Please appoint another first.</ng-container> }
@@ -86,12 +86,12 @@
 
     @default {
         <!-- If no ID provided, but message text is -->
-        @if (!messageId && message) {
-            <ng-container>{{ message }}</ng-container>
+        @if (!messageId() && message()) {
+            <ng-container>{{ message() }}</ng-container>
 
         <!-- No luck with the message: use the HTTP error code -->
         } @else {
-            @switch (errorCode) {
+            @switch (errorCode()) {
                 @case (400) { <ng-container i18n>Invalid input data. Please try again.</ng-container> }
                 @case (401) { <ng-container i18n>You have been signed out, please login again.</ng-container> }
                 @case (403) { <ng-container i18n>You're not authorised to perform this operation.</ng-container> }

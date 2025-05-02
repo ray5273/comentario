@@ -1,26 +1,26 @@
 <!-- Modal header -->
-@if (title) {
+@if (title(); as t) {
     <div class="modal-header">
-        <h5>{{ title }}</h5>
+        <h5>{{ t }}</h5>
     </div>
 }
 
 <!-- Modal body -->
 <div class="modal-body d-flex">
-    <div [class]="'text-'+actionType"><fa-icon [icon]="icon" size="4x"/></div>
+    <div [class]="textClass()"><fa-icon [icon]="icon()" size="4x"/></div>
     <div class="ms-3 d-flex flex-column justify-content-center">
-        <ng-container [ngTemplateOutlet]="template"></ng-container>
+        <ng-container [ngTemplateOutlet]="template()"></ng-container>
     </div>
 </div>
 
 <!-- Modal footer -->
 <div class="modal-footer">
     <button type="button" class="btn btn-outline-dark" (click)="activeModal.dismiss()" i18n>Cancel</button>
-    <button type="button" [disabled]="!actionEnabled" class="btn" [class]="'btn-'+actionType"
-            (click)="activeModal.close()">{{ actionLabel }}</button>
+    <button type="button" [disabled]="!actionEnabled()" class="btn" [class]="buttonClass()"
+            (click)="activeModal.close()">{{ actionLabel() }}</button>
 </div>
 
 <!-- Template that is rendered when only text is given -->
 <ng-template #textTempl>
-    <p [innerHtml]="safeHtml"></p>
+    <p [innerHtml]="safeHtml()"></p>
 </ng-template>

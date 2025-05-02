@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { faLightbulb } from '@fortawesome/free-solid-svg-icons';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { IconProp } from '@fortawesome/fontawesome-svg-core';
@@ -13,9 +13,6 @@ import { IconProp } from '@fortawesome/fontawesome-svg-core';
 })
 export class InfoBlockComponent {
 
-    /**
-     * Icon to display to the info text. If null/undefined, none will be displayed.
-     */
-    @Input()
-    icon: IconProp | null | undefined = faLightbulb;
+    /** Icon to display to the info text. If null/undefined, none will be displayed. */
+    readonly icon = input<IconProp | null | undefined>(faLightbulb);
 }

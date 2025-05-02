@@ -1,4 +1,4 @@
-import { Directive, EventEmitter, HostListener, Input, Output, TemplateRef } from '@angular/core';
+import { Directive, effect, input, output, signal, TemplateRef } from '@angular/core';
 import { noop } from 'rxjs';
 import { faExclamationTriangle, IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -6,76 +6,74 @@ import { ConfirmDialogComponent } from '../confirm-dialog/confirm-dialog.compone
 
 @Directive({
     selector: '[appConfirm]',
+    host: {
+        '(click)': 'clicked($event)',
+    }
 })
 export class ConfirmDirective {
 
     /**
-     * Optional HTML or template to display in the confirmation dialog. If not provided, the confirmation is silently given on click,
-     * without showing a dialog.
+     * Optional HTML or template to display in the confirmation dialog. If not provided, the confirmation is silently
+     * given on click, without showing a dialog.
      */
-    @Input() appConfirm?: string | TemplateRef<any>;
+    readonly appConfirm = input<string | TemplateRef<any>>();
 
     /** Optional title to display in the confirmation dialog's header. */
-    @Input() confirmTitle?: string;
+    readonly confirmTitle = input<string>();
 
     /** Action button label in the confirmation dialog. */
-    @Input() confirmAction = 'OK';
+    readonly confirmAction = input('OK');
 
     /** Action button type in the confirmation dialog. */
-    @Input() confirmActionType: 'primary' | 'secondary' | 'success' | 'warning' | 'danger' = 'danger';
+    readonly confirmActionType = input<'primary' | 'secondary' | 'success' | 'warning' | 'danger'>('danger');
 
     /** Name of the icon in the confirmation dialog. */
-    @Input() confirmIcon: IconDefinition = faExclamationTriangle;
+    readonly confirmIcon = input<IconDefinition>(faExclamationTriangle);
+
+    /** Whether the action button in the dialog is enabled (tracks changes also when the dialog is already opened). */
+    readonly confirmActionEnabled = input(true);
 
     /** Fired when the user clicks the action button. */
-    @Output()
-    readonly confirmed = new EventEmitter<void>();
+    readonly confirmed = output();
 
-    private _dlg?: ConfirmDialogComponent;
-    private _enableAction = true;
+    /** The opened dialog instance, if any. */
+    private readonly dlg = signal<ConfirmDialogComponent | undefined>(undefined);
 
     constructor(
         private readonly modal: NgbModal,
-    ) {}
-
-    /**
-     * Whether the action button in the dialog is enabled (tracks changes also when the dialog is already opened).
-     */
-    @Input()
-    set confirmActionEnabled(v: boolean) {
-        // Pass through to the dialog if it's open
-        this._enableAction = v;
-        if (this._dlg) {
-            this._dlg.actionEnabled = v;
-        }
+    ) {
+        // Pass directive properties through to the dialog if it's open
+        effect(() => {
+            const dlg = this.dlg();
+            if (dlg) {
+                dlg.title        .set(this.confirmTitle());
+                dlg.content      .set(this.appConfirm());
+                dlg.actionType   .set(this.confirmActionType());
+                dlg.actionLabel  .set(this.confirmAction());
+                dlg.actionEnabled.set(this.confirmActionEnabled());
+                dlg.icon         .set(this.confirmIcon());
+            }
+        });
     }
 
-    @HostListener('click', ['$event'])
-    private clicked(event: Event) {
+    clicked(event: Event) {
         // Do not propagate further
         event.stopPropagation();
         event.preventDefault();
 
         // If there's no content to be shown, issue a confirmation event right away
-        if (!this.appConfirm) {
+        if (!this.appConfirm()) {
             this.confirmed.emit();
             return;
         }
 
         // Show a dialog otherwise
         const mr = this.modal.open(ConfirmDialogComponent);
-        const dlg = mr.componentInstance;
-        dlg.title         = this.confirmTitle;
-        dlg.content       = this.appConfirm;
-        dlg.actionType    = this.confirmActionType;
-        dlg.actionLabel   = this.confirmAction;
-        dlg.actionEnabled = this._enableAction;
-        dlg.icon          = this.confirmIcon;
-        this._dlg = dlg;
+        this.dlg.set(mr.componentInstance);
 
         // Fire the confirmed event on resolution, swallow on rejection
         mr.result
             .then(() => this.confirmed.emit(), noop)
-            .finally(() => this._dlg = undefined);
+            .finally(() => this.dlg.set(undefined));
     }
 }

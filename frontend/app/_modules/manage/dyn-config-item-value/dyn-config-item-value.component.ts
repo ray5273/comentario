@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { TypedConfigItem } from '../../../_models/typed-config-item';
 import { CheckmarkComponent } from '../../tools/checkmark/checkmark.component';
@@ -14,6 +14,5 @@ import { CheckmarkComponent } from '../../tools/checkmark/checkmark.component';
 export class DynConfigItemValueComponent {
 
     /** The item to display value for. */
-    @Input({required: true})
-    item?: TypedConfigItem;
+    readonly item = input<TypedConfigItem>();
 }
