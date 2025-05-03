@@ -8,7 +8,7 @@ import { DomainBadgeComponent } from '../../../badges/domain-badge/domain-badge.
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
-import { mockConfigService, mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector, mockLocalSettingService } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainPageManagerComponent', () => {
 
@@ -25,6 +25,7 @@ describe('DomainPageManagerComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService, {domainPageList: () => of({pages: []} as any)}),
+                    mockLocalSettingService(),
                     mockConfigService(),
                     mockDomainSelector(),
                 ],

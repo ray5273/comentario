@@ -6,7 +6,7 @@ import { CommentListComponent } from './comment-list.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
-import { mockConfigService, mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector, mockLocalSettingService } from '../../../../../_utils/_mocks.spec';
 import { UserLinkComponent } from '../../../user-link/user-link.component';
 
 describe('CommentListComponent', () => {
@@ -24,6 +24,7 @@ describe('CommentListComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),
+                    mockLocalSettingService(),
                     mockConfigService(),
                     mockDomainSelector(),
                 ],

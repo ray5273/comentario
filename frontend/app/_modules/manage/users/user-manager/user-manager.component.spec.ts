@@ -7,7 +7,7 @@ import { SortSelectorComponent } from '../../sort-selector/sort-selector.compone
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
 import { IdentityProviderIconComponent } from '../../../tools/identity-provider-icon/identity-provider-icon.component';
 import { ApiGeneralService } from '../../../../../generated-api';
-import { mockConfigService } from '../../../../_utils/_mocks.spec';
+import { mockConfigService, mockLocalSettingService } from '../../../../_utils/_mocks.spec';
 
 describe('UserManagerComponent', () => {
 
@@ -24,6 +24,7 @@ describe('UserManagerComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),
+                    mockLocalSettingService(),
                     mockConfigService(),
                 ],
             })

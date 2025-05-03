@@ -8,7 +8,7 @@ import { DomainManagerComponent } from './domain-manager.component';
 import { ApiGeneralService } from '../../../../../generated-api';
 import { SortSelectorComponent } from '../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
-import { mockConfigService, mockDomainSelector } from '../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector, mockLocalSettingService } from '../../../../_utils/_mocks.spec';
 
 describe('DomainManagerComponent', () => {
 
@@ -26,6 +26,7 @@ describe('DomainManagerComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService, {domainList: () => of({domains: []} as any)}),
+                    mockLocalSettingService(),
                     mockConfigService(),
                     mockDomainSelector(),
                 ],

@@ -24,6 +24,8 @@ import { IdentityProviderIconComponent } from '../../../../tools/identity-provid
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
 import { LoaderDirective } from '../../../../tools/_directives/loader.directive';
 import { DecimalPipe } from '@angular/common';
+import { LocalSettingService } from '../../../../../_services/local-setting.service';
+import { SortableViewSettings } from '../../../_models/view';
 
 @UntilDestroy()
 @Component({
@@ -83,7 +85,11 @@ export class DomainUserManagerComponent implements OnInit {
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
-    ) {}
+        private readonly localSettingSvc: LocalSettingService,
+    ) {
+        // Restore the view settings
+        localSettingSvc.load<SortableViewSettings>('domainUserManager').subscribe(s => s?.sort && (this.sort.asString = s.sort));
+    }
 
     ngOnInit(): void {
         merge(
@@ -93,7 +99,7 @@ export class DomainUserManagerComponent implements OnInit {
                     untilDestroyed(this),
                     tap(meta => this.domainMeta = meta)),
             // Subscribe to sort changes
-            this.sort.changes.pipe(untilDestroyed(this)),
+            this.sort.changes,
             // Subscribe to filter changes
             this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
@@ -126,6 +132,9 @@ export class DomainUserManagerComponent implements OnInit {
 
                 // Make a map of user ID => user
                 r.users?.forEach(u => this.userMap.set(u.id!, u));
+
+                // Persist view settings
+                this.localSettingSvc.storeValue<SortableViewSettings>('domainUserManager', {sort: this.sort.asString});
             });
     }
 }

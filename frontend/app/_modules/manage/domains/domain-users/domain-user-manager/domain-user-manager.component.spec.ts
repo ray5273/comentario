@@ -8,7 +8,7 @@ import { ApiGeneralService } from '../../../../../../generated-api';
 import { SortSelectorComponent } from '../../../sort-selector/sort-selector.component';
 import { SortPropertyComponent } from '../../../sort-selector/sort-property/sort-property.component';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
-import { mockConfigService, mockDomainSelector } from '../../../../../_utils/_mocks.spec';
+import { mockConfigService, mockDomainSelector, mockLocalSettingService } from '../../../../../_utils/_mocks.spec';
 
 describe('DomainUserManagerComponent', () => {
 
@@ -29,6 +29,7 @@ describe('DomainUserManagerComponent', () => {
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),
+                    mockLocalSettingService(),
                     mockConfigService(),
                     mockDomainSelector(),
                 ],

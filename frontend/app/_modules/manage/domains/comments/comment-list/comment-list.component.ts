@@ -25,6 +25,8 @@ import { DatetimePipe } from '../../../_pipes/datetime.pipe';
 import { ConfirmDirective } from '../../../../tools/_directives/confirm.directive';
 import { ListFooterComponent } from '../../../../tools/list-footer/list-footer.component';
 import { LoaderDirective } from '../../../../tools/_directives/loader.directive';
+import { LocalSettingService } from '../../../../../_services/local-setting.service';
+import { SortableViewSettings } from '../../../_models/view';
 
 @UntilDestroy()
 @Component({
@@ -102,8 +104,12 @@ export class CommentListComponent implements OnInit, OnChanges {
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
+        private readonly localSettingSvc: LocalSettingService,
         private readonly commentService: CommentService,
-    ) {}
+    ) {
+        // Restore the view settings
+        localSettingSvc.load<SortableViewSettings>('commentList').subscribe(s => s?.sort && (this.sort.asString = s.sort));
+    }
 
     ngOnInit(): void {
         merge(
@@ -123,7 +129,7 @@ export class CommentListComponent implements OnInit, OnChanges {
                                 this.filterForm.controls.deleted);
                         })),
                 // Subscribe to sort changes
-                this.sort.changes.pipe(untilDestroyed(this)),
+                this.sort.changes,
                 // Subscribe to filter changes
                 this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
@@ -167,6 +173,9 @@ export class CommentListComponent implements OnInit, OnChanges {
 
                 // Make a map of user ID => commenter
                 r.commenters?.forEach(cr => this.commenters.set(cr.id!, cr));
+
+                // Persist view settings
+                this.localSettingSvc.storeValue<SortableViewSettings>('commentList', {sort: this.sort.asString});
             });
     }
 

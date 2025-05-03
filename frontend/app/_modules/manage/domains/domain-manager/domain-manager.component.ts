@@ -21,6 +21,8 @@ import { DomainUserRoleBadgeComponent } from '../../badges/domain-user-role-badg
 import { ListFooterComponent } from '../../../tools/list-footer/list-footer.component';
 import { SortPropertyComponent } from '../../sort-selector/sort-property/sort-property.component';
 import { LoaderDirective } from '../../../tools/_directives/loader.directive';
+import { LocalSettingService } from '../../../../_services/local-setting.service';
+import { SortableViewSettings } from '../../_models/view';
 
 @UntilDestroy()
 @Component({
@@ -80,7 +82,12 @@ export class DomainManagerComponent implements OnInit {
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly configSvc: ConfigService,
+        private readonly localSettingSvc: LocalSettingService,
     ) {
+        // Restore the view settings
+        localSettingSvc.load<SortableViewSettings>('domainManager').subscribe(s => s?.sort && (this.sort.asString = s.sort));
+
+        // Subscribe to domain selector changes
         this.domainSelectorSvc.domainMeta(true)
             .pipe(
                 untilDestroyed(this),
@@ -107,7 +114,7 @@ export class DomainManagerComponent implements OnInit {
                 // Trigger an initial load
                 of(undefined),
                 // Subscribe to sort changes
-                this.sort.changes.pipe(untilDestroyed(this)),
+                this.sort.changes,
                 // Subscribe to filter changes
                 this.filterForm.controls.filter.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
             .pipe(
@@ -155,6 +162,9 @@ export class DomainManagerComponent implements OnInit {
 
                 // Make a map of domain ID => domain users
                 r.domainUsers?.forEach(du => this.domainUsers.set(du.domainId!, du));
+
+                // Persist view settings
+                this.localSettingSvc.storeValue<SortableViewSettings>('domainManager', {sort: this.sort.asString});
             });
     }
 }

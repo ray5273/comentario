@@ -6,6 +6,7 @@ import { ProcessingStatus } from './processing-status';
 import { HighlightLoader } from 'ngx-highlightjs';
 import { ConfigService } from '../_services/config.service';
 import { DynamicConfig } from '../_models/config';
+import { LocalSettingService } from '../_services/local-setting.service';
 
 export const mockConfigService = () => MockProvider(
     ConfigService, {
@@ -41,6 +42,10 @@ export const mockDomainSelector = (domainEmitter?: Observable<DomainMeta>) => Mo
         domainMeta:    () => domainEmitter || of(new DomainMeta()),
         domainLoading: new ProcessingStatus(),
     });
+
+export const mockLocalSettingService = () => MockProvider(
+    LocalSettingService,
+    {load: () => of(undefined)});
 
 @Directive({
     // eslint-disable-next-line @angular-eslint/directive-selector
