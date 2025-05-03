@@ -264,6 +264,14 @@ declare namespace Cypress {
         dlgCancel(): Chainable<JQueryWithSelector>;
 
         /**
+         * Check the currently active sorting in the sort dropdown.
+         * @param sort Expected current sort label.
+         * @param order Expected current sort order.
+         * @return The sort dropdown button.
+         */
+        checkListSort(sort: string, order: 'asc' | 'desc'): Chainable<JQueryWithSelector>;
+
+        /**
          * Check the currently active sorting in the sort dropdown, then click the dropdown button and subsequently a
          * sort button with the given label.
          * @param curSort Current sort label.
@@ -272,6 +280,13 @@ declare namespace Cypress {
          * @param expectOrder The expected sort order after the click.
          */
         changeListSort(curSort: string, curOrder: 'asc' | 'desc', label: string, expectOrder: 'asc' | 'desc'): Chainable<void>;
+
+        /**
+         * Run through the given sequence of sort changes, verifying the sort order is retained after reload.
+         * @param selector String selector for searching the element (we cannot pass the element itself because this command executes page reloads).
+         * @param sequence Sorting steps to follow.
+         */
+        checkListSortRetained(selector: string, sequence: {sort: string; order: 'asc' | 'desc'}[]): Chainable<void>;
 
         /**
          * Verify that when visiting the given path, the application first redirects to the login page and subsequently

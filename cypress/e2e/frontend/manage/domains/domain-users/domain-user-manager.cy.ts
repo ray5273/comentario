@@ -120,6 +120,18 @@ context('Domain User Manager', () => {
                 cy.get('@domainUserList').texts('.domain-user-email').should('arrayMatch', users.map(u => u.email).reverse());
             });
 
+            it('retains chosen sort order', () =>
+                cy.checkListSortRetained(
+                    '@domainUserManager',
+                    [
+                        {sort: 'Email',   order: 'asc'},
+                        {sort: 'Email',   order: 'desc'},
+                        {sort: 'Name',    order: 'asc'},
+                        {sort: 'Name',    order: 'desc'},
+                        {sort: 'Created', order: 'asc'},
+                        {sort: 'Created', order: 'desc'},
+                    ]));
+
             it('filters items', () => {
                 // Test filtering by email
                 cy.get('@filterString').setValue('bLoG');

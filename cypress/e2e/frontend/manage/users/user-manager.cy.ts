@@ -140,4 +140,21 @@ context('User Manager', () => {
         cy.get('@userList').find('.list-group-item').eq(1).click();
         cy.isAt(PATHS.manage.users.id(USERS.king.id).props);
     });
+
+    it('retains chosen sort order', () => {
+        cy.loginViaApi(USERS.root, pagePath);
+        makeAliases();
+        cy.checkListSortRetained(
+            '@userManager',
+            [
+                {sort: 'Email',         order: 'asc'},
+                {sort: 'Email',         order: 'desc'},
+                {sort: 'Name',          order: 'asc'},
+                {sort: 'Name',          order: 'desc'},
+                {sort: 'Created',       order: 'asc'},
+                {sort: 'Created',       order: 'desc'},
+                {sort: 'Federated IdP', order: 'asc'},
+                {sort: 'Federated IdP', order: 'desc'},
+            ]);
+    });
 });

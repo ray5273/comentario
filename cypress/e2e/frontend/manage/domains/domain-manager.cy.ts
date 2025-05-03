@@ -122,6 +122,25 @@ context('Domain Manager', () => {
         cy.get('@domainList').find('a').hasClass('active').should('arrayMatch', [true, false, false, false]);
     });
 
+    it('retains chosen sort order', () => {
+        cy.loginViaApi(USERS.king, PATHS.manage.domains._);
+        makeDMAliases(true, true);
+        cy.checkListSortRetained(
+            '@domainManager',
+            [
+                {sort: 'Host',               order: 'asc'},
+                {sort: 'Host',               order: 'desc'},
+                {sort: 'Name',               order: 'asc'},
+                {sort: 'Name',               order: 'desc'},
+                {sort: 'Created',            order: 'asc'},
+                {sort: 'Created',            order: 'desc'},
+                {sort: 'Number of comments', order: 'asc'},
+                {sort: 'Number of comments', order: 'desc'},
+                {sort: 'Number of views',    order: 'asc'},
+                {sort: 'Number of views',    order: 'desc'},
+            ]);
+    });
+
     context('for superuser', () => {
 
         /** Hosts ordered by creation date. */

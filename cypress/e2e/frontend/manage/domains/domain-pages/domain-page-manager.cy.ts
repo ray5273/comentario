@@ -117,6 +117,22 @@ context('Domain Page Manager', () => {
             cy.get('@pageList').texts('.domain-page-path').should('arrayMatch', pagesByPath);
         });
 
+        it('retains chosen sort order', () =>
+            cy.checkListSortRetained(
+                '@pageManager',
+                [
+                    {sort: 'Path',               order: 'asc'},
+                    {sort: 'Path',               order: 'desc'},
+                    {sort: 'Title',              order: 'asc'},
+                    {sort: 'Title',              order: 'desc'},
+                    {sort: 'Created',            order: 'asc'},
+                    {sort: 'Created',            order: 'desc'},
+                    {sort: 'Number of comments', order: 'asc'},
+                    {sort: 'Number of comments', order: 'desc'},
+                    {sort: 'Number of views',    order: 'asc'},
+                    {sort: 'Number of views',    order: 'desc'},
+                ]));
+
         it('filters pages', () => {
 
             const filterOn = (s: string) => {

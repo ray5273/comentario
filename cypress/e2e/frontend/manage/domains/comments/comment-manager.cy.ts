@@ -183,6 +183,17 @@ context('Comment Manager', () => {
                 cy.isAt(pagePath + '/f08639de-ab7b-4032-bdce-a021bf07e596');
             });
 
+            it('retains chosen sort order', () =>
+                cy.checkListSortRetained(
+                    '@commentManager',
+                    [
+                        {sort: 'Created', order: 'desc'},
+                        {sort: 'Created', order: 'asc'},
+                        {sort: 'Score',   order: 'asc'},
+                        {sort: 'Score',   order: 'desc'},
+                        {sort: 'Created', order: 'asc'},
+                    ]));
+
             it('filters comments', () => {
 
                 const checkFilter = (approved: boolean, pending: boolean, rejected: boolean, deleted: boolean) => {

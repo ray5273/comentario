@@ -360,31 +360,50 @@ Cypress.Commands.add(
     (element: JQueryWithSelector) => cy.wrap(element).dlgButtonClick('Cancel'));
 
 Cypress.Commands.add(
-    'changeListSort',
-    {prevSubject: 'optional'},
-    (element: JQueryWithSelector, curSort: string, curOrder: 'asc' | 'desc', label: string, expectOrder: 'asc' | 'desc') => {
-        const el = () => (element ? cy.wrap(element) : cy).find('app-sort-selector');
+    'checkListSort',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, sort: string, order: 'asc' | 'desc') =>
+        cy.wrap(element).find('app-sort-selector button[ngbdropdowntoggle]')
+            .should('have.text',  sort)
+            .should('have.class', 'sort-' + order));
 
-        // Click the sort dropdown
-        el().find('button[ngbdropdowntoggle]')
-            .should('have.text',  curSort)
-            .should('have.class', 'sort-' + curOrder)
-            .click();
+Cypress.Commands.add(
+    'changeListSort',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, curSort: string, curOrder: 'asc' | 'desc', label: string, expectOrder: 'asc' | 'desc') => {
+        // Check the current sort on the button, then click the sort dropdown
+        cy.wrap(element).checkListSort(curSort, curOrder).click();
 
         // Click the required sort button and check the sort order
-        el().contains('div[ngbdropdownmenu] button', label)
+        cy.wrap(element).contains('app-sort-selector div[ngbdropdownmenu] button', label)
             .click()
             .should('have.class', 'sort-' + expectOrder)
             .should('have.attr', 'aria-checked', 'true');
 
         // Check the sort dropdown button updated title/icon, then click it again
-        el().find('button[ngbdropdowntoggle]')
-            .should('have.text',  label)
-            .should('have.class', 'sort-' + expectOrder)
-            .click();
+        cy.wrap(element).checkListSort(label, expectOrder).click();
 
         // Verify the sort menu is gone
-        el().find('div[ngbdropdownmenu]').should('not.be.visible');
+        cy.wrap(element).find('app-sort-selector div[ngbdropdownmenu]').should('not.be.visible');
+    });
+
+Cypress.Commands.add(
+    'checkListSortRetained',
+    {prevSubject: false},
+    (selector: string, sequence: {sort: string; order: 'asc' | 'desc'}[]) => {
+        // Check the initial sort
+        cy.get(selector).checkListSort(sequence[0].sort, sequence[0].order);
+
+        // Iterate all steps in order
+        for (let i = 0; i < sequence.length; i++) {
+            // Reload the page
+            cy.reload();
+
+            // Verify the current sort and switch it to the next, looping over to the first element at the last step
+            const curr = sequence[i];
+            const next = i === sequence.length-1 ? sequence[0] : sequence[i+1];
+            cy.get(selector).changeListSort(curr.sort, curr.order, next.sort, next.order);
+        }
     });
 
 Cypress.Commands.add(
