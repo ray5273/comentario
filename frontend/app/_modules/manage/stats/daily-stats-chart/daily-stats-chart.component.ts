@@ -1,4 +1,4 @@
-import { Component, Inject, Input, LOCALE_ID } from '@angular/core';
+import { Component, computed, Inject, input, LOCALE_ID } from '@angular/core';
 import { DatePipe } from '@angular/common';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -18,82 +18,65 @@ import { NoDataComponent } from '../../../tools/no-data/no-data.component';
 export class DailyStatsChartComponent {
 
     /** Total number of views over the returned stats period. */
-    @Input({required: true})
-    totalViews?: number;
+    readonly totalViews = input<number>();
 
     /** Total number of comments over the returned stats period. */
-    @Input({required: true})
-    totalComments?: number;
+    readonly totalComments = input<number>();
 
-    // Chart data
-    chartDataViews?: ChartConfiguration['data'];
-    chartDataComments?: ChartConfiguration['data'];
-    chartOptionsViews?: ChartOptions;
-    chartOptionsComments?: ChartOptions;
+    /** Daily numbers of views. */
+    readonly countsViews = input<number[] | undefined>();
+
+    /** Daily numbers of comments. */
+    readonly countsComments = input<number[] | undefined>();
+
+    readonly chartDataViews       = computed<ChartConfiguration['data'] | undefined>(() => this.getChartConfig(this.countsViews(), $localize`Views`, '#339b11'));
+    readonly chartDataComments    = computed<ChartConfiguration['data'] | undefined>(() => this.getChartConfig(this.countsComments(), $localize`Comments`, '#376daf'));
+    readonly chartOptionsViews    = computed<ChartOptions | undefined>(() => this.getChartOptions(this.chartDataViews()?.labels as any));
+    readonly chartOptionsComments = computed<ChartOptions | undefined>(() => this.getChartOptions(this.chartDataComments()?.labels as any));
 
     constructor(
         @Inject(LOCALE_ID) private readonly locale: string,
     ) {}
 
-    /** Daily numbers of views. */
-    @Input({required: true})
-    set countsViews(c: number[] | undefined) {
-        if (c?.length) {
-            this.chartDataViews    = this.getChartConfig(c, $localize`Views`, '#339b11') ;
-            this.chartOptionsViews = this.getChartOptions(this.chartDataViews.labels as string[]);
-        } else {
-            this.chartDataViews    = undefined;
-            this.chartOptionsViews = undefined;
-        }
+    private getChartConfig(data: number[] | undefined, label: string, colour: string): ChartConfiguration['data'] | undefined {
+        return data ?
+            {
+                datasets: [{
+                    label,
+                    data,
+                    borderColor:          colour,
+                    backgroundColor:      `${colour}20`,
+                    pointBackgroundColor: colour,
+                    tension:              0.5,
+                    fill:                 true,
+                }],
+                labels: this.getDates(data.length),
+            } :
+            undefined;
     }
 
-    /** Daily numbers of comments. */
-    @Input({required: true})
-    set countsComments(c: number[] | undefined) {
-        if (c?.length) {
-            this.chartDataComments    = this.getChartConfig(c, $localize`Comments`, '#376daf');
-            this.chartOptionsComments = this.getChartOptions(this.chartDataComments.labels as string[]);
-        } else {
-            this.chartDataComments    = undefined;
-            this.chartOptionsComments = undefined;
-        }
-    }
-
-    private getChartConfig(data: number[], label: string, colour: string): ChartConfiguration['data'] {
-        return {
-            datasets: [{
-                label,
-                data,
-                borderColor:          colour,
-                backgroundColor:      `${colour}20`,
-                pointBackgroundColor: colour,
-                tension:              0.5,
-                fill:                 true,
-            }],
-            labels: this.getDates(data.length),
-        };
-    }
-
-    private getChartOptions(labels: string[]): ChartOptions {
-        return {
-            maintainAspectRatio: false,
-            backgroundColor: '#00000000',
-            plugins: {
-                legend: {display: false},
-            },
-            scales: {
-                y: {
-                    // We expect no negative values
-                    min: 0,
+    private getChartOptions(labels: string[] | undefined): ChartOptions | undefined {
+        return labels ?
+            {
+                maintainAspectRatio: false,
+                backgroundColor: '#00000000',
+                plugins: {
+                    legend: {display: false},
                 },
-                x: {
-                    // Only draw one tick per week
-                    ticks: {
-                        callback: (_, index) => (labels.length - index) % 7 === 1 ? labels[index] : null,
+                scales: {
+                    y: {
+                        // We expect no negative values
+                        min: 0,
+                    },
+                    x: {
+                        // Only draw one tick per week
+                        ticks: {
+                            callback: (_, index) => (labels.length - index) % 7 === 1 ? labels[index] : null,
+                        },
                     },
                 },
-            },
-        };
+            } :
+            undefined;
     }
 
     private getDates(count: number): string[] {

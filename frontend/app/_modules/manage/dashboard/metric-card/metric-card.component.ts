@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ChartData, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -14,33 +14,34 @@ import { BaseChartDirective } from 'ng2-charts';
 })
 export class MetricCardComponent {
 
-    /**
-     * Display label.
-     */
-    @Input({required: true})
-    label?: string;
+    /** Display label. */
+    readonly label = input<string>();
 
-    /**
-     * Second-line display label.
-     */
-    @Input()
-    sublabel?: string;
+    /** Second-line display label. */
+    readonly sublabel = input<string>();
 
-    /**
-     * Metric value.
-     */
-    @Input({required: true})
-    value?: number;
+    /** Metric value. */
+    readonly value = input<number>();
 
-    /**
-     * Whether the card should use the full parent height.
-     */
-    @Input()
-    fullHeight = false;
+    /** Whether the card should use the full parent height. */
+    readonly fullHeight = input(false);
 
-    chartData?: ChartData<'bar'>;
+    /** Colour of the underlying chart. */
+    readonly chartColour = input<string | null | undefined>();
 
-    private _chartClr: string | null | undefined;
+    /** Point values to plot on the underlying chart. If omitted or empty, no chart is shown. */
+    readonly chartCounts = input<number[] | null | undefined>();
+
+    readonly chartData = computed<ChartData<'bar'> | undefined>(() =>
+        this.chartCounts() ?
+            {
+                datasets: [{
+                    data:            this.chartCounts() ?? [],
+                    backgroundColor: this.chartColour() || '#48484855',
+                }],
+                labels: Array(this.chartCounts()?.length).fill('z'),
+            } :
+            undefined);
 
     readonly chartOptions: ChartOptions<'bar'> = {
         maintainAspectRatio: false,
@@ -53,35 +54,4 @@ export class MetricCardComponent {
             y: {display: false},
         }
     };
-
-    /**
-     * Colour of the underlying chart.
-     */
-    @Input()
-    set chartColour(c: string | null | undefined) {
-        this._chartClr = c;
-
-        // Also update the existing chart data, if any
-        if (this.chartData) {
-            this.chartData.datasets[0].backgroundColor = this.barColour;
-        }
-    }
-
-    /**
-     * Point values to plot on the underlying chart. If omitted or empty, no chart is shown.
-     */
-    @Input()
-    set chartCounts(c: number[] | null | undefined) {
-        this.chartData = {
-            datasets: [{
-                data:            c ?? [],
-                backgroundColor: this.barColour,
-            }],
-            labels: Array(c?.length).fill('z'),
-        };
-    }
-
-    get barColour(): string {
-        return this._chartClr || '#48484855';
-    }
 }

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { ChartConfiguration, ChartOptions } from 'chart.js';
 import { BaseChartDirective } from 'ng2-charts';
@@ -19,8 +19,67 @@ export class PieStatsChartComponent {
     /** Number of top items to display. */
     static readonly MaxItems = 5;
 
-    chartData?: ChartConfiguration['data'];
-    chartOptions: ChartOptions = {
+    /** Chart data to display. */
+    readonly data = input<StatsDimensionItem[]>();
+
+    /** Item data points. */
+    readonly values = computed<number[] | undefined>(() => {
+        const data = this.data();
+        if (!data) {
+            return undefined;
+        }
+
+        // Limit the number of segments to MaxItems
+        const r = data.slice(0, PieStatsChartComponent.MaxItems).map(item => item.count);
+
+        // Roll up counts beyond MaxItems
+        if (data.length > PieStatsChartComponent.MaxItems) {
+            r.push(data.slice(PieStatsChartComponent.MaxItems).reduce((acc, item) => acc + item.count, 0));
+        }
+        return r;
+    });
+
+    /** Item labels. */
+    readonly labels = computed<string[] | undefined>(() => {
+        const data = this.data();
+        if (!data) {
+            return undefined;
+        }
+
+        // Limit the number of segments to MaxItems
+        const r = data.slice(0, PieStatsChartComponent.MaxItems).map(item => item.element);
+
+        // Roll up counts beyond MaxItems
+        if (data.length > PieStatsChartComponent.MaxItems) {
+            r.push($localize`Others`);
+        }
+        return r;
+    });
+
+    /** Item colours. */
+    readonly colours = computed<string[] | undefined>(() => {
+        // Hash labels to determine each label's colour; use the DefaultColour for the optional (last) roll-up item
+        const pipe = new HashColourPipe();
+        return this.labels()
+            ?.map((s, i) => i >= PieStatsChartComponent.MaxItems ? HashColourPipe.DefaultColour : pipe.transform(s));
+    });
+
+    /** Ready-to-display chart data. */
+    readonly chartData = computed<ChartConfiguration['data'] | undefined>(() =>
+        this.values() ?
+        {
+            datasets: [{
+                data:                 this.values()!,
+                borderColor:          '#ffffff',
+                backgroundColor:      this.colours(),
+                hoverBackgroundColor: this.colours(),
+            }],
+            labels: this.labels(),
+        } :
+        undefined);
+
+    /** (Constant) chart options. */
+    readonly chartOptions: ChartOptions = {
         maintainAspectRatio: false,
         plugins: {
             legend: {
@@ -28,50 +87,4 @@ export class PieStatsChartComponent {
             }
         }
     };
-
-    /** Item data points. */
-    values?: number[];
-
-    /** Item labels. */
-    labels?: string[];
-
-    /** Item colours. */
-    colours?: string[];
-
-    /** Page view statistical data. */
-    @Input({required: true})
-    set data(items: StatsDimensionItem[] | undefined) {
-        if (items) {
-            // Limit the number of segments to MaxItems
-            this.labels = items.slice(0, PieStatsChartComponent.MaxItems).map(item => item.element);
-            this.values = items.splice(0, PieStatsChartComponent.MaxItems).map(item => item.count);
-
-            // Calculate segment colours based on label hash
-            const pipe = new HashColourPipe();
-            this.colours = this.labels.map(s => pipe.transform(s));
-
-            // Roll up counts beyond MaxItems
-            if (items.length) {
-                this.labels.push($localize`Others`);
-                this.values.push(items.reduce((acc, item) => acc + item.count, 0));
-                this.colours.push(HashColourPipe.DefaultColour);
-            }
-
-            // Make up a configuration object
-            this.chartData = {
-                datasets: [{
-                    data:                 this.values,
-                    borderColor:          '#ffffff',
-                    backgroundColor:      this.colours,
-                    hoverBackgroundColor: this.colours,
-                }],
-                labels: this.labels,
-            };
-        } else {
-            this.labels    = undefined;
-            this.values    = undefined;
-            this.colours   = undefined;
-            this.chartData = undefined;
-        }
-    }
 }

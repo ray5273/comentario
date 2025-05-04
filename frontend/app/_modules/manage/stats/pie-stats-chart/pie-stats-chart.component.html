@@ -1,18 +1,18 @@
 <!-- Chart -->
 <div class="chart-container">
-    <canvas baseChart type="pie" [options]="chartOptions" [data]="chartData"></canvas>
+    <canvas baseChart type="pie" [options]="chartOptions" [data]="chartData()"></canvas>
 </div>
 
 <!-- Legend -->
 <div class="chart-legend">
-    @for (l of labels; track l; let idx = $index) {
+    @for (l of labels(); track l; let idx = $index) {
         <div class="chart-legend-item">
             <!-- Color square -->
-            <span class="chart-legend-item-colour" [style.background-color]="colours![idx]"></span>
+            <span class="chart-legend-item-colour" [style.background-color]="colours()![idx]"></span>
             <!-- Item label -->
             <span class="chart-legend-item-label">{{ l }}</span>
             <!-- Item value -->
-            <span class="chart-legend-item-value">{{ values![idx] | number }}</span>
+            <span class="chart-legend-item-value">{{ values()![idx] | number }}</span>
         </div>
     }
 </div>

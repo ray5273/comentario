@@ -2,12 +2,12 @@
     <!-- Views -->
     <div class="col">
         <!-- Numbers of views -->
-        <app-metric-card [value]="totalViews" label="Views" i18n-label="metric-label|"/>
+        <app-metric-card [value]="totalViews()" label="Views" i18n-label="metric-label|"/>
 
         <!-- Chart -->
         <div class="chart-container">
-            @if (chartDataViews; as d) {
-                <canvas baseChart type="line" [options]="chartOptionsViews" [data]="d"></canvas>
+            @if (chartDataViews(); as d) {
+                <canvas baseChart type="line" [options]="chartOptionsViews()" [data]="d"></canvas>
             } @else {
                 <app-no-data [fullHeight]="true"/>
             }
@@ -17,12 +17,12 @@
     <!-- Comments -->
     <div class="col">
         <!-- Numbers of comments -->
-        <app-metric-card [value]="totalComments" label="Comments" i18n-label="metric-label|"/>
+        <app-metric-card [value]="totalComments()" label="Comments" i18n-label="metric-label|"/>
 
         <!-- Chart -->
         <div class="chart-container">
-            @if (chartDataComments; as d) {
-                <canvas baseChart type="line" [options]="chartOptionsComments" [data]="d"></canvas>
+            @if (chartDataComments(); as d) {
+                <canvas baseChart type="line" [options]="chartOptionsComments()" [data]="d"></canvas>
             } @else {
                 <app-no-data [fullHeight]="true"/>
             }
