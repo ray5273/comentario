@@ -1,6 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
-import { concatMap, debounceTime, EMPTY, forkJoin, mergeMap, Observable, of, Subject, switchMap, tap, toArray } from 'rxjs';
+import { concatMap, Observable, of, tap, toArray } from 'rxjs';
 import { ApiGeneralService, PageStatsItem, StatsDimensionItem } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { SpinnerDirective } from '../../../tools/_directives/spinner.directive';
@@ -28,6 +28,12 @@ type PageViewDimension = 'country' | 'device' | 'browser' | 'os';
 })
 export class StatsComponent {
 
+    /** ID of the domain to collect the statistics for. If '', statistics for all domains of the current user is collected. */
+    readonly domainId = input<string | undefined>();
+
+    /** Number of days of statistics to request from the backend. */
+    readonly numberOfDays = input<number>();
+
     // Daily stats data
     totalCounts?: Partial<Record<DailyMetric, number>>;
     dailyStats?:  Partial<Record<DailyMetric, number[]>>;
@@ -47,56 +53,37 @@ export class StatsComponent {
     topPagesByComments?: PageStatsItem[];
     readonly loadingTopPages = new ProcessingStatus();
 
-    _domainId?: string;
-    private _numberOfDays?: number;
-    private reload$ = new Subject<void>();
-
-    /**
-     * ID of the domain to collect the statistics for. If an empty string, statistics for all domains of the current
-     * user is collected.
-     */
-    @Input()
-    set domainId(id: string | undefined) {
-        this._domainId = id;
-        this.reload$.next();
-    }
-
-    /**
-     * Number of days of statistics to request from the backend.
-     */
-    @Input()
-    set numberOfDays(n: number) {
-        this._numberOfDays = n;
-        this.reload$.next();
-    }
-
     constructor(
         private readonly api: ApiGeneralService,
     ) {
-        // Reload on a property change, with some delay
-        this.reload$.pipe(debounceTime(200), switchMap(() => this.reload())).subscribe();
+        // Initially load the stats, and reload on a property change
+        effect(() => this.reload());
     }
 
     /**
      * (Re)load all statistical data.
      * @private
      */
-    private reload(): Observable<any> {
+    private reload() {
         // Undefined domain means it isn't initialised yet
-        if (this._domainId === undefined) {
+        const domainId = this.domainId();
+        if (domainId === undefined) {
             this.totalCounts        = undefined;
             this.dailyStats         = undefined;
             this.pageViewsStats     = undefined;
             this.topPagesByViews    = undefined;
             this.topPagesByComments = undefined;
-            return EMPTY;
+            return;
         }
 
         // First, load daily figures and calculate totals to determine if there's any other stats worth fetching
-        const domainId = this._domainId || undefined;
-        return this.loadDaily(domainId)
+        // (translate empty string (= all domains) into undefined)
+        this.loadDaily(domainId || undefined)
             // Second, load page views and top pages in parallel
-            .pipe(mergeMap(() => forkJoin([this.loadPageViews(domainId), this.loadTopPages(domainId)])));
+            .subscribe(() => {
+                this.loadPageViews(domainId);
+                this.loadTopPages(domainId);
+            });
     }
 
     /**
@@ -113,7 +100,7 @@ export class StatsComponent {
         return of<DailyMetric[]>('views', 'comments')
             .pipe(
                 concatMap(metric =>
-                    this.api.dashboardDailyStats(metric, this._numberOfDays, domainId)
+                    this.api.dashboardDailyStats(metric, this.numberOfDays(), domainId)
                         .pipe(
                             tap(counts => {
                                 this.totalCounts![metric] = counts.reduce((acc, n) => acc + n, 0);
@@ -132,22 +119,23 @@ export class StatsComponent {
      * @param domainId ID of the domain to load stats for. If undefined, statistics for all domains is requested.
      * @private
      */
-    private loadPageViews(domainId: string | undefined): Observable<any> {
+    private loadPageViews(domainId: string | undefined) {
         // Don't bother if no views at all
         if (!this.totalCounts?.views) {
             this.pageViewsStats = undefined;
-            return EMPTY;
+            return;
         }
 
         // Iterate dimensions and load stats for each of them sequentially, to unburden the backend
         this.pageViewsStats = {};
-        return of<PageViewDimension[]>('country', 'device', 'browser', 'os')
+        of<PageViewDimension[]>('country', 'device', 'browser', 'os')
             .pipe(
                 concatMap(dim =>
-                    this.api.dashboardPageViewStats(dim, this._numberOfDays, domainId)
+                    this.api.dashboardPageViewStats(dim, this.numberOfDays(), domainId)
                         .pipe(
                             this.loadingPageViews[dim].processing(),
-                            tap(d => this.pageViewsStats![dim] = d))));
+                            tap(d => this.pageViewsStats![dim] = d))))
+            .subscribe();
     }
 
     /**
@@ -155,23 +143,20 @@ export class StatsComponent {
      * @param domainId ID of the domain to load stats for. If undefined, statistics for all domains is requested.
      * @private
      */
-    private loadTopPages(domainId: string | undefined): Observable<any> {
+    private loadTopPages(domainId: string | undefined) {
         // Don't bother if no views and no comments
         if (!this.totalCounts?.views && !this.totalCounts?.comments) {
             this.topPagesByViews    = undefined;
             this.topPagesByComments = undefined;
-            return EMPTY;
+            return;
         }
 
         // Load the top page stats
-        return this.api.dashboardPageStats(this._numberOfDays, domainId)
-            .pipe(
-                tap(data => {
-                    this.topPagesByViews    = data.views;
-                    this.topPagesByComments = data.comments;
-                }),
-
-                // Loading indicator
-                this.loadingTopPages.processing());
+        this.api.dashboardPageStats(this.numberOfDays(), domainId)
+            .pipe(this.loadingTopPages.processing())
+            .subscribe(r => {
+                this.topPagesByViews    = r.views;
+                this.topPagesByComments = r.comments;
+            });
     }
 }

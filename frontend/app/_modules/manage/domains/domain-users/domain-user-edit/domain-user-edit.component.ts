@@ -1,7 +1,7 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
-import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
+import { EMPTY, switchMap } from 'rxjs';
 import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, DomainUser, DomainUserRole, Principal } from '../../../../../../generated-api';
@@ -27,7 +27,10 @@ import { DomainUserRoleBadgeComponent } from '../../../badges/domain-user-role-b
         RouterLink,
     ],
 })
-export class DomainUserEditComponent implements OnInit {
+export class DomainUserEditComponent {
+
+    /** ID of the domain user to edit. */
+    readonly id = input<string>();
 
     /** The domain user in question. */
     domainUser?: DomainUser;
@@ -47,51 +50,15 @@ export class DomainUserEditComponent implements OnInit {
         notifyCommentStatus: false,
     });
 
-    private readonly id$ = new ReplaySubject<string>(1);
-
     constructor(
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly toastSvc: ToastService,
-    ) {}
-
-    @Input()
-    set id(id: string) {
-        this.id$.next(id);
-    }
-
-    ngOnInit(): void {
-        // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta(true)
-            .pipe(
-                untilDestroyed(this),
-                // Nothing can be loaded unless there's a domain
-                filter(meta => !!meta.domain),
-                // Blend with user ID
-                combineLatestWith(this.id$),
-                // Fetch the domain user
-                switchMap(([meta, id]) => {
-                    this.principal = meta.principal;
-                    return this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing());
-                }))
-            .subscribe(r => {
-                this.domainUser = r.domainUser;
-                this.email      = r.user!.email;
-                const du = this.domainUser!;
-                this.form.setValue({
-                    role:                du.role,
-                    notifyReplies:       du.notifyReplies,
-                    notifyModerator:     du.notifyModerator,
-                    notifyCommentStatus: du.notifyCommentStatus,
-                });
-
-                // Only superuser can change their own role
-                if (this.domainUser?.userId === this.principal?.id && !this.principal?.isSuperuser) {
-                    this.form.controls.role.disable();
-                }
-            });
+    ) {
+        // Load the domain user initially, and reload on changes
+        effect(() => this.reload());
     }
 
     submit() {
@@ -118,5 +85,40 @@ export class DomainUserEditComponent implements OnInit {
                     this.router.navigate([Paths.manage.domains, this.domainUser!.domainId!, 'users', this.domainUser!.userId]);
                 });
         }
+    }
+
+    /**
+     * Reload the domain user properties.
+     * @private
+     */
+    private reload() {
+        // Subscribe to domain changes
+        this.domainSelectorSvc.domainMeta(true)
+            .pipe(
+                untilDestroyed(this),
+                // Nothing can be loaded unless there's a domain
+                filter(meta => !!meta.domain),
+                // Fetch the domain user
+                switchMap(meta => {
+                    this.principal = meta.principal;
+                    const id = this.id();
+                    return id ? this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing()) : EMPTY;
+                }))
+            .subscribe(r => {
+                this.domainUser = r.domainUser;
+                this.email      = r.user!.email;
+                const du = this.domainUser!;
+                this.form.setValue({
+                    role:                du.role,
+                    notifyReplies:       du.notifyReplies,
+                    notifyModerator:     du.notifyModerator,
+                    notifyCommentStatus: du.notifyCommentStatus,
+                });
+
+                // Only superuser can change their own role
+                if (this.domainUser?.userId === this.principal?.id && !this.principal?.isSuperuser) {
+                    this.form.controls.role.disable();
+                }
+            });
     }
 }

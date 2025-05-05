@@ -1,4 +1,4 @@
-import { Directive, Input } from '@angular/core';
+import { Directive, input } from '@angular/core';
 import { Observable, of } from 'rxjs';
 import { MockProvider } from 'ng-mocks';
 import { DomainMeta, DomainSelectorService } from '../_modules/manage/_services/domain-selector.service';
@@ -53,11 +53,8 @@ export const mockLocalSettingService = () => MockProvider(
     standalone: true,
 })
 export class MockHighlightDirective {
-    @Input()
-    highlight?: string;
-
-    @Input()
-    language?: string;
+    readonly highlight = input<string>();
+    readonly language = input<string>();
 }
 
 export const mockHighlightLoaderStub = () =>

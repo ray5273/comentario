@@ -1,3 +1,6 @@
+@let meta = domainMeta();
+@let dp = page();
+
 <!-- Header -->
 <header class="mb-3">
     <h1 i18n="heading">Domain page properties</h1>
@@ -5,10 +8,10 @@
 
 <!-- Properties -->
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    @if (domainMeta?.domain && page) {
+    @if (meta && dp) {
         <div class="row">
             <!-- Buttons: only for moderator+ -->
-            @if (domainMeta!.canModerateDomain) {
+            @if (meta.canModerateDomain) {
                 <div class="col-md-4 order-md-last pb-3">
                     <!-- Update title button -->
                     <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-outline-secondary w-100 mb-2">
@@ -30,17 +33,17 @@
                     <div>
                         <dt i18n>Domain</dt>
                         <dd>
-                            <a [routerLink]="[Paths.manage.domains, domainMeta!.domain!.id]"
-                               class="internal-link">{{ domainMeta!.domain!.host }}</a>
+                            <a [routerLink]="[Paths.manage.domains, meta.domain!.id]"
+                               class="internal-link">{{ meta.domain!.host }}</a>
                         </dd>
                     </div>
                     <!-- Path -->
                     <div>
                         <dt i18n>Path</dt>
-                        <dd><a [appExternalLink]="domainMeta!.domain!.rootUrl! + page.path">{{ page.path }}</a></dd>
+                        <dd><a [appExternalLink]="meta.domain!.rootUrl! + dp.path">{{ dp.path }}</a></dd>
                     </div>
                     <!-- Title -->
-                    @if (page.title; as v) {
+                    @if (dp.title; as v) {
                         <div>
                             <dt i18n>Title</dt>
                             <dd>{{ v }}</dd>
@@ -49,27 +52,27 @@
                     <!-- Read-only -->
                     <div>
                         <dt i18n>Read-only</dt>
-                        <dd><app-checkmark [value]="page.isReadonly"/></dd>
+                        <dd><app-checkmark [value]="dp.isReadonly"/></dd>
                     </div>
                     <!-- Created -->
-                    @if (page.createdTime | datetime; as v) {
+                    @if (dp.createdTime | datetime; as v) {
                         <div>
                             <dt i18n>Created</dt>
                             <dd>{{ v }}</dd>
                         </div>
                     }
                     <!-- Number of comments -->
-                    @if (page.countComments! >= 0) {
+                    @if (dp.countComments! >= 0) {
                         <div>
                             <dt i18n>Number of comments</dt>
-                            <dd>{{ page.countComments | number }}</dd>
+                            <dd>{{ dp.countComments | number }}</dd>
                         </div>
                     }
                     <!-- Number of views -->
-                    @if (page.countViews! >= 0) {
+                    @if (dp.countViews! >= 0) {
                         <div>
                             <dt i18n>Number of views</dt>
-                            <dd>{{ page.countViews | number }}</dd>
+                            <dd>{{ dp.countViews | number }}</dd>
                         </div>
                     }
                     <!-- Comment RSS feed -->
@@ -78,7 +81,7 @@
                             <ng-container i18n>Comment RSS feed</ng-container>
                             <app-info-icon docLink="kb/rss/" position="right"/>
                         </dt>
-                        <dd><app-domain-rss-link [pageId]="page.id"/></dd>
+                        <dd><app-domain-rss-link [pageId]="dp.id"/></dd>
                     </div>
                 </dl>
             </div>
@@ -89,10 +92,10 @@
             <!-- Heading -->
             <h2 i18n>Comments</h2>
             <!-- Comment list -->
-            <app-comment-list [pageId]="page.id"/>
+            <app-comment-list [pageId]="dp.id"/>
         </section>
     }
 
     <!-- Placeholder when no data -->
-    @if (!domainMeta?.domain || !page) { <app-no-data/> }
+    @if (!meta?.domain || !dp) { <app-no-data/> }
 </div>

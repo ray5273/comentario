@@ -1,37 +1,38 @@
+@let u = user();
+
 <!-- User avatar, only when there's one -->
-@if (user?.hasAvatar) {
+@if (u?.hasAvatar) {
     <div>
-        <app-user-avatar [user]="user" size="L"/>
+        <app-user-avatar [user]="u" size="L"/>
     </div>
 }
 
 <!-- User details -->
-@if (user) {
+@if (u) {
     <dl class="detail-table" id="userDetailTable">
         <!-- ID -->
         <div>
             <dt i18n>ID</dt>
             <dd>
-                <!-- Plain-text ID -->
-                @if (!userLink) {
-                    <span appCopyText class="text-copyable">{{ user.id }}</span>
-                }
                 <!-- User-linked ID -->
-                @if (userLink) {
-                    <a [routerLink]="[Paths.manage.users, user.id]" class="internal-link">{{ user.id }}</a>
+                @if (userLink()) {
+                    <a [routerLink]="[Paths.manage.users, u.id]" class="internal-link">{{ u.id }}</a>
+                } @else {
+                <!-- Plain-text ID -->
+                    <span appCopyText class="text-copyable">{{ u.id }}</span>
                 }
                 <!-- Current user badge -->
-                <app-current-user-badge [userId]="user.id" badgeClasses="ms-2"/>
+                <app-current-user-badge [userId]="u.id" badgeClasses="ms-2"/>
             </dd>
         </div>
         <!-- Federated user -->
-        @if (user.federatedSso || user.federatedIdP) {
+        @if (u.federatedSso || u.federatedIdP) {
             <div>
                 <dt i18n>Federated user</dt>
                 <dd>
-                    <app-idp-icon [sso]="user.federatedSso" [idpId]="user.federatedIdP" class="me-1"/>
-                    @if (user.federatedIdP) {
-                        <ng-container>{{ user.federatedIdP }}/{{ user.federatedId || '*' }}</ng-container>
+                    <app-idp-icon [sso]="u.federatedSso" [idpId]="u.federatedIdP" class="me-1"/>
+                    @if (u.federatedIdP) {
+                        <ng-container>{{ u.federatedIdP }}/{{ u.federatedId || '*' }}</ng-container>
                     }
                 </dd>
             </div>
@@ -39,84 +40,84 @@
         <!-- Name -->
         <div>
             <dt i18n>Name</dt>
-            <dd>{{ user.name }}</dd>
+            <dd>{{ u.name }}</dd>
         </div>
         <!-- Email -->
-        @if (user.email; as v) {
+        @if (u.email; as v) {
             <div>
                 <dt i18n>Email</dt>
                 <dd><span appCopyText class="text-copyable">{{ v }}</span></dd>
             </div>
         }
         <!-- Language -->
-        @if (user.langId; as v) {
+        @if (u.langId; as v) {
             <div>
                 <dt i18n>Language</dt>
                 <dd>{{ v }}</dd>
             </div>
         }
         <!-- Banned -->
-        @if (user.banned) {
+        @if (u.banned) {
             <div>
                 <dt i18n>Banned</dt>
                 <dd>
                     <app-checkmark/>
-                    @if (user.bannedTime; as v) {
+                    @if (u.bannedTime; as v) {
                         <span class="text-dimmed"> ({{ v | datetime }})</span>
                     }
                 </dd>
             </div>
         }
         <!-- Remarks -->
-        @if (user.remarks; as v) {
+        @if (u.remarks; as v) {
             <div>
                 <dt i18n>Remarks</dt>
                 <dd>{{ v }}</dd>
             </div>
         }
         <!-- Website URL -->
-        @if (user.websiteUrl; as v) {
+        @if (u.websiteUrl; as v) {
             <div>
                 <dt i18n>Website URL</dt>
                 <dd><a [appExternalLink]="v">{{ v }}</a></dd>
             </div>
         }
         <!-- System account -->
-        @if (user.systemAccount) {
+        @if (u.systemAccount) {
             <div>
                 <dt i18n>System account</dt>
                 <dd><app-checkmark/></dd>
             </div>
         }
         <!-- Confirmed -->
-        @if (user.confirmed) {
+        @if (u.confirmed) {
             <div>
                 <dt i18n>Confirmed</dt>
                 <dd>
                     <app-checkmark/>
-                    @if (user.confirmedTime; as v) {
+                    @if (u.confirmedTime; as v) {
                         <span class="text-dimmed"> ({{ v | datetime }})</span>
                     }
                 </dd>
             </div>
         }
         <!-- Superuser -->
-        @if (user.isSuperuser) {
+        @if (u.isSuperuser) {
             <div>
                 <dt i18n>Superuser</dt>
                 <dd><app-checkmark/></dd>
             </div>
         }
         <!-- Created -->
-        @if (user.createdTime | datetime; as v) {
+        @if (u.createdTime | datetime; as v) {
             <div>
                 <dt i18n>Created</dt>
                 <dd>{{ v }}</dd>
             </div>
         }
-        @if (!user.systemAccount) {
+        @if (!u.systemAccount) {
             <!-- Last password change -->
-            @if (user.passwordChangeTime | datetime; as v) {
+            @if (u.passwordChangeTime | datetime; as v) {
                 <div>
                     <dt i18n>Last password change</dt>
                     <dd>{{ v }}</dd>
@@ -126,7 +127,7 @@
             <div>
                 <dt i18n>Last login</dt>
                 <dd>
-                    @if (user.lastLoginTime | datetime; as v) {
+                    @if (u.lastLoginTime | datetime; as v) {
                         <ng-container>{{ v }}</ng-container>
                     } @else {
                         <em i18n>(never)</em>
@@ -134,29 +135,29 @@
                 </dd>
             </div>
             <!-- Last failed login -->
-            @if (user.lastFailedLoginTime | datetime; as v) {
+            @if (u.lastFailedLoginTime | datetime; as v) {
                 <div>
                     <dt i18n>Last failed login</dt>
                     <dd>{{ v }}</dd>
                 </div>
             }
             <!-- Failed login attempts -->
-            @if (user.failedLoginAttempts; as v) {
+            @if (u.failedLoginAttempts; as v) {
                 <div>
                     <dt i18n>Failed login attempts</dt>
                     <dd>{{ v | number }}</dd>
                 </div>
             }
             <!-- Locked -->
-            @if (user.isLocked) {
+            @if (u.isLocked) {
                 <div>
                     <dt i18n>Locked</dt>
                     <dd>
                         <app-checkmark/>
-                        @if (user.lockedTime; as v) {
+                        @if (u.lockedTime; as v) {
                             <span class="text-dimmed"> ({{ v | datetime }})</span>
                         }
-                        @if (canUnlock) {
+                        @if (canUnlock()) {
                             <button [appSpinner]="unlocking.active" (click)="unlock()" type="button"
                                     class="ms-2 btn btn-outline-secondary btn-sm" i18n>Unlock</button>
                         }
@@ -164,28 +165,28 @@
                 </div>
             }
             <!-- Signup IP -->
-            @if (user.signupIP; as v) {
+            @if (u.signupIP; as v) {
                 <div>
                     <dt i18n>Signup IP</dt>
                     <dd><span appCopyText class="text-copyable">{{ v }}</span></dd>
                 </div>
             }
             <!-- Signup country -->
-            @if (user.signupCountry; as v) {
+            @if (u.signupCountry; as v) {
                 <div>
                     <dt i18n>Signup country</dt>
                     <dd>{{ v }} — {{ v | countryName }}</dd>
                 </div>
             }
             <!-- Signup host -->
-            @if (user.signupHost; as v) {
+            @if (u.signupHost; as v) {
                 <div>
                     <dt i18n>Signup host</dt>
                     <dd>{{ v }}</dd>
                 </div>
             }
             <!-- Number of owned domains -->
-            @if (user.countDomainsOwned; as v) {
+            @if (u.countDomainsOwned; as v) {
                 <div>
                     <dt i18n>Number of owned domains</dt>
                     <dd>{{ v | number }}</dd>

@@ -1,4 +1,4 @@
-import { Component, Input } from '@angular/core';
+import { Component, input } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { FormGroup, ReactiveFormsModule } from '@angular/forms';
 import { DomainModNotifyPolicy } from '../../../../../../generated-api';
@@ -22,8 +22,7 @@ import { ValidatableDirective } from '../../../../tools/_directives/validatable.
 export class DomainEditModerationComponent {
 
     /** Form group to bind controls to. */
-    @Input({required: true})
-    formGroup?: FormGroup;
+    readonly formGroup = input.required<FormGroup>();
 
     /** All available moderator notification policies. */
     readonly modNotifyPolicies = Object.values(DomainModNotifyPolicy);

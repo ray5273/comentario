@@ -1,15 +1,16 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
+import { toSignal } from '@angular/core/rxjs-interop';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { UntilDestroy } from '@ngneat/until-destroy';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { faCopy } from '@fortawesome/free-solid-svg-icons';
+import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
 import { CopyTextDirective } from '../../../tools/_directives/copy-text.directive';
-import { DomainMeta, DomainSelectorService } from '../../_services/domain-selector.service';
+import { DomainSelectorService } from '../../_services/domain-selector.service';
 import { ConfigService } from '../../../../_services/config.service';
 import { DomainConfigItemKey } from '../../../../_models/config';
 import { Utils } from '../../../../_utils/utils';
 import { environment } from '../../../../../environments/environment';
-import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { NgbTooltip } from '@ng-bootstrap/ng-bootstrap';
-import { faCopy } from '@fortawesome/free-solid-svg-icons';
 import { ExternalLinkDirective } from '../../../tools/_directives/external-link.directive';
 
 type UserFilterKind = 'all' | 'author' | 'replies';
@@ -29,15 +30,19 @@ type UserFilterKind = 'all' | 'author' | 'replies';
 export class DomainRssLinkComponent {
 
     /** Optional domain page ID to include in the filter. */
-    @Input()
-    pageId?: string;
+    readonly pageId = input<string>();
 
     /** Domain/user metadata. */
-    domainMeta?: DomainMeta;
+    readonly domainMeta = toSignal(this.domainSelectorSvc.domainMeta(false));
 
     readonly form = this.fb.nonNullable.group({
         userFilter: 'all' as UserFilterKind,
     });
+
+    /** User filter as a signal. */
+    readonly userFilter = toSignal(
+        this.form.controls.userFilter.valueChanges,
+        {initialValue: this.form.controls.userFilter.value});
 
     // Icons
     readonly faCopy = faCopy;
@@ -46,51 +51,44 @@ export class DomainRssLinkComponent {
         private readonly fb: FormBuilder,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly cfgSvc: ConfigService,
-    ) {
-        this.domainSelectorSvc.domainMeta(false)
-            .pipe(untilDestroyed(this))
-            .subscribe(dm => this.domainMeta = dm);
-    }
+    ) {}
 
-    /**
-     * Whether RSS is enabled for the current domain.
-     */
-    get enabled(): boolean {
-        return !!this.domainMeta?.config?.get(DomainConfigItemKey.enableRss).val;
-    }
+    /** RSS feed URL. */
+    readonly rssUrl = computed<string>(() => {
+        const meta = this.domainMeta();
 
-    /**
-     * Construct and return a RSS feed URL.
-     */
-    get rssUrl(): string {
         // Return an empty string if no selected domain or RSS isn't enabled
-        if (!this.enabled || !this.domainMeta?.domain?.id) {
+        if (!meta || !meta.config?.get(DomainConfigItemKey.enableRss).val || !meta.domain?.id) {
             return '';
         }
 
         // Construct feed parameters
-        const up = new URLSearchParams({domain: this.domainMeta.domain.id});
+        const up = new URLSearchParams({domain: meta.domain.id});
 
         // Page ID
-        if (this.pageId) {
-            up.set('page', this.pageId);
+        const pageId = this.pageId();
+        if (pageId) {
+            up.set('page', pageId);
         }
 
         // User ID
-        const uk = this.form.controls.userFilter.value;
-        const userId = this.domainMeta.principal?.id;
-        if (uk === 'author' && userId) {
-            up.set('author', userId);
-        }
+        const userId = meta.principal?.id;
+        if (userId) {
+            switch (this.userFilter()) {
+                case 'author':
+                    up.set('author', userId);
+                    break;
 
-        // Reply-to user ID
-        if (uk === 'replies' && userId) {
-            up.set('replyToUser', userId);
+                // Reply-to user ID
+                case 'replies':
+                    up.set('replyToUser', userId);
+                    break;
+            }
         }
 
         // Construct the complete feed URL
         return Utils.joinUrl(this.cfgSvc.staticConfig.baseUrl, environment.apiBasePath, 'rss/comments') +
             '?' +
             up.toString();
-    }
+    });
 }

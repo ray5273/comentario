@@ -64,7 +64,9 @@ export class DashboardComponent implements OnInit {
                 this.loading.processing(),
                 concatMap(t => {
                     this.totals = t;
-                    this.hasData = t.countDomainsOwned + t.countDomainsModerated + t.countDomainsCommenter + t.countDomainsReadonly > 0;
+                    this.hasData =
+                        t.countUsersTotal >= 0 || // Superuser; regular users have this set to -1 (unknown)
+                        t.countDomainsOwned + t.countDomainsModerated + t.countDomainsCommenter + t.countDomainsReadonly > 0;
 
                     // Fetch domain page stats
                     return this.api.dashboardDailyStats('domainPages');

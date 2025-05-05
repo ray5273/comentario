@@ -1,13 +1,14 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, input } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { tap } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { BehaviorSubject, combineLatestWith, EMPTY, switchMap, tap } from 'rxjs';
+import { filter, map } from 'rxjs/operators';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEdit, faRotate } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, DomainPage } from '../../../../../../generated-api';
-import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
+import { ApiGeneralService } from '../../../../../../generated-api';
+import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { Paths } from '../../../../../_utils/consts';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ToastService } from '../../../../../_services/toast.service';
@@ -38,24 +39,30 @@ import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.compone
         InfoIconComponent,
     ],
 })
-export class DomainPagePropertiesComponent implements OnInit {
+export class DomainPagePropertiesComponent {
 
-    /** The current domain page. */
-    page?: DomainPage;
+    /** ID of the domain page to display properties for. */
+    readonly id = input<string>();
 
-    /** Domain/user metadata. */
-    domainMeta?: DomainMeta;
+    /** The current domain/user metadata. */
+    readonly domainMeta = toSignal(this.domainSelectorSvc.domainMeta(true));
+
+    private readonly reload$ = new BehaviorSubject<void>(undefined);
 
     readonly Paths = Paths;
     readonly loading       = new ProcessingStatus();
     readonly updatingTitle = new ProcessingStatus();
 
+    /** The current domain page. */
+    readonly page = toSignal(
+        toObservable(this.id)
+            .pipe(
+                combineLatestWith(this.reload$),
+                switchMap(([id]) => id ? this.api.domainPageGet(id).pipe(this.loading.processing(), map(r => r.page)) : EMPTY)));
+
     // Icons
     readonly faEdit   = faEdit;
     readonly faRotate = faRotate;
-
-    /** Current page ID. */
-    private _id?: string;
 
     constructor(
         private readonly api: ApiGeneralService,
@@ -63,45 +70,17 @@ export class DomainPagePropertiesComponent implements OnInit {
         private readonly toastSvc: ToastService,
     ) {}
 
-    @Input()
-    set id(id: string) {
-        this._id = id;
-        this.reload();
-    }
-
-    ngOnInit(): void {
-        // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta(true)
-            .pipe(untilDestroyed(this))
-            .subscribe(meta => this.domainMeta = meta);
-    }
-
     updateTitle() {
-        this.api.domainPageUpdateTitle(this.page!.id!)
-            .pipe(
-                this.updatingTitle.processing(),
-                // Add a toast
-                tap(d => this.toastSvc.success(d.changed ? 'data-updated' : 'no-change')),
-                // Reload on changes
-                filter(d => d.changed!))
-            .subscribe(() => this.reload());
-    }
-
-    private reload() {
-        // Make sure there's a page ID
-        if (!this._id) {
-            this.page = undefined;
-            return;
+        const id = this.id();
+        if (id) {
+            this.api.domainPageUpdateTitle(id)
+                .pipe(
+                    this.updatingTitle.processing(),
+                    // Add a toast
+                    tap(d => this.toastSvc.success(d.changed ? 'data-updated' : 'no-change')),
+                    // Reload on changes
+                    filter(d => d.changed!))
+                .subscribe(() => this.reload$.next());
         }
-
-        // Fetch the page
-        this.api.domainPageGet(this._id)
-            .pipe(this.loading.processing())
-            .subscribe(r => {
-                this.page = r.page;
-
-                // Make sure the correct domain is selected
-                this.domainSelectorSvc.setDomainId(this.page?.domainId);
-            });
     }
 }

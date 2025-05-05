@@ -1,7 +1,6 @@
-import { Component, Input } from '@angular/core';
+import { Component, computed, effect, input } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
-import { BehaviorSubject, combineLatestWith, mergeWith, of, Subject, switchMap, tap, throwError } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faBan, faCalendarXmark, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
@@ -45,6 +44,9 @@ import { PrincipalService } from '../../../../_services/principal.service';
 })
 export class UserPropertiesComponent {
 
+    /** ID of the user to display properties for. */
+    readonly id = input<string>();
+
     /** The selected user whose properties are displayed. */
     user?: User;
 
@@ -64,10 +66,7 @@ export class UserPropertiesComponent {
     canLoadMoreSessions = true;
 
     /** Whether the user is the currently authenticated principal. */
-    isSelf = false;
-
-    /** Observable triggering a sessions load, while indicating whether a reset is needed. */
-    readonly loadSessions$ = new Subject<boolean>();
+    readonly isSelf = computed(() => this.id() && this.id() === this.principalSvc.principal()?.id);
 
     readonly Paths = Paths;
     readonly loading          = new ProcessingStatus();
@@ -92,9 +91,6 @@ export class UserPropertiesComponent {
     readonly faEdit          = faEdit;
     readonly faTrashAlt      = faTrashAlt;
 
-    /** Observable triggering a full refresh. */
-    private readonly refresh$ = new BehaviorSubject<void>(undefined);
-
     /** Last loaded session list page number. */
     private loadedSessionsPageNum = 0;
 
@@ -111,50 +107,10 @@ export class UserPropertiesComponent {
             .forEach(f => f.controls.deleteComments.valueChanges
                 .pipe(untilDestroyed(this))
                 .subscribe(b => Utils.enableControls(b, f.controls.purgeComments)));
-    }
 
-    @Input()
-    set id(id: string) {
-        // Load the user's details, triggering a reload on each refresh signal
-        this.refresh$
-            .pipe(
-                switchMap(() => this.api.userGet(id).pipe(this.loading.processing())),
-                // Monitor principal changes, too
-                combineLatestWith(this.principalSvc.principal$),
-                // Save user properties
-                switchMap(([r, principal]) => {
-                    // Terminate processing if not logged in anymore (for example, if the user expired their own sessions)
-                    if (!principal) {
-                        return throwError(() => 'Not authenticated');
-                    }
-
-                    this.user        = r.user;
-                    this.userAttrs   = Utils.sortByKey(r.attributes) as Record<string, string> | undefined;
-                    this.domainUsers = r.domainUsers;
-                    this.isSelf      = principal?.id === this.user?.id;
-
-                    // Make a domain map
-                    this.domains.clear();
-                    r.domains?.forEach(d => this.domains.set(d.id!, d));
-
-                    // Map this action to true (= reset)
-                    return of(true);
-                }),
-                // Subscribe to sessions load requests
-                mergeWith(this.loadSessions$),
-                // Reset the content/page if needed
-                tap(reset => {
-                    if (reset) {
-                        this.userSessions = undefined;
-                        this.loadedSessionsPageNum = 0;
-                    }
-                }),
-                // Fetch user sessions
-                switchMap(() => this.api.userSessionList(id, ++this.loadedSessionsPageNum).pipe(this.loadingSessions.processing())))
-            .subscribe(uss => {
-                this.userSessions = [...this.userSessions || [], ...uss || []];
-                this.canLoadMoreSessions = this.configSvc.canLoadMore(uss);
-            });
+        // Load the user's properties and sessions
+        effect(() => this.reload());
+        effect(() => this.loadSessions(true));
     }
 
     toggleBan() {
@@ -182,7 +138,7 @@ export class UserPropertiesComponent {
             .subscribe(r => {
                 // Add a success toast
                 this.toastSvc.success({
-                    messageId:                'user-is-deleted',
+                    messageId:         'user-is-deleted',
                     details:           vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
                     keepOnRouteChange: true,
                 });
@@ -192,16 +148,57 @@ export class UserPropertiesComponent {
     }
 
     /**
-     * Trigger a reload of the current user.
+     * Reload the current user.
      */
     reload() {
-        this.refresh$.next();
+        // Make sure there's a user ID and an authenticated principal, too
+        const uid = this.id();
+        if (!uid || !this.principalSvc.principal()) {
+            return;
+        }
+
+        // Load the user's properties
+        this.api.userGet(uid)
+            .pipe(this.loading.processing())
+            .subscribe(r => {
+                // Save user properties
+                this.user        = r.user;
+                this.userAttrs   = Utils.sortByKey(r.attributes) as Record<string, string> | undefined;
+                this.domainUsers = r.domainUsers;
+
+                // Make a domain map
+                this.domains.clear();
+                r.domains?.forEach(d => this.domains.set(d.id!, d));
+            });
+    }
+
+    /**
+     * Load or reload sessions of the current user.
+     * @param reset Whether to reset the list prior to load.
+     */
+    loadSessions(reset: boolean) {
+        const uid = this.id();
+        if (uid) {
+            // Reset the content/page if needed
+            if (reset) {
+                this.userSessions = undefined;
+                this.loadedSessionsPageNum = 0;
+            }
+
+            // Load sessions
+            this.api.userSessionList(uid, ++this.loadedSessionsPageNum)
+                .pipe(this.loadingSessions.processing())
+                .subscribe(sessions => {
+                    this.userSessions = [...this.userSessions || [], ...sessions || []];
+                    this.canLoadMoreSessions = this.configSvc.canLoadMore(sessions);
+                });
+        }
     }
 
     expireSessions() {
         this.api.userSessionsExpire(this.user!.id!)
             .pipe(this.expiringSessions.processing())
-            .subscribe(() => this.loadSessions$.next(true));
+            .subscribe(() => this.loadSessions(true));
     }
 
     /**

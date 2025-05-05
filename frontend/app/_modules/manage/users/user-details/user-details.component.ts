@@ -1,4 +1,4 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { DecimalPipe } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ApiGeneralService, User } from '../../../../../generated-api';
@@ -38,19 +38,16 @@ import { ExternalLinkDirective } from '../../../tools/_directives/external-link.
 export class UserDetailsComponent {
 
     /** The user in question. */
-    @Input({required: true})
-    user?: User;
+    readonly user = input<User>();
 
     /** Whether to turn the ID into a link. */
-    @Input()
-    userLink?: boolean;
+    readonly userLink = input<boolean>();
 
     /** Whether the current user can unlock users (= is a superuser). */
-    @Input()
-    canUnlock?: boolean;
+    readonly canUnlock = input<boolean>();
 
-    @Output()
-    readonly unlocked = new EventEmitter<void>();
+    /** Event fired after the user has been unlocked. */
+    readonly unlocked = output<void>();
 
     readonly Paths = Paths;
     readonly unlocking = new ProcessingStatus();
@@ -64,8 +61,9 @@ export class UserDetailsComponent {
      * Unlock the current user.
      */
     unlock() {
-        if (this.user) {
-            this.api.userUnlock(this.user.id!)
+        const id = this.user()?.id;
+        if (id) {
+            this.api.userUnlock(id)
                 .pipe(this.unlocking.processing())
                 .subscribe(() => {
                     // Notify subscribers

@@ -1,21 +1,21 @@
 <div class="card shadow-none border-0">
     <div class="card-body">
-        <div class="card-title fw-bold" i18n>{{ title }}</div>
+        <div class="card-title fw-bold" i18n>{{ title() }}</div>
         <div class="list-group">
             <div>
-                @for (p of items; track p.id) {
+                @for (p of items(); track p.id) {
                     <a [routerLink]="[Paths.manage.domains, p.domainId, 'pages', p.id]" class="list-group-item list-group-item-action">
                         <div class="d-flex w-100 justify-content-between overflow-hidden">
                             <div>
                                 <!-- Domain host (md+ and only when no specific domain is given) -->
-                                @if (!domainId) {
+                                @if (!domainId()) {
                                     <span class="text-black-50 d-none d-md-inline domain-page-domain">{{ p.domainHost }}</span>
                                 }
                                 <!-- Page path -->
                                 <span class="fw-bold domain-page-path">{{ p.path }}</span>
                             </div>
                             <!-- Count -->
-                            <div class="small text-dimmed domain-page-metric">{{ p.count | number }}&nbsp;{{ metricName }}</div>
+                            <div class="small text-dimmed domain-page-metric">{{ p.count | number }}&nbsp;{{ metricName() }}</div>
                         </div>
                         @if (p.title) {
                             <div class="domain-page-title">{{ p.title }}</div>

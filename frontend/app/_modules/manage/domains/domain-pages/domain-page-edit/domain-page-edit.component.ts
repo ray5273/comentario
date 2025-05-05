@@ -1,8 +1,8 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { filter } from 'rxjs/operators';
-import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
+import { EMPTY, switchMap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { ApiGeneralService, DomainPage } from '../../../../../../generated-api';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
@@ -23,7 +23,10 @@ import { ValidatableDirective } from '../../../../tools/_directives/validatable.
         ValidatableDirective,
     ],
 })
-export class DomainPageEditComponent implements OnInit {
+export class DomainPageEditComponent {
+
+    /** ID of the domain page to edit. */
+    readonly id = input<string>();
 
     /** Domain page being edited. */
     page?: DomainPage;
@@ -38,48 +41,15 @@ export class DomainPageEditComponent implements OnInit {
         path:     [{value: '', disabled: true}, [Validators.required, Validators.pattern(/^\//), Validators.maxLength(2075)]],
     });
 
-    /** Page ID, set via input binding. */
-    private readonly id$ = new ReplaySubject<string>(1);
-
     constructor(
         private readonly fb: FormBuilder,
         private readonly router: Router,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly toastSvc: ToastService,
-    ) {}
-
-    @Input()
-    set id(id: string) {
-        this.id$.next(id);
-    }
-
-    ngOnInit(): void {
-        // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta(true)
-            .pipe(
-                untilDestroyed(this),
-                // Nothing can be loaded unless there's a domain
-                filter(meta => !!meta.domain),
-                // Blend with page ID
-                combineLatestWith(this.id$),
-                // Fetch the domain page
-                switchMap(([meta, id]) => {
-                    this.domainMeta = meta;
-                    return this.api.domainPageGet(id).pipe(this.loading.processing());
-                }))
-            .subscribe(r => {
-                this.page = r.page;
-                this.form.setValue({
-                    readOnly: !!r.page!.isReadonly,
-                    path:     r.page!.path ?? '',
-                });
-
-                // Only domain managers are allowed to edit the path
-                if (this.domainMeta?.canManageDomain) {
-                    this.form.controls.path.enable();
-                }
-            });
+    ) {
+        // Load the domain page initially, and reload on changes
+        effect(() => this.reload());
     }
 
     submit() {
@@ -101,5 +71,36 @@ export class DomainPageEditComponent implements OnInit {
                     this.router.navigate([Paths.manage.domains, this.page!.domainId!, 'pages', this.page!.id]);
                 });
         }
+    }
+
+    /**
+     * Reload the domain page properties.
+     * @private
+     */
+    private reload() {
+        // Subscribe to domain changes
+        this.domainSelectorSvc.domainMeta(true)
+            .pipe(
+                untilDestroyed(this),
+                // Nothing can be loaded unless there's a domain
+                filter(meta => !!meta.domain),
+                // Fetch the domain page
+                switchMap(meta => {
+                    this.domainMeta = meta;
+                    const id = this.id();
+                    return id ? this.api.domainPageGet(id).pipe(this.loading.processing()) : EMPTY;
+                }))
+            .subscribe(r => {
+                this.page = r.page;
+                this.form.setValue({
+                    readOnly: !!r.page!.isReadonly,
+                    path:     r.page!.path ?? '',
+                });
+
+                // Only domain managers are allowed to edit the path
+                if (this.domainMeta?.canManageDomain) {
+                    this.form.controls.path.enable();
+                }
+            });
     }
 }

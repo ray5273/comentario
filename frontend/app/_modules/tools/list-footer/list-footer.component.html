@@ -32,7 +32,7 @@
     <!-- Load more items button, only when there's something loaded already -->
     @if (count() && canLoadMore()) {
         <div class="pt-2">
-            <button [appSpinner]="loading()" (click)="loadMore.next()" type="button" class="btn btn-outline-secondary">
+            <button [appSpinner]="loading()" (click)="loadMore.emit()" type="button" class="btn btn-outline-secondary">
                 <ng-container i18n>Load more</ng-container>
             </button>
         </div>

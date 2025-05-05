@@ -1,4 +1,4 @@
-import { Component, Input, OnChanges, OnInit, SimpleChanges } from '@angular/core';
+import { Component, effect, input } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
 import { debounceTime, distinctUntilChanged, merge, mergeWith, Subject, switchMap, tap } from 'rxjs';
@@ -49,19 +49,13 @@ import { SortableViewSettings } from '../../../_models/view';
         LoaderDirective,
     ],
 })
-export class CommentListComponent implements OnInit, OnChanges {
+export class CommentListComponent {
 
-    /**
-     * Optional page ID to load comments for. If not provided, all comments for the current domain will be loaded.
-     */
-    @Input()
-    pageId?: string;
+    /** Optional page ID to load comments for. If not provided, all comments for the current domain will be loaded. */
+    readonly pageId = input<string>();
 
-    /**
-     * Optional user ID to load comments for. If not provided, comments by all users will be loaded.
-     */
-    @Input()
-    userId?: string;
+    /** Optional user ID to load comments for. If not provided, comments by all users will be loaded. */
+    readonly userId = input<string>();
 
     /** Domain/user metadata. */
     domainMeta?: DomainMeta;
@@ -75,8 +69,8 @@ export class CommentListComponent implements OnInit, OnChanges {
     /** Loaded commenters. */
     readonly commenters = new Map<string, Commenter>();
 
-    /** Observable triggering a data load, while indicating whether a result reset is needed. */
-    readonly load = new Subject<boolean>();
+    /** Observable triggering a next page load. */
+    readonly loadMore = new Subject<void>();
 
     readonly Paths = Paths;
     readonly sort = new Sort(['created', 'score'], 'created', true);
@@ -109,81 +103,9 @@ export class CommentListComponent implements OnInit, OnChanges {
     ) {
         // Restore the view settings
         localSettingSvc.load<SortableViewSettings>('commentList').subscribe(s => s?.sort && (this.sort.asString = s.sort));
-    }
 
-    ngOnInit(): void {
-        merge(
-                // Subscribe to domain changes. This will also trigger an initial load
-                this.domainSelectorSvc.domainMeta(true)
-                    .pipe(
-                        untilDestroyed(this),
-                        // Store the domain and the user
-                        tap(meta => {
-                            this.domainMeta = meta;
-                            // If the user is not a moderator, disable the status filter
-                            Utils.enableControls(
-                                this.domainMeta?.canModerateDomain,
-                                this.filterForm.controls.approved,
-                                this.filterForm.controls.pending,
-                                this.filterForm.controls.rejected,
-                                this.filterForm.controls.deleted);
-                        })),
-                // Subscribe to sort changes
-                this.sort.changes,
-                // Subscribe to filter changes
-                this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
-            .pipe(
-                // Map any of the above to true (= reset)
-                map(() => true),
-                // Subscribe to load requests
-                mergeWith(this.load),
-                // Reset the content/page if needed
-                tap(reset => {
-                    if (reset) {
-                        this.comments = undefined;
-                        this.commenters.clear();
-                        this.loadedPageNum = 0;
-                    }
-                }),
-                // Nothing can be loaded unless a domain is selected
-                filter(() => !!this.domainMeta?.domain),
-                // Load the comment list
-                switchMap(() => {
-                    const f = this.filterForm.value;
-                    const isMod = !!this.domainMeta?.canModerateDomain;
-                    return this.api.commentList(
-                            this.domainMeta!.domain!.id!,
-                            this.pageId,
-                            // If no user explicitly provided and the current user isn't a moderator, limit the comment
-                            // list to their comments only
-                            this.userId || (isMod ? undefined : this.domainMeta?.principal?.id),
-                            !isMod || f.approved,
-                            !isMod || f.pending,
-                            !isMod || f.rejected,
-                            !isMod || f.deleted,
-                            f.filter,
-                            ++this.loadedPageNum,
-                            this.sort.property as any,
-                            this.sort.descending)
-                        .pipe(this.commentsLoading.processing());
-                }))
-            .subscribe(r => {
-                this.comments = [...this.comments || [], ...r.comments || []];
-                this.canLoadMore = this.configSvc.canLoadMore(r.comments);
-
-                // Make a map of user ID => commenter
-                r.commenters?.forEach(cr => this.commenters.set(cr.id!, cr));
-
-                // Persist view settings
-                this.localSettingSvc.storeValue<SortableViewSettings>('commentList', {sort: this.sort.asString});
-            });
-    }
-
-    ngOnChanges(changes: SimpleChanges): void {
-        // Reload on page or user change
-        if (changes.pageId || changes.userId) {
-            this.load.next(true);
-        }
+        // Reload on property changes
+        effect(() => this.reload());
     }
 
     deleteComment(c: Comment) {
@@ -264,5 +186,77 @@ export class CommentListComponent implements OnInit, OnChanges {
             deleted:  false,
             filter:   '',
         });
+    }
+
+    /**
+     * Reload the comment list.
+     * @private
+     */
+    private reload() {
+        merge(
+            // Subscribe to domain changes. This will also trigger an initial load
+            this.domainSelectorSvc.domainMeta(true)
+                .pipe(
+                    untilDestroyed(this),
+                    // Store the domain and the user
+                    tap(meta => {
+                        this.domainMeta = meta;
+                        // If the user is not a moderator, disable the status filter
+                        Utils.enableControls(
+                            this.domainMeta?.canModerateDomain,
+                            this.filterForm.controls.approved,
+                            this.filterForm.controls.pending,
+                            this.filterForm.controls.rejected,
+                            this.filterForm.controls.deleted);
+                    })),
+            // Subscribe to sort changes
+            this.sort.changes,
+            // Subscribe to filter changes
+            this.filterForm.valueChanges.pipe(untilDestroyed(this), debounceTime(500), distinctUntilChanged()))
+            .pipe(
+                // Map any of the above to true (= reset)
+                map(() => true),
+                // Subscribe to load requests
+                mergeWith(this.loadMore),
+                // Reset the content/page if needed
+                tap(reset => {
+                    if (reset) {
+                        this.comments = undefined;
+                        this.commenters.clear();
+                        this.loadedPageNum = 0;
+                    }
+                }),
+                // Nothing can be loaded unless a domain is selected
+                filter(() => !!this.domainMeta?.domain),
+                // Load the comment list
+                switchMap(() => {
+                    const f = this.filterForm.value;
+                    const isMod = !!this.domainMeta?.canModerateDomain;
+                    return this.api.commentList(
+                            this.domainMeta!.domain!.id!,
+                            this.pageId(),
+                            // If no user explicitly provided and the current user isn't a moderator, limit the comment
+                            // list to their comments only
+                            this.userId() || (isMod ? undefined : this.domainMeta?.principal?.id),
+                            !isMod || f.approved,
+                            !isMod || f.pending,
+                            !isMod || f.rejected,
+                            !isMod || f.deleted,
+                            f.filter,
+                            ++this.loadedPageNum,
+                            this.sort.property as any,
+                            this.sort.descending)
+                        .pipe(this.commentsLoading.processing());
+                }))
+            .subscribe(r => {
+                this.comments = [...this.comments || [], ...r.comments || []];
+                this.canLoadMore = this.configSvc.canLoadMore(r.comments);
+
+                // Make a map of user ID => commenter
+                r.commenters?.forEach(cr => this.commenters.set(cr.id!, cr));
+
+                // Persist view settings
+                this.localSettingSvc.storeValue<SortableViewSettings>('commentList', {sort: this.sort.asString});
+            });
     }
 }

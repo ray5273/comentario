@@ -1,5 +1,6 @@
-@if (formGroup) {
-    <ng-container [formGroup]="formGroup">
+@let fg = formGroup();
+@if (fg) {
+    <ng-container [formGroup]="fg">
         <!-- Info -->
         <app-info-block>
             <ng-container i18n>Here you can specify moderation policy settings for the domain.</ng-container>
@@ -26,13 +27,13 @@
                     <label class="form-check-label colon" for="mod-num-comments-on" i18n>Author has less than this number of approved comments</label>
                 </div>
                 <!-- Number of approved comments -->
-                @if (formGroup.controls.numComments.enabled) {
+                @if (fg.controls.numComments.enabled) {
                     <div class="mb-3">
                         <input appValidatable formControlName="numComments" type="number" class="form-control"
                                id="mod-num-comments">
                         <!-- Invalid feedback -->
                         <div class="invalid-feedback">
-                            @if (formGroup.controls.numComments.errors; as err) {
+                            @if (fg.controls.numComments.errors; as err) {
                                 @if (err.required)       { <div i18n>Please enter a value.</div> }
                                 @if (err.min || err.max) { <div i18n>Please enter a value in the range {{ 1 | number }}…{{ 999 | number }}.</div> }
                             }
@@ -45,13 +46,13 @@
                     <label class="form-check-label colon" for="mod-user-age-days-on" i18n>Author is registered less than this number of days ago</label>
                 </div>
                 <!-- Number of days for minimum user age -->
-                @if (formGroup.controls.userAgeDays.enabled) {
+                @if (fg.controls.userAgeDays.enabled) {
                     <div class="mb-3">
                         <input appValidatable formControlName="userAgeDays" type="number" class="form-control"
                                id="mod-user-age-days">
                         <!-- Invalid feedback -->
                         <div class="invalid-feedback">
-                            @if (formGroup.controls.userAgeDays.errors; as err) {
+                            @if (fg.controls.userAgeDays.errors; as err) {
                                 @if (err.required)       { <div i18n>Please enter a value.</div> }
                                 @if (err.min || err.max) { <div i18n>Please enter a value in the range {{ 1 | number }}…{{ 999 | number }}.</div> }
                             }

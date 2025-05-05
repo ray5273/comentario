@@ -1,6 +1,6 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, effect, input, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
-import { BehaviorSubject, combineLatestWith, EMPTY, from, ReplaySubject, switchMap } from 'rxjs';
+import { BehaviorSubject, EMPTY, from, switchMap } from 'rxjs';
 import { catchError, filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { NgbModal, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
@@ -44,6 +44,9 @@ import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
     ],
 })
 export class CommentPropertiesComponent implements OnInit {
+
+    /** ID of the comment to load properties for. */
+    readonly id = input<string>();
 
     /** The comment in question. */
     comment?: Comment;
@@ -94,7 +97,6 @@ export class CommentPropertiesComponent implements OnInit {
     readonly faXmark    = faXmark;
 
     private readonly reload$ = new BehaviorSubject<void>(undefined);
-    private readonly id$     = new ReplaySubject<string>(1);
 
     constructor(
         private readonly route: ActivatedRoute,
@@ -102,85 +104,14 @@ export class CommentPropertiesComponent implements OnInit {
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly commentService: CommentService,
-    ) {}
-
-    @Input()
-    set id(id: string) {
-        this.id$.next(id);
+    ) {
+        // Load the comment properties initially, and reload on changes
+        effect(() => this.reload());
     }
 
     ngOnInit(): void {
         // Check of there's an action passed in
         this.action = this.route.snapshot.queryParamMap.get('action') ?? undefined;
-
-        // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta(true)
-            .pipe(
-                untilDestroyed(this),
-                // Nothing can be loaded unless there's a domain
-                filter(meta => !!meta.domain),
-                // Blend with user ID
-                combineLatestWith(this.id$),
-                // Fetch the domain user and the corresponding user
-                switchMap(([meta, id]) => {
-                    this.domainMeta = meta;
-                    return this.reload$.pipe(switchMap(() => this.api.commentGet(id).pipe(this.loading.processing())));
-                }))
-            .subscribe(r => {
-                this.comment       = r.comment;
-                this.commenter     = r.commenter;
-                this.userModerated = r.moderator;
-                this.userDeleted   = r.deleter;
-                this.userEdited    = r.editor;
-                this.page          = r.page;
-
-                // If the comment is by an unregistered user, imitate the anonymous user
-                if (!this.commenter && this.comment?.userCreated === AnonymousUser.id) {
-                    this.commenter = AnonymousUser;
-                }
-
-                // If moderator/deleter/editor refer to the current user, copy the principal into them
-                if (!this.userModerated && r.comment?.userModerated === this.domainMeta?.principal?.id) {
-                    this.userModerated = this.domainMeta?.principal;
-                }
-                if (!this.userDeleted && r.comment?.userDeleted === this.domainMeta?.principal?.id) {
-                    this.userDeleted = this.domainMeta?.principal;
-                }
-                if (!this.userEdited && r.comment?.userEdited === this.domainMeta?.principal?.id) {
-                    this.userEdited = this.domainMeta?.principal;
-                }
-
-                // Prepare link routes for users (Anonymous has no domain user, so no link)
-                const isSuper = this.domainMeta?.principal?.isSuperuser;
-                if (this.commenter && this.page && this.domainMeta?.canManageDomain) {
-                    // If the user is Anonymous, there's no domain user, but superuser may see the user properties
-                    if (this.commenter.id === AnonymousUser.id) {
-                        if (isSuper) {
-                            this.commenterRoute = [Paths.manage.users, this.commenter.id!];
-                        }
-
-                    // Non-anonymous existing user
-                    } else {
-                        this.commenterRoute = [Paths.manage.domains, this.page.domainId!, 'users', this.commenter.id!];
-                    }
-                }
-                if (isSuper) {
-                    if (this.userModerated) {
-                        this.userModeratedRoute = [Paths.manage.users, this.userModerated.id!];
-                    }
-                    if (this.userDeleted) {
-                        this.userDeletedRoute = [Paths.manage.users, this.userDeleted.id!];
-                    }
-                    if (this.userEdited) {
-                        this.userEditedRoute = [Paths.manage.users, this.userEdited.id!];
-                    }
-                }
-
-                // If there's a comment and an action, apply it
-                if (this.comment && this.action) {
-                    this.runAction();
-                }
-            });
     }
 
     delete() {
@@ -227,6 +158,10 @@ export class CommentPropertiesComponent implements OnInit {
             });
     }
 
+    /**
+     * Execute the action stored in the `action` property, then remove its value.
+     * @private
+     */
     private runAction() {
         switch (this.action) {
             case 'approve':
@@ -251,5 +186,81 @@ export class CommentPropertiesComponent implements OnInit {
 
         // Remove the action to prevent re-doing it
         this.action = undefined;
+    }
+
+    /**
+     * Reload the comment properties.
+     * @private
+     */
+    private reload() {
+        // Subscribe to domain changes
+        this.domainSelectorSvc.domainMeta(true)
+            .pipe(
+                untilDestroyed(this),
+                // Nothing can be loaded unless there's a domain
+                filter(meta => !!meta.domain),
+                // Fetch the domain user and the corresponding user
+                switchMap(meta => {
+                    this.domainMeta = meta;
+                    const id = this.id();
+                    return id ?
+                        this.reload$.pipe(switchMap(() => this.api.commentGet(id).pipe(this.loading.processing()))) :
+                        EMPTY;
+                }))
+            .subscribe(r => {
+                this.comment       = r.comment;
+                this.commenter     = r.commenter;
+                this.userModerated = r.moderator;
+                this.userDeleted   = r.deleter;
+                this.userEdited    = r.editor;
+                this.page          = r.page;
+
+                // If the comment is by an unregistered user, imitate the anonymous user
+                if (!this.commenter && this.comment?.userCreated === AnonymousUser.id) {
+                    this.commenter = AnonymousUser;
+                }
+
+                // If moderator/deleter/editor refer to the current user, copy the principal into them
+                if (!this.userModerated && r.comment?.userModerated === this.domainMeta?.principal?.id) {
+                    this.userModerated = this.domainMeta?.principal;
+                }
+                if (!this.userDeleted && r.comment?.userDeleted === this.domainMeta?.principal?.id) {
+                    this.userDeleted = this.domainMeta?.principal;
+                }
+                if (!this.userEdited && r.comment?.userEdited === this.domainMeta?.principal?.id) {
+                    this.userEdited = this.domainMeta?.principal;
+                }
+
+                // Prepare link routes for users (Anonymous has no domain user, so no link)
+                const isSuper = this.domainMeta?.principal?.isSuperuser;
+                if (this.commenter && this.page && this.domainMeta?.canManageDomain) {
+                    // If the user is Anonymous, there's no domain user, but superuser may see the user properties
+                    if (this.commenter.id === AnonymousUser.id) {
+                        if (isSuper) {
+                            this.commenterRoute = [Paths.manage.users, this.commenter.id!];
+                        }
+
+                        // Non-anonymous existing user
+                    } else {
+                        this.commenterRoute = [Paths.manage.domains, this.page.domainId!, 'users', this.commenter.id!];
+                    }
+                }
+                if (isSuper) {
+                    if (this.userModerated) {
+                        this.userModeratedRoute = [Paths.manage.users, this.userModerated.id!];
+                    }
+                    if (this.userDeleted) {
+                        this.userDeletedRoute = [Paths.manage.users, this.userDeleted.id!];
+                    }
+                    if (this.userEdited) {
+                        this.userEditedRoute = [Paths.manage.users, this.userEdited.id!];
+                    }
+                }
+
+                // If there's a comment and an action, apply it
+                if (this.comment && this.action) {
+                    this.runAction();
+                }
+            });
     }
 }

@@ -1,11 +1,11 @@
-import { Component, Input, OnInit } from '@angular/core';
+import { Component, computed, input } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { RouterLink } from '@angular/router';
-import { combineLatestWith, ReplaySubject, switchMap } from 'rxjs';
-import { filter } from 'rxjs/operators';
-import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
+import { combineLatestWith, EMPTY, switchMap } from 'rxjs';
+import { UntilDestroy } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faEdit } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, DomainUser, Principal, User } from '../../../../../../generated-api';
+import { ApiGeneralService, DomainUser, User } from '../../../../../../generated-api';
 import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { Paths } from '../../../../../_utils/consts';
@@ -16,6 +16,14 @@ import { DatetimePipe } from '../../../_pipes/datetime.pipe';
 import { UserDetailsComponent } from '../../../users/user-details/user-details.component';
 import { CommentListComponent } from '../../comments/comment-list/comment-list.component';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
+
+/**
+ * Object combining a domain user and a corresponding user; is implemented by the domainUserGet()'s response.
+ */
+interface UserDomainUser {
+    user?: User;
+    domainUser?: DomainUser;
+}
 
 @UntilDestroy()
 @Component({
@@ -33,16 +41,25 @@ import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
         RouterLink,
     ],
 })
-export class DomainUserPropertiesComponent implements OnInit {
+export class DomainUserPropertiesComponent {
 
-    /** The domain user in question. */
-    domainUser?: DomainUser;
+    /** ID of the domain user to display properties for. */
+    readonly id = input<string>();
 
-    /** The user corresponding to domainUser. */
-    user?: User;
+    /** The current domain/user metadata. */
+    readonly domainMeta = toSignal(this.domainSelectorSvc.domainMeta(true));
 
-    /** Currently authenticated principal. */
-    principal?: Principal;
+    /** The domain user in question, and the corresponding user. */
+    readonly userDomainUser = toSignal<UserDomainUser>(
+        toObservable(this.domainMeta)
+            .pipe(
+                combineLatestWith(toObservable(this.id)),
+                switchMap(([meta, id]) => meta && id ?
+                    this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing()) :
+                    EMPTY)));
+
+    /** Whether the currently authenticated principal is a superuser. */
+    readonly isSuperuser = computed<boolean>(() => !!this.domainMeta()?.principal?.isSuperuser);
 
     readonly Paths = Paths;
     readonly loading = new ProcessingStatus();
@@ -50,35 +67,8 @@ export class DomainUserPropertiesComponent implements OnInit {
     // Icons
     readonly faEdit = faEdit;
 
-    private readonly id$ = new ReplaySubject<string>(1);
-
     constructor(
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
     ) {}
-
-    @Input()
-    set id(id: string) {
-        this.id$.next(id);
-    }
-
-    ngOnInit(): void {
-        // Subscribe to domain changes
-        this.domainSelectorSvc.domainMeta(true)
-            .pipe(
-                untilDestroyed(this),
-                // Nothing can be loaded unless there's a domain
-                filter(meta => !!meta.domain),
-                // Blend with user ID
-                combineLatestWith(this.id$),
-                // Fetch the domain user and the corresponding user
-                switchMap(([meta, id]) => {
-                    this.principal = meta.principal;
-                    return this.api.domainUserGet(id, meta.domain!.id!).pipe(this.loading.processing());
-                }))
-            .subscribe(r => {
-                this.domainUser = r.domainUser;
-                this.user       = r.user;
-            });
-    }
 }

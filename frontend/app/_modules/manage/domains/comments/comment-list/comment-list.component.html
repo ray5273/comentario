@@ -162,5 +162,5 @@
 
     <!-- List footer -->
     <app-list-footer [canLoadMore]="canLoadMore" [loading]="commentsLoading.active" [count]="comments?.length"
-                     (loadMore)="load.next(false)"/>
+                     (loadMore)="loadMore.next()"/>
 </div>

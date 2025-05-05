@@ -2,6 +2,8 @@
 <h1 i18n="heading">Domain user properties</h1>
 
 <div [appSpinner]="loading.active" spinnerSize="lg">
+    @let user = userDomainUser()?.user;
+    @let domainUser = userDomainUser()?.domainUser;
     @if (domainUser && user) {
         <div class="row">
             <!-- Buttons -->
@@ -48,10 +50,7 @@
                 <!-- Related user properties -->
                 <section>
                     <h2 i18n>Related user properties</h2>
-                    <app-user-details [user]="user"
-                                      [userLink]="principal?.isSuperuser"
-                                      [canUnlock]="principal?.isSuperuser"
-                                      id="user-details"/>
+                    <app-user-details [user]="user" [userLink]="isSuperuser()" [canUnlock]="isSuperuser()" id="user-details"/>
                 </section>
             </div>
         </div>
@@ -64,8 +63,9 @@
             <!-- Comment list -->
             <app-comment-list [userId]="user.id"/>
         </section>
-    }
 
     <!-- Placeholder when no data -->
-    @if (!domainUser || !user) { <app-no-data/> }
+    } @else {
+        <app-no-data/>
+    }
 </div>

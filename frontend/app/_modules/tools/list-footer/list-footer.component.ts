@@ -1,4 +1,4 @@
-import { Component, EventEmitter, input, Output } from '@angular/core';
+import { Component, input, output } from '@angular/core';
 import { NoDataComponent } from '../no-data/no-data.component';
 import { SpinnerDirective } from '../_directives/spinner.directive';
 
@@ -30,7 +30,5 @@ export class ListFooterComponent {
     readonly count = input<number>();
 
     /** Event emitted when the user wants to load more items. */
-    @Output()
-    loadMore = new EventEmitter<void>();
-
+    readonly loadMore = output<void>();
 }

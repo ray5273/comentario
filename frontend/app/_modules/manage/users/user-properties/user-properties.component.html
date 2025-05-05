@@ -14,7 +14,7 @@
                 <!-- Ban user button -->
                 <button [class.active]="user.banned"
                         [appSpinner]="banning.active" [appConfirm]="user.banned ? unbanConfirm : banConfirm"
-                        [disable]="isSelf || user.systemAccount!" confirmAction="Proceed" confirmActionType="warning"
+                        [disable]="isSelf() || user.systemAccount!" confirmAction="Proceed" confirmActionType="warning"
                         (confirmed)="toggleBan()"
                         type="button" class="btn btn-outline-warning w-100 mb-2" i18n-confirmAction>
                     <fa-icon [icon]="faBan" class="me-1"/>
@@ -25,7 +25,7 @@
                     }
                 </button>
                 <!-- Delete user button -->
-                <button [appSpinner]="deleting.active" [appConfirm]="deleteConfirm" [disable]="isSelf || user.systemAccount!"
+                <button [appSpinner]="deleting.active" [appConfirm]="deleteConfirm" [disable]="isSelf() || user.systemAccount!"
                         confirmAction="Delete user" (confirmed)="delete()" type="button"
                         class="btn btn-outline-danger w-100 mb-2" i18n-confirmAction>
                     <fa-icon [icon]="faTrashAlt" class="me-1"/>
@@ -171,7 +171,7 @@
 
             <!-- List footer -->
             <app-list-footer [canLoadMore]="canLoadMoreSessions" [loading]="loadingSessions.active"
-                             [count]="userSessions?.length" (loadMore)="loadSessions$.next(false)"/>
+                             [count]="userSessions?.length" (loadMore)="loadSessions(false)"/>
         </section>
     }
     <!-- Placeholder when no data -->

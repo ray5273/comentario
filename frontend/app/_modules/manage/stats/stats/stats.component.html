@@ -86,13 +86,13 @@
         <div class="row row-cols-1 row-cols-lg-2 g-2">
             <!-- Stats by views -->
             <div *appLoader="loadingTopPages.active" class="col">
-                <app-top-pages-stats [items]="topPagesByViews" [domainId]="_domainId"
+                <app-top-pages-stats [items]="topPagesByViews" [domainId]="domainId()"
                                      title="By views" metricName="views" i18n-title i18n-metricName="metric|"
                                      id="stats-top-pages-views"/>
             </div>
             <!-- Stats by comments -->
             <div *appLoader="loadingTopPages.active" class="col">
-                <app-top-pages-stats [items]="topPagesByComments" [domainId]="_domainId"
+                <app-top-pages-stats [items]="topPagesByComments" [domainId]="domainId()"
                                      title="By comments" metricName="comments" i18n-title i18n-metricName="metric|"
                                      id="stats-top-pages-comments"/>
             </div>
