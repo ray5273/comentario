@@ -1,4 +1,4 @@
-import { effect, Injectable } from '@angular/core';
+import { effect, Injectable, Injector } from '@angular/core';
 import { Router } from '@angular/router';
 import { fromEvent } from 'rxjs';
 import { filter } from 'rxjs/operators';
@@ -54,6 +54,7 @@ export class PluginMessageService {
     };
 
     constructor(
+        private readonly injector: Injector,
         private readonly router: Router,
         private readonly authSvc: AuthService,
         private readonly principalSvc: PrincipalService,
@@ -114,11 +115,13 @@ export class PluginMessageService {
      * @private
      */
     private addAuthStatusSubscription(sender: MessageSender<Principal | undefined>) {
-        effect(() => sender({
-            kind:             PluginEventKind.SubEmission,
-            subscriptionKind: PluginSubscriptionKind.AuthStatus,
-            data:             this.principalSvc.principal(),
-        }));
+        effect(
+            () => sender({
+                kind:             PluginEventKind.SubEmission,
+                subscriptionKind: PluginSubscriptionKind.AuthStatus,
+                data:             this.principalSvc.principal(),
+            }),
+            {injector: this.injector});
     }
 
     /**

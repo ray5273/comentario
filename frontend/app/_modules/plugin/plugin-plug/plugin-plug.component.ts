@@ -1,7 +1,13 @@
 import { AfterContentInit, Component, computed, effect, ElementRef, input, signal, ViewChild } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { JsonPipe } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
-import { PluginService, PluginStatus } from '../_services/plugin.service';
+import { EMPTY, Observable, switchMap } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import { FaIconComponent } from '@fortawesome/angular-fontawesome';
+import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
+import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
+import { PluginConfigAndStatus, PluginService } from '../_services/plugin.service';
 import { PluginRouteData } from '../../../_models/models';
 import { UIPlug } from '../_models/plugs';
 import { Animations } from '../../../_utils/animations';
@@ -15,6 +21,8 @@ import { SpinnerDirective } from '../../tools/_directives/spinner.directive';
     imports: [
         SpinnerDirective,
         JsonPipe,
+        NgbCollapse,
+        FaIconComponent,
     ],
 })
 export class PluginPlugComponent implements AfterContentInit {
@@ -31,29 +39,34 @@ export class PluginPlugComponent implements AfterContentInit {
     /** Plug component tag to use. */
     readonly plugTag = computed(() => this.plug()?.componentTag ?? this.routeData()?.plug?.componentTag);
 
-    /** Status of the plugin. */
-    readonly pluginStatus = computed<PluginStatus | undefined>(() => {
+    /** Plugin config/status entry. */
+    private readonly pluginCfgStatus = computed<PluginConfigAndStatus | undefined>(() => {
         const id = this.pluginId();
         return id ? this.pluginService.pluginStatus(id) : undefined;
     });
 
     /** Configuration of the plugin. */
-    readonly pluginConfig = computed<PluginConfig | undefined>(() => this.pluginStatus()?.config);
+    readonly pluginConfig = computed<PluginConfig | undefined>(() => this.pluginCfgStatus()?.config);
+
+    /** Plugin availability status. */
+    readonly pluginAvailable = toSignal(
+        toObservable(this.pluginCfgStatus)
+            .pipe(switchMap(cs => cs?.status ?? EMPTY), catchError(err => this.handlePluginError(err))));
+
+    /** Plugin load error, if any. */
+    readonly pluginError = signal<any>(undefined);
 
     @ViewChild('elementHost', {static: true})
     elementHost?: ElementRef<HTMLDivElement>;
 
-    /** Whether technical error details are shown. */
-    showErrorDetails = false;
-
-    /** Plugin availability status. */
-    pluginAvailable?: boolean;
-
-    /** Plugin load error, if any. */
-    pluginError: any;
+    /** Whether technical error details are collapsed. */
+    collapseErrorDetails = true;
 
     /** Created custom element. */
     private plugElement?: HTMLElement;
+
+    // Icons
+    readonly faAngleDown = faAngleDown;
 
     constructor(
         private readonly route: ActivatedRoute,
@@ -83,21 +96,25 @@ export class PluginPlugComponent implements AfterContentInit {
      * @private
      */
     private load() {
-        // Subscribe to the status changes when available
-        this.pluginStatus()?.status.subscribe({
-            next: b => {
-                this.pluginAvailable = b;
+        const tag = this.plugTag();
+        const avail = this.pluginAvailable();
 
-                // Remove any existing plug
-                this.removeElement();
+        // Remove any existing plug
+        this.removeElement();
 
-                // Recreate the element, if the plugin is operational
-                const tag = this.plugTag();
-                if (tag && this.pluginAvailable && this.elementHost) {
-                    this.plugElement = this.pluginService.insertElement(this.elementHost.nativeElement, tag);
-                }
-            },
-            error: err => this.pluginError = err,
-        });
+        // Recreate the element, if the plugin is operational
+        if (tag && avail && this.elementHost) {
+            this.plugElement = this.pluginService.insertElement(this.elementHost.nativeElement, tag);
+        }
+    }
+
+    /**
+     * Catch the provided error and emit it as the pluginError signal.
+     * @param err Error to handle.
+     * @private
+     */
+    private handlePluginError(err: any): Observable<never> {
+        this.pluginError.set(err);
+        return EMPTY;
     }
 }

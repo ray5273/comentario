@@ -12,9 +12,9 @@ import { UIPlug } from '../_models/plugs';
 import { PluginMessageService } from './plugin-message.service';
 
 /**
- * Plugin status entry.
+ * Plugin config/status entry.
  */
-export interface PluginStatus {
+export interface PluginConfigAndStatus {
     /**
      * Plugin configuration as received from the backend.
      */
@@ -33,8 +33,8 @@ export interface PluginStatus {
 })
 export class PluginService {
 
-    /** Map of plugin availability status by plugin ID. */
-    private readonly pluginStatuses: Record<string, PluginStatus> = {};
+    /** Map of plugin config/status entries by plugin ID. */
+    private readonly plugins: Record<string, PluginConfigAndStatus> = {};
 
     constructor(
         @Inject(DOCUMENT) private readonly doc: Document,
@@ -69,8 +69,8 @@ export class PluginService {
      * Return status for a plugin with the given ID, or undefined if this ID is unknown.
      * @param id ID of the plugin to return status for.
      */
-    pluginStatus(id: string): PluginStatus | undefined {
-        return this.pluginStatuses[id];
+    pluginStatus(id: string): PluginConfigAndStatus | undefined {
+        return this.plugins[id];
     }
 
     /**
@@ -153,7 +153,7 @@ export class PluginService {
                 });
 
             // Create a status entry
-            this.pluginStatuses[plugin.id] = {config: plugin, status};
+            this.plugins[plugin.id] = {config: plugin, status};
         });
     }
 

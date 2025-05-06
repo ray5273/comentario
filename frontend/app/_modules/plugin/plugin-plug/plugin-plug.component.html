@@ -1,8 +1,8 @@
 <!-- Custom element container -->
-<div #elementHost [appSpinner]="!pluginAvailable && !pluginError" spinnerSize="lg"></div>
+<div #elementHost [appSpinner]="!pluginAvailable() && !pluginError()" spinnerSize="lg"></div>
 
 <!-- Load error, if any -->
-@if (pluginError; as err) {
+@if (pluginError(); as err) {
     <div class="container p-4 alert alert-danger" role="alert">
         <!-- Heading -->
         <div class="alert-heading lead fw-bold" i18n>Plugin error</div>
@@ -12,13 +12,18 @@
 
         <!-- Technical details -->
         <div class="small">
-            <button (click)="showErrorDetails = !showErrorDetails" [class.active]="showErrorDetails"
-                    [attr.aria-expanded]="showErrorDetails" class="btn btn-link btn-sm" i18n>Technical details</button>
-            @if (showErrorDetails) {
+            <button [class.collapsed]="collapseErrorDetails"
+                    [attr.aria-expanded]="!collapseErrorDetails"
+                    (click)="errDetails.toggle()"
+                    type="button" class="btn btn-link btn-sm collapse-toggler" aria-controls="pluginErrorDetails">
+                <span class="me-2" i18n>Technical details</span>
+                <fa-icon [icon]="faAngleDown"/>
+            </button>
+            <div #errDetails="ngbCollapse" [(ngbCollapse)]="collapseErrorDetails" id="pluginErrorDetails">
                 <div @fadeInOut-fast>
                     <code><pre>{{ err | json }}</pre></code>
                 </div>
-            }
+            </div>
         </div>
     </div>
 }
