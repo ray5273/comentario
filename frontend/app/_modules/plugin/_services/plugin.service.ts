@@ -14,7 +14,7 @@ import { PluginMessageService } from './plugin-message.service';
 /**
  * Plugin config/status entry.
  */
-export interface PluginConfigAndStatus {
+interface PluginConfigAndStatus {
     /**
      * Plugin configuration as received from the backend.
      */
@@ -66,11 +66,20 @@ export class PluginService {
     }
 
     /**
-     * Return status for a plugin with the given ID, or undefined if this ID is unknown.
+     * Return config for a plugin with the given ID, or undefined if this ID is unknown.
+     * @param id ID of the plugin to return config for.
+     */
+    pluginConfig(id: string): PluginConfig | undefined {
+        return this.plugins[id]?.config;
+    }
+
+    /**
+     * Return availability status observable for a plugin with the given ID. If this ID is unknown, return a completed
+     * Observable.
      * @param id ID of the plugin to return status for.
      */
-    pluginStatus(id: string): PluginConfigAndStatus | undefined {
-        return this.plugins[id];
+    pluginAvailable(id: string): Observable<boolean> {
+        return this.plugins[id]?.status ?? EMPTY;
     }
 
     /**

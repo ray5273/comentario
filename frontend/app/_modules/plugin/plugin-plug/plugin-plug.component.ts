@@ -7,7 +7,7 @@ import { catchError } from 'rxjs/operators';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faAngleDown } from '@fortawesome/free-solid-svg-icons';
 import { NgbCollapse } from '@ng-bootstrap/ng-bootstrap';
-import { PluginConfigAndStatus, PluginService } from '../_services/plugin.service';
+import { PluginService } from '../_services/plugin.service';
 import { PluginRouteData } from '../../../_models/models';
 import { UIPlug } from '../_models/plugs';
 import { Animations } from '../../../_utils/animations';
@@ -39,19 +39,21 @@ export class PluginPlugComponent implements AfterContentInit {
     /** Plug component tag to use. */
     readonly plugTag = computed(() => this.plug()?.componentTag ?? this.routeData()?.plug?.componentTag);
 
-    /** Plugin config/status entry. */
-    private readonly pluginCfgStatus = computed<PluginConfigAndStatus | undefined>(() => {
+    /** Configuration of the plugin. */
+    readonly pluginConfig = computed<PluginConfig | undefined>(() => {
         const id = this.pluginId();
-        return id ? this.pluginService.pluginStatus(id) : undefined;
+        return id ? this.pluginService.pluginConfig(id) : undefined;
     });
 
-    /** Configuration of the plugin. */
-    readonly pluginConfig = computed<PluginConfig | undefined>(() => this.pluginCfgStatus()?.config);
+    /** Plugin availability observable. */
+    private readonly pluginAvailable$ = computed<Observable<boolean>>(() => {
+        const id = this.pluginId();
+        return id ? this.pluginService.pluginAvailable(id) : EMPTY;
+    });
 
     /** Plugin availability status. */
     readonly pluginAvailable = toSignal(
-        toObservable(this.pluginCfgStatus)
-            .pipe(switchMap(cs => cs?.status ?? EMPTY), catchError(err => this.handlePluginError(err))));
+        toObservable(this.pluginAvailable$).pipe(switchMap(o => o), catchError(err => this.handlePluginError(err))));
 
     /** Plugin load error, if any. */
     readonly pluginError = signal<any>(undefined);
