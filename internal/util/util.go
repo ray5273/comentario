@@ -242,8 +242,8 @@ func HTMLTitleFromURL(u *url.URL) (string, error) {
 	}
 	defer LogError(resp.Body.Close, "HTMLTitleFromURL, resp.Body.Close()")
 
-	// Verify we're dealing with an HTML document
-	if !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
+	// Ignore irrelevant HTTP statuses and verify we're dealing with an HTML document
+	if resp.StatusCode < 200 || resp.StatusCode > 299 || !strings.HasPrefix(resp.Header.Get("Content-Type"), "text/html") {
 		return "", nil
 	}
 
