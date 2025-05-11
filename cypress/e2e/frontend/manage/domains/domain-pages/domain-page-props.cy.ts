@@ -5,7 +5,7 @@ context('Domain Page Properties page', () => {
     const localhostPageId   = '0ebb8a1b-12f6-421e-b1bb-75867ac480c7';
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + `/${localhostPageId}`;
 
-    const makeAliases = (hasUpdateTitle: boolean, hasEdit: boolean) => {
+    const makeAliases = (hasUpdateTitle: boolean, updateTitleEnabled: boolean, hasEdit: boolean) => {
         cy.get('app-domain-page-properties').as('pageProps');
 
         // Header
@@ -16,7 +16,8 @@ context('Domain Page Properties page', () => {
 
         // Buttons
         if (hasUpdateTitle) {
-            cy.get('@pageProps').contains('button', 'Update title').as('btnUpdateTitle').should('be.visible').and('be.enabled');
+            cy.get('@pageProps').contains('button', 'Update title').as('btnUpdateTitle')
+                .should('be.visible').and(updateTitleEnabled ? 'be.enabled' : 'be.disabled');
         } else {
             cy.get('@pageProps').contains('button', 'Update title').should('not.exist');
         }
@@ -53,14 +54,14 @@ context('Domain Page Properties page', () => {
         cy.verifyStayOnReload(localhostPagePath, USERS.commenterTwo));
 
     [
-        {name: 'read-only', user: USERS.commenterThree, numComments:  0, editable: false},
-        {name: 'commenter', user: USERS.commenterTwo,   numComments:  1, editable: false},
-        {name: 'moderator', user: USERS.king,           numComments: 16, editable: true},
+        {name: 'read-only', user: USERS.commenterThree, numComments:  0, hasUpdTitle: false, canUpdTitle: false, editable: false},
+        {name: 'commenter', user: USERS.commenterTwo,   numComments:  1, hasUpdTitle: false, canUpdTitle: false, editable: false},
+        {name: 'moderator', user: USERS.king,           numComments: 16, hasUpdTitle: true,  canUpdTitle: false, editable: true},
     ]
         .forEach(test =>
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
-                makeAliases(test.editable, test.editable);
+                makeAliases(test.hasUpdTitle, test.canUpdTitle, test.editable);
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',           DOMAINS.localhost.host],
                     ['Path',             '/'],
@@ -83,7 +84,7 @@ context('Domain Page Properties page', () => {
         .forEach(test =>
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
-                makeAliases(true, true);
+                makeAliases(true, true, true);
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',             DOMAINS.localhost.host],
                     ['Path',               '/'],

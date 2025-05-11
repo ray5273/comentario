@@ -39,6 +39,7 @@ export class DomainPageEditComponent {
     readonly form = this.fb.nonNullable.group({
         readOnly: false,
         path:     [{value: '', disabled: true}, [Validators.required, Validators.pattern(/^\//), Validators.maxLength(2075)]],
+        title:    [{value: '', disabled: true}, [Validators.maxLength(100)]],
     });
 
     constructor(
@@ -61,7 +62,8 @@ export class DomainPageEditComponent {
             const val = this.form.value;
             this.api.domainPageUpdate(this.page.id!, {
                     isReadonly: val.readOnly!,
-                    path:       val.path || this.page.path,
+                    path:       val.path  ?? this.page.path,
+                    title:      val.title ?? this.page.title,
                 })
                 .pipe(this.saving.processing())
                 .subscribe(() => {
@@ -93,13 +95,15 @@ export class DomainPageEditComponent {
             .subscribe(r => {
                 this.page = r.page;
                 this.form.setValue({
-                    readOnly: !!r.page!.isReadonly,
-                    path:     r.page!.path ?? '',
+                    readOnly: !!r.page?.isReadonly,
+                    path:     r.page?.path ?? '',
+                    title:    r.page?.title ?? '',
                 });
 
-                // Only domain managers are allowed to edit the path
+                // Only domain managers are allowed to edit the path/title
                 if (this.domainMeta?.canManageDomain) {
-                    this.form.controls.path.enable();
+                    this.form.controls.path .enable();
+                    this.form.controls.title.enable();
                 }
             });
     }

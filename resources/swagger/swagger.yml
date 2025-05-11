@@ -395,8 +395,9 @@ definitions:
         description: Page path. Can only be updated by a domain owner or superuser
       title:
         type: string
-        readOnly: true
-        description: Optional page title
+        description: >
+          Optional page title. When not provided on page creation or update, will be derived automatically from the
+          actual page's HTML title. Can only be updated by a domain owner or superuser
       isReadonly:
         type: boolean
         description: >
@@ -3310,7 +3311,7 @@ paths:
   /domain-pages/{uuid}/title:
     post:
       operationId: DomainPageUpdateTitle
-      summary: Update the title of a domain page by inspecting the corresponding URL
+      summary: Update the title of a domain page by inspecting the corresponding URL. Only available to domain owners and superusers
       tags:
         - ApiGeneral
       parameters:

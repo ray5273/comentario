@@ -54,7 +54,7 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 
 func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User) middleware.Responder {
 	// Fetch the page and the domain user
-	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	page, domain, domainUser, r := domainPageGetDomainUser(params.UUID, user)
 	if r != nil {
 		return r
 	}
@@ -77,9 +77,19 @@ func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User
 		}
 	}
 
+	// If the title is changing
+	oldTitle := page.Title
+	page.WithTitle(params.Body.Title) // Takes care of title truncation
+	if page.Title != oldTitle {
+		// Verify the user can manage the domain
+		if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
+			return r
+		}
+	}
+
 	// Update the page
 	ro := swag.BoolValue(params.Body.IsReadonly)
-	if err := svc.Services.PageService(nil).Update(page.WithIsReadonly(ro).WithPath(path)); err != nil {
+	if err := svc.Services.PageService(nil).Update(domain, page.WithIsReadonly(ro).WithPath(path)); err != nil {
 		return respServiceError(err)
 	}
 
@@ -95,7 +105,7 @@ func DomainPageUpdateTitle(params api_general.DomainPageUpdateTitleParams, user 
 	}
 
 	// Make sure the user is allowed to update page
-	if r := Verifier.UserCanModerateDomain(user, domainUser); r != nil {
+	if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
 		return r
 	}
 

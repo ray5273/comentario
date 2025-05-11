@@ -1095,6 +1095,12 @@ func (p *DomainPage) WithPath(s string) *DomainPage {
 	return p
 }
 
+// WithTitle sets the Title value
+func (p *DomainPage) WithTitle(s string) *DomainPage {
+	p.Title = util.TruncateStr(s, MaxPageTitleLength) // Make sure the title doesn't exceed the size of the database field
+	return p
+}
+
 // ---------------------------------------------------------------------------------------------------------------------
 
 // DomainPageView is a domain page view database record

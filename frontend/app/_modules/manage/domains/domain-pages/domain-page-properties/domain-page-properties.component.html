@@ -14,7 +14,8 @@
             @if (meta.canModerateDomain) {
                 <div class="col-md-4 order-md-last pb-3">
                     <!-- Update title button -->
-                    <button [appSpinner]="updatingTitle.active" (click)="updateTitle()" type="button" class="btn btn-outline-secondary w-100 mb-2">
+                    <button [appSpinner]="updatingTitle.active" [disable]="!meta.canManageDomain" (click)="updateTitle()"
+                            type="button" class="btn btn-outline-secondary w-100 mb-2">
                         <fa-icon [icon]="faRotate" class="me-1"/>
                         <ng-container i18n>Update title</ng-container>
                     </button>

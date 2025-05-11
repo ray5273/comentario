@@ -10,7 +10,7 @@ import (
 
 func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) middleware.Responder {
 	// Fetch the page and the domain user
-	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	page, domain, domainUser, r := domainPageGetDomainUser(params.UUID, user)
 	if r != nil {
 		return r
 	}
@@ -23,7 +23,7 @@ func EmbedPageUpdate(params api_embed.EmbedPageUpdateParams, user *data.User) mi
 	// Update the page properties, if necessary
 	ro := swag.BoolValue(params.Body.IsReadonly)
 	if page.IsReadonly != ro {
-		if err := svc.Services.PageService(nil).Update(page.WithIsReadonly(ro)); err != nil {
+		if err := svc.Services.PageService(nil).Update(domain, page.WithIsReadonly(ro)); err != nil {
 			return respServiceError(err)
 		}
 	}

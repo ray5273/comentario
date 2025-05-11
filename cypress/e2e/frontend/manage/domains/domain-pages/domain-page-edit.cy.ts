@@ -8,7 +8,7 @@ context('Domain Page Edit page', () => {
 
     const pathComments = '/comments/';
 
-    const makeAliases = (path: string, pathEditable: boolean, readOnly: boolean) => {
+    const makeAliases = (path: string, title: string, pathEditable: boolean, titleEditable: boolean, readOnly: boolean) => {
         cy.get('app-domain-page-edit').as('pageEdit');
 
         // Header
@@ -16,7 +16,8 @@ context('Domain Page Edit page', () => {
         cy.get('@pageEdit').find('#domain-page-path').should('have.text', path).and('be.visible');
 
         // Form controls
-        cy.get('@pageEdit').find('#path')    .as('path')    .should('have.value', path).and(pathEditable ? 'be.enabled' : 'be.disabled');
+        cy.get('@pageEdit').find('#path')    .as('path')    .should('have.value', path) .and(pathEditable  ? 'be.enabled' : 'be.disabled');
+        cy.get('@pageEdit').find('#title')   .as('title')   .should('have.value', title).and(titleEditable ? 'be.enabled' : 'be.disabled');
         cy.get('@pageEdit').find('#readOnly').as('readOnly').should(readOnly ? 'be.checked' : 'not.be.checked').and('be.enabled');
 
         // Buttons
@@ -59,7 +60,7 @@ context('Domain Page Edit page', () => {
         cy.verifyStayOnReload(pagePathWritable, USERS.ace);
 
         // Test cancelling: we return to page properties
-        makeAliases(pathComments, true, false);
+        makeAliases(pathComments, 'Comments', true, true, false);
         cy.get('@btnCancel').click();
         cy.isAt(propsPagePathWritable);
         cy.noToast();
@@ -67,7 +68,7 @@ context('Domain Page Edit page', () => {
 
     it('validates input', () => {
         cy.loginViaApi(USERS.ace, pagePathWritable);
-        makeAliases(pathComments, true, false);
+        makeAliases(pathComments, 'Comments', true, true, false);
 
         // Remove the path, then try to submit to get error feedback
         cy.get('@path').isValid().clear();
@@ -81,6 +82,15 @@ context('Domain Page Edit page', () => {
             .setValue('/'.repeat(2076)).isInvalid('Value is too long.')
             .type('{backspace}').isValid()
             .setValue('/path').isValid();
+
+        // Title
+        cy.get('@title').isValid()
+            .clear().isValid()
+            .blur() // This should really not be necessary, but Angular change detection seems to slip on this one despite markAllAsTouched()
+            .type('x').isValid()
+            .setValue('a few words for the title'.repeat(4)).isValid()
+            .setValue('x'.repeat(101)).isInvalid('Value is too long.')
+            .type('{backspace}').isValid();
     });
 
     context('allows to edit page', () => {
@@ -94,10 +104,11 @@ context('Domain Page Edit page', () => {
                     // Login
                     cy.loginViaApi(test.user, pagePathWritable);
                     const newPath = '/new-path';
-                    makeAliases(pathComments, true, false);
+                    makeAliases(pathComments, 'Comments', true, true, false);
 
                     // Edit the page and submit
-                    cy.get('@path').setValue(newPath);
+                    cy.get('@path') .setValue(newPath);
+                    cy.get('@title').setValue('Blah blah');
                     cy.get('@readOnly').click().should('be.checked');
                     cy.get('@btnSubmit').click();
 
@@ -109,7 +120,7 @@ context('Domain Page Edit page', () => {
                         .dlTexts().should('matrixMatch', [
                             ['Domain',             DOMAINS.localhost.host],
                             ['Path',               newPath],
-                            ['Title',              'Comments'],
+                            ['Title',              'Blah blah'],
                             ['Read-only',          '✔'],
                             ['Created',            REGEXES.datetime],
                             ['Number of comments', '1'],
@@ -119,7 +130,7 @@ context('Domain Page Edit page', () => {
 
                     // Revert path so that we can check the comments
                     cy.get('@pageProps').contains('a', 'Edit').click();
-                    makeAliases(newPath, true, true);
+                    makeAliases(newPath, 'Blah blah', true, true, true);
                     cy.get('@path').setValue(pathComments);
                     cy.get('@btnSubmit').click();
                     cy.toastCheckAndClose('data-saved');
@@ -130,7 +141,8 @@ context('Domain Page Edit page', () => {
                     // Edit the page again
                     cy.visit(propsPagePathWritable);
                     cy.get('@pageProps').contains('a', 'Edit').click();
-                    makeAliases(pathComments, true, true);
+                    makeAliases(pathComments, 'Blah blah', true, true, true);
+                    cy.get('@title').clear();
                     cy.get('@readOnly').click().should('not.be.checked');
                     cy.get('@btnSubmit').click();
 
@@ -142,7 +154,7 @@ context('Domain Page Edit page', () => {
                         .dlTexts().should('matrixMatch', [
                             ['Domain',             DOMAINS.localhost.host],
                             ['Path',               pathComments],
-                            ['Title',              'Comments'],
+                            ['Title',              'Comments | Comentario Test'],
                             ['Read-only',          ''],
                             ['Created',            REGEXES.datetime],
                             ['Number of comments', '1'],
@@ -157,7 +169,7 @@ context('Domain Page Edit page', () => {
                 it(`by ${test.name}, refusing to reuse existing path`, () => {
                     // Login
                     cy.loginViaApi(test.user, pagePathWritable);
-                    makeAliases(pathComments, true, false);
+                    makeAliases(pathComments, 'Comments', true, true, false);
 
                     // Edit the page and submit
                     cy.get('@path').setValue('/dark-mode/');
@@ -172,7 +184,7 @@ context('Domain Page Edit page', () => {
         it('by moderator', () => {
             // Login
             cy.loginViaApi(USERS.king, pagePathWritable);
-            makeAliases(pathComments, false, false);
+            makeAliases(pathComments, 'Comments', false, false, false);
 
             // Make the page readonly and submit
             cy.get('@readOnly').click().should('be.checked');
@@ -197,7 +209,7 @@ context('Domain Page Edit page', () => {
             // Edit the page again
             cy.visit(propsPagePathWritable);
             cy.get('@pageProps').contains('a', 'Edit').click();
-            makeAliases(pathComments, false, true);
+            makeAliases(pathComments, 'Comments', false, false, true);
             cy.get('@readOnly').click().should('not.be.checked');
             cy.get('@btnSubmit').click();
 
