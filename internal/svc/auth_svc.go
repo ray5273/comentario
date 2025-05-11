@@ -10,6 +10,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/util"
 	"net/http"
+	"slices"
 )
 
 var (
@@ -59,7 +60,7 @@ func (svc *authService) AuthenticateBearerToken(tokenStr string, scopes []string
 	}
 
 	// Check if the token is of the right scope
-	if util.IndexOfString(string(token.Scope), scopes) < 0 {
+	if slices.Index(scopes, string(token.Scope)) < 0 {
 		return nil, ErrUnauthorised
 	}
 

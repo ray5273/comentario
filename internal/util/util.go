@@ -260,16 +260,6 @@ func If[T any](cond bool, ifTrue, ifFalse T) T {
 	return ifFalse
 }
 
-// IndexOfString returns the index of the given string in the slice, or -1 if it wasn't found
-func IndexOfString(s string, slice []string) int {
-	for i, e := range slice {
-		if s == e {
-			return i
-		}
-	}
-	return -1
-}
-
 // IsStrongPassword checks whether the provided password is a 'strong' one
 func IsStrongPassword(s string) bool {
 	// Check length
