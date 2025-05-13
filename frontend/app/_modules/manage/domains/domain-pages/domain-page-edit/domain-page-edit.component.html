@@ -33,17 +33,14 @@
             <div class="mb-3 row">
                 <label for="path" class="col-sm-3 col-form-label colon fw-bold" i18n>Title</label>
                 <div class="col-sm-9">
-                    <input appValidatable formControlName="title" type="text" class="form-control" id="title" maxlength="100">
+                    <input appValidatable formControlName="title" type="text" class="form-control" placeholder="(automatic)"
+                           id="title" maxlength="100" i18n-placeholder>
                     <!-- Invalid feedback -->
                     <div class="invalid-feedback">
                         @if (form.controls.title.errors; as err) {
                             @if (err.maxlength) { <div i18n>Value is too long.</div> }
                         }
                     </div>
-                    <!-- Info -->
-                    @if (domainMeta?.canManageDomain) {
-                        <div class="form-text" i18n>Leave empty to fetch title from the actual website page.</div>
-                    }
                 </div>
             </div>
 

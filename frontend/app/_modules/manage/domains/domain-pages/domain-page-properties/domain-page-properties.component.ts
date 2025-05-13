@@ -1,12 +1,12 @@
 import { Component, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { DecimalPipe } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { Router, RouterLink } from '@angular/router';
 import { BehaviorSubject, combineLatestWith, EMPTY, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { faEdit, faRotate } from '@fortawesome/free-solid-svg-icons';
+import { faEdit, faRotate, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { Paths } from '../../../../../_utils/consts';
@@ -20,6 +20,7 @@ import { CommentListComponent } from '../../comments/comment-list/comment-list.c
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 import { DomainRssLinkComponent } from '../../domain-rss-link/domain-rss-link.component';
 import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
+import { ConfirmDirective } from '../../../../tools/_directives/confirm.directive';
 
 @UntilDestroy()
 @Component({
@@ -37,6 +38,7 @@ import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.compone
         NoDataComponent,
         DomainRssLinkComponent,
         InfoIconComponent,
+        ConfirmDirective,
     ],
 })
 export class DomainPagePropertiesComponent {
@@ -51,6 +53,7 @@ export class DomainPagePropertiesComponent {
 
     readonly Paths = Paths;
     readonly loading       = new ProcessingStatus();
+    readonly deleting      = new ProcessingStatus();
     readonly updatingTitle = new ProcessingStatus();
 
     /** The current domain page. */
@@ -61,10 +64,12 @@ export class DomainPagePropertiesComponent {
                 switchMap(([id]) => id ? this.api.domainPageGet(id).pipe(this.loading.processing(), map(r => r.page)) : EMPTY)));
 
     // Icons
-    readonly faEdit   = faEdit;
-    readonly faRotate = faRotate;
+    readonly faEdit     = faEdit;
+    readonly faRotate   = faRotate;
+    readonly faTrashAlt = faTrashAlt;
 
     constructor(
+        private readonly router: Router,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
         private readonly toastSvc: ToastService,
@@ -81,6 +86,20 @@ export class DomainPagePropertiesComponent {
                     // Reload on changes
                     filter(d => d.changed!))
                 .subscribe(() => this.reload$.next());
+        }
+    }
+
+    delete() {
+        const id = this.id();
+        if (id) {
+            this.api.domainPageDelete(id)
+                .pipe(this.deleting.processing())
+                .subscribe(() => {
+                    // Add a success toast
+                    this.toastSvc.success({messageId: 'domain-page-deleted', keepOnRouteChange: true});
+                    // Go back to the page list
+                    this.router.navigate([Paths.manage.domains, this.page()!.domainId, 'pages']);
+                });
         }
     }
 }

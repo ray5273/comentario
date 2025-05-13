@@ -2,10 +2,10 @@ import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../suppo
 
 context('Domain Page Properties page', () => {
 
-    const localhostPageId   = '0ebb8a1b-12f6-421e-b1bb-75867ac480c7';
+    const localhostPageId   = '0ebb8a1b-12f6-421e-b1bb-75867ac480c7'; // Home page ('/')
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + `/${localhostPageId}`;
 
-    const makeAliases = (hasUpdateTitle: boolean, updateTitleEnabled: boolean, hasEdit: boolean) => {
+    const makeAliases = (hasUpdateTitle: boolean, hasEdit: boolean, hasDelete: boolean) => {
         cy.get('app-domain-page-properties').as('pageProps');
 
         // Header
@@ -16,8 +16,7 @@ context('Domain Page Properties page', () => {
 
         // Buttons
         if (hasUpdateTitle) {
-            cy.get('@pageProps').contains('button', 'Update title').as('btnUpdateTitle')
-                .should('be.visible').and(updateTitleEnabled ? 'be.enabled' : 'be.disabled');
+            cy.get('@pageProps').contains('button', 'Update title').as('btnUpdateTitle').should('be.visible').and('be.enabled');
         } else {
             cy.get('@pageProps').contains('button', 'Update title').should('not.exist');
         }
@@ -25,6 +24,11 @@ context('Domain Page Properties page', () => {
             cy.get('@pageProps').contains('a', 'Edit').as('btnEdit').should('be.visible');
         } else {
             cy.get('@pageProps').contains('a', 'Edit').should('not.exist');
+        }
+        if (hasDelete) {
+            cy.get('@pageProps').contains('button', 'Delete').as('btnDelete').should('be.visible').and('be.enabled');
+        } else {
+            cy.get('@pageProps').contains('button', 'Delete').should('not.exist');
         }
 
         // Comments
@@ -54,14 +58,14 @@ context('Domain Page Properties page', () => {
         cy.verifyStayOnReload(localhostPagePath, USERS.commenterTwo));
 
     [
-        {name: 'read-only', user: USERS.commenterThree, numComments:  0, hasUpdTitle: false, canUpdTitle: false, editable: false},
-        {name: 'commenter', user: USERS.commenterTwo,   numComments:  1, hasUpdTitle: false, canUpdTitle: false, editable: false},
-        {name: 'moderator', user: USERS.king,           numComments: 16, hasUpdTitle: true,  canUpdTitle: false, editable: true},
+        {name: 'read-only', user: USERS.commenterThree, numComments:  0, editable: false},
+        {name: 'commenter', user: USERS.commenterTwo,   numComments:  1, editable: false},
+        {name: 'moderator', user: USERS.king,           numComments: 16, editable: true},
     ]
         .forEach(test =>
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
-                makeAliases(test.hasUpdTitle, test.canUpdTitle, test.editable);
+                makeAliases(false, test.editable, false);
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',           DOMAINS.localhost.host],
                     ['Path',             '/'],
@@ -78,40 +82,92 @@ context('Domain Page Properties page', () => {
             }));
 
     [
-        {name: 'owner',     user: USERS.ace},
-        {name: 'superuser', user: USERS.root},
+        {
+            name: 'owner',
+            user: USERS.ace,
+            metrics:
+                // language=yaml
+                `
+                - {label: Domains,      sublabel: you own,          value: 1}
+                - {label: Pages,        sublabel: you moderate,     value: 15}
+                - {label: Pages,        sublabel: you commented on, value: 8}
+                - {label: Domain users, sublabel: you manage,       value: 6}
+                - {label: Comments,     sublabel: total,            value: 24}
+                - {label: Comments,     sublabel: you authored,     value: 8}
+                - {label: Commenters,   sublabel: total,            value: 7}
+                `,
+        },
+        {
+            name: 'superuser',
+            user: USERS.root,
+            metrics:
+                // language=yaml
+                `
+                - {label: Users,        sublabel: total,        value: 16}
+                - {label: Pages,        sublabel: you moderate, value: 19}
+                - {label: Domain users, sublabel: you manage,   value: 9}
+                - {label: Comments,     sublabel: total,        value: 25}
+                - {label: Commenters,   sublabel: total,        value: 7}
+                `,
+        },
     ]
         .forEach(test =>
-            it(`shows properties for ${test.name} user`, () => {
-                cy.loginViaApi(test.user, localhostPagePath);
-                makeAliases(true, true, true);
-                cy.get('@pageDetails').dlTexts().should('matrixMatch', [
-                    ['Domain',             DOMAINS.localhost.host],
-                    ['Path',               '/'],
-                    ['Title',              'Home'],
-                    ['Read-only',          ''],
-                    ['Created',            REGEXES.datetime],
-                    ['Number of comments', '17'],
-                    ['Number of views',    '10'],
-                    ['Comment RSS feed',   null], // Checked separately below
-                ]);
+            context(`for ${test.name} user`, () => {
 
-                // Verify the RSS link
-                cy.get('@pageDetails').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, test.user.id, localhostPageId);
+                beforeEach(() => {
+                    cy.loginViaApi(test.user, localhostPagePath);
+                    makeAliases(true, true, true);
+                });
 
-                // Test Update title button
-                cy.get('@btnUpdateTitle').click();
-                cy.get('@pageDetails').ddItem('Title').should('have.text', 'Home | Comentario Test');
+                it('shows page properties', () => {
+                    cy.get('@pageDetails').dlTexts().should('matrixMatch', [
+                        ['Domain',             DOMAINS.localhost.host],
+                        ['Path',               '/'],
+                        ['Title',              'Home'],
+                        ['Read-only',          ''],
+                        ['Created',            REGEXES.datetime],
+                        ['Number of comments', '17'],
+                        ['Number of views',    '10'],
+                        ['Comment RSS feed',   null], // Checked separately below
+                    ]);
 
-                // Check number of comments in the Comments section
-                cy.get('@commentList').verifyListFooter(16, false);
+                    // Verify the RSS link
+                    cy.get('@pageDetails').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, test.user.id, localhostPageId);
 
-                // Load the comment page and wait for Comentario to load
-                cy.testSiteVisit(TEST_PATHS.home);
-                cy.commentTree().should('have.length', 2);
+                    // Test Update title button
+                    cy.get('@btnUpdateTitle').click();
+                    cy.get('@pageDetails').ddItem('Title').should('have.text', 'Home | Comentario Test');
 
-                // Go back to verify the pageview has been registered
-                cy.visit(localhostPagePath);
-                cy.get('@pageDetails').ddItem('Number of views').should('have.text', '11');
+                    // Check number of comments in the Comments section
+                    cy.get('@commentList').verifyListFooter(16, false);
+
+                    // Load the comment page and wait for Comentario to load
+                    cy.testSiteVisit(TEST_PATHS.home);
+                    cy.commentTree().should('have.length', 2);
+
+                    // Go back to verify the pageview has been registered
+                    cy.visit(localhostPagePath);
+                    cy.get('@pageDetails').ddItem('Number of views').should('have.text', '11');
+                });
+
+                it('allows to delete a page', () => {
+                    // Click on Delete
+                    cy.get('@btnDelete').click();
+
+                    // Confirmation dialog appears. Confirm deletion
+                    cy.confirmationDialog(/Are you sure you want to delete this domain page\?/).as('dlg');
+                    cy.get('@dlg').dlgButtonClick('Delete domain page');
+
+                    // We're back to the Domain Page Manager and there's a success toast
+                    cy.isAt(PATHS.manage.domains.id(DOMAINS.localhost.id).pages);
+                    cy.toastCheckAndClose('domain-page-deleted');
+
+                    // One fewer page on the list
+                    cy.get('app-domain-page-manager').verifyListFooter(15, false);
+
+                    // Check the Dashboard, too
+                    cy.sidebarClick('Dashboard', PATHS.manage.dashboard);
+                    cy.get('app-dashboard #dashboard-totals').metricCards().should('yamlMatch', test.metrics);
+                });
             }));
 });
