@@ -21,6 +21,8 @@ import (
 type PageService interface {
 	// CommentCounts returns a map of comment counts by page path, for the specified host and multiple paths
 	CommentCounts(domainID *uuid.UUID, paths []string) (map[string]int, error)
+	// Delete the page with the given ID, including dependent objects
+	Delete(pageID *uuid.UUID) error
 	// FetchUpdatePageTitle fetches and updates the title of the provided page based on its URL, returning if there was
 	// any change
 	FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error)
@@ -80,6 +82,19 @@ func (svc *pageService) CommentCounts(domainID *uuid.UUID, paths []string) (map[
 
 	// Succeeded
 	return res, nil
+}
+
+func (svc *pageService) Delete(pageID *uuid.UUID) error {
+	logger.Debugf("pageService.Delete(%s)", pageID)
+
+	// Delete the page record
+	err := persistence.ExecOne(svc.dbx().Delete("cm_domain_pages").Where(goqu.Ex{"id": pageID}))
+	if err != nil {
+		return translateDBErrors("pageService.Delete/Delete", err)
+	}
+
+	// Succeeded
+	return nil
 }
 
 func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.DomainPage) (bool, error) {

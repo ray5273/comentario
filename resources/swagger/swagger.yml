@@ -3308,6 +3308,15 @@ paths:
         204:
           description: Domain page properties have been updated
 
+    delete:
+      operationId: DomainPageDelete
+      summary: Delete the specified domain page, including dependent objects (comments, page views)
+      tags:
+        - ApiGeneral
+      responses:
+        204:
+          description: Domain page has been deleted
+
   /domain-pages/{uuid}/title:
     post:
       operationId: DomainPageUpdateTitle

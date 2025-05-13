@@ -121,6 +121,7 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 	api.APIGeneralDomainReadonlyHandler = api_general.DomainReadonlyHandlerFunc(handlers.DomainReadonly)
 	api.APIGeneralDomainUpdateHandler = api_general.DomainUpdateHandlerFunc(handlers.DomainUpdate)
 	// Domain pages
+	api.APIGeneralDomainPageDeleteHandler = api_general.DomainPageDeleteHandlerFunc(handlers.DomainPageDelete)
 	api.APIGeneralDomainPageGetHandler = api_general.DomainPageGetHandlerFunc(handlers.DomainPageGet)
 	api.APIGeneralDomainPageListHandler = api_general.DomainPageListHandlerFunc(handlers.DomainPageList)
 	api.APIGeneralDomainPageUpdateHandler = api_general.DomainPageUpdateHandlerFunc(handlers.DomainPageUpdate)

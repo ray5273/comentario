@@ -10,6 +10,27 @@ import (
 	"gitlab.com/comentario/comentario/internal/svc"
 )
 
+func DomainPageDelete(params api_general.DomainPageDeleteParams, user *data.User) middleware.Responder {
+	// Fetch the page and the domain user
+	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	if r != nil {
+		return r
+	}
+
+	// Make sure the user is at least a domain owner
+	if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
+		return r
+	}
+
+	// Delete the page
+	if err := svc.Services.PageService(nil).Delete(&page.ID); err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDomainPageDeleteNoContent()
+}
+
 func DomainPageGet(params api_general.DomainPageGetParams, user *data.User) middleware.Responder {
 	// Fetch the page and the domain user
 	page, _, domainUser, r := domainPageGetDomainUser(params.UUID, user)
