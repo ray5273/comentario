@@ -20,6 +20,9 @@ export default defineConfig({
         baseUrl: 'http://localhost:8080',
         numTestsKeptInMemory: 2,
 
+        // Use the legacy behaviour allowing for cross-origin tests
+        injectDocumentDomain: true,
+
         // Occasionally, tests fail for no conceivable reason (most likely due to Cypress/browser quirks). Therefore we
         // want to retry at least once
         retries: {
