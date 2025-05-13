@@ -4,7 +4,7 @@ go 1.24
 
 require (
 	github.com/JohannesKaufmann/html-to-markdown v1.6.0
-	github.com/avct/uasurfer v0.0.0-20250320214457-f1f6afeb74db
+	github.com/avct/uasurfer v0.0.0-20250506104815-f2613aa2d406
 	github.com/disintegration/imaging v1.6.2
 	github.com/doug-martin/goqu/v9 v9.19.0
 	github.com/go-openapi/errors v0.22.1
@@ -29,11 +29,11 @@ require (
 	github.com/microcosm-cc/bluemonday v1.0.27
 	github.com/nicksnyder/go-i18n/v2 v2.6.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
-	github.com/phuslu/iploc v1.0.20250331
-	github.com/yuin/goldmark v1.7.10
-	golang.org/x/crypto v0.37.0
-	golang.org/x/net v0.39.0
-	golang.org/x/text v0.24.0
+	github.com/phuslu/iploc v1.0.20250430
+	github.com/yuin/goldmark v1.7.11
+	golang.org/x/crypto v0.38.0
+	golang.org/x/net v0.40.0
+	golang.org/x/text v0.25.0
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -57,9 +57,9 @@ require (
 	github.com/mrjones/oauth v0.0.0-20190623134757-126b35219450 // indirect
 	github.com/oklog/ulid v1.3.1 // indirect
 	go.mongodb.org/mongo-driver v1.17.3 // indirect
-	golang.org/x/image v0.26.0 // indirect
-	golang.org/x/oauth2 v0.29.0 // indirect
-	golang.org/x/sync v0.13.0 // indirect
-	golang.org/x/sys v0.32.0 // indirect
+	golang.org/x/image v0.27.0 // indirect
+	golang.org/x/oauth2 v0.30.0 // indirect
+	golang.org/x/sync v0.14.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 )
