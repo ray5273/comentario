@@ -4,9 +4,11 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
+	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
 	"gitlab.com/comentario/comentario/internal/data"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
 )
 
@@ -71,6 +73,63 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 		WithPayload(&api_general.DomainPageListOKBody{
 			Pages: data.SliceToDTOs[*data.DomainPage, *models.DomainPage](ps),
 		})
+}
+
+func DomainPageMoveData(params api_general.DomainPageMoveDataParams, user *data.User) middleware.Responder {
+	// Fetch the source page and the domain user
+	srcPage, srcDomain, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	if r != nil {
+		return r
+	}
+
+	// Make sure the user is at least a domain owner
+	if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
+		return r
+	}
+
+	// Fetch the target page and the domain user
+	tgtPage, tgtDomain, _, r := domainPageGetDomainUser(params.Body.TargetPageID, user)
+	if r != nil {
+		return r
+	}
+
+	// Make sure target != source
+	if tgtPage.ID == srcPage.ID {
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("target page is the same as the source"))
+	}
+
+	// Make sure the pages are on the same domain
+	if srcDomain.ID != tgtDomain.ID {
+		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("target page is on a different domain"))
+	}
+
+	// Move the page data
+	var cntComments, cntPageViews int64
+	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
+		var err error
+
+		// Move comments
+		if cntComments, err = svc.Services.CommentService(tx).MoveToPage(&srcPage.ID, &tgtPage.ID); err != nil {
+			return err
+		}
+
+		// Move page views
+		if cntPageViews, err = svc.Services.StatsService(tx).MovePageViews(&srcPage.ID, &tgtPage.ID); err != nil {
+			return err
+		}
+
+		// Remove the source page
+		return svc.Services.PageService(tx).Delete(&srcPage.ID)
+	})
+	if err != nil {
+		return respServiceError(err)
+	}
+
+	// Succeeded
+	return api_general.NewDomainPageMoveDataOK().WithPayload(&api_general.DomainPageMoveDataOKBody{
+		CountComments:  cntComments,
+		CountPageViews: cntPageViews,
+	})
 }
 
 func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User) middleware.Responder {

@@ -299,7 +299,6 @@ func DomainPurge(params api_general.DomainPurgeParams, user *data.User) middlewa
 	})
 	if err != nil {
 		return respServiceError(err)
-
 	}
 
 	// Succeeded

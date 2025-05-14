@@ -69,6 +69,8 @@ type CommentService interface {
 	MarkDeletedByUser(curUserID, userID *uuid.UUID) (int64, error)
 	// Moderated persists the moderation status changes of the given comment in the database
 	Moderated(comment *data.Comment) error
+	// MoveToPage moves all comments from the source to the target page, returning the number of moved rows
+	MoveToPage(sourcePageID, targetPageID *uuid.UUID) (int64, error)
 	// SetMarkdown updates the Markdown/HTML properties of the given comment in the specified domain. editedUserID
 	// should point to the user who edited the comment in case it's edited, otherwise nil
 	SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error
@@ -533,6 +535,20 @@ func (svc *commentService) Moderated(comment *data.Comment) error {
 
 	// Succeeded
 	return nil
+}
+
+func (svc *commentService) MoveToPage(sourcePageID, targetPageID *uuid.UUID) (int64, error) {
+	logger.Debugf("commentService.MoveToPage(%s, %s)", sourcePageID, targetPageID)
+
+	// Update comment rows in the database
+	if res, err := svc.dbx().Update("cm_comments").Set(goqu.Record{"page_id": targetPageID}).Where(goqu.Ex{"page_id": sourcePageID}).Executor().Exec(); err != nil {
+		return 0, translateDBErrors("commentService.MoveToPage/Exec", err)
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		return 0, translateDBErrors("commentService.MoveToPage/RowsAffected", err)
+	} else {
+		// Succeeded
+		return cnt, nil
+	}
 }
 
 func (svc *commentService) SetMarkdown(comment *data.Comment, markdown string, domainID, editedUserID *uuid.UUID) error {

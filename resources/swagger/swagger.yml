@@ -3317,6 +3317,42 @@ paths:
         204:
           description: Domain page has been deleted
 
+  /domain-pages/{uuid}/move:
+    post:
+      operationId: DomainPageMoveData
+      summary: >
+        Move the page's dependent data (comments, views) onto another page, then remove the source page. Only available
+        to domain owners and superusers
+      tags:
+        - ApiGeneral
+      parameters:
+        - $ref: "#/parameters/pathUuid"
+        - in: body
+          name: body
+          required: true
+          schema:
+            type: object
+            required:
+              - targetPageId
+            properties:
+              targetPageId:
+                description: ID of the domain page to move dependent data to. The page must reside on the same domain as the source page
+                type: string
+                format: uuid
+                x-isnullable: false
+      responses:
+        200:
+          description: Domain page data has been moved onto the target page, and the source page is removed
+          schema:
+            type: object
+            properties:
+              countComments:
+                type: integer
+                description: Number of moved comments
+              countPageViews:
+                type: integer
+                description: Number of moved page views
+
   /domain-pages/{uuid}/title:
     post:
       operationId: DomainPageUpdateTitle

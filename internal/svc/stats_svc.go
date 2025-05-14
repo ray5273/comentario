@@ -33,6 +33,8 @@ type StatsService interface {
 	GetTotals(curUser *data.User) (*StatsTotals, error)
 	// GetViewStats returns view numbers for the given dimension values, optionally limited to a specific domain
 	GetViewStats(isSuperuser bool, dimension string, userID, domainID *uuid.UUID, numDays int) (exmodels.StatsDimensionCounts, error)
+	// MovePageViews moves all page views from the source to the target page, returning the number of moved rows
+	MovePageViews(sourcePageID, targetPageID *uuid.UUID) (int64, error)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -307,6 +309,20 @@ func (svc *statsService) GetViewStats(isSuperuser bool, dimension string, userID
 
 	// Succeeded
 	return res, nil
+}
+
+func (svc *statsService) MovePageViews(sourcePageID, targetPageID *uuid.UUID) (int64, error) {
+	logger.Debugf("statsService.MovePageViews(%s, %s)", sourcePageID, targetPageID)
+
+	// Update comment rows in the database
+	if res, err := svc.dbx().Update("cm_domain_page_views").Set(goqu.Record{"page_id": targetPageID}).Where(goqu.Ex{"page_id": sourcePageID}).Executor().Exec(); err != nil {
+		return 0, translateDBErrors("statsService.MovePageViews/Exec", err)
+	} else if cnt, err := res.RowsAffected(); err != nil {
+		return 0, translateDBErrors("statsService.MovePageViews/RowsAffected", err)
+	} else {
+		// Succeeded
+		return cnt, nil
+	}
 }
 
 // fillCommentCommenterStats fills the statistics for comments and commenters in totals
