@@ -1036,8 +1036,8 @@ type DomainPage struct {
 	Title         string    `db:"title"`                            // Page title
 	IsReadonly    bool      `db:"is_readonly"`                      // Whether the page is readonly (no new comments are allowed)
 	CreatedTime   time.Time `db:"ts_created"     goqu:"skipupdate"` // When the record was created
-	CountComments int64     `db:"count_comments" goqu:"skipupdate"` // Total number of comments
-	CountViews    int64     `db:"count_views"    goqu:"skipupdate"` // Total number of views
+	CountComments int64     `db:"count_comments"`                   // Total number of comments
+	CountViews    int64     `db:"count_views"`                      // Total number of views
 }
 
 // CloneWithClearance returns a clone of the page with a limited set of properties, depending on the specified

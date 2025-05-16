@@ -43,8 +43,8 @@ type PageService interface {
 	//   - dir is the sort direction.
 	//   - pageIndex is the page index, if negative, no pagination is applied.
 	ListByDomainUser(userID, domainID *uuid.UUID, superuser bool, filter, sortBy string, dir data.SortDirection, pageIndex int) ([]*data.DomainPage, error)
-	// Update updates the page's by its ID
-	Update(domain *data.Domain, page *data.DomainPage) error
+	// Update updates the page by its ID
+	Update(page *data.DomainPage) error
 	// UpsertByDomainPath queries a page, inserting a new page database record if necessary, optionally registering a
 	// new pageview (if req is not nil), returning whether the page was added. title is an optional page title, if not
 	// provided, it will be fetched from the URL in the background
@@ -124,7 +124,7 @@ func (svc *pageService) FetchUpdatePageTitle(domain *data.Domain, page *data.Dom
 	}
 
 	// Update the page in the database
-	if err := svc.Update(domain, page); err != nil {
+	if err := svc.Update(page); err != nil {
 		return false, err
 	}
 
@@ -277,18 +277,13 @@ func (svc *pageService) ListByDomainUser(userID, domainID *uuid.UUID, superuser 
 	return ps, nil
 }
 
-func (svc *pageService) Update(domain *data.Domain, page *data.DomainPage) error {
-	logger.Debugf("pageService.Update([%s], %#v)", &domain.ID, page)
+func (svc *pageService) Update(page *data.DomainPage) error {
+	logger.Debugf("pageService.Update(%#v)", page)
 
 	// Update the page record
 	err := persistence.ExecOne(svc.dbx().Update("cm_domain_pages").Set(page).Where(goqu.Ex{"id": &page.ID}))
 	if err != nil {
 		return translateDBErrors("pageService.Update/Update", err)
-	}
-
-	// If no title was provided, fetch it in the background, ignoring possible errors
-	if page.Title == "" {
-		Services.PageTitleFetcher().Enqueue(domain, page)
 	}
 
 	// Succeeded

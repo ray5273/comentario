@@ -10,6 +10,7 @@ import (
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/svc"
+	"gitlab.com/comentario/comentario/internal/util"
 )
 
 func DomainPageDelete(params api_general.DomainPageDeleteParams, user *data.User) middleware.Responder {
@@ -77,59 +78,52 @@ func DomainPageList(params api_general.DomainPageListParams, user *data.User) mi
 
 func DomainPageMoveData(params api_general.DomainPageMoveDataParams, user *data.User) middleware.Responder {
 	// Fetch the source page and the domain user
-	srcPage, srcDomain, domainUser, r := domainPageGetDomainUser(params.UUID, user)
+	pgSrc, domSrc, du, r := domainPageGetDomainUser(params.UUID, user)
 	if r != nil {
 		return r
 	}
 
 	// Make sure the user is at least a domain owner
-	if r := Verifier.UserCanManageDomain(user, domainUser); r != nil {
+	if r := Verifier.UserCanManageDomain(user, du); r != nil {
 		return r
 	}
 
 	// Fetch the target page and the domain user
-	tgtPage, tgtDomain, _, r := domainPageGetDomainUser(params.Body.TargetPageID, user)
+	pgTgt, domTgt, _, r := domainPageGetDomainUser(params.Body.TargetPageID, user)
 	if r != nil {
 		return r
 	}
 
 	// Make sure target != source
-	if tgtPage.ID == srcPage.ID {
+	if pgTgt.ID == pgSrc.ID {
 		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("target page is the same as the source"))
 	}
 
 	// Make sure the pages are on the same domain
-	if srcDomain.ID != tgtDomain.ID {
+	if domSrc.ID != domTgt.ID {
 		return respBadRequest(exmodels.ErrorInvalidPropertyValue.WithDetails("target page is on a different domain"))
 	}
 
 	// Move the page data
-	var cntComments, cntPageViews int64
 	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
-		var err error
-
-		// Move comments
-		if cntComments, err = svc.Services.CommentService(tx).MoveToPage(&srcPage.ID, &tgtPage.ID); err != nil {
-			return err
-		}
-
-		// Move page views
-		if cntPageViews, err = svc.Services.StatsService(tx).MovePageViews(&srcPage.ID, &tgtPage.ID); err != nil {
-			return err
-		}
-
-		// Remove the source page
-		return svc.Services.PageService(tx).Delete(&srcPage.ID)
+		ps := svc.Services.PageService(tx)
+		return util.RunCheckErr([]util.ErrFunc{
+			// Move comments
+			func() error { return svc.Services.CommentService(tx).MoveToPage(&pgSrc.ID, &pgTgt.ID) },
+			// Move page views
+			func() error { return svc.Services.StatsService(tx).MovePageViews(&pgSrc.ID, &pgTgt.ID) },
+			// Update target page metrics
+			func() error { return ps.IncrementCounts(&pgTgt.ID, int(pgSrc.CountComments), int(pgSrc.CountViews)) },
+			// Remove the source page
+			func() error { return ps.Delete(&pgSrc.ID) },
+		})
 	})
 	if err != nil {
 		return respServiceError(err)
 	}
 
 	// Succeeded
-	return api_general.NewDomainPageMoveDataOK().WithPayload(&api_general.DomainPageMoveDataOKBody{
-		CountComments:  cntComments,
-		CountPageViews: cntPageViews,
-	})
+	return api_general.NewDomainPageMoveDataNoContent()
 }
 
 func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User) middleware.Responder {
@@ -168,9 +162,8 @@ func DomainPageUpdate(params api_general.DomainPageUpdateParams, user *data.User
 	}
 
 	// Update the page
-	ro := swag.BoolValue(params.Body.IsReadonly)
-	if err := svc.Services.PageService(nil).Update(domain, page.WithIsReadonly(ro).WithPath(path)); err != nil {
-		return respServiceError(err)
+	if r := domainPageUpdateFetchTitle(domain, page.WithIsReadonly(swag.BoolValue(params.Body.IsReadonly)).WithPath(path)); r != nil {
+		return r
 	}
 
 	// Succeeded
@@ -229,4 +222,21 @@ func domainPageGetDomainUser(pageID strfmt.UUID, user *data.User) (*data.DomainP
 
 	// Succeeded
 	return page, domain, domainUser, nil
+}
+
+// domainPageUpdateFetchTitle updates the page data and initiates a title fetch-and-update in the background if the
+// page has no title set
+func domainPageUpdateFetchTitle(domain *data.Domain, page *data.DomainPage) middleware.Responder {
+	// Update the page record
+	if err := svc.Services.PageService(nil).Update(page); err != nil {
+		return respServiceError(err)
+	}
+
+	// If no title was provided, fetch it in the background, ignoring possible errors
+	if page.Title == "" {
+		svc.Services.PageTitleFetcher().Enqueue(domain, page)
+	}
+
+	// Succeeded
+	return nil
 }

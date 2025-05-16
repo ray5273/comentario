@@ -3341,17 +3341,8 @@ paths:
                 format: uuid
                 x-isnullable: false
       responses:
-        200:
+        204:
           description: Domain page data has been moved onto the target page, and the source page is removed
-          schema:
-            type: object
-            properties:
-              countComments:
-                type: integer
-                description: Number of moved comments
-              countPageViews:
-                type: integer
-                description: Number of moved page views
 
   /domain-pages/{uuid}/title:
     post:
