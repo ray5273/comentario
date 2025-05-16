@@ -1,26 +1,21 @@
 import { Component, input } from '@angular/core';
 import { toObservable, toSignal } from '@angular/core/rxjs-interop';
-import { DecimalPipe } from '@angular/common';
 import { Router, RouterLink } from '@angular/router';
 import { BehaviorSubject, combineLatestWith, EMPTY, switchMap, tap } from 'rxjs';
 import { filter, map } from 'rxjs/operators';
 import { UntilDestroy } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { faEdit, faRotate, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { faBoxesPacking, faEdit, faRotate, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { DomainSelectorService } from '../../../_services/domain-selector.service';
 import { Paths } from '../../../../../_utils/consts';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { ToastService } from '../../../../../_services/toast.service';
 import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
-import { ExternalLinkDirective } from '../../../../tools/_directives/external-link.directive';
-import { CheckmarkComponent } from '../../../../tools/checkmark/checkmark.component';
-import { DatetimePipe } from '../../../_pipes/datetime.pipe';
 import { CommentListComponent } from '../../comments/comment-list/comment-list.component';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
-import { DomainRssLinkComponent } from '../../domain-rss-link/domain-rss-link.component';
-import { InfoIconComponent } from '../../../../tools/info-icon/info-icon.component';
 import { ConfirmDirective } from '../../../../tools/_directives/confirm.directive';
+import { DomainPageDetailsComponent } from '../domain-page-details/domain-page-details.component';
 
 @UntilDestroy()
 @Component({
@@ -30,15 +25,10 @@ import { ConfirmDirective } from '../../../../tools/_directives/confirm.directiv
         SpinnerDirective,
         FaIconComponent,
         RouterLink,
-        ExternalLinkDirective,
-        CheckmarkComponent,
-        DatetimePipe,
-        DecimalPipe,
         CommentListComponent,
         NoDataComponent,
-        DomainRssLinkComponent,
-        InfoIconComponent,
         ConfirmDirective,
+        DomainPageDetailsComponent,
     ],
 })
 export class DomainPagePropertiesComponent {
@@ -64,9 +54,10 @@ export class DomainPagePropertiesComponent {
                 switchMap(([id]) => id ? this.api.domainPageGet(id).pipe(this.loading.processing(), map(r => r.page)) : EMPTY)));
 
     // Icons
-    readonly faEdit     = faEdit;
-    readonly faRotate   = faRotate;
-    readonly faTrashAlt = faTrashAlt;
+    readonly faBoxesPacking = faBoxesPacking;
+    readonly faEdit         = faEdit;
+    readonly faRotate       = faRotate;
+    readonly faTrashAlt     = faTrashAlt;
 
     constructor(
         private readonly router: Router,

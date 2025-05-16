@@ -13,21 +13,24 @@
             <!-- Buttons: only for moderator+ -->
             @if (meta.canModerateDomain) {
                 <div class="col-md-4 order-md-last pb-3">
-                    <!-- Update title -->
-                    @if (meta.canManageDomain) {
-                        <button [appSpinner]="updatingTitle.active" (click)="updateTitle()"
-                                type="button" class="btn btn-outline-secondary w-100 mb-2">
-                            <fa-icon [icon]="faRotate" class="me-1"/>
-                            <ng-container i18n>Update title</ng-container>
-                        </button>
-                    }
                     <!-- Edit -->
                     <a routerLink="edit" class="btn btn-secondary w-100 mb-2">
                         <fa-icon [icon]="faEdit" class="me-1"/>
                         <ng-container i18n>Edit</ng-container>
                     </a>
-                    <!-- Delete -->
                     @if (meta.canManageDomain) {
+                        <!-- Update title -->
+                        <button [appSpinner]="updatingTitle.active" (click)="updateTitle()"
+                                type="button" class="btn btn-outline-secondary w-100 mb-2">
+                            <fa-icon [icon]="faRotate" class="me-1"/>
+                            <ng-container i18n>Update title</ng-container>
+                        </button>
+                        <!-- Move data -->
+                        <a routerLink="move" class="btn btn-outline-secondary w-100 mb-2">
+                            <fa-icon [icon]="faBoxesPacking" class="me-1"/>
+                            <ng-container i18n>Move data</ng-container>
+                        </a>
+                        <!-- Delete -->
                         <button [appSpinner]="deleting.active"
                                 [appConfirm]="deleteConfirm"
                                 confirmAction="Delete domain page"
@@ -43,62 +46,7 @@
 
             <!-- Detail table -->
             <div class="col col-md-8">
-                <dl class="detail-table" id="domainPageDetailTable">
-                    <!-- Domain -->
-                    <div>
-                        <dt i18n>Domain</dt>
-                        <dd>
-                            <a [routerLink]="[Paths.manage.domains, meta.domain!.id]"
-                               class="internal-link">{{ meta.domain!.host }}</a>
-                        </dd>
-                    </div>
-                    <!-- Path -->
-                    <div>
-                        <dt i18n>Path</dt>
-                        <dd><a [appExternalLink]="meta.domain!.rootUrl! + dp.path">{{ dp.path }}</a></dd>
-                    </div>
-                    <!-- Title -->
-                    @if (dp.title; as v) {
-                        <div>
-                            <dt i18n>Title</dt>
-                            <dd>{{ v }}</dd>
-                        </div>
-                    }
-                    <!-- Read-only -->
-                    <div>
-                        <dt i18n>Read-only</dt>
-                        <dd><app-checkmark [value]="dp.isReadonly"/></dd>
-                    </div>
-                    <!-- Created -->
-                    @if (dp.createdTime | datetime; as v) {
-                        <div>
-                            <dt i18n>Created</dt>
-                            <dd>{{ v }}</dd>
-                        </div>
-                    }
-                    <!-- Number of comments -->
-                    @if (dp.countComments! >= 0) {
-                        <div>
-                            <dt i18n>Number of comments</dt>
-                            <dd>{{ dp.countComments | number }}</dd>
-                        </div>
-                    }
-                    <!-- Number of views -->
-                    @if (dp.countViews! >= 0) {
-                        <div>
-                            <dt i18n>Number of views</dt>
-                            <dd>{{ dp.countViews | number }}</dd>
-                        </div>
-                    }
-                    <!-- Comment RSS feed -->
-                    <div>
-                        <dt>
-                            <ng-container i18n>Comment RSS feed</ng-container>
-                            <app-info-icon docLink="kb/rss/" position="right"/>
-                        </dt>
-                        <dd><app-domain-rss-link [pageId]="dp.id"/></dd>
-                    </div>
-                </dl>
+                <app-domain-page-details [page]="dp"/>
             </div>
         </div>
 

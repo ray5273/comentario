@@ -30,5 +30,13 @@ export class XtraValidators {
                 /^https:\/\/.{1,2076}$/ :
                 /^https?:\/\/.{1,2076}$/);
     }
+
+    /**
+     * Return a validator that enforces the given property of the value is set (truthy).
+     * @param prop Property name that must be present in the control's value.
+     */
+    static hasProperty(prop: string): ValidatorFn {
+        return (control: AbstractControl) => control.value?.[prop] ? null : {[`hasProperty[${prop}]`]: true};
+    }
 }
 

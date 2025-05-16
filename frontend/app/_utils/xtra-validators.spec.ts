@@ -144,4 +144,32 @@ describe('XtraValidators', () => {
                 `given '${t.in}', validates to ${t.ok ?? false}`,
                 () => expect(XtraValidators.url(t.secure)(new FormControl(t.in))).toEqual(t.ok ? null : jasmine.truthy())));
     });
+
+    describe('hasProperty', () => {
+
+        [
+            // Good
+            {ok, prop: 'foo', in: {foo: 'bar'}},
+            {ok, prop: 'foo', in: {foo: 42}},
+
+            // Bad
+            {prop: 'foo', in: undefined},
+            {prop: 'foo', in: null},
+            {prop: 'foo', in: false},
+            {prop: 'foo', in: true},
+            {prop: 'foo', in: 'x'},
+            {prop: 'foo', in: NaN},
+            {prop: 'foo', in: 0},
+            {prop: 'foo', in: {}},
+            {prop: 'foo', in: {bar: 'foo'}},
+            {prop: 'foo', in: {foo: ''}},
+            {prop: 'foo', in: {foo: false}},
+            {prop: 'foo', in: {foo: 0}},
+            {prop: 'foo', in: {foo: undefined}},
+            {prop: 'foo', in: {foo: null}},
+        ]
+            .forEach(t => it(
+                `given value ${t.in}, validates to ${t.ok ?? false}`,
+                () => expect(XtraValidators.hasProperty(t.prop)(new FormControl(t.in))).toEqual(t.ok ? null : jasmine.truthy())));
+    });
 });

@@ -5,7 +5,7 @@ context('Domain Page Properties page', () => {
     const localhostPageId   = '0ebb8a1b-12f6-421e-b1bb-75867ac480c7'; // Home page ('/')
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + `/${localhostPageId}`;
 
-    const makeAliases = (hasUpdateTitle: boolean, hasEdit: boolean, hasDelete: boolean) => {
+    const makeAliases = (hasEdit: boolean, hasUpdateTitle: boolean, hasMove: boolean, hasDelete: boolean) => {
         cy.get('app-domain-page-properties').as('pageProps');
 
         // Header
@@ -15,15 +15,20 @@ context('Domain Page Properties page', () => {
         cy.get('@pageProps').find('#domainPageDetailTable').as('pageDetails');
 
         // Buttons
+        if (hasEdit) {
+            cy.get('@pageProps').contains('a', 'Edit').as('btnEdit').should('be.visible');
+        } else {
+            cy.get('@pageProps').contains('a', 'Edit').should('not.exist');
+        }
         if (hasUpdateTitle) {
             cy.get('@pageProps').contains('button', 'Update title').as('btnUpdateTitle').should('be.visible').and('be.enabled');
         } else {
             cy.get('@pageProps').contains('button', 'Update title').should('not.exist');
         }
-        if (hasEdit) {
-            cy.get('@pageProps').contains('a', 'Edit').as('btnEdit').should('be.visible');
+        if (hasMove) {
+            cy.get('@pageProps').contains('a', 'Move data').as('btnMoveData').should('be.visible');
         } else {
-            cy.get('@pageProps').contains('a', 'Edit').should('not.exist');
+            cy.get('@pageProps').contains('a', 'Move data').should('not.exist');
         }
         if (hasDelete) {
             cy.get('@pageProps').contains('button', 'Delete').as('btnDelete').should('be.visible').and('be.enabled');
@@ -65,7 +70,7 @@ context('Domain Page Properties page', () => {
         .forEach(test =>
             it(`shows properties for ${test.name} user`, () => {
                 cy.loginViaApi(test.user, localhostPagePath);
-                makeAliases(false, test.editable, false);
+                makeAliases(test.editable, false, false, false);
                 cy.get('@pageDetails').dlTexts().should('matrixMatch', [
                     ['Domain',           DOMAINS.localhost.host],
                     ['Path',             '/'],
@@ -79,6 +84,12 @@ context('Domain Page Properties page', () => {
 
                 // Verify the RSS link
                 cy.get('@pageDetails').ddItem('Comment RSS feed').verifyRssLink(DOMAINS.localhost.id, test.user.id, localhostPageId);
+
+                // Verify the edit button
+                if (test.editable) {
+                    cy.get('@btnEdit').click();
+                    cy.isAt(localhostPagePath + '/edit');
+                }
             }));
 
     [
@@ -116,7 +127,7 @@ context('Domain Page Properties page', () => {
 
                 beforeEach(() => {
                     cy.loginViaApi(test.user, localhostPagePath);
-                    makeAliases(true, true, true);
+                    makeAliases(true, true, true, true);
                 });
 
                 it('shows page properties', () => {
@@ -148,6 +159,18 @@ context('Domain Page Properties page', () => {
                     // Go back to verify the pageview has been registered
                     cy.visit(localhostPagePath);
                     cy.get('@pageDetails').ddItem('Number of views').should('have.text', '11');
+                });
+
+                it('allows to edit page', () => {
+                    // Click on Edit
+                    cy.get('@btnEdit').click();
+                    cy.isAt(localhostPagePath + '/edit');
+                });
+
+                it('allows to move page data', () => {
+                    // Click on Move data
+                    cy.get('@btnMoveData').click();
+                    cy.isAt(localhostPagePath + '/move');
                 });
 
                 it('allows to delete a page', () => {

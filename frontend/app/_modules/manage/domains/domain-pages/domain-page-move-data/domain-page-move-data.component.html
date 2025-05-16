@@ -1,0 +1,84 @@
+<!-- Header -->
+<header class="mb-3">
+    <h1 i18n="heading">Move domain page data</h1>
+</header>
+
+<!-- Info block -->
+<app-info-block>
+    <p i18n>This function allows you to move the following data onto another page:</p>
+    <ul>
+        <li i18n>Comments</li>
+        <li i18n>View statistics</li>
+    </ul>
+    <p class="mb-0">
+        <ng-container i18n>You can use it to merge data of a page that was renamed or otherwise changed its URL, into a new one.</ng-container>&ngsp;
+        <ng-container i18n>Once the data transfer is complete, the source page will be removed.</ng-container>
+    </p>
+</app-info-block>
+
+<!-- Move data form -->
+<form [formGroup]="form" [appSpinner]="loading.active" (ngSubmit)="submit()" (keydown.control.enter)="submit()" spinnerSize="lg">
+    <fieldset [disabled]="loading.active || submitting.active">
+        <!-- Source -->
+        <div class="mb-3 row">
+            <label for="sourcePage" class="col-sm-3 col-form-label colon fw-bold" i18n>Move all data from page</label>
+            <div class="col-sm-9">
+                <div class="input-group">
+                    <input [value]="sourcePage()?.path" type="text" readonly class="form-control" id="sourcePage"
+                           aria-describedby="sourcePageDetails">
+                    <a [href]="sourcePageUrl()" class="btn btn-outline-secondary" target="_blank"
+                       rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
+                        <fa-icon [icon]="faUpRightFromSquare"/>
+                    </a>
+                </div>
+                <div id="sourcePageDetails" class="form-text">
+                    <ng-container *ngTemplateOutlet="pageDetails; context: {$implicit: sourcePage()}"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Target -->
+        <div class="mb-3 row">
+            <label for="targetPage" class="col-sm-3 col-form-label colon fw-bold" i18n>To page</label>
+            <div class="col-sm-9">
+                <div class="input-group">
+                    <input formControlName="targetPage"
+                           appValidatable
+                           #targetTypeahead="ngbTypeahead"
+                           [ngbTypeahead]="targetSearch"
+                           [inputFormatter]="pageInputFormatter"
+                           [resultFormatter]="pageInputFormatter"
+                           (focus)="targetFocus.next($any($event).target.value)"
+                           (click)="targetClick.next($any($event).target.value)"
+                           type="search" class="form-control" id="targetPage" placeholder="Click or type" required
+                           aria-describedby="targetPageDetails" i18n-placeholder>
+                    <a [href]="targetPageUrl()" [class.disabled]="!targetPageUrl()" class="btn btn-outline-secondary"
+                       target="_blank" rel="nofollow noopener noreferrer" title="Open in new tab" i18n-title>
+                        <fa-icon [icon]="faUpRightFromSquare"/>
+                    </a>
+                    <div class="invalid-feedback" i18n>Please select a value.</div>
+                </div>
+                <div id="targetPageDetails" class="form-text">
+                    <ng-container *ngTemplateOutlet="pageDetails; context: {$implicit: targetPage()}"/>
+                </div>
+            </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="form-footer">
+            <a routerLink=".." class="btn btn-link" i18n="action">Cancel</a>
+            <button [appSpinner]="submitting.active" type="submit" class="btn btn-primary" i18n="action">Move data</button>
+        </div>
+    </fieldset>
+</form>
+
+<!-- Page details template used for source and target inputs -->
+<ng-template #pageDetails let-page>
+    <!-- If the result is indeed a DomainPage (by partial match it will be a string) -->
+    @if (page?.id) {
+        @if (page?.title; as t) { <span class="pageDetails_title" i18n>Titled "{{ t }}"</span>,&ngsp; }
+        <span class="pageDetails_comments" i18n>{{ page.countComments | number }} comments</span>,&ngsp;
+        <span class="pageDetails_views"    i18n>{{ page.countViews | number }} views</span>,&ngsp;
+        <span class="pageDetails_created"  i18n>created {{ page.createdTime | datetime }}</span>
+    }
+</ng-template>

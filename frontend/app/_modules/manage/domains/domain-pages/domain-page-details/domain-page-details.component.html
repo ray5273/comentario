@@ -1,0 +1,58 @@
+@let p = page();
+@let d = domainMeta()?.domain;
+
+@if (p && d) {
+    <dl class="detail-table" id="domainPageDetailTable">
+        <!-- Domain -->
+        <div>
+            <dt i18n>Domain</dt>
+            <dd><a [routerLink]="[Paths.manage.domains, d.id]" class="internal-link">{{ d.host }}</a></dd>
+        </div>
+        <!-- Path -->
+        <div>
+            <dt i18n>Path</dt>
+            <dd><a [appExternalLink]="d.rootUrl! + p.path">{{ p.path }}</a></dd>
+        </div>
+        <!-- Title -->
+        @if (p.title; as v) {
+            <div>
+                <dt i18n>Title</dt>
+                <dd>{{ v }}</dd>
+            </div>
+        }
+        <!-- Read-only -->
+        <div>
+            <dt i18n>Read-only</dt>
+            <dd><app-checkmark [value]="p.isReadonly"/></dd>
+        </div>
+        <!-- Created -->
+        @if (p.createdTime | datetime; as v) {
+            <div>
+                <dt i18n>Created</dt>
+                <dd>{{ v }}</dd>
+            </div>
+        }
+        <!-- Number of comments -->
+        @if (p.countComments! >= 0) {
+            <div>
+                <dt i18n>Number of comments</dt>
+                <dd>{{ p.countComments | number }}</dd>
+            </div>
+        }
+        <!-- Number of views -->
+        @if (p.countViews! >= 0) {
+            <div>
+                <dt i18n>Number of views</dt>
+                <dd>{{ p.countViews | number }}</dd>
+            </div>
+        }
+        <!-- Comment RSS feed -->
+        <div>
+            <dt>
+                <ng-container i18n>Comment RSS feed</ng-container>
+                <app-info-icon docLink="kb/rss/" position="right"/>
+            </dt>
+            <dd><app-domain-rss-link [pageId]="p.id"/></dd>
+        </div>
+    </dl>
+}

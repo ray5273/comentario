@@ -1,13 +1,13 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
 import { FontAwesomeTestingModule } from '@fortawesome/angular-fontawesome/testing';
-import { NgbModalModule } from '@ng-bootstrap/ng-bootstrap';
 import { MockComponents, MockProvider } from 'ng-mocks';
 import { CommentPropertiesComponent } from './comment-properties.component';
 import { ApiGeneralService } from '../../../../../../generated-api';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
 import { mockDomainSelector, MockHighlightDirective, mockHighlightLoaderStub } from '../../../../../_utils/_mocks.spec';
 import { UserLinkComponent } from '../../../user-link/user-link.component';
+import { DialogService } from '../../../_services/dialog.service';
 
 describe('CommentPropertiesComponent', () => {
 
@@ -19,13 +19,13 @@ describe('CommentPropertiesComponent', () => {
                 imports: [
                     RouterModule.forRoot([]),
                     FontAwesomeTestingModule,
-                    NgbModalModule,
                     CommentPropertiesComponent,
                     MockComponents(NoDataComponent, UserLinkComponent),
                     MockHighlightDirective,
                 ],
                 providers: [
                     MockProvider(ApiGeneralService),
+                    MockProvider(DialogService),
                     mockDomainSelector(),
                     mockHighlightLoaderStub(),
                 ],

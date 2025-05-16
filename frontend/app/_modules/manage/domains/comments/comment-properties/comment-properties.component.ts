@@ -1,9 +1,9 @@
 import { Component, effect, input, OnInit } from '@angular/core';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 import { BehaviorSubject, EMPTY, from, switchMap } from 'rxjs';
-import { catchError, filter } from 'rxjs/operators';
+import { filter } from 'rxjs/operators';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
-import { NgbModal, NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
+import { NgbNavModule } from '@ng-bootstrap/ng-bootstrap';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
 import { faCheck, faTrashAlt, faXmark } from '@fortawesome/free-solid-svg-icons';
 import { Highlight } from 'ngx-highlightjs';
@@ -11,7 +11,6 @@ import { ApiGeneralService, Comment, Commenter, DomainPage, Principal, User } fr
 import { DomainMeta, DomainSelectorService } from '../../../_services/domain-selector.service';
 import { ProcessingStatus } from '../../../../../_utils/processing-status';
 import { AnonymousUser, Paths } from '../../../../../_utils/consts';
-import { ConfirmDialogComponent } from '../../../../tools/confirm-dialog/confirm-dialog.component';
 import { CommentService } from '../../../_services/comment.service';
 import { SpinnerDirective } from '../../../../tools/_directives/spinner.directive';
 import { ExternalLinkDirective } from '../../../../tools/_directives/external-link.directive';
@@ -22,6 +21,7 @@ import { UserLinkComponent } from '../../../user-link/user-link.component';
 import { CountryNamePipe } from '../../../_pipes/country-name.pipe';
 import { CopyTextDirective } from '../../../../tools/_directives/copy-text.directive';
 import { NoDataComponent } from '../../../../tools/no-data/no-data.component';
+import { DialogService } from '../../../_services/dialog.service';
 
 @UntilDestroy()
 @Component({
@@ -100,9 +100,9 @@ export class CommentPropertiesComponent implements OnInit {
 
     constructor(
         private readonly route: ActivatedRoute,
-        private readonly modal: NgbModal,
         private readonly api: ApiGeneralService,
         private readonly domainSelectorSvc: DomainSelectorService,
+        private readonly dialogService: DialogService,
         private readonly commentService: CommentService,
     ) {
         // Load the comment properties initially, and reload on changes
@@ -116,18 +116,9 @@ export class CommentPropertiesComponent implements OnInit {
 
     delete() {
         // Show a confirmation dialog
-        const mr = this.modal.open(ConfirmDialogComponent);
-        const dlg = (mr.componentInstance as ConfirmDialogComponent);
-        dlg.content    .set($localize`Are you sure you want to delete this comment?`);
-        dlg.actionLabel.set($localize`Delete comment`);
-
-        // Run the dialog
-        from(mr.result)
-            .pipe(
-                // Ignore when canceled
-                catchError(() => EMPTY),
-                // Run deletion when confirmed
-                switchMap(() => this.api.commentDelete(this.comment!.id!).pipe(this.deleting.processing())))
+        from(this.dialogService.confirm($localize`Are you sure you want to delete this comment?`, $localize`Delete comment`))
+            // Run deletion when confirmed
+            .pipe(switchMap(b => b ? this.api.commentDelete(this.comment!.id!).pipe(this.deleting.processing()): EMPTY))
             .subscribe(() => {
                 this.reload$.next();
                 this.commentService.refresh();
