@@ -1,11 +1,9 @@
-import { DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
+import { DOMAIN_PAGES, DOMAINS, TEST_PATHS, USERS } from '../../support/cy-utils';
 import { EmbedUtils } from '../../support/cy-embed-utils';
 
 context('RSS dialog', () => {
 
     before(cy.backendReset);
-
-    const pageId     = '0ebb8a1b-12f6-421e-b1bb-75867ac480c6';
 
     const makeDlgAliases = (hasRepliesCB: boolean) => {
         // Check the title
@@ -34,7 +32,7 @@ context('RSS dialog', () => {
         makeDlgAliases(false);
 
         // Check the link
-        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: pageId});
+        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: DOMAIN_PAGES.comments.id});
 
         // Uncheck the "this page" checkbox
         cy.get('@cbThisPage').click().should('not.be.checked');
@@ -42,7 +40,7 @@ context('RSS dialog', () => {
 
         // Enable it again and come back to the previous URL
         cy.get('@cbThisPage').click().should('be.checked');
-        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: pageId});
+        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: DOMAIN_PAGES.comments.id});
 
         // Close the dialog with Esc
         cy.get('@cbThisPage').type('{esc}');
@@ -59,7 +57,7 @@ context('RSS dialog', () => {
         makeDlgAliases(true);
 
         // Check the link
-        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: pageId});
+        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: DOMAIN_PAGES.comments.id});
 
         // Uncheck the "this page" checkbox
         cy.get('@cbThisPage').click().should('not.be.checked');
@@ -71,11 +69,11 @@ context('RSS dialog', () => {
 
         // Enable "this page" again
         cy.get('@cbThisPage').click().should('be.checked');
-        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: pageId, replyToUser: USERS.commenterOne.id});
+        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: DOMAIN_PAGES.comments.id, replyToUser: USERS.commenterOne.id});
 
         // Uncheck the "replies" checkbox
         cy.get('@cbReplies').click().should('not.be.checked');
-        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: pageId});
+        cy.get('@rssLink').should('be.rssLink', {domain: DOMAINS.localhost.id, page: DOMAIN_PAGES.comments.id});
 
         // Close the dialog with Esc
         cy.get('@cbThisPage').type('{esc}');

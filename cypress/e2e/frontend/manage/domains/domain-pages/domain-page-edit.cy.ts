@@ -1,12 +1,11 @@
-import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAIN_PAGES, DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
 
 context('Domain Page Edit page', () => {
 
     const pagesPath             = PATHS.manage.domains.id(DOMAINS.localhost.id).pages;
-    const propsPagePathWritable = `${pagesPath}/0ebb8a1b-12f6-421e-b1bb-75867ac480c6`;
-    const pagePathWritable      = `${propsPagePathWritable}/edit`;
-
-    const pathComments = '/comments/';
+    const commentsPropsPagePath = `${pagesPath}/${DOMAIN_PAGES.comments.id}`;
+    const commentsEditPagePath  = `${commentsPropsPagePath}/edit`;
+    const commentsPagePath      = DOMAIN_PAGES.comments.path;
 
     const makeAliases = (path: string, title: string, pathEditable: boolean, titleEditable: boolean, readOnly: boolean) => {
         cy.get('app-domain-page-edit').as('pageEdit');
@@ -53,27 +52,27 @@ context('Domain Page Edit page', () => {
         ]
             .forEach(test =>
                 it(`redirects ${test.name} user to login and ${test.dest}`, () =>
-                    cy.verifyRedirectsAfterLogin(pagePathWritable, test.user, test.redir)));
+                    cy.verifyRedirectsAfterLogin(commentsEditPagePath, test.user, test.redir)));
     });
 
     it('stays on the page after reload', () => {
-        cy.verifyStayOnReload(pagePathWritable, USERS.ace);
+        cy.verifyStayOnReload(commentsEditPagePath, USERS.ace);
 
         // Test cancelling: we return to page properties
-        makeAliases(pathComments, 'Comments', true, true, false);
+        makeAliases(commentsPagePath, 'Comments', true, true, false);
         cy.get('@btnCancel').click();
-        cy.isAt(propsPagePathWritable);
+        cy.isAt(commentsPropsPagePath);
         cy.noToast();
     });
 
     it('validates input', () => {
-        cy.loginViaApi(USERS.ace, pagePathWritable);
-        makeAliases(pathComments, 'Comments', true, true, false);
+        cy.loginViaApi(USERS.ace, commentsEditPagePath);
+        makeAliases(commentsPagePath, 'Comments', true, true, false);
 
         // Remove the path, then try to submit to get error feedback
         cy.get('@path').isValid().clear();
         cy.get('@btnSubmit').click();
-        cy.isAt(pagePathWritable);
+        cy.isAt(commentsEditPagePath);
 
         // Path
         cy.get('@path').isInvalid('Please enter a value.')
@@ -102,9 +101,9 @@ context('Domain Page Edit page', () => {
             .forEach(test => {
                 it(`by ${test.name}, changing path`, () => {
                     // Login
-                    cy.loginViaApi(test.user, pagePathWritable);
+                    cy.loginViaApi(test.user, commentsEditPagePath);
                     const newPath = '/new-path';
-                    makeAliases(pathComments, 'Comments', true, true, false);
+                    makeAliases(commentsPagePath, 'Comments', true, true, false);
 
                     // Edit the page and submit
                     cy.get('@path') .setValue(newPath);
@@ -113,7 +112,7 @@ context('Domain Page Edit page', () => {
                     cy.get('@btnSubmit').click();
 
                     // We're back to page props
-                    cy.isAt(propsPagePathWritable);
+                    cy.isAt(commentsPropsPagePath);
                     cy.toastCheckAndClose('data-saved');
                     cy.get('app-domain-page-properties').as('pageProps')
                         .find('#domainPageDetailTable').as('pageDetails')
@@ -131,7 +130,7 @@ context('Domain Page Edit page', () => {
                     // Revert path so that we can check the comments
                     cy.get('@pageProps').contains('a', 'Edit').click();
                     makeAliases(newPath, 'Blah blah', true, true, true);
-                    cy.get('@path').setValue(pathComments);
+                    cy.get('@path').setValue(commentsPagePath);
                     cy.get('@btnSubmit').click();
                     cy.toastCheckAndClose('data-saved');
 
@@ -139,21 +138,21 @@ context('Domain Page Edit page', () => {
                     checkIsReadonly(TEST_PATHS.comments);
 
                     // Edit the page again
-                    cy.visit(propsPagePathWritable);
+                    cy.visit(commentsPropsPagePath);
                     cy.get('@pageProps').contains('a', 'Edit').click();
-                    makeAliases(pathComments, 'Blah blah', true, true, true);
+                    makeAliases(commentsPagePath, 'Blah blah', true, true, true);
                     cy.get('@title').clear();
                     cy.get('@readOnly').click().should('not.be.checked');
                     cy.get('@btnSubmit').click();
 
                     // Verify the updated properties
-                    cy.isAt(propsPagePathWritable);
+                    cy.isAt(commentsPropsPagePath);
                     cy.toastCheckAndClose('data-saved');
                     cy.get('app-domain-page-properties').as('pageProps')
                         .find('#domainPageDetailTable').as('pageDetails')
                         .dlTexts().should('matrixMatch', [
                             ['Domain',             DOMAINS.localhost.host],
-                            ['Path',               pathComments],
+                            ['Path',               commentsPagePath],
                             ['Title',              'Comments | Comentario Test'],
                             ['Read-only',          ''],
                             ['Created',            REGEXES.datetime],
@@ -168,8 +167,8 @@ context('Domain Page Edit page', () => {
 
                 it(`by ${test.name}, refusing to reuse existing path`, () => {
                     // Login
-                    cy.loginViaApi(test.user, pagePathWritable);
-                    makeAliases(pathComments, 'Comments', true, true, false);
+                    cy.loginViaApi(test.user, commentsEditPagePath);
+                    makeAliases(commentsPagePath, 'Comments', true, true, false);
 
                     // Edit the page and submit
                     cy.get('@path').setValue('/dark-mode/');
@@ -177,27 +176,27 @@ context('Domain Page Edit page', () => {
 
                     // We get an error toast and stay on the same page
                     cy.toastCheckAndClose('page-path-already-exists');
-                    cy.isAt(pagePathWritable);
+                    cy.isAt(commentsEditPagePath);
                 });
             });
 
         it('by moderator', () => {
             // Login
-            cy.loginViaApi(USERS.king, pagePathWritable);
-            makeAliases(pathComments, 'Comments', false, false, false);
+            cy.loginViaApi(USERS.king, commentsEditPagePath);
+            makeAliases(commentsPagePath, 'Comments', false, false, false);
 
             // Make the page readonly and submit
             cy.get('@readOnly').click().should('be.checked');
             cy.get('@btnSubmit').click();
 
             // We're back to page props
-            cy.isAt(propsPagePathWritable);
+            cy.isAt(commentsPropsPagePath);
             cy.toastCheckAndClose('data-saved');
             cy.get('app-domain-page-properties').as('pageProps')
                 .find('#domainPageDetailTable').as('pageDetails')
                 .dlTexts().should('matrixMatch', [
                     ['Domain',           DOMAINS.localhost.host],
-                    ['Path',             pathComments],
+                    ['Path',             commentsPagePath],
                     ['Title',            'Comments'],
                     ['Read-only',        '✔'],
                     ['Comment RSS feed', null],
@@ -207,20 +206,20 @@ context('Domain Page Edit page', () => {
             checkIsReadonly(TEST_PATHS.comments);
 
             // Edit the page again
-            cy.visit(propsPagePathWritable);
+            cy.visit(commentsPropsPagePath);
             cy.get('@pageProps').contains('a', 'Edit').click();
-            makeAliases(pathComments, 'Comments', false, false, true);
+            makeAliases(commentsPagePath, 'Comments', false, false, true);
             cy.get('@readOnly').click().should('not.be.checked');
             cy.get('@btnSubmit').click();
 
             // Verify the updated properties
-            cy.isAt(propsPagePathWritable);
+            cy.isAt(commentsPropsPagePath);
             cy.toastCheckAndClose('data-saved');
             cy.get('app-domain-page-properties').as('pageProps')
                 .find('#domainPageDetailTable').as('pageDetails')
                 .dlTexts().should('matrixMatch', [
                 ['Domain',           DOMAINS.localhost.host],
-                ['Path',             pathComments],
+                ['Path',             commentsPagePath],
                 ['Title',            'Comments'],
                 ['Read-only',        ''],
                 ['Comment RSS feed', null],

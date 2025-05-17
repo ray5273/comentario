@@ -1,4 +1,4 @@
-import { DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAIN_PAGES, DOMAINS, PATHS, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
 
 context('Domain Page Manager', () => {
 
@@ -164,7 +164,7 @@ context('Domain Page Manager', () => {
 
         it('allows to navigate to page props', () => {
             cy.get('@pageList').find('a.list-group-item').eq(1).click();
-            cy.isAt(pagePath + '/0ebb8a1b-12f6-421e-b1bb-75867ac4a000');
+            cy.isAt(`${pagePath}/${DOMAIN_PAGES.attrAutoInit.id}`);
         });
 
         it('updates view stats', () => {

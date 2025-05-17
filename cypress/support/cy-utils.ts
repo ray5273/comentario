@@ -323,6 +323,26 @@ export const DOMAINS = {
     bridge:    {id: '828f1362-37ae-4c8f-83e7-84801f84b6a8', host: 'bridge.example.com', name: ''},
 };
 
+/** Predefined **localhost** domain pages. */
+export const DOMAIN_PAGES = {
+    home:                 {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480c7', path: '/',},
+    comments:             {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480c6', path: '/comments/',},
+    nocomment:            {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480c9', path: '/nocomment/',},
+    readonly:             {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480c8', path: '/readonly/',},
+    longPath:             {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480ca', path: '/page/with/a/very/long/path/that/will/definitely/have/to/be/wrapped/on/display/to/make/it/a/bit/usable.html?some_even_more_long_param=long_boring_value_3457290346493563584693847569723456987245869&foo=bar&buzz=238974592875469782&bux=whatever-28973423498765987249586729847569275469874578969234756938745697834569782349567824596879432756924578692874569234865'},
+    double:               {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480cb', path: '/double/'},
+    dynamic:              {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480cc', path: '/dynamic/'},
+    darkMode:             {id: '0ebb8a1b-12f6-421e-b1bb-75867ac480cd', path: '/dark-mode/'},
+    attrAutoInit:         {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a000', path: '/attr/auto-init/'},
+    attrAutoNonIntSso:    {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a010', path: '/attr/auto-non-interactive-sso/'},
+    attrNoFonts:          {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a020', path: '/attr/no-fonts/'},
+    attrCssOverride:      {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a030', path: '/attr/css-override/'},
+    attrCssOverrideFalse: {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a040', path: '/attr/css-override-false/'},
+    attrPageId:           {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a050', path: '/different-page/123'},
+    attrLiveUpdate:       {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a060', path: '/attr/live-update/'},
+    attrMaxLevel:         {id: '0ebb8a1b-12f6-421e-b1bb-75867ac4a070', path: '/attr/max-level/'},
+}
+
 export class Util {
 
     /**

@@ -176,6 +176,15 @@ declare namespace Cypress {
         isInvalid(text?: string): Chainable<JQueryWithSelector>;
 
         /**
+         * Select the specified item in the typeahead window associated with the subject element.
+         * @param text text to use when searching for the option button
+         * @param setAsValue whether to set the passed text as the input's value before searching
+         * @param expectNumItems expected number of items in the typeahead, used to wait for any filtering to complete, defaults to 1
+         * @returns The typeahead element
+         */
+        typeaheadSelect(text: string, setAsValue?: boolean, expectNumItems?: number): Chainable<JQueryWithSelector>;
+
+        /**
          * Login as provided user via the UI.
          * @param creds Credentials to login with
          * @param options Additional login options.

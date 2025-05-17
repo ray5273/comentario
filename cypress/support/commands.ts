@@ -217,6 +217,21 @@ Cypress.Commands.add(
             .should(fb => text && expect(fb.text()).eq(text))
             .wrap(element));
 
+Cypress.Commands.add(
+    'typeaheadSelect',
+    {prevSubject: 'element'},
+    (element: JQueryWithSelector, text: string, setAsValue?: boolean, expectNumItems?: number) => {
+        // Set the element text, if needed
+        if (setAsValue) {
+            cy.wrap(element).setValue(text);
+        }
+        // Start looking for ngb-typeahead-window from the root because it can also be attached to <body>
+        return cy.get('ngb-typeahead-window').should('be.visible')
+            .find('button').should('have.length', expectNumItems || 1)
+            .contains(text).click()
+            .wrap(element);
+    });
+
 Cypress.Commands.add('login', (creds: Cypress.Credentials, options?: Cypress.LoginOptions) => {
     // Go to the login page and verify, if needed
     if (options?.goTo ?? true) {

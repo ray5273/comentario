@@ -1,4 +1,4 @@
-import { DomainConfigKey, DOMAINS, USERS } from '../../support/cy-utils';
+import { DOMAIN_PAGES, DomainConfigKey, DOMAINS, USERS } from '../../support/cy-utils';
 
 const { $ } = Cypress;
 
@@ -183,7 +183,7 @@ context('API / RSS', () => {
 
         it('returns RSS feed for a domain page', () => {
             fetchRssItems(
-                {domain: DOMAINS.localhost.id, page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c6'},
+                {domain: DOMAINS.localhost.id, page: DOMAIN_PAGES.comments.id},
                 '/comments/',
                 'Comentario page comments on localhost:8000',
             ).should('yamlMatch',
@@ -253,7 +253,7 @@ context('API / RSS', () => {
             fetchRssItems(
                 {
                     domain: DOMAINS.localhost.id,
-                    page: '0ebb8a1b-12f6-421e-b1bb-75867ac480c7',
+                    page: DOMAIN_PAGES.home.id,
                     author: USERS.ace.id,
                     replyToUser: USERS.queen.id,
                 },

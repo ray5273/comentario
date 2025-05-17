@@ -1,8 +1,8 @@
-import { DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
+import { DOMAIN_PAGES, DOMAINS, PATHS, REGEXES, TEST_PATHS, USERS } from '../../../../../support/cy-utils';
 
 context('Domain Page Properties page', () => {
 
-    const localhostPageId   = '0ebb8a1b-12f6-421e-b1bb-75867ac480c7'; // Home page ('/')
+    const localhostPageId   = DOMAIN_PAGES.home.id;
     const localhostPagePath = PATHS.manage.domains.id(DOMAINS.localhost.id).pages + `/${localhostPageId}`;
 
     const makeAliases = (hasEdit: boolean, hasUpdateTitle: boolean, hasMove: boolean, hasDelete: boolean) => {
