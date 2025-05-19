@@ -4,8 +4,10 @@ import (
 	"fmt"
 	"github.com/google/uuid"
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/extend/intf"
 	cplugin "gitlab.com/comentario/comentario/extend/plugin"
 	"gitlab.com/comentario/comentario/internal/config"
+	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
 	"iter"
 	"net/http"
@@ -20,9 +22,9 @@ type PluginManager interface {
 	// Active returns whether the plugin manager is active (i.e. there's at least one plugin)
 	Active() bool
 	// ActivatePlugins activates every plugin
-	ActivatePlugins() error
+	ActivatePlugins(tx *persistence.DatabaseTx) error
 	// HandleEvent passes the given event to available plugins, in order, until it's successfully handled or errored
-	HandleEvent(event any) error
+	HandleEvent(event any, tx *persistence.DatabaseTx) error
 	// Init the manager
 	Init() error
 	// PluginConfigs returns an iterator for each plugin's ID and configuration
@@ -30,7 +32,7 @@ type PluginManager interface {
 	// ServeHandler returns an HTTP handler for processing requests
 	ServeHandler(next http.Handler) http.Handler
 	// Shutdown the manager
-	Shutdown()
+	Shutdown(*persistence.DatabaseTx) error
 }
 
 //----------------------------------------------------------------------------------------------------------------------
@@ -83,22 +85,23 @@ func (p *pluginLogger) Debugf(format string, args ...any) {
 
 // pluginConnector implements PluginConnector
 type pluginConnector struct {
-	pluginID        string            // ID of the plugin the connector is created for
-	userAttrStore   cplugin.AttrStore // User attribute store
-	domainAttrStore cplugin.AttrStore // Domain attribute store
+	id string // ID of the plugin the connector is created for
+	px string // Prefix used for scoping domain/user stores
 }
 
 // newPluginConnector returns a new PluginConnector instance
 func newPluginConnector(pluginID string) PluginConnector {
-	prefix := pluginID + "/"
 	return &pluginConnector{
-		pluginID:        pluginID,
-		domainAttrStore: &pluginAttrStore{p: prefix, s: Services.DomainAttrService(nil)},
-		userAttrStore:   &pluginAttrStore{p: prefix, s: Services.UserAttrService(nil)},
+		id: pluginID,
+		px: pluginID + "/",
 	}
 }
 
-func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*cplugin.User, error) {
+func (c *pluginConnector) CreateTx() (intf.Tx, error) {
+	return Services.CreateTx()
+}
+
+func (c *pluginConnector) AuthenticateBySessionCookie(value string) (*intf.User, error) {
 	// Hand over to the cookie auth handler
 	u, err := Services.AuthService(nil).AuthenticateUserByCookieHeader(value)
 	if err != nil {
@@ -115,27 +118,35 @@ func (c *pluginConnector) Config() *cplugin.HostConfig {
 }
 
 func (c *pluginConnector) CreateLogger(module string) cplugin.Logger {
-	return &pluginLogger{l: logging.MustGetLogger(c.pluginID + "." + module)}
+	return &pluginLogger{l: logging.MustGetLogger(c.id + "." + module)}
 }
 
-func (c *pluginConnector) DomainAttrStore() cplugin.AttrStore {
-	return c.domainAttrStore
+func (c *pluginConnector) DomainAttrStore(tx intf.Tx) intf.AttrStore {
+	return &pluginAttrStore{p: c.px, s: Services.DomainAttrService(castTx(tx))}
 }
 
-func (c *pluginConnector) UserAttrStore() cplugin.AttrStore {
-	return c.userAttrStore
+func (c *pluginConnector) UserAttrStore(tx intf.Tx) intf.AttrStore {
+	return &pluginAttrStore{p: c.px, s: Services.UserAttrService(castTx(tx))}
 }
 
-func (c *pluginConnector) UserStore() cplugin.UserStore {
-	return &userStore{}
+func (c *pluginConnector) UserStore(tx intf.Tx) intf.UserStore {
+	return &userStore{tx: castTx(tx)}
+}
+
+// castTx panics if the passed Tx is nil, casting it to DatabaseTx otherwise
+func castTx(tx intf.Tx) *persistence.DatabaseTx {
+	if tx == nil {
+		panic("tx must not be nil")
+	}
+	return tx.(*persistence.DatabaseTx)
 }
 
 //----------------------------------------------------------------------------------------------------------------------
 
 // pluginAttrStore is an AttrStore implementation scoped to a specific plugin
 type pluginAttrStore struct {
-	p string            // Prefix derived from the plugin ID
-	s cplugin.AttrStore // Reference to the underlying store
+	p string         // Prefix derived from the plugin ID
+	s intf.AttrStore // Reference to the underlying store
 }
 
 func (as *pluginAttrStore) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
@@ -143,7 +154,7 @@ func (as *pluginAttrStore) FindByAttrValue(key, value string) ([]uuid.UUID, erro
 	return as.s.FindByAttrValue(as.p+key, value)
 }
 
-func (as *pluginAttrStore) GetAll(ownerID *uuid.UUID) (cplugin.AttrValues, error) {
+func (as *pluginAttrStore) GetAll(ownerID *uuid.UUID) (intf.AttrValues, error) {
 	// Delegate fetching to the underlying store
 	av, err := as.s.GetAll(ownerID)
 	if err != nil {
@@ -151,7 +162,7 @@ func (as *pluginAttrStore) GetAll(ownerID *uuid.UUID) (cplugin.AttrValues, error
 	}
 
 	// Filter by prefix
-	r := cplugin.AttrValues{}
+	r := intf.AttrValues{}
 	pLen := len(as.p)
 	for k, v := range av {
 		if strings.HasPrefix(k, as.p) {
@@ -162,9 +173,9 @@ func (as *pluginAttrStore) GetAll(ownerID *uuid.UUID) (cplugin.AttrValues, error
 	return r, nil
 }
 
-func (as *pluginAttrStore) Set(ownerID *uuid.UUID, attr cplugin.AttrValues) error {
+func (as *pluginAttrStore) Set(ownerID *uuid.UUID, attr intf.AttrValues) error {
 	// Prefix the keys
-	av := cplugin.AttrValues{}
+	av := intf.AttrValues{}
 	for k, v := range attr {
 		av[as.p+k] = v
 	}
@@ -176,10 +187,12 @@ func (as *pluginAttrStore) Set(ownerID *uuid.UUID, attr cplugin.AttrValues) erro
 //----------------------------------------------------------------------------------------------------------------------
 
 // userStore is an implementation of plugin.UserStore
-type userStore struct{}
+type userStore struct {
+	tx *persistence.DatabaseTx // Reference to the database transaction the store operates within
+}
 
-func (us *userStore) FindUserByID(id *uuid.UUID) (*cplugin.User, error) {
-	if u, err := Services.UserService(nil).FindUserByID(id); err != nil {
+func (us *userStore) FindUserByID(id *uuid.UUID) (*intf.User, error) {
+	if u, err := Services.UserService(us.tx).FindUserByID(id); err != nil {
 		return nil, err
 	} else {
 		return u.ToPluginUser(), nil
@@ -211,15 +224,15 @@ func (pm *pluginManager) Active() bool {
 	return len(pm.plugs) > 0
 }
 
-func (pm *pluginManager) ActivatePlugins() error {
-	return pm.HandleEvent(&cplugin.ActivateEvent{})
+func (pm *pluginManager) ActivatePlugins(tx *persistence.DatabaseTx) error {
+	return pm.HandleEvent(&cplugin.ActivateEvent{}, tx)
 }
 
-func (pm *pluginManager) HandleEvent(event any) error {
+func (pm *pluginManager) HandleEvent(event any, tx *persistence.DatabaseTx) error {
 	// Iterate over plugins
 	for _, pe := range pm.plugs {
 		// Try to handle the event
-		if err := pe.p.HandleEvent(event); err != nil {
+		if err := pe.p.HandleEvent(event, tx); err != nil {
 			// Event handling errored
 			logger.Warningf("Plugin %q returned error while handling event %T: %v", pe.id, event, err)
 			return err
@@ -292,8 +305,8 @@ func (pm *pluginManager) ServeHandler(next http.Handler) http.Handler {
 	})
 }
 
-func (pm *pluginManager) Shutdown() {
-	_ = pm.HandleEvent(&cplugin.ShutdownEvent{})
+func (pm *pluginManager) Shutdown(tx *persistence.DatabaseTx) error {
+	return pm.HandleEvent(&cplugin.ShutdownEvent{}, tx)
 }
 
 // findByPath returns a plugin whose path (with the optional prefix) starts the provided path, or nil if nothing found
@@ -308,7 +321,7 @@ func (pm *pluginManager) findByPath(requestPath, prefix string) *pluginEntry {
 }
 
 // initPlugin initialises the given plugin and fetches its config
-func (pm *pluginManager) initPlugin(p cplugin.ComentarioPlugin, secrets cplugin.YAMLDecoder) (*cplugin.Config, error) {
+func (pm *pluginManager) initPlugin(p cplugin.ComentarioPlugin, secrets intf.YAMLDecoder) (*cplugin.Config, error) {
 	// Initialise the plugin
 	if err := p.Init(newPluginConnector(p.ID()), secrets); err != nil {
 		return nil, err

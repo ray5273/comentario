@@ -15,6 +15,7 @@ import (
 	_ "github.com/lib/pq"           // PostgreSQL driver
 	_ "github.com/mattn/go-sqlite3" // SQLite3 driver
 	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/extend/intf"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/util"
 	"os"
@@ -716,12 +717,12 @@ func (db *Database) tryConnect(num, total int) (err error) {
 // DatabaseTx represents a database transaction, implementing DBX
 type DatabaseTx struct {
 	tx    *goqu.TxDatabase // Reference to the underlying transaction
-	cc    []Tx             // Child transactions, which get commited and rolled back together with (prior to) this one
+	cc    []intf.Tx        // Child transactions, which get commited and rolled back together with (prior to) this one
 	stale bool             // Whether the transaction is ended and hence unusable
 }
 
 // AddChild adds a child transaction to the transaction
-func (dt *DatabaseTx) AddChild(tx Tx) {
+func (dt *DatabaseTx) AddChild(tx intf.Tx) {
 	dt.cc = append(dt.cc, tx)
 }
 
@@ -780,16 +781,6 @@ func (dt *DatabaseTx) checkStale() {
 	if dt.stale {
 		panic("transaction is stale and hence unusable")
 	}
-}
-
-//----------------------------------------------------------------------------------------------------------------------
-
-// Tx is a transaction
-type Tx interface {
-	// Commit the running transaction
-	Commit() error
-	// Rollback the running transaction
-	Rollback() error
 }
 
 //----------------------------------------------------------------------------------------------------------------------

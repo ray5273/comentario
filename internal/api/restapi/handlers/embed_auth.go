@@ -5,7 +5,7 @@ import (
 	"github.com/go-openapi/runtime/middleware"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/extend/plugin"
+	"gitlab.com/comentario/comentario/extend/intf"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_embed"
 	"gitlab.com/comentario/comentario/internal/config"
@@ -27,7 +27,7 @@ func EmbedAuthLogin(params api_embed.EmbedAuthLoginParams) middleware.Responder 
 	}
 
 	// Fetch the user's attributes
-	var attr plugin.AttrValues
+	var attr intf.AttrValues
 	var du *data.DomainUser
 	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
 		var err error
@@ -83,7 +83,7 @@ func EmbedAuthLoginTokenRedeem(params api_embed.EmbedAuthLoginTokenRedeemParams,
 		return r
 	}
 
-	var attr plugin.AttrValues
+	var attr intf.AttrValues
 	var du *data.DomainUser
 	err := svc.Services.WithTx(func(tx *persistence.DatabaseTx) error {
 		var err error

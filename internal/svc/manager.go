@@ -3,7 +3,7 @@ package svc
 import (
 	"fmt"
 	"github.com/doug-martin/goqu/v9/exp"
-	"gitlab.com/comentario/comentario/extend/plugin"
+	xintf "gitlab.com/comentario/comentario/extend/intf"
 	"gitlab.com/comentario/comentario/internal/config"
 	"gitlab.com/comentario/comentario/internal/intf"
 	"gitlab.com/comentario/comentario/internal/persistence"
@@ -15,6 +15,8 @@ var Services ServiceManager = newServiceManager()
 
 // ServiceManager provides high-level service management routines
 type ServiceManager interface {
+	// CreateTx creates and returns a new database transaction
+	CreateTx() (*persistence.DatabaseTx, error)
 	// DBVersion returns the current database version string
 	DBVersion() string
 	// E2eRecreateDBSchema recreates the DB schema and fills it with the provided seed data (only used for e2e testing)
@@ -37,7 +39,7 @@ type ServiceManager interface {
 	// CommentService returns an instance of CommentService
 	CommentService(tx *persistence.DatabaseTx) CommentService
 	// DomainAttrService returns an instance of an plugin.AttrStore for domains
-	DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore
+	DomainAttrService(tx *persistence.DatabaseTx) xintf.AttrStore
 	// DomainConfigService returns an instance of DomainConfigService
 	DomainConfigService(tx *persistence.DatabaseTx) DomainConfigService
 	// DomainService returns an instance of DomainService
@@ -69,7 +71,7 @@ type ServiceManager interface {
 	// UserService returns an instance of UserService
 	UserService(tx *persistence.DatabaseTx) UserService
 	// UserAttrService returns an instance of an plugin.AttrStore for users
-	UserAttrService(tx *persistence.DatabaseTx) plugin.AttrStore
+	UserAttrService(tx *persistence.DatabaseTx) xintf.AttrStore
 	// VersionService returns an instance of VersionService
 	VersionService() intf.VersionService
 	// WebSocketsService returns an instance of WebSocketsService
@@ -159,11 +161,15 @@ func (m *serviceManager) CommentService(tx *persistence.DatabaseTx) CommentServi
 	return &commentService{dbTxAware{tx: tx, db: m.db}}
 }
 
+func (m *serviceManager) CreateTx() (*persistence.DatabaseTx, error) {
+	return m.db.Begin()
+}
+
 func (m *serviceManager) DBVersion() string {
 	return m.db.Version()
 }
 
-func (m *serviceManager) DomainAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
+func (m *serviceManager) DomainAttrService(tx *persistence.DatabaseTx) xintf.AttrStore {
 	return newTxAttrStore(m.domainAttrs, tx, m.db)
 }
 
@@ -246,7 +252,7 @@ func (m *serviceManager) Initialise() {
 	}
 
 	// Activate plugins
-	if err := m.plugMgr.ActivatePlugins(); err != nil {
+	if err := m.WithTx(m.plugMgr.ActivatePlugins); err != nil {
 		logger.Fatalf("Failed to activate plugins: %v", err)
 	}
 }
@@ -304,7 +310,7 @@ func (m *serviceManager) Shutdown() {
 
 	// Shut down the services
 	m.wsSvc.Shutdown()
-	m.plugMgr.Shutdown()
+	_ = m.WithTx(m.plugMgr.Shutdown)
 
 	// Teardown the database
 	_ = m.db.Shutdown()
@@ -324,7 +330,7 @@ func (m *serviceManager) TokenService(tx *persistence.DatabaseTx) TokenService {
 	return &tokenService{dbTxAware{tx: tx, db: m.db}}
 }
 
-func (m *serviceManager) UserAttrService(tx *persistence.DatabaseTx) plugin.AttrStore {
+func (m *serviceManager) UserAttrService(tx *persistence.DatabaseTx) xintf.AttrStore {
 	return newTxAttrStore(m.userAttrs, tx, m.db)
 }
 

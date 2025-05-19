@@ -99,7 +99,7 @@ func (svc *userService) ConfirmUser(u *data.User) error {
 	u.WithConfirmed(true)
 
 	// Fire an event
-	if _, err := handleUserEvent(&plugin.UserConfirmedEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserConfirmedEvent{}, u, svc.tx); err != nil {
 		return err
 	}
 
@@ -142,13 +142,13 @@ func (svc *userService) Create(u *data.User) error {
 	logger.Debugf("userService.Create(%#v)", u)
 
 	// Fire a user creation event
-	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u, svc.tx); err != nil {
 		return err
 	}
 
 	// If the user is created confirmed, also fire a user confirmation event
 	if u.Confirmed {
-		if _, err := handleUserEvent(&plugin.UserConfirmedEvent{}, u); err != nil {
+		if _, err := handleUserEvent(&plugin.UserConfirmedEvent{}, u, svc.tx); err != nil {
 			return err
 		}
 	}
@@ -176,7 +176,7 @@ func (svc *userService) DeleteUserByID(u *data.User, delComments, purgeComments 
 	logger.Debugf("userService.DeleteUserByID(%v, %v, %v)", u, delComments, purgeComments)
 
 	// Fire an event (we don't care if anything was changed)
-	if _, err := handleUserEvent(&plugin.UserDeleteEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserDeleteEvent{}, u, svc.tx); err != nil {
 		return 0, err
 	}
 
@@ -251,7 +251,7 @@ func (svc *userService) EnsureSuperuser(idOrEmail string) error {
 	u.WithSuperuser(true)
 
 	// Fire an event
-	if _, err := handleUserEvent(&plugin.UserMadeSuperuserEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserMadeSuperuserEvent{}, u, svc.tx); err != nil {
 		return err
 	}
 
@@ -738,7 +738,7 @@ func (svc *userService) Update(u *data.User) error {
 	logger.Debugf("userService.Update(%#v)", u)
 
 	// Fire an event
-	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserUpdateEvent{}, u, svc.tx); err != nil {
 		return err
 	}
 
@@ -758,7 +758,7 @@ func (svc *userService) UpdateBanned(curUserID *uuid.UUID, u *data.User, banned 
 	u.WithBanned(banned, curUserID)
 
 	// Fire an event
-	if _, err := handleUserEvent(&plugin.UserBanStatusEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserBanStatusEvent{}, u, svc.tx); err != nil {
 		return err
 	}
 
@@ -775,7 +775,7 @@ func (svc *userService) UpdateLoginLocked(u *data.User) error {
 	}
 
 	// Fire an event
-	if _, err := handleUserEvent(&plugin.UserLoginLockedStatusEvent{}, u); err != nil {
+	if _, err := handleUserEvent(&plugin.UserLoginLockedStatusEvent{}, u, svc.tx); err != nil {
 		return err
 	}
 
@@ -784,7 +784,7 @@ func (svc *userService) UpdateLoginLocked(u *data.User) error {
 }
 
 // handleUserEvent fires a user event. It returns true if the user has been modified during the event handling
-func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err error) {
+func handleUserEvent[E plugin.UserPayload](e E, u *data.User, tx *persistence.DatabaseTx) (changed bool, err error) {
 	// Skip unless the plugin manager is active
 	if !Services.PluginManager().Active() {
 		return
@@ -798,7 +798,7 @@ func handleUserEvent[E plugin.UserPayload](e E, u *data.User) (changed bool, err
 	uc := u.ToPluginUser()
 
 	// Fire an event
-	if err = Services.PluginManager().HandleEvent(e); err != nil {
+	if err = Services.PluginManager().HandleEvent(e, tx); err != nil {
 		return
 	}
 

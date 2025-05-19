@@ -631,7 +631,7 @@ func (svc *domainService) checkFireNewOwnerEvent(du *data.DomainUser) error {
 	}
 
 	// Fire an event
-	if changed, err := handleUserEvent(&plugin.UserBecomesOwnerEvent{CountOwnedDomains: domainCnt}, u); err != nil {
+	if changed, err := handleUserEvent(&plugin.UserBecomesOwnerEvent{CountOwnedDomains: domainCnt}, u, svc.tx); err != nil {
 		return err
 	} else if changed {
 		// The user was modified while handling the event: we need to save it

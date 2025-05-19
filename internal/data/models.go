@@ -11,7 +11,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/extend/plugin"
+	"gitlab.com/comentario/comentario/extend/intf"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -267,7 +267,7 @@ func (u *User) ColourIndex() byte {
 }
 
 // FromPluginUser updates this user model from the provided plugin model
-func (u *User) FromPluginUser(pu *plugin.User) {
+func (u *User) FromPluginUser(pu *intf.User) {
 	// ID is immutable
 	u.WithName(pu.Name).
 		WithLangID(pu.LangID).
@@ -357,8 +357,8 @@ func (u *User) ToDTO() *models.User {
 }
 
 // ToPluginUser returns a new plugin.User instance for this user
-func (u *User) ToPluginUser() *plugin.User {
-	return &plugin.User{
+func (u *User) ToPluginUser() *intf.User {
+	return &intf.User{
 		ID:          u.ID,
 		Email:       u.Email,
 		Name:        u.Name,
@@ -372,7 +372,7 @@ func (u *User) ToPluginUser() *plugin.User {
 
 // ToPrincipal converts this user into a Principal model. attr is the user's attribute map. du is an optional domain
 // user model, which only applies to commenter authentication; should be nil for UI authentication
-func (u *User) ToPrincipal(attr plugin.AttrValues, du *DomainUser) *models.Principal {
+func (u *User) ToPrincipal(attr intf.AttrValues, du *DomainUser) *models.Principal {
 	dto := &models.Principal{
 		Attributes:          exmodels.KeyValueMap(attr),
 		ColourIndex:         u.ColourIndex(),

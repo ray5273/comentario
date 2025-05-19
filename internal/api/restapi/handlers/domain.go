@@ -7,7 +7,7 @@ import (
 	"github.com/go-openapi/strfmt"
 	"github.com/go-openapi/swag"
 	"github.com/google/uuid"
-	"gitlab.com/comentario/comentario/extend/plugin"
+	"gitlab.com/comentario/comentario/extend/intf"
 	"gitlab.com/comentario/comentario/internal/api/exmodels"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/api/restapi/operations/api_general"
@@ -125,7 +125,7 @@ func DomainGet(params api_general.DomainGetParams, user *data.User) middleware.R
 	}
 
 	// If the user is a superuser, fetch domain attributes
-	var attr plugin.AttrValues
+	var attr intf.AttrValues
 	if user.IsSuperuser {
 		if attr, err = svc.Services.DomainAttrService(nil).GetAll(&d.ID); err != nil {
 			return respServiceError(err)

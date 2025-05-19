@@ -8,7 +8,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jellydator/ttlcache/v3"
 	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/extend/plugin"
+	"gitlab.com/comentario/comentario/extend/intf"
 	"gitlab.com/comentario/comentario/internal/data"
 	"gitlab.com/comentario/comentario/internal/persistence"
 	"gitlab.com/comentario/comentario/internal/util"
@@ -26,17 +26,17 @@ const (
 // attrStore is a generic attribute store implementation, whose methods require a database executor (DBX) in order to
 // communicate with the database
 type attrStore struct {
-	cache      *ttlcache.Cache[uuid.UUID, plugin.AttrValues] // Attribute caches per owner ID
-	tableName  string                                        // Name of the table storing attributes
-	keyColName string                                        // Name of the key column
-	checkAnon  bool                                          // Whether to check for "anonymous" (zero-UUID) owner
+	cache      *ttlcache.Cache[uuid.UUID, intf.AttrValues] // Attribute caches per owner ID
+	tableName  string                                      // Name of the table storing attributes
+	keyColName string                                      // Name of the key column
+	checkAnon  bool                                        // Whether to check for "anonymous" (zero-UUID) owner
 }
 
 // newAttrStore returns a new attrStore implementation, which uses the given underlying database table and key column
 func newAttrStore(tableName, keyColName string, checkAnonymous bool) *attrStore {
 	as := &attrStore{
-		cache: ttlcache.New[uuid.UUID, plugin.AttrValues](
-			ttlcache.WithTTL[uuid.UUID, plugin.AttrValues](util.AttrCacheTTL)),
+		cache: ttlcache.New[uuid.UUID, intf.AttrValues](
+			ttlcache.WithTTL[uuid.UUID, intf.AttrValues](util.AttrCacheTTL)),
 		tableName:  tableName,
 		keyColName: keyColName,
 		checkAnon:  checkAnonymous,
@@ -44,7 +44,7 @@ func newAttrStore(tableName, keyColName string, checkAnonymous bool) *attrStore 
 
 	// Debug logging
 	if logger.IsEnabledFor(logging.DEBUG) {
-		as.cache.OnEviction(func(_ context.Context, reason ttlcache.EvictionReason, i *ttlcache.Item[uuid.UUID, plugin.AttrValues]) {
+		as.cache.OnEviction(func(_ context.Context, reason ttlcache.EvictionReason, i *ttlcache.Item[uuid.UUID, intf.AttrValues]) {
 			logger.Debugf("attrStore: evicted %s, reason=%d", i.Key(), reason)
 		})
 	}
@@ -65,12 +65,12 @@ func (as *attrStore) findByAttrValue(dbx persistence.DBX, key, value string) ([]
 }
 
 // getAll returns all attributes of an owner with the given ID
-func (as *attrStore) getAll(dbx persistence.DBX, ownerID *uuid.UUID) (plugin.AttrValues, error) {
+func (as *attrStore) getAll(dbx persistence.DBX, ownerID *uuid.UUID) (intf.AttrValues, error) {
 	logger.Debugf("attrStore.getAll(%v, %s)", dbx, ownerID)
 
 	// Anonymous owner has no attributes
 	if as.checkAnon && *ownerID == util.ZeroUUID {
-		return plugin.AttrValues{}, nil
+		return intf.AttrValues{}, nil
 	}
 
 	// Try to find a cached item
@@ -90,7 +90,7 @@ func (as *attrStore) getAll(dbx persistence.DBX, ownerID *uuid.UUID) (plugin.Att
 	}
 
 	// Convert the slice into a map
-	m := plugin.AttrValues{}
+	m := intf.AttrValues{}
 	for _, a := range attrs {
 		m[a.Key] = a.Value
 	}
@@ -107,7 +107,7 @@ func (as *attrStore) resetCache(ownerID *uuid.UUID) {
 }
 
 // set given attribute values for the given owner by key
-func (as *attrStore) set(dbx persistence.DBX, ownerID *uuid.UUID, attr plugin.AttrValues) error {
+func (as *attrStore) set(dbx persistence.DBX, ownerID *uuid.UUID, attr intf.AttrValues) error {
 	logger.Debugf("attrStore.set(%v, %s, %v)", dbx, ownerID, attr)
 
 	// Anonymous owner cannot have attributes
@@ -214,12 +214,12 @@ func (a *txAttrStore) FindByAttrValue(key, value string) ([]uuid.UUID, error) {
 	return a.s.findByAttrValue(a.dbx(), key, value)
 }
 
-func (a *txAttrStore) GetAll(ownerID *uuid.UUID) (plugin.AttrValues, error) {
+func (a *txAttrStore) GetAll(ownerID *uuid.UUID) (intf.AttrValues, error) {
 	// Delegate to the underlying store
 	return a.s.getAll(a.dbx(), ownerID)
 }
 
-func (a *txAttrStore) Set(ownerID *uuid.UUID, attr plugin.AttrValues) error {
+func (a *txAttrStore) Set(ownerID *uuid.UUID, attr intf.AttrValues) error {
 	// Make a note of the owner ID so that we'll know something's changed for them, and can reset the cache should the
 	// transaction be rolled back
 	a.oIDs[*ownerID] = true

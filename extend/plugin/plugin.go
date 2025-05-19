@@ -1,7 +1,7 @@
 package plugin
 
 import (
-	"github.com/google/uuid"
+	"gitlab.com/comentario/comentario/extend/intf"
 	"net/http"
 )
 
@@ -28,36 +28,19 @@ type Logger interface {
 // HostApp represents the host application, which hosts plugins
 type HostApp interface {
 	// AuthenticateBySessionCookie authenticates a principal given a session cookie value
-	AuthenticateBySessionCookie(value string) (*User, error)
+	AuthenticateBySessionCookie(value string) (*intf.User, error)
 	// Config is the host configuration
 	Config() *HostConfig
 	// CreateLogger creates and returns a logger used for logging plugin messages
 	CreateLogger(module string) Logger
+	// CreateTx creates and returns a new database transaction
+	CreateTx() (intf.Tx, error)
 	// DomainAttrStore returns an instance of the domain attributes store for the plugin
-	DomainAttrStore() AttrStore
+	DomainAttrStore(tx intf.Tx) intf.AttrStore
 	// UserAttrStore returns an instance of the user attributes store for the plugin
-	UserAttrStore() AttrStore
+	UserAttrStore(tx intf.Tx) intf.AttrStore
 	// UserStore returns an instance of the user store
-	UserStore() UserStore
-}
-
-// AttrValues is a key-indexed value map
-type AttrValues = map[string]string
-
-// AttrStore allows to store and retrieve attributes consisting of a string key and a string value
-type AttrStore interface {
-	// FindByAttrValue finds and returns owner IDs that have the given attribute key-value pair
-	FindByAttrValue(key, value string) ([]uuid.UUID, error)
-	// GetAll returns all attributes of an owner with the given ID
-	GetAll(ownerID *uuid.UUID) (AttrValues, error)
-	// Set given attribute values for the given owner by key
-	Set(ownerID *uuid.UUID, attr AttrValues) error
-}
-
-// UserStore allows to retrieve Comentario users
-type UserStore interface {
-	// FindUserByID finds and returns a user by the given user ID
-	FindUserByID(id *uuid.UUID) (*User, error)
+	UserStore(tx intf.Tx) intf.UserStore
 }
 
 // UIResource describes a UI resource required by the plugin
@@ -108,18 +91,13 @@ type Config struct {
 	XSRFSafePaths []string       // API endpoint path prefixes to exclude from XSRF protection (for methods other than GET/HEAD/OPTIONS), relative to plugin API root (may contain leading "/")
 }
 
-// YAMLDecoder allows for unmarshalling configuration into a user-defined structure, which provides `yaml` metadata
-type YAMLDecoder interface {
-	Decode(target any) error
-}
-
 // ComentarioPlugin describes a plugin that handles API and static HTTP calls
 // Warning: Unstable API
 type ComentarioPlugin interface {
 	// ID returns a unique plugin identifier
 	ID() string
 	// Init initialises the plugin, supplying it with a host reference and an optional secrets config decoder
-	Init(host HostApp, secretsDecoder YAMLDecoder) error
+	Init(host HostApp, secretsDecoder intf.YAMLDecoder) error
 	// Config should return the plugin's configuration
 	Config() Config
 	// APIHandler returns a handler that processes API calls relevant to the plugin. Each HTTP request passed to the
@@ -128,7 +106,8 @@ type ComentarioPlugin interface {
 	// StaticHandler returns a handler that serves static content relevant to the plugin. Each HTTP request passed to
 	// the handler will have a path conforming "<base_path>/<plugin_path>[/<subpath>]"
 	StaticHandler() http.Handler
-	// HandleEvent notifies the plugin of a certain event, which is always passed as a pointer. The plugin can modify
+	// HandleEvent notifies the plugin of a certain event, which is always passed as a pointer, also providing a
+	// transaction, which must be used for all database operations in the context of this event. The plugin can modify
 	// the passed event's payload as necessary
-	HandleEvent(event any) error
+	HandleEvent(event any, tx intf.Tx) error
 }

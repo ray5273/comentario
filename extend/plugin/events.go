@@ -3,12 +3,14 @@
 
 package plugin
 
+import "gitlab.com/comentario/comentario/extend/intf"
+
 // UserPayload is implemented by events carrying a user
 type UserPayload interface {
 	// User payload
-	User() *User
+	User() *intf.User
 	// SetUser updates the user payload
-	SetUser(*User)
+	SetUser(*intf.User)
 }
 
 // ActivateEvent signals the plugin Comentario has readied all resources and is about to start serving the API.
@@ -21,14 +23,14 @@ type ShutdownEvent struct{}
 
 // UserEvent is an event related to user, which implements UserPayload
 type UserEvent struct {
-	user *User
+	user *intf.User
 }
 
-func (e *UserEvent) User() *User {
+func (e *UserEvent) User() *intf.User {
 	return e.user
 }
 
-func (e *UserEvent) SetUser(u *User) {
+func (e *UserEvent) SetUser(u *intf.User) {
 	e.user = u
 }
 
