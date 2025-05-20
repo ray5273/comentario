@@ -146,7 +146,9 @@ func importUserByEmail(email, federatedIdpID, name, websiteURL, remarks string, 
 		user = data.NewUser(email, name).
 			WithCreated(creationTime, curUserID).
 			WithWebsiteURL(websiteURL).
-			WithRemarks(remarks)
+			WithRemarks(remarks).
+			// If that's a real email, consider it confirmed (in the absence of a better alternative)
+			WithConfirmed(realEmail)
 		if federatedSSO || federatedIdpID != "" {
 			user.WithFederated("", federatedIdpID)
 		}
