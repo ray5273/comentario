@@ -152,6 +152,7 @@ context('Domain Import page', () => {
                                         ['Email',      'bugsy@bigsy'],
                                         ['Language',   'en'],
                                         ['Remarks',    remark],
+                                        ['Confirmed',  REGEXES.checkDatetime],
                                         ['Created',    REGEXES.datetime],
                                         ['Last login', '(never)'],
                                     ]);
@@ -281,6 +282,7 @@ context('Domain Import page', () => {
                                         ['Language',    'en'],
                                         ['Remarks',     remark],
                                         ['Website URL', 'https://skywalker.com/'],
+                                        ['Confirmed',   REGEXES.checkDatetime],
                                         ['Created',     REGEXES.datetime],
                                         ['Last login',  '(never)'],
                                     ]);
