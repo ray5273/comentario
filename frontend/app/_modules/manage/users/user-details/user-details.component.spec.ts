@@ -1,10 +1,8 @@
 import { ComponentFixture, TestBed } from '@angular/core/testing';
 import { RouterModule } from '@angular/router';
-import { MockComponents, MockProviders } from 'ng-mocks';
+import { MockComponents } from 'ng-mocks';
 import { UserDetailsComponent } from './user-details.component';
 import { UserAvatarComponent } from '../../../tools/user-avatar/user-avatar.component';
-import { ToastService } from '../../../../_services/toast.service';
-import { ApiGeneralService } from '../../../../../generated-api';
 
 describe('UserDetailsComponent', () => {
 
@@ -18,7 +16,6 @@ describe('UserDetailsComponent', () => {
                     UserDetailsComponent,
                     MockComponents(UserAvatarComponent),
                 ],
-                providers: MockProviders(ToastService, ApiGeneralService),
             })
             .compileComponents();
         fixture = TestBed.createComponent(UserDetailsComponent);

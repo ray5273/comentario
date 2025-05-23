@@ -514,3 +514,35 @@ values
     ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', SEED_NOW('-0057748 seconds'), 'HTTP/1.1', '127.14.x.x',  'NL', 'Chrome',    '117.0.0',     'Linux',   '0.0.0',   'Computer'),
     ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', SEED_NOW('-0049454 seconds'), 'HTTP/1.1', '127.14.x.x',  'NL', 'Chrome',    '117.0.0',     'Linux',   '0.0.0',   'Computer'),
     ('0ebb8a1b-12f6-421e-b1bb-75867ac480c7', SEED_NOW('-0049090 seconds'), 'HTTP/1.1', '199.105.x.x', 'CR', 'Firefox',   '118.0.0',     'iOS',     '16.7.0',  'Phone');
+
+insert into cm_tokens(value, user_id, scope, ts_expires, multiuse)
+values
+    ('b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61601', '460b2681-7411-4a38-b520-b23e2fac2230', 'pwd-reset',     SEED_NOW('-1 seconds'), false),
+    ('b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61602', '30f5efad-a266-46f2-8108-acbebba991de', 'confirm-email', SEED_NOW('-2 seconds'), false),
+    ('b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61603', '84ba64a4-a723-4bb2-a903-9c89132964f7', 'confirm-email', SEED_NOW('-3 seconds'), false),
+    ('b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61604', '820a5748-2033-4cb7-90b4-3a7d1eee4cfd', 'login',         SEED_NOW('-4 seconds'), false),
+    ('b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61605', 'b5962138-7a26-477c-aaea-50a70ef13696', 'login',         SEED_NOW('-5 seconds'), false);
+
+insert into cm_auth_sessions(id, token_value, data, host, ts_created, ts_expires)
+values
+    ('130ba8dc-7944-495a-bcad-6c5ee7bfcf01', 'b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61601', 'data01', '', SEED_NOW('-1 seconds'), SEED_NOW('+3601 seconds')),
+    ('130ba8dc-7944-495a-bcad-6c5ee7bfcf02', 'b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61602', 'data02', '', SEED_NOW('-2 seconds'), SEED_NOW('+3602 seconds')),
+    ('130ba8dc-7944-495a-bcad-6c5ee7bfcf03', 'b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61603', 'data03', '', SEED_NOW('-3 seconds'), SEED_NOW('+3603 seconds')),
+    ('130ba8dc-7944-495a-bcad-6c5ee7bfcf04', 'b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61604', 'data04', '', SEED_NOW('-4 seconds'), SEED_NOW('+3604 seconds')),
+    ('130ba8dc-7944-495a-bcad-6c5ee7bfcf05', 'b3fc244a5f7b4560b67b87c7da37ec373a8c5c637725477eab32848159d61605', 'data05', '', SEED_NOW('-5 seconds'), SEED_NOW('+3605 seconds'));
+
+insert into cm_user_sessions(id, user_id, ts_created, ts_expires, host, proto, ip, country, ua_browser_name, ua_browser_version, ua_os_name, ua_os_version, ua_device)
+values
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854102', '2af9ecd2-a32a-4332-8717-396e9af28639', SEED_NOW('-101 seconds'), SEED_NOW('+3601 seconds'), '', 'HTTP/1.0', '141.136.x.x', 'EG', 'Chrome',    '116.0.0',     'MacOSX',  '10.15.7', 'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854103', '98732142-bc83-48e0-be92-f6dbd6976702', SEED_NOW('-102 seconds'), SEED_NOW('+3602 seconds'), '', 'HTTP/1.0', '66.249.x.x',  'NL', 'Chrome',    '117.0.0',     'Linux',   '0.0.0',   'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854104', '2d01d8dd-0bb1-4281-850e-e943b9f8128a', SEED_NOW('-103 seconds'), SEED_NOW('+3603 seconds'), '', 'HTTP/1.0', '174.72.x.x',  'MX', 'Chrome',    '117.0.0',     'MacOSX',  '10.15.7', 'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854105', '01d1cb57-d98c-46f6-b270-1198860f642f', SEED_NOW('-104 seconds'), SEED_NOW('+3604 seconds'), '', 'HTTP/1.0', '168.119.x.x', 'DE', 'Firefox',   '118.0.0',     'Windows', '10.0.0',  'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854106', '61e2ccdb-4c2f-4b48-9527-fb8443e01a6f', SEED_NOW('-105 seconds'), SEED_NOW('+3605 seconds'), '', 'HTTP/1.0', '188.207.x.x', 'DE', 'Firefox',   '118.0.0',     'Windows', '10.0.0',  'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854107', 'a7ab1d55-cfaa-4f26-a1a6-88cc4c6ce96d', SEED_NOW('-106 seconds'), SEED_NOW('+3606 seconds'), '', 'HTTP/1.0', '201.87.x.x',  'AM', 'Chrome',    '117.0.0',     'Linux',   '0.0.0',   'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba854109', '30f5efad-a266-46f2-8108-acbebba991de', SEED_NOW('-107 seconds'), SEED_NOW('+3607 seconds'), '', 'HTTP/1.1', '201.87.x.x',  'US', 'Chrome',    '117.0.0',     'Windows', '10.0.0',  'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba85410a', '84ba64a4-a723-4bb2-a903-9c89132964f7', SEED_NOW('-108 seconds'), SEED_NOW('+3608 seconds'), '', 'HTTP/1.1', '65.154.x.x',  'DE', 'Unknown',   '0.0.0',       'Unknown', '0.0.0',   'Unknown'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba85410b', '820a5748-2033-4cb7-90b4-3a7d1eee4cfd', SEED_NOW('-109 seconds'), SEED_NOW('+3609 seconds'), '', 'HTTP/1.1', '145.224.x.x', 'NL', 'Chrome',    '117.0.0',     'Android', '10.0.0',  'Phone'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba85410c', 'b5962138-7a26-477c-aaea-50a70ef13696', SEED_NOW('-110 seconds'), SEED_NOW('+3610 seconds'), '', 'HTTP/1.1', '145.224.x.x', 'BR', 'Firefox',   '118.0.0',     'Windows', '10.0.0',  'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba85410d', '59866240-df40-470b-ab5f-c06fc2ce6dd1', SEED_NOW('-111 seconds'), SEED_NOW('+3611 seconds'), '', 'HTTP/1.1', '193.233.x.x', 'FR', 'Firefox',   '118.0.0',     'Windows', '10.0.0',  'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba85410e', '28053af1-612b-4d42-b03d-9e30f42f73c2', SEED_NOW('-112 seconds'), SEED_NOW('+3612 seconds'), '', 'HTTP/1.1', '161.142.x.x', 'BR', 'Firefox',   '118.0.0',     'Windows', '10.0.0',  'Computer'),
+    ('f86fb9f7-2598-4941-a5ef-3d8bba85410f', '683251c4-e70a-4831-b60c-10c564c894a8', SEED_NOW('-113 seconds'), SEED_NOW('+3613 seconds'), '', 'HTTP/1.1', '127.14.x.x',  'US', 'Chrome',    '117.0.5938',  'Linux',   '0.0.0',   'Computer');

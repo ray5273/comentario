@@ -167,6 +167,9 @@ build:
           &> ./tmp/logs/comentario-server.log &
     - waitFor http://localhost:8080/en/
 
+    # Let all database cleaners finish their first run
+    - sleep 10
+
     # Start the relay to pass localhost:8000 requests through to comentario-test-site:80
     - ./dist/comentario_linux_amd64/comentario-relay 
           -listen 127.0.0.1:8000

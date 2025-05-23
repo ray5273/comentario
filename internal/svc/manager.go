@@ -284,7 +284,7 @@ func (m *serviceManager) PluginManager() PluginManager {
 
 func (m *serviceManager) Run() {
 	// Start the cleanup service
-	m.cleanSvc = &cleanupService{dbTxAware{db: m.db}}
+	m.cleanSvc = NewCleanupService(m.db)
 	if err := m.cleanSvc.Run(); err != nil {
 		logger.Fatalf("Failed to run cleanup service: %v", err)
 	}
@@ -310,6 +310,7 @@ func (m *serviceManager) Shutdown() {
 
 	// Shut down the services
 	m.wsSvc.Shutdown()
+	m.cleanSvc.Shutdown()
 	_ = m.WithTx(m.plugMgr.Shutdown)
 
 	// Teardown the database

@@ -1,31 +1,41 @@
 <!-- Header -->
 <h1 i18n="heading">User properties</h1>
 
+@let u = user();
+@let dus = domainUsers();
 <div [appSpinner]="loading.active" spinnerSize="lg">
-    @if (user) {
+    @if (u) {
         <div class="row">
             <!-- Buttons -->
             <div class="col-md-4 order-md-last pb-3">
-                <!-- Edit user button -->
-                <a [class.disabled]="user.systemAccount" routerLink="edit" class="btn btn-secondary w-100 mb-2">
+                <!-- Edit user -->
+                <a [class.disabled]="u.systemAccount" routerLink="edit" class="btn btn-secondary w-100 mb-2">
                     <fa-icon [icon]="faEdit" class="me-1"/>
                     <ng-container i18n>Edit user</ng-container>
                 </a>
-                <!-- Ban user button -->
-                <button [class.active]="user.banned"
-                        [appSpinner]="banning.active" [appConfirm]="user.banned ? unbanConfirm : banConfirm"
-                        [disable]="isSelf() || user.systemAccount!" confirmAction="Proceed" confirmActionType="warning"
+                <!-- Ban user -->
+                <button [class.active]="u.banned"
+                        [appSpinner]="banning.active" [appConfirm]="u.banned ? unbanConfirm : banConfirm"
+                        [disable]="isSelf() || u.systemAccount!" confirmAction="Proceed" confirmActionType="warning"
                         (confirmed)="toggleBan()"
                         type="button" class="btn btn-outline-warning w-100 mb-2" i18n-confirmAction>
                     <fa-icon [icon]="faBan" class="me-1"/>
-                    @if (user.banned) {
+                    @if (u.banned) {
                         <ng-container i18n>Unban user</ng-container>
                     } @else {
                         <ng-container i18n>Ban user</ng-container>
                     }
                 </button>
-                <!-- Delete user button -->
-                <button [appSpinner]="deleting.active" [appConfirm]="deleteConfirm" [disable]="isSelf() || user.systemAccount!"
+                <!-- Unlock user -->
+                @if (u.isLocked) {
+                    <button [appSpinner]="unlocking.active" (click)="unlock()"
+                            type="button" class="btn btn-outline-success w-100 mb-2">
+                        <fa-icon [icon]="faLockOpen" class="me-1"/>
+                        <ng-container i18n>Unlock user</ng-container>
+                    </button>
+                }
+                <!-- Delete user -->
+                <button [appSpinner]="deleting.active" [appConfirm]="deleteConfirm" [disable]="isSelf() || u.systemAccount!"
                         confirmAction="Delete user" (confirmed)="delete()" type="button"
                         class="btn btn-outline-danger w-100 mb-2" i18n-confirmAction>
                     <fa-icon [icon]="faTrashAlt" class="me-1"/>
@@ -35,11 +45,11 @@
 
             <!-- Details -->
             <div class="col col-md-8">
-                <app-user-details [user]="user" [canUnlock]="true" (unlocked)="reload()" id="user-details"/>
+                <app-user-details [user]="u" id="user-details"/>
 
                 <!-- Attributes -->
-                @if (userAttrs) {
-                    <app-attribute-table [attributes]="userAttrs"/>
+                @if (userAttrs(); as ua) {
+                    <app-attribute-table [attributes]="ua"/>
                 }
             </div>
         </div>
@@ -50,10 +60,10 @@
             <h2 i18n>Domain roles</h2>
 
             <!-- Domain/role list -->
-            @if (domainUsers) {
+            @if (dus) {
                 <div class="list-group">
-                    @for (du of domainUsers; track du.domainId) {
-                        @if (domains.get(du.domainId!); as d) {
+                    @for (du of dus; track du.domainId) {
+                        @if (domains().get(du.domainId!); as d) {
                             <a @fadeIn-slow [routerLink]="[Paths.manage.domains, d.id]"
                                class="list-group-item list-group-item-action">
                                 <!-- Domain name/host -->
@@ -71,7 +81,7 @@
             }
 
             <!-- List footer -->
-            <app-list-footer [count]="domainUsers?.length"/>
+            <app-list-footer [count]="dus?.length"/>
         </section>
 
         <!-- User sessions -->
@@ -173,9 +183,11 @@
             <app-list-footer [canLoadMore]="canLoadMoreSessions" [loading]="loadingSessions.active"
                              [count]="userSessions?.length" (loadMore)="loadSessions(false)"/>
         </section>
+
+    } @else {
+        <!-- Placeholder when no data -->
+        <app-no-data/>
     }
-    <!-- Placeholder when no data -->
-    @if (!user) { <app-no-data/> }
 </div>
 
 <!-- Template for the ban confirmation dialog -->

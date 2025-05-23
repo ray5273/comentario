@@ -11,6 +11,10 @@ func DialectOptions() *goqu.SQLDialectOptions {
 	// The original sqlite3 implementation incorrectly marks RETURNING as unsupported, see
 	// https://github.com/doug-martin/goqu/issues/432
 	opts.SupportsReturn = true
+
+	// The original sqlite3 implementation thinks UPDATE ... FROM is unsupported, see
+	// https://github.com/doug-martin/goqu/issues/441
+	opts.SupportsMultipleUpdateTables = true
 	return opts
 }
 

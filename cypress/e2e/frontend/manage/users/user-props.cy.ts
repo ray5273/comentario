@@ -5,7 +5,7 @@ context('User Properties page', () => {
     const pagePathKing = PATHS.manage.users.id(USERS.king.id).props;
     const pagePathAce  = PATHS.manage.users.id(USERS.ace.id).props;
 
-    const makeAliases = (canEdit: boolean, canBan: boolean, canDelete: boolean, isBanned: boolean, hasAvatar: boolean, numSessions: number) => {
+    const makeAliases = (canEdit: boolean, canBan: boolean, canUnlock: boolean, canDelete: boolean, isBanned: boolean, hasAvatar: boolean, numSessions: number) => {
         cy.get('app-user-properties').as('userProps');
 
         // Check heading
@@ -25,6 +25,11 @@ context('User Properties page', () => {
             .should('be.visible')
             .and(canBan   ? 'be.enabled' : 'be.disabled')
             .and(isBanned ? 'have.class' : 'not.have.class', 'active');
+        if (canUnlock) {
+            cy.get('@userProps').contains('button', 'Unlock user').as('btnUnlock').should('be.visible').and('be.enabled');
+        } else {
+            cy.get('@userProps').contains('button', 'Unlock user').should('not.exist');
+        }
         cy.get('@userProps').contains('button', 'Delete user').as('btnDelete')
             .should('be.visible')
             .and(canDelete ? 'be.enabled' : 'be.disabled');
@@ -62,7 +67,7 @@ context('User Properties page', () => {
 
         it('of Anonymous user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.anonymous.id).props);
-            makeAliases(false, false, false, false, false, 0);
+            makeAliases(false, false, false, false, false, false, 0);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -80,7 +85,7 @@ context('User Properties page', () => {
 
         it('of self-user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.root.id).props);
-            makeAliases(true, false, false, false, false, 1);
+            makeAliases(true, false, false, false, false, false, 1);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -194,7 +199,7 @@ context('User Properties page', () => {
             cy.testSiteLoginViaApi(USERS.king);
 
             cy.loginViaApi(USERS.root, pagePathKing);
-            makeAliases(true, true, true, false, false, 3);
+            makeAliases(true, true, false, true, false, false, 4);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -233,13 +238,14 @@ context('User Properties page', () => {
             cy.isAt(pagePathKing);
 
             // Check the sessions: they all refer to the test site
-            cy.get('@sessions').find('.list-group-item').should('have.length', 3)
+            cy.get('@sessions').find('.list-group-item').should('have.length', 4)
                 .texts()
                 .should(tx => {
-                    tx.forEach(s => expect(s).contains(DOMAINS.localhost.host).and.not.contains('Expired'));
-                    expect(tx[0]).contains('IP' + '127.0.x.x');
-                    expect(tx[1]).contains('IP' + 'd0c7:89e2:x:x:x:x:x:x');
-                    expect(tx[2]).contains('IP' + '6.167.x.x');
+                    tx.forEach(s => expect(s).not.contains('Expired'));
+                    expect(tx[0]).contains(DOMAINS.localhost.host).and.contains('IP' + '127.0.x.x');
+                    expect(tx[1]).contains(DOMAINS.localhost.host).and.contains('IP' + 'd0c7:89e2:x:x:x:x:x:x');
+                    expect(tx[2]).contains(DOMAINS.localhost.host).and.contains('IP' + '6.167.x.x (US)');
+                    expect(tx[3])                                     .contains('IP' + '141.136.x.x (EG)');
                 });
 
             // Expire all sessions
@@ -248,7 +254,7 @@ context('User Properties page', () => {
                 .dlgButtonClick('Expire all sessions');
 
             // All sessions are expired now
-            cy.get('@sessions').find('.list-group-item').should('have.length', 3)
+            cy.get('@sessions').find('.list-group-item').should('have.length', 4)
                 .texts()
                 .each(s => expect(s).contains('Expired'));
 
@@ -288,7 +294,7 @@ context('User Properties page', () => {
 
         it('of banned user', () => {
             cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.banned.id).props);
-            makeAliases(true, true, true, true, false, 0);
+            makeAliases(true, true, false, true, true, false, 0);
 
             // Verify user details
             cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -314,7 +320,7 @@ context('User Properties page', () => {
 
         const delUser = (delComments: boolean, purge: boolean) => {
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, false, true, 0);
+            makeAliases(true, true, false, true, false, true, 0);
 
             // Click on Delete user
             cy.get('@btnDelete').click();
@@ -485,7 +491,7 @@ context('User Properties page', () => {
 
         const banUser = (delComments: boolean, purge: boolean) => {
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, false, true, 0);
+            makeAliases(true, true, false, true, false, true, 0);
 
             // Click on Ban user
             cy.get('@btnBan').click();
@@ -572,7 +578,7 @@ context('User Properties page', () => {
 
             // Relogin as root and unban the user
             cy.loginViaApi(USERS.root, pagePathAce);
-            makeAliases(true, true, true, true, true, 0);
+            makeAliases(true, true, false, true, true, true, 0);
             cy.get('@btnBan').click();
             cy.confirmationDialog('Are you sure you want to unban this user?').dlgButtonClick('Proceed');
 
@@ -667,7 +673,7 @@ context('User Properties page', () => {
 
     it('allows to unlock user', () => {
         cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.linkedinUser.id).props);
-        makeAliases(true, true, true, false, false, 0);
+        makeAliases(true, true, true, true, false, false, 1);
 
         // Verify user details: the user is locked
         cy.get('@userDetails').dlTexts().should('matrixMatch', [
@@ -681,12 +687,13 @@ context('User Properties page', () => {
             ['Last password change',  REGEXES.datetime],
             ['Last login',            '(never)'],
             ['Failed login attempts', '7'],
-            ['Locked',                /^✔\s*\(.+\)Unlock$/],
+            ['Locked',                REGEXES.checkDatetime],
         ]);
 
         // Unlock them
-        cy.get('@userDetails').ddItem('Locked').contains('button', 'Unlock').click();
+        cy.get('@btnUnlock').click();
         cy.toastCheckAndClose('user-is-unlocked');
+        cy.get('@btnUnlock').should('not.exist');
 
         // No locked status or failed attempts anymore
         cy.get('@userDetails').dlTexts().should('matrixMatch', [

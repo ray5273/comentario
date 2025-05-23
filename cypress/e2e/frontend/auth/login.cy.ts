@@ -97,7 +97,7 @@ context('Login', () => {
 
         // Open the user properties (as root) and unlock the user account
         cy.loginViaApi(USERS.root, PATHS.manage.users.id(USERS.ace.id).props);
-        cy.get('app-user-properties #user-details .detail-table').ddItem('Locked').contains('button', 'Unlock').click();
+        cy.contains('app-user-properties button', 'Unlock').click();
         cy.toastCheckAndClose('user-is-unlocked');
         cy.logout();
 

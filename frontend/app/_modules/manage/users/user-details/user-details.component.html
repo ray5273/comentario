@@ -157,10 +157,6 @@
                         @if (u.lockedTime; as v) {
                             <span class="text-dimmed"> ({{ v | datetime }})</span>
                         }
-                        @if (canUnlock()) {
-                            <button [appSpinner]="unlocking.active" (click)="unlock()" type="button"
-                                    class="ms-2 btn btn-outline-secondary btn-sm" i18n>Unlock</button>
-                        }
                     </dd>
                 </div>
             }

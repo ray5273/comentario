@@ -1,10 +1,12 @@
 import { Component, computed, effect, input } from '@angular/core';
+import { toObservable, toSignal } from '@angular/core/rxjs-interop';
 import { Router, RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule } from '@angular/forms';
+import { BehaviorSubject, combineLatestWith, EMPTY, switchMap, tap } from 'rxjs';
 import { UntilDestroy, untilDestroyed } from '@ngneat/until-destroy';
 import { FaIconComponent } from '@fortawesome/angular-fontawesome';
-import { faBan, faCalendarXmark, faEdit, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
-import { ApiGeneralService, Domain, DomainUser, User, UserSession } from '../../../../../generated-api';
+import { faBan, faCalendarXmark, faEdit, faLockOpen, faTrashAlt } from '@fortawesome/free-solid-svg-icons';
+import { ApiGeneralService, Domain, UserGet200Response, UserSession } from '../../../../../generated-api';
 import { ProcessingStatus } from '../../../../_utils/processing-status';
 import { Paths } from '../../../../_utils/consts';
 import { ToastService } from '../../../../_services/toast.service';
@@ -47,17 +49,27 @@ export class UserPropertiesComponent {
     /** ID of the user to display properties for. */
     readonly id = input<string>();
 
-    /** The selected user whose properties are displayed. */
-    user?: User;
+    /** Signals to reload the current user and dependent objects. */
+    private readonly reload$ = new BehaviorSubject<any>(undefined);
+
+    /** API response, which combines the user, their attributes, and domain users. */
+    readonly _userResp = toSignal<UserGet200Response>(
+        toObservable(this.id)
+            .pipe(
+                combineLatestWith(this.reload$),
+                switchMap(([id]) => id ? this.api.userGet(id).pipe(this.loading.processing()) : EMPTY)));
+
+    /** User in question, whose properties are displayed. */
+    readonly user = computed(() => this._userResp()?.user);
+
+    /** Selected user's attributes. */
+    readonly userAttrs = computed(() => Utils.sortByKey(this._userResp()?.attributes as Record<string, string> | undefined));
 
     /** Domain users for the selected user. */
-    domainUsers?: DomainUser[];
+    readonly domainUsers = computed(() => this._userResp()?.domainUsers);
 
     /** Domains of domainUsers. */
-    domains = new Map<string, Domain>();
-
-    /** The selected user's attributes. */
-    userAttrs?: Record<string, string>;
+    readonly domains = computed<Map<string, Domain>>(() => new Map<string, Domain>(this._userResp()?.domains?.map(d => [d.id!, d])));
 
     /** User sessions. */
     userSessions?: UserSession[];
@@ -71,6 +83,7 @@ export class UserPropertiesComponent {
     readonly Paths = Paths;
     readonly loading          = new ProcessingStatus();
     readonly loadingSessions  = new ProcessingStatus();
+    readonly unlocking        = new ProcessingStatus();
     readonly banning          = new ProcessingStatus();
     readonly deleting         = new ProcessingStatus();
     readonly expiringSessions = new ProcessingStatus();
@@ -89,6 +102,7 @@ export class UserPropertiesComponent {
     readonly faBan           = faBan;
     readonly faCalendarXmark = faCalendarXmark;
     readonly faEdit          = faEdit;
+    readonly faLockOpen      = faLockOpen;
     readonly faTrashAlt      = faTrashAlt;
 
     /** Last loaded session list page number. */
@@ -108,68 +122,42 @@ export class UserPropertiesComponent {
                 .pipe(untilDestroyed(this))
                 .subscribe(b => Utils.enableControls(b, f.controls.purgeComments)));
 
-        // Load the user's properties and sessions
-        effect(() => this.reload());
+        // Load the user's sessions
         effect(() => this.loadSessions(true));
     }
 
     toggleBan() {
-        const ban = !this.user!.banned;
-        const vals = this.banConfirmationForm.value;
-        this.api.userBan(this.user!.id!, {ban, deleteComments: vals.deleteComments, purgeComments: vals.purgeComments})
-            .pipe(this.banning.processing())
-            .subscribe(r => {
+        const u = this.user();
+        if (u) {
+            const ban = !u.banned;
+            const vals = this.banConfirmationForm.value;
+            this.api.userBan(u.id!, {ban, deleteComments: vals.deleteComments, purgeComments: vals.purgeComments})
+                .pipe(this.banning.processing(), tap(this.reload$))
                 // Add a success toast
-                this.toastSvc.success({
+                .subscribe(r => this.toastSvc.success({
                     messageId: ban ? 'user-is-banned' : 'user-is-unbanned',
-                    details: ban && vals.deleteComments ?
-                        $localize`${r.countDeletedComments} comments have been deleted` :
-                        undefined,
-                });
-                // Reload the properties
-                this.reload();
-            });
+                    details:   ban && vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
+                }));
+        }
     }
 
     delete() {
-        const vals = this.deleteConfirmationForm.value;
-        this.api.userDelete(this.user!.id!, vals)
-            .pipe(this.deleting.processing())
-            .subscribe(r => {
-                // Add a success toast
-                this.toastSvc.success({
-                    messageId:         'user-is-deleted',
-                    details:           vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
-                    keepOnRouteChange: true,
+        const u = this.user();
+        if (u) {
+            const vals = this.deleteConfirmationForm.value;
+            this.api.userDelete(u.id!, vals)
+                .pipe(this.deleting.processing())
+                .subscribe(r => {
+                    // Add a success toast
+                    this.toastSvc.success({
+                        messageId:         'user-is-deleted',
+                        details:           vals.deleteComments ? $localize`${r.countDeletedComments} comments have been deleted` : undefined,
+                        keepOnRouteChange: true,
+                    });
+                    // Navigate to the user list
+                    this.router.navigate([Paths.manage.users]);
                 });
-                // Navigate to the user list
-                this.router.navigate([Paths.manage.users]);
-            });
-    }
-
-    /**
-     * Reload the current user.
-     */
-    reload() {
-        // Make sure there's a user ID and an authenticated principal, too
-        const uid = this.id();
-        if (!uid || !this.principalSvc.principal()) {
-            return;
         }
-
-        // Load the user's properties
-        this.api.userGet(uid)
-            .pipe(this.loading.processing())
-            .subscribe(r => {
-                // Save user properties
-                this.user        = r.user;
-                this.userAttrs   = Utils.sortByKey(r.attributes) as Record<string, string> | undefined;
-                this.domainUsers = r.domainUsers;
-
-                // Make a domain map
-                this.domains.clear();
-                r.domains?.forEach(d => this.domains.set(d.id!, d));
-            });
     }
 
     /**
@@ -196,9 +184,12 @@ export class UserPropertiesComponent {
     }
 
     expireSessions() {
-        this.api.userSessionsExpire(this.user!.id!)
-            .pipe(this.expiringSessions.processing())
-            .subscribe(() => this.loadSessions(true));
+        const id = this.id();
+        if (id) {
+            this.api.userSessionsExpire(id)
+                .pipe(this.expiringSessions.processing())
+                .subscribe(() => this.loadSessions(true));
+        }
     }
 
     /**
@@ -206,5 +197,17 @@ export class UserPropertiesComponent {
      */
     isSessionExpired(us: UserSession): boolean {
         return new Date(us.expiresTime).getTime() < new Date().getTime();
+    }
+
+    /**
+     * Unlock the current user.
+     */
+    unlock() {
+        const id = this.id();
+        if (id) {
+            this.api.userUnlock(id)
+                .pipe(this.unlocking.processing(), tap(this.reload$))
+                .subscribe(() => this.toastSvc.success('user-is-unlocked'));
+        }
     }
 }
