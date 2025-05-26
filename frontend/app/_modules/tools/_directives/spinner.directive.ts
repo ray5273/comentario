@@ -17,7 +17,7 @@ export type SpinnerSize = 'sm' | 'lg';
 export class SpinnerDirective {
 
     /** Whether the spinning animation is shown on the component. */
-    readonly appSpinner = input<boolean>(false);
+    readonly appSpinner = input(false);
 
     /** Whether to forcefully disable the component. This property must be used instead of the standard 'disabled' property. */
     readonly disable = input(false);

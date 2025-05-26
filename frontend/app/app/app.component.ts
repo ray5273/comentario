@@ -46,8 +46,8 @@ export class AppComponent implements AfterViewInit {
                         // Close any open modal
                         this.modalSvc.dismissAll();
 
-                        // The sidebar is visible unless we're in the Control Center
-                        this.hasSidebar = event.url.indexOf('/manage') === 0;
+                        // The sidebar is visible if we're inside the Control Center
+                        this.hasSidebar = event.url.startsWith('/manage');
                         break;
 
                     // Lazy-loading a module starting
