@@ -87,6 +87,9 @@ Below is a list of available command-line options, with their environment equiva
 {.table .table-striped}
 </div>
 
+To run Comentario over HTTPS, pass `--scheme=https` along with `--tls-cert` and
+`--tls-key` when starting the server.
+
 ### Documentation
 
 Comentario provides numerous links to various docpages in its frontend and the embedded part. The base URL of the documentation site points to Comentario production documentation by default.
