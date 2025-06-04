@@ -4,14 +4,15 @@ import (
 	"embed"
 	"encoding/json"
 	"fmt"
-	"github.com/op/go-logging"
-	"gitlab.com/comentario/comentario/internal/util"
-	"gopkg.in/yaml.v3"
 	"net/http"
 	"net/mail"
 	"net/url"
 	"os"
 	"strings"
+
+	"github.com/op/go-logging"
+	"gitlab.com/comentario/comentario/internal/util"
+	"gopkg.in/yaml.v3"
 )
 
 // ServerConfiguration stores Comentario server configuration
@@ -26,8 +27,8 @@ type ServerConfiguration struct {
 	CDNURL               string `long:"cdn-url"             description:"Static file CDN URL (defaults to base URL)" default:""                            env:"CDN_URL"`
 	EmailFrom            string `long:"email-from"          description:"'From' address in sent emails, defaults to SMTP username"                         env:"EMAIL_FROM"`
 	DBIdleConns          int    `long:"db-idle-conns"       description:"Max. # of idle DB connections"              default:"50"                          env:"DB_MAX_IDLE_CONNS"`
-	TLSCertFile          string `long:"tls-cert"            description:"Path to TLS certificate file"              				       env:"TLS_CERT_FILE"`
-	TLSKeyFile           string `long:"tls-key"             description:"Path to TLS private key file"              				       env:"TLS_KEY_FILE"`
+	TLSCertFile          string `long:"tls-cert"            description:"Path to TLS certificate file"                env:"TLS_CERT_FILE"`
+	TLSKeyFile           string `long:"tls-key"             description:"Path to TLS private key file"                env:"TLS_KEY_FILE"`
 	DisableXSRF          bool   `long:"disable-xsrf"        description:"Disable XSRF protection (development purposes only)"`
 	EnableSwaggerUI      bool   `long:"enable-swagger-ui"   description:"Enable Swagger UI at /api/docs"`
 	PluginPath           string `long:"plugin-path"         description:"Path to plugins"                            default:""                            env:"PLUGIN_PATH"`
