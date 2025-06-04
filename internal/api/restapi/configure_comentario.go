@@ -225,14 +225,22 @@ func configureAPI(api *operations.ComentarioAPI) http.Handler {
 }
 
 // The TLS configuration before HTTPS server starts.
-func configureTLS(_ *tls.Config) {
-	// Not implemented
+func configureTLS(cfg *tls.Config) {
+	if !config.ServerConfig.UseHTTPS() {
+		return
+	}
+
+	cert, err := tls.LoadX509KeyPair(config.ServerConfig.TLSCertFile, config.ServerConfig.TLSKeyFile)
+	if err != nil {
+		logger.Fatalf("Failed to load TLS certificate: %v", err)
+	}
+	cfg.Certificates = []tls.Certificate{cert}
 }
 
 // configureServer is a callback that is invoked before the server startup with the protocol it's supposed to be
 // handling (http, https, or unix)
 func configureServer(_ *http.Server, scheme, _ string) {
-	if scheme != "http" {
+	if scheme != "http" && scheme != "https" {
 		return
 	}
 
