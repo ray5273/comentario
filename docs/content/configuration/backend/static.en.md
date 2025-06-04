@@ -63,6 +63,12 @@ Below is a list of available command-line options, with their environment equiva
 | `--cdn-url=VALUE`            | Static file CDN URL                                                   | `$CDN_URL`            | The base URL                                                  |
 | `--email-from=VALUE`         | 'From' address in sent emails                                         | `$EMAIL_FROM`         | SMTP username (`smtpServer.username` [secret](secrets) value) |
 | `--db-idle-conns=VALUE`      | Max. number of idle DB connections                                    | `$DB_MAX_IDLE_CONNS`  | `50`                                                          |
+| `--tls-cert=VALUE`           | Path to TLS certificate file
+                       | `$TLS_CERT_FILE`      |
+                               |
+| `--tls-key=VALUE`            | Path to TLS private key file
+                       | `$TLS_KEY_FILE`       |
+                               |
 | `--disable-xsrf`             | Disable XSRF protection (for development purposes only)               |                       |                                                               |
 | `--enable-swagger-ui`        | Enable Swagger UI at `/api/docs`                                      |                       |                                                               |
 | `--static-path=VALUE`        | Path to static files                                                  | `$STATIC_PATH`        | `.`                                                           |
@@ -80,6 +86,9 @@ Below is a list of available command-line options, with their environment equiva
 | `--e2e`                      | Start server in end-to-end testing mode                               |                       |                                                               |
 {.table .table-striped}
 </div>
+
+To run Comentario over HTTPS, pass `--scheme=https` along with `--tls-cert` and
+`--tls-key` when starting the server.
 
 ### Documentation
 

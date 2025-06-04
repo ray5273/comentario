@@ -26,6 +26,8 @@ type ServerConfiguration struct {
 	CDNURL               string `long:"cdn-url"             description:"Static file CDN URL (defaults to base URL)" default:""                            env:"CDN_URL"`
 	EmailFrom            string `long:"email-from"          description:"'From' address in sent emails, defaults to SMTP username"                         env:"EMAIL_FROM"`
 	DBIdleConns          int    `long:"db-idle-conns"       description:"Max. # of idle DB connections"              default:"50"                          env:"DB_MAX_IDLE_CONNS"`
+	TLSCertFile          string `long:"tls-cert"           description:"Path to TLS certificate file"              env:"TLS_CERT_FILE"`
+	TLSKeyFile           string `long:"tls-key"            description:"Path to TLS private key file"              env:"TLS_KEY_FILE"`
 	DisableXSRF          bool   `long:"disable-xsrf"        description:"Disable XSRF protection (development purposes only)"`
 	EnableSwaggerUI      bool   `long:"enable-swagger-ui"   description:"Enable Swagger UI at /api/docs"`
 	PluginPath           string `long:"plugin-path"         description:"Path to plugins"                            default:""                            env:"PLUGIN_PATH"`
@@ -111,6 +113,11 @@ func (sc *ServerConfiguration) postProcess() error {
 		return fmt.Errorf("invalid Base URL: %w", err)
 	}
 	sc.useHTTPS = sc.parsedBaseURL.Scheme == "https"
+	if sc.useHTTPS {
+		if sc.TLSCertFile == "" || sc.TLSKeyFile == "" {
+			return fmt.Errorf("HTTPS base URL requires --tls-cert and --tls-key")
+		}
+	}
 
 	// Validate the base docs URL
 	if !util.IsValidURL(sc.BaseDocsURL, true) {
