@@ -6,7 +6,8 @@
 
 **[Comentario](https://comentario.app)** is an open-source web comment engine, which adds discussion functionality to plain, boring web pages.
 
-This project was originally forked from a GitLab repository.
+This project was originally forked from the GitLab repository at
+[gitlab.com/comentario/comentario](https://gitlab.com/comentario/comentario).
 
 Available features:
 
