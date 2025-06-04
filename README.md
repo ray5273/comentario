@@ -74,3 +74,21 @@ Feel free to examine the [changelog](CHANGELOG.md), but here are a few major poi
 ## Getting started
 
 Refer to [Comentario documentation](https://docs.comentario.app/en/getting-started/) to learn how to install and configure it.
+
+## Running tests
+
+Before running `go test`, the server code generated from the OpenAPI specification must be present. Install `go-swagger` once, generate the code, and then run the tests:
+
+```bash
+go install github.com/go-swagger/go-swagger/cmd/swagger@v0.31.0
+go generate ./...
+go test ./...
+```
+
+## Publishing Docker images
+
+The GitHub Actions workflow `.github/workflows/dockerhub-publish.yml` builds
+multi-architecture images using `Dockerfile.build-all`. Images are published to
+Docker Hub automatically when pushing to the `master` branch or creating a tag
+starting with `v`. The workflow can also be started manually from the Actions
+tab to test the build process.
