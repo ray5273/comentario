@@ -18,6 +18,8 @@ import (
 // ServerConfiguration stores Comentario server configuration
 type ServerConfiguration struct {
 	// Flags
+	ListenHost           string `long:"host"             description:"The IP to listen on"                     default:"localhost"                 env:"HOST"`
+	ListenPort           int    `long:"port"             description:"The port to listen on"                   default:"8080"                     env:"PORT"`
 	Verbose              []bool `short:"v" long:"verbose"   description:"Verbose logging (-vv for debug)"`
 	NoLogColours         bool   `long:"no-color"            description:"Disable log colouring"                                                            env:"NO_COLOR"`
 	BaseURL              string `long:"base-url"            description:"Server's own base URL"                      default:"http://localhost:8080"       env:"BASE_URL"`

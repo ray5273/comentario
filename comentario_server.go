@@ -49,6 +49,10 @@ func main() {
 		logger.Fatalf("Failed to post-process configuration: %v", err)
 	}
 
+	// Apply listening host and port from the parsed configuration
+	server.Host = config.ServerConfig.ListenHost
+	server.Port = config.ServerConfig.ListenPort
+
 	// Link the translations to the embedded filesystem
 	config.I18nFS = &i18nFS
 
