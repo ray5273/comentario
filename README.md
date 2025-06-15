@@ -77,3 +77,41 @@ Feel free to examine the [changelog](CHANGELOG.md), but here are a few major poi
 ## Getting started
 
 Refer to [Comentario documentation](https://docs.comentario.app/en/getting-started/) to learn how to install and configure it.
+
+### Example Docker configuration with TLS
+
+Below is a minimal `docker-compose.yml` that starts Comentario over HTTPS on port 8443:
+
+```yaml
+version: '3'
+
+services:
+  db:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: comentario
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports:
+      - "5432:5432"
+
+  app:
+    image: registry.gitlab.com/comentario/comentario
+    command:
+      - "--scheme=https"
+      - "--tls-cert=/etc/letsencrypt/live/example.com/fullchain.pem"
+      - "--tls-key=/etc/letsencrypt/live/example.com/privkey.pem"
+      - "-v"
+    environment:
+      BASE_URL: https://example.com:8443/
+      SECRETS_FILE: "/secrets.yaml"
+      TLS_PORT: 8443
+      TLS_HOST: 0.0.0.0
+    ports:
+      - "8443:8443"
+    volumes:
+      - ./secrets.yaml:/secrets.yaml:ro
+      - /etc/letsencrypt/:/etc/letsencrypt/:ro
+```
+
+See [Docker playground](docs/content/getting-started/docker-compose.en.md) for more details.

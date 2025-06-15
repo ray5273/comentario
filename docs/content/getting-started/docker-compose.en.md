@@ -29,13 +29,21 @@ services:
 
   app:
     image: registry.gitlab.com/comentario/comentario
+    command:
+      - "--scheme=https"
+      - "--tls-cert=/etc/letsencrypt/live/example.com/fullchain.pem"
+      - "--tls-key=/etc/letsencrypt/live/example.com/privkey.pem"
+      - "-v"
     environment:
-      BASE_URL: http://localhost:8080/
+      BASE_URL: https://example.com:8443/
       SECRETS_FILE: "/secrets.yaml"
+      TLS_PORT: 8443
+      TLS_HOST: 0.0.0.0
     ports:
-      - "8080:80"
+      - "8443:8443"
     volumes:
       - ./secrets.yaml:/secrets.yaml:ro
+      - /etc/letsencrypt/:/etc/letsencrypt/:ro
 ```
 * `secrets.yaml` (find more details in [](/configuration/backend/secrets)):
 ```yaml
@@ -54,4 +62,4 @@ The two files must reside in the same directory. Then, start the database and th
 docker compose up
 ```
 
-Comentario will be reachable at [localhost:8080](http://localhost:8080). Just navigate to [Sign up](http://localhost:8080/en/auth/signup) and register with any email and password: you'll become a [superuser](/kb/permissions/superuser) and will be able to configure the server and add domains in the UI.
+Comentario will be reachable at [https://example.com:8443](https://example.com:8443). Just navigate to [Sign up](https://example.com:8443/en/auth/signup) and register with any email and password: you'll become a [superuser](/kb/permissions/superuser) and will be able to configure the server and add domains in the UI.
