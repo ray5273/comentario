@@ -92,6 +92,7 @@ Below is a summary of the values in the secrets file.
 | `idp.oidc.[N].name`                                     | string  | OIDC provider display name                                                                    |                     |
 | `idp.oidc.[N].url`                                      | string  | OIDC provider server URL                                                                      |                     |
 | `idp.oidc.[N].scopes`                                   | array   | OIDC scopes to request (array of strings)                                                     |                     |
+| `idp.oidc.[N].caFile`                                   | string  | Path to a custom CA certificate used to trust the provider    |                     |
 | `idp.oidc.[N].disable`                                  | boolean | Whether to forcefully disable authentication via this provider                                |                     |
 | `idp.oidc.[N].key`                                      | string  | OIDC client ID                                                                                |                     |
 | `idp.oidc.[N].secret`                                   | string  | OIDC client secret                                                                            |                     |

@@ -53,6 +53,7 @@ type OIDCProvider struct {
 	Name      string   `yaml:"name"`   // Provider display name, e.g. "Keycloak"
 	URL       string   `yaml:"url"`    // OIDC server URL
 	Scopes    []string `yaml:"scopes"` // Additional scopes to request
+	CAFile    string   `yaml:"caFile"` // Optional path to a custom CA certificate
 }
 
 // QualifiedID returns the provider's ID prepended with the common OIDC prefix
@@ -94,6 +95,13 @@ func (p *OIDCProvider) validate() error {
 		return errors.New("provider server URL must be specified")
 	} else if !util.IsValidURL(p.URL, false) {
 		return errors.New("invalid provider server URL")
+	}
+
+	// CA certificate file, if specified, must be readable
+	if p.CAFile != "" {
+		if _, err := os.Stat(p.CAFile); err != nil {
+			return fmt.Errorf("cannot access CA certificate %q: %w", p.CAFile, err)
+		}
 	}
 	return nil
 }
