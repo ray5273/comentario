@@ -45,6 +45,8 @@ idp:
         - email
       key:    5t02cn8y5609c28uh                     # This is your Client key
       secret: ghc02m84tgh8c2gjh                     # This is your Client secret
+      # Optional: specify a custom root CA to trust
+      rootCA: /path/to/rootCA.pem
 ...
 ```
 5. Restart Comentario.\

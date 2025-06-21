@@ -1,6 +1,8 @@
 package config
 
 import (
+	"crypto/tls"
+	"crypto/x509"
 	"fmt"
 	"github.com/markbates/goth"
 	"github.com/markbates/goth/providers/facebook"
@@ -11,6 +13,8 @@ import (
 	"github.com/markbates/goth/providers/twitter"
 	"gitlab.com/comentario/comentario/internal/api/models"
 	"gitlab.com/comentario/comentario/internal/data"
+	"net/http"
+	"os"
 	"strings"
 )
 
@@ -172,6 +176,23 @@ func oidcConfigure() error {
 			p.Scopes...)
 		if err != nil {
 			return fmt.Errorf("failed to add OIDC provider (ID=%q): %w", p.ID, err)
+		}
+
+		// If a custom root CA is provided, configure HTTP client
+		if p.RootCA != "" {
+			rootCAs, err := x509.SystemCertPool()
+			if err != nil || rootCAs == nil {
+				rootCAs = x509.NewCertPool()
+			}
+			if certs, err := os.ReadFile(p.RootCA); err == nil {
+				if ok := rootCAs.AppendCertsFromPEM(certs); !ok {
+					logger.Warningf("failed to append certs from %s", p.RootCA)
+				}
+			} else {
+				return fmt.Errorf("failed to load root CA %q: %w", p.RootCA, err)
+			}
+			tr := &http.Transport{TLSClientConfig: &tls.Config{RootCAs: rootCAs}}
+			op.HTTPClient = &http.Client{Transport: tr}
 		}
 
 		// Set the name explicitly to override goth's name assigning logic that adds a suffix
