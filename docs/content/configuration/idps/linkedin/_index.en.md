@@ -42,9 +42,10 @@ idp:
     name:   LinkedIn
     url:    https://www.linkedin.com/oauth/
     scopes:
-     - openid
-     - profile
-     - email
+    - openid
+    - profile
+    - email
+    caFile: /path/to/custom-ca.pem
     key:    78d26udw82x728
     secret: OfveFNVVm2l3Dkkd
 ...

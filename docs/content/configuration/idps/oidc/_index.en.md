@@ -43,6 +43,7 @@ idp:
         # The below is an example, use the actual application scopes here
         - profile
         - email
+      caFile: /path/to/custom-ca.pem                # Optional custom CA certificate
       key:    5t02cn8y5609c28uh                     # This is your Client key
       secret: ghc02m84tgh8c2gjh                     # This is your Client secret
 ...
