@@ -56,6 +56,7 @@ type OIDCProvider struct {
 	Name      string   `yaml:"name"`   // Provider display name, e.g. "Keycloak"
 	URL       string   `yaml:"url"`    // OIDC server URL
 	Scopes    []string `yaml:"scopes"` // Additional scopes to request
+	RootCA    string   `yaml:"rootCA"` // Additional root CA certificate file
 }
 
 // QualifiedID returns the provider's ID prepended with the common OIDC prefix
